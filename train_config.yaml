@@ -1,0 +1,101 @@
+experiment_dir : /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/cccma_PPP_test
+epochs : 3
+train_loader: 
+    dataset_config : 
+        input : 
+            paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/forecast_data
+            names: 
+                  - tas
+            preprocessing_pipeline :  
+                preprocessors_list:
+                    - name : anomalies
+                      args : 
+                              dims: 
+                                  - year
+                                  - lead_time
+                    - name : oceannanremover
+
+            ensemble_mean : True
+            concat_dim : year
+
+        target :
+            paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations
+            names: 
+                  - tas
+            preprocessing_pipeline :  
+                    preprocessors_list :
+                            - name : standardizer
+                            - name : oceannanremover
+
+            concat_dim : year
+
+        time_features :
+                        - year
+        num_lead_months : 120
+
+    batch_size: 10
+    train_years : [1980, 1982]
+    num_validation_years : 0
+    num_data_workers: 0
+
+module:
+    type : cVAE
+    config:    
+            ModelConfig : 
+                    type : MLP
+                    args :
+                          encoder_hidden_dims : [3000,3000,3000]
+                          latent_size : 10
+                          decoder_hidden_dims: [3000,3000,3000]
+                          condition_embedding_dims :  [3000,3000,3000, 10]
+                          condition_dependant_latent: True
+                          condemb_to_decoder:  True
+                          batch_normalization : True
+                          dropout_rate: 0.5
+                          init_method :  xavier
+            
+            min_posterior_variance: 2
+            prior_flow_config :
+                    list_flows :
+                              - type : RealNVP
+                                args : 
+                                      hidden_dim : 5 
+                              - type : MAF
+                                args : 
+                                      hidden_dim : 5 
+            combined_CGCN_weight : 0.1
+
+losspipeline:
+      loss_pipeline : 
+                    - name : mse
+
+                    - name : mse
+                      args : 
+                            low_ress_kernel_size : 3  
+      
+      loss_weights : [0.8,0.2] 
+      reduction : sum
+
+trainer : 
+    beta_finder : 
+              beta : 10
+              num_epoch_to_warmup : 10
+
+    earlystoppingbuffer : 10
+    gradient_accumulation_steps: 2
+    mixed_precision: True              
+
+optimization : 
+        lr : 0.0001
+        optimizer_type : adam
+        lr_scheduler_config : 
+                    min_lr : 0
+                    warmup_epochs : 2
+
+weights : 
+        spatial_method : cosine_lat
+
+log_every_n_epochs : 2
+save_checkpoint : True
+seed : 10
+
