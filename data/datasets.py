@@ -8,7 +8,7 @@ import os
 import warnings
 
 from data.data_abc import XarrayDatasetABC, XarrayDatasetConfigABC
-from data.utils_data import ModelDataConfig, ObsDataConfig, WeightsConfig, _unwrape_data_variables, _load_xarray_data, infoclass, _create_train_mask
+from data.utils_data import ModelDataConfig, ObsDataConfig, ConditionDataConfig, WeightsConfig, _unwrape_data_variables, _load_xarray_data, infoclass, _create_train_mask
 
 from preprocessing.preprocessing_ABC import PreprocessModuleABC
 
@@ -20,7 +20,7 @@ class XArrayDatasetConfig(Dataset, XarrayDatasetConfigABC):
 
     model: ModelDataConfig
     observation: ObsDataConfig | None = None 
-    condition : ModelDataConfig | None = None 
+    condition : ConditionDataConfig | None = None 
     condition_method: str = None
     time_features : list[str] | None = None 
     num_lead_months  : int | None = None 
@@ -31,6 +31,8 @@ class XArrayDatasetConfig(Dataset, XarrayDatasetConfigABC):
         
         self.num_model_lead_months = self.model.info.sizes['lead_time']
         self.model.preprocessing_pipeline.name = 'model'
+        if self.condition_method == 'same_member':
+            assert self.model.ensemble_mean is not None, 'for same member coniditioning the model data should not be ensemble mean.'
        
         if self.observation is not None:
 
@@ -248,7 +250,7 @@ class XArrayDatasetConfig(Dataset, XarrayDatasetConfigABC):
         
     @classmethod
     def _available_condiiton_methods(cls):
-        return ['ensemble_mean' , 'cross_ensemble' , 'same_member', 'no_ensemble', 'static']
+        return ['ensemble_mean' , 'cross_ensemble' , 'same_member',  'static']
 
         
 
@@ -306,12 +308,47 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             self.mask = self.mask.assign_coords(ensembles = self.config.model.info.coords['ensembles'] )
 
         self.mask = self.mask.where(~self.mask)
-        mask = self.mask.stack(batch = dict(self.mask.sizes).keys()).transpose('batch', ...).dropna(dim = 'batch').batch.values
-        mask = tuple(map(np.array, zip(*mask)))
-        self.indexes =  { key : mask[ind] for ind, key in enumerate(tuple(dict(self.mask.sizes).keys()))}
-        del mask           
+        self.model_indexes = self.get_model_indexes()
+        self.obs_indexes = self.get_obs_indexes(self.model_indexes)
+        self.cond_indexes = self.get_cond_indexes(self.model_indexes)
 
         self.time_features = self.config.time_features
+
+    def get_model_indexes(self):
+        mask = self.mask.stack(batch = dict(self.mask.sizes).keys()).transpose('batch', ...).dropna(dim = 'batch').batch.values
+        mask = tuple(map(np.array, zip(*mask)))
+        indexes =  { key : mask[ind] for ind, key in enumerate(tuple(dict(self.mask.sizes).keys()))}
+
+        return indexes   
+    
+    def get_obs_indexes(self, model_indexes : dict):
+        if self.observation_dataset is not None:
+
+            indexes = {}
+            offset_year, month = np.divmod(model_indexes['lead_time'] - 0.5 ,12)
+            indexes['year'] = model_indexes['year'] + offset_year
+            indexes['month'] = month + 0.5
+            if all([not self.config.observation.ensemble_mean, self.config.observation.info.coords['ensembles'] is not None]):
+                ens_inds = [np.random.choice(self.config.observation.info.coords['ensembles']) for _ in range(len(model_indexes['year'])) ]    
+                indexes['ensembles'] = np.array(ens_inds)
+
+            return indexes
+
+    def get_cond_indexes(self, model_indexes : dict):
+        if self.condition_dataset is not None:
+            if self.config.condition_method != 'static':
+                indexes = {}
+                indexes['year'] = model_indexes['year']
+                indexes['lead_time'] = model_indexes['lead_time']
+                if self.config.condition_method == 'cross_ensemble':
+                    ens_inds = [np.random.choice(self.config.condition.info.coords['ensembles']) for _ in range(len(model_indexes['year'])) ]    
+                    indexes['ensembles'] = np.array(ens_inds)
+
+                elif self.config.condition_method == 'same_member':
+                    indexes['ensembles'] = model_indexes['ensembles']
+                    
+            return indexes
+
 
     def get_input_shape(self):
         from preprocessing.utils_preprocessing import Oceannanremove
@@ -340,47 +377,45 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
         return len(self.time_features)
         
     def __getitem__(self, ind):
-        year = float(self.indexes['year'][ind])
-        lead_time = float(self.indexes['lead_time'][ind])
+
         
         if self.condition_dataset is not None:
 
             if self.config.condition_method != 'static':
+                year = float(self.cond_indexes['year'][ind])
+                lead_time = float(self.cond_indexes['lead_time'][ind])
                 selection = dict(year = year, lead_time = lead_time)
+                if 'ensembles' in self.cond_indexes:
+                    selection['ensembles'] =  self.cond_indexes['ensembles'][ind]  
+
             else:
                 selection = {}
-
-            if self.config.condition_method == 'cross_ensemble':
-                selection['ensembles'] = np.random.choice(self.config.condition.info.coords['ensembles'])
-
-            elif self.config.condition_method == 'same_member':
-                selection['ensembles'] = self.indexes[ind].ensembles.values
 
             condition = self.config.condition.preprocessing_pipeline.transform(self.condition_dataset.sel(**selection))  ##check if transforming once is faster
             condition = _unwrape_data_variables(condition)
         
         if self.observation_dataset is not None:
-            selection = dict(year = year, month = lead_time)
-            lead_year, lead_month = np.divmod(lead_time - 0.5, 12)
-            selection['year'] +=   lead_year
-            selection['month'] =  lead_month + 0.5
+            year = float(self.obs_indexes['year'][ind])
+            month = float(self.obs_indexes['month'][ind])
+            selection = dict(year = year, month = month)
 
-            if all([not self.config.observation.ensemble_mean, self.config.observation.info.coords['ensembles'] is not None]):
-                selection['ensembles'] = np.random.choice(self.config.observation.info.coords['ensembles']) 
+            if  'ensembles' in self.obs_indexes:
+                selection['ensembles'] = self.obs_indexes['ensembles'][ind]
 
             target = self.config.observation.preprocessing_pipeline.transform(self.observation_dataset.sel(**selection))  ##check if transforming once is faster
             target = _unwrape_data_variables(target)
 
-
-
+        year = float(self.model_indexes['year'][ind])
+        lead_time = float(self.model_indexes['lead_time'][ind])
         selection = dict(year = year, lead_time = lead_time)
 
         if all([self.condition_dataset is not None,  self.config._using_model_data_as_condition,  not self._autoencoding_input]):
             input = condition
 
         else:
-            if all([not self.config.model.ensemble_mean, self.config.model.info.coords['ensembles'] is not None]):
-                selection['ensembles'] = self.indexes[ind].ensembles.values
+            if  'ensembles' in self.model_indexes:
+                selection['ensembles'] = self.model_indexes['ensembles'][ind]
+                
             input = self.config.model.preprocessing_pipeline.transform(self.model_dataset.sel(**selection))  ##check if transforming once is faster
             input = _unwrape_data_variables(input)
 
@@ -433,3 +468,91 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
         return len(self.indexes.get(list(self.indexes.keys())[0]))
 
     
+        
+    # def __getitem__(self, ind):
+    #     year = float(self.indexes['year'][ind])
+    #     lead_time = float(self.indexes['lead_time'][ind])
+        
+    #     if self.condition_dataset is not None:
+
+    #         if self.config.condition_method != 'static':
+    #             selection = dict(year = year, lead_time = lead_time)
+    #         else:
+    #             selection = {}
+
+    #         if self.config.condition_method == 'cross_ensemble':
+    #             selection['ensembles'] = np.random.choice(self.config.condition.info.coords['ensembles'])
+
+    #         elif self.config.condition_method == 'same_member':
+    #             selection['ensembles'] = self.indexes[ind].ensembles.values
+
+    #         condition = self.config.condition.preprocessing_pipeline.transform(self.condition_dataset.sel(**selection))  ##check if transforming once is faster
+    #         condition = _unwrape_data_variables(condition)
+        
+    #     if self.observation_dataset is not None:
+    #         selection = dict(year = year, month = lead_time)
+    #         lead_year, lead_month = np.divmod(lead_time - 0.5, 12)
+    #         selection['year'] +=   lead_year
+    #         selection['month'] =  lead_month + 0.5
+
+    #         if all([not self.config.observation.ensemble_mean, self.config.observation.info.coords['ensembles'] is not None]):
+    #             selection['ensembles'] = np.random.choice(self.config.observation.info.coords['ensembles']) 
+
+    #         target = self.config.observation.preprocessing_pipeline.transform(self.observation_dataset.sel(**selection))  ##check if transforming once is faster
+    #         target = _unwrape_data_variables(target)
+
+
+
+    #     selection = dict(year = year, lead_time = lead_time)
+
+    #     if all([self.condition_dataset is not None,  self.config._using_model_data_as_condition,  not self._autoencoding_input]):
+    #         input = condition
+
+    #     else:
+    #         if all([not self.config.model.ensemble_mean, self.config.model.info.coords['ensembles'] is not None]):
+    #             selection['ensembles'] = self.indexes[ind].ensembles.values
+    #         input = self.config.model.preprocessing_pipeline.transform(self.model_dataset.sel(**selection))  ##check if transforming once is faster
+    #         input = _unwrape_data_variables(input)
+
+    #         if self._autoencoding_input:
+    #             target = input
+
+    #         if all([self.condition_dataset is not None,  self.config._using_model_data_as_condition]):
+    #             input = condition
+
+    #         elif all([self.condition_dataset is not None, not self.config._using_model_data_as_condition]):
+    #             input = xr.concat([input, condition], dim = 'channels')
+
+            
+
+    #     if self.time_features is not None:
+    #         time_features_list = np.array([self.time_features]).flatten()
+    #         feature_indices = {'year': 0, 'lead_time': 1, 'month_sin': 2, 'month_cos': 3}
+            
+    #         target_time = year + lead_time//12 
+    #         target_month = lead_time
+
+    #         y = (target_time - np.min(self.config.get_common_time)) /  (np.max(self.config.get_common_time) - np.min(self.config.get_common_time))
+    #         lt = lead_time / self.config.num_lead_months
+    #         msin = np.sin(2 * np.pi * target_month/12.0)
+    #         mcos = np.cos(2 * np.pi * target_month/12.0)
+
+    #         time_features = np.stack([y, lt, msin, mcos]) 
+    #         time_features = time_features[..., [feature_indices[k] for k in time_features_list]]
+    #         if len(input.shape) > 2:
+    #             time_features = np.broadcast_to(time_features[:, None, None], (len(time_features), input.shape[-2], input.shape[-1]))
+    #     else:
+    #         time_features = None
+
+    
+        
+    #     datadict = dict(input = torch.as_tensor(input.to_numpy(), dtype=torch.float32), 
+    #                     target = torch.as_tensor(target.to_numpy(), dtype=torch.float32), 
+    #                     added_features = torch.as_tensor(time_features, dtype=torch.float32) 
+    #                       if time_features is not None else None)
+                                                    
+
+    #     if self.return_metadata:
+    #         return datadict, selection
+    #     else:
+    #         return datadict

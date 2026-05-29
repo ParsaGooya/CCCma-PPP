@@ -12,9 +12,9 @@ from typing import final, ClassVar
 
 @dataclasses.dataclass
 class infoclass:
-    sizes : dict
-    start_year : xr.DataArray | np.ndarray | str | int
-    final_year : xr.DataArray | np.ndarray | str | int
+    sizes : dict | None
+    start_year : xr.DataArray | np.ndarray | str | int | None
+    final_year : xr.DataArray | np.ndarray | str | int | None
     coords : dict
     spatial_mask :  xr.Dataset = None
 
@@ -90,6 +90,41 @@ class ObsDataConfig:
         return [ 'month' , 'lat', 'lon']
 
 
+@dataclasses.dataclass
+class ConditionDataConfig:
+    paths: str 
+    names: list[str] 
+    preprocessing_pipeline :  PreprocessingPipeline = dataclasses.field(default_factory= PreprocessingPipeline)
+    ensemble_list: list | None = None
+    ensemble_mean : bool | None = True
+    concat_dim : str = 'year'
+    file_type : str = '*.nc'
+    rename_dict : dict = None
+    TYPE : ClassVar[str] = 'model'
+
+    
+    def __post_init__(self):
+        self._check_ensemble = False
+        if self.ensemble_list is not None:
+            self._check_ensemble = True
+
+        _check_data(self)
+        self.info = _get_ds_info(self)
+        if (self.info.start_year is not None and self.info.final_year is not None):
+            self.year_range = np.arange(self.info.start_year, self.info.final_year  + self.info.sizes['lead_time']//12 )
+
+    
+    @final
+    @classmethod
+    def _allowed_dims(cls):
+        return [ 'year', 'lead_time' , 'ensembles', 'lat', 'lon']
+    
+    @final
+    @classmethod
+    def _required_dims(cls):
+        return [ 'lat', 'lon']  
+
+
 
 def _check_data(dataconfig : ModelDataConfig | ObsDataConfig) -> None:
     if not Path(dataconfig.paths).exists():
@@ -136,8 +171,14 @@ def _get_ds_info(dataconfig : ModelDataConfig | ObsDataConfig) -> infoclass:
     if dataconfig.ensemble_list is not None:
             ds = ds.sel(ensembles = dataconfig.ensemble_list)
 
-    start_year, final_year = ds.year.min().values, ds.year.max().values
+    if 'year' in ds.dims:
+        start_year, final_year = ds.year.min().values, ds.year.max().values
+    else:
+        start_year =  final_year = None
+
     sizes =  {dim : dict(ds.sizes).get(dim) for dim in dict(ds.sizes).keys() if dim not in ['ensembles', 'lat', 'lon']}
+    if not sizes:
+        sizes = None
 
     coords = {dim : dict(ds.coords).get(dim, None) for dim in ['ensembles', 'lat', 'lon']}
     
