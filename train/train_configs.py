@@ -101,13 +101,14 @@ class TrainConfig:
 
         self.experiment_dir = Path(self.experiment_dir)
 
-        if self.train_loader.dataset_config.target is None:
+        if self.train_loader.dataset_config.observation is None:
             if self.module.type.lower() in ['deterministic', 'default']:
-                raise ValueError('with determisitic models target must be specified.')
+                raise ValueError('with determisitic models target observation must be specified.')
 
         if self.module.type.lower() in ['cVAE']:
             if self.trainer.beta_finder is None:
                  raise ValueError('with cVAE model TrainerConfig.beta_finder must be set up.')
+            assert self.train_loader.dataset_config.condition_type is not None, 'with cVAE you must specify condition type!'
 
         if getattr(self.module._module_config.model,'GENERATOR', False):
             if 'crps' not in self.losspipeline.loss_pipeline.loss_types:
@@ -118,10 +119,10 @@ class TrainConfig:
                 warnings.warn('TrainerConfig.beta_finder setup will be ignored with deterministic models ...')
 
         if self.module._module_config.model.NUM_OUTPUT_DIMS == 1:
-            if self.train_loader.dataset_config.target is not None:
-                pipeline = self.train_loader.dataset_config.target.preprocessing_pipeline.pipeline
+            if self.train_loader.dataset_config.observation is not None:
+                pipeline = self.train_loader.dataset_config.observation.preprocessing_pipeline.pipeline
             else:
-                pipeline = self.train_loader.dataset_config.input.preprocessing_pipeline.pipeline
+                pipeline = self.train_loader.dataset_config.model.preprocessing_pipeline.pipeline
 
             if not any([isinstance(step[1], Oceannanremove) for step in pipeline]):
                 raise RuntimeError('for MLP models, add Oceannanremove as a preprocessing step to flatten the maps.')

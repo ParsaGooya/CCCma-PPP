@@ -65,6 +65,7 @@ class TrainDataloaderConfig:
     train_years : tuple | list = None 
     num_validation_years : int = 0
     num_data_workers: int = 0
+    prefetch_factor : int = 2
     drop_last : bool = False
     
     
@@ -74,6 +75,9 @@ class TrainDataloaderConfig:
 
         if self.num_validation_years > 0:
                 self.available_train_years = self.dataset_config.available_train_time[ : - self.num_validation_years]
+
+        if self.num_data_workers == 0:
+             self.prefetch_factor = None
 
         if self.train_years is None:
 
@@ -163,7 +167,8 @@ class Dataloader:
                                         collate_fn = partial(                    ###Safer alternative for lambda to avoid break on some multiprocessing backends because lambdas are not pickleable.
                                                             self.collate_fn,
                                                             return_spatial_mask=self.return_spatial_mask, reduce_spatial_mask = self.reduce_spatial_mask),
-                                        num_workers = self.config.num_data_workers)
+                                        num_workers = self.config.num_data_workers,
+                                        prefetch_factor = self.config.prefetch_factor)
     
 
     def get_weights(self, config: WeightsConfig | None= None):

@@ -8,7 +8,7 @@ import os
 import warnings
 
 from data.data_abc import XarrayDatasetABC, XarrayDatasetConfigABC
-from data.utils_data import DataConfig, WeightsConfig, _unwrape_data_variables, _load_xarray_data, infoclass, _create_train_mask
+from data.utils_data import ModelDataConfig, ObsDataConfig, WeightsConfig, _unwrape_data_variables, _load_xarray_data, infoclass, _create_train_mask
 
 from preprocessing.preprocessing_ABC import PreprocessModuleABC
 
@@ -18,72 +18,84 @@ from preprocessing.preprocessing_ABC import PreprocessModuleABC
 @dataclasses.dataclass
 class XArrayDatasetConfig(Dataset, XarrayDatasetConfigABC):
 
-    input: DataConfig
-    target: DataConfig | None = None 
-    condition : DataConfig | None = None 
+    model: ModelDataConfig
+    observation: ObsDataConfig | None = None 
+    condition : ModelDataConfig | None = None 
+    condition_method: str = None
     time_features : list[str] | None = None 
     num_lead_months  : int | None = None 
     
     def __post_init__(self):
-        self._using_input_as_condition = False
-        self.dataset = None
-
-        assert self.input.condition_method is None, 'do not specify condition method for input'
-        if all([self.target.ensemble_list is not None, not self.target.ensemble_mean]):
-            assert len(self.target.ensemble_list) == len(self.input.ensemble_list), 'input and target must have same number of ensemble members'
-        self.input_info = self._get_ds_info(self.input)
-        assert 'lead_time' in self.input_info.sizes.keys(), f'lead_time is not an input dimention : {self.input_info.sizes.keys()}'
+        self._using_model_data_as_condition = False
+ 
         
-        self.num_input_lead_months = self.input_info.sizes['lead_time']
-        self.input_range = np.arange(self.input_info.start_year, self.input_info.final_year  + self.num_input_lead_months//12 )
-        self.input.preprocessing_pipeline.name = 'input'
+        self.num_model_lead_months = self.model.info.sizes['lead_time']
+        self.model.preprocessing_pipeline.name = 'model'
        
-        if self.target is not None:
-            assert self.target.condition_method is None, 'do not specify condition method for target'
-            self.target_info = self._get_ds_info(self.target)
-            self.target_range = np.arange(self.target_info.start_year, self.target_info.final_year + 1 )
-            if not self.target_info.coords["lat"].equals(self.input_info.coords["lat"]):
-                warnings.warn(f'input and taget do not have the same latitudes cooridnates.') 
-            if not self.target_info.coords["lon"].equals(self.input_info.coords["lon"]):
-                warnings.warn(f'input and taget do not have the same longitudes cooridnates.') 
-            self.target.preprocessing_pipeline.name = 'target'
+        if self.observation is not None:
 
+            if not self.observation.info.coords["lat"].equals(self.model.info.coords["lat"]):
+                warnings.warn(f'model and observation data do not have the same latitudes cooridnates.') 
+            if not self.observation.info.coords["lon"].equals(self.model.info.coords["lon"]):
+                warnings.warn(f'model and observation data do not have the same longitudes cooridnates.') 
+            self.observation.preprocessing_pipeline.name = 'observation'
+        else:
+            assert self.condition_method is not None, f'No target observation is specifiec. Specify condition_method!' 
+
+        if self.condition_method is not None:
+            assert self.condition_method in  self._available_condiiton_methods(), f'condition_method must be from {self._available_condiiton_methods()} '
 
         if self.condition is not None:
-            assert self.condition.condition_method is not None, f'specify condition_method from {DataConfig._available_condiiton_methods()} '
+            assert self.condition_method is not None, f'specify condition_method for conditioning dataset!'
+
+            if self.condition.paths == self.model.paths:
+                if self.condition.names == self.model.names:
+                    self._using_model_data_as_condition = True       
+
+            if self.condition_method in ['cross_ensemble', 'same_member']:
+                assert self.condition.ensemble_mean is False, 'Ensemble mean cannot be True for cross_ensemble or same_member conditioning.'
+                assert self.condition.info.coords['ensembles'] is not None, 'For cross_ensemble or same_member conditioning an ensembles dim must exist in condition.'
+            elif  self.condition_method == 'ensemble_mean':
+                assert self.condition.ensemble_mean is True, 'Ensemble mean must be True for ensemble_mean conditioning.'
+            else:
+                assert self.condition.ensemble_list is None, 'For "static" or "no_ensemble" conditioning fields cannot specify ensemble list.'
+ 
+
+        elif self.condition_method is not None:
+            assert self.condition_method in ['ensemble_mean', 'cross_ensemble', 'same_member'], 'for static and no-ensemble conditioning methods condition dataset must be specified!'
             
-            if self.condition.paths is None:              
-               self._using_input_as_condition = True
-            elif self.condition.paths == self.input.paths:
-                if self.condition.names == self.input.names:
-                    self._using_input_as_condition = True
-            else: 
-                self._using_input_as_condition = False
+            if self.condition_method in ['cross_ensemble', 'same_member']:
+                ensemble_mean = False
+            elif  self.condition_method == 'ensemble_mean':
+                ensemble_mean = True
 
-            if self._using_input_as_condition:
-               self.condition = DataConfig(paths = self.input.path, 
-                                           names = self.input.names, 
-                                           preprocessing_pipeline = self.input.preprocessing_pipeline, 
-                                            ensemble_list = self.input.ensemble_list,
-                                            concat_dim = self.input.concat_dim,
-                                            file_type = self.input.file_type,
-                                            ensemble_mean  = None,
-                                           condition_method = self.condition.condition_method)
+            self._using_model_data_as_condition = True
 
-            self.condition_info = self._get_ds_info(self.condition)
-            if self.condition.condition_method not in ['static']:
-                assert self.condition_info.sizes == self.input_info.sizes, 'non static coniditioning field must have the same times as the input.'
-            assert self.condition_info.coords['lat'] == self.input_info.coords['lat'], 'coniditioning field must have the same lat shape as the input.'
-            assert self.condition_info.coords['lon'] == self.input_info.coords['lon'], 'coniditioning field must have the same lon shape as the input.'
-            if self.condition.condition_method in ['same_member']:
-                   assert self.condition_info.coords['ensembles'] == self.input_info.coords['ensembles'], 'coniditioning field and input must have the same ensemble dimension for same_member conditioning.'
+            self.condition = ModelDataConfig(paths = self.model.paths, 
+                                           names = self.model.names, 
+                                           preprocessing_pipeline = self.model.preprocessing_pipeline, 
+                                            ensemble_list = self.model.ensemble_list,
+                                            concat_dim = self.model.concat_dim,
+                                            file_type = self.model.file_type,
+                                            ensemble_mean  = ensemble_mean,
+                                            rename_dict = self.model.rename_dict)
+            
+        if self.condition is not None:
 
-            self.condition_range = np.arange(self.condition_info.start_year, self.condition_info.final_year + self.num_input_lead_months//12)
+            if self.condition_method not in ['static']:
+                    assert self.condition.info.sizes == self.model.info.sizes, 'non static coniditioning field must have the same times as the model data.'
+            
+            assert self.condition.info.coords['lat'].equals(self.model.info.coords['lat']), 'coniditioning field must have the same lat shape as the model data.'
+            assert self.condition.info.coords['lon'].equals(self.model.info.coords['lon']), 'coniditioning field must have the same lon shape as the model data.'
+            
+            if self.condition_method in ['same_member']:
+                    assert self.condition.info.coords['ensembles'].equals(self.model.info.coords['ensembles']), 'coniditioning field and model data must have the same ensemble dimension for same_member conditioning.'
+        
             self.condition.preprocessing_pipeline.name = 'condition'
 
         if self.num_lead_months is None:
-            self.num_lead_months = self.num_input_lead_months
-        assert self.num_lead_months <= self.num_input_lead_months, f'Maximum available lead months is {self.num_input_lead_months}' 
+            self.num_lead_months = self.num_model_lead_months
+        assert self.num_lead_months <= self.num_model_lead_months, f'Maximum available lead months is {self.num_model_lead_months}' 
 
         if self.time_features is not None:
             assert set(self.time_features).issubset(set(['year','lead_time','month_sin','month_cos']))
@@ -92,70 +104,57 @@ class XArrayDatasetConfig(Dataset, XarrayDatasetConfigABC):
         
     @property
     def get_common_time(self):
-        if self.target is not None:
-            return np.intersect1d(self.input_range, self.target_range)
+        if self.observation is not None:
+            return np.intersect1d(self.model.year_range, self.observation.year_range)
         else:
-            return self.input_range
+            return self.model.year_range
     
     @property
     def available_train_time(self):
         num_lead_years = self.num_lead_months // 12
-        if self.target is None:
+        if self.observation is None:
             return np.arange( np.min(self.get_common_time), np.max(self.get_common_time) + 1 - num_lead_years + 1) 
         else:
             return self.get_common_time
         
-
-    def _get_ds_info(self, data_dict) -> infoclass:
-
-        ds = _load_xarray_data(data_dict.paths, names = data_dict.names, concat_dim = data_dict.concat_dim)
-        if data_dict.ensemble_list is not None:
-                ds = ds.sel(ensembles = data_dict.ensemble_list)
-        start_year, final_year = ds.year.min().values, ds.year.max().values
-        sizes =  {dim : dict(ds.sizes).get(dim) for dim in dict(ds.sizes).keys() if dim not in ['ensembles', 'lat', 'lon']}
-        coords = {dim : dict(ds.coords).get(dim, None) for dim in ['ensembles', 'lat', 'lon']}
-        
-        ds.close()
-        del ds
-
-        return infoclass(start_year = start_year, final_year = final_year, sizes = sizes, coords = coords)
     
     def _fit_preprocessors(self, train_years : np.ndarray | list | tuple, save = False, save_path : Path | str | None = None, save_name : str| None = None):
  
-        if self.input.preprocessing_pipeline.load_dir is None:
+        if self.model.preprocessing_pipeline.load_dir is None:
 
             selection={'year' : train_years, 'lead_time' :  np.arange(1,self.num_lead_months + 1) }
-            if self.input_info.coords['ensembles'] is not None: 
-                selection['ensembles'] = self.input_info.coords['ensembles']
-            input_base = _load_xarray_data(self.input.paths, names = self.input.names, concat_dim = self.input.concat_dim, selection=selection, ensemble_mean=self.input.ensemble_mean)
-            mask_input = _create_train_mask(input_base.year, input_base.lead_time)
-            self.input.preprocessing_pipeline.fit(base_data = input_base.load(), mask = mask_input, save = save, save_path = save_path ,save_name = save_name)
-            input_base.close()
-            del input_base
+            if self.model.info.coords['ensembles'] is not None: 
+                selection['ensembles'] = self.model.info.coords['ensembles']
+            _base = _load_xarray_data(self.model.list_paths, names = self.model.names, concat_dim = self.model.concat_dim, selection=selection, ensemble_mean=self.model.ensemble_mean, rename_dict=self.model.rename_dict)
+            _mask = _create_train_mask(_base.year, _base.lead_time)
+            self.model.preprocessing_pipeline.fit(base_data = _base.load(), mask = _mask, save = save, save_path = save_path ,save_name = save_name)
+            _base.close()
+            del _base, _mask
         else:
-            self.input.preprocessing_pipeline._load_from_memory(Path(self.input.preprocessing_pipeline.load_dir), load_name = self.input.preprocessing_pipeline.load_name)
+            self.model.preprocessing_pipeline._load_from_memory(Path(self.model.preprocessing_pipeline.load_dir), load_name = self.model.preprocessing_pipeline.load_name)
         
-        if self.target is not None:
-            if self.target.preprocessing_pipeline.load_dir is None:
+        if self.observation is not None:
+            if self.observation.preprocessing_pipeline.load_dir is None:
                 selection={'year' : train_years }
-                if self.target_info.coords['ensembles'] is not None: 
-                    selection['ensembles'] = self.target_info.coords['ensembles']
-                target_base = _load_xarray_data(self.target.paths,  names = self.target.names ,concat_dim = self.target.concat_dim, selection = selection , ensemble_mean=self.target.ensemble_mean)
-                self.target.preprocessing_pipeline.fit(base_data = target_base.load(), save = save, save_path = save_path, save_name = save_name)
-                target_base.close()
-                del target_base
+                if self.observation.info.coords['ensembles'] is not None: 
+                    selection['ensembles'] = self.observation.info.coords['ensembles']
+                _base = _load_xarray_data(self.observation.list_paths,  names = self.observation.names ,concat_dim = self.observation.concat_dim, selection = selection , ensemble_mean=self.observation.ensemble_mean, rename_dict=self.observation.rename_dict)
+                self.observation.preprocessing_pipeline.fit(base_data = _base.load(), save = save, save_path = save_path, save_name = save_name)
+                _base.close()
+                del _base
             else:
-                self.target.preprocessing_pipeline._load_from_memory(Path(self.target.preprocessing_pipeline.load_dir), load_name = self.target.preprocessing_pipeline.load_name)  
+                self.observation.preprocessing_pipeline._load_from_memory(Path(self.observation.preprocessing_pipeline.load_dir), load_name = self.observation.preprocessing_pipeline.load_name)  
 
         if self.condition is not None:
             if self.condition.preprocessing_pipeline.load_dir is None:
                 selection={'year' : train_years }
-                if self.condition_info.coords['ensembles']is not None:
-                    selection['ensembles'] = self.condition_info.coords['ensembles']
-                condition_base = _load_xarray_data(self.condition.paths, names = self.condition.names,  concat_dim = self.condition.concat_dim, selection= selection, ensemble_mean=self.condition.ensemble_mean)
-                self.condition.preprocessing_pipeline.fit(base_data =  condition_base.load(), mask = mask_input, save = save, save_path = save_path, save_name = save_name)
-                condition_base.close()
-                del condition_base
+                if self.condition.info.coords['ensembles'] is not None:
+                    selection['ensembles'] = self.condition.info.coords['ensembles']
+                _base = _load_xarray_data(self.condition.list_paths, names = self.condition.names,  concat_dim = self.condition.concat_dim, selection= selection, ensemble_mean=self.condition.ensemble_mean, rename_dict=self.condition.rename_dict)
+                _mask = _create_train_mask(_base.year, _base.lead_time)
+                self.condition.preprocessing_pipeline.fit(base_data =  _base.load(), mask = _mask, save = save, save_path = save_path, save_name = save_name)
+                _base.close()
+                del _base, _mask
             else:
                 self.condition.preprocessing_pipeline._load_from_memory(Path(self.condition.preprocessing_pipeline.load_dir ), load_name = self.condition.preprocessing_pipeline.load_name)   
 
@@ -163,21 +162,23 @@ class XArrayDatasetConfig(Dataset, XarrayDatasetConfigABC):
         
 
         if load_dir is None:
-            load_dir = Path(os.environ["GLOBAL_EXP_DIR"]) / 'preprocessing_pipeline' / f"{self.input.preprocessing_pipeline.name}_preprocessing_pipeline.joblib"
+            load_dir = Path(os.environ["GLOBAL_EXP_DIR"]) / 'preprocessing_pipeline' / f"{self.model.preprocessing_pipeline.name}_preprocessing_pipeline.joblib"
         else:
             load_dir = Path(load_dir)
-    
-        self.input.preprocessing_pipeline._load_from_memory(Path(load_dir), load_name = load_name)
-        assert self.input.preprocessing_pipeline.fitted, 'the loaded preprocessor for input is not fitted!'
 
-        if self.target is not None:
+        assert self.model.preprocessing_pipeline.fitted, 'the loaded preprocessor for model data is not fitted!'
+        self.model.preprocessing_pipeline._load_from_memory(Path(load_dir), load_name = load_name)
+        
+
+        if self.observation is not None:
             if load_dir is None:
-                load_dir = Path(os.environ["GLOBAL_EXP_DIR"]) / 'preprocessing_pipeline' /  f"{self.target.preprocessing_pipeline.name}_preprocessing_pipeline.joblib"
+                load_dir = Path(os.environ["GLOBAL_EXP_DIR"]) / 'preprocessing_pipeline' /  f"{self.observation.preprocessing_pipeline.name}_preprocessing_pipeline.joblib"
             else:
                 load_dir = Path(load_dir)
 
-            self.target.preprocessing_pipeline._load_from_memory(Path(load_dir), load_name = load_name)     
-            assert self.target.preprocessing_pipeline.fitted, 'the loaded preprocessor for target is not fitted!'
+            assert self.observation.preprocessing_pipeline.fitted, 'the loaded preprocessor for observation data is not fitted!'
+            self.observation.preprocessing_pipeline._load_from_memory(Path(load_dir), load_name = load_name)     
+            
 
         if self.condition is not None:
             if self.condition.preprocessing_pipeline.load_dir is None:
@@ -185,8 +186,9 @@ class XArrayDatasetConfig(Dataset, XarrayDatasetConfigABC):
             else:
                 load_dir = Path(load_dir)
             
+            assert self.condition.preprocessing_pipeline.fitted, 'the loaded preprocessor for condition is not fitted!' 
             self.condition.preprocessing_pipeline._load_from_memory(Path(load_dir), load_name = load_name)          
-            assert self.condition.preprocessing_pipeline.fitted, 'the loaded preprocessor for condition is not fitted!'    
+               
                
 
     def _add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC , index = 0):
@@ -197,9 +199,9 @@ class XArrayDatasetConfig(Dataset, XarrayDatasetConfigABC):
         )
         assert preprocessor.fitted, 'The preprocessor must be fitted'
 
-        self.input.preprocessing_pipeline.add_fitted_preprocessor(preprocessor, index = index)
-        if self.target is not None:
-            self.target.preprocessing_pipeline.add_fitted_preprocessor(preprocessor, index = index)
+        self.model.preprocessing_pipeline.add_fitted_preprocessor(preprocessor, index = index)
+        if self.observation is not None:
+            self.observation.preprocessing_pipeline.add_fitted_preprocessor(preprocessor, index = index)
         if self.condition is not None:
             self.condition.preprocessing_pipeline.add_fitted_preprocessor(preprocessor, index = index)
 
@@ -207,19 +209,19 @@ class XArrayDatasetConfig(Dataset, XarrayDatasetConfigABC):
         if config is None:
             config =  WeightsConfig()
 
-        if self.target is not None:
-            target_coords = self.target_info.coords.copy()
+        if self.observation is not None:
+            target_coords = self.observation.info.coords.copy()
         else:
-            target_coords = self.input_info.coords.copy()
+            target_coords = self.model.info.coords.copy()
 
         if 'ensembles' in target_coords:
             del target_coords['ensembles']
 
         from preprocessing.utils_preprocessing import Oceannanremove
-        if self.target is not None:
-            pipeline = self.target.preprocessing_pipeline
+        if self.observation is not None:
+            pipeline = self.observation.preprocessing_pipeline
         else:
-            pipeline = self.input.preprocessing_pipeline
+            pipeline = self.model.preprocessing_pipeline
 
         checklist = [isinstance(item, Oceannanremove) for item in pipeline.fitted_preprocessors]
 
@@ -230,11 +232,13 @@ class XArrayDatasetConfig(Dataset, XarrayDatasetConfigABC):
                                         save_name=save_name)
 
         if 'channels' in weights.dims:
-            error_msg = f'inconsistent variable weights {weights.channels.values} for taget variables {self.target.names}'
-            if self.target is not None:
-                assert weights.channels.values == self.target.names, error_msg
+            
+            if self.observation is not None:
+                error_msg = f'inconsistent variable weights {weights.channels.values} for taget variables {self.observation.names}'
+                assert weights.channels.values == self.observation.names, error_msg
             else:
-                assert weights.channels.values == self.input.names, error_msg
+                error_msg = f'inconsistent variable weights {weights.channels.values} for taget variables {self.model.names}'
+                assert weights.channels.values == self.model.names, error_msg
         
         return weights
 
@@ -242,7 +246,9 @@ class XArrayDatasetConfig(Dataset, XarrayDatasetConfigABC):
     def build(self, years : np.ndarray, mask: xr. DataArray = None, return_metadata : bool = False):
         return  XArrayDataset(config = self, requested_years = years,mask =  mask, return_metadata = return_metadata)
         
-
+    @classmethod
+    def _available_condiiton_methods(cls):
+        return ['ensemble_mean' , 'cross_ensemble' , 'same_member', 'no_ensemble', 'static']
 
         
 
@@ -258,42 +264,46 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
     def __post_init__(self):
         assert set(self.requested_years).issubset(set(self.config.get_common_time)), 'the requested years are not common to input and target data.'
 
-        self.input = self.config.input
-        self.target = self.config.target
-        self.condition = self.config.condition
         self._autoencoding_input = False
+        self.observation_dataset = self.condition_dataset = None
         
-        # if  self.config._using_input_as_condition is False:
-        self.input.dataset = _load_xarray_data(self.input.paths, 
-                                               names = self.input.names, 
-                                               ensemble_mean=self.input.ensemble_mean, 
-                                            #    preprocessor = self.input.preprocessing_pipeline,  ##checking if doing this once is faster
-                                               concat_dim = self.input.concat_dim)
-        if self.target is not None:
-            self.target.dataset = _load_xarray_data(self.target.paths, 
-                                               names = self.target.names, 
-                                               ensemble_mean=self.target.ensemble_mean, 
-                                            #    preprocessor = self.target.preprocessing_pipeline,  ##checking if doing this once is faster
-                                               concat_dim = self.target.concat_dim)
+        self.model_dataset = _load_xarray_data(self.config.model.list_paths, 
+                                               names = self.config.model.names, 
+                                               ensemble_mean=self.config.model.ensemble_mean, 
+                                               selection= {'ensembles' :  self.config.model.info.coords['ensembles']} if self.config.model.info.coords['ensembles'] is not None else None,
+                                            #    preprocessor = self.model.preprocessing_pipeline,  ##checking if doing this once is faster
+                                               concat_dim = self.config.model.concat_dim,
+                                               rename_dict= self.config.model.rename_dict)
+        if self.config.observation is not None:
+            self.observation_dataset = _load_xarray_data(self.config.observation.list_paths, 
+                                               names = self.config.observation.names, 
+                                               ensemble_mean=self.config.observation.ensemble_mean, 
+                                                selection= {'ensembles' :  self.config.observation.info.coords['ensembles']} if self.config.observation.info.coords['ensembles'] is not None else None,
+                                            #    preprocessor = self.observation.preprocessing_pipeline,  ##checking if doing this once is faster
+                                               concat_dim = self.config.observation.concat_dim,
+                                               rename_dict= self.config.observation.rename_dict)
         else:
             self._autoencoding_input = True
 
-        if self.condition is not None:
-            self.condition.dataset = _load_xarray_data(self.condition.paths, 
-                                               names = self.condition.names, 
-                                               ensemble_mean=self.condition.ensemble_mean, 
+        if self.config.condition is not None:
+            self.condition_dataset = _load_xarray_data(self.config.condition.list_paths, 
+                                               names = self.config.condition.names, 
+                                               ensemble_mean=self.config.condition.ensemble_mean, 
+                                               selection= {'ensembles' :  self.config.condition.info.coords['ensembles']} if self.config.condition.info.coords['ensembles'] is not None else None,
                                             #    preprocessor = self.condition.preprocessing_pipeline,  ##checking if doing this once is faster
-                                               concat_dim = self.condition.concat_dim)            
+                                               concat_dim = self.config.condition.concat_dim,
+                                               rename_dict= self.config.condition.rename_dict)          
+
 
         if self.mask is None:
-            self.mask = _create_train_mask(years = self.config.input_range, 
-                                           lead_times= np.arange(1, self.config.input_info.sizes['lead_time']+ 1) )
+            self.mask = _create_train_mask(years = self.config.model.year_range, 
+                                           lead_times= np.arange(1, self.config.model.info.sizes['lead_time']+ 1) )
             self.mask = xr.full_like(self.mask, fill_value = False)
                                                                           
         self.mask = self.mask.sel(year = self.requested_years).sel(lead_time = np.arange(1,self.config.num_lead_months + 1))
-        if all([not self.input.ensemble_mean, self.config.input_info.coords['ensembles'] is not None]):
-            self.mask = self.mask.expand_dims(ensembles = len(self.config.input_info.coords['ensembles']), axis = 0)
-            self.mask = self.mask.assign_coords(ensembles = self.config.input_info.coords['ensembles'] )
+        if all([not self.config.model.ensemble_mean, self.config.model.info.coords['ensembles'] is not None]):
+            self.mask = self.mask.expand_dims(ensembles = len(self.config.model.info.coords['ensembles']), axis = 0)
+            self.mask = self.mask.assign_coords(ensembles = self.config.model.info.coords['ensembles'] )
 
         self.mask = self.mask.where(~self.mask)
         mask = self.mask.stack(batch = dict(self.mask.sizes).keys()).transpose('batch', ...).dropna(dim = 'batch').batch.values
@@ -305,21 +315,24 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
 
     def get_input_shape(self):
         from preprocessing.utils_preprocessing import Oceannanremove
-        checklist = [isinstance(item, Oceannanremove) for item in self.input.preprocessing_pipeline.fitted_preprocessors]
+        checklist = [isinstance(item, Oceannanremove) for item in self.config.model.preprocessing_pipeline.fitted_preprocessors]
 
         if any(checklist):
-            return self.input.preprocessing_pipeline.get_preprocessors('oceannanremover').final_locations.shape * len(self.input.names)
+            return self.config.model.preprocessing_pipeline.get_preprocessors('oceannanremover').final_locations.shape * len(self.config.model.names)
         else:
-            return (self.config.input_info.coords['lat'].size, self.config.input_info.coords['lon'].size)
+            return (self.config.model.info.coords['lat'].size, self.config.model.info.coords['lon'].size)
         
     def get_target_shape(self):
         from preprocessing.utils_preprocessing import Oceannanremove
-        checklist = [isinstance(item, Oceannanremove) for item in self.target.preprocessing_pipeline.fitted_preprocessors]
+        if self.observation_dataset is not None:
+            checklist = [isinstance(item, Oceannanremove) for item in self.config.observation.preprocessing_pipeline.fitted_preprocessors]
 
-        if any(checklist):
-            return self.target.preprocessing_pipeline.get_preprocessors('oceannanremover').final_locations.shape * len(self.target.names)
+            if any(checklist):
+                return self.config.observation.preprocessing_pipeline.get_preprocessors('oceannanremover').final_locations.shape * len(self.config.observation.names)
+            else:
+                return (self.config.observation.info.coords['lat'].size, self.config.observation.info.coords['lon'].size) 
         else:
-            return (self.config.target_info.coords['lat'].size, self.config.target_info.coords['lon'].size) 
+            return self.get_input_shape()
     
     @property
     def added_features_dim(self):
@@ -330,49 +343,54 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
         year = float(self.indexes['year'][ind])
         lead_time = float(self.indexes['lead_time'][ind])
         
-        if self.condition is not None:
-            if self.condition.condition_method != 'static':
+        if self.condition_dataset is not None:
+
+            if self.config.condition_method != 'static':
                 selection = dict(year = year, lead_time = lead_time)
             else:
                 selection = {}
-            if self.condition.condition_method == 'cross_ensmeble':
-                selection['ensembles'] = np.random.choice(self.config.condition_info.coords['ensembles'])
-            elif self.condition.condition_method == 'same_member':
+
+            if self.config.condition_method == 'cross_ensemble':
+                selection['ensembles'] = np.random.choice(self.config.condition.info.coords['ensembles'])
+
+            elif self.config.condition_method == 'same_member':
                 selection['ensembles'] = self.indexes[ind].ensembles.values
-            condition = self.condition.preprocessing_pipeline.transform(self.condition.dataset.sel(**selection))  ##check if transforming once is faster
+
+            condition = self.config.condition.preprocessing_pipeline.transform(self.condition_dataset.sel(**selection))  ##check if transforming once is faster
             condition = _unwrape_data_variables(condition)
         
-        if self.target is not None:
-            selection = dict(year = year, lead_time = lead_time)
+        if self.observation_dataset is not None:
+            selection = dict(year = year, month = lead_time)
             lead_year, lead_month = np.divmod(lead_time - 0.5, 12)
             selection['year'] +=   lead_year
-            selection['lead_time'] =  lead_month + 0.5
+            selection['month'] =  lead_month + 0.5
 
-            if all([not self.target.ensemble_mean, self.config.target_info.coords['ensembles'] is not None]):
-                selection['ensembles'] = np.random.choice(self.config.target_info.coords['ensembles']) 
-            target = self.target.preprocessing_pipeline.transform(self.target.dataset.sel(**selection))  ##check if transforming once is faster
+            if all([not self.config.observation.ensemble_mean, self.config.observation.info.coords['ensembles'] is not None]):
+                selection['ensembles'] = np.random.choice(self.config.observation.info.coords['ensembles']) 
+
+            target = self.config.observation.preprocessing_pipeline.transform(self.observation_dataset.sel(**selection))  ##check if transforming once is faster
             target = _unwrape_data_variables(target)
 
 
 
         selection = dict(year = year, lead_time = lead_time)
 
-        if all([self.condition is not None,  self.config._using_input_as_condition,  not self._autoencoding_input]):
+        if all([self.condition_dataset is not None,  self.config._using_model_data_as_condition,  not self._autoencoding_input]):
             input = condition
 
         else:
-            if all([not self.input.ensemble_mean, self.config.input_info.coords['ensembles'] is not None]):
+            if all([not self.config.model.ensemble_mean, self.config.model.info.coords['ensembles'] is not None]):
                 selection['ensembles'] = self.indexes[ind].ensembles.values
-            input = self.input.preprocessing_pipeline.transform(self.input.dataset.sel(**selection))  ##check if transforming once is faster
+            input = self.config.model.preprocessing_pipeline.transform(self.model_dataset.sel(**selection))  ##check if transforming once is faster
             input = _unwrape_data_variables(input)
 
             if self._autoencoding_input:
                 target = input
 
-            if all([self.condition is not None,  self.config._using_input_as_condition]):
+            if all([self.condition_dataset is not None,  self.config._using_model_data_as_condition]):
                 input = condition
 
-            elif all([self.condition is not None, not self.config._using_input_as_condition]):
+            elif all([self.condition_dataset is not None, not self.config._using_model_data_as_condition]):
                 input = xr.concat([input, condition], dim = 'channels')
 
             

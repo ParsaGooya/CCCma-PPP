@@ -61,7 +61,7 @@ def main(yaml_config: str):
 
 
     if distributed.is_root():
-        logger.info('Building trainer ...')                       
+        logger.info('Building objects:')                       
 
     trainer = build_trainer(config, distributed, logger)
 

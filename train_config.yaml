@@ -2,7 +2,7 @@ experiment_dir : /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/cccma_PPP_te
 epochs : 3
 train_loader: 
     dataset_config : 
-        input : 
+        model : 
             paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/forecast_data
             names: 
                   - tas
@@ -18,7 +18,8 @@ train_loader:
             ensemble_mean : True
             concat_dim : year
 
-        target :
+
+        observation :
             paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations
             names: 
                   - tas
@@ -28,7 +29,8 @@ train_loader:
                             - name : oceannanremover
 
             concat_dim : year
-
+            rename_dict : 
+                            lead_time : month
         time_features :
                         - year
         num_lead_months : 120

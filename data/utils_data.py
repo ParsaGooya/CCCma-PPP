@@ -7,7 +7,7 @@ from preprocessing.utils_preprocessing import Oceannanremove
 import os
 from pathlib import Path
 import glob
-
+from typing import final, ClassVar
 
 
 @dataclasses.dataclass
@@ -22,71 +22,131 @@ class infoclass:
 
 
 
+
 @dataclasses.dataclass
-class DataConfig:
-    paths: str | None = None
-    names: list[str]  | None = None
-    preprocessing_pipeline :  PreprocessingPipeline = dataclasses.field(default_factory= PreprocessingPipeline())
+class ModelDataConfig:
+    paths: str 
+    names: list[str] 
+    preprocessing_pipeline :  PreprocessingPipeline = dataclasses.field(default_factory= PreprocessingPipeline)
     ensemble_list: list | None = None
     ensemble_mean : bool | None = True
-    condition_method: str = None
     concat_dim : str = 'year'
-    file_type = '*.nc'
+    file_type : str = '*.nc'
+    rename_dict : dict = None
+    TYPE : ClassVar[str] = 'model'
 
     
     def __post_init__(self):
-        self.check_ensemble = False
-        
-        if self.condition_method is not None:
-            assert self.condition_method in self._available_condiiton_methods(), f'{self.condition_method} is not a valid conditioning method. Available methods: {self._available_condiiton_methods()}'
-         
-            if self.condition_method in ['cross_ensemble', 'same_member']:
-                assert self.ensemble_mean is not True, 'Ensemble mean cannot be True for cross_ensemble or same_member conditioning.'
-                self.ensemble_mean = False
-                self.check_ensemble = True
-            elif  self.condition_method == 'ensemble_mean':
-                self.ensemble_mean = True
-                self.check_ensemble = True
-            else:
-                assert self.ensemble_list is None, 'For "static" or "no_ensemble" conditioning fields do not specify ensemble list.'
-                self.check_ensemble = False
+        self._check_ensemble = False
+        if self.ensemble_list is not None:
+            self._check_ensemble = True
 
+        _check_data(self)
+        self.info = _get_ds_info(self)
+        self.year_range = np.arange(self.info.start_year, self.info.final_year  + self.info.sizes['lead_time']//12 )
 
-            if self.paths is not None:
-                assert self.names is not None, 'specify the names of variables to load or set paths to None to use input as condition.'
-                self._check_data()
-
-        else:
-            self._check_data()
-
-    def _check_data(self) -> None:
-        if not Path(self.paths).exists():
-            raise FileNotFoundError(
-                f"The following file does not exist:\n" + "\n".join(self.paths))
-        
-        list_paths = glob.glob(str(Path(self.paths).joinpath(self.file_type)))
-
-        if len(list_paths) == 0:
-            raise FileNotFoundError(
-                f"The following file does is empty for {self.file_type} file type :\n" + "\n".join(self.paths))
-        
-        for p in list_paths:
-            with xr.open_dataset(Path(p)) as ds:
-                if self.check_ensemble:
-                    assert 'ensembles' in ds.dims, f'"ensembles" not a valid data dimension: {ds.dims}'
-                if self.condition_method == 'static':
-                    assert all(['time','year','lead_time', 'month', 'ensembles']) not in ds.dims, 'static fields connot have time or ensemble dimensions.'
-
-                missing = [name for name in self.names if name not in ds.data_vars]
-                if missing:
-                    raise ValueError(
-                        f"{p} is missing variables: {missing}"
-                    )
-        self.paths = list_paths
-
+    
+    @final
     @classmethod
-    def _available_condiiton_methods(cls):
-        return ['ensemble_mean' , 'cross_ensemble' , 'same_member', 'no_ensemble', 'static']
+    def _allowed_dims(cls):
+        return [ 'year', 'lead_time' , 'ensembles', 'lat', 'lon']
+    
+    @final
+    @classmethod
+    def _required_dims(cls):
+        return [ 'lead_time', 'ensembles' , 'lat', 'lon']  
+
+@dataclasses.dataclass
+class ObsDataConfig:
+    paths: str 
+    names: list[str] 
+    preprocessing_pipeline :  PreprocessingPipeline = dataclasses.field(default_factory= PreprocessingPipeline)
+    ensemble_list: list | None = None
+    ensemble_mean : bool | None = True
+    concat_dim : str = 'year'
+    file_type : str = '*.nc'
+    rename_dict : dict = None
+    TYPE : ClassVar[str] = 'observation'
+
+    
+    def __post_init__(self):
+        self._check_ensemble = False
+        if self.ensemble_list is not None:
+            self._check_ensemble = True
+
+        _check_data(self)
+        self.info = _get_ds_info(self)
+        self.year_range = np.arange(self.info.start_year, self.info.final_year + 1 )
+
+
+    @final
+    @classmethod
+    def _allowed_dims(cls):
+        return ['year', 'month' ,'ensembles', 'lat', 'lon']
+
+    @final
+    @classmethod
+    def _required_dims(cls):
+        return [ 'month' , 'lat', 'lon']
+
+
+
+def _check_data(dataconfig : ModelDataConfig | ObsDataConfig) -> None:
+    if not Path(dataconfig.paths).exists():
+        raise FileNotFoundError(
+            f"The following file does not exist:\n" + "\n".join(dataconfig.paths))
+    
+    list_paths = glob.glob(str(Path(dataconfig.paths).joinpath(dataconfig.file_type)))
+
+    if len(list_paths) == 0:
+        raise FileNotFoundError(
+            f"The following file does is empty for {dataconfig.file_type} file type :\n" + "\n".join(dataconfig.paths))
+    
+    for p in list_paths:
+        with xr.open_dataset(Path(p)) as ds:
+
+            if dataconfig.rename_dict is not None:
+                ds = ds.rename(dataconfig.rename_dict)
+                        
+            for dim in dataconfig._required_dims():
+                assert dim in ds.dims, f'{dataconfig.TYPE} data must have {dataconfig._required_dims()} dimensions. Current dims : {ds.dims}'    
+            
+            if dataconfig._check_ensemble:
+                assert 'ensembles' in ds.dims, 'Cannot select ensemble_list as ensembles dim does not exist'
+
+            for dim in ds.dims:
+                assert dim in dataconfig._allowed_dims(), f'"{dim}" not a valid dimension for {dataconfig.TYPE} data: {dataconfig._allowed_dims()}'
+                assert dim in ds.coords, f'"coordinates for {dim} dimension does not exist. Available coords: {dict(ds.coords).keys()}'
+
+            missing = [name for name in dataconfig.names if name not in ds.data_vars]
+            if missing:
+                raise ValueError(
+                    f"{p} is missing variables: {missing}"
+                )
+    dataconfig.list_paths = list_paths
+
+def _get_ds_info(dataconfig : ModelDataConfig | ObsDataConfig) -> infoclass:
+    if getattr(dataconfig, 'list_paths', None) is None:
+        list_paths = glob.glob(str(Path(dataconfig.paths).joinpath(dataconfig.file_type)))
+    else:
+        list_paths = dataconfig.list_paths
+
+    ds = _load_xarray_data(list_paths, names = dataconfig.names, concat_dim = dataconfig.concat_dim, rename_dict=dataconfig.rename_dict)
+
+    if dataconfig.ensemble_list is not None:
+            ds = ds.sel(ensembles = dataconfig.ensemble_list)
+
+    start_year, final_year = ds.year.min().values, ds.year.max().values
+    sizes =  {dim : dict(ds.sizes).get(dim) for dim in dict(ds.sizes).keys() if dim not in ['ensembles', 'lat', 'lon']}
+
+    coords = {dim : dict(ds.coords).get(dim, None) for dim in ['ensembles', 'lat', 'lon']}
+    
+    ds.close()
+    del ds
+
+    return infoclass(start_year = start_year, final_year = final_year, sizes = sizes, coords = coords)
+
+
 
 
 
@@ -158,11 +218,16 @@ def _unwrape_data_variables(dataset : xr.Dataset):
 def _load_xarray_data(paths : list[str], 
                       selection: dict|None = None, 
                       names: list|None = None,
-                      ensemble_mean = True, 
+                      ensemble_mean = False, 
                       preprocessor : PreprocessingPipeline |None = None,
-                      concat_dim = 'year'):
+                      concat_dim = 'year',
+                      rename_dict : dict = None):
         
         ds =  xr.open_mfdataset(paths, combine = 'nested', concat_dim = concat_dim)
+
+        if rename_dict is not None:
+            ds = ds.rename(rename_dict)
+
         ds =  ds.sel(selection) if selection is not None else ds
 
         if 'ensembles' in ds.coords:
