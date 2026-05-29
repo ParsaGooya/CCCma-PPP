@@ -465,7 +465,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
 
          
     def __len__(self):
-        return len(self.indexes.get(list(self.indexes.keys())[0]))
+        return len(self.model_indexes.get(list(self.model_indexes.keys())[0]))
 
     
         
