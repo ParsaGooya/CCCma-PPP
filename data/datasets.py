@@ -16,7 +16,7 @@ from preprocessing.preprocessing_ABC import PreprocessModuleABC
 
         
 @dataclasses.dataclass
-class XArrayDatasetConfig(Dataset, XarrayDatasetConfigABC):
+class XArrayDatasetConfig(XarrayDatasetConfigABC):
 
     model: ModelDataConfig
     observation: ObsDataConfig | None = None 
@@ -26,6 +26,7 @@ class XArrayDatasetConfig(Dataset, XarrayDatasetConfigABC):
     num_lead_months  : int | None = None 
     
     def __post_init__(self):
+        self._fitted_preprocessors = False
         self._using_model_data_as_condition = False
  
         
@@ -160,6 +161,7 @@ class XArrayDatasetConfig(Dataset, XarrayDatasetConfigABC):
             else:
                 self.condition.preprocessing_pipeline._load_from_memory(Path(self.condition.preprocessing_pipeline.load_dir ), load_name = self.condition.preprocessing_pipeline.load_name)   
 
+        self._fitted_preprocessors = True
     def _load_fitted_preprocessors(self, load_dir : Path | str | None = None, load_name : str| None  = None):
         
 
@@ -191,7 +193,7 @@ class XArrayDatasetConfig(Dataset, XarrayDatasetConfigABC):
             assert self.condition.preprocessing_pipeline.fitted, 'the loaded preprocessor for condition is not fitted!' 
             self.condition.preprocessing_pipeline._load_from_memory(Path(load_dir), load_name = load_name)          
                
-               
+        self._fitted_preprocessors = True   
 
     def _add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC , index = 0):
         if not isinstance(preprocessor, PreprocessModuleABC):
@@ -264,6 +266,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
     return_metadata : bool = False
     
     def __post_init__(self):
+        assert self.config._fitted_preprocessors, 'Make sure to fit preprocessors first!. Hint:  XArrayDatasetConfig._fit_preprocessors()'
         assert set(self.requested_years).issubset(set(self.config.get_common_time)), 'the requested years are not common to input and target data.'
 
         self._autoencoding_input = False
