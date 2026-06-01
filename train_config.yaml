@@ -1,35 +1,32 @@
-experiment_dir : /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/cccma_PPP_test
-epochs : 3
-train_loader: 
-    dataset_config : 
-        model : 
-            paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/forecast_data
-            names: 
-                  - tas
-            preprocessing_pipeline :  
-                preprocessors_list:
-                    - name : anomalies
-                      args : 
-                              dims: 
-                                  - year
-                                  - lead_time
-                    - name : oceannanremover
+experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/cccma_PPP_test
+epochs: 3
+train_loader:
+  dataset_config:
+    model:
+      paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/forecast_data
+      names: [tas]
+      preprocessing_pipeline:
+        preprocessors_list:
+          - name: anomalies
+            args:
+              dims: [year, lead_time]
+          - name: oceannanremover
 
-            ensemble_mean : True
-            concat_dim : year
+        ensemble_mean : True
+        concat_dim : year
 
 
         observation :
             paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations
-            names: 
+            names:
                   - tas
-            preprocessing_pipeline :  
+            preprocessing_pipeline :
                     preprocessors_list :
                             - name : standardizer
                             - name : oceannanremover
 
             concat_dim : year
-            rename_dict : 
+            rename_dict :
                             lead_time : month
         time_features :
                         - year
@@ -42,8 +39,8 @@ train_loader:
 
 module:
     type : cVAE
-    config:    
-            ModelConfig : 
+    config:
+            ModelConfig :
                     type : MLP
                     args :
                           encoder_hidden_dims : [3000,3000,3000]
@@ -55,31 +52,31 @@ module:
                           batch_normalization : True
                           dropout_rate: 0.5
                           init_method :  xavier
-            
+
             min_posterior_variance: 2
             prior_flow_config :
                     list_flows :
                               - type : RealNVP
-                                args : 
+                                args :
                                       hidden_dim : 5 
                               - type : MAF
-                                args : 
+                                args :
                                       hidden_dim : 5 
             combined_CGCN_weight : 0.1
 
 losspipeline:
-      loss_pipeline : 
+      loss_pipeline :
                     - name : mse
 
                     - name : mse
-                      args : 
+                      args :
                             low_ress_kernel_size : 3  
-      
-      loss_weights : [0.8,0.2] 
+
+      loss_weights : [0.8,0.2]
       reduction : sum
 
-trainer : 
-    beta_finder : 
+trainer :
+    beta_finder :
               beta : 10
               num_epoch_to_warmup : 10
 
@@ -87,14 +84,14 @@ trainer :
     gradient_accumulation_steps: 2
     mixed_precision: True              
 
-optimization : 
+optimization :
         lr : 0.0001
         optimizer_type : adam
-        lr_scheduler_config : 
+        lr_scheduler_config :
                     min_lr : 0
                     warmup_epochs : 2
 
-weights : 
+weights :
         spatial_method : cosine_lat
 
 log_every_n_epochs : 2

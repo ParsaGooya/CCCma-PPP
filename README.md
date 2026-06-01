@@ -7,10 +7,14 @@ The training framework supports a suite of deterministic and probabilistic model
 The package is currently under active development and quality assurance (QA) testing.
 
 ---
+## Installation
+
+`pip` installabale with `pip install .`. Or for development mode, `pip install -e .`.
+
 
 ## Ownership and Use
 
-Developed by Parsa Gooya at the Canadian Centre for Climate Modelling and Analysis (CCCma), Environment and Climate Change Canada (ECCC).  
+Developed by Parsa Gooya at the Canadian Centre for Climate Modelling and Analysis (CCCma), Environment and Climate Change Canada (ECCC).
 Contact: parsa.gooya@ec.gc.ca
 
 All rights reserved. This software and associated materials may not be used, copied, modified, distributed, or shared without prior written permission from the authors.
