@@ -18,3 +18,17 @@ class XarrayDatasetABC(abc.ABC):
     @abc.abstractmethod
     def __len__(self):
         ...
+
+
+
+
+
+class DataConfig(abc.ABC):
+
+    @abc.abstractmethod
+    def _allowed_dims(cls):
+        ...
+
+    @abc.abstractmethod
+    def _required_dims(cls):
+        ...

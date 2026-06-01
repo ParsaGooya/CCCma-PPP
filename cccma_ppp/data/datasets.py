@@ -29,8 +29,15 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
         self._fitted_preprocessors = False
         self._using_model_data_as_condition = False
  
-        
         self.num_model_lead_months = self.model.info.sizes['lead_time']
+
+        if self.num_lead_months is None:
+            self.num_lead_months = self.num_model_lead_months
+        assert self.num_lead_months <= self.num_model_lead_months, f'Maximum available lead months is {self.num_model_lead_months}' 
+
+        if self.time_features is not None:
+            assert set(self.time_features).issubset(set(['year','lead_time','month_sin','month_cos']))
+
         self.model.preprocessing_pipeline.name = 'model'
         if self.condition_method == 'same_member':
             assert self.model.ensemble_mean is not None, 'for same member coniditioning the model data should not be ensemble mean.'
@@ -95,15 +102,6 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
                     assert self.condition.info.coords['ensembles'].equals(self.model.info.coords['ensembles']), 'coniditioning field and model data must have the same ensemble dimension for same_member conditioning.'
         
             self.condition.preprocessing_pipeline.name = 'condition'
-
-        if self.num_lead_months is None:
-            self.num_lead_months = self.num_model_lead_months
-        assert self.num_lead_months <= self.num_model_lead_months, f'Maximum available lead months is {self.num_model_lead_months}' 
-
-        if self.time_features is not None:
-            assert set(self.time_features).issubset(set(['year','lead_time','month_sin','month_cos']))
-
-
         
     @property
     def get_common_time(self):
@@ -272,33 +270,27 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
         self._autoencoding_input = False
         self.observation_dataset = self.condition_dataset = None
         
-        self.model_dataset = _load_xarray_data(self.config.model.list_paths, 
-                                               names = self.config.model.names, 
-                                               ensemble_mean=self.config.model.ensemble_mean, 
-                                               selection= {'ensembles' :  self.config.model.info.coords['ensembles']} if self.config.model.info.coords['ensembles'] is not None else None,
-                                            #    preprocessor = self.model.preprocessing_pipeline,  ##checking if doing this once is faster
-                                               concat_dim = self.config.model.concat_dim,
-                                               rename_dict= self.config.model.rename_dict)
+        self.model_dataset = self._load_xarray_data(self.config.model)
+        
         if self.config.observation is not None:
-            self.observation_dataset = _load_xarray_data(self.config.observation.list_paths, 
-                                               names = self.config.observation.names, 
-                                               ensemble_mean=self.config.observation.ensemble_mean, 
-                                                selection= {'ensembles' :  self.config.observation.info.coords['ensembles']} if self.config.observation.info.coords['ensembles'] is not None else None,
-                                            #    preprocessor = self.observation.preprocessing_pipeline,  ##checking if doing this once is faster
-                                               concat_dim = self.config.observation.concat_dim,
-                                               rename_dict= self.config.observation.rename_dict)
+            self.observation_dataset = self._load_xarray_data(self.config.observation)
         else:
             self._autoencoding_input = True
 
         if self.config.condition is not None:
-            self.condition_dataset = _load_xarray_data(self.config.condition.list_paths, 
-                                               names = self.config.condition.names, 
-                                               ensemble_mean=self.config.condition.ensemble_mean, 
-                                               selection= {'ensembles' :  self.config.condition.info.coords['ensembles']} if self.config.condition.info.coords['ensembles'] is not None else None,
-                                            #    preprocessor = self.condition.preprocessing_pipeline,  ##checking if doing this once is faster
-                                               concat_dim = self.config.condition.concat_dim,
-                                               rename_dict= self.config.condition.rename_dict)          
+            self.condition_dataset = self._load_xarray_data(self.config.condition)          
 
+
+        self._prepare_mask()
+
+        self.mask = self.mask.where(~self.mask)
+        self.model_indexes = self.get_model_indexes()
+        self.obs_indexes = self.get_obs_indexes(self.model_indexes)
+        self.cond_indexes = self.get_cond_indexes(self.model_indexes)
+
+        self.time_features = self.config.time_features
+
+    def _prepare_mask(self):
 
         if self.mask is None:
             self.mask = _create_train_mask(years = self.config.model.year_range, 
@@ -310,14 +302,20 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             self.mask = self.mask.expand_dims(ensembles = len(self.config.model.info.coords['ensembles']), axis = 0)
             self.mask = self.mask.assign_coords(ensembles = self.config.model.info.coords['ensembles'] )
 
-        self.mask = self.mask.where(~self.mask)
-        self.model_indexes = self.get_model_indexes()
-        self.obs_indexes = self.get_obs_indexes(self.model_indexes)
-        self.cond_indexes = self.get_cond_indexes(self.model_indexes)
+        return self
+       
+    def _load_xarray_data(self, config : DataConfig):
 
-        self.time_features = self.config.time_features
+        return _load_xarray_data(config.list_paths, 
+                                               names = config.names, 
+                                               ensemble_mean= config.ensemble_mean, 
+                                               selection= {'ensembles' :  config.info.coords['ensembles']} if config.info.coords['ensembles'] is not None else None,
+                                            #    preprocessor = self.model.preprocessing_pipeline,  ##checking if doing this once is faster
+                                               concat_dim = config.concat_dim,
+                                               rename_dict= config.rename_dict)
 
     def get_model_indexes(self):
+
         mask = self.mask.stack(batch = dict(self.mask.sizes).keys()).transpose('batch', ...).dropna(dim = 'batch').batch.values
         mask = tuple(map(np.array, zip(*mask)))
         indexes =  { key : mask[ind] for ind, key in enumerate(tuple(dict(self.mask.sizes).keys()))}
@@ -325,6 +323,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
         return indexes   
     
     def get_obs_indexes(self, model_indexes : dict):
+
         if self.observation_dataset is not None:
 
             indexes = {}
@@ -338,6 +337,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             return indexes
 
     def get_cond_indexes(self, model_indexes : dict):
+
         if self.condition_dataset is not None:
             if self.config.condition_method != 'static':
                 indexes = {}
@@ -379,11 +379,11 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
 
         return len(self.time_features)
         
+        
     def __getitem__(self, ind):
 
         
         if self.condition_dataset is not None:
-
             if self.config.condition_method != 'static':
                 year = float(self.cond_indexes['year'][ind])
                 lead_time = float(self.cond_indexes['lead_time'][ind])
@@ -414,9 +414,8 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
 
         if all([self.condition_dataset is not None,  self.config._using_model_data_as_condition,  not self._autoencoding_input]):
             input = condition
-
         else:
-            if  'ensembles' in self.model_indexes:
+            if 'ensembles' in self.model_indexes:
                 selection['ensembles'] = self.model_indexes['ensembles'][ind]
                 
             input = self.config.model.preprocessing_pipeline.transform(self.model_dataset.sel(**selection))  ##check if transforming once is faster
@@ -432,27 +431,11 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
                 input = xr.concat([input, condition], dim = 'channels')
 
             
-
-        if self.time_features is not None:
-            time_features_list = np.array([self.time_features]).flatten()
-            feature_indices = {'year': 0, 'lead_time': 1, 'month_sin': 2, 'month_cos': 3}
-            
-            target_time = year + lead_time//12 
-            target_month = lead_time
-
-            y = (target_time - np.min(self.config.get_common_time)) /  (np.max(self.config.get_common_time) - np.min(self.config.get_common_time))
-            lt = lead_time / self.config.num_lead_months
-            msin = np.sin(2 * np.pi * target_month/12.0)
-            mcos = np.cos(2 * np.pi * target_month/12.0)
-
-            time_features = np.stack([y, lt, msin, mcos]) 
-            time_features = time_features[..., [feature_indices[k] for k in time_features_list]]
-            if len(input.shape) > 2:
+        time_features = self.get_time_features(year, lead_time)
+        if (time_features is not None 
+            and len(input.shape) > 2):
                 time_features = np.broadcast_to(time_features[:, None, None], (len(time_features), input.shape[-2], input.shape[-1]))
-        else:
-            time_features = None
 
-    
         
         datadict = dict(input = torch.as_tensor(input.to_numpy(), dtype=torch.float32), 
                         target = torch.as_tensor(target.to_numpy(), dtype=torch.float32), 
@@ -469,6 +452,27 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
          
     def __len__(self):
         return len(self.model_indexes.get(list(self.model_indexes.keys())[0]))
+
+
+    def get_time_features(self, year, lead_time):
+
+        if self.time_features is not None:
+            time_features_list = np.array([self.time_features]).flatten()
+            feature_indices = {'year': 0, 'lead_time': 1, 'month_sin': 2, 'month_cos': 3}
+            
+            target_time = year + lead_time//12 
+            target_month = lead_time
+
+            y = (target_time - np.min(self.config.get_common_time)) /  (np.max(self.config.get_common_time) - np.min(self.config.get_common_time))
+            lt = lead_time / self.config.num_lead_months
+            msin = np.sin(2 * np.pi * target_month/12.0)
+            mcos = np.cos(2 * np.pi * target_month/12.0)
+
+            time_features = np.stack([y, lt, msin, mcos]) 
+            time_features = time_features[..., [feature_indices[k] for k in time_features_list]]
+
+
+            return time_features
 
     
         

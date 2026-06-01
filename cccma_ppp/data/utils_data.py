@@ -20,11 +20,8 @@ class infoclass:
 
 
 
-
-
-
 @dataclasses.dataclass
-class ModelDataConfig:
+class ModelDataConfig(DataConfig):
     paths: str
     names: list[str]
     preprocessing_pipeline :  PreprocessingPipeline = dataclasses.field(default_factory= PreprocessingPipeline)
@@ -57,7 +54,7 @@ class ModelDataConfig:
         return [ 'lead_time', 'ensembles' , 'lat', 'lon']
 
 @dataclasses.dataclass
-class ObsDataConfig:
+class ObsDataConfig(DataConfig):
     paths: str
     names: list[str]
     preprocessing_pipeline :  PreprocessingPipeline = dataclasses.field(default_factory= PreprocessingPipeline)
@@ -91,7 +88,7 @@ class ObsDataConfig:
 
 
 @dataclasses.dataclass
-class ConditionDataConfig:
+class ConditionDataConfig(DataConfig):
     paths: str
     names: list[str]
     preprocessing_pipeline :  PreprocessingPipeline = dataclasses.field(default_factory= PreprocessingPipeline)
