@@ -1,4 +1,4 @@
-import numpy as np
+
 import torch
 from torch.cuda.amp import GradScaler
 from pathlib import Path
@@ -14,7 +14,7 @@ from cccma_ppp.core.cVAE_module import cVAE
 from cccma_ppp.data.dataloader import Dataloader
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.aggregator import MetricsAggregator
-from loss.kld import BetaAnnealing
+from cccma_ppp.loss.kld import BetaAnnealing
 
 
 

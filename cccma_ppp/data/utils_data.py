@@ -2,13 +2,14 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import dataclasses
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
-from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 import os
 from pathlib import Path
 import glob
 from typing import final, ClassVar
 
+from cccma_ppp.data.data_abc import DataConfig
+from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
+from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
 @dataclasses.dataclass
 class infoclass:

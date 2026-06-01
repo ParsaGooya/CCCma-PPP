@@ -6,7 +6,6 @@ from collections import defaultdict
 import warnings
 import matplotlib.pyplot as plt
 import os
-import glob
 from cccma_ppp.generic.distributed import Distributed
 import random
 from pathlib import Path

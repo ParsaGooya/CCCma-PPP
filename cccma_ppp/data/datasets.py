@@ -7,10 +7,10 @@ from pathlib import Path
 import os
 import warnings
 
-from data.data_abc import XarrayDatasetABC, XarrayDatasetConfigABC
-from data.utils_data import ModelDataConfig, ObsDataConfig, ConditionDataConfig, WeightsConfig, _unwrape_data_variables, _load_xarray_data, infoclass, _create_train_mask
+from cccma_ppp.data.data_abc import XarrayDatasetABC, XarrayDatasetConfigABC, DataConfig
+from cccma_ppp.data.utils_data import ModelDataConfig, ObsDataConfig, ConditionDataConfig, WeightsConfig, _unwrape_data_variables, _load_xarray_data, infoclass, _create_train_mask
 
-from preprocessing.preprocessing_ABC import PreprocessModuleABC
+from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 
 
@@ -219,7 +219,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
         if 'ensembles' in target_coords:
             del target_coords['ensembles']
 
-        from preprocessing.utils_preprocessing import Oceannanremove
+        from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
         if self.observation is not None:
             pipeline = self.observation.preprocessing_pipeline
         else:
@@ -354,7 +354,8 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
 
 
     def get_input_shape(self):
-        from preprocessing.utils_preprocessing import Oceannanremove
+
+        from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
         checklist = [isinstance(item, Oceannanremove) for item in self.config.model.preprocessing_pipeline.fitted_preprocessors]
 
         if any(checklist):
@@ -363,7 +364,8 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             return (self.config.model.info.coords['lat'].size, self.config.model.info.coords['lon'].size)
         
     def get_target_shape(self):
-        from preprocessing.utils_preprocessing import Oceannanremove
+
+        from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
         if self.observation_dataset is not None:
             checklist = [isinstance(item, Oceannanremove) for item in self.config.observation.preprocessing_pipeline.fitted_preprocessors]
 

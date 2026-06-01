@@ -20,8 +20,8 @@ from cccma_ppp.core.optimization import OptimizerConfig
 
 from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
-from cccma_ppp.models.normalized_flows import MAF
-from cccma_ppp.models.normalized_flows import RealNVP
+import cccma_ppp.train.registry_imports
+
 
 
 
