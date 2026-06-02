@@ -133,7 +133,7 @@ class TrainConfig:
         """
         The directory where checkpoints are saved.
         """
-        return os.path.join(self.experiment_dir, "training_checkpoints")
+        return os.path.join(self.experiment_dir, "checkpoints")
 
     @property
     def log_dir(self) -> str:
