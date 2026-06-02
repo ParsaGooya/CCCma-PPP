@@ -4,8 +4,10 @@ import numpy as np
 from cccma_ppp.models.models_abc import cVAEmodelsABC, deterministicmodelsABC
 from cccma_ppp.core.selectors import deterministicModelSelector, cVAEModelSelector
 from cccma_ppp.models.normalized_flows import NormalizedFlowModel
-from timm.models.layers import trunc_normal_, DropPath
 import dataclasses
+
+
+
 
 
 @dataclasses.dataclass
@@ -88,6 +90,10 @@ class cVAE_MLP(cVAEmodelsABC):
 
         assert len(output_shape) == self.NUM_OUTPUT_DIMS, f'MLP models should creat {self.NUM_OUTPUT_DIMS}D outputs'
 
+        if self.checkpoint_config is not None:
+            assert input_shape == self.checkpoint_config.checkpoint_input_shape, f'the requested input shape does not match the loaded model : {self.checkpoint_config.load_path}'
+            assert output_shape == self.checkpoint_config.checkpoint_output_shape, f'the requested output shape does not match the loaded model : {self.checkpoint_config.load_path}'
+
         self.input_shape = np.prod(input_shape)
         self.added_features_dim = added_features_dim
 
@@ -157,11 +163,14 @@ class cVAE_MLP(cVAEmodelsABC):
                     layers.append(nn.BatchNorm1d(decoder_dims[i + 1]))
         self.decoder = nn.Sequential(*layers)
 
-        self._initialize_weights()
+        
 
+        if self.checkpoint_config is not None:
+            self._load_state_dict(self.checkpoint_config)
 
-    def _initialize_weights(self):
-        self.apply(lambda m: weights_init(m, method=self.init_method))
+        else:
+            self._initialize_weights()
+
 
 
     def forward(self,
@@ -390,12 +399,18 @@ class Autoencoder( deterministicmodelsABC):
             else:
                 self.decoder_hidden_dims = self.encoder_hidden_dims[::-1][1:]
 
+
+
     def build(self,
               input_shape : np.ndarray,
               output_shape: np.ndarray|None = None,
               added_features_dim : int = None):
 
         assert len(output_shape) == self.NUM_OUTPUT_DIMS, f'MLP models should creat {self.NUM_OUTPUT_DIMS}D outputs'
+
+        if self.checkpoint_config is not None:
+            assert input_shape == self.checkpoint_config.checkpoint_input_shape, f'the requested input shape does not match the loaded model : {self.checkpoint_config.load_path}'
+            assert output_shape == self.checkpoint_config.checkpoint_output_shape, f'the requested output shape does not match the loaded model : {self.checkpoint_config.load_path}'
 
         self.input_shape = np.prod(input_shape)
         self.added_features_dim = added_features_dim
@@ -451,11 +466,11 @@ class Autoencoder( deterministicmodelsABC):
 
         self.decoder = nn.Sequential(*layers)
 
-        self._initialize_weights()
+        if self.checkpoint_config is not None:
+            self._load_state_dict( self.checkpoint_config)
+        else:
+            self._initialize_weights()
 
-
-    def _initialize_weights(self):
-        self.apply(lambda m: weights_init(m, method=self.init_method))
 
 
     def forward(self,
@@ -507,30 +522,5 @@ class Autoencoder( deterministicmodelsABC):
 
         return deterministicoutput(output = out.view(B, C, -1))
 
-
-def weights_init(m, method = 'xavier'):
-
-    if not isinstance(m, (nn.Linear, nn.Conv1d, nn.Conv2d, nn.Conv3d)):
-        return
-
-    if method == 'xavier':
-        def initializer(t):
-            nn.init.xavier_uniform_(t)
-
-    elif method == 'trunc_normal':
-        def initializer(t):
-            trunc_normal_(t, std=0.02)
-
-    else:
-        raise NotImplementedError('initiliazation methods besied "trunc_normal" and "xavier" are not implementd.')
-
-
-    if hasattr(m, "weight") and m.weight is not None:
-        if m.weight.requires_grad:
-                initializer(m.weight)
-
-    if hasattr(m, "bias") and m.bias is not None:
-        if m.bias.requires_grad:
-            nn.init.constant_(m.bias, 0)
 
 

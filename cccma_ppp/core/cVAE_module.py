@@ -2,9 +2,8 @@
 import torch
 import numpy as np
 from pathlib import Path
-
+import warnings
 from cccma_ppp.loss.loss import Losspipeline
-
 from cccma_ppp.core.registery import *
 from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC
 from cccma_ppp.core.selectors import *
@@ -38,7 +37,7 @@ class cVAEConfig(moduleConfigABC):
             assert 0 <= self.combined_CGCN_weight <= 1, 'CGCN weight should be between [0,1]'
         else:
             self._load_from_checkpoint(self.load_dir)
-            RuntimeWarning(f'all module config overwritten by the saved module: \n {self.load_dir}')
+            warnings.warn(f'all module config overwritten by the saved module: \n {self.load_dir}')
 
         self.model = self.ModelConfig.get_model()
     def build(self,   ## this instantiates cVAE module and builds it at the same time.
@@ -55,19 +54,23 @@ class cVAEConfig(moduleConfigABC):
 
         if not Path(load_path).exists():
             raise FileNotFoundError(f"Checkpoint not found: {load_path}")
+        
+        checkpoint = torch.load( Path(load_path), weights_only=False)
+        _checkpoint_config = checkpoint.get('module_config')
 
-        module_checkpoint = torch.load( Path(load_path), map_location=self.device, weights_only=False).get('module_config')
+        self._checkpoint_input_shape = checkpoint.get('model_input_shape')
+        self._checkpoint_input_shape = checkpoint.get('model_input_shape')
         
         self.ModelConfig  =  dacite.from_dict(
                                         data_class=cVAEModelSelector,
-                                        data=module_checkpoint.get("ModelConfig"),
+                                        data= _checkpoint_config.get("ModelConfig"),
                                         config=dacite.Config(strict=True))
 
-        self.min_posterior_variance = module_checkpoint.min_posterior_variance
-        self.prior_flow_config = module_checkpoint.prior_flow_config
-        self.combined_CGCN_weight = module_checkpoint.combined_CGCN_weight
+        self.min_posterior_variance = _checkpoint_config.min_posterior_variance
+        self.prior_flow_config = _checkpoint_config.prior_flow_config
+        self.combined_CGCN_weight = _checkpoint_config.combined_CGCN_weight
 
-        del module_checkpoint
+        del checkpoint, _checkpoint_config
         gc.collect()
         return self
 
@@ -111,9 +114,14 @@ class cVAE( moduleABC):
               output_shape: np.ndarray|None = None,
               added_features_dim : int = None):
 
-
+        
         self.input_shape = input_shape
         self.output_shape = output_shape
+
+        if self.config.load_dir is not None:
+            assert self.input_shape == self._checkpoint_input_shape, f'the requested input shape does not match the loaded module : {self.config.load_dir}'
+            assert self.output_shape == self._checkpoint_output_shape, f'the requested output shape does not match the loaded module : {self.config.load_dir}'
+
         if self.min_posterior_variance is not None:
               self.min_posterior_variance = torch.log(torch.tensor(self.min_posterior_variance))  #.expand(self.latent_size)
 
@@ -127,8 +135,12 @@ class cVAE( moduleABC):
 
         self.built = True
 
+        if self.config.load_dir is not None:
+            self._load_state_dict(self.config.load_dir)
 
         return self
+
+
 
     def init_loss_function(self,
                            reconstruction_loss : Losspipeline):
@@ -217,18 +229,10 @@ class cVAE( moduleABC):
                 sample_size = sample_size)
 
 
-    def _get_device(self):
-        param = next(self.parameters(), None)
 
-        if param is not None:
-            return param.device
 
-        buffer = next(self.buffers(), None)
 
-        if buffer is not None:
-            return buffer.device
 
-        return torch.device("cpu")
 
 
     # def _save_state_dict(self, save_path : Path | str):

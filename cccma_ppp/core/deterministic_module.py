@@ -4,11 +4,13 @@ import pathlib as Path
 from pathlib import Path
 import dataclasses
 import gc
+import warnings
 from cccma_ppp.loss.loss import Losspipeline
 from cccma_ppp.core.registery import *
 from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC
 from cccma_ppp.core.selectors import *
 from cccma_ppp.data.dataloader import BatchData
+
 
 
 @ModuleSelector.register('deterministic')
@@ -23,7 +25,7 @@ class deterministicConfig(moduleConfigABC):
             assert self.ModelConfig is not None, 'provide loading dir or model configurations'
         else:
             self._load_from_checkpoint(self.load_dir)
-            RuntimeWarning(f'all module config overwritten by the saved module: \n {self.load_dir}')
+            warnings.warn(f'all module config overwritten by the saved module: \n {self.load_dir}')
 
         self.model = self.ModelConfig.get_model()
     def build(self,
@@ -40,14 +42,18 @@ class deterministicConfig(moduleConfigABC):
         if not Path(load_path).exists():
             raise FileNotFoundError(f"Checkpoint not found: {load_path}")
 
-        module_checkpoint = torch.load( Path(load_path), map_location=self.device, weights_only=False).get('module_config')
+        checkpoint = torch.load( Path(load_path), weights_only=False)
+        _checkpoint_config = checkpoint.get('module_config')
+
+        self._checkpoint_input_shape = checkpoint.get('model_input_shape')
+        self._checkpoint_input_shape = checkpoint.get('model_input_shape')
         
         self.ModelConfig  =  dacite.from_dict(
                                         data_class=deterministicModelSelector,
-                                        data=module_checkpoint.ModelConfig,
+                                        data= _checkpoint_config.get("ModelConfig"),
                                         config=dacite.Config(strict=True))
 
-        del module_checkpoint
+        del checkpoint, _checkpoint_config
         gc.collect()
         return self
 
@@ -81,10 +87,20 @@ class deterministic( moduleABC):
               output_shape: np.ndarray|None = None,
               added_features_dim : int = None):
 
+        self.input_shape = input_shape
+        self.output_shape = output_shape
+
+        if self.config.load_dir is not None:
+            assert self.input_shape == self._checkpoint_input_shape, f'the requested input shape does not match the loaded module : {self.config.load_dir}'
+            assert self.output_shape == self._checkpoint_output_shape, f'the requested output shape does not match the loaded module : {self.config.load_dir}'
+
 
         self.model.build(input_shape = input_shape,
                                             output_shape = output_shape,
                                             added_features_dim = added_features_dim)
+        
+        if self.config.load_dir is not None:
+            self._load_state_dict(self.config.load_dir)
 
         self.built = True
 
@@ -126,21 +142,12 @@ class deterministic( moduleABC):
 
     def predict(self, data: BatchData) -> deterministicOutput:
 
-        return deterministicOutput(output = self.model(x = data.input,  added_features = data.added_features))
+        return self.forward(data)
 
 
-    def _get_device(self):
-        param = next(self.parameters(), None)
 
-        if param is not None:
-            return param.device
 
-        buffer = next(self.buffers(), None)
 
-        if buffer is not None:
-            return buffer.device
-
-        return torch.device("cpu")
 
     # def _save_state_dict(self, save_path : Path | str):
 

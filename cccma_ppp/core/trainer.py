@@ -473,6 +473,8 @@ class Trainer:
                 "earlystopping_counter": self.earlystopping_counter,
                 "module": self.raw_module.state_dict(),
                 "module_config" : dataclasses.asdict(self.raw_module.config),
+                "model_input_shape" : self.raw_module.input_shape,
+                "model_output_shape" : self.raw_module.output_shape,
                 "optimizer": self.optimizer.state_dict(),
                 "scaler": self.scaler.state_dict(),
                 "train_logs": train_logs,
