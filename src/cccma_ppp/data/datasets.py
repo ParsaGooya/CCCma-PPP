@@ -7,8 +7,8 @@ from pathlib import Path
 import os
 import warnings
 
-from data.data_abc import XarrayDatasetABC, XarrayDatasetConfigABC
-from data.utils_data import (
+from src.cccma_ppp.data.data_abc import XarrayDatasetABC, XarrayDatasetConfigABC
+from src.cccma_ppp.data.utils_data import (
     ModelDataConfig,
     ObsDataConfig,
     ConditionDataConfig,
@@ -18,7 +18,7 @@ from data.utils_data import (
     _create_train_mask,
 )
 
-from preprocessing.preprocessing_ABC import PreprocessModuleABC
+from src.cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 
 @dataclasses.dataclass
@@ -467,7 +467,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
         if "ensembles" in target_coords:
             del target_coords["ensembles"]
 
-        from preprocessing.utils_preprocessing import Oceannanremove
+        from src.cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
         if self.observation is not None:
             pipeline = self.observation.preprocessing_pipeline
@@ -744,7 +744,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             Input tensor shape.
         """
 
-        from preprocessing.utils_preprocessing import Oceannanremove
+        from src.cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
         checklist = [
             isinstance(item, Oceannanremove)
@@ -771,7 +771,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             Target tensor shape.
         """
 
-        from preprocessing.utils_preprocessing import Oceannanremove
+        from src.cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
         if self.observation_dataset is not None:
             checklist = [

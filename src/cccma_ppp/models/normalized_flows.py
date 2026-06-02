@@ -5,8 +5,8 @@ import math
 
 import dataclasses
 
-from cccma_ppp.models.models_abc import flowABC
-from cccma_ppp.core.selectors import FlowSelector
+from src.cccma_ppp.models.models_abc import flowABC
+from src.cccma_ppp.core.selectors import FlowSelector
 
 
 @dataclasses.dataclass

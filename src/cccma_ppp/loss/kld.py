@@ -1,8 +1,7 @@
 import torch
 from torch.distributions import Normal, kl_divergence
 import dataclasses
-from loss.loss_abc import lossABC
-
+from src.cccma_ppp.loss.loss_abc import lossABC
 
 
 @dataclasses.dataclass

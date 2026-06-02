@@ -4,11 +4,11 @@ import pathlib as Path
 from pathlib import Path
 import dataclasses
 
-from cccma_ppp.loss.loss import Losspipeline
-from cccma_ppp.core.registery import *
-from cccma_ppp.core.core_abc import moduleABC
-from cccma_ppp.core.selectors import *
-from cccma_ppp.data.dataloader import BatchData
+from src.cccma_ppp.loss.loss import Losspipeline
+from src.cccma_ppp.core.registery import *
+from src.cccma_ppp.core.core_abc import moduleABC
+from src.cccma_ppp.core.selectors import *
+from src.cccma_ppp.data.dataloader import BatchData
 
 
 @ModuleSelector.register("deterministic")

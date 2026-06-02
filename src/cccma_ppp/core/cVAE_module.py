@@ -2,15 +2,15 @@ import torch
 import numpy as np
 from pathlib import Path
 
-from loss.loss import Losspipeline
+from src.cccma_ppp.loss.loss import Losspipeline
 
-from cccma_ppp.core.registery import *
-from cccma_ppp.core.core_abc import moduleABC
-from cccma_ppp.core.selectors import *
-from cccma_ppp.models.normalized_flows import NormalizedFlowConfig
-from cccma_ppp.data.dataloader import BatchData
+from src.cccma_ppp.core.registery import *
+from src.cccma_ppp.core.core_abc import moduleABC
+from src.cccma_ppp.core.selectors import *
+from src.cccma_ppp.models.normalized_flows import NormalizedFlowConfig
+from src.cccma_ppp.data.dataloader import BatchData
 
-from loss.kld import KLD
+from src.cccma_ppp.loss.kld import KLD
 
 
 @ModuleSelector.register("cvae")

@@ -1,6 +1,6 @@
-from cccma_ppp.train.train_configs import TrainConfig, build_trainer
-from cccma_ppp.generic.distributed import Distributed
-from cccma_ppp.generic.logger import setup_logger
+from src.cccma_ppp.train.train_configs import TrainConfig, build_trainer
+from src.cccma_ppp.generic.distributed import Distributed
+from src.cccma_ppp.generic.logger import setup_logger
 import argparse
 import dacite
 import yaml

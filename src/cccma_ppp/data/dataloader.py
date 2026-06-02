@@ -11,10 +11,10 @@ from typing import final
 from collections.abc import Callable, Iterator
 from itertools import islice
 
-from cccma_ppp.data.datasets import XArrayDataset, XArrayDatasetConfig
-from cccma_ppp.data.utils_data import _create_train_mask, WeightsConfig
-from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
-from cccma_ppp.generic.distributed import Distributed
+from src.cccma_ppp.data.datasets import XArrayDataset, XArrayDatasetConfig
+from src.cccma_ppp.data.utils_data import _create_train_mask, WeightsConfig
+from src.cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
+from src.cccma_ppp.generic.distributed import Distributed
 
 
 @dataclasses.dataclass
