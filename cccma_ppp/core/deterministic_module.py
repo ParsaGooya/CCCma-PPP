@@ -3,11 +3,10 @@ import numpy as np
 import pathlib as Path
 from pathlib import Path
 import dataclasses
-
-from cccma_ppp.loss.loss_abc import lossABC
+import gc
 from cccma_ppp.loss.loss import Losspipeline
 from cccma_ppp.core.registery import *
-from cccma_ppp.core.core_abc import moduleABC
+from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC
 from cccma_ppp.core.selectors import *
 from cccma_ppp.data.dataloader import BatchData
 
@@ -15,7 +14,7 @@ from cccma_ppp.data.dataloader import BatchData
 @ModuleSelector.register('deterministic')
 @ModuleSelector.register('default')
 @dataclasses.dataclass
-class deterministicConfig:
+class deterministicConfig(moduleConfigABC):
     ModelConfig  : deterministicModelSelector | None = None
     load_dir : str| None = None
 
@@ -23,9 +22,10 @@ class deterministicConfig:
         if self.load_dir is None:
             assert self.ModelConfig is not None, 'provide loading dir or model configurations'
         else:
-            RuntimeWarning(f'all model config overwritten by the loaded model: \n {self.load_dir}')
+            self._load_from_checkpoint(self.load_dir)
+            RuntimeWarning(f'all module config overwritten by the saved module: \n {self.load_dir}')
 
-
+        self.model = self.ModelConfig.get_model()
     def build(self,
               input_shape : np.ndarray,
               output_shape: np.ndarray|None = None,
@@ -35,7 +35,21 @@ class deterministicConfig:
                                  output_shape = output_shape,
                                  added_features_dim = added_features_dim)
 
+    def _load_from_checkpoint(self, load_path : Path | str):
 
+        if not Path(load_path).exists():
+            raise FileNotFoundError(f"Checkpoint not found: {load_path}")
+
+        module_checkpoint = torch.load( Path(load_path), map_location=self.device, weights_only=False).get('module_config')
+        
+        self.ModelConfig  =  dacite.from_dict(
+                                        data_class=deterministicModelSelector,
+                                        data=module_checkpoint.ModelConfig,
+                                        config=dacite.Config(strict=True))
+
+        del module_checkpoint
+        gc.collect()
+        return self
 
 
 
@@ -54,7 +68,7 @@ class deterministic( moduleABC):
 
         super().__init__()
         self.config = config
-        self.model = self.config.ModelConfig.get_model()
+        self.model = self.config.model
 
 
         self.built = False
@@ -72,9 +86,7 @@ class deterministic( moduleABC):
                                             output_shape = output_shape,
                                             added_features_dim = added_features_dim)
 
-        self.build = True
-        if self.config.load_dir is not None:
-            self._load_from_state(self.config.load_dir)
+        self.built = True
 
         return self
 
@@ -130,21 +142,21 @@ class deterministic( moduleABC):
 
         return torch.device("cpu")
 
-    def _save_state_dict(self, save_path : Path | str):
+    # def _save_state_dict(self, save_path : Path | str):
 
-        path = Path(save_path) / f"deterministic_module.pt"
-        torch.save(self.state_dict(), path)
+    #     path = Path(save_path) / f"deterministic_module.pt"
+    #     torch.save(self.state_dict(), path)
 
 
-    def _load_from_state(self, load_path : Path | str, strict : bool = True):
+    # def _load_from_state(self, load_path : Path | str, strict : bool = True):
 
-        assert self.built, 'module stgate should be built for torch to load the weights into. Hint: call .build() method first.'
+    #     assert self.built, 'module stgate should be built for torch to load the weights into. Hint: call .build() method first.'
 
-        if not Path(load_path).exists():
-            raise FileNotFoundError(f"Checkpoint not found: {load_path}")
+    #     if not Path(load_path).exists():
+    #         raise FileNotFoundError(f"Checkpoint not found: {load_path}")
 
-        checkpoint = torch.load( Path(load_path), map_location=self.device, weights_only=False)
-        self.load_state_dict( checkpoint ,strict=strict)
+    #     checkpoint = torch.load( Path(load_path), map_location=self.device, weights_only=False)
+    #     self.load_state_dict( checkpoint ,strict=strict)
 
-        return checkpoint
+    #     return checkpoint
 

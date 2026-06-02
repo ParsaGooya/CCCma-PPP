@@ -22,9 +22,6 @@ class moduleABC( nn.Module,abc.ABC):
                            reconstruction_loss : Losspipeline,
                            **kwargs):
         ...
-    @abc.abstractmethod
-    def _load_from_state(self, load_dir):
-        ...
 
     @abc.abstractmethod
     def _compute_loss(self):
@@ -40,3 +37,19 @@ class moduleABC( nn.Module,abc.ABC):
 
 
 
+class moduleConfigABC(abc.ABC):
+
+    def __init__(self):
+        super().__init__()
+
+
+    @abc.abstractmethod
+    def build(self,
+              input_shape : np.ndarray,
+              output_shape: np.ndarray|None = None,
+              added_features_dim : int = None):
+
+        ...
+    @abc.abstractmethod
+    def _load_from_checkpoint(self):
+        ...

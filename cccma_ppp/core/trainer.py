@@ -472,6 +472,7 @@ class Trainer:
                 "best_validation_loss": self._best_validation_loss,
                 "earlystopping_counter": self.earlystopping_counter,
                 "module": self.raw_module.state_dict(),
+                "module_config" : dataclasses.asdict(self.raw_module.config),
                 "optimizer": self.optimizer.state_dict(),
                 "scaler": self.scaler.state_dict(),
                 "train_logs": train_logs,

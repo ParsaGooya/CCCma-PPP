@@ -6,7 +6,7 @@ import dataclasses
 from pathlib import Path
 import os
 import warnings
-
+import gc
 from cccma_ppp.data.data_abc import XarrayDatasetABC, XarrayDatasetConfigABC, DataConfig
 from cccma_ppp.data.utils_data import ModelDataConfig, ObsDataConfig, ConditionDataConfig, WeightsConfig, _unwrape_data_variables, _load_xarray_data, infoclass, _create_train_mask
 
@@ -131,6 +131,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
             self.model.preprocessing_pipeline.fit(base_data = _base.load(), mask = _mask, save = save, save_path = save_path ,save_name = save_name)
             _base.close()
             del _base, _mask
+            gc.collect()
         else:
             self.model.preprocessing_pipeline._load_from_memory(Path(self.model.preprocessing_pipeline.load_dir), load_name = self.model.preprocessing_pipeline.load_name)
         
@@ -143,6 +144,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
                 self.observation.preprocessing_pipeline.fit(base_data = _base.load(), save = save, save_path = save_path, save_name = save_name)
                 _base.close()
                 del _base
+                gc.collect()
             else:
                 self.observation.preprocessing_pipeline._load_from_memory(Path(self.observation.preprocessing_pipeline.load_dir), load_name = self.observation.preprocessing_pipeline.load_name)  
 
@@ -156,6 +158,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
                 self.condition.preprocessing_pipeline.fit(base_data =  _base.load(), mask = _mask, save = save, save_path = save_path, save_name = save_name)
                 _base.close()
                 del _base, _mask
+                gc.collect()
             else:
                 self.condition.preprocessing_pipeline._load_from_memory(Path(self.condition.preprocessing_pipeline.load_dir ), load_name = self.condition.preprocessing_pipeline.load_name)   
 

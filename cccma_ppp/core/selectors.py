@@ -5,7 +5,7 @@ from cccma_ppp.core.core_abc import  moduleABC
 from cccma_ppp.models.models_abc import *
 from typing import Any, ClassVar
 from collections.abc import Callable,Mapping
-
+from pathlib import Path
 
 @dataclasses.dataclass
 class ModuleSelector:
@@ -40,12 +40,17 @@ class ModuleSelector:
 class cVAEModelSelector:
 
     type: str
-    args: Mapping[str, Any ]
+    args: Mapping[str, Any ] | None = None
+    load_dir: Path | str | None = None
     registery: ClassVar[Registery] = Registery()
 
     def __post_init__(self):
 
-        pass
+        if all([self.args is None, self.load_dir is None]):
+             raise RuntimeError('Either specify model configuration as args dict or specify a path for loading.')
+        
+        if self.load_dir is not None:
+            RuntimeWarning(f'all model config overwritten by the saved model: \n {self.load_dir}')
 
     @classmethod
     def register(cls, name: str) -> Callable[..., cVAEmodelsABC]:  # noqa: UP006
@@ -56,19 +61,39 @@ class cVAEModelSelector:
 
 
     def get_model(self):
-            return self.registery.get(self.type.lower(), self.args)
+        
+        if self.load_dir is not None:
+            args = self._load_from_checkpoint(self.load_dir)
+        else:
+            args = self.args
 
+        return self.registery.get(self.type.lower(), args)
+   
+
+    def _load_from_checkpoint(self, load_path : Path | str):
+
+        if not Path(load_path).exists():
+            raise FileNotFoundError(f"Checkpoint not found: {load_path}")
+
+        model_checkpoint = torch.load( Path(load_path), map_location=self.device, weights_only=False).get('module_config').get('ModelConfig')
+
+        return model_checkpoint
 
 @dataclasses.dataclass
 class deterministicModelSelector:
 
     type: str
-    args: Mapping[str, Any ]
+    args: Mapping[str, Any ] | None = None
+    load_dir: Path | str | None = None
     registery: ClassVar[Registery] = Registery()
 
     def __post_init__(self):
 
-        pass
+        if all([self.args is None, self.load_dir is None]):
+             raise RuntimeError('Either specify model configuration as args dict or specify a path for loading.')
+        
+        if self.load_dir is not None:
+            RuntimeWarning(f'all model config overwritten by the saved model: \n {self.load_dir}')
 
     @classmethod
     def register(cls, name: str) -> Callable[..., deterministicmodelsABC]:  # noqa: UP006
@@ -79,9 +104,22 @@ class deterministicModelSelector:
 
 
     def get_model(self):
-            return self.registery.get(self.type.lower(), self.args)
+        
+        if self.load_dir is not None:
+            args = self._load_from_checkpoint(self.load_dir)
+        else:
+            args = self.args
 
+        return self.registery.get(self.type.lower(), args)
 
+    def _load_from_checkpoint(self, load_path : Path | str):
+
+        if not Path(load_path).exists():
+            raise FileNotFoundError(f"Checkpoint not found: {load_path}")
+
+        checkpoint_model_config = torch.load( Path(load_path), map_location=self.device, weights_only=False).get('module_config').get('ModelConfig')
+
+        return checkpoint_model_config
 
 
 ##### can deleter this and add the registery machinery

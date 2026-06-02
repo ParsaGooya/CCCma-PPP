@@ -6,16 +6,16 @@ from pathlib import Path
 from cccma_ppp.loss.loss import Losspipeline
 
 from cccma_ppp.core.registery import *
-from cccma_ppp.core.core_abc import moduleABC
+from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC
 from cccma_ppp.core.selectors import *
 from cccma_ppp.models.normalized_flows import NormalizedFlowConfig
 from cccma_ppp.data.dataloader import BatchData
 from cccma_ppp.loss.kld import KLD
-
+import gc
 
 @ModuleSelector.register('cvae')
 @dataclasses.dataclass
-class cVAEConfig:
+class cVAEConfig(moduleConfigABC):
     ModelConfig  : cVAEModelSelector | None = None
     min_posterior_variance: float | None = None
     prior_flow_config : NormalizedFlowConfig | None = None
@@ -28,18 +28,18 @@ class cVAEConfig:
 
             self.latent_size = self.ModelConfig.args.get('latent_size')
 
-            ## read condition_dependant_latent from the ModelConfig so that we know the flow should be conditional.
-            self.condition_dependant_flow = self.ModelConfig.args.get('condition_dependant_latent')
-            ## if prior flow is requested, set the condition_dependant_latent for the model to False because we don't want to generate cond_mu and cond_log_var.
             if self.prior_flow_config is not None:
+                    ## read condition_dependant_latent from the ModelConfig so that we know the flow should be conditional.
+                    self.condition_dependant_flow = self.ModelConfig.args.get('condition_dependant_latent')
+                    ## if prior flow is requested, set the condition_dependant_latent for the model to False because we don't want to generate cond_mu and cond_log_var.
                     self.ModelConfig.args['condition_dependant_latent'] = False
             ##note that as long as .build() is not called, the cVAE module is not generated, thus the selected model is not created, so no issues with overwriting the config at this level.
             # When the model is loaded, if the flow is off,  condition_dependant_latent has been turned off and condition_dependant_flow is on, so even though the flow sees the condition, there is no requirement that the condition_embedding_size == latent_size.
-
+            assert 0 <= self.combined_CGCN_weight <= 1, 'CGCN weight should be between [0,1]'
         else:
-            RuntimeWarning(f'all model config overwritten by the loaded model: \n {self.load_dir}')
+            self._load_from_checkpoint(self.load_dir)
+            RuntimeWarning(f'all module config overwritten by the saved module: \n {self.load_dir}')
 
-        assert 0 <= self.combined_CGCN_weight <= 1, 'CGCN weight should be between [0,1]'
         self.model = self.ModelConfig.get_model()
     def build(self,   ## this instantiates cVAE module and builds it at the same time.
               input_shape : np.ndarray,
@@ -51,7 +51,25 @@ class cVAEConfig:
                                  added_features_dim = added_features_dim)
 
 
+    def _load_from_checkpoint(self, load_path : Path | str):
 
+        if not Path(load_path).exists():
+            raise FileNotFoundError(f"Checkpoint not found: {load_path}")
+
+        module_checkpoint = torch.load( Path(load_path), map_location=self.device, weights_only=False).get('module_config')
+        
+        self.ModelConfig  =  dacite.from_dict(
+                                        data_class=cVAEModelSelector,
+                                        data=module_checkpoint.get("ModelConfig"),
+                                        config=dacite.Config(strict=True))
+
+        self.min_posterior_variance = module_checkpoint.min_posterior_variance
+        self.prior_flow_config = module_checkpoint.prior_flow_config
+        self.combined_CGCN_weight = module_checkpoint.combined_CGCN_weight
+
+        del module_checkpoint
+        gc.collect()
+        return self
 
 
 
@@ -80,7 +98,7 @@ class cVAE( moduleABC):
 
         if self.min_posterior_variance is not None:
             assert self.min_posterior_variance > 0, 'min_posterior_variance must be positive.'
-        if self.config.condition_dependant_flow:
+        if getattr(self.config , 'condition_dependant_flow', False):
             self.flow_condition_size = self.model.condition_embedding_size
         else:
             self.flow_condition_size = None
@@ -109,8 +127,6 @@ class cVAE( moduleABC):
 
         self.built = True
 
-        if self.config.load_dir is not None:
-            self._load_from_state(self.config.load_dir)
 
         return self
 
@@ -215,44 +231,44 @@ class cVAE( moduleABC):
         return torch.device("cpu")
 
 
-    def _save_state_dict(self, save_path : Path | str):
-        """
-        For DDP, save the underlying module, not the DDP wrapper.
-        """
+    # def _save_state_dict(self, save_path : Path | str):
+    #     """
+    #     For DDP, save the underlying module, not the DDP wrapper.
+    #     """
 
-        prior_flow_state = None
-        if hasattr(self, "prior_flow") and self.prior_flow is not None:
-            prior_flow_state = self.prior_flow.state_dict()
+    #     prior_flow_state = None
+    #     if hasattr(self, "prior_flow") and self.prior_flow is not None:
+    #         prior_flow_state = self.prior_flow.state_dict()
 
-        checkpoint = {
-                'model' : self.model.state_dict(),
-                'latent_size' : self.latent_size,
-                'min_posterior_variance' : self.min_posterior_variance,
-                'prior_flow_config' : self.config.prior_flow_config,
-                'prior_flow' :   prior_flow_state,
-                'combined_CGCN_weight' : self.config.combined_CGCN_weight,
-                'input_shape' : self.input_shape,
-                 'output_shape' : self.output_shape }
-
-
-        path = Path(save_path) / f"cVAE_module.pt"
-        torch.save(checkpoint, path)
+    #     checkpoint = {
+    #             'model' : self.model.state_dict(),
+    #             'latent_size' : self.latent_size,
+    #             'min_posterior_variance' : self.min_posterior_variance,
+    #             'prior_flow_config' : self.config.prior_flow_config,
+    #             'prior_flow' :   prior_flow_state,
+    #             'combined_CGCN_weight' : self.config.combined_CGCN_weight,
+    #             'input_shape' : self.input_shape,
+    #             'output_shape' : self.output_shape }
 
 
-    def _load_from_state(self, load_path : Path | str, strict : bool = True):
+    #     path = Path(save_path) / f"cVAE_module.pt"
+    #     torch.save(checkpoint, path)
 
-        assert self.built, 'module stgate should be built for torch to load the weights into. Hint: call .build() method first.'
 
-        if not Path(load_path).exists():
-            raise FileNotFoundError(f"Checkpoint not found: {load_path}")
+    # def _load_from_state(self, load_path : Path | str, strict : bool = True):
 
-        checkpoint = torch.load( Path(load_path), map_location=self.device, weights_only=False)
+    #     assert self.built, 'module stgate should be built for torch to load the weights into. Hint: call .build() method first.'
 
-        self.model.load_state_dict( checkpoint["model"],strict=strict)
+    #     if not Path(load_path).exists():
+    #         raise FileNotFoundError(f"Checkpoint not found: {load_path}")
 
-        self.latent_size = checkpoint.get("latent_size")
-        self.min_posterior_variance = checkpoint.get("min_posterior_variance", None)
-        self.prior_flow_config = checkpoint.get("prior_flow_config", None)
-        self.combined_CGCN_weight = checkpoint.get("prior_flow_config", 0)
+    #     checkpoint = torch.load( Path(load_path), map_location=self.device, weights_only=False)
 
-        return checkpoint
+    #     self.model.load_state_dict( checkpoint["model"],strict=strict)
+
+    #     self.latent_size = checkpoint.get("latent_size")
+    #     self.min_posterior_variance = checkpoint.get("min_posterior_variance", None)
+    #     self.prior_flow_config = checkpoint.get("prior_flow_config", None)
+    #     self.combined_CGCN_weight = checkpoint.get("prior_flow_config", 0)
+
+    #     return checkpoint
