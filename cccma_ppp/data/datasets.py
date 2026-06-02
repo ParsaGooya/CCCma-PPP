@@ -15,7 +15,6 @@ from data.utils_data import (
     WeightsConfig,
     _unwrape_data_variables,
     _load_xarray_data,
-    infoclass,
     _create_train_mask,
 )
 
@@ -64,18 +63,18 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
                 self.model.info.coords["lat"]
             ):
                 warnings.warn(
-                    f"model and observation data do not have the same latitudes cooridnates."
+                    "model and observation data do not have the same latitudes cooridnates."
                 )
             if not self.observation.info.coords["lon"].equals(
                 self.model.info.coords["lon"]
             ):
                 warnings.warn(
-                    f"model and observation data do not have the same longitudes cooridnates."
+                    "model and observation data do not have the same longitudes cooridnates."
                 )
             self.observation.preprocessing_pipeline.name = "observation"
         else:
             assert self.condition_method is not None, (
-                f"No target observation is specifiec. Specify condition_method!"
+                "No target observation is specifiec. Specify condition_method!"
             )
 
         if self.condition_method is not None:
@@ -85,7 +84,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
 
         if self.condition is not None:
             assert self.condition_method is not None, (
-                f"specify condition_method for conditioning dataset!"
+                "specify condition_method for conditioning dataset!"
             )
 
             if self.condition.paths == self.model.paths:

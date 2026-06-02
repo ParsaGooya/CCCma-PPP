@@ -1,5 +1,4 @@
 import torch.nn as nn
-import xarray as xr
 from cccma_ppp.loss.registery import Registery
 from typing import ClassVar
 import dataclasses

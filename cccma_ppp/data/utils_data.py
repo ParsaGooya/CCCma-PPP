@@ -1,9 +1,7 @@
 import numpy as np
-import pandas as pd
 import xarray as xr
 import dataclasses
 from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
-from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 import os
 from pathlib import Path
 import glob
@@ -262,7 +260,7 @@ def _check_data(dataconfig: ModelDataConfig | ObsDataConfig) -> None:
 
     if not Path(dataconfig.paths).exists():
         raise FileNotFoundError(
-            f"The following file does not exist:\n" + "\n".join(dataconfig.paths)
+            "The following file does not exist:\n" + "\n".join(dataconfig.paths)
         )
 
     list_paths = glob.glob(str(Path(dataconfig.paths).joinpath(dataconfig.file_type)))
@@ -465,7 +463,7 @@ class WeightsConfig:
                     if save_path is not None
                     else Path(os.environ["GLOBAL_EXP_DIR"])
                 )
-                save_name = save_name or f"spatial_weights.nc"
+                save_name = save_name or "spatial_weights.nc"
 
                 if not os.path.isdir(save_path):
                     os.makedirs(save_path)

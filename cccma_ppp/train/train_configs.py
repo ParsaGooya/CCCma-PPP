@@ -3,7 +3,6 @@ import os
 import numpy as np
 import torch
 import warnings
-import logging
 from pathlib import Path
 import shutil
 
@@ -12,7 +11,6 @@ from cccma_ppp.loss.loss import LosspipelineConfig
 from cccma_ppp.data.dataloader import TrainDataloaderConfig
 from cccma_ppp.data.utils_data import WeightsConfig
 
-from cccma_ppp.generic.distributed import Distributed
 
 from cccma_ppp.core.selectors import ModuleSelector
 from cccma_ppp.core.trainer import TrainerConfig
@@ -20,8 +18,6 @@ from cccma_ppp.core.optimization import OptimizerConfig
 
 from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
-from cccma_ppp.models.normalized_flows import MAF
-from cccma_ppp.models.normalized_flows import RealNVP
 
 
 def set_seed(seed):
@@ -247,7 +243,7 @@ def build_trainer(config, distributed, logger=None):
             else:
                 print(msg)
 
-    log(f"creating data loaders ...")
+    log("creating data loaders ...")
 
     config.train_loader.setup_distributed(distributed)
 
@@ -279,7 +275,7 @@ def build_trainer(config, distributed, logger=None):
             find_unused_parameters=False,
         )
 
-    log(f"Creating loss function ...")
+    log("Creating loss function ...")
 
     reconstruction_loss = config.losspipeline.build(
         weights=weights,
@@ -293,7 +289,7 @@ def build_trainer(config, distributed, logger=None):
 
     optimizer = config.optimization.build(module, num_train_batches, config.epochs)
 
-    log(f"Creating trainer ...")
+    log("Creating trainer ...")
 
     trainer = config.trainer.build(
         train_data_loader=train_loader,

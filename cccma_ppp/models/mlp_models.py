@@ -3,8 +3,7 @@ import torch.nn as nn
 import numpy as np
 from cccma_ppp.models.models_abc import cVAEmodelsABC, deterministicmodelsABC
 from cccma_ppp.core.selectors import deterministicModelSelector, cVAEModelSelector
-from cccma_ppp.models.normalized_flows import NormalizedFlowModel
-from timm.models.layers import trunc_normal_, DropPath
+from timm.models.layers import trunc_normal_
 import dataclasses
 
 

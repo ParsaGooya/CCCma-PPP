@@ -1,10 +1,8 @@
 import torch
-import torch.nn as nn
 from torch.distributions import Normal, kl_divergence
 import dataclasses
 from loss.loss_abc import lossABC
 
-from cccma_ppp.models.normalized_flows import NormalizedFlowModel
 
 
 @dataclasses.dataclass

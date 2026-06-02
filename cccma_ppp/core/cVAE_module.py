@@ -422,7 +422,7 @@ class cVAE(moduleABC):
             "output_shape": self.output_shape,
         }
 
-        path = Path(save_path) / f"cVAE_module.pt"
+        path = Path(save_path) / "cVAE_module.pt"
         torch.save(checkpoint, path)
 
     def _load_from_state(self, load_path: Path | str, strict: bool = True):

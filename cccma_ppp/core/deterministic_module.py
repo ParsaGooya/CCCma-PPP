@@ -4,7 +4,6 @@ import pathlib as Path
 from pathlib import Path
 import dataclasses
 
-from cccma_ppp.loss.loss_abc import lossABC
 from cccma_ppp.loss.loss import Losspipeline
 from cccma_ppp.core.registery import *
 from cccma_ppp.core.core_abc import moduleABC
@@ -280,7 +279,7 @@ class deterministic(moduleABC):
         None
         """
 
-        path = Path(save_path) / f"deterministic_module.pt"
+        path = Path(save_path) / "deterministic_module.pt"
         torch.save(self.state_dict(), path)
 
     def _load_from_state(self, load_path: Path | str, strict: bool = True):

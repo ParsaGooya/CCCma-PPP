@@ -5,7 +5,6 @@ from collections import defaultdict
 import warnings
 import matplotlib.pyplot as plt
 import os
-import glob
 from cccma_ppp.generic.distributed import Distributed
 import random
 from pathlib import Path
@@ -368,7 +367,7 @@ class MetricsAggregator:
         ax.set_xlabel("Epochs")
         ax.set_ylabel("epoch training times")
 
-        for old_plot in plot_dir.glob(f"epoch_*_times.png"):
+        for old_plot in plot_dir.glob("epoch_*_times.png"):
             old_plot.unlink()
 
         plt.savefig(plot_dir / f"epoch_{num_epochs}_times.png")

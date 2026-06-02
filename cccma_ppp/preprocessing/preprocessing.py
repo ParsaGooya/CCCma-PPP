@@ -1,14 +1,12 @@
 import numpy as np
 import dataclasses
-from typing import Callable, ClassVar
+from typing import ClassVar
 import joblib
 from pathlib import Path
 import os
-import xarray as xr
 
 
 from cccma_ppp.preprocessing.registery import Registery
-from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 
 @dataclasses.dataclass

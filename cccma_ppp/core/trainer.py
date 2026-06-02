@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 from torch.cuda.amp import GradScaler
 from pathlib import Path
@@ -12,7 +11,6 @@ from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.core.optimization import *
 from cccma_ppp.core.cVAE_module import cVAE
 from cccma_ppp.data.dataloader import Dataloader
-from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.aggregator import MetricsAggregator
 from loss.kld import BetaAnnealing
 
@@ -689,7 +687,7 @@ class Trainer:
         """
 
         if path is None:
-            path = Path(self.checkpoint_dir) / f"latest.pt"
+            path = Path(self.checkpoint_dir) / "latest.pt"
         else:
             path = Path(path)
 
