@@ -62,8 +62,7 @@ module:
                                 args :
                                       hidden_dim : 5 
             combined_CGCN_weight : 0.1
-            load_dir : /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/cccma_PPP_test/checkpoints/best.pt
-
+          
 losspipeline:
       loss_pipeline :
                     - name : mse
