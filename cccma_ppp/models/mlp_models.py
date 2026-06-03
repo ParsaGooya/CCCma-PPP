@@ -37,6 +37,7 @@ class cVAE_MLP(cVAEmodelsABC):
                     decoder_hidden_dims: list =None,
                     condition_embedding_dims : list= None,
                     condition_dependant_latent:bool  = False,
+                    condition_dependant_flow: bool = False,
                     condemb_to_decoder: bool = True,
                     batch_normalization : bool =False,
                     dropout_rate: float = None,
@@ -44,12 +45,14 @@ class cVAE_MLP(cVAEmodelsABC):
 
         super(cVAE_MLP, self).__init__()
         self.generative_modeling = True
+        
 
         self.encoder_hidden_dims = encoder_hidden_dims
         self.latent_size = latent_size
         self.decoder_hidden_dims = decoder_hidden_dims
         self.condition_embedding_dims = condition_embedding_dims
         self.condition_dependant_latent = condition_dependant_latent
+        self.condition_dependant_flow = condition_dependant_flow
         self.condemb_to_decoder = condemb_to_decoder
         self.init_method = init_method
 
@@ -72,7 +75,7 @@ class cVAE_MLP(cVAEmodelsABC):
                 self.decoder_hidden_dims = self.encoder_hidden_dims[::-1][1:]
 
 
-        if self.condition_dependant_latent:
+        if (self.condition_dependant_latent and not self.condition_dependant_flow):
 
             assert self.latent_size == self.condition_embedding_size, (f"for condition dependent latent when prior flow is off, "
                                                                         f"condition embedding size ({self.condition_embedding_dims + [f'**{self.condition_embedding_size}**']}) "
@@ -89,19 +92,17 @@ class cVAE_MLP(cVAEmodelsABC):
               added_features_dim : int = None):
 
         assert len(output_shape) == self.NUM_OUTPUT_DIMS, f'MLP models should creat {self.NUM_OUTPUT_DIMS}D outputs'
+        if output_shape is None:
+            output_shape = input_shape.copy()
 
         if self.checkpoint_config is not None:
-            assert input_shape == self.checkpoint_config.checkpoint_input_shape, f'the requested input shape does not match the loaded model : {self.checkpoint_config.load_path}'
-            assert output_shape == self.checkpoint_config.checkpoint_output_shape, f'the requested output shape does not match the loaded model : {self.checkpoint_config.load_path}'
+            assert input_shape == self.checkpoint_config.checkpoint_input_shape, f'the requested input shape ({input_shape}) does not match the loaded model : {self.checkpoint_config.checkpoint_input_shape}'
+            assert output_shape == self.checkpoint_config.checkpoint_output_shape, f'the requested output shape ({output_shape}) does not match the loaded model : {self.checkpoint_config.checkpoint_output_shape}'
 
         self.input_shape = np.prod(input_shape)
+        self.output_shape =  np.prod(output_shape)
         self.added_features_dim = added_features_dim
 
-
-        if output_shape is None:
-            self.output_shape = self.input_shape
-        else:
-            self.output_shape =  np.prod(output_shape)
 
         if self.added_features_dim is None:
             self.added_features_dim = 0
@@ -124,7 +125,7 @@ class cVAE_MLP(cVAEmodelsABC):
                 if self.batch_normalization:
                     layers.append(nn.BatchNorm1d(condition_embedding_dims[i + 1]))
 
-            if self.condition_dependant_latent:
+            if (self.condition_dependant_latent and not self.condition_dependant_flow):
                 self.condition_mu = nn.Linear(condition_embedding_dims[-1], self.condition_embedding_size)
                 self.condition_log_var = nn.Linear(condition_embedding_dims[-1], self.condition_embedding_size)
             else:
@@ -232,7 +233,7 @@ class cVAE_MLP(cVAEmodelsABC):
             cond_mu, cond_log_var = self._condition(condition=condition,
                                                             added_features=added_features)
 
-            if self.condition_dependant_latent:
+            if (self.condition_dependant_latent and not self.condition_dependant_flow):
                 latent_samples = self._sample(cond_mu, cond_log_var, sample_size)
 
             else:
@@ -314,7 +315,7 @@ class cVAE_MLP(cVAEmodelsABC):
                     cond_in = torch.cat([cond_in, x_features], dim=-1)
 
             cond_in = self.embedding(cond_in)
-            if self.condition_dependant_latent:
+            if (self.condition_dependant_latent and not self.condition_dependant_flow):
                     cond_mu = self.condition_mu(cond_in)
                     cond_log_var =self.condition_log_var(cond_in)
             else:
@@ -408,17 +409,16 @@ class Autoencoder( deterministicmodelsABC):
 
         assert len(output_shape) == self.NUM_OUTPUT_DIMS, f'MLP models should creat {self.NUM_OUTPUT_DIMS}D outputs'
 
+        if output_shape is None:
+            output_shape = input_shape.copy()
+
         if self.checkpoint_config is not None:
-            assert input_shape == self.checkpoint_config.checkpoint_input_shape, f'the requested input shape does not match the loaded model : {self.checkpoint_config.load_path}'
-            assert output_shape == self.checkpoint_config.checkpoint_output_shape, f'the requested output shape does not match the loaded model : {self.checkpoint_config.load_path}'
+            assert input_shape == self.checkpoint_config.checkpoint_input_shape, f'the requested input shape ({input_shape}) does not match the loaded model : {self.checkpoint_config.checkpoint_input_shape}'
+            assert output_shape == self.checkpoint_config.checkpoint_output_shape, f'the requested output shape ({output_shape}) does not match the loaded model : {self.checkpoint_config.checkpoint_output_shape}'
 
         self.input_shape = np.prod(input_shape)
+        self.output_shape =  np.prod(output_shape)
         self.added_features_dim = added_features_dim
-
-        if output_shape is None:
-            self.output_shape = self.input_shape
-        else:
-            self.output_shape =  np.prod(output_shape)
 
         if self.added_features_dim is None:
             self.added_features_dim = 0

@@ -46,7 +46,7 @@ class deterministicConfig(moduleConfigABC):
         _checkpoint_config = checkpoint.get('module_config')
 
         self._checkpoint_input_shape = checkpoint.get('model_input_shape')
-        self._checkpoint_input_shape = checkpoint.get('model_input_shape')
+        self._checkpoint_output_shape = checkpoint.get('model_output_shape')
         
         self.ModelConfig  =  dacite.from_dict(
                                         data_class=deterministicModelSelector,
@@ -86,13 +86,16 @@ class deterministic( moduleABC):
               input_shape : np.ndarray,
               output_shape: np.ndarray|None = None,
               added_features_dim : int = None):
-
+        
+        if output_shape is None:
+            output_shape = input_shape.copy()
+            
         self.input_shape = input_shape
         self.output_shape = output_shape
 
         if self.config.load_dir is not None:
-            assert self.input_shape == self._checkpoint_input_shape, f'the requested input shape does not match the loaded module : {self.config.load_dir}'
-            assert self.output_shape == self._checkpoint_output_shape, f'the requested output shape does not match the loaded module : {self.config.load_dir}'
+            assert self.input_shape == self.config._checkpoint_input_shape, f'the requested input shape ({self.input_shape}) does not match the loaded module : {self.config._checkpoint_input_shape}'
+            assert self.output_shape == self.config._checkpoint_output_shape, f'the requested output shape ({self.output_shape}) does not match the loaded module : {self.config._checkpoint_output_shape}'
 
 
         self.model.build(input_shape = input_shape,

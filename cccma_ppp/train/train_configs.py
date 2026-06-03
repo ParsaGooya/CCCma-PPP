@@ -65,11 +65,9 @@ class TrainConfig:
             randomization, including data shuffling and model initialization.
             If unset, weight initialization is not reproducible but data shuffling is.
 
+
             
         to do:
-
-            resume_module:  Configuration for resuming a previously stopped or finished
-            module. When provided, the module config will be overwritten and the saved module will be loaded.
 
             ema: Configuration for exponential moving average of model weights.
 

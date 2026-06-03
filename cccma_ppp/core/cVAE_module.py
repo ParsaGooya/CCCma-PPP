@@ -25,19 +25,20 @@ class cVAEConfig(moduleConfigABC):
         if self.load_dir is None:
             assert self.ModelConfig is not None, 'provide loading dir or model configurations'
 
-            self.latent_size = self.ModelConfig.args.get('latent_size')
-
-            if self.prior_flow_config is not None:
-                    ## read condition_dependant_latent from the ModelConfig so that we know the flow should be conditional.
-                    self.condition_dependant_flow = self.ModelConfig.args.get('condition_dependant_latent')
-                    ## if prior flow is requested, set the condition_dependant_latent for the model to False because we don't want to generate cond_mu and cond_log_var.
-                    self.ModelConfig.args['condition_dependant_latent'] = False
-            ##note that as long as .build() is not called, the cVAE module is not generated, thus the selected model is not created, so no issues with overwriting the config at this level.
-            # When the model is loaded, if the flow is off,  condition_dependant_latent has been turned off and condition_dependant_flow is on, so even though the flow sees the condition, there is no requirement that the condition_embedding_size == latent_size.
-            assert 0 <= self.combined_CGCN_weight <= 1, 'CGCN weight should be between [0,1]'
         else:
             self._load_from_checkpoint(self.load_dir)
             warnings.warn(f'all module config overwritten by the saved module: \n {self.load_dir}')
+
+        self.latent_size = self.ModelConfig.args.get('latent_size')
+
+        if self.prior_flow_config is not None:
+                ## read condition_dependant_latent from the ModelConfig so that we know the flow should be conditional.
+                self.condition_dependant_flow = self.ModelConfig.args.get('condition_dependant_latent')
+                ## if prior flow is requested, set the condition_dependant_latent for the model to False because we don't want to generate cond_mu and cond_log_var.
+                self.ModelConfig.args['condition_dependant_flow'] = True
+        ##note that as long as .build() is not called, the cVAE module is not generated, thus the selected model is not created, so no issues with overwriting the config at this level.
+        # When the model is loaded, if the flow is off,  condition_dependant_latent has been turned off and condition_dependant_flow is on, so even though the flow sees the condition, there is no requirement that the condition_embedding_size == latent_size.
+        assert 0 <= self.combined_CGCN_weight <= 1, 'CGCN weight should be between [0,1]'
 
         self.model = self.ModelConfig.get_model()
     def build(self,   ## this instantiates cVAE module and builds it at the same time.
@@ -59,16 +60,22 @@ class cVAEConfig(moduleConfigABC):
         _checkpoint_config = checkpoint.get('module_config')
 
         self._checkpoint_input_shape = checkpoint.get('model_input_shape')
-        self._checkpoint_input_shape = checkpoint.get('model_input_shape')
+        self._checkpoint_output_shape = checkpoint.get('model_output_shape')
         
         self.ModelConfig  =  dacite.from_dict(
                                         data_class=cVAEModelSelector,
                                         data= _checkpoint_config.get("ModelConfig"),
                                         config=dacite.Config(strict=True))
 
-        self.min_posterior_variance = _checkpoint_config.min_posterior_variance
-        self.prior_flow_config = _checkpoint_config.prior_flow_config
-        self.combined_CGCN_weight = _checkpoint_config.combined_CGCN_weight
+        self.prior_flow_config = _checkpoint_config.get('prior_flow_config', None)
+        if self.prior_flow_config is not None:
+            self.prior_flow_config  =  dacite.from_dict(
+                                            data_class=NormalizedFlowConfig,
+                                            data= self.prior_flow_config,
+                                            config=dacite.Config(strict=True))
+        
+        self.min_posterior_variance = _checkpoint_config.get('min_posterior_variance', None)
+        self.combined_CGCN_weight = _checkpoint_config.get('combined_CGCN_weight', 0)
 
         del checkpoint, _checkpoint_config
         gc.collect()
@@ -109,18 +116,21 @@ class cVAE( moduleABC):
         self.built = False
         self.criterion = None
 
+        self.prior_flow = None
     def build(self,
               input_shape : np.ndarray,
               output_shape: np.ndarray|None = None,
               added_features_dim : int = None):
 
-        
+        if output_shape is None:
+            output_shape = input_shape.copy()
+
         self.input_shape = input_shape
         self.output_shape = output_shape
 
         if self.config.load_dir is not None:
-            assert self.input_shape == self._checkpoint_input_shape, f'the requested input shape does not match the loaded module : {self.config.load_dir}'
-            assert self.output_shape == self._checkpoint_output_shape, f'the requested output shape does not match the loaded module : {self.config.load_dir}'
+            assert self.input_shape == self.config._checkpoint_input_shape, f'the requested input shape ({self.input_shape}) does not match the loaded module : {self.config._checkpoint_input_shape}'
+            assert self.output_shape == self.config._checkpoint_output_shape, f'the requested output shape ({self.output_shape}) does not match the loaded module : {self.config._checkpoint_output_shape}'
 
         if self.min_posterior_variance is not None:
               self.min_posterior_variance = torch.log(torch.tensor(self.min_posterior_variance))  #.expand(self.latent_size)
@@ -151,7 +161,7 @@ class cVAE( moduleABC):
                 raise RuntimeError('with normalized flow all loss reduction has to be sum.')
 
         self.criterion = reconstruction_loss
-        self.KLD = KLD( reduction = self.criterion.reduction, prior_flow = getattr(self, "prior_flow", None))
+        self.KLD = KLD( reduction = self.criterion.reduction)
 
     def _compute_loss(self,
                         beta: float,
@@ -185,6 +195,7 @@ class cVAE( moduleABC):
             output.log_var,
             output.cond_mu,
             output.cond_log_var,
+            prior_flow =  self.prior_flow,
             print_loss = False)
 
         total_loss = reconstruction_loss + beta * kld_loss

@@ -45,24 +45,26 @@ class BetaAnnealing:
 
 
 class KLD(lossABC):
-    def __init__(self, reduction : str = 'mean', prior_flow : NormalizedFlowModel = None):
+    def __init__(self, reduction : str = 'mean',):
         super().__init__()
         self.reduction = reduction
-        self.prior_flow = prior_flow
-        if self.prior_flow is not None:
-            assert self.reduction.lower() == 'sum', 'reduction must be sum for prior flow to work.'
+        self._has_prior_flow = False
 
     def forward(self,
                 mu: torch.Tensor, # samples x F
                 log_var: torch.Tensor,   # samples x F
                 cond_mu: torch.Tensor|None = None,   # samples x F
                 cond_log_var : torch.Tensor | None = None,   # samples x F
+                prior_flow : NormalizedFlowModel = None,
                 print_loss = False)-> torch.Tensor:
+        
+        if prior_flow is not None:
+            self._has_prior_flow = True
 
         assert mu.shape == log_var.shape
         var = (torch.exp(log_var) + 1e-4)
 
-        if self.prior_flow is None:
+        if prior_flow is None:
             if all([cond_mu is not None, cond_log_var is not None]):
                 assert cond_mu.shape == cond_log_var.shape
                 cond_var = (torch.exp(cond_log_var) + 1e-4)
@@ -80,7 +82,7 @@ class KLD(lossABC):
             opts = dict(device=mu.device, dtype=mu.dtype)
             base_dist = Normal(torch.zeros_like(mu), torch.ones_like(log_var))
 
-            posterior_samples = self.sample(mu,  torch.sqrt(var), sample_size = self.prior_flow.flow_sample_size)
+            posterior_samples = self.sample(mu,  torch.sqrt(var), sample_size = prior_flow.flow_sample_size)
             posterior_logprob = Normal(mu,  torch.sqrt(var)).log_prob(posterior_samples).mean(0).sum(-1).to(**opts)
 
             if cond_mu is None:
@@ -92,7 +94,7 @@ class KLD(lossABC):
                 condition = torch.flatten(condition, start_dim= 0 , end_dim=1 )
 
             # e_samples, log_det =
-            flow_output = self.prior_flow(torch.flatten(posterior_samples, start_dim= 0 , end_dim=1 ), condition =  condition)
+            flow_output = prior_flow(torch.flatten(posterior_samples, start_dim= 0 , end_dim=1 ), condition =  condition)
 
             e_samples = torch.unflatten(flow_output.e_samples, dim = 0 , sizes = posterior_samples.shape[:2]).to(**opts)
             prior_logprob = base_dist.log_prob(e_samples).mean(0).sum(-1).to(**opts)
@@ -107,7 +109,7 @@ class KLD(lossABC):
         return KLD
 
     def _aggregate(self, loss):
-        if self.prior_flow is None:
+        if not self._has_prior_flow:
             if self.reduction == 'mean':
                 KLD = loss.mean()
             if self.reduction == 'sum':

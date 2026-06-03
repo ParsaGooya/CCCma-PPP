@@ -51,12 +51,20 @@ class ModelSelector:
         cls.registery = Registery()
 
     def __post_init__(self):
+        self.checkpoint_config = None
 
         if all([self.args is None, self.load_dir is None]):
-             raise RuntimeError('Either specify model configuration as args dict or specify a path for loading.')
+             raise RuntimeError('Either specify model configuration with args dict or specify a path for loading.')
+
         
         if self.load_dir is not None:
-            warnings.warn(f'all model config overwritten by the saved model: \n {self.load_dir}')
+            
+            checkpoint_model, self.checkpoint_config = _load_config_from_checkpoint(self.load_dir)
+            assert self.type == checkpoint_model.get('type'), f'the specified model does not have the correct type {self.type}'
+            self.args = checkpoint_model.get('args')
+            warnings.warn(f'all model config overwritten by the saved model from {self.load_dir}')
+            if self.freeze_weights:
+                warnings.warn(f'Froze model weights ...')
 
     @classmethod
     def register(cls, name: str) -> Callable[..., modelABC]:  # noqa: UP006
@@ -69,17 +77,9 @@ class ModelSelector:
 
     def get_model(self):
 
-        checkpoint_config = None
-        
-        if self.load_dir is not None:
-            args, checkpoint_config = _load_config_from_checkpoint(self.load_dir)
-            checkpoint_config.freeze_weights = self.freeze_weights
-        else:
-            args = self.args
-
-        model = self.registery.get(self.type.lower(), args)
-        if checkpoint_config is not None:
-            model._add_checkpoint_config(checkpoint_config)
+        model = self.registery.get(self.type.lower(), self.args)
+        if self.checkpoint_config is not None:
+            model._add_checkpoint_config(self.checkpoint_config)
 
         return model
 
@@ -129,9 +129,9 @@ def _load_config_from_checkpoint(load_path : Path | str, strict : bool = True):
         raise FileNotFoundError(f"Checkpoint not found: {load_path}")
 
     checkpoint = torch.load( Path(load_path), weights_only=False)
-    checkpoint_model_args = checkpoint.get('module_config').get('ModelConfig')
-    checkpoint_input_shape =  checkpoint.get('input_shape')
-    checkpoint_output_shape =  checkpoint.get('input_shape')
+    checkpoint_model = checkpoint.get('module_config').get('ModelConfig')
+    checkpoint_input_shape =  checkpoint.get('model_input_shape')
+    checkpoint_output_shape =  checkpoint.get('model_output_shape')
 
     checkpoint_config = CheckpointConfig(load_path,
                                             checkpoint_input_shape,
@@ -141,6 +141,6 @@ def _load_config_from_checkpoint(load_path : Path | str, strict : bool = True):
     del checkpoint
     gc.collect()
 
-    return checkpoint_model_args, checkpoint_config
+    return checkpoint_model, checkpoint_config
 
 
