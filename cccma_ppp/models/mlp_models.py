@@ -5,23 +5,12 @@ from cccma_ppp.models.models_abc import cVAEmodelsABC, deterministicmodelsABC, m
 from cccma_ppp.core.selectors import deterministicModelSelector, cVAEModelSelector
 from cccma_ppp.models.normalized_flows import NormalizedFlowModel
 import dataclasses
+from cccma_ppp.core.cVAE_module import cVAEOutput
+from cccma_ppp.core.deterministic_module import deterministicOutput
 
 
 
 
-
-@dataclasses.dataclass
-class cVAEoutput:
-        output : torch.Tensor
-        mu : torch.Tensor
-        log_var :torch.Tensor
-        cond_mu :torch.Tensor = None
-        cond_log_var : torch.Tensor = None
-
-
-@dataclasses.dataclass
-class deterministicoutput:
-        output : torch.Tensor
 
 
 
@@ -52,7 +41,7 @@ class cVAE_MLP(cVAEmodelsABC):
     def __init__(self,   ## do not buuld anything here to keep it lightweight during config parsing
                     config : cVAE_MLPConfig):
 
-        super(cVAE_MLP, self).__init__()
+        super().__init__()
         self.generative_modeling = True
         
         self.config = config
@@ -188,7 +177,7 @@ class cVAE_MLP(cVAEmodelsABC):
                 added_features : torch.Tensor= None,
                 condition : torch.Tensor= None,
                 sample_size = 1,
-                min_posterior_variance = None) -> cVAEoutput:
+                min_posterior_variance = None) -> cVAEOutput:
 
         x_in = x[0] if isinstance(x, (tuple, list)) else x
         self._shape_model_output = x_in.shape ##cVAE autoencodes the input
@@ -220,7 +209,7 @@ class cVAE_MLP(cVAEmodelsABC):
 
         out = out.view(self._shape_model_output)
 
-        return cVAEoutput(output = out,
+        return cVAEOutput(output = out,
                                   mu = mu,
                                   log_var = log_var,
                                   cond_mu = cond_mu,
@@ -230,7 +219,7 @@ class cVAE_MLP(cVAEmodelsABC):
                 condition : torch.Tensor= None,
                 added_features : torch.Tensor= None,
                 prior_flow : NormalizedFlowModel | None = None,
-                sample_size = 1) -> cVAEoutput:
+                sample_size = 1) -> cVAEOutput:
 
 
             cond_in = condition[0] if isinstance(condition, (tuple, list)) else condition
@@ -263,7 +252,7 @@ class cVAE_MLP(cVAEmodelsABC):
 
             output =  self._generate(latent_samples, condition = cond_mu, added_features = added_features)
 
-            return  cVAEoutput(output = output.view(_shape_model_output),
+            return  cVAEOutput(output = output.view(_shape_model_output),
                                   mu = None,
                                   log_var = None,
                                   cond_mu = cond_mu,
@@ -405,7 +394,7 @@ class Autoencoder( deterministicmodelsABC):
     def __init__(self, 
                  config : AutoencoderConfig): ## do not buuld anything here to keep it lightweight during config parsing
 
-        super(Autoencoder, self).__init__()
+        super().__init__()
         self.config = config
         self.batch_normalization = config.batch_normalization
         self.dropout_rate = config.dropout_rate
@@ -495,7 +484,7 @@ class Autoencoder( deterministicmodelsABC):
 
     def forward(self,
                 x : torch.Tensor,
-                added_features = None) -> deterministicoutput:
+                added_features = None) -> deterministicOutput:
 
         if isinstance(x, (tuple, list)):
             x_in, x_mask = x
@@ -540,7 +529,7 @@ class Autoencoder( deterministicmodelsABC):
             out = self.encoder(x_in)
             out = self.decoder(out)
 
-        return deterministicoutput(output = out.view(B, C, -1))
+        return deterministicOutput(output = out.view(B, C, -1))
 
 
 

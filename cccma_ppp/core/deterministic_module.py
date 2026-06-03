@@ -13,6 +13,15 @@ from cccma_ppp.data.dataloader import BatchData
 
 
 
+
+
+@dataclasses.dataclass
+class deterministicOutput:
+    output : torch.Tensor
+
+
+
+
 @ModuleSelector.register('deterministic')
 @ModuleSelector.register('default')
 @dataclasses.dataclass
@@ -60,10 +69,6 @@ class deterministicConfig(moduleConfigABC):
 
 
 
-
-@dataclasses.dataclass
-class deterministicOutput:
-    output : torch.Tensor
 
 
 
@@ -142,7 +147,7 @@ class deterministic( moduleABC):
 
     def forward(self, data: BatchData) -> deterministicOutput:
 
-        return deterministicOutput(output = self.model(x = data.input,  added_features = data.added_features))
+        return self.model(x = data.input,  added_features = data.added_features)
 
     def predict(self, data: BatchData) -> deterministicOutput:
 

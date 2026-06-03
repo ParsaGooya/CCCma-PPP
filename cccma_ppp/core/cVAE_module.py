@@ -12,6 +12,19 @@ from cccma_ppp.data.dataloader import BatchData
 from cccma_ppp.loss.kld import KLD
 import gc
 
+
+
+
+@dataclasses.dataclass
+class cVAEOutput:
+    output : torch.Tensor
+    mu : torch.Tensor  | None
+    log_var : torch.Tensor | None
+    cond_mu : torch.Tensor | None = None
+    cond_log_var : torch.Tensor | None = None
+
+
+
 @ModuleSelector.register('cvae')
 @dataclasses.dataclass
 class cVAEConfig(moduleConfigABC):
@@ -92,13 +105,7 @@ class cVAEConfig(moduleConfigABC):
 
 
 
-@dataclasses.dataclass
-class cVAEOutput:
-    output : torch.Tensor
-    mu : torch.Tensor  | None
-    log_var : torch.Tensor | None
-    cond_mu : torch.Tensor | None = None
-    cond_log_var : torch.Tensor | None = None
+
 
 
 
@@ -240,7 +247,7 @@ class cVAE( moduleABC):
                               sample_size = sample_size)
 
     def preidct(self, data: BatchData,
-                sample_size = 1):
+                sample_size = 1) -> cVAEOutput:
 
 
             return  self.model.predict( condition =data.input,
