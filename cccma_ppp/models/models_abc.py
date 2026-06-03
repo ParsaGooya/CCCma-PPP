@@ -30,12 +30,25 @@ class flowABC(nn.Module,abc.ABC):
         ...
 
 
+
+class modelConfigABC(abc.ABC):
+
+    def __init__(self):
+        self.checkpoint_config: CheckpointConfig | None = None
+
+    @final
+    def _add_checkpoint_config(self, checkpoint_config : CheckpointConfig) -> None:
+         self.checkpoint_config = checkpoint_config
+
+    @abc.abstractmethod
+    def build(self):
+            ...
+
 class modelABC(nn.Module,abc.ABC):
 
     def __init__(self):
         super().__init__()
         self.init_method : str =  'trunc_normal'
-        self.checkpoint_config: CheckpointConfig | None = None
 
     @abc.abstractmethod
     def build(self,
@@ -55,9 +68,9 @@ class modelABC(nn.Module,abc.ABC):
     def _initialize_weights(self):
         self.apply(lambda m: weights_init(m, method=self.init_method))
 
-    @final
-    def _add_checkpoint_config(self, checkpoint_config : CheckpointConfig) -> None:
-         self.checkpoint_config = checkpoint_config
+    # @final
+    # def _add_checkpoint_config(self, checkpoint_config : CheckpointConfig) -> None:
+    #      self.checkpoint_config = checkpoint_config
 
     @final
     def _get_device(self) -> torch.device:

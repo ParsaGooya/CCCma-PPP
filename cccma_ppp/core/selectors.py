@@ -40,7 +40,7 @@ class ModuleSelector:
 class ModelSelector:
 
     type: str
-    args: Mapping[str, Any ] | None = None
+    config: Mapping[str, Any ] | None = None
     load_dir: Path | str | None = None
     freeze_weights : bool = False
 
@@ -53,15 +53,15 @@ class ModelSelector:
     def __post_init__(self):
         self.checkpoint_config = None
 
-        if all([self.args is None, self.load_dir is None]):
-             raise RuntimeError('Either specify model configuration with args dict or specify a path for loading.')
+        if all([self.config is None, self.load_dir is None]):
+             raise RuntimeError('Either specify model configuration with config or specify a path for loading.')
 
         
         if self.load_dir is not None:
             
             checkpoint_model, self.checkpoint_config = _load_config_from_checkpoint(self.load_dir)
             assert self.type == checkpoint_model.get('type'), f'the specified model does not have the correct type {self.type}'
-            self.args = checkpoint_model.get('args')
+            self.config = checkpoint_model.get('config')
             warnings.warn(f'all model config overwritten by the saved model from {self.load_dir}')
             if self.freeze_weights:
                 warnings.warn(f'Froze model weights ...')
@@ -75,13 +75,13 @@ class ModelSelector:
         return cls.registery.available()
 
 
-    def get_model(self):
+    def get_model_config(self):
 
-        model = self.registery.get(self.type.lower(), self.args)
+        model_config = self.registery.get(self.type.lower(), self.config)
         if self.checkpoint_config is not None:
-            model._add_checkpoint_config(self.checkpoint_config)
+            model_config._add_checkpoint_config(self.checkpoint_config)
 
-        return model
+        return model_config
 
 
 

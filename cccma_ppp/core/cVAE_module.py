@@ -27,22 +27,25 @@ class cVAEConfig(moduleConfigABC):
 
         else:
             self._load_from_checkpoint(self.load_dir)
-            warnings.warn(f'Module config overwritten by the saved module: \n {self.load_dir}')
+            warnings.warn(f'Model and prior flow config overwritten by the saved module: \n {self.load_dir}')
         
         if self.combined_CGCN_weight is None:
             self.combined_CGCN_weight = 0
 
-        self.latent_size = self.ModelConfig.args.get('latent_size')
+        self.model_config = self.ModelConfig.get_model_config()
+
+        self.latent_size = self.model_config.latent_size
 
         if self.prior_flow_config is not None:
-                ## read condition_dependant_latent from the ModelConfig so that we know the flow should be conditional.
-                self.condition_dependant_flow = self.ModelConfig.args.get('condition_dependant_latent')
+                ## read condition_dependant_latent from the model_config so that we know the flow should be conditional.
+                self.condition_dependant_flow = self.model_config.condition_dependant_latent
                 ## if prior flow is requested, set the condition_dependant_flow tur for the model because we don't want to generate cond_mu and cond_log_var.
-                self.ModelConfig.args['condition_dependant_flow'] = True
+                if self.condition_dependant_flow:
+                    self.model_config.condition_dependant_flow = True
 
         assert 0 <= self.combined_CGCN_weight <= 1, 'CGCN weight should be between [0,1]'
 
-        self.model = self.ModelConfig.get_model()
+        self.model = self.model_config.build()
     def build(self,   ## this instantiates cVAE module and builds it at the same time.
               input_shape : np.ndarray,
               output_shape: np.ndarray|None = None,
@@ -54,6 +57,9 @@ class cVAEConfig(moduleConfigABC):
 
 
     def _load_from_checkpoint(self, load_path : Path | str):
+        '''
+        Loads model and prior flow config but allows control over the rest.
+        '''
 
         if not Path(load_path).exists():
             raise FileNotFoundError(f"Checkpoint not found: {load_path}")
@@ -70,8 +76,7 @@ class cVAEConfig(moduleConfigABC):
                                         config=dacite.Config(strict=True))
 
         self.prior_flow_config = _checkpoint_config.get('prior_flow_config', None)
-        if self.prior_flow_config is not None:
-            self.prior_flow_config  =  dacite.from_dict(
+        self.prior_flow_config  =  dacite.from_dict(
                                             data_class=NormalizedFlowConfig,
                                             data= self.prior_flow_config,
                                             config=dacite.Config(strict=True))

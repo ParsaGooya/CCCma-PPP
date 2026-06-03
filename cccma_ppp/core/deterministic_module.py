@@ -27,7 +27,8 @@ class deterministicConfig(moduleConfigABC):
             self._load_from_checkpoint(self.load_dir)
             warnings.warn(f'all module config overwritten by the saved module: \n {self.load_dir}')
 
-        self.model = self.ModelConfig.get_model()
+        self.model_config = self.ModelConfig.get_model_config()
+        self.model = self.model_config.build()
     def build(self,
               input_shape : np.ndarray,
               output_shape: np.ndarray|None = None,

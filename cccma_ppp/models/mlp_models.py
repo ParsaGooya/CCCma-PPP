@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from cccma_ppp.models.models_abc import cVAEmodelsABC, deterministicmodelsABC
+from cccma_ppp.models.models_abc import cVAEmodelsABC, deterministicmodelsABC, modelConfigABC
 from cccma_ppp.core.selectors import deterministicModelSelector, cVAEModelSelector
 from cccma_ppp.models.normalized_flows import NormalizedFlowModel
 import dataclasses
@@ -25,39 +25,49 @@ class deterministicoutput:
 
 
 
-
-
 @cVAEModelSelector.register('mlp')
+@dataclasses.dataclass
+class cVAE_MLPConfig(modelConfigABC):
+        encoder_hidden_dims : list
+        latent_size : int
+        decoder_hidden_dims: list =None
+        condition_embedding_dims : list= None
+        condition_dependant_latent:bool  = False
+        condemb_to_decoder: bool = True
+        batch_normalization : bool =False
+        dropout_rate: float = None
+        init_method : str =  'trunc_normal'
+
+        def __post_init__(self):
+            super().__init__()
+            self.condition_dependant_flow = False
+
+        def build(self):
+            return cVAE_MLP(self)
+
+
 class cVAE_MLP(cVAEmodelsABC):
     NUM_OUTPUT_DIMS = 1
     GENERATOR = False
     def __init__(self,   ## do not buuld anything here to keep it lightweight during config parsing
-                    encoder_hidden_dims : list,
-                    latent_size : int,
-                    decoder_hidden_dims: list =None,
-                    condition_embedding_dims : list= None,
-                    condition_dependant_latent:bool  = False,
-                    condition_dependant_flow: bool = False,
-                    condemb_to_decoder: bool = True,
-                    batch_normalization : bool =False,
-                    dropout_rate: float = None,
-                    init_method : str =  'trunc_normal'):
+                    config : cVAE_MLPConfig):
 
         super(cVAE_MLP, self).__init__()
         self.generative_modeling = True
         
+        self.config = config
 
-        self.encoder_hidden_dims = encoder_hidden_dims
-        self.latent_size = latent_size
-        self.decoder_hidden_dims = decoder_hidden_dims
-        self.condition_embedding_dims = condition_embedding_dims
-        self.condition_dependant_latent = condition_dependant_latent
-        self.condition_dependant_flow = condition_dependant_flow
-        self.condemb_to_decoder = condemb_to_decoder
-        self.init_method = init_method
+        self.encoder_hidden_dims = config.encoder_hidden_dims
+        self.latent_size = config.latent_size
+        self.decoder_hidden_dims = config.decoder_hidden_dims
+        self.condition_embedding_dims = config.condition_embedding_dims
+        self.condition_dependant_latent = config.condition_dependant_latent
+        self.condition_dependant_flow = config.condition_dependant_flow
+        self.condemb_to_decoder = config.condemb_to_decoder
+        self.init_method = config.init_method
 
-        self.batch_normalization = batch_normalization
-        self.dropout_rate = dropout_rate
+        self.batch_normalization = config.batch_normalization
+        self.dropout_rate = config.dropout_rate
 
         if self.condition_embedding_dims is not None:
             self.condition_embedding_size = self.condition_embedding_dims[-1]
@@ -75,12 +85,11 @@ class cVAE_MLP(cVAEmodelsABC):
                 self.decoder_hidden_dims = self.encoder_hidden_dims[::-1][1:]
 
 
-        if (self.condition_dependant_latent and not self.condition_dependant_flow):
-
-            assert self.latent_size == self.condition_embedding_size, (f"for condition dependent latent when prior flow is off, "
-                                                                        f"condition embedding size ({self.condition_embedding_dims + [f'**{self.condition_embedding_size}**']}) "
+        if self.condition_dependant_latent:
+            if not self.condition_dependant_flow:
+                assert self.latent_size == self.condition_embedding_size, (f"for condition dependent latent when prior flow is off, "
+                                                                            f"condition embedding size ({self.condition_embedding_dims + [f'**{self.condition_embedding_size}**']}) "
                                                                         f"must equal latent size ({self.latent_size}).")
-
 
         else:
             if self.condition_embedding_dims is not None:
@@ -95,9 +104,9 @@ class cVAE_MLP(cVAEmodelsABC):
         if output_shape is None:
             output_shape = input_shape.copy()
 
-        if self.checkpoint_config is not None:
-            assert input_shape == self.checkpoint_config.checkpoint_input_shape, f'the requested input shape ({input_shape}) does not match the loaded model : {self.checkpoint_config.checkpoint_input_shape}'
-            assert output_shape == self.checkpoint_config.checkpoint_output_shape, f'the requested output shape ({output_shape}) does not match the loaded model : {self.checkpoint_config.checkpoint_output_shape}'
+        if self.config.checkpoint_config is not None:
+            assert input_shape == self.config.checkpoint_config.checkpoint_input_shape, f'the requested input shape ({input_shape}) does not match the loaded model : {self.config.checkpoint_config.checkpoint_input_shape}'
+            assert output_shape == self.config.checkpoint_config.checkpoint_output_shape, f'the requested output shape ({output_shape}) does not match the loaded model : {self.config.checkpoint_config.checkpoint_output_shape}'
 
         self.input_shape = np.prod(input_shape)
         self.output_shape =  np.prod(output_shape)
@@ -166,8 +175,8 @@ class cVAE_MLP(cVAEmodelsABC):
 
         
 
-        if self.checkpoint_config is not None:
-            self._load_state_dict(self.checkpoint_config)
+        if self.config.checkpoint_config is not None:
+            self._load_state_dict(self.config.checkpoint_config)
 
         else:
             self._initialize_weights()
@@ -373,28 +382,39 @@ class cVAE_MLP(cVAEmodelsABC):
 
 
 @deterministicModelSelector.register('mlp')
+@dataclasses.dataclass
+class AutoencoderConfig(modelConfigABC):
+            encoder_hidden_dims : list
+            decoder_hidden_dims: list =None
+            batch_normalization : bool =False
+            dropout_rate: float = None
+            append_mode=1
+            init_method : str =  'trunc_normal'
+
+            def __post_init__(self):
+                super().__init__()
+
+            def build(self):
+                return Autoencoder(self)
+
+
 class Autoencoder( deterministicmodelsABC):
 
     NUM_OUTPUT_DIMS = 1
     GENERATOR = False
-    def __init__(self,  ## do not buuld anything here to keep it lightweight during config parsing
-            encoder_hidden_dims : list,
-            decoder_hidden_dims: list =None,
-            batch_normalization : bool =False,
-            dropout_rate: float = None,
-            append_mode=1,
-            init_method : str =  'trunc_normal'):
+    def __init__(self, 
+                 config : AutoencoderConfig): ## do not buuld anything here to keep it lightweight during config parsing
 
         super(Autoencoder, self).__init__()
+        self.config = config
+        self.batch_normalization = config.batch_normalization
+        self.dropout_rate = config.dropout_rate
+        self.init_method = config.init_method
+        self.append_mode = config.append_mode
+        self.latent_size = config.encoder_hidden_dims[-1]
+        self.encoder_hidden_dims = config.encoder_hidden_dims
 
-        self.batch_normalization = batch_normalization
-        self.dropout_rate = dropout_rate
-        self.init_method = init_method
-        self.append_mode = append_mode
-        self.latent_size = encoder_hidden_dims[-1]
-        self.encoder_hidden_dims = encoder_hidden_dims
-
-        if decoder_hidden_dims is None:
+        if config.decoder_hidden_dims is None:
             if len(self.encoder_hidden_dims) == 1:
                 self.decoder_hidden_dims = []
             else:
@@ -412,9 +432,9 @@ class Autoencoder( deterministicmodelsABC):
         if output_shape is None:
             output_shape = input_shape.copy()
 
-        if self.checkpoint_config is not None:
-            assert input_shape == self.checkpoint_config.checkpoint_input_shape, f'the requested input shape ({input_shape}) does not match the loaded model : {self.checkpoint_config.checkpoint_input_shape}'
-            assert output_shape == self.checkpoint_config.checkpoint_output_shape, f'the requested output shape ({output_shape}) does not match the loaded model : {self.checkpoint_config.checkpoint_output_shape}'
+        if self.config.checkpoint_config is not None:
+            assert input_shape == self.config.checkpoint_config.checkpoint_input_shape, f'the requested input shape ({input_shape}) does not match the loaded model : {self.config.checkpoint_config.checkpoint_input_shape}'
+            assert output_shape == self.config.checkpoint_config.checkpoint_output_shape, f'the requested output shape ({output_shape}) does not match the loaded model : {self.config.checkpoint_config.checkpoint_output_shape}'
 
         self.input_shape = np.prod(input_shape)
         self.output_shape =  np.prod(output_shape)
@@ -466,8 +486,8 @@ class Autoencoder( deterministicmodelsABC):
 
         self.decoder = nn.Sequential(*layers)
 
-        if self.checkpoint_config is not None:
-            self._load_state_dict( self.checkpoint_config)
+        if self.config.checkpoint_config is not None:
+            self._load_state_dict( self.config.checkpoint_config)
         else:
             self._initialize_weights()
 
