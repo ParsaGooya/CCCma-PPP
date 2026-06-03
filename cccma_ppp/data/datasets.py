@@ -50,7 +50,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
                 warnings.warn(f'model and observation data do not have the same longitudes cooridnates.') 
             self.observation.preprocessing_pipeline.name = 'observation'
         else:
-            assert self.condition_method is not None, f'No target observation is specifiec. Specify condition_method!' 
+            assert self.condition_method is not None, f'No target observation is specified. Specify condition_method!' 
 
         if self.condition_method is not None:
             assert self.condition_method in  self._available_condiiton_methods(), f'condition_method must be from {self._available_condiiton_methods()} '
