@@ -18,7 +18,7 @@ class cVAEConfig(moduleConfigABC):
     ModelConfig  : cVAEModelSelector | None = None
     min_posterior_variance: float | None = None
     prior_flow_config : NormalizedFlowConfig | None = None
-    combined_CGCN_weight : float = 0
+    combined_CGCN_weight : float = None
     load_dir : str| None = None
 
     def __post_init__(self):
@@ -27,17 +27,19 @@ class cVAEConfig(moduleConfigABC):
 
         else:
             self._load_from_checkpoint(self.load_dir)
-            warnings.warn(f'all module config overwritten by the saved module: \n {self.load_dir}')
+            warnings.warn(f'Module config overwritten by the saved module: \n {self.load_dir}')
+        
+        if self.combined_CGCN_weight is None:
+            self.combined_CGCN_weight = 0
 
         self.latent_size = self.ModelConfig.args.get('latent_size')
 
         if self.prior_flow_config is not None:
                 ## read condition_dependant_latent from the ModelConfig so that we know the flow should be conditional.
                 self.condition_dependant_flow = self.ModelConfig.args.get('condition_dependant_latent')
-                ## if prior flow is requested, set the condition_dependant_latent for the model to False because we don't want to generate cond_mu and cond_log_var.
+                ## if prior flow is requested, set the condition_dependant_flow tur for the model because we don't want to generate cond_mu and cond_log_var.
                 self.ModelConfig.args['condition_dependant_flow'] = True
-        ##note that as long as .build() is not called, the cVAE module is not generated, thus the selected model is not created, so no issues with overwriting the config at this level.
-        # When the model is loaded, if the flow is off,  condition_dependant_latent has been turned off and condition_dependant_flow is on, so even though the flow sees the condition, there is no requirement that the condition_embedding_size == latent_size.
+
         assert 0 <= self.combined_CGCN_weight <= 1, 'CGCN weight should be between [0,1]'
 
         self.model = self.ModelConfig.get_model()
@@ -74,8 +76,10 @@ class cVAEConfig(moduleConfigABC):
                                             data= self.prior_flow_config,
                                             config=dacite.Config(strict=True))
         
-        self.min_posterior_variance = _checkpoint_config.get('min_posterior_variance', None)
-        self.combined_CGCN_weight = _checkpoint_config.get('combined_CGCN_weight', 0)
+        if self.min_posterior_variance is None:
+            self.min_posterior_variance = _checkpoint_config.get('min_posterior_variance', None)
+        if self.combined_CGCN_weight is None:
+            self.combined_CGCN_weight = _checkpoint_config.get('combined_CGCN_weight', 0)
 
         del checkpoint, _checkpoint_config
         gc.collect()
