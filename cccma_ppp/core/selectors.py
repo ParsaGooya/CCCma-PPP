@@ -1,6 +1,6 @@
 import dataclasses
-from src.cccma_ppp.core.registery import *
-from src.cccma_ppp.models.models_abc import *
+from cccma_ppp.core.registery import *
+from cccma_ppp.models.models_abc import *
 from typing import Any, ClassVar
 from collections.abc import Mapping
 

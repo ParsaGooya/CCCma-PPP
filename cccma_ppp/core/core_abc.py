@@ -1,6 +1,6 @@
 import abc
 import numpy as np
-from src.cccma_ppp.loss.loss import Losspipeline
+from cccma_ppp.loss.loss import Losspipeline
 import torch.nn as nn
 
 

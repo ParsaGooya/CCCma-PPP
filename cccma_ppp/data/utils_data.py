@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
 import dataclasses
-from src.cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
+from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 import os
 from pathlib import Path
 import glob

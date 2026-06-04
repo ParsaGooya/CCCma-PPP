@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from src.cccma_ppp.models.models_abc import cVAEmodelsABC, deterministicmodelsABC
-from src.cccma_ppp.core.selectors import deterministicModelSelector, cVAEModelSelector
+from cccma_ppp.models.models_abc import cVAEmodelsABC, deterministicmodelsABC
+from cccma_ppp.core.selectors import deterministicModelSelector, cVAEModelSelector
 from timm.models.layers import trunc_normal_
 import dataclasses
 

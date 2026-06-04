@@ -5,7 +5,7 @@ from collections import defaultdict
 import warnings
 import matplotlib.pyplot as plt
 import os
-from src.cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic.distributed import Distributed
 import random
 from pathlib import Path
 

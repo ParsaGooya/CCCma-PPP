@@ -6,17 +6,17 @@ import warnings
 from pathlib import Path
 import shutil
 
-from src.cccma_ppp.loss.loss import LosspipelineConfig
+from cccma_ppp.loss.loss import LosspipelineConfig
 
-from src.cccma_ppp.data.dataloader import TrainDataloaderConfig
-from src.cccma_ppp.data.utils_data import WeightsConfig
+from cccma_ppp.data.dataloader import TrainDataloaderConfig
+from cccma_ppp.data.utils_data import WeightsConfig
 
 
-from src.cccma_ppp.core.selectors import ModuleSelector
-from src.cccma_ppp.core.trainer import TrainerConfig
-from src.cccma_ppp.core.optimization import OptimizerConfig
+from cccma_ppp.core.selectors import ModuleSelector
+from cccma_ppp.core.trainer import TrainerConfig
+from cccma_ppp.core.optimization import OptimizerConfig
 
-from src.cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
+from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
 
 def set_seed(seed):
