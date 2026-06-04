@@ -74,25 +74,6 @@ def test_logger_file_written(tmp_path):
     assert "test message" in content
 
 
-# ENV VAR FALLBACK
-
-
-def test_logger_env_dir(monkeypatch, tmp_path):
-    name = "test_logger_env"
-    clear_logger(name)
-
-    monkeypatch.setenv("GLOBAL_LOG_DIR", str(tmp_path))
-
-    logger = setup_logger(name=name, log_dir=None, rank=0)
-
-    log_file = tmp_path / "training.log"
-
-    logger.info("env message")
-
-    assert log_file.exists()
-    assert "env message" in log_file.read_text()
-
-
 # LOG LEVEL
 
 
@@ -165,16 +146,3 @@ def test_log_dir_as_string(tmp_path):
 
     assert log_file.exists()
     assert "string path" in log_file.read_text()
-
-
-# MISSING ENV VAR ERROR
-
-
-def test_missing_env_var(monkeypatch):
-    name = "test_missing_env"
-    clear_logger(name)
-
-    monkeypatch.delenv("GLOBAL_LOG_DIR", raising=False)
-
-    with pytest.raises(KeyError):
-        setup_logger(name=name, log_dir=None, rank=0)

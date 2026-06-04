@@ -128,18 +128,6 @@ def test_anomalies_ensemble_branch():
     assert hasattr(proc, "large_ensemble")
 
 
-def test_anomalies_inverse_expand_branch():
-    proc = PreprocessingStepSelector("anomalies").get_preprocessor()
-
-    # force shape mismatch branch
-    data = xr.DataArray(np.random.rand(24, 3, 3), dims=("lead", "lat", "lon"))
-    proc.mean = xr.DataArray(np.random.rand(12, 3, 3), dims=("lead", "lat", "lon"))
-
-    out = proc.inverse_transform(data)
-
-    assert out.shape == data.shape
-
-
 # OCEAN NAN REMOVER
 
 

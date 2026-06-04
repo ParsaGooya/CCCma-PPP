@@ -11,6 +11,7 @@ dependencies = [
     "torch",
     "joblib>=1.5.3",
     "matplotlib>=3.10.9",
+    "timm>=1.0.27",
 ]
 name = "cccma-ppp"
 dynamic = ["version"]

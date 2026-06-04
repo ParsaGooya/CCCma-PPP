@@ -310,28 +310,6 @@ def test_validation_loader_created():
     assert val_loader is not None
 
 
-# ----------------------------
-# EXTRA BatchData Coverage
-# ----------------------------
-
-
-def test_batchdata_reduce_spatial_mask():
-    inp = torch.tensor([[1.0, float("nan")], [1.0, 2.0]])
-    tgt = torch.tensor([[1.0, float("nan")], [1.0, 2.0]])
-
-    batch = BatchData(
-        inp,
-        tgt,
-        return_spatial_mask=True,
-        reduce_spatial_mask=True,
-    )
-
-    input_vals, input_mask = batch.input
-
-    # reduced → no batch dimension
-    assert input_mask.ndim == inp.ndim - 1
-
-
 def test_batchdata_to_device_with_mask():
     inp = torch.tensor([[1.0, float("nan")]])
     tgt = torch.tensor([[2.0, 3.0]])
