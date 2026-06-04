@@ -23,8 +23,6 @@ class XarrayDatasetConfigABC(abc.ABC):
         """
         ...
 
-        ...
-
 
 class XarrayDatasetABC(abc.ABC):
     """

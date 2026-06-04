@@ -316,7 +316,7 @@ class AnomaliesScaler(PreprocessModuleABC):
         if data.shape[-3] > 12 and self.mean.shape[-3] <= 12:
             lead_years = int(data.shape[-3] / 12)
             mean = xr.concat(
-                [self.mean for _ in range(lead_years)], dim=self.mean.dims()[-3]
+                [self.mean for _ in range(lead_years)], dim=self.mean.dims[-3]
             )
             data_raw = data + mean
         else:

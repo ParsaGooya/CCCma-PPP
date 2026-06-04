@@ -8,3 +8,7 @@ venv/
 dist/
 build/
 .DS_Store
+.vscode
+.ruff_cache
+.pytest_cache
+dummy.nc

@@ -51,7 +51,10 @@ def setup_logger(
 
     # Optional file handler: root rank only
     if rank == 0:
-        log_dir = Path(log_dir) or Path(os.environ["GLOBAL_LOG_DIR"])
+        if log_dir is None:
+            log_dir = Path(os.environ["GLOBAL_LOG_DIR"])
+        else:
+            log_dir = Path(log_dir)
         log_dir.mkdir(parents=True, exist_ok=True)
 
         file_handler = logging.FileHandler(log_dir / "training.log")

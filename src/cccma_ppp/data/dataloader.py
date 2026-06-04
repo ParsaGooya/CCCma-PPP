@@ -39,8 +39,8 @@ class BatchData:
         """
 
         if self.return_spatial_mask:
-            self.input_mask = (~torch.isnan(self.input)).to(torch.int)
-            self.target_mask = (~torch.isnan(self.target)).to(torch.int)
+            self.input_mask = (~torch.isnan(self.input)).to(torch.float)
+            self.target_mask = (~torch.isnan(self.target)).to(torch.float)
             if self.reduce_spatial_mask:
                 self.input_mask = self.input_mask.mean(0)
                 self.input_mask = (self.input_mask == 1).float()
@@ -438,6 +438,7 @@ class Dataloader:
         int
             Number of batches.
         """
+        return len(self._torch_loader)
 
     @final
     def set_epoch(self, epoch):

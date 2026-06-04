@@ -85,7 +85,7 @@ class TrainConfig:
                     "with determisitic models target observation must be specified."
                 )
 
-        if self.module.type.lower() in ["cVAE"]:
+        if self.module.type.lower() == "cvae":
             if self.trainer.beta_finder is None:
                 raise ValueError(
                     "with cVAE model TrainerConfig.beta_finder must be set up."
