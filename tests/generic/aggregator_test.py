@@ -5,7 +5,7 @@ import warnings
 import tempfile
 from pathlib import Path
 
-from src.cccma_ppp.generic.aggregator import MetricsAggregator
+from cccma_ppp.generic.aggregator import MetricsAggregator
 
 
 # MOCK DISTRIBUTED

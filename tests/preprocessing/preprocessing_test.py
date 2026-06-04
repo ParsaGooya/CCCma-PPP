@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import numpy as np
 
-from src.cccma_ppp.preprocessing.preprocessing import (
+from cccma_ppp.preprocessing.preprocessing import (
     PreprocessingStepSelector,
     PreprocessingPipeline,
 )

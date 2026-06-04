@@ -4,10 +4,10 @@ from pathlib import Path
 import joblib
 import os
 
-from src.cccma_ppp.preprocessing.preprocessing import (
+from cccma_ppp.preprocessing.preprocessing import (
     PreprocessingStepSelector,
 )  # PreprocessingPipeline
-from src.cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
+from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 
 @PreprocessingStepSelector.register("normalizer")

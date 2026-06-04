@@ -3,7 +3,7 @@ import warnings
 import os
 from pathlib import Path
 
-from src.cccma_ppp.train.train_configs import TrainConfig
+from cccma_ppp.train.train_configs import TrainConfig
 
 
 # HELPERS
@@ -59,7 +59,7 @@ class DummyLoss:
 
 # helper to inject Oceannanremove
 def ocean_pipeline():
-    from src.cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
+    from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
     return [(None, Oceannanremove())]
 

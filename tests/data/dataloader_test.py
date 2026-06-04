@@ -2,7 +2,7 @@ import pytest
 import torch
 import numpy as np
 
-from src.cccma_ppp.data.dataloader import (
+from cccma_ppp.data.dataloader import (
     BatchData,
     TrainDataloaderConfig,
     Dataloader,

@@ -5,7 +5,7 @@ import joblib
 from pathlib import Path
 
 # import classes (they register automatically)
-from src.cccma_ppp.preprocessing.utils_preprocessing import PreprocessingStepSelector
+from cccma_ppp.preprocessing.utils_preprocessing import PreprocessingStepSelector
 
 
 class FakeLoaded:

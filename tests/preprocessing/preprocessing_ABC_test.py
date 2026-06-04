@@ -1,6 +1,6 @@
 import pytest
 
-from src.cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
+from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 
 # ABSTRACT CLASS INSTANTIATION

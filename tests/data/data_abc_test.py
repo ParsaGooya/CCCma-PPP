@@ -1,6 +1,6 @@
 import pytest
 
-from src.cccma_ppp.data.data_abc import XarrayDatasetABC, XarrayDatasetConfigABC
+from cccma_ppp.data.data_abc import XarrayDatasetABC, XarrayDatasetConfigABC
 
 
 # ---------------------------

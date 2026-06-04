@@ -1,5 +1,5 @@
 import torch.nn as nn
-from src.cccma_ppp.loss.registery import Registery
+from cccma_ppp.loss.registery import Registery
 from typing import ClassVar
 import dataclasses
 

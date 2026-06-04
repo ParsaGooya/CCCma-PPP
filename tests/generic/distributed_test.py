@@ -2,7 +2,7 @@ import pytest
 import torch
 import os
 
-import src.cccma_ppp.generic.distributed as mod
+import cccma_ppp.generic.distributed as mod
 
 
 # HELPERS

@@ -1,6 +1,6 @@
 import pytest
 
-from src.cccma_ppp.preprocessing.registery import Registery
+from cccma_ppp.preprocessing.registery import Registery
 
 
 # BASIC REGISTRATION

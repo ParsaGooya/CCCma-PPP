@@ -3,8 +3,8 @@ import torch
 import torch.nn.functional as F
 import xarray as xr
 
-from src.cccma_ppp.loss.loss import Losspipeline
-from src.cccma_ppp.loss.loss_abc import lossABC
+from cccma_ppp.loss.loss import Losspipeline
+from cccma_ppp.loss.loss_abc import lossABC
 
 
 @Losspipeline.register("mse")

@@ -6,7 +6,7 @@ import glob
 from pathlib import Path
 import importlib
 
-from src.cccma_ppp.data import utils_data as mod
+from cccma_ppp.data import utils_data as mod
 
 
 # GLOBAL PATCH FOR SAFE TESTS

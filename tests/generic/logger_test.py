@@ -3,7 +3,7 @@ import logging
 import os
 from pathlib import Path
 
-from src.cccma_ppp.generic.logger import setup_logger
+from cccma_ppp.generic.logger import setup_logger
 
 
 # HELPERS
