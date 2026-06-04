@@ -1,3 +1,4 @@
+
 import numpy as np
 import dataclasses
 import torch
@@ -12,30 +13,14 @@ from pathlib import Path
 
 @dataclasses.dataclass
 class MetricsAggregator:
-    """
-    Aggregate and store training and validation metrics across batches and epochs.
-    """
-
-    distributed: Distributed
-    name: str
+    distributed : Distributed
+    name : str
 
     epoch_loss_terms: dict[str, list[float]] | None = None
     epoch_times: list[float] | None = None
     num_epochs_seen: int = 0
 
     def __post_init__(self):
-        """
-        Initialize internal accumulators and validate input state.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        AssertionError
-            If provided epoch data is inconsistent.
-        """
 
         self.loss_terms = defaultdict(float)
         self.num_batches_seen = 0
@@ -44,10 +29,9 @@ class MetricsAggregator:
         self._aggregated_across_ranks = False
 
         if self.epoch_loss_terms is not None:
+
             lengths = {len(v) for v in self.epoch_loss_terms.values()}
-            assert len(lengths) == 1, (
-                f"Not all loss lists have the same length: {lengths}"
-            )
+            assert len(lengths) == 1, f"Not all loss lists have the same length: {lengths}"
             if self.num_epochs_seen == 0:
                 self.num_epochs_seen = next(iter(lengths), 0)
 
@@ -55,31 +39,18 @@ class MetricsAggregator:
             self.epoch_loss_terms = {}
 
         if self.epoch_times is not None:
-            assert self.epoch_loss_terms is not None, (
-                "must specify corresponding loss terms."
-            )
-            assert len(self.epoch_times) == next(iter(lengths), 0), (
-                "length of epoch_times is inconsistent with epoch_loss_terms."
-            )
+            assert self.epoch_loss_terms is not None, 'must specify corresponding loss terms.'
+            assert len(self.epoch_times) == next(iter(lengths), 0), 'length of epoch_times is inconsistent with epoch_loss_terms.'
 
         else:
             self.epoch_times = []
 
+
     @torch.no_grad()
-    def record(self, loss_dict):
+    def record(self, loss_dict : dict[str, torch.Tensor | int | float ]) -> None:
         """
-        Record batch-level loss values.
-
-        Parameters
-        ----------
-        loss_dict : dict
-            Dictionary of loss terms.
-
-        Returns
-        -------
-        None
+        Record one "local" batch losses.
         """
-
         for name, value in loss_dict.items():
             if value is None:
                 continue
@@ -90,27 +61,24 @@ class MetricsAggregator:
             if isinstance(value, (int, float)):
                 self.loss_terms[name] += float(value)
 
+
         self.num_batches_seen += 1
 
     @torch.no_grad()
-    def _dist_compute(self):
+    def _dist_compute(self) -> dict[str, float]:
         """
-        Compute globally averaged metrics across all distributed ranks.
+        Returns globally averaged metrics across all ranks.
 
-        Returns
-        -------
-        dict of float
-            Averaged loss metrics.
+        The average is:
+            total metric sum across all GPUs / total number of recorded batches
         """
-
         logs = {}
 
         for name in sorted(self.loss_terms):
             local = torch.tensor(
                 [self.loss_terms[name], self.num_batches_seen],
                 dtype=torch.float64,
-                device=self.distributed.device,
-            )
+                device=self.distributed.device)
 
             self.distributed.all_reduce_sum(local)
 
@@ -122,52 +90,40 @@ class MetricsAggregator:
             else:
                 logs[name] = global_sum / global_count
 
+
         self._aggregated_across_ranks = True
         return logs
 
-    def record_epoch(self, logs, replace_index=None, time_elapsed=None):
+
+
+    def record_epoch(self, logs : dict[str, float], replace_index : int = None , time_elapsed = None):
         """
-        Record epoch-level metrics.
+        Store already-synchronized epoch-level logs.
 
-        Parameters
-        ----------
-        logs : dict
-            Dictionary of aggregated loss metrics.
-        replace_index : int, optional
-            Index to replace existing epoch data.
-        time_elapsed : float, optional
-            Time taken for the epoch.
+        If replace_index is None:
+            append a new epoch.
 
-        Returns
-        -------
-        dict
-            Recorded logs.
-
-        Raises
-        ------
-        RuntimeError
-            If metrics are not synchronized across ranks.
-        ValueError
-            If replacement index is invalid.
+        If replace_index is not None:
+            replace an existing epoch entry without incrementing num_epochs_seen.
         """
-
         if not self._aggregated_across_ranks:
-            raise RuntimeError(
-                "Call _dist_compute() before record_epoch(), so losses are "
-                "synchronized across all ranks."
-            )
+                raise RuntimeError(
+                    "Call _dist_compute() before record_epoch(), so losses are "
+                    "synchronized across all ranks.")
 
         if replace_index is None:
+
             for key, value in logs.items():
+
                 self.epoch_loss_terms.setdefault(key, []).append(value)
 
-            self.epoch_times.append(
-                time_elapsed if time_elapsed is not None else np.nan
-            )
+            self.epoch_times.append(time_elapsed if time_elapsed is not None else np.nan)
             self.num_epochs_seen += 1
 
         else:
+
             for key, value in logs.items():
+
                 if key not in self.epoch_loss_terms:
                     raise ValueError(
                         f"Cannot replace metric {key!r}; it was not previously recorded."
@@ -175,99 +131,67 @@ class MetricsAggregator:
 
                 self.epoch_loss_terms[key][replace_index] = value
 
-            self.epoch_times[replace_index] = (
-                time_elapsed if time_elapsed is not None else np.nan
-            )
+
+            self.epoch_times[replace_index] = time_elapsed if time_elapsed is not None else np.nan
+
 
         self.epochs_submitted = True
         self.reset_batch_losses()
 
         return logs
 
+
     def reset_batch_losses(self):
-        """
-        Reset accumulated batch-level metrics.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        UserWarning
-            If called before any epoch submission.
-        """
-
-        if self.epochs_submitted:
-            self.loss_terms = defaultdict(float)
-            self.num_batches_seen = 0
-            self._aggregated_across_ranks = False
-        else:
-            warnings.warn(
-                "\n you are resetting batch losses before submitting any epochs. \n"
-            )
+            if self.epochs_submitted:
+                self.loss_terms = defaultdict(float)
+                self.num_batches_seen = 0
+                self._aggregated_across_ranks = False
+            else:
+                 warnings.warn('\n you are resetting batch losses before submitting any epochs. \n')
 
     @classmethod
-    def plot(cls, aggregator_list, color_styles_list=None, plot_dir=None):
+    def plot(cls,
+             aggregator_list : list["MetricsAggregator"],
+             color_styles_list : list[tuple[str, str]] = None,
+             plot_dir: str | Path | None = None) -> None:
         """
-        Plot recorded metrics for one or more aggregators.
+        Plot every recorded metric across all aggregators.
 
-        Parameters
-        ----------
-        aggregator_list : list of MetricsAggregator
-            List of aggregators to plot.
-        color_styles_list : list of tuple, optional
-            Custom color and linestyle pairs.
-        plot_dir : str or Path, optional
-            Directory to save plots.
+        Known names:
+            train -> blue solid
+            val/validation -> orange dashed
 
-        Returns
-        -------
-        None
+        Other names:
+            random color and linestyle.
 
-        Raises
-        ------
-        ValueError
-            If aggregators have inconsistent epoch counts or no data.
         """
-
         if plot_dir is None:
             plot_dir = Path(os.environ.get("GLOBAL_FIGURES_DIR"))
         else:
             plot_dir = Path(plot_dir)
 
+
         if len(aggregator_list) == 0:
             raise ValueError("Specify at least one aggregator.")
 
-        num_epochs = {
-            aggregator.num_epochs_seen
-            for aggregator in aggregator_list
-            if aggregator is not None
-        }
+        num_epochs = {aggregator.num_epochs_seen for aggregator in aggregator_list if aggregator is not None}
         if len(num_epochs) != 1:
-            raise ValueError(
-                "All aggregators must have recorded the same number of epochs."
-            )
+            raise ValueError("All aggregators must have recorded the same number of epochs.")
         num_epochs = next(iter(num_epochs))
 
         if num_epochs == 0:
             raise ValueError("No epochs have been recorded yet.")
 
-        loss_lengths = {
-            len(list(aggregator.epoch_loss_terms.values())[0])
-            for aggregator in aggregator_list
-            if aggregator is not None
-        }
+        loss_lengths = {len(list(aggregator.epoch_loss_terms.values())[0]) for aggregator in aggregator_list if aggregator is not None}
         if len(loss_lengths) != 1:
-            raise ValueError(
-                "All aggregators must have the same number of epoch items."
-            )
+            raise ValueError("All aggregators must have the same number of epoch items.")
         loss_lengths = next(iter(loss_lengths))
 
-        loss_kinds: set[str] = set()
-        epochs_range = np.arange(num_epochs - loss_lengths + 1, num_epochs + 1)
+        loss_kinds : set[str] = set()
+        epochs_range  = np.arange(num_epochs - loss_lengths + 1, num_epochs + 1)
 
-        rng = random.Random()  ## remove the already chosen ones
+
+        rng = random.Random() ## remove the already chosen ones
         random_colors = [
             "tab:green",
             "tab:blue",
@@ -288,17 +212,19 @@ class MetricsAggregator:
 
         style_by_name: dict[str, tuple[str, str]] = {}
 
+
         for ind, aggregator in enumerate(aggregator_list):
             if aggregator is not None:
                 loss_kinds.update(list(aggregator.epoch_loss_terms.keys()))
 
                 if color_styles_list is None:
-                    if "train" in aggregator.name.lower():
+
+                    if 'train' in aggregator.name.lower():
                         style_by_name[aggregator.name] = ("tab:blue", "solid")
                         random_linestyles.remove("solid")
                         random_colors.remove("tab:blue")
 
-                    elif "val" in aggregator.name.lower():
+                    elif 'val' in aggregator.name.lower():
                         style_by_name[aggregator.name] = ("tab:orange", "dashed")
                         random_linestyles.remove("dashed")
                         random_colors.remove("tab:orange")
@@ -306,7 +232,7 @@ class MetricsAggregator:
                     else:
                         random_color = rng.choice(random_colors)
                         random_style = rng.choice(random_linestyles)
-                        style_by_name[aggregator.name] = (random_color, random_style)
+                        style_by_name[aggregator.name] = (random_color,random_style)
                         random_linestyles.remove(random_style)
                         random_colors.remove(random_color)
 
@@ -314,7 +240,8 @@ class MetricsAggregator:
                     style_by_name[aggregator.name] = color_styles_list[ind]
 
         for loss_name in list(loss_kinds):
-            fig, ax = plt.subplots(1, 1, figsize=(8, 5))
+
+            fig, ax = plt.subplots(1,1, figsize=(8,5))
 
             for aggregator in aggregator_list:
                 if aggregator is not None:
@@ -325,27 +252,25 @@ class MetricsAggregator:
 
                     color, style = style_by_name[aggregator.name]
 
-                    ax.plot(
-                        epochs_range,
-                        epoch_losses,
-                        color=color,
-                        linestyle=style,
-                        label=f"{aggregator.name}",
-                    )
+                    ax.plot(epochs_range, epoch_losses, color = color, linestyle = style, label = f'{aggregator.name}')
 
             ax.legend()
-            ax.set_xlabel("Epochs")
+            ax.set_xlabel('Epochs')
             ax.set_ylabel(loss_name)
 
             safe_loss_name = loss_name.replace("/", "_")
 
+
             for old_plot in plot_dir.glob(f"epoch_*_{safe_loss_name}.png"):
                 old_plot.unlink()
 
-            plt.savefig(plot_dir / f"epoch_{num_epochs}_{safe_loss_name}.png")
+            plt.savefig(plot_dir / f'epoch_{num_epochs}_{safe_loss_name}.png')
             plt.close()
 
-        _, ax = plt.subplots(1, 1, figsize=(8, 5))
+
+
+
+        _, ax = plt.subplots(1,1, figsize=(8,5))
 
         for aggregator in aggregator_list:
             if aggregator is not None:
@@ -355,57 +280,32 @@ class MetricsAggregator:
                 if len(epoch_times) == 0:
                     continue
 
-                ax.plot(
-                    epochs_range,
-                    epoch_times,
-                    color=color,
-                    linestyle=style,
-                    label=f"{aggregator.name}",
-                )
+                ax.plot(epochs_range, epoch_times, color = color, linestyle = style, label = f'{aggregator.name}')
 
         ax.legend()
-        ax.set_xlabel("Epochs")
-        ax.set_ylabel("epoch training times")
+        ax.set_xlabel('Epochs')
+        ax.set_ylabel('epoch training times')
 
-        for old_plot in plot_dir.glob("epoch_*_times.png"):
-            old_plot.unlink()
 
-        plt.savefig(plot_dir / f"epoch_{num_epochs}_times.png")
+        for old_plot in plot_dir.glob(f"epoch_*_times.png"):
+                old_plot.unlink()
+
+        plt.savefig(plot_dir / f'epoch_{num_epochs}_times.png')
         plt.close()
 
     def state_dict(self):
-        """
-        Retrieve internal state for checkpointing.
-
-        Returns
-        -------
-        dict
-            State dictionary containing metrics history.
-        """
-
         return {
             "name": self.name,
             "epoch_loss_terms": self.epoch_loss_terms,
-            "epoch_times": self.epoch_times,
-            "num_epochs_seen": self.num_epochs_seen,
-        }
+            "epoch_times" : self.epoch_times,
+            "num_epochs_seen" : self.num_epochs_seen}
 
     def load_state_dict(self, state_dict):
-        """
-        Load internal state from checkpoint.
 
-        Parameters
-        ----------
-        state_dict : dict
-            Saved state dictionary.
-
-        Returns
-        -------
-        None
-        """
-
-        self.name = state_dict.get("name")
-        self.epoch_loss_terms = state_dict.get("epoch_loss_terms", None)
-        self.epoch_times = state_dict.get("epoch_times", None)
-        self.num_epochs_seen = state_dict.get("num_epochs_seen", 0)
+        self.name = state_dict.get('name')
+        self.epoch_loss_terms = state_dict.get('epoch_loss_terms', None)
+        self.epoch_times =  state_dict.get('epoch_times', None)
+        self.num_epochs_seen =  state_dict.get('num_epochs_seen', 0)
         self.reset_batch_losses()
+
+

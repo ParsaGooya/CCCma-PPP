@@ -1,315 +1,146 @@
+import numpy as np
 import dataclasses
 from cccma_ppp.core.registery import *
+from cccma_ppp.core.core_abc import  moduleABC
 from cccma_ppp.models.models_abc import *
 from typing import Any, ClassVar
-from collections.abc import Mapping
-
+from collections.abc import Callable,Mapping
+from pathlib import Path
+import gc
+import warnings
 
 @dataclasses.dataclass
 class ModuleSelector:
-    """
-    Selector for constructing registered module configurations.
-    """
-
     type: str
-    config: Mapping[str, Any]
+    config: Mapping[str, Any ]
     registery: ClassVar[Registery] = Registery()
 
     def __post_init__(self):
-        """
-        Retrieve module configuration from registry.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        ValueError
-            If the specified module type is not registered.
-        """
-
         self._module_config = self.registery.get(self.type.lower(), self.config)
 
     @classmethod
-    def register(cls, name: str):
-        """
-        Register a module under a given name.
-
-        Parameters
-        ----------
-        name : str
-            Name used for registration.
-
-        Returns
-        -------
-        callable
-            Decorator for class registration.
-        """
-        # noqa: UP006
-        return cls.registery.register(
-            name.lower()
-        )  ##attentin: the return is on cls.registery. This means even when register is called on an instance of StepSelector, it will still register the type on the class-level registery, which is what we want.
+    def register(cls, name: str) -> Callable[..., moduleABC]:  # noqa: UP006
+        return cls.registery.register(name.lower())   ##attentin: the return is on cls.registery. This means even when register is called on an instance of StepSelector, it will still register the type on the class-level registery, which is what we want.
 
     @classmethod
     def available(cls):
-        """
-        List available registered module types.
-
-        Returns
-        -------
-        list of str
-            Registered module names.
-        """
-
         return cls.registery.available()
 
-    def build_module(self, input_shape, output_shape=None, added_features_dim=None):
-        """
-        Build selected module instance.
+    def build_module(self,
+              input_shape : np.ndarray,
+              output_shape: np.ndarray|None = None,
+              added_features_dim : int = None):
 
-        Parameters
-        ----------
-        input_shape : np.ndarray
-            Shape of input data.
-        output_shape : np.ndarray or None, optional
-            Shape of output data.
-        added_features_dim : int, optional
-            Dimension of additional features.
-
-        Returns
-        -------
-        moduleABC
-            Constructed module instance.
-
-        Raises
-        ------
-        AttributeError
-            If module configuration does not implement build().
-        """
-
-        return self._module_config.build(
-            input_shape=input_shape,
-            output_shape=output_shape,
-            added_features_dim=added_features_dim,
-        )
+        return self._module_config.build(input_shape = input_shape,
+                                        output_shape = output_shape,
+                                        added_features_dim  = added_features_dim)
 
 
 @dataclasses.dataclass
-class cVAEModelSelector:
-    """
-    Selector for constructing registered cVAE models.
-    """
+class ModelSelector:
 
     type: str
-    args: Mapping[str, Any]
-    registery: ClassVar[Registery] = Registery()
+    config: Mapping[str, Any ] | None = None
+    load_dir: Path | str | None = None
+    freeze_weights : bool = False
+
+    registery: ClassVar[Registery] 
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.registery = Registery()
 
     def __post_init__(self):
-        """
-        Initialize selector instance.
+        self.checkpoint_config = None
 
-        Returns
-        -------
-        None
-        """
+        if all([self.config is None, self.load_dir is None]):
+             raise RuntimeError('Either specify model configuration with config or specify a path for loading.')
 
-        pass
-
-    @classmethod
-    def register(cls, name: str):
-        """
-        Register a cVAE model under a given name.
-
-        Parameters
-        ----------
-        name : str
-            Name used for registration.
-
-        Returns
-        -------
-        callable
-            Decorator for class registration.
-        """
-        # noqa: UP006
-        return cls.registery.register(
-            name.lower()
-        )  ##attentin: the return is on cls.registery. This means even when register is called on an instance of StepSelector, it will still register the type on the class-level registery, which is what we want.
-
-    def available(cls):
-        """
-        List available registered model types.
-
-        Returns
-        -------
-        list of str
-            Registered model names.
-        """
-
-        return cls.registery.available()
-
-    def get_model(self):
-        """
-        Retrieve and instantiate selected model.
-
-        Returns
-        -------
-        cVAEmodelsABC
-            Instantiated model.
-
-        Raises
-        ------
-        ValueError
-            If model type is not registered.
-        """
-
-        return self.registery.get(self.type.lower(), self.args)
-
-
-@dataclasses.dataclass
-class deterministicModelSelector:
-    """
-    Selector for constructing registered deterministic models.
-    """
-
-    type: str
-    args: Mapping[str, Any]
-    registery: ClassVar[Registery] = Registery()
-
-    def __post_init__(self):
-        """
-        Initialize selector instance.
-
-        Returns
-        -------
-        None
-        """
-
-        pass
+        
+        if self.load_dir is not None:
+            
+            checkpoint_model, self.checkpoint_config = _load_config_from_checkpoint(self.load_dir)
+            assert self.type == checkpoint_model.get('type'), f'the specified model does not have the correct type {self.type}'
+            self.config = checkpoint_model.get('config')
+            warnings.warn(f'all model config overwritten by the saved model from {self.load_dir}')
+            if self.freeze_weights:
+                warnings.warn(f'Froze model weights ...')
 
     @classmethod
-    def register(cls, name: str):
-        """
-        Register a deterministic model under a given name.
+    def register(cls, name: str) -> Callable[..., modelABC]:  # noqa: UP006
+        return cls.registery.register(name.lower())   ##attentin: the return is on cls.registery. This means even when register is called on an instance of StepSelector, it will still register the type on the class-level registery, which is what we want.
 
-        Parameters
-        ----------
-        name : str
-            Name used for registration.
-
-        Returns
-        -------
-        callable
-            Decorator for class registration.
-        """
-        # noqa: UP006
-        return cls.registery.register(
-            name.lower()
-        )  ##attentin: the return is on cls.registery. This means even when register is called on an instance of StepSelector, it will still register the type on the class-level registery, which is what we want.
-
+    @classmethod
     def available(cls):
-        """
-        List available registered deterministic model types.
-
-        Returns
-        -------
-        list of str
-            Registered model names.
-        """
-
         return cls.registery.available()
 
-    def get_model(self):
-        """
-        Retrieve and instantiate selected deterministic model.
 
-        Returns
-        -------
-        deterministicmodelsABC
-            Instantiated model.
+    def get_model_config(self):
 
-        Raises
-        ------
-        ValueError
-            If model type is not registered.
-        """
+        model_config = self.registery.get(self.type.lower(), self.config)
+        if self.checkpoint_config is not None:
+            model_config._add_checkpoint_config(self.checkpoint_config)
 
-        return self.registery.get(self.type.lower(), self.args)
+        return model_config
 
+
+
+class cVAEModelSelector(ModelSelector):
+    pass
+
+class deterministicModelSelector(ModelSelector):
+    pass
+
+    
 
 ##### can deleter this and add the registery machinery
 #  to the NormalizedFlowConfig instead. This is because
 # similar to preprocessing, we need to be able to pass
 # a list of flows on top of each other #######
 
-
 @dataclasses.dataclass
 class FlowSelector:
-    """
-    Selector for constructing registered flow components.
-    """
-
-    type: str
-    args: dict[str, object]
+    type  : str
+    args : dict[str, object]
     registery: ClassVar[Registery] = Registery()
 
     def __post_init__(self):
-        """
-        Initialize selector instance.
-
-        Returns
-        -------
-        None
-        """
-
         pass
 
     @classmethod
-    def register(cls, name: str):
-        """
-        Register a flow component under a given name.
-
-        Parameters
-        ----------
-        name : str
-            Name used for registration.
-
-        Returns
-        -------
-        callable
-            Decorator for class registration.
-        """
-        # noqa: UP006
-        return cls.registery.register(
-            name.lower()
-        )  ##attentin: the return is on cls.registery. This means even when register is called on an instance of StepSelector, it will still register the type on the class-level registery, which is what we want.
+    def register(cls, name: str) -> Callable[..., flowABC]:  # noqa: UP006
+        return cls.registery.register(name.lower())   ##attentin: the return is on cls.registery. This means even when register is called on an instance of StepSelector, it will still register the type on the class-level registery, which is what we want.
 
     @classmethod
     def available(cls):
-        """
-        List available registered flow types.
-
-        Returns
-        -------
-        list of str
-            Registered flow names.
-        """
-
         return cls.registery.available()
 
+
     def get_model(self):
-        """
-        Retrieve and instantiate selected flow component.
+            return self.registery.get(self.type.lower(), self.args)
 
-        Returns
-        -------
-        object
-            Instantiated flow component.
 
-        Raises
-        ------
-        ValueError
-            If flow type is not registered.
-        """
 
-        return self.registery.get(self.type.lower(), self.args)
+
+
+def _load_config_from_checkpoint(load_path : Path | str, strict : bool = True):
+
+    if not Path(load_path).exists():
+        raise FileNotFoundError(f"Checkpoint not found: {load_path}")
+
+    checkpoint = torch.load( Path(load_path), weights_only=False)
+    checkpoint_model = checkpoint.get('module_config').get('ModelConfig')
+    checkpoint_input_shape =  checkpoint.get('model_input_shape')
+    checkpoint_output_shape =  checkpoint.get('model_output_shape')
+
+    checkpoint_config = CheckpointConfig(load_path,
+                                            checkpoint_input_shape,
+                                            checkpoint_output_shape,
+                                            strict = strict)
+
+    del checkpoint
+    gc.collect()
+
+    return checkpoint_model, checkpoint_config
+
+

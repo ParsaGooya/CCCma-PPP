@@ -1,235 +1,166 @@
 import abc
+import numpy as np
+import torch
 import torch.nn as nn
+from typing import final
+from timm.models.layers import trunc_normal_
+import gc
+from pathlib import Path
+import dataclasses
 
 
-class flowABC(nn.Module, abc.ABC):
-    """
-    Abstract base class for normalizing flow models.
-    """
+@dataclasses.dataclass
+class CheckpointConfig:
+    load_path : Path | str
+    checkpoint_input_shape :np.ndarray
+    checkpoint_output_shape :np.ndarray
+    strict : bool = True
+    freeze_weights : bool = False
+
+
+
+class flowABC(nn.Module,abc.ABC):
 
     @abc.abstractmethod
-    def forward(self, x, condition=None):
-        """
-        Apply forward transformation from input space to latent space.
-
-        Parameters
-        ----------
-        x : torch.Tensor
-            Input tensor.
-        condition : torch.Tensor, optional
-            Conditioning input.
-
-        Returns
-        -------
-        object
-            Transformed output.
-        """
+    def forward(self, x, condition = None):
         ...
-
+    
     @abc.abstractmethod
-    def inverse(self, z, condition=None):
-        """
-        Apply inverse transformation from latent space to input space.
-
-        Parameters
-        ----------
-        z : torch.Tensor
-            Latent tensor.
-        condition : torch.Tensor, optional
-            Conditioning input.
-
-        Returns
-        -------
-        object
-            Inverse transformed output.
-        """
+    def inverse(self, z, condition = None):
         ...
 
 
-class deterministicmodelsABC(nn.Module, abc.ABC):
-    """
-    Abstract base class for deterministic models.
-    """
+
+class modelConfigABC(abc.ABC):
 
     def __init__(self):
-        """
-        Initialize base deterministic model.
+        self.checkpoint_config: CheckpointConfig | None = None
 
-        Returns
-        -------
-        None
-        """
-
-        super().__init__()
+    @final
+    def _add_checkpoint_config(self, checkpoint_config : CheckpointConfig) -> None:
+         self.checkpoint_config = checkpoint_config
 
     @abc.abstractmethod
-    def build(self, input_shape, output_shape=None, added_features_dim=None, **kwargs):
-        """
-        Build model architecture.
+    def build(self):
+            ...
 
-        Parameters
-        ----------
-        input_shape : np.ndarray
-            Shape of input data.
-        output_shape : np.ndarray or None, optional
-            Shape of output data.
-        added_features_dim : int, optional
-            Dimension of additional features.
-        **kwargs
-            Additional arguments.
-
-        Returns
-        -------
-        object
-            Built model instance.
-        """
-        ...
-
-    @abc.abstractmethod
-    def _initialize_weights(self):
-        """
-        Initialize model weights.
-
-        Returns
-        -------
-        None
-        """
-        ...
-
-    @abc.abstractmethod
-    def forward(self, x):
-        """
-        Perform forward pass.
-
-        Parameters
-        ----------
-        x : torch.Tensor
-            Input tensor.
-
-        Returns
-        -------
-        object
-            Model output.
-        """
-        ...
-
-
-class cVAEmodelsABC(nn.Module, abc.ABC):
-    """
-    Abstract base class for conditional variational autoencoder models.
-    """
+class modelABC(nn.Module,abc.ABC):
 
     def __init__(self):
-        """
-        Initialize base cVAE model.
-
-        Returns
-        -------
-        None
-        """
-
         super().__init__()
+        self.init_method : str =  'trunc_normal'
 
     @abc.abstractmethod
-    def build(self, input_shape, output_shape=None, added_features_dim=None, **kwargs):
-        """
-        Build model architecture.
-
-        Parameters
-        ----------
-        input_shape : np.ndarray
-            Shape of input data.
-        output_shape : np.ndarray or None, optional
-            Shape of output data.
-        added_features_dim : int, optional
-            Dimension of additional features.
-        **kwargs
-            Additional arguments.
-
-        Returns
-        -------
-        object
-            Built model instance.
-        """
+    def build(self,
+                input_shape : np.ndarray, 
+                output_shape: np.ndarray|None = None,
+                added_features_dim : int = None , **kwargs):
+            
+            ...
+    
+    @abc.abstractmethod
+    def forward(self,
+                x):
         ...
 
-    @abc.abstractmethod
+
+    @final
     def _initialize_weights(self):
-        """
-        Initialize model weights.
+        self.apply(lambda m: weights_init(m, method=self.init_method))
 
-        Returns
-        -------
-        None
-        """
+    # @final
+    # def _add_checkpoint_config(self, checkpoint_config : CheckpointConfig) -> None:
+    #      self.checkpoint_config = checkpoint_config
+
+    @final
+    def _get_device(self) -> torch.device:
+        param = next(self.parameters(), None)
+
+        if param is not None:
+            return param.device
+
+        buffer = next(self.buffers(), None)
+
+        if buffer is not None:
+            return buffer.device
+
+        return torch.device("cpu")
+
+    @final
+    def _load_state_dict(self, checkpoint_config : CheckpointConfig):
+
+        if not Path(checkpoint_config.load_path).exists():
+            raise FileNotFoundError(f"Checkpoint not found: {checkpoint_config.load_path}")
+            
+        checkpoint = torch.load( Path(checkpoint_config.load_path), map_location= self._get_device(), weights_only=True)["module"]
+
+        model_state_dict = {
+                                key.removeprefix("model."): value
+                                for key, value in checkpoint.items()
+                                if key.startswith("model.")}
+
+        self.load_state_dict( model_state_dict, strict= checkpoint_config.strict)
+
+        del checkpoint
+        gc.collect()
+
+        if checkpoint_config.freeze_weights:
+            for param in self.parameters():
+                param.requires_grad = False
+
+
+
+
+
+class deterministicmodelsABC(modelABC,abc.ABC):
+    pass
+
+
+class cVAEmodelsABC( modelABC,abc.ABC):
+
+    @abc.abstractmethod
+    def predict(self,
+                x):
         ...
 
     @abc.abstractmethod
-    def forward(self, x):
-        """
-        Perform forward pass.
+    def _recognition(self )-> tuple[torch.Tensor, ...]:
+        ...
 
-        Parameters
-        ----------
-        x : torch.Tensor
-            Input tensor.
 
-        Returns
-        -------
-        object
-            Model output.
-        """
+    @abc.abstractmethod
+    def _condition(self)-> tuple[torch.Tensor, ...]:
         ...
 
     @abc.abstractmethod
-    def predict(self, x):
-        """
-        Generate predictions from the model.
-
-        Parameters
-        ----------
-        x : torch.Tensor
-            Input tensor.
-
-        Returns
-        -------
-        object
-            Predicted output.
-        """
+    def _generate(self) -> torch.Tensor:
         ...
 
-    @abc.abstractmethod
-    def _recognition(self):
-        """
-        Encode inputs into latent distribution parameters.
 
-        Returns
-        -------
-        tuple of torch.Tensor
-            Latent distribution parameters.
-        """
-        ...
 
-    @abc.abstractmethod
-    def _condition(self):
-        """
-        Compute conditioning representations.
 
-        Returns
-        -------
-        tuple of torch.Tensor
-            Conditioning parameters.
-        """
-        ...
 
-    @abc.abstractmethod
-    def _generate(self):
-        """
-        Decode latent variables into output space.
+def weights_init(m, method = 'xavier'):
 
-        Returns
-        -------
-        torch.Tensor
-            Generated output.
-        """
-        ...
+    if not isinstance(m, (nn.Linear, nn.Conv1d, nn.Conv2d, nn.Conv3d)):
+        return
+
+    if method == 'xavier':
+        def initializer(t):
+            nn.init.xavier_uniform_(t)
+
+    elif method == 'trunc_normal':
+        def initializer(t):
+            trunc_normal_(t, std=0.02)
+
+    else:
+        raise NotImplementedError('initiliazation methods besied "trunc_normal" and "xavier" are not implementd.')
+
+
+    if hasattr(m, "weight") and m.weight is not None:
+        if m.weight.requires_grad:
+                initializer(m.weight)
+
+    if hasattr(m, "bias") and m.bias is not None:
+        if m.bias.requires_grad:
+            nn.init.constant_(m.bias, 0)

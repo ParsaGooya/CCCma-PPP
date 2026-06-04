@@ -1,5 +1,4 @@
 import logging
-import os
 import sys
 from pathlib import Path
 
@@ -10,26 +9,6 @@ def setup_logger(
     rank: int = 0,
     level: int = logging.INFO,
 ) -> logging.Logger:
-    """
-    Configure and return a logger with console and optional file output.
-
-    Parameters
-    ----------
-    name : str, optional
-        Name of the logger.
-    log_dir : str or Path, optional
-        Directory for saving log file.
-    rank : int, optional
-        Process rank (logging only enabled on root rank).
-    level : int, optional
-        Logging level.
-
-    Returns
-    -------
-    logging.Logger
-        Configured logger instance.
-    """
-
     logger = logging.getLogger(name)
     logger.setLevel(level)
 
@@ -51,10 +30,7 @@ def setup_logger(
 
     # Optional file handler: root rank only
     if rank == 0:
-        if log_dir is None:
-            log_dir = Path(os.environ["GLOBAL_LOG_DIR"])
-        else:
-            log_dir = Path(log_dir)
+        log_dir = Path(log_dir) or Path(os.environ["GLOBAL_LOG_DIR"])
         log_dir.mkdir(parents=True, exist_ok=True)
 
         file_handler = logging.FileHandler(log_dir / "training.log")
