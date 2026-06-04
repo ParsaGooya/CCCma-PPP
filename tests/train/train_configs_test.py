@@ -6,9 +6,7 @@ from pathlib import Path
 from src.cccma_ppp.train.train_configs import TrainConfig
 
 
-# ============================================================
 # HELPERS
-# ============================================================
 
 
 class DummyPipeline:
@@ -66,9 +64,7 @@ def ocean_pipeline():
     return [(None, Oceannanremove())]
 
 
-# ============================================================
 # CORE BRANCHES
-# ============================================================
 
 
 def test_epochs_assertion():
@@ -282,9 +278,7 @@ def test_ocean_required_model_fail():
         )
 
 
-# ============================================================
 # PREPARE DIRECTORY (ALL BRANCHES)
-# ============================================================
 
 
 class Root:

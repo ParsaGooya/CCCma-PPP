@@ -34,9 +34,7 @@ class FakeData(dict):
         return val
 
 
-# ============================================================
 # MOCK PREPROCESSOR
-# ============================================================
 
 
 class DummyPreprocessor:
@@ -54,9 +52,7 @@ class DummyPreprocessor:
         return data
 
 
-# ============================================================
 # REGISTER PREPROCESSOR
-# ============================================================
 
 
 @PreprocessingStepSelector.register("dummy")
@@ -64,9 +60,7 @@ class RegisteredDummy(DummyPreprocessor):
     pass
 
 
-# ============================================================
 # SELECTOR TESTS
-# ============================================================
 
 
 def test_selector_get_preprocessor():
@@ -88,9 +82,7 @@ def test_selector_invalid():
         sel.get_preprocessor()
 
 
-# ============================================================
 # PIPELINE BASIC FIT
-# ============================================================
 
 
 def make_pipeline(scale=2):
@@ -114,9 +106,7 @@ def test_pipeline_fit_basic(monkeypatch, tmp_path):
     assert len(pipe.steps) == 1
 
 
-# ============================================================
 # PIPELINE TRANSFORM / INVERSE
-# ============================================================
 
 
 def test_pipeline_transform_inverse(monkeypatch, tmp_path):
@@ -135,9 +125,7 @@ def test_pipeline_transform_inverse(monkeypatch, tmp_path):
     assert np.allclose(restored, data)
 
 
-# ============================================================
 # STEP ARGUMENT VALIDATION
-# ============================================================
 
 
 def test_transform_invalid_step():
@@ -160,9 +148,7 @@ def test_inverse_invalid_step():
         pipe.inverse_transform(np.array([1]), step_arguments={"bad": {}})
 
 
-# ============================================================
 # GET PREPROCESSORS
-# ============================================================
 
 
 def test_get_all_preprocessors(monkeypatch, tmp_path):
@@ -207,9 +193,7 @@ def test_get_preprocessor_invalid_name(monkeypatch, tmp_path):
         pipe.get_preprocessors("bad")
 
 
-# ============================================================
 # ADD FITTED PREPROCESSOR
-# ============================================================
 
 
 def test_add_fitted_preprocessor():
@@ -247,9 +231,7 @@ def test_add_preprocessor_not_fitted():
         pipe.add_fitted_preprocessor(proc, "dummy")
 
 
-# ============================================================
 # SAVE / LOAD PIPELINE
-# ============================================================
 
 
 def test_pipeline_save(monkeypatch, tmp_path):

@@ -8,9 +8,7 @@ from pathlib import Path
 from src.cccma_ppp.generic.aggregator import MetricsAggregator
 
 
-# ============================================================
 # MOCK DISTRIBUTED
-# ============================================================
 
 
 class DummyDistributed:
@@ -22,9 +20,7 @@ class DummyDistributed:
         return tensor
 
 
-# ============================================================
 # INIT TESTS
-# ============================================================
 
 
 def test_init_basic():
@@ -63,9 +59,7 @@ def test_init_epoch_times_mismatch():
         )
 
 
-# ============================================================
 # RECORD BATCH
-# ============================================================
 
 
 def test_record_numeric_and_tensor():
@@ -83,9 +77,7 @@ def test_record_ignore_none():
     assert "loss" not in agg.loss_terms
 
 
-# ============================================================
 # DIST COMPUTE
-# ============================================================
 
 
 def test_dist_compute_basic():
@@ -106,9 +98,7 @@ def test_dist_compute_zero_batches():
         assert np.isnan(v)
 
 
-# ============================================================
 # RECORD EPOCH
-# ============================================================
 
 
 def test_record_epoch_append():
@@ -157,9 +147,7 @@ def test_record_epoch_without_sync():
         agg.record_epoch({"loss": 1.0})
 
 
-# ============================================================
 # RESET
-# ============================================================
 
 
 def test_reset_after_epoch():
@@ -184,9 +172,7 @@ def test_reset_warning():
         assert len(w) > 0
 
 
-# ============================================================
 # PLOT
-# ============================================================
 
 
 def make_agg(name, values):
@@ -229,9 +215,7 @@ def test_plot_no_epochs_recorded(tmp_path):
         MetricsAggregator.plot([agg], plot_dir=tmp_path)
 
 
-# ============================================================
 # STATE DICT
-# ============================================================
 
 
 def test_state_dict_roundtrip():
@@ -252,9 +236,7 @@ def test_state_dict_roundtrip():
     assert new_agg.num_epochs_seen == agg.num_epochs_seen
 
 
-# ============================================================
 # OTHERS
-# ============================================================
 
 
 def test_dist_compute_nan_branch():

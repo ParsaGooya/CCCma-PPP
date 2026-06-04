@@ -5,9 +5,7 @@ import os
 import src.cccma_ppp.generic.distributed as mod
 
 
-# ============================================================
 # HELPERS
-# ============================================================
 
 
 class DummyDist:
@@ -21,9 +19,7 @@ class DummyDist:
         return True
 
 
-# ============================================================
 # NON-DISTRIBUTED MODE
-# ============================================================
 
 
 def test_distributed_false(monkeypatch):
@@ -38,9 +34,7 @@ def test_distributed_false(monkeypatch):
     assert d.is_root()
 
 
-# ============================================================
 # DISTRIBUTED INIT BRANCH
-# ============================================================
 
 
 def test_distributed_true(monkeypatch):
@@ -60,9 +54,7 @@ def test_distributed_true(monkeypatch):
     assert d.world_size == 2
 
 
-# ============================================================
 # SINGLETON
-# ============================================================
 
 
 def test_singleton(monkeypatch):
@@ -77,9 +69,7 @@ def test_singleton(monkeypatch):
     assert d1 is d2
 
 
-# ============================================================
 # CLEANUP
-# ============================================================
 
 
 def test_cleanup(monkeypatch):
@@ -107,9 +97,7 @@ def test_cleanup_not_initialized(monkeypatch):
     d.cleanup()  # should not crash
 
 
-# ============================================================
 # BARRIER
-# ============================================================
 
 
 def test_barrier_called(monkeypatch):
@@ -139,9 +127,7 @@ def test_barrier_not_called(monkeypatch):
     d.barrier()  # should do nothing
 
 
-# ============================================================
 # ALL REDUCE
-# ============================================================
 
 
 def test_all_reduce_called(monkeypatch):
@@ -173,9 +159,7 @@ def test_all_reduce_not_called(monkeypatch):
     d.all_reduce_sum(t)  # no error
 
 
-# ============================================================
 # BROADCAST
-# ============================================================
 
 
 def test_broadcast_called(monkeypatch):
@@ -207,9 +191,7 @@ def test_broadcast_not_called(monkeypatch):
     d.broadcast(t)  # no error
 
 
-# ============================================================
 # ROOT CHECK
-# ============================================================
 
 
 def test_is_root():

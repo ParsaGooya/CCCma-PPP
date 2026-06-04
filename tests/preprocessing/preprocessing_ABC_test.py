@@ -3,9 +3,7 @@ import pytest
 from src.cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 
-# ============================================================
 # ABSTRACT CLASS INSTANTIATION
-# ============================================================
 
 
 def test_cannot_instantiate_abstract():
@@ -13,9 +11,7 @@ def test_cannot_instantiate_abstract():
         PreprocessModuleABC()
 
 
-# ============================================================
 # VALID SUBCLASS
-# ============================================================
 
 
 class DummyPreprocess(PreprocessModuleABC):
@@ -42,9 +38,7 @@ def test_valid_subclass_workflow():
     assert restored == data
 
 
-# ============================================================
 # PARTIAL IMPLEMENTATION (SHOULD FAIL)
-# ============================================================
 
 
 class IncompletePreprocess1(PreprocessModuleABC):
@@ -72,9 +66,7 @@ def test_incomplete_implementation_fails():
         IncompletePreprocess2()
 
 
-# ============================================================
 # METHOD SIGNATURE FLEXIBILITY
-# ============================================================
 
 
 class FlexiblePreprocess(PreprocessModuleABC):

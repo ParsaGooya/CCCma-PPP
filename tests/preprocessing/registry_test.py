@@ -3,9 +3,7 @@ import pytest
 from src.cccma_ppp.preprocessing.registery import Registery
 
 
-# ============================================================
 # BASIC REGISTRATION
-# ============================================================
 
 
 def test_register_and_get_class():
@@ -20,9 +18,7 @@ def test_register_and_get_class():
     assert cls is Dummy
 
 
-# ============================================================
 # GET WITH CONFIG (INSTANTIATION)
-# ============================================================
 
 
 def test_get_with_config_instantiates():
@@ -39,9 +35,7 @@ def test_get_with_config_instantiates():
     assert obj.x == 10
 
 
-# ============================================================
 # GET WITHOUT CONFIG RETURNS CLASS
-# ============================================================
 
 
 def test_get_without_config():
@@ -56,9 +50,7 @@ def test_get_without_config():
     assert result is Dummy
 
 
-# ============================================================
 # UNKNOWN NAME ERROR
-# ============================================================
 
 
 def test_get_unknown_name():
@@ -70,9 +62,7 @@ def test_get_unknown_name():
     assert "missing not registered" in str(exc.value)
 
 
-# ============================================================
 # AVAILABLE NAMES
-# ============================================================
 
 
 def test_available_returns_registered_names():
@@ -91,9 +81,7 @@ def test_available_returns_registered_names():
     assert set(names) == {"a", "b"}
 
 
-# ============================================================
 # DECORATOR OVERWRITE BEHAVIOR
-# ============================================================
 
 
 def test_register_overwrites_existing():
@@ -112,9 +100,7 @@ def test_register_overwrites_existing():
     assert result is B  # overwritten
 
 
-# ============================================================
 # CONFIG TYPE ERROR
-# ============================================================
 
 
 def test_get_invalid_config_type():
@@ -130,9 +116,7 @@ def test_get_invalid_config_type():
         registry.get("test", config="not_a_dict")
 
 
-# ============================================================
 # CONFIG MISSING REQUIRED ARG
-# ============================================================
 
 
 def test_get_missing_required_argument():
@@ -147,9 +131,7 @@ def test_get_missing_required_argument():
         registry.get("test", config={})  # missing x
 
 
-# ============================================================
 # MULTIPLE REGISTRATIONS
-# ============================================================
 
 
 def test_multiple_registry_instances_isolated():

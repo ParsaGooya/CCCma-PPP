@@ -15,9 +15,7 @@ class FakeLoaded:
         self.final_locations = None
 
 
-# ============================================================
 # HELPERS
-# ============================================================
 
 
 def make_data(shape=(2, 2, 2), dims=("time", "lat", "lon")):
@@ -34,9 +32,7 @@ def make_mask(data):
     return xr.where(data > 0.5, 1.0, np.nan)
 
 
-# ============================================================
 # NORMALIZER
-# ============================================================
 
 
 def test_normalizer_basic():
@@ -73,9 +69,7 @@ def test_normalizer_ensemble_branch():
     assert hasattr(proc, "large_ensemble")
 
 
-# ============================================================
 # STANDARDIZER
-# ============================================================
 
 
 def test_standardizer_basic():
@@ -110,9 +104,7 @@ def test_standardizer_ensemble_branch():
     assert hasattr(proc, "large_ensemble")
 
 
-# ============================================================
 # ANOMALIES
-# ============================================================
 
 
 def test_anomalies_basic():
@@ -148,9 +140,7 @@ def test_anomalies_inverse_expand_branch():
     assert out.shape == data.shape
 
 
-# ============================================================
 # OCEAN NAN REMOVER
-# ============================================================
 
 
 def make_geo_data():
@@ -195,9 +185,7 @@ def test_oceannan_flat_input_branch():
     assert "ref" in out.dims
 
 
-# ============================================================
 # SAVE + LOAD
-# ============================================================
 
 
 def test_oceannan_load(monkeypatch, tmp_path):
@@ -222,9 +210,7 @@ def test_oceannan_load_unfitted(tmp_path):
         proc._load_from_memory(file)
 
 
-# ============================================================
 # REGISTRY INTEGRATION
-# ============================================================
 
 
 def test_registry_integration():

@@ -9,9 +9,7 @@ import importlib
 from src.cccma_ppp.data import utils_data as mod
 
 
-# ============================================================
 # GLOBAL PATCH FOR SAFE TESTS
-# ============================================================
 
 
 @pytest.fixture(autouse=True)
@@ -40,9 +38,7 @@ def patch_io(monkeypatch):
     monkeypatch.setattr(mod, "_load_xarray_data", fake_load)
 
 
-# ============================================================
 # HELPERS
-# ============================================================
 
 
 def coords():
@@ -52,9 +48,7 @@ def coords():
     }
 
 
-# ============================================================
 # CONFIG CLASSES
-# ============================================================
 
 
 def test_model_obs_condition_configs():
@@ -70,9 +64,7 @@ def test_model_obs_condition_configs():
     assert m2._check_ensemble is True
 
 
-# ============================================================
 # _get_ds_info
-# ============================================================
 
 
 def test_get_ds_info_all_branches():
@@ -108,9 +100,7 @@ def test_get_ds_info_no_year(monkeypatch):
     assert info.sizes is None or isinstance(info.sizes, dict)
 
 
-# ============================================================
 # TRAIN MASK
-# ============================================================
 
 
 def test_create_train_mask():
@@ -121,9 +111,7 @@ def test_create_train_mask():
     assert m2.shape == (1, 12)
 
 
-# ============================================================
 # UNWRAP
-# ============================================================
 
 
 def test_unwrap_all():
@@ -142,9 +130,7 @@ def test_unwrap_all():
         mod._unwrape_data_variables(bad)
 
 
-# ============================================================
 # WEIGHTS — ALL BRANCHES
-# ============================================================
 
 
 def test_weights_standard_branches():
@@ -234,9 +220,7 @@ def test_weights_load_assert(monkeypatch):
         mod.WeightsConfig(load_dir="fake").build_weights(coords(), save=False)
 
 
-# ============================================================
 # _load_xarray_data — FULL BRANCHES
-# ============================================================
 
 
 def test_load_xarray_data(monkeypatch):
@@ -269,9 +253,7 @@ def test_load_xarray_data(monkeypatch):
     assert "a" in ds
 
 
-# ============================================================
 # _check_data — REAL BRANCH COVERAGE
-# ============================================================
 
 
 def test_check_data_real(monkeypatch):

@@ -6,9 +6,7 @@ from pathlib import Path
 from src.cccma_ppp.generic.logger import setup_logger
 
 
-# ============================================================
 # HELPERS
-# ============================================================
 
 
 def clear_logger(name):
@@ -17,9 +15,7 @@ def clear_logger(name):
     logger.propagate = True
 
 
-# ============================================================
 # BASIC CREATION
-# ============================================================
 
 
 def test_logger_basic(tmp_path):
@@ -34,9 +30,7 @@ def test_logger_basic(tmp_path):
     assert len(logger.handlers) == 2  # console + file
 
 
-# ============================================================
 # NO DUPLICATE HANDLERS
-# ============================================================
 
 
 def test_logger_no_duplicate_handlers(tmp_path):
@@ -50,9 +44,7 @@ def test_logger_no_duplicate_handlers(tmp_path):
     assert len(logger1.handlers) == 2  # still only 2
 
 
-# ============================================================
 # RANK ≠ 0 (NO HANDLERS)
-# ============================================================
 
 
 def test_logger_non_root(tmp_path):
@@ -64,9 +56,7 @@ def test_logger_non_root(tmp_path):
     assert len(logger.handlers) == 0
 
 
-# ============================================================
 # FILE HANDLER WRITES FILE
-# ============================================================
 
 
 def test_logger_file_written(tmp_path):
@@ -84,9 +74,7 @@ def test_logger_file_written(tmp_path):
     assert "test message" in content
 
 
-# ============================================================
 # ENV VAR FALLBACK
-# ============================================================
 
 
 def test_logger_env_dir(monkeypatch, tmp_path):
@@ -105,9 +93,7 @@ def test_logger_env_dir(monkeypatch, tmp_path):
     assert "env message" in log_file.read_text()
 
 
-# ============================================================
 # LOG LEVEL
-# ============================================================
 
 
 def test_logger_custom_level(tmp_path):
@@ -128,9 +114,7 @@ def test_logger_custom_level(tmp_path):
         assert h.level == logging.DEBUG
 
 
-# ============================================================
 # FORMATTER CONTENT
-# ============================================================
 
 
 def test_logger_format(tmp_path):
@@ -151,9 +135,7 @@ def test_logger_format(tmp_path):
     assert "format test" in content
 
 
-# ============================================================
 # MULTIPLE LOGGERS DIFFERENT NAMES
-# ============================================================
 
 
 def test_multiple_loggers(tmp_path):
@@ -168,9 +150,7 @@ def test_multiple_loggers(tmp_path):
     assert len(l2.handlers) == 2
 
 
-# ============================================================
 # LOG_DIR AS STRING
-# ============================================================
 
 
 def test_log_dir_as_string(tmp_path):
@@ -187,9 +167,7 @@ def test_log_dir_as_string(tmp_path):
     assert "string path" in log_file.read_text()
 
 
-# ============================================================
 # MISSING ENV VAR ERROR
-# ============================================================
 
 
 def test_missing_env_var(monkeypatch):
