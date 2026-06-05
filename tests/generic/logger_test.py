@@ -1,7 +1,4 @@
-import pytest
 import logging
-import os
-from pathlib import Path
 
 from cccma_ppp.generic.logger import setup_logger
 

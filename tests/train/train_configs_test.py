@@ -79,9 +79,6 @@ def test_epochs_assertion():
         )
 
 
-# ---- observation + deterministic/default branch ----
-
-
 def test_no_observation_deterministic():
     with pytest.raises(ValueError):
         TrainConfig(
@@ -115,9 +112,6 @@ def test_no_observation_other_type():
         DummyLoss(["mse"]),
         DummyTrainer(),
     )
-
-
-# ---- cvae branch ----
 
 
 def test_cvae_beta_required():
@@ -155,9 +149,6 @@ def test_cvae_valid():
     )
 
 
-# ---- generator branch ----
-
-
 def test_generator_requires_crps():
     with pytest.raises(RuntimeError):
         TrainConfig(
@@ -192,9 +183,6 @@ def test_non_generator_skip():
     )
 
 
-# ---- warning branch ----
-
-
 def test_deterministic_warning():
     with warnings.catch_warnings(record=True) as w:
         TrainConfig(
@@ -223,9 +211,6 @@ def test_deterministic_no_warning():
             DummyTrainer(True),
         )
         assert len(w) == 0
-
-
-# ---- oceannan branch ----
 
 
 def test_ocean_required_fail_observation():

@@ -2,7 +2,6 @@ import pytest
 import numpy as np
 import xarray as xr
 import joblib
-from pathlib import Path
 
 # import classes (they register automatically)
 from cccma_ppp.preprocessing.utils_preprocessing import PreprocessingStepSelector

@@ -2,8 +2,6 @@ import pytest
 import numpy as np
 import torch
 import warnings
-import tempfile
-from pathlib import Path
 
 from cccma_ppp.generic.aggregator import MetricsAggregator
 

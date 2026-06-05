@@ -1,9 +1,6 @@
 import pytest
 import numpy as np
 import joblib
-import os
-from pathlib import Path
-import numpy as np
 
 from cccma_ppp.preprocessing.preprocessing import (
     PreprocessingStepSelector,

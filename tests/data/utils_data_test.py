@@ -4,7 +4,6 @@ import xarray as xr
 import os
 import glob
 from pathlib import Path
-import importlib
 
 from cccma_ppp.data import utils_data as mod
 
@@ -261,7 +260,6 @@ def test_check_data_real(monkeypatch):
     # force real _check_data
     monkeypatch.setattr(mod, "_check_data", mod._check_data)
 
-    # ---- missing path branch ----
     monkeypatch.setattr(Path, "exists", lambda self: False)
 
     class Dummy:
@@ -284,7 +282,6 @@ def test_check_data_real(monkeypatch):
     with pytest.raises(FileNotFoundError):
         mod._check_data(Dummy())
 
-    # ---- empty glob branch ----
     monkeypatch.setattr(Path, "exists", lambda self: True)
     monkeypatch.setattr(glob, "glob", lambda x: [])
 

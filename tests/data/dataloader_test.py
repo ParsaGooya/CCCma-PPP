@@ -5,13 +5,11 @@ import numpy as np
 from cccma_ppp.data.dataloader import (
     BatchData,
     TrainDataloaderConfig,
-    Dataloader,
     collate_batch,
 )
 
-# ----------------------------
+
 # Mock / Stub Classes
-# ----------------------------
 
 
 class DummyDataset:
@@ -70,9 +68,7 @@ class DummyDistributed:
         pass
 
 
-# ----------------------------
 # BatchData Tests
-# ----------------------------
 
 
 def test_batchdata_basic():
@@ -118,9 +114,7 @@ def test_batchdata_to_device():
     assert batch.input.device.type == "cpu"
 
 
-# ----------------------------
 # collate_batch Tests
-# ----------------------------
 
 
 def test_collate_batch_basic():
@@ -162,9 +156,7 @@ def test_collate_with_added_features():
     assert result.added_features.shape[0] == 2
 
 
-# ----------------------------
 # TrainDataloaderConfig Tests
-# ----------------------------
 
 
 def test_config_default_years():
@@ -223,9 +215,7 @@ def test_add_fitted_preprocessor_requires_fitted():
         cfg._add_fitted_preprocessor(DummyPreprocessor())
 
 
-# ----------------------------
 # Dataloader Tests
-# ----------------------------
 
 
 def setup_loader():
@@ -276,9 +266,7 @@ def test_dataloader_set_epoch_no_sampler():
     loader.set_epoch(1)
 
 
-# ----------------------------
 # Validation Loader Tests
-# ----------------------------
 
 
 def test_validation_loader_none_if_disabled():
@@ -323,9 +311,7 @@ def test_batchdata_to_device_with_mask():
     assert input_mask.device.type == "cpu"
 
 
-# ----------------------------
 # EXTRA collate_batch Coverage
-# ----------------------------
 
 
 def test_collate_with_masks_enabled():
@@ -348,9 +334,7 @@ def test_collate_with_masks_enabled():
     assert isinstance(result.target, tuple)
 
 
-# ----------------------------
 # EXTRA Config Coverage
-# ----------------------------
 
 
 def test_config_train_year_range_expansion():
@@ -387,9 +371,7 @@ def test_build_train_loader_without_setup():
         cfg.build_train_loader()
 
 
-# ----------------------------
 # EXTRA Dataloader Coverage
-# ----------------------------
 
 
 def test_dataloader_len():
@@ -421,9 +403,7 @@ def test_distributed_sampler_created():
     assert loader.sampler is not None
 
 
-# ----------------------------
 # EXTRA Validation Coverage
-# ----------------------------
 
 
 def test_validation_years_computation():
