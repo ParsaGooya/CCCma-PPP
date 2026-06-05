@@ -9,6 +9,7 @@ from cccma_ppp.core.core_abc import moduleABC
 class LRSchedulerConfig:
     min_lr: float = 0.0
     warmup_epochs: int = 0
+    total_epochs: int = None
 
     def __post_init__(self):
         assert self.min_lr >= 0
@@ -17,15 +18,14 @@ class LRSchedulerConfig:
     def build(
         self,
         optimizer: torch.optim.Optimizer,
-        num_batches: int,
-        total_epochs: int,
+        num_batches: int
     ):
-
-        assert total_epochs > 0
+        assert self.total_epochs is not None
+        assert self.total_epochs > 0
         assert num_batches > 0
-        assert self.warmup_epochs < total_epochs, 'number of warmup epochs must be smaller than total epochs.'
+        assert self.warmup_epochs < self.total_epochs, 'number of warmup epochs must be smaller than total epochs.'
 
-        self.total_steps = num_batches * total_epochs
+        self.total_steps = num_batches * self.total_epochs
         self.warmup_steps = num_batches * self.warmup_epochs
 
 
@@ -55,15 +55,21 @@ class OptimizerConfig:
     def build(self,
             module: moduleABC,
             num_batches: int = None,
-            total_epochs: int = None):
+            max_epochs: int = None):
 
         assert module.built, 'make sure module is built before optmizer.'
 
         if self.lr_scheduler_config is not None:
-            if any([num_batches is  None, total_epochs is None]):
-                raise ValueError('total_epochs and num_batches must be specified to set up learning rate scheduler.')
 
-        return OptimizerWrapper(self, module, num_batches, total_epochs)
+            if self.lr_scheduler_config.total_epochs is None:
+                if max_epochs is None:
+                    raise ValueError('either max_epochs must be specified or total_epochs in the learning rate scheduler configuration.')
+
+                self.lr_scheduler_config.total_epochs = max_epochs
+            if num_batches is None:
+                raise ValueError('num_batches must be specified to set up learning rate scheduler.')
+
+        return OptimizerWrapper(self, module, num_batches, max_epochs)  ## max_epochs will be used if total_epochs is not specified.
 
 
 
@@ -74,7 +80,7 @@ class OptimizerWrapper:
                 config : OptimizerConfig,
                 module: moduleABC,
                 num_batches : int = None,
-                total_epochs : int = None):
+                max_epochs: int = None):
 
 
         params = [p for p in module.parameters() if p.requires_grad]
@@ -83,12 +89,14 @@ class OptimizerWrapper:
         self.optimizer = self.optimizer(params, lr = config.lr, weight_decay = config.weight_decay)
 
         if config.lr_scheduler_config is not None:
-            if any([num_batches is  None, total_epochs is None]):
-                raise ValueError('total_epochs and num_batches must be specified to set up learning rate scheduler.')
+            if num_batches is None: 
+                raise ValueError('num_batches must be specified to set up learning rate scheduler.')
+            
+            if all([max_epochs is None, config.lr_scheduler_config.total_epochs is None]):
+                raise ValueError('either max_epochs must be specified or total_epochs in the learning rate scheduler configuration.')
 
             self.lr_scheduler = config.lr_scheduler_config.build(self.optimizer,
-                                                 num_batches,
-                                                 total_epochs)
+                                                 num_batches)
 
     def step(self):
         if self.optimizer is None:

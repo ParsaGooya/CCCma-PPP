@@ -41,7 +41,7 @@ class TrainerConfig:
               validation_data_loader : Dataloader,
               optimization : OptimizerWrapper,
               module : moduleABC,
-              epochs : int):
+              max_epochs : int):
 
 
         self.num_train_batches = len(train_data_loader)
@@ -59,7 +59,7 @@ class TrainerConfig:
                         validation_data_loader  = validation_data_loader,
                         module = module,
                         optimizer = optimization,
-                        epochs = epochs)
+                        max_epochs = max_epochs)
 
 
 
@@ -74,7 +74,7 @@ class Trainer:
             train_data_loader : Dataloader,
             module : moduleABC,
             optimizer : OptimizerWrapper,
-            epochs : int,
+            max_epochs : int,
             validation_data_loader : Dataloader | None = None):
 
 
@@ -84,7 +84,7 @@ class Trainer:
             self.TrainLoader = train_data_loader
             self.ValidationLoader = validation_data_loader
 
-            self.epochs = epochs
+            self.max_epochs = max_epochs
             self.global_step = 0
             self.batch_step = 0
             self._start_epoch = 0
@@ -176,7 +176,7 @@ class Trainer:
             self._clear_memory()
             self.optimizer.zero_grad(set_to_none=True)
 
-            while self._epochs_trained < self.epochs:
+            while self._epochs_trained < self.max_epochs:
 
                 time_elapsed = self._train_on_epoch()
                 train_logs = self.train_aggregator._dist_compute()
@@ -440,7 +440,7 @@ class Trainer:
         def _log_epoch(self, train_logs, validation_logs=None):
             elapsed_time = time.time() - self.start_time_train
             msg = (
-                f"Epoch {self._epochs_trained}/{self.epochs} | "
+                f"Epoch {self._epochs_trained}/{self.max_epochs} | "
                 f"train loss: {train_logs['total_loss']:.6f}")
 
 
