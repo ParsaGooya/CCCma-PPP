@@ -55,16 +55,15 @@ class cVAEConfig(moduleConfigABC):
                 self.condition_dependant_flow = self.model_config.condition_dependant_latent
                 ## if prior flow is requested, set the condition_dependant_flow tur for the model because we don't want to generate cond_mu and cond_log_var.
                 if self.condition_dependant_flow:
-                    self.model_config.condition_dependant_flow = True
+                    self.model_config._resolve_flow_settings(self.condition_dependant_flow)
 
         assert 0 <= self.combined_CGCN_weight <= 1, 'CGCN weight should be between [0,1]'
 
-        self.model = self.model_config.build()
     def build(self,   ## this instantiates cVAE module and builds it at the same time.
               input_shape : np.ndarray,
               output_shape: np.ndarray|None = None,
               added_features_dim : int = None):
-
+        
         return cVAE(self).build(input_shape= input_shape,
                                  output_shape = output_shape,
                                  added_features_dim = added_features_dim)
@@ -110,7 +109,7 @@ class cVAE( moduleABC):
 
         super().__init__()
         self.config = config
-        self.model = self.config.model
+        self.model_config = self.config.model_config
         self.latent_size = self.config.latent_size
         self.min_posterior_variance = self.config.min_posterior_variance
         self.prior_flow_config = self.config.prior_flow_config
@@ -119,7 +118,7 @@ class cVAE( moduleABC):
         if self.min_posterior_variance is not None:
             assert self.min_posterior_variance > 0, 'min_posterior_variance must be positive.'
         if getattr(self.config , 'condition_dependant_flow', False):
-            self.flow_condition_size = self.model.condition_embedding_size
+            self.flow_condition_size = self.model_config.condition_embedding_size
         else:
             self.flow_condition_size = None
 
@@ -148,10 +147,11 @@ class cVAE( moduleABC):
             if output_shape != self.config.checkpoint_config.checkpoint_output_shape:
                 raise RuntimeError(f'the requested output shape ({output_shape}) does not match the loaded module : {self.config.checkpoint_config.checkpoint_output_shape}')
 
+
         if self.min_posterior_variance is not None:
               self.min_posterior_variance = torch.log(torch.tensor(self.min_posterior_variance))  #.expand(self.latent_size)
 
-        self.model.build(input_shape = input_shape,
+        self.model = self.model_config.build(input_shape = input_shape,
                                             output_shape = output_shape,
                                             added_features_dim = added_features_dim)
 

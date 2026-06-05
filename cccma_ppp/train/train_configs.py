@@ -6,6 +6,8 @@ import warnings
 import logging
 from pathlib import Path
 import shutil
+import yaml
+import dacite
 
 from cccma_ppp.loss.loss import LosspipelineConfig
 
@@ -41,7 +43,9 @@ class TrainConfig:
         experiment_dir: Directory where checkpoints and logs are saved. For the
             time being, this must be a local directory.
 
-        epochs : total number of epochs to train on.
+        resume_dir : Directory of a previously stopped or finished training experiment to be resumed.
+
+        max_epochs : maximum number of epochs to train on. If early stopping buffer is not specified, this manu epochs will be trained for.
 
         train_loader: Configuration for the training data loader.
 
@@ -77,21 +81,42 @@ class TrainConfig:
 
 
     """
-    experiment_dir: str
-    epochs : int
-    train_loader: TrainDataloaderConfig
-    module: ModuleSelector
-    losspipeline: LosspipelineConfig
-    trainer : TrainerConfig
-    optimization: OptimizerConfig = dataclasses.field(default_factory=OptimizerConfig)
-    weights : WeightsConfig = dataclasses.field(default_factory=WeightsConfig)
+    experiment_dir: str | None
+    max_epochs : int
+    train_loader: TrainDataloaderConfig | None
+    module: ModuleSelector | None
+    losspipeline: LosspipelineConfig | None
+    trainer : TrainerConfig | None
+    optimization: OptimizerConfig | None = dataclasses.field(default_factory=OptimizerConfig) 
+    weights : WeightsConfig  | None = dataclasses.field(default_factory=WeightsConfig)
     log_every_n_epochs: int = 5
     save_checkpoint: bool = True
     seed: int | None = None
+    resume_dir: str | None = None
 
     # resume_results: ResumeResultsConfig | None = None
     def __post_init__(self):
-        assert self.epochs >=0
+        
+        # if all([self.resume_dir is None, self.experiment_dir is None]):
+        #     raise ValueError('User must specify an experiment_dir for the new experiment or point resume_dir to a previously stopped/finished experiment for resumming')
+        
+        # if self.experiment_dir is not None:
+
+        #     if self.resume_dir is None:
+        #         raise ValueError(f'resume_dir cannot be specified when a new experiment_dir is requersted.')
+            
+        #     required_inputs = [self.train_loader, self.module, self.losspipeline, self.trainer ]
+        #     for config in required_inputs:
+        #         if config is None:
+        #             raise ValueError(f'{config} must be specified for a new experiment.')
+                
+        # else:
+        #     self = self.read_config_from_halted_experiment(self.resume_dir)
+        
+        if self.max_epochs is None: 
+            self.max_epochs = float("inf")
+            
+        assert self.max_epochs >=0
 
         self.experiment_dir = Path(self.experiment_dir)
 
@@ -104,7 +129,7 @@ class TrainConfig:
                  raise ValueError('with cVAE model TrainerConfig.beta_finder must be set up.')
             assert self.train_loader.dataset_config.condition_type is not None, 'with cVAE you must specify condition type!'
 
-        if getattr(self.module._module_config.model,'GENERATOR', False):
+        if getattr(self.module._module_config.model_config,'GENERATOR', False):
             if 'crps' not in self.losspipeline.loss_pipeline.loss_types:
                 raise RuntimeError('For models with generators crps has to be in the loss function.')
 
@@ -118,12 +143,22 @@ class TrainConfig:
         else:
             pipeline = self.train_loader.dataset_config.model.preprocessing_pipeline.pipeline
         
-        if self.module._module_config.model.NUM_OUTPUT_DIMS == 1:
+        if self.module._module_config.model_config.NUM_OUTPUT_DIMS == 1:
             if not any([isinstance(step[1], Oceannanremove) for step in pipeline]):
                 raise RuntimeError('for MLP models, add Oceannanremove as a preprocessing step to flatten the maps.')
         else:
             if any([isinstance(step[1], Oceannanremove) for step in pipeline]):
-                raise RuntimeError('for non-MLP models, do add Oceannanremove as a preprocessing step because it flattens the maps.')          
+                raise RuntimeError('for non-MLP models, do add Oceannanremove as a preprocessing step because it flattens the maps.')    
+
+    
+
+    def read_config_from_halted_experiment(self, resume_dir : str ):
+            
+            config_data = prepare_config(Path(resume_dir) / 'config.yaml')
+            config_data['max_epochs'] = self.max_epochs
+            if config_data.get('seed', None) is None:
+                raise RuntimeError('the resume_dict experiment did not have a seed specified so it is not reproducable.')
+            return dacite.from_dict(data_class=TrainConfig, data=config_data, config=dacite.Config(strict=True))      
 
 
     def set_random_seed(self):
@@ -184,6 +219,15 @@ class TrainConfig:
 
         distributed.barrier()
 
+
+
+def prepare_config(path: Path | str) -> dict:
+    """Get config and update with possible dotlist override."""
+    with open(path) as f:
+        data = yaml.safe_load(f)
+    return data
+
+
 def build_trainer(config : TrainConfig, distributed : Distributed, logger : logging.Logger | None = None):
     def log(msg, **kwargs):
         if distributed.is_root():
@@ -230,7 +274,7 @@ def build_trainer(config : TrainConfig, distributed : Distributed, logger : logg
 
     log(f"Creating {config.optimization.optimizer_type} optimizer ...")
 
-    optimizer = config.optimization.build(module, num_train_batches, config.epochs)
+    optimizer = config.optimization.build(module, num_train_batches, config.max_epochs)
 
 
     log(f"Creating trainer ...")
@@ -240,7 +284,7 @@ def build_trainer(config : TrainConfig, distributed : Distributed, logger : logg
               validation_data_loader = validation_loader,
               module = module,
               optimization = optimizer,
-              epochs = config.epochs)
+              max_epochs = config.max_epochs)
 
     return trainer
 

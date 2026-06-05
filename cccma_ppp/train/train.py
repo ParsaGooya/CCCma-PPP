@@ -1,10 +1,10 @@
 
-from cccma_ppp.train.train_configs import TrainConfig, build_trainer
+from cccma_ppp.train.train_configs import TrainConfig, build_trainer, prepare_config
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.logger import setup_logger
 import argparse
 import dacite
-import yaml
+
 
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Train model from config file")
@@ -29,12 +29,6 @@ def get_parser() -> argparse.ArgumentParser:
     return parser
 
 
-
-def prepare_config(path: str) -> dict:
-    """Get config and update with possible dotlist override."""
-    with open(path) as f:
-        data = yaml.safe_load(f)
-    return data
 
 
 

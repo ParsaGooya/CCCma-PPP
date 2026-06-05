@@ -37,7 +37,7 @@ class deterministicConfig(moduleConfigABC):
             warnings.warn(f'all module config overwritten by the saved module: \n {self.load_dir}')
 
         self.model_config = self.ModelConfig.get_model_config()
-        self.model = self.model_config.build()
+        
     def build(self,
               input_shape : np.ndarray,
               output_shape: np.ndarray|None = None,
@@ -73,9 +73,7 @@ class deterministic( moduleABC):
 
         super().__init__()
         self.config = config
-        self.model = self.config.model
-
-
+        self.model_config = config.model_config
         self.built = False
         self.criterion = None
 
@@ -102,7 +100,7 @@ class deterministic( moduleABC):
                 raise RuntimeError(f'the requested output shape ({output_shape}) does not match the loaded module : {self.config.checkpoint_config.checkpoint_output_shape}')
 
 
-        self.model.build(input_shape = input_shape,
+        self.model = self.model_config.build(input_shape = input_shape,
                                             output_shape = output_shape,
                                             added_features_dim = added_features_dim)
         

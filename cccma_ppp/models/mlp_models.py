@@ -1,10 +1,13 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from cccma_ppp.models.models_abc import cVAEmodelsABC, deterministicmodelsABC, modelConfigABC
+from typing import ClassVar
+import dataclasses
+
+from cccma_ppp.models.models_abc import cVAEmodelsABC, deterministicmodelsABC, modelConfigABC, cVAEmodelConfigABC
 from cccma_ppp.core.selectors import deterministicModelSelector, cVAEModelSelector
 from cccma_ppp.models.normalized_flows import NormalizedFlowModel
-import dataclasses
+
 from cccma_ppp.core.cVAE_module import cVAEOutput
 from cccma_ppp.core.deterministic_module import deterministicOutput
 from cccma_ppp.generic.runtime import RuntimeContext
@@ -16,33 +19,60 @@ from cccma_ppp.generic.runtime import RuntimeContext
 
 @cVAEModelSelector.register('mlp')
 @dataclasses.dataclass
-class cVAE_MLPConfig(modelConfigABC):
+class cVAE_MLPConfig(cVAEmodelConfigABC):
         encoder_hidden_dims : list
         latent_size : int
         decoder_hidden_dims: list =None
         condition_embedding_dims : list= None
-        condition_dependant_latent:bool  = False
+        condition_embedding_size : int = None
+        condition_dependant_latent :bool  = False
         condemb_to_decoder: bool = True
         batch_normalization : bool =False
         dropout_rate: float = None
         init_method : str =  'trunc_normal'
 
-        def __post_init__(self):
-            super().__init__()
-            self.condition_dependant_flow = False
+        NUM_OUTPUT_DIMS: ClassVar[int] = 1
+        GENERATOR: ClassVar[int] = False
 
-        def build(self):
-            return cVAE_MLP(self)
+
+        def __post_init__(self):
+            super().__init__(self.latent_size,
+                            self.condition_dependant_latent,
+                            self.condition_embedding_size)
+
+            if self.condition_embedding_dims is None:
+                self.condemb_to_decoder = False
+
+
+            if self.dropout_rate is not None:
+                assert self.dropout_rate <= 1 and self.dropout_rate >= 0, 'drop out rate must be between 0 and 1'
+
+            if self.decoder_hidden_dims is None:
+                if len(self.encoder_hidden_dims) == 0:
+                    self.decoder_hidden_dims = []
+                else:
+                    self.decoder_hidden_dims = self.encoder_hidden_dims[::-1][1:]
+
+            if not self.condition_dependant_latent:
+                if self.condition_embedding_dims is not None:
+                    assert self.condemb_to_decoder, 'condition embedding has to be passed to decoder for cVAE when latent is not condition dependant.'
+
+
+        def build(self, input_shape : np.ndarray,
+              output_shape: np.ndarray|None = None,
+              added_features_dim : int = None):
+                    
+                return cVAE_MLP(self).build(input_shape = input_shape,
+                                            output_shape = output_shape,
+                                            added_features_dim = added_features_dim)
 
 
 class cVAE_MLP(cVAEmodelsABC):
-    NUM_OUTPUT_DIMS = 1
-    GENERATOR = False
+
     def __init__(self,   ## do not buuld anything here to keep it lightweight during config parsing
                     config : cVAE_MLPConfig):
 
-        super().__init__()
-        self.generative_modeling = True
+        super().__init__(config)
         
         self.config = config
 
@@ -50,39 +80,16 @@ class cVAE_MLP(cVAEmodelsABC):
         self.latent_size = config.latent_size
         self.decoder_hidden_dims = config.decoder_hidden_dims
         self.condition_embedding_dims = config.condition_embedding_dims
+        self.condition_embedding_size = config.condition_embedding_size
         self.condition_dependant_latent = config.condition_dependant_latent
-        self.condition_dependant_flow = config.condition_dependant_flow
         self.condemb_to_decoder = config.condemb_to_decoder
         self.init_method = config.init_method
 
         self.batch_normalization = config.batch_normalization
         self.dropout_rate = config.dropout_rate
 
-        if self.condition_embedding_dims is not None:
-            self.condition_embedding_size = self.condition_embedding_dims[-1]
-            self.condition_embedding_dims = self.condition_embedding_dims[:-1]
-        else:
-            self.condemb_to_decoder = False
+        self.condition_dependant_flow = getattr(config, 'condition_dependant_flow', False)
 
-        if self.dropout_rate is not None:
-            assert self.dropout_rate <= 1 and self.dropout_rate >= 0, 'drop out rate must be between 0 and 1'
-
-        if self.decoder_hidden_dims is None:
-            if len(self.encoder_hidden_dims) == 0:
-                self.decoder_hidden_dims = []
-            else:
-                self.decoder_hidden_dims = self.encoder_hidden_dims[::-1][1:]
-
-
-        if self.condition_dependant_latent:
-            if not self.condition_dependant_flow:
-                assert self.latent_size == self.condition_embedding_size, (f"for condition dependent latent when prior flow is off, "
-                                                                            f"condition embedding size ({self.condition_embedding_dims + [f'**{self.condition_embedding_size}**']}) "
-                                                                        f"must equal latent size ({self.latent_size}).")
-
-        else:
-            if self.condition_embedding_dims is not None:
-                assert self.condemb_to_decoder, 'condition embedding has to be passed to decoder for cVAE when latent is not condition dependant.'
 
     def build(self,
               input_shape : np.ndarray,
@@ -179,7 +186,7 @@ class cVAE_MLP(cVAEmodelsABC):
             self._initialize_weights()
 
 
-
+        return self
     def forward(self,
                 x : torch.Tensor,
                 added_features : torch.Tensor= None,
@@ -388,21 +395,35 @@ class AutoencoderConfig(modelConfigABC):
             append_mode=1
             init_method : str =  'trunc_normal'
 
+            NUM_OUTPUT_DIMS: ClassVar[int] = 1
+            GENERATOR: ClassVar[int] = False
+
             def __post_init__(self):
                 super().__init__()
 
-            def build(self):
-                return Autoencoder(self)
+                if self.decoder_hidden_dims is None:
+                    if len(self.encoder_hidden_dims) == 1:
+                        self.decoder_hidden_dims = []
+                    else:
+                        self.decoder_hidden_dims = self.encoder_hidden_dims[::-1][1:]
+
+
+            def build(self,
+                        input_shape : np.ndarray,
+                        output_shape: np.ndarray|None = None,
+                        added_features_dim : int = None):
+                
+                return Autoencoder(self).build(input_shape = input_shape,
+                                               output_shape = output_shape,
+                                               added_features_dim = added_features_dim)
 
 
 class Autoencoder( deterministicmodelsABC):
 
-    NUM_OUTPUT_DIMS = 1
-    GENERATOR = False
     def __init__(self, 
                  config : AutoencoderConfig): ## do not buuld anything here to keep it lightweight during config parsing
 
-        super().__init__()
+        super().__init__(config)
         self.config = config
         self.batch_normalization = config.batch_normalization
         self.dropout_rate = config.dropout_rate
@@ -410,13 +431,7 @@ class Autoencoder( deterministicmodelsABC):
         self.append_mode = config.append_mode
         self.latent_size = config.encoder_hidden_dims[-1]
         self.encoder_hidden_dims = config.encoder_hidden_dims
-
-        if config.decoder_hidden_dims is None:
-            if len(self.encoder_hidden_dims) == 1:
-                self.decoder_hidden_dims = []
-            else:
-                self.decoder_hidden_dims = self.encoder_hidden_dims[::-1][1:]
-
+        self.decoder_hidden_dims = config.decoder_hidden_dims
 
 
     def build(self,
@@ -495,7 +510,7 @@ class Autoencoder( deterministicmodelsABC):
         else:
             self._initialize_weights()
 
-
+        return self
 
     def forward(self,
                 x : torch.Tensor,

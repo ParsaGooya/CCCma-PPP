@@ -21,6 +21,10 @@ class CheckpointConfig:
 
 
 
+
+
+
+
 class flowABC(nn.Module,abc.ABC):
 
     @abc.abstractmethod
@@ -33,7 +37,15 @@ class flowABC(nn.Module,abc.ABC):
 
 
 
+
+
+
+
+
 class modelConfigABC(abc.ABC):
+
+    NUM_OUTPUT_DIMS = 2
+    GENERATOR = False
 
     def __init__(self):
         self.checkpoint_config: CheckpointConfig | None = None
@@ -43,14 +55,49 @@ class modelConfigABC(abc.ABC):
          self.checkpoint_config = checkpoint_config
 
     @abc.abstractmethod
-    def build(self):
-            ...
+    def build(self,
+                input_shape : np.ndarray, 
+                output_shape: np.ndarray|None = None,
+                added_features_dim : int = None , **kwargs):
+        ...
+
+
+
+
+class cVAEmodelConfigABC(modelConfigABC,abc.ABC):
+    def __init__(self,
+                 latent_size : int,
+                 condition_dependant_latent : bool = False,
+                 condition_embedding_size : int = None ):
+    
+        super().__init__()
+        self.condition_dependant_latent = condition_dependant_latent
+        self.latent_size = latent_size
+        self.condition_embedding_size = condition_embedding_size
+ 
+    def _resolve_flow_settings(self, condition_dependant_flow : bool = False):
+
+        self.condition_dependant_flow = condition_dependant_flow
+        
+        if self.condition_dependant_latent:
+            if not self.condition_dependant_flow:
+                if self.latent_size != self.condition_embedding_size:
+                    raise ValueError(f"for condition dependent latent when prior flow is off, "
+                                        f"condition embedding size ({self.condition_embedding_size}) "
+                                        f"must equal latent size ({self.latent_size}).")
+
+        return self
+
+
+
 
 class modelABC(nn.Module,abc.ABC):
 
-    def __init__(self):
+    def __init__(self, config : modelConfigABC):
         super().__init__()
         self.init_method : str =  'trunc_normal'
+        self.NUM_OUTPUT_DIMS = config.NUM_OUTPUT_DIMS
+        self.GENERATOR = config.GENERATOR
 
     @abc.abstractmethod
     def build(self,
@@ -114,11 +161,23 @@ class modelABC(nn.Module,abc.ABC):
 
 
 
+
+
 class deterministicmodelsABC(modelABC,abc.ABC):
-    pass
+    def __init__(self, config : modelConfigABC):
+        super().__init__(config)
+        self.generative_modeling = False
+
+
+
 
 
 class cVAEmodelsABC( modelABC,abc.ABC):
+
+    def __init__(self, config : modelConfigABC):
+        super().__init__(config)
+        self.generative_modeling = True
+
 
     @abc.abstractmethod
     def predict(self,
