@@ -8,15 +8,7 @@ import os
 import warnings
 import gc
 from cccma_ppp.data.data_abc import XarrayDatasetABC, XarrayDatasetConfigABC, DataConfig
-from cccma_ppp.data.utils_data import (
-    ModelDataConfig,
-    ObsDataConfig,
-    ConditionDataConfig,
-    WeightsConfig,
-    _unwrape_data_variables,
-    _load_xarray_data,
-    _create_train_mask,
-)
+from cccma_ppp.data.utils_data import ModelDataConfig, ObsDataConfig, ConditionDataConfig, WeightsConfig, _unwrape_data_variables, _load_xarray_data, infoclass, _create_train_mask
 
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
@@ -33,6 +25,21 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
     def __post_init__(self):
         self._fitted_preprocessors = False
         self._using_model_data_as_condition = False
+ 
+        self.num_model_lead_months = self.model.info.sizes['lead_time']
+
+        if self.num_lead_months is None:
+            self.num_lead_months = self.num_model_lead_months
+        assert self.num_lead_months <= self.num_model_lead_months, f'Maximum available lead months is {self.num_model_lead_months}' 
+
+        if self.time_features is not None:
+            assert set(self.time_features).issubset(set(['year','lead_time','month_sin','month_cos']))
+
+        self.model.preprocessing_pipeline.name = 'model'
+        if self.condition_method == 'same_member':
+            assert self.model.ensemble_mean is not None, 'for same member coniditioning the model data should not be ensemble mean.'
+       
+        if self.observation is not None:
 
         self.num_model_lead_months = self.model.info.sizes["lead_time"]
 
@@ -68,9 +75,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
                 )
             self.observation.preprocessing_pipeline.name = "observation"
         else:
-            assert self.condition_method is not None, (
-                "No target observation is specified. Specify condition_method!"
-            )
+            assert self.condition_method is not None, f'No target observation is specified. Specify condition_method!' 
 
         if self.condition_method is not None:
             assert self.condition_method in self._available_condiiton_methods(), (
@@ -135,22 +140,17 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
                     "non static coniditioning field must have the same times as the model data."
                 )
 
-            assert self.condition.info.coords["lat"].equals(
-                self.model.info.coords["lat"]
-            ), "coniditioning field must have the same lat shape as the model data."
-            assert self.condition.info.coords["lon"].equals(
-                self.model.info.coords["lon"]
-            ), "coniditioning field must have the same lon shape as the model data."
-
-            if self.condition_method in ["same_member"]:
-                assert self.condition.info.coords["ensembles"].equals(
-                    self.model.info.coords["ensembles"]
-                ), (
-                    "coniditioning field and model data must have the same ensemble dimension for same_member conditioning."
-                )
-
-            self.condition.preprocessing_pipeline.name = "condition"
-
+            if self.condition_method not in ['static']:
+                    assert self.condition.info.sizes == self.model.info.sizes, 'non static coniditioning field must have the same times as the model data.'
+            
+            assert self.condition.info.coords['lat'].equals(self.model.info.coords['lat']), 'coniditioning field must have the same lat shape as the model data.'
+            assert self.condition.info.coords['lon'].equals(self.model.info.coords['lon']), 'coniditioning field must have the same lon shape as the model data.'
+            
+            if self.condition_method in ['same_member']:
+                    assert self.condition.info.coords['ensembles'].equals(self.model.info.coords['ensembles']), 'coniditioning field and model data must have the same ensemble dimension for same_member conditioning.'
+        
+            self.condition.preprocessing_pipeline.name = 'condition'
+        
     @property
     def get_common_time(self):
         if self.observation is not None:
@@ -365,6 +365,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
 
         from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
+        from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
         if self.observation is not None:
             pipeline = self.observation.preprocessing_pipeline
         else:
@@ -429,16 +430,17 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
 
         self._autoencoding_input = False
         self.observation_dataset = self.condition_dataset = None
-
+        
         self.model_dataset = self._load_xarray_data(self.config.model)
-
+        
         if self.config.observation is not None:
             self.observation_dataset = self._load_xarray_data(self.config.observation)
         else:
             self._autoencoding_input = True
 
         if self.config.condition is not None:
-            self.condition_dataset = self._load_xarray_data(self.config.condition)
+            self.condition_dataset = self._load_xarray_data(self.config.condition)          
+
 
         self._prepare_mask()
 
@@ -448,6 +450,30 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
         self.cond_indexes = self.get_cond_indexes(self.model_indexes)
 
         self.time_features = self.config.time_features
+
+    def _prepare_mask(self):
+
+        if self.mask is None:
+            self.mask = _create_train_mask(years = self.config.model.year_range, 
+                                           lead_times= np.arange(1, self.config.model.info.sizes['lead_time']+ 1) )
+            self.mask = xr.full_like(self.mask, fill_value = False)
+                                                                          
+        self.mask = self.mask.sel(year = self.requested_years).sel(lead_time = np.arange(1,self.config.num_lead_months + 1))
+        if all([not self.config.model.ensemble_mean, self.config.model.info.coords['ensembles'] is not None]):
+            self.mask = self.mask.expand_dims(ensembles = len(self.config.model.info.coords['ensembles']), axis = 0)
+            self.mask = self.mask.assign_coords(ensembles = self.config.model.info.coords['ensembles'] )
+
+        return self
+       
+    def _load_xarray_data(self, config : DataConfig):
+
+        return _load_xarray_data(config.list_paths, 
+                                               names = config.names, 
+                                               ensemble_mean= config.ensemble_mean, 
+                                               selection= {'ensembles' :  config.info.coords['ensembles']} if config.info.coords['ensembles'] is not None else None,
+                                            #    preprocessor = self.model.preprocessing_pipeline,  ##checking if doing this once is faster
+                                               concat_dim = config.concat_dim,
+                                               rename_dict= config.rename_dict)
 
     def _prepare_mask(self):
 
@@ -492,12 +518,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
 
     def get_model_indexes(self):
 
-        mask = (
-            self.mask.stack(batch=dict(self.mask.sizes).keys())
-            .transpose("batch", ...)
-            .dropna(dim="batch")
-            .batch.values
-        )
+        mask = self.mask.stack(batch = dict(self.mask.sizes).keys()).transpose('batch', ...).dropna(dim = 'batch').batch.values
         mask = tuple(map(np.array, zip(*mask)))
         indexes = {
             key: mask[ind]
@@ -507,6 +528,10 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
         return indexes
 
     def get_obs_indexes(self, model_indexes: dict):
+
+        return indexes   
+    
+    def get_obs_indexes(self, model_indexes : dict):
 
         if self.observation_dataset is not None:
             indexes = {}
@@ -527,7 +552,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
 
             return indexes
 
-    def get_cond_indexes(self, model_indexes: dict):
+    def get_cond_indexes(self, model_indexes : dict):
 
         if self.condition_dataset is not None:
             if self.config.condition_method != "static":
@@ -549,11 +574,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
     def get_input_shape(self):
 
         from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
-
-        checklist = [
-            isinstance(item, Oceannanremove)
-            for item in self.config.model.preprocessing_pipeline.fitted_preprocessors
-        ]
+        checklist = [isinstance(item, Oceannanremove) for item in self.config.model.preprocessing_pipeline.fitted_preprocessors]
 
         if any(checklist):
             return self.config.model.preprocessing_pipeline.get_preprocessors(
@@ -568,7 +589,6 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
     def get_target_shape(self):
 
         from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
-
         if self.observation_dataset is not None:
             checklist = [
                 isinstance(item, Oceannanremove)
@@ -591,16 +611,17 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
     def added_features_dim(self):
 
         return len(self.time_features)
-
+        
+        
     def __getitem__(self, ind):
 
         if self.condition_dataset is not None:
-            if self.config.condition_method != "static":
-                year = float(self.cond_indexes["year"][ind])
-                lead_time = float(self.cond_indexes["lead_time"][ind])
-                selection = dict(year=year, lead_time=lead_time)
-                if "ensembles" in self.cond_indexes:
-                    selection["ensembles"] = self.cond_indexes["ensembles"][ind]
+            if self.config.condition_method != 'static':
+                year = float(self.cond_indexes['year'][ind])
+                lead_time = float(self.cond_indexes['lead_time'][ind])
+                selection = dict(year = year, lead_time = lead_time)
+                if 'ensembles' in self.cond_indexes:
+                    selection['ensembles'] =  self.cond_indexes['ensembles'][ind]  
 
             else:
                 selection = {}
@@ -636,12 +657,10 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
         ):
             input = condition
         else:
-            if "ensembles" in self.model_indexes:
-                selection["ensembles"] = self.model_indexes["ensembles"][ind]
-
-            input = self.config.model.preprocessing_pipeline.transform(
-                self.model_dataset.sel(**selection)
-            )  ##check if transforming once is faster
+            if 'ensembles' in self.model_indexes:
+                selection['ensembles'] = self.model_indexes['ensembles'][ind]
+                
+            input = self.config.model.preprocessing_pipeline.transform(self.model_dataset.sel(**selection))  ##check if transforming once is faster
             input = _unwrape_data_variables(input)
 
             if self._autoencoding_input:
@@ -663,20 +682,18 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             ):
                 input = xr.concat([input, condition], dim="channels")
 
+            
         time_features = self.get_time_features(year, lead_time)
-        if time_features is not None and len(input.shape) > 2:
-            time_features = np.broadcast_to(
-                time_features[:, None, None],
-                (len(time_features), input.shape[-2], input.shape[-1]),
-            )
+        if (time_features is not None 
+            and len(input.shape) > 2):
+                time_features = np.broadcast_to(time_features[:, None, None], (len(time_features), input.shape[-2], input.shape[-1]))
 
-        datadict = dict(
-            input=torch.as_tensor(input.to_numpy(), dtype=torch.float32),
-            target=torch.as_tensor(target.to_numpy(), dtype=torch.float32),
-            added_features=torch.as_tensor(time_features, dtype=torch.float32)
-            if time_features is not None
-            else None,
-        )
+        
+        datadict = dict(input = torch.as_tensor(input.to_numpy(), dtype=torch.float32), 
+                        target = torch.as_tensor(target.to_numpy(), dtype=torch.float32), 
+                        added_features = torch.as_tensor(time_features, dtype=torch.float32) 
+                          if time_features is not None else None)
+                                                    
 
         if self.return_metadata:
             return datadict, selection
@@ -686,35 +703,29 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
     def __len__(self):
         return len(self.model_indexes.get(list(self.model_indexes.keys())[0]))
 
+
     def get_time_features(self, year, lead_time):
 
         if self.time_features is not None:
             time_features_list = np.array([self.time_features]).flatten()
-            feature_indices = {
-                "year": 0,
-                "lead_time": 1,
-                "month_sin": 2,
-                "month_cos": 3,
-            }
-
-            target_time = year + lead_time // 12
+            feature_indices = {'year': 0, 'lead_time': 1, 'month_sin': 2, 'month_cos': 3}
+            
+            target_time = year + lead_time//12 
             target_month = lead_time
 
-            y = (target_time - np.min(self.config.get_common_time)) / (
-                np.max(self.config.get_common_time)
-                - np.min(self.config.get_common_time)
-            )
+            y = (target_time - np.min(self.config.get_common_time)) /  (np.max(self.config.get_common_time) - np.min(self.config.get_common_time))
             lt = lead_time / self.config.num_lead_months
-            msin = np.sin(2 * np.pi * target_month / 12.0)
-            mcos = np.cos(2 * np.pi * target_month / 12.0)
+            msin = np.sin(2 * np.pi * target_month/12.0)
+            mcos = np.cos(2 * np.pi * target_month/12.0)
 
-            time_features = np.stack([y, lt, msin, mcos])
-            time_features = time_features[
-                ..., [feature_indices[k] for k in time_features_list]
-            ]
+            time_features = np.stack([y, lt, msin, mcos]) 
+            time_features = time_features[..., [feature_indices[k] for k in time_features_list]]
+
 
             return time_features
 
+    
+        
     # def __getitem__(self, ind):
     #     year = float(self.indexes['year'][ind])
     #     lead_time = float(self.indexes['lead_time'][ind])

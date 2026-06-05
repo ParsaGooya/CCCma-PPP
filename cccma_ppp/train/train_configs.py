@@ -20,6 +20,10 @@ from cccma_ppp.core.optimization import OptimizerConfig
 
 from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
+import cccma_ppp.train.registry_imports
+
+
+
 
 def set_seed(seed):
 
@@ -62,7 +66,7 @@ class TrainConfig:
             If unset, weight initialization is not reproducible but data shuffling is.
 
 
-
+            
         to do:
 
             ema: Configuration for exponential moving average of model weights.

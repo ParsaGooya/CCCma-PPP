@@ -10,14 +10,14 @@ from cccma_ppp.data.data_abc import DataConfig
 from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
-
 @dataclasses.dataclass
 class infoclass:
-    sizes: dict | None
-    start_year: xr.DataArray | np.ndarray | str | int | None
-    final_year: xr.DataArray | np.ndarray | str | int | None
-    coords: dict
-    spatial_mask: xr.Dataset = None
+    sizes : dict | None
+    start_year : xr.DataArray | np.ndarray | str | int | None
+    final_year : xr.DataArray | np.ndarray | str | int | None
+    coords : dict
+    spatial_mask :  xr.Dataset = None
+
 
 
 @dataclasses.dataclass

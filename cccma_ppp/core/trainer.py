@@ -1,3 +1,4 @@
+
 import torch
 from torch.cuda.amp import GradScaler
 from pathlib import Path
@@ -14,6 +15,8 @@ from cccma_ppp.data.dataloader import Dataloader
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.aggregator import MetricsAggregator
 from cccma_ppp.loss.kld import BetaAnnealing
+
+
 
 
 @dataclasses.dataclass
@@ -209,6 +212,11 @@ class Trainer:
                 else:
                     self.earlystopping_counter += 1
 
+            self.checkpoint_dir = Path(os.environ["GLOBAL_CHECKPOINT_DIR"])
+            resuming = os.path.isfile(self.checkpoint_dir / '*best*.pt')
+            if resuming:
+                self.log_root(logging.INFO, f"Resuming training from {self.checkpoint_dir / '*best*.pt' }")
+                self._load_checkpoint(self.checkpoint_dir / '*best*.pt')
             else:
                 validation_logs = None
                 validation_loss = None
@@ -284,12 +292,12 @@ class Trainer:
 
         time_elapsed = time.time() - self.start_time_train
 
-        if self.is_on_root:
-            MetricsAggregator.plot(
-                [self.train_aggregator, self.validation_aggregator],
-                plot_dir=self.plot_dir,
-            )
-        self.log_root(logging.INFO, f"Training finished in {time_elapsed:.2f}s")
+                    if self.is_on_root and self.save_checkpoint:
+                        self._save_checkpoint(
+                            name="best",
+                            train_logs=train_logs,
+                            validation_logs=None,
+                        )
 
     def _train_on_epoch(self):
         """
@@ -345,10 +353,11 @@ class Trainer:
 
         return loss_dict
 
-    @torch.no_grad()
-    def _validate_on_epoch(self):
-        """
-        Validate for one epoch.
+                        self._save_checkpoint(
+                                name="best",
+                                train_logs=train_logs,
+                                validation_logs=None,
+                            )
 
         Responsibilities:
         - put module in eval mode
@@ -430,127 +439,212 @@ class Trainer:
         if self.ValidationLoader is None:
             return False
 
-        if self.config.earlystoppingbuffer is None:
-            return False
+            # epoch_data = self.TrainLoader.subset_loader(start_batch=self._current_epoch_num_batches_seen)  ###you can work with this if you need batch level checkpoining and restarting
 
-        if self.config.earlystoppingbuffer == float("inf"):
-            return False
+            start_time = time.time()
+            for batch_id, batch in enumerate(self.TrainLoader):
 
-        return self.earlystopping_counter >= self.config.earlystoppingbuffer
+                batch_loss_dict = self._train_on_batch(batch)
 
-    def _log_epoch(self, train_logs, validation_logs=None):
-        elapsed_time = time.time() - self.start_time_train
-        msg = (
-            f"Epoch {self._epochs_trained}/{self.epochs} | "
-            f"train loss: {train_logs['total_loss']:.6f}"
-        )
+                # self._current_epoch_num_batches_seen += 1      ###you can work with this if you need batch level checkpoining and restarting
+                self.train_aggregator.record(batch_loss_dict)
 
-        if validation_logs is not None:
-            msg += f" | validation loss: {validation_logs['total_loss']:.6f}"
 
-        msg += (
-            f" | global step: {self.global_step} | "
-            f"| early stopping counter: {self.earlystopping_counter} |"
-            f" elapsed time: {elapsed_time:.2f}"
-        )
+            self._epochs_trained += 1
+            # self._current_epoch_num_batches_seen = 0 ###you can work with this if you need batch level checkpoining and restarting
+            time_elapsed = time.time() - start_time
 
-        self.log_root(logging.INFO, msg)
+            return time_elapsed
 
-    def _save_checkpoint(
-        self, name: str, train_logs: dict, validation_logs: dict | None = None
-    ):
-        """
-        Save checkpoint.
-        For DDP, save the underlying module, not the DDP wrapper.
-        """
+        def _train_on_batch(self, batch) :
 
-        checkpoint = {
-            "epoch": self._epochs_trained,
-            "global_step": self.global_step,
-            "batch_step": self.batch_step,
-            "best_validation_loss": self._best_validation_loss,
-            "earlystopping_counter": self.earlystopping_counter,
-            "module": self.raw_module.state_dict(),
-            "module_config": dataclasses.asdict(self.raw_module.config),
-            "model_input_shape": self.raw_module.input_shape,
-            "model_output_shape": self.raw_module.output_shape,
-            "optimizer": self.optimizer.state_dict(),
-            "scaler": self.scaler.state_dict(),
-            "train_logs": train_logs,
-            "validation_logs": validation_logs,
-            "train_history": self.train_aggregator.state_dict(),
-            "validation_history": self.validation_aggregator.state_dict()
-            if self.validation_aggregator is not None
-            else None,
-        }
+            batch.to_device(self.device)
+            kwargs = {}
 
-        path = Path(self.checkpoint_dir) / f"{name}.pt"
-        torch.save(checkpoint, path)
+            if hasattr(self, "beta_finder"):
+                beta = self.beta_finder(self.global_step)
+                kwargs = dict(beta = beta)
 
-        if self.is_distributed:
-            self.distributed.barrier()
+            with torch.cuda.amp.autocast( #device_type=self.device.type,
+                                    enabled=self.scaler.is_enabled() and self.device.type == "cuda"):
 
-    def _load_checkpoint(self, path: str | Path | None = None, strict: bool = True):
-        """
-        Load trainer checkpoint.
+                    loss, loss_dict = self.raw_module._compute_loss(data=batch, **kwargs)
+                    loss = loss / self.config.gradient_accumulation_steps
 
-        Assumes:
-        - setup() has already been called
-        - module has already been moved to device
-        - DDP wrapping has already happened if distributed
-        - optimizer has already been built
-        - scaler has already been created
-        """
 
-        if path is None:
-            path = Path(self.checkpoint_dir) / "best.pt"
-        else:
-            path = Path(path)
+            self.scaler.scale(loss).backward()
 
-        if not path.exists():
-            raise FileNotFoundError(f"Checkpoint not found: {path}")
+            self.batch_step += 1
 
-        checkpoint = torch.load(path, map_location=self.device, weights_only=False)
+            if self.batch_step  % self.config.gradient_accumulation_steps == 0:
 
-        self.raw_module.load_state_dict(checkpoint["module"], strict=strict)
+                self._optimizer_step()
 
-        self.optimizer.load_state_dict(checkpoint["optimizer"])
 
-        if "scaler" in checkpoint and checkpoint["scaler"] is not None:
-            self.scaler.load_state_dict(checkpoint["scaler"])
+            return loss_dict
 
-        self._epochs_trained = checkpoint.get("epoch", 0)
-        self._start_epoch = self._epochs_trained
-        self.global_step = checkpoint.get("global_step", 0)
-        self.batch_step = checkpoint.get("batch_step", 0)
+        @torch.no_grad()
+        def _validate_on_epoch(self):
+            """
+            Validate for one epoch.
 
-        self._best_validation_loss = checkpoint.get("best_validation_loss", torch.inf)
-        self.earlystopping_counter = checkpoint.get("earlystopping_counter", 0)
+            Responsibilities:
+            - put module in eval mode
+            - iterate over validation batches
+            - record batch metrics
+            """
+            if self.ValidationLoader is None:
+                raise RuntimeError("ValidationLoader is None, but validation was requested.")
 
-        if "train_history" in checkpoint:
-            self.train_aggregator.load_state_dict(checkpoint["train_history"])
+            self.module.eval()
 
-        if (
-            "validation_history" in checkpoint
-            and checkpoint["validation_history"] is not None
-            and self.validation_aggregator is not None
-        ):
-            self.validation_aggregator.load_state_dict(checkpoint["validation_history"])
+            for batch_id, batch in enumerate(self.ValidationLoader):
 
-        if self.is_distributed:
-            self.distributed.barrier()
+                batch_loss_dict = self._validate_on_batch(batch)
 
-        return checkpoint
+                # self._current_epoch_num_batches_seen += 1      ###you can work with this if you need batch level checkpoining and restarting
+                self.validation_aggregator.record(batch_loss_dict)
 
-    @property
-    def raw_module(self):
-        if isinstance(self.module, torch.nn.parallel.DistributedDataParallel):
-            return self.module.module
-        return self.module
+        @torch.no_grad()
+        def _validate_on_batch(self, batch) :
 
-    def log_root(self, level: int, msg: str, *args):
-        if self.is_on_root:
-            if self.logger is not None:
-                self.logger.log(level, msg, *args)
+            batch.to_device(self.device)
+            kwargs = {}
+
+            if hasattr(self, "beta_finder"):
+                beta = self.beta_finder(self.global_step)
+                kwargs = dict(beta = beta)
+
+            with torch.cuda.amp.autocast(
+                #device_type=self.device.type,
+                enabled=self.scaler.is_enabled() and self.device.type == "cuda"):
+
+
+                _, loss_dict = self.raw_module._compute_loss(data=batch, **kwargs)
+
+            return loss_dict
+
+        def _optimizer_step(self):
+
+                if self.config.grad_clip is not None:
+                    self.scaler.unscale_(self.optimizer.optimizer)
+                    torch.nn.utils.clip_grad_norm_(
+                        self.module.parameters(),
+                        self.config.grad_clip)
+
+                old_scale = self.scaler.get_scale()
+                self.scaler.step(self.optimizer.optimizer)
+                self.scaler.update()
+                new_scale = self.scaler.get_scale()
+
+                step_was_skipped = new_scale < old_scale  ##sometimes
+                if not step_was_skipped:   ## With AMP, GradScaler.step() may skip the optimizer step if gradients contain inf/nan. If that happens, you probably should not step the LR scheduler or increment global_step
+
+                    self.optimizer.scheduler_step()
+                    self.global_step += 1
+
+                self.optimizer.zero_grad(set_to_none=True)
+
+        def _clear_memory(self):
+            gc.collect()
+
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
+
+        def _is_improved(self, validation_loss: float | torch.Tensor) -> bool:
+            if isinstance(validation_loss, torch.Tensor):
+                validation_loss = validation_loss.item()
+
+            if self._best_validation_loss == float("inf"):
+                return True
+
+            required_improvement = (self.config.minimum_validation_improvement_percentage * abs(self._best_validation_loss))
+
+            return validation_loss < self._best_validation_loss - required_improvement
+
+        def _should_stop_early(self) -> bool:
+            if self.ValidationLoader is None:
+                return False
+
+            if self.config.earlystoppingbuffer is None:
+                return False
+
+            if self.config.earlystoppingbuffer == float("inf"):
+                return False
+
+            return self.earlystopping_counter >= self.config.earlystoppingbuffer
+
+        def _log_epoch(self, train_logs, validation_logs=None):
+            elapsed_time = time.time() - self.start_time_train
+            msg = (
+                f"Epoch {self._epochs_trained}/{self.epochs} | "
+                f"train loss: {train_logs['total_loss']:.6f}")
+
+
+            if validation_logs is not None:
+                msg += f" | validation loss: {validation_logs['total_loss']:.6f}"
+
+            msg += (
+                f" | global step: {self.global_step} | "
+                f"| early stopping counter: {self.earlystopping_counter} |"
+                f" elapsed time: {elapsed_time:.2f}")
+
+
+            self.log_root(logging.INFO, msg)
+
+        def _save_checkpoint(
+            self,
+            name: str,
+            train_logs: dict,
+            validation_logs: dict | None = None):
+
+            """
+            Save checkpoint.
+            For DDP, save the underlying module, not the DDP wrapper.
+            """
+
+            checkpoint = {
+                "epoch": self._epochs_trained,
+                "global_step": self.global_step,
+                "batch_step": self.batch_step,
+                "best_validation_loss": self._best_validation_loss,
+                "earlystopping_counter": self.earlystopping_counter,
+                "module": self.raw_module.state_dict(),
+                "module_config" : dataclasses.asdict(self.raw_module.config),
+                "model_input_shape" : self.raw_module.input_shape,
+                "model_output_shape" : self.raw_module.output_shape,
+                "optimizer": self.optimizer.state_dict(),
+                "scaler": self.scaler.state_dict(),
+                "train_logs": train_logs,
+                "validation_logs": validation_logs,
+                "train_history": self.train_aggregator.state_dict(),
+                "validation_history": self.validation_aggregator.state_dict() if self.validation_aggregator is not None else None,
+            }
+
+            path = Path(self.checkpoint_dir) / f"{name}.pt"
+            torch.save(checkpoint, path)
+
+            if self.is_distributed:
+                self.distributed.barrier()
+
+        def _load_checkpoint(
+            self,
+            path: str | Path | None = None,
+            strict: bool = True):
+
+            """
+            Load trainer checkpoint.
+
+            Assumes:
+            - setup() has already been called
+            - module has already been moved to device
+            - DDP wrapping has already happened if distributed
+            - optimizer has already been built
+            - scaler has already been created
+            """
+
+            if path is None:
+                path = Path(self.checkpoint_dir) / f"best.pt"
             else:
                 print(msg)
