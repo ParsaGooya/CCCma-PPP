@@ -112,14 +112,18 @@ class TrainConfig:
             if self.trainer.beta_finder is None:
                 warnings.warn('TrainerConfig.beta_finder setup will be ignored with deterministic models ...')
 
+        
+        if self.train_loader.dataset_config.observation is not None:
+            pipeline = self.train_loader.dataset_config.observation.preprocessing_pipeline.pipeline
+        else:
+            pipeline = self.train_loader.dataset_config.model.preprocessing_pipeline.pipeline
+        
         if self.module._module_config.model.NUM_OUTPUT_DIMS == 1:
-            if self.train_loader.dataset_config.observation is not None:
-                pipeline = self.train_loader.dataset_config.observation.preprocessing_pipeline.pipeline
-            else:
-                pipeline = self.train_loader.dataset_config.model.preprocessing_pipeline.pipeline
-
             if not any([isinstance(step[1], Oceannanremove) for step in pipeline]):
                 raise RuntimeError('for MLP models, add Oceannanremove as a preprocessing step to flatten the maps.')
+        else:
+            if any([isinstance(step[1], Oceannanremove) for step in pipeline]):
+                raise RuntimeError('for non-MLP models, do add Oceannanremove as a preprocessing step because it flattens the maps.')          
 
 
     def set_random_seed(self):

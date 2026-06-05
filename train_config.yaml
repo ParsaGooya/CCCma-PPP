@@ -17,8 +17,7 @@ train_loader:
           
         observation :
             paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations
-            names:
-                  - tas
+            names: [tas]
             preprocessing_pipeline :
                     preprocessors_list :
                             - name : standardizer
