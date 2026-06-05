@@ -48,7 +48,7 @@ class TrainerConfig:
         if validation_data_loader is not None:
             self.num_validation_batches = len(validation_data_loader)
 
-        assert module.built, 'make sure the module is built.'
+        # assert module.built, 'make sure the module is built.'
 
         if isinstance(module, cVAE):
             assert self.beta_finder is not None, 'specify beta annealing config for cVAE module.'

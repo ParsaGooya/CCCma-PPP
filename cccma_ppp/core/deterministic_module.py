@@ -43,9 +43,10 @@ class deterministicConfig(moduleConfigABC):
               output_shape: np.ndarray|None = None,
               added_features_dim : int = None):
 
-        return deterministic(self).build(input_shape= input_shape,
-                                 output_shape = output_shape,
-                                 added_features_dim = added_features_dim)
+        return deterministic(config= self,
+                             input_shape= input_shape,
+                            output_shape = output_shape,
+                            added_features_dim = added_features_dim)
 
     def _load_from_checkpoint(self, load_path : Path | str):
 
@@ -69,20 +70,17 @@ class deterministicConfig(moduleConfigABC):
 
 class deterministic( moduleABC):
     def __init__(self,
-        config : deterministicConfig| None = None):
+        config : deterministicConfig,
+        input_shape : np.ndarray,
+        output_shape: np.ndarray|None = None,
+        added_features_dim : int = None):
 
         super().__init__()
         self.config = config
         self.model_config = config.model_config
-        self.built = False
+
         self.criterion = None
 
-
-
-    def build(self,
-              input_shape : np.ndarray,
-              output_shape: np.ndarray|None = None,
-              added_features_dim : int = None):
         
         if output_shape is None:
             output_shape = input_shape.copy()
@@ -107,9 +105,6 @@ class deterministic( moduleABC):
         if self.config.load_dir is not None:
             self._load_state_dict(self.config.load_dir)
 
-        self.built = True
-
-        return self
 
     def init_loss_function(self, reconstruction_loss : Losspipeline):
 
@@ -151,24 +146,4 @@ class deterministic( moduleABC):
 
 
 
-
-
-
-    # def _save_state_dict(self, save_path : Path | str):
-
-    #     path = Path(save_path) / f"deterministic_module.pt"
-    #     torch.save(self.state_dict(), path)
-
-
-    # def _load_from_state(self, load_path : Path | str, strict : bool = True):
-
-    #     assert self.built, 'module stgate should be built for torch to load the weights into. Hint: call .build() method first.'
-
-    #     if not Path(load_path).exists():
-    #         raise FileNotFoundError(f"Checkpoint not found: {load_path}")
-
-    #     checkpoint = torch.load( Path(load_path), map_location=self.device, weights_only=False)
-    #     self.load_state_dict( checkpoint ,strict=strict)
-
-    #     return checkpoint
 

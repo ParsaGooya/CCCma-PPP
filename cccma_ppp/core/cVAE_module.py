@@ -64,9 +64,10 @@ class cVAEConfig(moduleConfigABC):
               output_shape: np.ndarray|None = None,
               added_features_dim : int = None):
         
-        return cVAE(self).build(input_shape= input_shape,
-                                 output_shape = output_shape,
-                                 added_features_dim = added_features_dim)
+        return cVAE(config = self,
+                        input_shape= input_shape,
+                        output_shape = output_shape,
+                        added_features_dim = added_features_dim)
 
 
     def _load_from_checkpoint(self, load_path : Path | str):
@@ -105,7 +106,10 @@ class cVAEConfig(moduleConfigABC):
 
 class cVAE( moduleABC):
     def __init__(self,
-                config : cVAEConfig| None = None):
+                config : cVAEConfig,
+              input_shape : np.ndarray,
+              output_shape: np.ndarray|None = None,
+              added_features_dim : int = None):
 
         super().__init__()
         self.config = config
@@ -122,14 +126,9 @@ class cVAE( moduleABC):
         else:
             self.flow_condition_size = None
 
-        self.built = False
-        self.criterion = None
 
+        self.criterion = None
         self.prior_flow = None
-    def build(self,
-              input_shape : np.ndarray,
-              output_shape: np.ndarray|None = None,
-              added_features_dim : int = None):
 
         if output_shape is None:
             output_shape = input_shape.copy()
@@ -159,12 +158,10 @@ class cVAE( moduleABC):
             self.prior_flow = self.prior_flow_config.build(latent_size = self.latent_size,
                                                                 condition_size = self.flow_condition_size)
 
-        self.built = True
+
 
         if self.config.load_dir is not None:
             self._load_state_dict(self.config.load_dir)
-
-        return self
 
 
 
@@ -258,48 +255,3 @@ class cVAE( moduleABC):
 
 
 
-
-
-
-
-    # def _save_state_dict(self, save_path : Path | str):
-    #     """
-    #     For DDP, save the underlying module, not the DDP wrapper.
-    #     """
-
-    #     prior_flow_state = None
-    #     if hasattr(self, "prior_flow") and self.prior_flow is not None:
-    #         prior_flow_state = self.prior_flow.state_dict()
-
-    #     checkpoint = {
-    #             'model' : self.model.state_dict(),
-    #             'latent_size' : self.latent_size,
-    #             'min_posterior_variance' : self.min_posterior_variance,
-    #             'prior_flow_config' : self.config.prior_flow_config,
-    #             'prior_flow' :   prior_flow_state,
-    #             'combined_CGCN_weight' : self.config.combined_CGCN_weight,
-    #             'input_shape' : self.input_shape,
-    #             'output_shape' : self.output_shape }
-
-
-    #     path = Path(save_path) / f"cVAE_module.pt"
-    #     torch.save(checkpoint, path)
-
-
-    # def _load_from_state(self, load_path : Path | str, strict : bool = True):
-
-    #     assert self.built, 'module stgate should be built for torch to load the weights into. Hint: call .build() method first.'
-
-    #     if not Path(load_path).exists():
-    #         raise FileNotFoundError(f"Checkpoint not found: {load_path}")
-
-    #     checkpoint = torch.load( Path(load_path), map_location=self.device, weights_only=False)
-
-    #     self.model.load_state_dict( checkpoint["model"],strict=strict)
-
-    #     self.latent_size = checkpoint.get("latent_size")
-    #     self.min_posterior_variance = checkpoint.get("min_posterior_variance", None)
-    #     self.prior_flow_config = checkpoint.get("prior_flow_config", None)
-    #     self.combined_CGCN_weight = checkpoint.get("prior_flow_config", 0)
-
-    #     return checkpoint

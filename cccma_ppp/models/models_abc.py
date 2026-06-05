@@ -99,19 +99,11 @@ class modelABC(nn.Module,abc.ABC):
         self.NUM_OUTPUT_DIMS = config.NUM_OUTPUT_DIMS
         self.GENERATOR = config.GENERATOR
 
-    @abc.abstractmethod
-    def build(self,
-                input_shape : np.ndarray, 
-                output_shape: np.ndarray|None = None,
-                added_features_dim : int = None , **kwargs):
-            
-            ...
     
     @abc.abstractmethod
     def forward(self,
                 x):
         ...
-
 
     @final
     def _initialize_weights(self):

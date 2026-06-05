@@ -62,8 +62,7 @@ module:
                                 args :
                                       hidden_dim : 5 
             combined_CGCN_weight : 0.1
-            
-            
+                     
           
 losspipeline:
       loss_pipeline :

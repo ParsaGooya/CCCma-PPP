@@ -62,15 +62,19 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
               output_shape: np.ndarray|None = None,
               added_features_dim : int = None):
                     
-                return cVAE_MLP(self).build(input_shape = input_shape,
-                                            output_shape = output_shape,
-                                            added_features_dim = added_features_dim)
+                return cVAE_MLP(config = self,
+                                input_shape = input_shape,
+                                output_shape = output_shape,
+                                added_features_dim = added_features_dim)
 
 
 class cVAE_MLP(cVAEmodelsABC):
 
     def __init__(self,   ## do not buuld anything here to keep it lightweight during config parsing
-                    config : cVAE_MLPConfig):
+                    config : cVAE_MLPConfig,
+                    input_shape : np.ndarray,
+                output_shape: np.ndarray|None = None,
+                added_features_dim : int = None):
 
         super().__init__(config)
         
@@ -90,11 +94,6 @@ class cVAE_MLP(cVAEmodelsABC):
 
         self.condition_dependant_flow = getattr(config, 'condition_dependant_flow', False)
 
-
-    def build(self,
-              input_shape : np.ndarray,
-              output_shape: np.ndarray|None = None,
-              added_features_dim : int = None):
 
         assert len(output_shape) == self.NUM_OUTPUT_DIMS, f'MLP models should creat {self.NUM_OUTPUT_DIMS}D outputs'
         if output_shape is None:
@@ -186,7 +185,6 @@ class cVAE_MLP(cVAEmodelsABC):
             self._initialize_weights()
 
 
-        return self
     def forward(self,
                 x : torch.Tensor,
                 added_features : torch.Tensor= None,
@@ -413,15 +411,19 @@ class AutoencoderConfig(modelConfigABC):
                         output_shape: np.ndarray|None = None,
                         added_features_dim : int = None):
                 
-                return Autoencoder(self).build(input_shape = input_shape,
-                                               output_shape = output_shape,
-                                               added_features_dim = added_features_dim)
+                return Autoencoder(config = self,
+                                   input_shape = input_shape,
+                                    output_shape = output_shape,
+                                    added_features_dim = added_features_dim)
 
 
 class Autoencoder( deterministicmodelsABC):
 
     def __init__(self, 
-                 config : AutoencoderConfig): ## do not buuld anything here to keep it lightweight during config parsing
+                 config : AutoencoderConfig,
+                input_shape : np.ndarray,
+                output_shape: np.ndarray|None = None,
+                added_features_dim : int = None): ## do not buuld anything here to keep it lightweight during config parsing
 
         super().__init__(config)
         self.config = config
@@ -433,11 +435,6 @@ class Autoencoder( deterministicmodelsABC):
         self.encoder_hidden_dims = config.encoder_hidden_dims
         self.decoder_hidden_dims = config.decoder_hidden_dims
 
-
-    def build(self,
-              input_shape : np.ndarray,
-              output_shape: np.ndarray|None = None,
-              added_features_dim : int = None):
 
         assert len(output_shape) == self.NUM_OUTPUT_DIMS, f'MLP models should creat {self.NUM_OUTPUT_DIMS}D outputs'
 
@@ -510,7 +507,6 @@ class Autoencoder( deterministicmodelsABC):
         else:
             self._initialize_weights()
 
-        return self
 
     def forward(self,
                 x : torch.Tensor,

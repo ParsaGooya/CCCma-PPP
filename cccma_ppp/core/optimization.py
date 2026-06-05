@@ -57,7 +57,7 @@ class OptimizerConfig:
             num_batches: int = None,
             max_epochs: int = None):
 
-        assert module.built, 'make sure module is built before optmizer.'
+        # assert module.built, 'make sure module is built before optmizer.'
 
         if self.lr_scheduler_config is not None:
 

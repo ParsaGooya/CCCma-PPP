@@ -13,13 +13,7 @@ class moduleABC( nn.Module,abc.ABC):
         super().__init__()
 
 
-    @abc.abstractmethod
-    def build(self,
-              input_shape : np.ndarray,
-              output_shape: np.ndarray|None = None,
-              added_features_dim : int = None):
 
-        ...
     @abc.abstractmethod
     def init_loss_function(self,
                            reconstruction_loss : Losspipeline,

@@ -31,42 +31,30 @@ class NormalizedFlowConfig:
 
     def build(self, latent_size : int, condition_size: int = None): ## this instatiates and build flow model at the same time.
 
-        return NormalizedFlowModel(self).build(latent_size = latent_size,
-                                                condition_size = condition_size)
+        return NormalizedFlowModel(config = self,
+                                   latent_size = latent_size,
+                                    condition_size = condition_size)
 
-    ####  registery machinery is not part of the FlowSelector #####
-    # @classmethod
-    # def register(cls, name: str) -> Callable[..., flowABC]:  # noqa: UP006
-    #     return cls.registery.register(name.lower())   ##attentin: the return is on cls.registery. This means even when register is called on an instance of StepSelector, it will still register the type on the class-level registery, which is what we want.
-
-    # def available(cls):
-    #     return cls.registery.available()
 
 
 
 class NormalizedFlowModel(flowABC):
 
     def __init__(self,
-        config : NormalizedFlowConfig):
+        config : NormalizedFlowConfig,
+        latent_size, 
+        condition_size:int = None):
 
         super().__init__()
 
-        #### try this when registery machinery is part of NormalizedFlowConfig itself and not a separate selector #####
-        # self.config = config
-        # self.list_flows = self.config.list_flows
-        # self.flow_sample_size = self.config.flow_sample_size
-        ###############################################################################################################
 
         self.list_flows = config.list_flows
         self.flow_sample_size = config.flow_sample_size
         self.flows = []
 
         for step in self.list_flows:
-                # self.flows.append(self.config.registery.get(name, args))  #### try this when registery machinery is part of NormalizedFlowConfig itself and not a separate selector #####
                 self.flows.append(step.get_model())
 
-
-    def build(self, latent_size, condition_size:int = None):
 
         self.condition_size = condition_size
 
@@ -78,7 +66,7 @@ class NormalizedFlowModel(flowABC):
 
         self.flows = nn.ModuleList(self.flows)
 
-        return self
+    
 
     def forward(self, x, condition = None):
 

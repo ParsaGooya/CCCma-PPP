@@ -138,7 +138,6 @@ class TrainDataloaderConfig:
             return Dataloader(dataset = validation_dataset, config = self,  collate_fn = collate_batch, rank = self.rank, world_size = self.world_size, return_spatial_mask = return_spatial_mask, reduce_spatial_mask = reduce_spatial_mask)
 
         else:
-            # raise ValueError(f'Validation dataoader could not be built for num_validation_years = {self.num_validation_years} ')
             warnings.warn(f'Validation dataoader could not be built for num_validation_years = {self.num_validation_years} ')
             return None
 
