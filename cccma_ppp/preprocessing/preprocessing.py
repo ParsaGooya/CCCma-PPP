@@ -9,7 +9,7 @@ import xarray as xr
 
 from cccma_ppp.preprocessing.registery import Registery
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
-
+from cccma_ppp.generic.runtime import RuntimeContext
 
 @dataclasses.dataclass
 class PreprocessingStepSelector:
@@ -36,7 +36,6 @@ class PreprocessingPipeline:
 
     preprocessors_list : list[PreprocessingStepSelector]  = dataclasses.field(default_factory=list)
     load_dir : str | Path = None
-    load_name : str = None
     num_instances: ClassVar[int] = 0
 
     def __post_init__(self):
@@ -49,6 +48,8 @@ class PreprocessingPipeline:
 
                 self.pipeline.append((step.name.lower(), step.get_preprocessor()))
 
+    def set_name(self, name : str):
+        self.name = name
 
 
     def fit(self, base_data: xr.DataArray = None, mask: xr.DataArray = None, save : bool = True, save_name :str | None  = None, save_path: Path | str | None  = None):
@@ -69,15 +70,16 @@ class PreprocessingPipeline:
 
             if save:
 
-                save_path = Path(save_path) if save_path is not None else Path(os.environ["GLOBAL_EXP_DIR"]) / 'preprocessing_pipeline'
+                save_path = Path(save_path) if save_path is not None else Path(RuntimeContext.GLOBAL_EXP_DIR) / 'preprocessing_pipeline'
                 save_name = save_name or f"{self.name}_preprocessing_pipeline.joblib"
 
                 if not os.path.isdir(save_path):
                     os.makedirs(save_path)
 
                 joblib.dump(self, save_path / save_name )
+                
         else:
-            self._load_from_memory(Path(self.load_dir), self.load_name)
+            self._load_from_memory(Path(self.load_dir))
 
         return self
 
@@ -130,10 +132,10 @@ class PreprocessingPipeline:
             self.steps.insert(index, name)
 
 
-    def _load_from_memory(self, load_dir : str | Path  , load_name : str = None):
+    def _load_from_memory(self, load_dir : str | Path ):
 
-        load_name = load_name or f"{self.name}_preprocessing_pipeline.joblib"
-        loaded = joblib.load(Path(load_dir) / load_name)
+        # load_name = load_name or f"{self.name}_preprocessing_pipeline.joblib"
+        loaded = joblib.load(Path(load_dir))
 
         assert loaded.fitted, 'the preprocessor to be loaded has to be fitted first.'
 

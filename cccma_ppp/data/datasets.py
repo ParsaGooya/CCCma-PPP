@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 import torch
 import dataclasses
 from pathlib import Path
-import os
+
 import warnings
 import gc
 from cccma_ppp.data.data_abc import XarrayDatasetABC, XarrayDatasetConfigABC, DataConfig
@@ -12,7 +12,7 @@ from cccma_ppp.data.utils_data import ModelDataConfig, ObsDataConfig, ConditionD
 
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
-
+from cccma_ppp.generic.runtime import RuntimeContext
 
         
 @dataclasses.dataclass
@@ -38,7 +38,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
         if self.time_features is not None:
             assert set(self.time_features).issubset(set(['year','lead_time','month_sin','month_cos']))
 
-        self.model.preprocessing_pipeline.name = 'model'
+        self.model.preprocessing_pipeline.set_name('model')
         if self.condition_method == 'same_member':
             assert self.model.ensemble_mean is not None, 'for same member coniditioning the model data should not be ensemble mean.'
        
@@ -48,7 +48,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
                 warnings.warn(f'model and observation data do not have the same latitudes cooridnates.') 
             if not self.observation.info.coords["lon"].equals(self.model.info.coords["lon"]):
                 warnings.warn(f'model and observation data do not have the same longitudes cooridnates.') 
-            self.observation.preprocessing_pipeline.name = 'observation'
+            self.observation.preprocessing_pipeline.set_name('observation')
         else:
             assert self.condition_method is not None, f'No target observation is specified. Specify condition_method!' 
 
@@ -101,7 +101,8 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
             if self.condition_method in ['same_member']:
                     assert self.condition.info.coords['ensembles'].equals(self.model.info.coords['ensembles']), 'coniditioning field and model data must have the same ensemble dimension for same_member conditioning.'
         
-            self.condition.preprocessing_pipeline.name = 'condition'
+            self.condition.preprocessing_pipeline.set_name('condition')
+
         
     @property
     def get_common_time(self):
@@ -167,7 +168,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
         
 
         if load_dir is None:
-            load_dir = Path(os.environ["GLOBAL_EXP_DIR"]) / 'preprocessing_pipeline' / f"{self.model.preprocessing_pipeline.name}_preprocessing_pipeline.joblib"
+            load_dir = Path(RuntimeContext.GLOBAL_EXP_DIR) / 'preprocessing_pipeline' / f"{self.model.preprocessing_pipeline.name}_preprocessing_pipeline.joblib"
         else:
             load_dir = Path(load_dir)
 
@@ -177,7 +178,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
 
         if self.observation is not None:
             if load_dir is None:
-                load_dir = Path(os.environ["GLOBAL_EXP_DIR"]) / 'preprocessing_pipeline' /  f"{self.observation.preprocessing_pipeline.name}_preprocessing_pipeline.joblib"
+                load_dir = Path(RuntimeContext.GLOBAL_EXP_DIR) / 'preprocessing_pipeline' /  f"{self.observation.preprocessing_pipeline.name}_preprocessing_pipeline.joblib"
             else:
                 load_dir = Path(load_dir)
 
@@ -187,7 +188,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
 
         if self.condition is not None:
             if self.condition.preprocessing_pipeline.load_dir is None:
-                load_dir = Path(os.environ["GLOBAL_EXP_DIR"]) / 'preprocessing_pipeline' / f"{self.condition.preprocessing_pipeline.name}_preprocessing_pipeline.joblib"
+                load_dir = Path(RuntimeContext.GLOBAL_EXP_DIR) / 'preprocessing_pipeline' / f"{self.condition.preprocessing_pipeline.name}_preprocessing_pipeline.joblib"
             else:
                 load_dir = Path(load_dir)
             
@@ -246,6 +247,51 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
                 assert weights.channels.values == self.model.names, error_msg
         
         return weights
+
+    def get_input_var_metadata(self):
+
+        metadata = dict( variables = list(), preprocessors = list())
+        
+        def _update_metadata_with_dataconfig_metadata(metadata, dataconfig : ModelDataConfig |ObsDataConfig |ConditionDataConfig):
+                preprocessor_names = [processor[0] for processor in dataconfig.preprocessing_pipeline.pipeline]
+                for var in dataconfig.names:
+                    metadata['variables'].append(var)
+                    metadata['preprocessors'].append(preprocessor_names)
+                    return metadata
+        
+        
+        if self.condition is None:
+            metadata = _update_metadata_with_dataconfig_metadata(metadata, self.model)
+
+        else:
+            if not self._using_model_data_as_condition:
+                metadata = _update_metadata_with_dataconfig_metadata(metadata, self.model) 
+                metadata = _update_metadata_with_dataconfig_metadata(metadata, self.condition)   
+            else:
+                metadata = _update_metadata_with_dataconfig_metadata(metadata, self.condition)   
+
+
+        return metadata
+    
+
+    def get_target_var_metadata(self):
+
+        metadata = dict( variables = list(), preprocessors = list())
+        def _update_metadata_with_dataconfig_metadata(metadata, dataconfig : ModelDataConfig |ObsDataConfig |ConditionDataConfig):
+                preprocessor_names = [processor[0] for processor in dataconfig.preprocessing_pipeline.pipeline]
+                for var in dataconfig.names:
+                    metadata['variables'].append(var)
+                    metadata['preprocessors'].append(preprocessor_names)
+                    return metadata
+
+        
+        if self.observation is None:
+            metadata = _update_metadata_with_dataconfig_metadata(metadata, self.model) 
+        else:
+            metadata = _update_metadata_with_dataconfig_metadata(metadata, self.observation) 
+
+        return metadata
+    
 
 
     def build(self, years : np.ndarray, mask: xr. DataArray = None, return_metadata : bool = False):
@@ -354,18 +400,19 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
                     indexes['ensembles'] = model_indexes['ensembles']
                     
             return indexes
-
-
+        
     def get_input_shape(self):
+
 
         from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
         checklist = [isinstance(item, Oceannanremove) for item in self.config.model.preprocessing_pipeline.fitted_preprocessors]
 
         if any(checklist):
-            return self.config.model.preprocessing_pipeline.get_preprocessors('oceannanremover').final_locations.shape * len(self.config.model.names)
+            return  self.config.model.preprocessing_pipeline.get_preprocessors('oceannanremover').final_locations.shape * len(self.config.model.names)
         else:
-            return (self.config.model.info.coords['lat'].size, self.config.model.info.coords['lon'].size)
+            return  (self.config.model.info.coords['lat'].size, self.config.model.info.coords['lon'].size)
         
+
     def get_target_shape(self):
 
         from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
@@ -377,13 +424,12 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             else:
                 return (self.config.observation.info.coords['lat'].size, self.config.observation.info.coords['lon'].size) 
         else:
-            return self.get_input_shape()
-    
-    @property
-    def added_features_dim(self):
+            return self.input_shape
+        
+    def get_added_features_dim(self):
 
         return len(self.time_features)
-        
+      
         
     def __getitem__(self, ind):
 

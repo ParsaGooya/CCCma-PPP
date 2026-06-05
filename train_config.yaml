@@ -1,4 +1,4 @@
-experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/cccma_PPP_test
+experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/cccma_PPP_test3
 epochs: 3
 train_loader:
     dataset_config:
@@ -62,6 +62,7 @@ module:
                                 args :
                                       hidden_dim : 5 
             combined_CGCN_weight : 0.1
+            
             
           
 losspipeline:

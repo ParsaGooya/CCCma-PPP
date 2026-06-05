@@ -7,7 +7,7 @@ from cccma_ppp.models.normalized_flows import NormalizedFlowModel
 import dataclasses
 from cccma_ppp.core.cVAE_module import cVAEOutput
 from cccma_ppp.core.deterministic_module import deterministicOutput
-
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 
@@ -94,8 +94,16 @@ class cVAE_MLP(cVAEmodelsABC):
             output_shape = input_shape.copy()
 
         if self.config.checkpoint_config is not None:
-            assert input_shape == self.config.checkpoint_config.checkpoint_input_shape, f'the requested input shape ({input_shape}) does not match the loaded model : {self.config.checkpoint_config.checkpoint_input_shape}'
-            assert output_shape == self.config.checkpoint_config.checkpoint_output_shape, f'the requested output shape ({output_shape}) does not match the loaded model : {self.config.checkpoint_config.checkpoint_output_shape}'
+            if input_shape != self.config.checkpoint_config.checkpoint_input_shape:
+                raise RuntimeError(f'the requested input shape ({input_shape}) does not match the loaded model : {self.config.checkpoint_config.checkpoint_input_shape}')
+            if output_shape != self.config.checkpoint_config.checkpoint_output_shape:
+                raise RuntimeError(f'the requested output shape ({output_shape}) does not match the loaded model : {self.config.checkpoint_config.checkpoint_output_shape}')
+
+            if RuntimeContext.INPUT_VAR_METADATA != self.config.checkpoint_config.checkpoint_input_var_metadata:
+                raise RuntimeError('the loaded module was not trained for the consistent input variables or preprocessing steps')
+            if RuntimeContext.TARGET_VAR_METADATA != self.config.checkpoint_config.checkpoint_output_var_metadata:
+                raise RuntimeError('the loaded module was not trained for the consistent output variables or preprocessing steps')
+    
 
         self.input_shape = np.prod(input_shape)
         self.output_shape =  np.prod(output_shape)
@@ -422,9 +430,16 @@ class Autoencoder( deterministicmodelsABC):
             output_shape = input_shape.copy()
 
         if self.config.checkpoint_config is not None:
-            assert input_shape == self.config.checkpoint_config.checkpoint_input_shape, f'the requested input shape ({input_shape}) does not match the loaded model : {self.config.checkpoint_config.checkpoint_input_shape}'
-            assert output_shape == self.config.checkpoint_config.checkpoint_output_shape, f'the requested output shape ({output_shape}) does not match the loaded model : {self.config.checkpoint_config.checkpoint_output_shape}'
+            if input_shape != self.config.checkpoint_config.checkpoint_input_shape:
+                raise RuntimeError(f'the requested input shape ({input_shape}) does not match the loaded model : {self.config.checkpoint_config.checkpoint_input_shape}')
+            if output_shape != self.config.checkpoint_config.checkpoint_output_shape:
+                raise RuntimeError(f'the requested output shape ({output_shape}) does not match the loaded model : {self.config.checkpoint_config.checkpoint_output_shape}')
 
+            if RuntimeContext.INPUT_VAR_METADATA != self.config.checkpoint_config.checkpoint_input_var_metadata:
+                raise RuntimeError('the loaded module was not trained for the consistent input variables or preprocessing steps')
+            if RuntimeContext.TARGET_VAR_METADATA != self.config.checkpoint_config.checkpoint_output_var_metadata:
+                raise RuntimeError('the loaded module was not trained for the consistent output variables or preprocessing steps')
+            
         self.input_shape = np.prod(input_shape)
         self.output_shape =  np.prod(output_shape)
         self.added_features_dim = added_features_dim

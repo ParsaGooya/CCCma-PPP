@@ -2,14 +2,16 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import dataclasses
-import os
+
 from pathlib import Path
 import glob
 from typing import final, ClassVar
-
+import os
 from cccma_ppp.data.data_abc import DataConfig
 from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
+
+from cccma_ppp.generic.runtime import RuntimeContext
 
 @dataclasses.dataclass
 class infoclass:
@@ -193,7 +195,7 @@ def _get_ds_info(dataconfig : ModelDataConfig | ObsDataConfig) -> infoclass:
 class WeightsConfig:
     spatial_method: str = 'uniform'
     variable_weights: dict[str, float] | None = None
-    load_dir : str | None = None
+    load_dir : Path | str | None = None
 
     def __post_init__(self):
         if self.load_dir is None:
@@ -208,7 +210,7 @@ class WeightsConfig:
 
         if self.load_dir is not None:
 
-            weights =  xr.open_dataset(self.load_dir)
+            weights =  xr.open_dataset(Path(self.load_dir))
             if isinstance(weights, xr.Dataset):
                 weights = _unwrape_data_variables(weights)
 
@@ -237,7 +239,7 @@ class WeightsConfig:
 
             if save:
 
-                save_path = Path(save_path) if save_path is not None else Path(os.environ["GLOBAL_EXP_DIR"])
+                save_path = Path(save_path) if save_path is not None else Path(RuntimeContext.GLOBAL_EXP_DIR)
                 save_name = save_name or f"spatial_weights.nc"
 
                 if not os.path.isdir(save_path):

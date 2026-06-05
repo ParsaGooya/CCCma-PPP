@@ -124,6 +124,8 @@ class TrainDataloaderConfig:
         train_dataset = self.dataset_config.build(years = self.train_years , mask = train_mask, return_metadata = False)
 
         return Dataloader(dataset = train_dataset, config = self,  collate_fn = collate_batch, rank = self.rank, world_size = self.world_size, return_spatial_mask = return_spatial_mask, reduce_spatial_mask = reduce_spatial_mask)
+    
+
 
     def build_validation_loader(self, return_spatial_mask = False, reduce_spatial_mask = False):
         if not self._setup:
@@ -141,7 +143,13 @@ class TrainDataloaderConfig:
             return None
 
 
+    @property
+    def input_var_metadata(self):
+            return self.dataset_config.get_input_var_metadata()
 
+    @property
+    def target_var_metadata(self):
+            return self.dataset_config.get_target_var_metadata()
 
 
 
@@ -186,7 +194,8 @@ class Dataloader:
 
     @property
     def added_features_dim(self):
-        return self.dataset.added_features_dim
+        return self.dataset.get_added_features_dim()
+
 
     @final
     def __iter__(self) -> Iterator[BatchData]:

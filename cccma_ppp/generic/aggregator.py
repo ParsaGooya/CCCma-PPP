@@ -7,9 +7,10 @@ import warnings
 import matplotlib.pyplot as plt
 import os
 from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic.runtime import RuntimeContext
 import random
 from pathlib import Path
-
+import os
 
 @dataclasses.dataclass
 class MetricsAggregator:
@@ -166,7 +167,7 @@ class MetricsAggregator:
 
         """
         if plot_dir is None:
-            plot_dir = Path(os.environ.get("GLOBAL_FIGURES_DIR"))
+            plot_dir = Path(RuntimeContext.GLOBAL_FIGURES_DIR)
         else:
             plot_dir = Path(plot_dir)
 

@@ -14,6 +14,7 @@ from cccma_ppp.core.cVAE_module import cVAE
 from cccma_ppp.data.dataloader import Dataloader
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.aggregator import MetricsAggregator
+from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.loss.kld import BetaAnnealing
 
 
@@ -139,7 +140,7 @@ class Trainer:
                     "Configured value of save_checkpoint is false, no checkpoints whatsoever will be saved! ")
 
 
-            self.checkpoint_dir = Path(os.environ["GLOBAL_CHECKPOINT_DIR"])
+            self.checkpoint_dir = Path(RuntimeContext.GLOBAL_CHECKPOINT_DIR)
             resuming = os.path.isfile(self.checkpoint_dir / '*best*.pt')
             if resuming:
                 self.log_root(logging.INFO, f"Resuming training from {self.checkpoint_dir / '*best*.pt' }")
@@ -148,7 +149,7 @@ class Trainer:
                 if self.is_on_root and self.save_checkpoint:
                     os.makedirs(self.checkpoint_dir, exist_ok=True)
 
-            self.plot_dir = Path(os.environ["GLOBAL_FIGURES_DIR"])
+            self.plot_dir = Path(RuntimeContext.GLOBAL_FIGURES_DIR)
             if self.is_on_root:
                     os.makedirs(self.plot_dir, exist_ok=True)
 
@@ -473,8 +474,10 @@ class Trainer:
                 "earlystopping_counter": self.earlystopping_counter,
                 "module": self.raw_module.state_dict(),
                 "module_config" : dataclasses.asdict(self.raw_module.config),
-                "model_input_shape" : self.raw_module.input_shape,
-                "model_output_shape" : self.raw_module.output_shape,
+                "input_shape" : self.TrainLoader.input_shape,
+                "output_shape" : self.TrainLoader.target_shape,
+                "input_var_metadata" : RuntimeContext.INPUT_VAR_METADATA,
+                "output_var_metadata" : RuntimeContext.TARGET_VAR_METADATA,
                 "optimizer": self.optimizer.state_dict(),
                 "scaler": self.scaler.state_dict(),
                 "train_logs": train_logs,

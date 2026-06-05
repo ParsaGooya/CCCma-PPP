@@ -14,6 +14,8 @@ class CheckpointConfig:
     load_path : Path | str
     checkpoint_input_shape :np.ndarray
     checkpoint_output_shape :np.ndarray
+    checkpoint_input_var_metadata : dict
+    checkpoint_output_var_metadata : dict
     strict : bool = True
     freeze_weights : bool = False
 

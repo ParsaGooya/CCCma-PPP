@@ -13,6 +13,7 @@ from cccma_ppp.data.dataloader import TrainDataloaderConfig
 from cccma_ppp.data.utils_data import WeightsConfig
 
 from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic.runtime import RuntimeContext
 
 from cccma_ppp.core.selectors import ModuleSelector
 from cccma_ppp.core.trainer import TrainerConfig
@@ -146,6 +147,16 @@ class TrainConfig:
         The directory where output files are saved.
         """
         return os.path.join(self.experiment_dir, "figures")
+    
+    def _prepare_runtime_variables(self):
+
+        RuntimeContext.GLOBAL_EXP_DIR = str(self.experiment_dir)
+        RuntimeContext.GLOBAL_CHECKPOINT_DIR = str(self.checkpoint_dir)
+        RuntimeContext.GLOBAL_FIGURES_DIR = str(self.figures_dir)
+        RuntimeContext.GLOBAL_LOG_DIR = str(self.log_dir)
+        RuntimeContext.INPUT_VAR_METADATA = self.train_loader.input_var_metadata
+        RuntimeContext.TARGET_VAR_METADATA = self.train_loader.target_var_metadata
+
 
     def prepare_directory(self, distributed : Distributed, yaml_config : str = None):
 
@@ -153,10 +164,7 @@ class TrainConfig:
         Create experiment (sub)directories and dump config_data to it.
         """
 
-        os.environ["GLOBAL_EXP_DIR"] = str(self.experiment_dir)
-        os.environ["GLOBAL_CHECKPOINT_DIR"] = str(self.checkpoint_dir)
-        os.environ["GLOBAL_FIGURES_DIR"] = str(self.figures_dir)
-        os.environ["GLOBAL_LOG_DIR"] = str(self.log_dir)
+        self._prepare_runtime_variables()
 
         for path in (self.experiment_dir , self.checkpoint_dir , self.figures_dir, self.log_dir ):
             if distributed.is_root():

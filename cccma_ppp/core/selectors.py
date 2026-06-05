@@ -3,6 +3,7 @@ import dataclasses
 from cccma_ppp.core.registery import *
 from cccma_ppp.core.core_abc import  moduleABC
 from cccma_ppp.models.models_abc import *
+
 from typing import Any, ClassVar
 from collections.abc import Callable,Mapping
 from pathlib import Path
@@ -59,7 +60,8 @@ class ModelSelector:
         
         if self.load_dir is not None:
             
-            checkpoint_model, self.checkpoint_config = _load_config_from_checkpoint(self.load_dir)
+            checkpoint_module, self.checkpoint_config = _load_config_from_checkpoint(self.load_dir)
+            checkpoint_model = checkpoint_module.get('ModelConfig')
             assert self.type == checkpoint_model.get('type'), f'the specified model does not have the correct type {self.type}'
             self.config = checkpoint_model.get('config')
             warnings.warn(f'all model config overwritten by the saved model from {self.load_dir}')
@@ -129,18 +131,25 @@ def _load_config_from_checkpoint(load_path : Path | str, strict : bool = True):
         raise FileNotFoundError(f"Checkpoint not found: {load_path}")
 
     checkpoint = torch.load( Path(load_path), weights_only=False)
-    checkpoint_model = checkpoint.get('module_config').get('ModelConfig')
-    checkpoint_input_shape =  checkpoint.get('model_input_shape')
-    checkpoint_output_shape =  checkpoint.get('model_output_shape')
+    
+
+    checkpoint_module = checkpoint.get('module_config')
+    checkpoint_input_shape =  checkpoint.get('input_shape')
+    checkpoint_output_shape =  checkpoint.get('output_shape')
+    checkpoint_input_var_metadata =  checkpoint.get('input_var_metadata')
+    checkpoint_output_var_metadata =  checkpoint.get('output_var_metadata')
+    
 
     checkpoint_config = CheckpointConfig(load_path,
-                                            checkpoint_input_shape,
-                                            checkpoint_output_shape,
+                                            checkpoint_input_shape = checkpoint_input_shape,
+                                            checkpoint_output_shape = checkpoint_output_shape,
+                                            checkpoint_input_var_metadata = checkpoint_input_var_metadata,
+                                            checkpoint_output_var_metadata = checkpoint_output_var_metadata,
                                             strict = strict)
 
     del checkpoint
     gc.collect()
 
-    return checkpoint_model, checkpoint_config
+    return checkpoint_module, checkpoint_config
 
 

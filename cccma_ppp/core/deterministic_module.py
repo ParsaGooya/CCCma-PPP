@@ -8,9 +8,9 @@ import warnings
 from cccma_ppp.loss.loss import Losspipeline
 from cccma_ppp.core.registery import *
 from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC
-from cccma_ppp.core.selectors import *
+from cccma_ppp.core.selectors import ModuleSelector, deterministicModelSelector, _load_config_from_checkpoint
 from cccma_ppp.data.dataloader import BatchData
-
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 
@@ -49,21 +49,14 @@ class deterministicConfig(moduleConfigABC):
 
     def _load_from_checkpoint(self, load_path : Path | str):
 
-        if not Path(load_path).exists():
-            raise FileNotFoundError(f"Checkpoint not found: {load_path}")
+        checkpoint_module, checkpoint_config = _load_config_from_checkpoint(Path(load_path))
 
-        checkpoint = torch.load( Path(load_path), weights_only=False)
-        _checkpoint_config = checkpoint.get('module_config')
-
-        self._checkpoint_input_shape = checkpoint.get('model_input_shape')
-        self._checkpoint_output_shape = checkpoint.get('model_output_shape')
-        
         self.ModelConfig  =  dacite.from_dict(
                                         data_class=deterministicModelSelector,
-                                        data= _checkpoint_config.get("ModelConfig"),
+                                        data= checkpoint_module.get("ModelConfig"),
                                         config=dacite.Config(strict=True))
 
-        del checkpoint, _checkpoint_config
+        del checkpoint_config, checkpoint_module
         gc.collect()
         return self
 
@@ -96,12 +89,17 @@ class deterministic( moduleABC):
         if output_shape is None:
             output_shape = input_shape.copy()
             
-        self.input_shape = input_shape
-        self.output_shape = output_shape
 
         if self.config.load_dir is not None:
-            assert self.input_shape == self.config._checkpoint_input_shape, f'the requested input shape ({self.input_shape}) does not match the loaded module : {self.config._checkpoint_input_shape}'
-            assert self.output_shape == self.config._checkpoint_output_shape, f'the requested output shape ({self.output_shape}) does not match the loaded module : {self.config._checkpoint_output_shape}'
+            if RuntimeContext.INPUT_VAR_METADATA != self.config.checkpoint_config.checkpoint_input_var_metadata:
+                raise RuntimeError('the loaded module was not trained for the consistent input variables or preprocessing steps')
+            if RuntimeContext.TARGET_VAR_METADATA != self.config.checkpoint_config.checkpoint_output_var_metadata:
+                raise RuntimeError('the loaded module was not trained for the consistent output variables or preprocessing steps')
+            
+            if input_shape != self.config.checkpoint_config.checkpoint_input_shape: 
+                raise RuntimeError(f'the requested input shape ({input_shape}) does not match the loaded module : {self.config.checkpoint_config.checkpoint_input_shape}')
+            if output_shape != self.config.checkpoint_config.checkpoint_output_shape:
+                raise RuntimeError(f'the requested output shape ({output_shape}) does not match the loaded module : {self.config.checkpoint_config.checkpoint_output_shape}')
 
 
         self.model.build(input_shape = input_shape,
