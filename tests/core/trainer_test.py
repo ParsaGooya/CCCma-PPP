@@ -8,9 +8,6 @@ import cccma_ppp.core.trainer as trainer_mod
 from cccma_ppp.core.trainer import Trainer, TrainerConfig
 
 
-# ============================================================
-# Test doubles
-# ============================================================
 @dataclasses.dataclass
 class DummyModuleConfig:
     dummy: bool = True
@@ -189,11 +186,6 @@ class FakeAggregator:
         FakeAggregator.plot_calls.append((aggregators, plot_dir))
 
 
-# ============================================================
-# Fixtures
-# ============================================================
-
-
 @pytest.fixture(autouse=True)
 def patch_aggregator(monkeypatch):
     FakeAggregator.plot_calls.clear()
@@ -230,11 +222,6 @@ def make_trainer(validation=True, mixed_precision=False, grad_clip=None):
     )
 
     return trainer, module, optimizer, train_loader, validation_loader
-
-
-# ============================================================
-# TrainerConfig
-# ============================================================
 
 
 def test_trainer_config_defaults():
@@ -345,11 +332,6 @@ def test_trainer_config_cvae_builds_beta_finder(monkeypatch):
     assert beta.built_with == 4
 
 
-# ============================================================
-# setup_distributed / logging
-# ============================================================
-
-
 def test_setup_distributed_basic(env_dirs):
     trainer, module, _, _, _ = make_trainer(validation=True)
     dist = DummyDistributed(distributed=False)
@@ -453,11 +435,6 @@ def test_log_root_noop_when_not_root(env_dirs):
     assert not any(rec[1] == "hidden" for rec in logger.records)
 
 
-# ============================================================
-# Improvement / early stopping helpers
-# ============================================================
-
-
 def test_is_improved_first_validation_is_true():
     trainer, _, _, _, _ = make_trainer(validation=True)
 
@@ -509,11 +486,6 @@ def test_should_stop_early_true():
     trainer.earlystopping_counter = 2
 
     assert trainer._should_stop_early() is True
-
-
-# ============================================================
-# Train / validation batch methods
-# ============================================================
 
 
 def test_train_requires_setup():
@@ -627,11 +599,6 @@ def test_validate_on_epoch(env_dirs):
     assert len(trainer.validation_aggregator.records) == len(validation_loader)
 
 
-# ============================================================
-# Optimizer step / memory
-# ============================================================
-
-
 def test_optimizer_step_with_grad_clip(env_dirs):
     trainer, module, optimizer, _, _ = make_trainer(validation=False, grad_clip=1.0)
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -665,11 +632,6 @@ def test_clear_memory_cuda_available(monkeypatch):
     trainer._clear_memory()
 
     assert called["empty"] is True
-
-
-# ============================================================
-# Checkpoint save/load
-# ============================================================
 
 
 def test_save_checkpoint_without_validation(env_dirs):
@@ -777,11 +739,6 @@ def test_load_checkpoint_without_scaler_or_histories(env_dirs):
     assert trainer._start_epoch == 3
     assert trainer.global_step == 4
     assert trainer.batch_step == 5
-
-
-# ============================================================
-# Epoch logging / full training loop
-# ============================================================
 
 
 def test_log_epoch_with_validation(env_dirs):
@@ -966,7 +923,7 @@ def test_optimizer_step_amp_skipped_does_not_increment(monkeypatch, env_dirs):
 
         def get_scale(self):
             self.calls += 1
-            # old_scale = 2.0, new_scale = 1.0
+
             return 2.0 if self.calls == 1 else 1.0
 
         def step(self, optimizer):
@@ -1101,5 +1058,4 @@ def test_setup_distributed_non_root_does_not_create_checkpoint_dir(env_dirs):
         save_checkpoint=True,
     )
 
-    # plot_dir creation is also root-only
     assert trainer.is_on_root is False

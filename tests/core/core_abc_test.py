@@ -23,7 +23,7 @@ class DummyModule(moduleABC):
     def forward(self, x=None):
         return self.linear(torch.ones(1, 2))
 
-    def preidct(self):  # typo preserved from base class
+    def preidct(self):
         return torch.tensor(0.0)
 
 
@@ -123,11 +123,9 @@ def test_load_state_dict_file_not_found(tmp_path):
 def test_load_state_dict_success(tmp_path):
     m = DummyModule()
 
-    # create checkpoint
     checkpoint_path = tmp_path / "ckpt.pt"
     torch.save({"module": m.state_dict()}, checkpoint_path)
 
-    # load into new model
     new_model = DummyModule()
     new_model._load_state_dict(checkpoint_path)
 
@@ -143,12 +141,10 @@ def test_load_state_dict_non_strict(tmp_path):
 
     new_model = DummyModule()
 
-    # remove a key to test non-strict loading
     state = m.state_dict()
     state.pop(list(state.keys())[0])
     torch.save({"module": state}, checkpoint_path)
 
-    # should NOT crash with strict=False
     new_model._load_state_dict(checkpoint_path, strict=False)
 
 
@@ -158,11 +154,10 @@ def test_load_on_specific_device(tmp_path):
     checkpoint_path = tmp_path / "ckpt.pt"
     torch.save({"module": m.state_dict()}, checkpoint_path)
 
-    # simulate device usage
     m.to(torch.device("cpu"))
 
     m._load_state_dict(checkpoint_path)
-    assert True  # just ensure no crash
+    assert True
 
 
 def test_load_triggers_gc(tmp_path):
@@ -171,5 +166,4 @@ def test_load_triggers_gc(tmp_path):
     checkpoint_path = tmp_path / "ckpt.pt"
     torch.save({"module": m.state_dict()}, checkpoint_path)
 
-    # just ensure GC path executes without error
     m._load_state_dict(checkpoint_path)

@@ -1,6 +1,3 @@
-# test_abc_models.py
-
-
 import numpy as np
 import pytest
 import torch
@@ -12,11 +9,6 @@ from cccma_ppp.models.models_abc import (
     modelConfigABC,
     weights_init,
 )
-
-
-# ------------------------------------------------------------------
-# Test helpers
-# ------------------------------------------------------------------
 
 
 class DummyConfig(modelConfigABC):
@@ -65,11 +57,6 @@ class EmptyModel(modelABC):
         return iter(())
 
 
-# ------------------------------------------------------------------
-# modelConfigABC
-# ------------------------------------------------------------------
-
-
 def test_add_checkpoint_config():
     cfg = DummyConfig()
 
@@ -82,11 +69,6 @@ def test_add_checkpoint_config():
     cfg._add_checkpoint_config(checkpoint_cfg)
 
     assert cfg.checkpoint_config is checkpoint_cfg
-
-
-# ------------------------------------------------------------------
-# _get_device
-# ------------------------------------------------------------------
 
 
 def test_get_device_from_parameter():
@@ -107,15 +89,9 @@ def test_get_device_cpu_fallback():
     assert model._get_device() == torch.device("cpu")
 
 
-# ------------------------------------------------------------------
-# weights_init
-# ------------------------------------------------------------------
-
-
 def test_weights_init_non_module_returns():
     relu = nn.ReLU()
 
-    # should simply return
     weights_init(relu)
 
 
@@ -157,22 +133,12 @@ def test_weights_init_frozen_weight_and_bias():
     assert torch.equal(old_bias, layer.bias)
 
 
-# ------------------------------------------------------------------
-# _initialize_weights
-# ------------------------------------------------------------------
-
-
 def test_initialize_weights():
     model = DummyModel()
 
     model._initialize_weights()
 
     assert model.linear.bias is not None
-
-
-# ------------------------------------------------------------------
-# _load_state_dict
-# ------------------------------------------------------------------
 
 
 def test_load_state_dict_missing_checkpoint(tmp_path):

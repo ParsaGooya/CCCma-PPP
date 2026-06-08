@@ -16,11 +16,6 @@ from cccma_ppp.models.normalized_flows import (
 torch.manual_seed(0)
 
 
-# ============================================================
-# Helpers
-# ============================================================
-
-
 def x(batch=4, dim=4):
     return torch.randn(batch, dim)
 
@@ -80,11 +75,6 @@ class DummySelector:
         return self.model
 
 
-# ============================================================
-# flowOutput
-# ============================================================
-
-
 def test_flow_output_dataclass():
     samples = torch.randn(2, 3)
     log_det = torch.randn(2)
@@ -93,11 +83,6 @@ def test_flow_output_dataclass():
 
     assert out.e_samples is samples
     assert out.log_det is log_det
-
-
-# ============================================================
-# FCNN
-# ============================================================
 
 
 def test_fcnn_forward_shape():
@@ -114,11 +99,6 @@ def test_fcnn_contains_expected_layers():
     assert isinstance(model.network, nn.Sequential)
     assert any(isinstance(layer, nn.Tanh) for layer in model.network)
     assert sum(isinstance(layer, nn.Linear) for layer in model.network) == 3
-
-
-# ============================================================
-# NormalizedFlowConfig / NormalizedFlowModel
-# ============================================================
 
 
 def test_normalized_flow_config_build():
@@ -295,11 +275,6 @@ def test_normalized_flow_empty_flow_list_inverse():
     assert torch.allclose(out.log_det, torch.zeros(data.shape[0]))
 
 
-# ============================================================
-# FlowSelector registry integration
-# ============================================================
-
-
 def test_flow_selector_maf_registered():
     selector = FlowSelector(type="maf", args={"hidden_dim": 8})
 
@@ -333,11 +308,6 @@ def test_normalized_flow_config_with_real_selectors():
     assert len(model.flows) == 2
     assert isinstance(model.flows[0], MAF)
     assert isinstance(model.flows[1], RealNVP)
-
-
-# ============================================================
-# MAF
-# ============================================================
 
 
 def test_maf_build_without_condition():
@@ -398,11 +368,6 @@ def test_maf_inverse_with_condition():
 
     assert inv.shape == data.shape
     assert log_det.shape == (5,)
-
-
-# ============================================================
-# RealNVP
-# ============================================================
 
 
 def test_realnvp_build_without_condition():
@@ -481,7 +446,5 @@ def test_realnvp_odd_dimension_shape_behavior():
     flow = RealNVP(hidden_dim=8).build(dim=5)
     data = x(batch=4, dim=5)
 
-    # Current implementation uses dim//2 for both halves.
-    # For odd dimensions this produces incompatible dimensions.
     with pytest.raises(RuntimeError):
         flow.forward(data)

@@ -4,11 +4,6 @@ import pytest
 import yaml
 
 
-# ============================================================
-# get_parser
-# ============================================================
-
-
 def test_get_parser_returns_argument_parser():
     parser = get_parser()
 
@@ -35,11 +30,6 @@ def test_get_parser_rejects_extra_argument():
 
     with pytest.raises(SystemExit):
         parser.parse_args(["config.yaml", "extra"])
-
-
-# ============================================================
-# prepare_config
-# ============================================================
 
 
 def test_prepare_config_reads_yaml(tmp_path):
@@ -83,11 +73,6 @@ def test_prepare_config_invalid_yaml_raises(tmp_path):
 
     with pytest.raises(yaml.YAMLError):
         prepare_config(str(path))
-
-
-# ============================================================
-# main
-# ============================================================
 
 
 def test_main_root_happy_path(monkeypatch, tmp_path):
@@ -422,11 +407,6 @@ def test_main_propagates_train_error_and_does_not_cleanup(monkeypatch, tmp_path)
 
 import cccma_ppp.train.train as train_mod
 from cccma_ppp.train.train import get_parser, prepare_config, main
-
-
-# ============================================================
-# Test doubles
-# ============================================================
 
 
 class DummyDistributed:

@@ -3,16 +3,10 @@ import logging
 from cccma_ppp.generic.logger import setup_logger
 
 
-# HELPERS
-
-
 def clear_logger(name):
     logger = logging.getLogger(name)
     logger.handlers.clear()
     logger.propagate = True
-
-
-# BASIC CREATION
 
 
 def test_logger_basic(tmp_path):
@@ -24,10 +18,7 @@ def test_logger_basic(tmp_path):
     assert isinstance(logger, logging.Logger)
     assert logger.level == logging.INFO
     assert logger.propagate is False
-    assert len(logger.handlers) == 2  # console + file
-
-
-# NO DUPLICATE HANDLERS
+    assert len(logger.handlers) == 2
 
 
 def test_logger_no_duplicate_handlers(tmp_path):
@@ -38,10 +29,7 @@ def test_logger_no_duplicate_handlers(tmp_path):
     logger2 = setup_logger(name=name, log_dir=tmp_path, rank=0)
 
     assert logger1 is logger2
-    assert len(logger1.handlers) == 2  # still only 2
-
-
-# RANK ≠ 0 (NO HANDLERS)
+    assert len(logger1.handlers) == 2
 
 
 def test_logger_non_root(tmp_path):
@@ -51,9 +39,6 @@ def test_logger_non_root(tmp_path):
     logger = setup_logger(name=name, log_dir=tmp_path, rank=1)
 
     assert len(logger.handlers) == 0
-
-
-# FILE HANDLER WRITES FILE
 
 
 def test_logger_file_written(tmp_path):
@@ -71,9 +56,6 @@ def test_logger_file_written(tmp_path):
     assert "test message" in content
 
 
-# LOG LEVEL
-
-
 def test_logger_custom_level(tmp_path):
     name = "test_logger_level"
     clear_logger(name)
@@ -87,12 +69,8 @@ def test_logger_custom_level(tmp_path):
 
     assert logger.level == logging.DEBUG
 
-    # check handler levels match
     for h in logger.handlers:
         assert h.level == logging.DEBUG
-
-
-# FORMATTER CONTENT
 
 
 def test_logger_format(tmp_path):
@@ -107,13 +85,9 @@ def test_logger_format(tmp_path):
 
     content = log_file.read_text()
 
-    # basic structure check
     assert "INFO" in content
     assert name in content
     assert "format test" in content
-
-
-# MULTIPLE LOGGERS DIFFERENT NAMES
 
 
 def test_multiple_loggers(tmp_path):
@@ -126,9 +100,6 @@ def test_multiple_loggers(tmp_path):
     assert l1 is not l2
     assert len(l1.handlers) == 2
     assert len(l2.handlers) == 2
-
-
-# LOG_DIR AS STRING
 
 
 def test_log_dir_as_string(tmp_path):

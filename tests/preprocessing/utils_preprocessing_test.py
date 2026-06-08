@@ -627,7 +627,6 @@ def test_anomalies_dataset_input():
 
     out = proc.transform(ds)
 
-    # inverse_transform does not support Dataset.shape internally
     assert isinstance(out, xr.Dataset)
     assert set(out.data_vars) == {"a", "b"}
 

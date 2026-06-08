@@ -11,11 +11,6 @@ from cccma_ppp.train.train_configs import TrainConfig, build_trainer, set_seed
 from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
 
-# ============================================================
-# Basic dummy objects
-# ============================================================
-
-
 class DummyPipeline:
     def __init__(self, pipeline=None):
         self.pipeline = pipeline or []
@@ -350,11 +345,6 @@ def test_non_mlp_skips_ocean_requirement():
     assert cfg.module._module_config.model.NUM_OUTPUT_DIMS == 2
 
 
-# ============================================================
-# Seed and path property tests
-# ============================================================
-
-
 def test_set_seed_reproducible_numpy_and_torch():
     set_seed(123)
     np_first = np.random.rand()
@@ -450,11 +440,6 @@ def test_directory_properties():
     assert str(cfg.checkpoint_dir).endswith("my_exp/checkpoints")
     assert str(cfg.log_dir).endswith("my_exp/logs")
     assert str(cfg.figures_dir).endswith("my_exp/figures")
-
-
-# ============================================================
-# prepare_directory branch tests
-# ============================================================
 
 
 def test_prepare_root(tmp_path):
@@ -553,11 +538,6 @@ def test_prepare_non_root_yaml(tmp_path):
 
     assert not os.path.exists(Path(cfg.experiment_dir) / "config.yaml")
     assert non_root.barrier_calls == 5
-
-
-# ============================================================
-# build_trainer test doubles
-# ============================================================
 
 
 class DummyBuiltLoader:
@@ -727,11 +707,6 @@ def build_train_config_for_builder(module_num_out=1):
     )
 
 
-# ============================================================
-# build_trainer branch tests
-# ============================================================
-
-
 def test_build_trainer_basic_root_logger():
     cfg = build_train_config_for_builder()
     logger = DummyLogger()
@@ -867,11 +842,6 @@ def test_build_trainer_trainer_receives_validation_loader():
     assert isinstance(cfg.trainer.validation_data_loader, DummyBuiltLoader)
 
 
-# ============================================================
-# Distributed test doubles
-# ============================================================
-
-
 class Root:
     def __init__(self):
         self.barrier_calls = 0
@@ -892,11 +862,6 @@ class NonRoot:
 
     def barrier(self):
         self.barrier_calls += 1
-
-
-# ============================================================
-# Core TrainConfig branch tests
-# ============================================================
 
 
 def test_epochs_assertion():

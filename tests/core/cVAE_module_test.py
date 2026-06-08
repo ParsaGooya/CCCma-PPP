@@ -4,11 +4,6 @@ import numpy as np
 from cccma_ppp.core.cVAE_module import cVAE, cVAEConfig, cVAEOutput
 
 
-# =========================================================
-# Dummy infrastructure (CORRECT + FULLY COMPATIBLE)
-# =========================================================
-
-
 class DummyFlow:
     def __init__(self):
         self.flow_sample_size = 2
@@ -76,11 +71,6 @@ class SumLoss:
         return torch.tensor(1.0), {}
 
 
-# =========================================================
-# CONFIG TESTS
-# =========================================================
-
-
 def test_config_requires_model_or_load():
     with pytest.raises(AssertionError):
         cVAEConfig(ModelConfig=None, load_dir=None)
@@ -99,11 +89,6 @@ def test_config_weight_bounds():
 def test_config_build():
     cfg = cVAEConfig(ModelConfig=DummySelector())
     assert isinstance(cfg.build(np.array([1])), cVAE)
-
-
-# =========================================================
-# BUILD / INIT
-# =========================================================
 
 
 def test_module_build_basic():
@@ -128,11 +113,6 @@ def test_build_shape_mismatch():
 
     with pytest.raises(AssertionError):
         m.build(np.array([2]))
-
-
-# =========================================================
-# FLOW + CONDITIONAL BRANCHES
-# =========================================================
 
 
 class ConditionalModel(DummyModel):
@@ -165,11 +145,6 @@ def test_prior_flow_build():
     assert isinstance(m.prior_flow, DummyFlow)
 
 
-# =========================================================
-# LOSS INIT
-# =========================================================
-
-
 def test_init_loss_function_basic():
     m = cVAE(cVAEConfig(ModelConfig=DummySelector()))
     m.init_loss_function(DummyLoss())
@@ -186,12 +161,7 @@ def test_init_loss_with_flow_requires_sum():
 
 def test_flow_loss_valid_sum():
     m = cVAE(cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow()))
-    m.init_loss_function(SumLoss())  # valid path
-
-
-# =========================================================
-# FORWARD / PREDICT
-# =========================================================
+    m.init_loss_function(SumLoss())
 
 
 def test_forward_pass():
@@ -214,11 +184,6 @@ def test_forward_with_added_features():
     batch.added_features = torch.ones(2, 3)
 
     assert isinstance(m.forward(batch), cVAEOutput)
-
-
-# =========================================================
-# LOSS COMPUTATION (ALL BRANCHES)
-# =========================================================
 
 
 def test_compute_loss_requires_init():
@@ -294,11 +259,6 @@ def test_cgcn_weight_active():
     assert "total_loss_CGCN" in losses
 
 
-# =========================================================
-# KLD BRANCHES
-# =========================================================
-
-
 def test_kld_with_condition():
     class CondModel(DummyModel):
         def __call__(self, **kwargs):
@@ -329,11 +289,6 @@ def test_kld_with_prior_flow():
 
     total, _ = m._compute_loss(1.0, DummyBatch())
     assert total >= 0
-
-
-# =========================================================
-# CHECKPOINT / LOAD BRANCHES
-# =========================================================
 
 
 def test_load_checkpoint_missing():
@@ -488,7 +443,7 @@ def test_kld_cond_shape_mismatch():
                 mu=torch.zeros(1, 4),
                 log_var=torch.zeros(1, 4),
                 cond_mu=torch.ones(1, 4),
-                cond_log_var=torch.ones(1, 5),  # mismatch
+                cond_log_var=torch.ones(1, 5),
             )
 
     class Sel:

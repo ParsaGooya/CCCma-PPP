@@ -42,11 +42,6 @@ def test_condition_config_no_year_range_when_no_year(monkeypatch):
     assert not hasattr(cfg, "year_range")
 
 
-# ============================================================
-# _get_ds_info
-# ============================================================
-
-
 def test_get_ds_info_uses_existing_list_paths():
     class Dummy:
         paths = "fake"
@@ -123,11 +118,6 @@ def test_get_ds_info_no_year_no_sizes(monkeypatch):
     assert info.sizes is None
 
 
-# ============================================================
-# _create_train_mask
-# ============================================================
-
-
 def test_create_train_mask_with_int_lead_times():
     mask = mod._create_train_mask([2000, 2001], 12)
 
@@ -146,11 +136,6 @@ def test_create_train_mask_with_exclude_idx():
 
     assert mask.shape == (3, 24)
     assert mask.dtype == bool
-
-
-# ============================================================
-# _unwrape_data_variables
-# ============================================================
 
 
 def test_unwrap_single_variable_dataset():
@@ -181,11 +166,6 @@ def test_unwrap_multiple_variable_dataset():
 
     assert "channels" in out.dims
     assert out.shape[0] == 2
-
-
-# ============================================================
-# WeightsConfig
-# ============================================================
 
 
 def test_weights_uniform():
@@ -358,11 +338,6 @@ def test_weights_load_dir_ref_ocean_mismatch(monkeypatch):
             oceannanremover=DummyOcean(),
             save=False,
         )
-
-
-# ============================================================
-# _load_xarray_data real branch coverage
-# ============================================================
 
 
 def test_load_xarray_data_basic(monkeypatch):
@@ -547,11 +522,6 @@ def test_load_xarray_data_without_names(monkeypatch):
     ds = mod._load_xarray_data(["fake.nc"], names=None)
 
     assert set(ds.data_vars) == {"a", "b"}
-
-
-# ============================================================
-# _check_data real branch coverage
-# ============================================================
 
 
 class CheckDummy:

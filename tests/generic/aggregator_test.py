@@ -6,19 +6,13 @@ import warnings
 from cccma_ppp.generic.aggregator import MetricsAggregator
 
 
-# MOCK DISTRIBUTED
-
-
 class DummyDistributed:
     def __init__(self):
         self.device = "cpu"
 
     def all_reduce_sum(self, tensor):
-        # simulate single-rank (no change)
+
         return tensor
-
-
-# INIT TESTS
 
 
 def test_init_basic():
@@ -53,11 +47,8 @@ def test_init_epoch_times_mismatch():
             DummyDistributed(),
             "train",
             epoch_loss_terms={"loss": [1, 2]},
-            epoch_times=[1.0],  # mismatch
+            epoch_times=[1.0],
         )
-
-
-# RECORD BATCH
 
 
 def test_record_numeric_and_tensor():
@@ -65,7 +56,7 @@ def test_record_numeric_and_tensor():
 
     agg.record({"loss": 2.0, "val": torch.tensor([3.0, 5.0])})
     assert pytest.approx(agg.loss_terms["loss"]) == 2.0
-    assert pytest.approx(agg.loss_terms["val"]) == 4.0  # mean
+    assert pytest.approx(agg.loss_terms["val"]) == 4.0
     assert agg.num_batches_seen == 1
 
 
@@ -73,9 +64,6 @@ def test_record_ignore_none():
     agg = MetricsAggregator(DummyDistributed(), "train")
     agg.record({"loss": None})
     assert "loss" not in agg.loss_terms
-
-
-# DIST COMPUTE
 
 
 def test_dist_compute_basic():
@@ -91,12 +79,8 @@ def test_dist_compute_zero_batches():
     agg = MetricsAggregator(DummyDistributed(), "train")
     logs = agg._dist_compute()
 
-    # no updates → nan
     for v in logs.values():
         assert np.isnan(v)
-
-
-# RECORD EPOCH
 
 
 def test_record_epoch_append():
@@ -145,9 +129,6 @@ def test_record_epoch_without_sync():
         agg.record_epoch({"loss": 1.0})
 
 
-# RESET
-
-
 def test_reset_after_epoch():
     agg = MetricsAggregator(DummyDistributed(), "train")
 
@@ -168,9 +149,6 @@ def test_reset_warning():
         warnings.simplefilter("always")
         agg.reset_batch_losses()
         assert len(w) > 0
-
-
-# PLOT
 
 
 def make_agg(name, values):
@@ -213,9 +191,6 @@ def test_plot_no_epochs_recorded(tmp_path):
         MetricsAggregator.plot([agg], plot_dir=tmp_path)
 
 
-# STATE DICT
-
-
 def test_state_dict_roundtrip():
     agg = MetricsAggregator(DummyDistributed(), "train")
 
@@ -232,9 +207,6 @@ def test_state_dict_roundtrip():
     assert new_agg.epoch_loss_terms == agg.epoch_loss_terms
     assert new_agg.epoch_times == agg.epoch_times
     assert new_agg.num_epochs_seen == agg.num_epochs_seen
-
-
-# OTHERS
 
 
 def test_dist_compute_nan_branch():
@@ -318,7 +290,7 @@ def test_dist_compute_multiple_metrics():
 def test_load_state_dict_missing_keys():
     agg = MetricsAggregator(DummyDistributed(), "train")
 
-    agg.load_state_dict({})  # empty state
+    agg.load_state_dict({})
 
     assert agg.name is None
 
@@ -330,7 +302,7 @@ def test_load_state_dict_missing_keys():
 def test_dist_compute_multiple_metrics_assert():
     agg = MetricsAggregator(DummyDistributed(), "train")
 
-    agg.record({"b": 4.0, "a": 2.0})  # unordered input
+    agg.record({"b": 4.0, "a": 2.0})
 
     logs = agg._dist_compute()
 
@@ -363,8 +335,7 @@ def test_plot_inconsistent_loss_lengths(tmp_path):
     agg1 = make_agg("train", [1, 2])
     agg2 = make_agg("val", [1, 2])
 
-    # manually break internal structure
-    agg2.epoch_loss_terms = {"loss": [1]}  # shorter
+    agg2.epoch_loss_terms = {"loss": [1]}
 
     with pytest.raises(ValueError):
         MetricsAggregator.plot([agg1, agg2], plot_dir=tmp_path)
@@ -396,7 +367,7 @@ def test_plot_multiple_loss_types(tmp_path):
 def test_load_state_dict_resets_batches():
     agg = MetricsAggregator(DummyDistributed(), "train")
 
-    agg.record({"loss": 5.0})  # batches exist
+    agg.record({"loss": 5.0})
 
     state = {
         "name": "loaded",
@@ -449,7 +420,7 @@ def test_plot_multiple_losses_same_aggregator(tmp_path):
 
 def test_plot_skip_empty_times(tmp_path):
     agg = make_agg("train", [1, 2])
-    agg.epoch_times = []  # triggers skip branch
+    agg.epoch_times = []
 
     MetricsAggregator.plot([agg], plot_dir=tmp_path)
 
@@ -477,7 +448,6 @@ def test_load_state_dict_with_reset_trigger():
 
     agg.record({"loss": 5.0})
 
-    # simulate epoch submission
     agg.epochs_submitted = True
 
     state = {

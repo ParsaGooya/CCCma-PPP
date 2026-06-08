@@ -12,11 +12,6 @@ from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
 
-# ============================================================
-# Helpers / test doubles
-# ============================================================
-
-
 @dataclasses.dataclass
 class DummyInfo:
     sizes: dict | None
@@ -488,11 +483,6 @@ def make_config(
     return cfg
 
 
-# ============================================================
-# XArrayDatasetConfig __post_init__
-# ============================================================
-
-
 def test_config_basic_with_observation():
     cfg = make_config(observation=True)
 
@@ -751,11 +741,6 @@ def test_config_missing_condition_cross_ensemble_uses_model_data(monkeypatch):
     assert cfg.condition.ensemble_mean is False
 
 
-# ============================================================
-# Time properties
-# ============================================================
-
-
 def test_get_common_time_with_observation():
     cfg = make_config(observation=True)
 
@@ -791,11 +776,6 @@ def test_available_train_time_without_observation():
     cfg._fitted_preprocessors = True
 
     assert len(cfg.available_train_time) >= 1
-
-
-# ============================================================
-# Preprocessor fitting/loading
-# ============================================================
 
 
 def test_fit_preprocessors_model_observation_condition(tmp_path):
@@ -911,11 +891,6 @@ def test_add_fitted_preprocessor_success():
     assert len(cfg.condition.preprocessing_pipeline.add_calls) == 1
 
 
-# ============================================================
-# get_weights
-# ============================================================
-
-
 def test_get_weights_without_observation():
     cfg = XArrayDatasetConfig(
         model=make_model_config(kind="model_mean"),
@@ -1004,11 +979,6 @@ def test_get_weights_uses_oceannanremover():
     cfg.get_weights(config=weights_config, save=False)
 
     assert weights_config.ocean is ocean
-
-
-# ============================================================
-# XArrayDataset construction/indexing
-# ============================================================
 
 
 def test_dataset_requires_fitted_preprocessors():
@@ -1248,11 +1218,6 @@ def test_dataset_get_target_shape_with_ocean():
     )
 
 
-# ============================================================
-# Time features
-# ============================================================
-
-
 def test_dataset_added_features_dim():
     cfg = make_config(
         observation=True,
@@ -1296,11 +1261,6 @@ def test_dataset_getitem_with_time_features_broadcasted():
     assert item["added_features"].shape[0] == 2
 
 
-# ============================================================
-# Available condition methods
-# ============================================================
-
-
 def test_available_condition_methods():
     assert XArrayDatasetConfig._available_condiiton_methods() == [
         "ensemble_mean",
@@ -1311,7 +1271,7 @@ def test_available_condition_methods():
 
 
 def test_dataset_selection_with_missing_month_uses_nearest(monkeypatch):
-    # Force selection to use method="nearest"
+
     original_sel = xr.Dataset.sel
 
     def patched_sel(self, *args, **kwargs):
@@ -1426,11 +1386,6 @@ def test_pipeline_transform_called():
     assert len(cfg.model.preprocessing_pipeline.transform_calls) > 0
 
 
-# ============================================================
-# EXTRA BRANCH COVERAGE (push to 90%)
-# ============================================================
-
-
 def test_get_cond_indexes_static_returns_empty_dict():
     cfg = make_config(
         observation=True,
@@ -1460,7 +1415,6 @@ def test_get_obs_indexes_without_ensembles():
 
     ds = cfg.build(years=[2000])
 
-    # obs_indexes exists without ensembles
     assert isinstance(ds.obs_indexes, dict)
     assert "year" in ds.obs_indexes
     assert "month" in ds.obs_indexes
@@ -1493,7 +1447,6 @@ def test_dataset_getitem_multiple_indices():
 
     ds = cfg.build(years=[2000])
 
-    # access several indices to trigger iteration path
     for i in range(min(3, len(ds))):
         item = ds[i]
         assert torch.is_tensor(item["input"])
@@ -1632,7 +1585,6 @@ def test_get_model_indexes_empty_mask_edge():
 
     ds = cfg.build(years=[2000], mask=mask)
 
-    # mask isn't applied, but ensures branch execution
     assert len(ds) == 12
 
 
@@ -1709,7 +1661,6 @@ def test_getitem_using_model_as_condition_branch(monkeypatch):
     ds = cfg.build(years=[2000])
     item = ds[0]
 
-    # input should come from condition (model reused)
     assert torch.is_tensor(item["input"])
 
 
@@ -1721,13 +1672,11 @@ def test_getitem_condition_concat_branch_strict():
         condition_ensemble_mean=True,
     )
 
-    # force NOT using model as condition
     cfg._using_model_data_as_condition = False
 
     ds = cfg.build(years=[2000])
     item = ds[0]
 
-    # concatenated channels
     assert item["input"].shape[0] > 1
 
 
@@ -1750,7 +1699,7 @@ def test_same_member_ensemble_exact_match():
 def test_time_features_subset_ordering():
     cfg = make_config(
         observation=True,
-        time_features=["month_cos", "year"],  # non-default order
+        time_features=["month_cos", "year"],
     )
 
     ds = cfg.build(years=[2000])
@@ -1764,7 +1713,7 @@ def test_force_random_branch(monkeypatch):
     import numpy as np
 
     def fake_choice(arr):
-        return arr[0]  # deterministic
+        return arr[0]
 
     monkeypatch.setattr(np.random, "choice", fake_choice)
 
@@ -1791,7 +1740,6 @@ def test_empty_condition_dataset_branch():
 
     ds = cfg.build(years=[2000])
 
-    # manually wipe condition dataset after init
     ds.condition_dataset = None
 
     item = ds[0]
@@ -1803,7 +1751,7 @@ def test_mask_stack_edge_shape():
     cfg = make_config(observation=True)
 
     mask = xr.DataArray(
-        np.zeros((1, 12), dtype=bool),  # match full lead_time range
+        np.zeros((1, 12), dtype=bool),
         dims=("year", "lead_time"),
         coords={
             "year": [2000],
@@ -1823,11 +1771,10 @@ def test_getitem_condition_all_paths_force():
         condition_method="ensemble_mean",
     )
 
-    cfg._using_model_data_as_condition = True  # force branch
+    cfg._using_model_data_as_condition = True
 
     ds = cfg.build(years=[2000])
 
-    # Also force autoencoding OFF to hit inner path
     ds._autoencoding_input = False
 
     item = ds[0]
@@ -1846,7 +1793,6 @@ def test_getitem_autoencoding_with_condition_forced():
 
     ds = cfg.build(years=[2000])
 
-    # manually force condition present + autoencoding
     ds.condition_dataset = ds.model_dataset
     ds._autoencoding_input = True
 
@@ -1958,16 +1904,10 @@ def test_force_multiple_getitem_paths():
 
     ds = cfg.build(years=[2000])
 
-    # force multiple calls to traverse hidden branches
     for i in range(min(10, len(ds))):
         _ = ds[i]
 
     assert True
-
-
-# ============================================================
-# ADDITIONAL TARGETED BRANCH COVERAGE
-# ============================================================
 
 
 def test_config_same_member_rejects_model_ensemble_mean_none():

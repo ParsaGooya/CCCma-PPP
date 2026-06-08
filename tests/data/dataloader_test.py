@@ -9,9 +9,6 @@ from cccma_ppp.data.dataloader import (
 )
 
 
-# Mock / Stub Classes
-
-
 class DummyDataset:
     def __init__(self, size=10):
         self.data = list(range(size))
@@ -68,9 +65,6 @@ class DummyDistributed:
         pass
 
 
-# BatchData Tests
-
-
 def test_batchdata_basic():
     inp = torch.tensor([[1.0]])
     tgt = torch.tensor([[2.0]])
@@ -114,9 +108,6 @@ def test_batchdata_to_device():
     assert batch.input.device.type == "cpu"
 
 
-# collate_batch Tests
-
-
 def test_collate_batch_basic():
     batch = [
         {
@@ -154,9 +145,6 @@ def test_collate_with_added_features():
     result = collate_batch(batch)
 
     assert result.added_features.shape[0] == 2
-
-
-# TrainDataloaderConfig Tests
 
 
 def test_config_default_years():
@@ -215,9 +203,6 @@ def test_add_fitted_preprocessor_requires_fitted():
         cfg._add_fitted_preprocessor(DummyPreprocessor())
 
 
-# Dataloader Tests
-
-
 def setup_loader():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -262,11 +247,7 @@ def test_dataloader_subset():
 def test_dataloader_set_epoch_no_sampler():
     loader = setup_loader()
 
-    # Should not fail even if sampler is None
     loader.set_epoch(1)
-
-
-# Validation Loader Tests
 
 
 def test_validation_loader_none_if_disabled():
@@ -311,9 +292,6 @@ def test_batchdata_to_device_with_mask():
     assert input_mask.device.type == "cpu"
 
 
-# EXTRA collate_batch Coverage
-
-
 def test_collate_with_masks_enabled():
     batch = [
         {
@@ -334,9 +312,6 @@ def test_collate_with_masks_enabled():
     assert isinstance(result.target, tuple)
 
 
-# EXTRA Config Coverage
-
-
 def test_config_train_year_range_expansion():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -344,7 +319,6 @@ def test_config_train_year_range_expansion():
         train_years=(2001, 2003),
     )
 
-    # should expand into full range
     assert list(cfg.train_years) == [2001, 2002, 2003]
 
 
@@ -357,7 +331,6 @@ def test_add_fitted_preprocessor_success():
     class DummyPreprocessor:
         fitted = True
 
-    # should not raise
     cfg._add_fitted_preprocessor(DummyPreprocessor())
 
 
@@ -371,13 +344,9 @@ def test_build_train_loader_without_setup():
         cfg.build_train_loader()
 
 
-# EXTRA Dataloader Coverage
-
-
 def test_dataloader_len():
     loader = setup_loader()
 
-    # requires you implement __len__
     assert len(loader) > 0
 
 
@@ -401,9 +370,6 @@ def test_distributed_sampler_created():
     loader = cfg.build_train_loader()
 
     assert loader.sampler is not None
-
-
-# EXTRA Validation Coverage
 
 
 def test_validation_years_computation():
@@ -484,7 +450,6 @@ def test_available_train_years_excludes_validation():
         num_validation_years=2,
     )
 
-    # last 2 years excluded
     assert len(cfg.available_train_years) == 3
 
 
@@ -545,11 +510,6 @@ def test_collate_all_features_masks():
 
     assert isinstance(result.input, tuple)
     assert result.added_features is not None
-
-
-# ============================================================
-# Additional Branch Coverage
-# ============================================================
 
 
 class RecordingDatasetConfig(DummyDatasetConfig):

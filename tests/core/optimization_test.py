@@ -350,7 +350,6 @@ def test_optimizer_scheduler_step_without_scheduler_current_behavior():
     cfg = OptimizerConfig(lr=0.01)
     wrapper = cfg.build(module)
 
-    # Current implementation does not define self.lr_scheduler when absent.
     with pytest.raises(AttributeError):
         wrapper.scheduler_step()
 
@@ -375,7 +374,6 @@ def test_optimizer_state_dict_without_scheduler_current_behavior():
     cfg = OptimizerConfig(lr=0.01)
     wrapper = cfg.build(module)
 
-    # Current implementation does not define self.lr_scheduler when absent.
     with pytest.raises(AttributeError):
         wrapper.state_dict()
 

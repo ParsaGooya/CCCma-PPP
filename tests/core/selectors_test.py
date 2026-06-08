@@ -73,11 +73,6 @@ def test_module_selector_register_lowercases_name():
     assert isinstance(selector._module_config, DummyModuleConfig)
 
 
-# ============================================================
-# ModelSelector base behavior through isolated subclass
-# ============================================================
-
-
 def test_model_selector_requires_config_or_load_dir():
     with pytest.raises(RuntimeError):
         LocalModelSelector(type="anything", config=None, load_dir=None)
@@ -242,11 +237,6 @@ def test_model_selector_load_dir_without_freeze_only_one_warning(monkeypatch, tm
     assert "overwritten" in str(record[0].message)
 
 
-# ============================================================
-# cVAEModelSelector / deterministicModelSelector
-# ============================================================
-
-
 def test_cvae_model_selector_has_registry():
     name = unique_name("cvae_model")
 
@@ -285,11 +275,6 @@ def test_model_selector_subclass_registries_are_isolated():
 
     assert det_name in deterministicModelSelector.available()
     assert cvae_name not in deterministicModelSelector.available()
-
-
-# ============================================================
-# FlowSelector
-# ============================================================
 
 
 def test_flow_selector_register_available_and_get_model():
@@ -334,11 +319,6 @@ def test_flow_selector_case_insensitive_lookup():
 
     assert isinstance(flow, DummyFlow)
     assert flow.scale == 8
-
-
-# ============================================================
-# _load_config_from_checkpoint
-# ============================================================
 
 
 def test_load_config_from_checkpoint_missing_file():
@@ -427,11 +407,6 @@ def test_load_config_from_checkpoint_missing_shapes_allowed(tmp_path):
     assert checkpoint_config is not None
 
 
-# ============================================================
-# Helpers
-# ============================================================
-
-
 class DummyModelConfig:
     def __init__(self, value=1, **kwargs):
         self.value = value
@@ -483,11 +458,6 @@ def make_checkpoint(
         },
         path,
     )
-
-
-# ============================================================
-# ModuleSelector
-# ============================================================
 
 
 def test_module_selector_register_available_and_build():

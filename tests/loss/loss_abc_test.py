@@ -85,7 +85,7 @@ def test_valid_subclass_forward():
     loss = model(x, y)
 
     assert isinstance(loss, torch.Tensor)
-    assert loss.ndim == 0  # scalar
+    assert loss.ndim == 0
 
 
 def test_valid_subclass_correct_value():
@@ -95,7 +95,6 @@ def test_valid_subclass_correct_value():
     x = torch.tensor([[2.0, 2.0]])
     y = torch.tensor([[0.0, 0.0]])
 
-    # (2^2 + 2^2) / 2 = 4
     loss = model(x, y)
 
     assert loss.item() == pytest.approx(4.0)

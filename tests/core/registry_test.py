@@ -1,5 +1,3 @@
-# test_registry.py
-
 from dataclasses import dataclass
 
 import pytest

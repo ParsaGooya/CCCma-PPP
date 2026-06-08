@@ -18,11 +18,6 @@ torch.manual_seed(0)
 np.random.seed(0)
 
 
-# ============================================================
-# Helpers
-# ============================================================
-
-
 @dataclasses.dataclass
 class DummyCheckpointConfig:
     checkpoint_input_shape: np.ndarray
@@ -175,11 +170,6 @@ def build_autoencoder(
     return model
 
 
-# ============================================================
-# Selector registration
-# ============================================================
-
-
 def test_cvae_mlp_registered():
     selector = cVAEModelSelector(
         type="mlp",
@@ -205,11 +195,6 @@ def test_autoencoder_registered():
     cfg = selector.get_model_config()
 
     assert isinstance(cfg, AutoencoderConfig)
-
-
-# ============================================================
-# cVAE config/init branches
-# ============================================================
 
 
 def test_cvae_config_build_returns_model():
@@ -338,11 +323,6 @@ def test_cvae_condition_dependant_flow_skips_latent_size_assert():
     assert model.condition_dependant_flow is True
 
 
-# ============================================================
-# cVAE build branches
-# ============================================================
-
-
 def test_cvae_build_basic():
     model = build_cvae()
 
@@ -461,11 +441,6 @@ def test_cvae_build_checkpoint_success_calls_load(monkeypatch):
     model.build(input_shape=np.array([6]), output_shape=np.array([6]))
 
     assert called["load"] is True
-
-
-# ============================================================
-# cVAE internals
-# ============================================================
 
 
 def test_cvae_recognition_plain():
@@ -658,11 +633,6 @@ def test_cvae_generate_with_condition_but_decoder_flag_false():
     assert out.shape == (3, 2, 6)
 
 
-# ============================================================
-# cVAE forward / predict
-# ============================================================
-
-
 def test_cvae_forward_basic():
     model = build_cvae()
 
@@ -804,11 +774,6 @@ def test_cvae_predict_with_prior_flow_conditioned():
     assert out.output.shape == (2, 2, 1, 6)
 
 
-# ============================================================
-# Autoencoder config/init
-# ============================================================
-
-
 def test_autoencoder_config_build_returns_model():
     cfg = AutoencoderConfig(encoder_hidden_dims=[4])
 
@@ -842,11 +807,6 @@ def test_autoencoder_explicit_decoder_hidden_dims():
     model = Autoencoder(cfg)
 
     assert model.config.decoder_hidden_dims == [5]
-
-
-# ============================================================
-# Autoencoder build
-# ============================================================
 
 
 @pytest.mark.parametrize("append_mode", [1, 2, 3])
@@ -947,11 +907,6 @@ def test_autoencoder_build_checkpoint_success_calls_load(monkeypatch):
     model.build(input_shape=np.array([6]), output_shape=np.array([6]))
 
     assert called["load"] is True
-
-
-# ============================================================
-# Autoencoder forward
-# ============================================================
 
 
 def test_autoencoder_forward_plain():

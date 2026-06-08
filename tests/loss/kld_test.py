@@ -15,7 +15,7 @@ def test_beta_no_warmup():
 
 def test_beta_linear_increase():
     beta = BetaAnnealing(beta=1.0, beta_min=0.0, num_epoch_to_warmup=2)
-    beta.build(num_batches=10)  # 20 steps total
+    beta.build(num_batches=10)
 
     assert beta(0) == pytest.approx(0.0)
     assert beta(10) == pytest.approx(0.5)

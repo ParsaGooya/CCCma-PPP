@@ -3,9 +3,6 @@ import torch
 import cccma_ppp.generic.distributed as mod
 
 
-# HELPERS
-
-
 class DummyDist:
     def __init__(self):
         self.initialized = True
@@ -15,9 +12,6 @@ class DummyDist:
 
     def is_available(self):
         return True
-
-
-# NON-DISTRIBUTED MODE
 
 
 def test_distributed_false(monkeypatch):
@@ -30,9 +24,6 @@ def test_distributed_false(monkeypatch):
     assert d.rank == 0
     assert d.world_size == 1
     assert d.is_root()
-
-
-# DISTRIBUTED INIT BRANCH
 
 
 def test_distributed_true(monkeypatch):
@@ -52,9 +43,6 @@ def test_distributed_true(monkeypatch):
     assert d.world_size == 2
 
 
-# SINGLETON
-
-
 def test_singleton(monkeypatch):
     monkeypatch.delenv("RANK", raising=False)
     monkeypatch.delenv("WORLD_SIZE", raising=False)
@@ -65,9 +53,6 @@ def test_singleton(monkeypatch):
     d2 = mod.Distributed.get_instance()
 
     assert d1 is d2
-
-
-# CLEANUP
 
 
 def test_cleanup(monkeypatch):
@@ -92,10 +77,7 @@ def test_cleanup_not_initialized(monkeypatch):
     monkeypatch.setattr(mod.dist, "is_initialized", lambda: False)
 
     d = mod.Distributed()
-    d.cleanup()  # should not crash
-
-
-# BARRIER
+    d.cleanup()
 
 
 def test_barrier_called(monkeypatch):
@@ -122,10 +104,7 @@ def test_barrier_not_called(monkeypatch):
     monkeypatch.delenv("WORLD_SIZE", raising=False)
 
     d = mod.Distributed()
-    d.barrier()  # should do nothing
-
-
-# ALL REDUCE
+    d.barrier()
 
 
 def test_all_reduce_called(monkeypatch):
@@ -154,10 +133,7 @@ def test_all_reduce_not_called(monkeypatch):
     d = mod.Distributed()
     t = torch.tensor([1.0])
 
-    d.all_reduce_sum(t)  # no error
-
-
-# BROADCAST
+    d.all_reduce_sum(t)
 
 
 def test_broadcast_called(monkeypatch):
@@ -186,10 +162,7 @@ def test_broadcast_not_called(monkeypatch):
     d = mod.Distributed()
     t = torch.tensor([1.0])
 
-    d.broadcast(t)  # no error
-
-
-# ROOT CHECK
+    d.broadcast(t)
 
 
 def test_is_root():

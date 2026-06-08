@@ -31,9 +31,6 @@ class FakeData(dict):
         return val
 
 
-# MOCK PREPROCESSOR
-
-
 class DummyPreprocessor:
     def __init__(self, scale=1):
         self.scale = scale
@@ -43,21 +40,15 @@ class DummyPreprocessor:
         self.fitted = True
 
     def transform(self, data, **kwargs):
-        return data  # no-op
+        return data
 
     def inverse_transform(self, data, **kwargs):
         return data
 
 
-# REGISTER PREPROCESSOR
-
-
 @PreprocessingStepSelector.register("dummy")
 class RegisteredDummy(DummyPreprocessor):
     pass
-
-
-# SELECTOR TESTS
 
 
 def test_selector_get_preprocessor():
@@ -77,9 +68,6 @@ def test_selector_invalid():
 
     with pytest.raises(ValueError):
         sel.get_preprocessor()
-
-
-# PIPELINE BASIC FIT
 
 
 def make_pipeline(scale=2):
@@ -103,9 +91,6 @@ def test_pipeline_fit_basic(monkeypatch, tmp_path):
     assert len(pipe.steps) == 1
 
 
-# PIPELINE TRANSFORM / INVERSE
-
-
 def test_pipeline_transform_inverse(monkeypatch, tmp_path):
     monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
 
@@ -120,9 +105,6 @@ def test_pipeline_transform_inverse(monkeypatch, tmp_path):
     restored = pipe.inverse_transform(transformed)
 
     assert np.allclose(restored, data)
-
-
-# STEP ARGUMENT VALIDATION
 
 
 def test_transform_invalid_step():
@@ -145,9 +127,6 @@ def test_inverse_invalid_step():
         pipe.inverse_transform(np.array([1]), step_arguments={"bad": {}})
 
 
-# GET PREPROCESSORS
-
-
 def test_get_all_preprocessors(monkeypatch, tmp_path):
     monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
 
@@ -167,7 +146,7 @@ def test_get_named_preprocessor(monkeypatch, tmp_path):
     fake_data = FakeData({"year": np.array([1])})
     pipe.fit(base_data=fake_data, save=False)
 
-    proc = pipe.get_preprocessors()[0]  # safer path
+    proc = pipe.get_preprocessors()[0]
 
     assert isinstance(proc, DummyPreprocessor)
 
@@ -188,9 +167,6 @@ def test_get_preprocessor_invalid_name(monkeypatch, tmp_path):
 
     with pytest.raises(ValueError):
         pipe.get_preprocessors("bad")
-
-
-# ADD FITTED PREPROCESSOR
 
 
 def test_add_fitted_preprocessor():
@@ -222,13 +198,10 @@ def test_add_preprocessor_with_index():
 
 def test_add_preprocessor_not_fitted():
     pipe = make_pipeline()
-    proc = DummyPreprocessor()  # not fitted
+    proc = DummyPreprocessor()
 
     with pytest.raises(AssertionError):
         pipe.add_fitted_preprocessor(proc, "dummy")
-
-
-# SAVE / LOAD PIPELINE
 
 
 def test_pipeline_save(monkeypatch, tmp_path):
@@ -246,14 +219,12 @@ def test_pipeline_save(monkeypatch, tmp_path):
 def test_pipeline_load(monkeypatch, tmp_path):
     monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
 
-    # create + save
     pipe = make_pipeline()
     fake_data = FakeData({"year": np.array([1])})
     pipe.fit(base_data=fake_data, save=True)
 
     saved = list(tmp_path.rglob("*.joblib"))[0]
 
-    # load new instance
     new_pipe = PreprocessingPipeline(load_dir=saved.parent, load_name=saved.name)
     new_pipe.fit()
 
@@ -300,7 +271,6 @@ def test_transform_with_step_arguments(monkeypatch, tmp_path):
 
     data = np.array([1, 2])
 
-    # arguments passed to step (even if dummy ignores them)
     out = pipe.transform(data, step_arguments={"dummy": {"x": 1}})
 
     assert out is not None

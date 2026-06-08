@@ -3,9 +3,6 @@ import pytest
 from cccma_ppp.data.data_abc import XarrayDatasetABC, XarrayDatasetConfigABC
 
 
-# Helpers: Concrete classes
-
-
 class ValidDataset(XarrayDatasetABC):
     def __init__(self, data):
         self.data = data
@@ -23,9 +20,6 @@ class ValidConfig(XarrayDatasetConfigABC):
 
     def build(self):
         return ValidDataset(self.data)
-
-
-# Tests for XarrayDatasetABC
 
 
 def test_dataset_cannot_instantiate_abstract():
@@ -65,9 +59,6 @@ def test_dataset_index_out_of_bounds():
     ds = ValidDataset([1, 2, 3])
     with pytest.raises(IndexError):
         _ = ds[10]
-
-
-# Tests for XarrayDatasetConfigABC
 
 
 def test_config_cannot_instantiate_abstract():
