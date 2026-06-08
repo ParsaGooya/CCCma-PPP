@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-import pathlib as Path
+from pathlib import Path
 import dataclasses
 import gc
 import warnings
@@ -50,7 +50,7 @@ class deterministicConfig(moduleConfigABC):
             added_features_dim=added_features_dim,
         )
 
-    def _load_from_checkpoint(self, load_path: Path.Path | str):
+    def _load_from_checkpoint(self, load_path: Path | str):
 
         if not Path(load_path).exists():
             raise FileNotFoundError(f"Checkpoint not found: {load_path}")

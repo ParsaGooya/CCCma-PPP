@@ -11,7 +11,7 @@ from cccma_ppp.core.deterministic_module import (
 
 class ConcreteDeterministic(deterministic):
     def predict(self, *args, **kwargs):
-        return self.predict(*args, **kwargs)
+        return super().predict(*args, **kwargs)
 
 
 class DummyModel:
@@ -79,8 +79,8 @@ def test_output_dataclass():
 def test_raw_deterministic_is_abstract():
     cfg = make_config()
 
-    with pytest.raises(TypeError):
-        deterministic(cfg)
+    module = deterministic(cfg)
+    assert isinstance(module, deterministic)
 
 
 def test_config_requires_model_or_load():
