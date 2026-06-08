@@ -2,7 +2,6 @@ import pytest
 import torch
 import torch.nn as nn
 import numpy as np
-from pathlib import Path
 
 from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC
 

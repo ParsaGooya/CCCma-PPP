@@ -545,3 +545,327 @@ def test_collate_all_features_masks():
 
     assert isinstance(result.input, tuple)
     assert result.added_features is not None
+
+
+# ============================================================
+# Additional Branch Coverage
+# ============================================================
+
+
+class RecordingDatasetConfig(DummyDatasetConfig):
+    def __init__(self):
+        super().__init__()
+        self.fit_called = False
+        self.load_called = False
+        self.add_called = False
+        self.build_calls = []
+        self.weights_config_seen = None
+
+    def build(self, **kwargs):
+        self.build_calls.append(kwargs)
+        return DummyDataset(size=6)
+
+    def _fit_preprocessors(self, *args, **kwargs):
+        self.fit_called = True
+        self.fit_args = args
+        self.fit_kwargs = kwargs
+
+    def _load_fitted_preprocessors(self, *args, **kwargs):
+        self.load_called = True
+        self.load_args = args
+        self.load_kwargs = kwargs
+
+    def _add_fitted_preprocessor(self, *args, **kwargs):
+        self.add_called = True
+        self.add_args = args
+        self.add_kwargs = kwargs
+
+    def get_weights(self, config=None):
+        self.weights_config_seen = config
+        return "weights-with-config"
+
+
+class NonRootDistributed(DummyDistributed):
+    def __init__(self, distributed=False):
+        super().__init__(distributed=distributed)
+        self.rank = 1
+
+    def is_root(self):
+        return False
+
+
+def test_batchdata_to_device_without_added_features_stays_none():
+    batch = BatchData(
+        torch.tensor([[1.0]]),
+        torch.tensor([[2.0]]),
+        added_features=None,
+    )
+
+    batch = batch.to_device("cpu")
+
+    assert batch.added_features is None
+    assert batch.input.device.type == "cpu"
+    assert batch.target.device.type == "cpu"
+
+
+def test_batchdata_mask_reduction_false_keeps_mask_shape():
+    inp = torch.tensor([[[1.0, float("nan")], [2.0, 3.0]]])
+    tgt = torch.tensor([[[float("nan"), 5.0], [6.0, 7.0]]])
+
+    batch = BatchData(
+        inp,
+        tgt,
+        return_spatial_mask=True,
+        reduce_spatial_mask=False,
+    )
+
+    input_values, input_mask = batch.input
+    target_values, target_mask = batch.target
+
+    assert input_values.shape == inp.shape
+    assert target_values.shape == tgt.shape
+    assert input_mask.shape == inp.shape
+    assert target_mask.shape == tgt.shape
+
+
+def test_batchdata_nan_added_features_preserved_or_zeroed():
+    feats = torch.tensor([[float("nan"), 2.0]])
+
+    batch = BatchData(
+        torch.tensor([[1.0]]),
+        torch.tensor([[2.0]]),
+        added_features=feats,
+    )
+
+    batch = batch.to_device("cpu")
+
+    assert batch.added_features.device.type == "cpu"
+
+
+def test_collate_batch_added_features_none_branch():
+    batch = [
+        {
+            "input": torch.tensor([1.0]),
+            "target": torch.tensor([2.0]),
+            "added_features": None,
+        }
+    ]
+
+    result = collate_batch(batch)
+
+    assert result.added_features is None
+
+
+def test_config_train_years_numpy_array_is_accepted():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+        train_years=np.array([2000, 2001]),
+    )
+
+    assert list(cfg.train_years) == [2000, 2001]
+
+
+def test_setup_distributed_root_fits_preprocessors():
+    dataset_config = RecordingDatasetConfig()
+
+    cfg = TrainDataloaderConfig(
+        dataset_config=dataset_config,
+        batch_size=2,
+    )
+
+    dist = DummyDistributed(distributed=False)
+    cfg.setup_distributed(dist)
+
+    assert cfg._setup is True
+    assert dataset_config.fit_called is True
+
+
+def test_setup_distributed_non_root_loads_preprocessors():
+    dataset_config = RecordingDatasetConfig()
+
+    cfg = TrainDataloaderConfig(
+        dataset_config=dataset_config,
+        batch_size=2,
+    )
+
+    dist = NonRootDistributed(distributed=True)
+    dist.world_size = 2
+
+    cfg.setup_distributed(dist)
+
+    assert cfg._setup is True
+    assert dataset_config.load_called is True
+
+
+def test_setup_distributed_barrier_called(monkeypatch):
+    cfg = TrainDataloaderConfig(
+        dataset_config=RecordingDatasetConfig(),
+        batch_size=2,
+    )
+
+    dist = DummyDistributed(distributed=True)
+    dist.world_size = 2
+
+    called = {"barrier": False}
+
+    def fake_barrier():
+        called["barrier"] = True
+
+    dist.barrier = fake_barrier
+
+    cfg.setup_distributed(dist)
+
+    assert called["barrier"] is True
+
+
+def test_build_train_loader_passes_years_to_dataset_config():
+    dataset_config = RecordingDatasetConfig()
+
+    cfg = TrainDataloaderConfig(
+        dataset_config=dataset_config,
+        batch_size=2,
+        train_years=[2000, 2001],
+    )
+
+    cfg.setup_distributed(DummyDistributed())
+    loader = cfg.build_train_loader()
+
+    assert loader is not None
+    assert len(dataset_config.build_calls) >= 1
+    assert "years" in dataset_config.build_calls[-1]
+
+
+def test_build_validation_loader_passes_validation_years():
+    dataset_config = RecordingDatasetConfig()
+
+    cfg = TrainDataloaderConfig(
+        dataset_config=dataset_config,
+        batch_size=2,
+        num_validation_years=1,
+    )
+
+    cfg.setup_distributed(DummyDistributed())
+    val_loader = cfg.build_validation_loader()
+
+    assert val_loader is not None
+    assert len(dataset_config.build_calls) >= 1
+    assert "years" in dataset_config.build_calls[-1]
+
+
+def test_loader_get_weights_forwards_config_argument():
+    dataset_config = RecordingDatasetConfig()
+
+    cfg = TrainDataloaderConfig(
+        dataset_config=dataset_config,
+        batch_size=2,
+    )
+
+    cfg.setup_distributed(DummyDistributed())
+    loader = cfg.build_train_loader()
+
+    sentinel_config = object()
+    result = loader.get_weights(config=sentinel_config)
+
+    assert result == "weights-with-config"
+    assert dataset_config.weights_config_seen is sentinel_config
+
+
+def test_subset_loader_start_zero_returns_first_batch():
+    loader = setup_loader()
+
+    subset_iter = loader.subset_loader(start_batch=0)
+    batch = next(subset_iter)
+
+    assert isinstance(batch, BatchData)
+
+
+def test_subset_loader_multiple_batches():
+    loader = setup_loader()
+
+    batches = list(loader.subset_loader(start_batch=0))
+
+    assert len(batches) > 0
+    assert all(isinstance(batch, BatchData) for batch in batches)
+
+
+def test_loader_set_epoch_with_none_sampler_no_error():
+    loader = setup_loader()
+
+    loader.sampler = None
+    loader.set_epoch(99)
+
+    assert loader.sampler is None
+
+
+def test_distributed_sampler_rank_world_size_branch():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+    )
+
+    dist = DummyDistributed(distributed=True)
+    dist.rank = 1
+    dist.world_size = 4
+
+    cfg.setup_distributed(dist)
+
+    loader = cfg.build_train_loader()
+
+    assert loader.sampler is not None
+
+
+def test_validation_loader_with_distributed_sampler():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+        num_validation_years=1,
+    )
+
+    dist = DummyDistributed(distributed=True)
+    dist.rank = 0
+    dist.world_size = 2
+
+    cfg.setup_distributed(dist)
+
+    val_loader = cfg.build_validation_loader()
+
+    assert val_loader is not None
+    assert val_loader.sampler is not None
+
+
+def test_prefetch_factor_kept_when_workers_positive():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+        num_data_workers=1,
+        prefetch_factor=2,
+    )
+
+    assert cfg.prefetch_factor == 2
+
+
+def test_drop_last_false_builds_loader():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+        drop_last=False,
+    )
+
+    cfg.setup_distributed(DummyDistributed())
+    loader = cfg.build_train_loader()
+
+    assert len(loader) > 0
+
+
+def test_drop_last_true_builds_loader():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+        drop_last=True,
+    )
+
+    cfg.setup_distributed(DummyDistributed())
+    loader = cfg.build_train_loader()
+
+    assert len(loader) > 0

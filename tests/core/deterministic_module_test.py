@@ -144,7 +144,6 @@ def test_load_checkpoint_success(monkeypatch, tmp_path):
 
 
 def test_load_checkpoint_missing_module_config(monkeypatch, tmp_path):
-    import cccma_ppp.core.deterministic_module as mod
 
     ckpt_path = tmp_path / "checkpoint.pt"
     torch.save(

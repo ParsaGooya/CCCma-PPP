@@ -1,7 +1,6 @@
 import pytest
 import torch
 import numpy as np
-from pathlib import Path
 from cccma_ppp.core.cVAE_module import cVAE, cVAEConfig, cVAEOutput
 
 
@@ -545,7 +544,6 @@ def test_kld_condition_expansion():
     assert total >= 0
 
 
-import warnings
 import cccma_ppp.core.cVAE_module as mod
 
 

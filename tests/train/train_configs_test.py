@@ -1,13 +1,19 @@
-import pytest
-import warnings
 import os
+import warnings
 from pathlib import Path
+import numpy as np
+import pytest
 import torch
+import torch.nn as nn
 
-from cccma_ppp.train.train_configs import TrainConfig
+
+from cccma_ppp.train.train_configs import TrainConfig, build_trainer, set_seed
 from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
-# HELPERS
+
+# ============================================================
+# Basic dummy objects
+# ============================================================
 
 
 class DummyPipeline:
@@ -19,22 +25,48 @@ class DummyDatasetConfig:
     def __init__(self, observation=None, condition_type=None, pipeline=None):
         self.condition_type = condition_type
 
-        obs_pipeline = DummyPipeline(pipeline)
+        observation_pipeline = DummyPipeline(pipeline)
         model_pipeline = DummyPipeline(pipeline)
 
         if observation is not None:
             self.observation = type(
-                "Obs", (), {"preprocessing_pipeline": obs_pipeline}
+                "ObservationConfig",
+                (),
+                {"preprocessing_pipeline": observation_pipeline},
             )()
         else:
             self.observation = None
 
-        self.model = type("Model", (), {"preprocessing_pipeline": model_pipeline})()
+        self.model = type(
+            "ModelDataConfig",
+            (),
+            {"preprocessing_pipeline": model_pipeline},
+        )()
 
 
 class DummyTrainLoader:
     def __init__(self, dataset_config):
         self.dataset_config = dataset_config
+
+
+class DummyModel:
+    GENERATOR = False
+    NUM_OUTPUT_DIMS = 1
+
+
+class DummyGeneratorModel:
+    GENERATOR = True
+    NUM_OUTPUT_DIMS = 2
+
+
+class DummyNonGeneratorModel:
+    GENERATOR = False
+    NUM_OUTPUT_DIMS = 2
+
+
+class Dummy2DModel:
+    GENERATOR = False
+    NUM_OUTPUT_DIMS = 2
 
 
 class DummyModule:
@@ -45,7 +77,7 @@ class DummyModule:
             GENERATOR = generator
             NUM_OUTPUT_DIMS = num_out
 
-        self._module_config = type("Inner", (), {"model": Model()})
+        self._module_config = type("InnerModuleConfig", (), {"model": Model()})()
 
 
 class DummyTrainer:
@@ -55,39 +87,11 @@ class DummyTrainer:
 
 class DummyLoss:
     def __init__(self, loss_types):
-        self.loss_pipeline = type("LP", (), {"loss_types": loss_types})
+        self.loss_pipeline = type("LossPipeline", (), {"loss_types": loss_types})()
 
 
-# helper to inject Oceannanremove
 def ocean_pipeline():
-    return [(None, Oceannanremove())]
-
-
-# CORE BRANCHES
-
-
-def test_epochs_assertion():
-    with pytest.raises(AssertionError):
-        TrainConfig(
-            "x",
-            -1,
-            DummyTrainLoader(DummyDatasetConfig()),
-            DummyModule(),
-            DummyLoss(["mse"]),
-            DummyTrainer(),
-        )
-
-
-def test_no_observation_deterministic():
-    with pytest.raises(ValueError):
-        TrainConfig(
-            "x",
-            1,
-            DummyTrainLoader(DummyDatasetConfig()),
-            DummyModule("deterministic"),
-            DummyLoss(["mse"]),
-            DummyTrainer(),
-        )
+    return [("ocean", Oceannanremove())]
 
 
 def test_no_observation_default():
@@ -103,7 +107,7 @@ def test_no_observation_default():
 
 
 def test_no_observation_other_type():
-    TrainConfig(
+    cfg = TrainConfig(
         "x",
         1,
         DummyTrainLoader(
@@ -117,10 +121,22 @@ def test_no_observation_other_type():
         DummyTrainer(),
     )
 
+    assert cfg.train_loader.dataset_config.observation is None
+    assert cfg.module.type == "other"
 
-def test_cvae_beta_required():  # Current source checks:
-    # self.module.type.lower() in ["cVAE"]
-    # This never triggers because "cVAE".lower() == "cvae".
+
+def test_cvae_beta_required():
+    """
+    Current source behavior:
+    The cVAE validation branch is unreachable because source checks:
+
+        self.module.type.lower() in ["cVAE"]
+
+    but "cvae" != "cVAE".
+
+    This test documents current behavior.
+    If source is fixed to ["cvae"], replace this with pytest.raises(ValueError).
+    """
     cfg = TrainConfig(
         "x",
         1,
@@ -136,17 +152,49 @@ def test_cvae_beta_required():  # Current source checks:
     )
 
     assert cfg.module.type == "cvae"
+    assert cfg.trainer.beta_finder is None
 
 
-def test_cvae_valid():
-    TrainConfig(
+def test_cvae_condition_required():
+    """
+    Current source behavior:
+    The cVAE condition validation branch is unreachable because of the
+    ["cVAE"] case mismatch in source.
+    """
+    cfg = TrainConfig(
         "x",
         1,
-        DummyTrainLoader(DummyDatasetConfig(condition_type="cond")),
+        DummyTrainLoader(
+            DummyDatasetConfig(
+                condition_type=None,
+                pipeline=ocean_pipeline(),
+            )
+        ),
         DummyModule("cvae", num_out=2),
         DummyLoss(["mse"]),
         DummyTrainer(True),
     )
+
+    assert cfg.module.type == "cvae"
+    assert cfg.train_loader.dataset_config.condition_type is None
+
+
+def test_cvae_valid():
+    cfg = TrainConfig(
+        "x",
+        1,
+        DummyTrainLoader(
+            DummyDatasetConfig(
+                condition_type="cond",
+                pipeline=ocean_pipeline(),
+            )
+        ),
+        DummyModule("cvae", num_out=2),
+        DummyLoss(["mse"]),
+        DummyTrainer(True),
+    )
+
+    assert cfg.module.type == "cvae"
 
 
 def test_generator_requires_crps():
@@ -162,7 +210,7 @@ def test_generator_requires_crps():
 
 
 def test_generator_valid():
-    TrainConfig(
+    cfg = TrainConfig(
         "x",
         1,
         DummyTrainLoader(DummyDatasetConfig(observation="obs")),
@@ -171,9 +219,11 @@ def test_generator_valid():
         DummyTrainer(),
     )
 
+    assert "crps" in cfg.losspipeline.loss_pipeline.loss_types
+
 
 def test_non_generator_skip():
-    TrainConfig(
+    cfg = TrainConfig(
         "x",
         1,
         DummyTrainLoader(DummyDatasetConfig(observation="obs")),
@@ -182,35 +232,49 @@ def test_non_generator_skip():
         DummyTrainer(),
     )
 
+    assert cfg.module._module_config.model.GENERATOR is False
+
 
 def test_deterministic_warning():
-    with warnings.catch_warnings(record=True) as w:
+    with warnings.catch_warnings(record=True) as captured:
+        warnings.simplefilter("always")
+
         TrainConfig(
             "x",
             1,
             DummyTrainLoader(
-                DummyDatasetConfig(observation="obs", pipeline=ocean_pipeline())
+                DummyDatasetConfig(
+                    observation="obs",
+                    pipeline=ocean_pipeline(),
+                )
             ),
             DummyModule("deterministic"),
             DummyLoss(["mse"]),
             DummyTrainer(None),
         )
-        assert len(w) > 0
+
+    assert any("beta_finder" in str(w.message) for w in captured)
 
 
 def test_deterministic_no_warning():
-    with warnings.catch_warnings(record=True) as w:
+    with warnings.catch_warnings(record=True) as captured:
+        warnings.simplefilter("always")
+
         TrainConfig(
             "x",
             1,
             DummyTrainLoader(
-                DummyDatasetConfig(observation="obs", pipeline=ocean_pipeline())
+                DummyDatasetConfig(
+                    observation="obs",
+                    pipeline=ocean_pipeline(),
+                )
             ),
             DummyModule("deterministic"),
             DummyLoss(["mse"]),
             DummyTrainer(True),
         )
-        assert len(w) == 0
+
+    assert len(captured) == 0
 
 
 def test_ocean_required_fail_observation():
@@ -226,29 +290,39 @@ def test_ocean_required_fail_observation():
 
 
 def test_ocean_required_pass_observation():
-    TrainConfig(
+    cfg = TrainConfig(
         "x",
         1,
         DummyTrainLoader(
-            DummyDatasetConfig(observation="obs", pipeline=ocean_pipeline())
+            DummyDatasetConfig(
+                observation="obs",
+                pipeline=ocean_pipeline(),
+            )
         ),
         DummyModule(num_out=1),
         DummyLoss(["mse"]),
         DummyTrainer(),
     )
 
+    assert cfg.module._module_config.model.NUM_OUTPUT_DIMS == 1
+
 
 def test_ocean_required_model_pipeline():
-    TrainConfig(
+    cfg = TrainConfig(
         "x",
         1,
         DummyTrainLoader(
-            DummyDatasetConfig(condition_type="cond", pipeline=ocean_pipeline())
+            DummyDatasetConfig(
+                condition_type="cond",
+                pipeline=ocean_pipeline(),
+            )
         ),
         DummyModule("cvae", num_out=1),
         DummyLoss(["mse"]),
         DummyTrainer(True),
     )
+
+    assert cfg.train_loader.dataset_config.observation is None
 
 
 def test_ocean_required_model_fail():
@@ -263,92 +337,35 @@ def test_ocean_required_model_fail():
         )
 
 
-# PREPARE DIRECTORY (ALL BRANCHES)
-
-
-class Root:
-    def is_root(self):
-        return True
-
-    def barrier(self):
-        pass
-
-
-class NonRoot:
-    def is_root(self):
-        return False
-
-    def barrier(self):
-        pass
-
-
-def test_prepare_root(tmp_path):
+def test_non_mlp_skips_ocean_requirement():
     cfg = TrainConfig(
-        str(tmp_path),
+        "x",
         1,
-        DummyTrainLoader(
-            DummyDatasetConfig(observation="obs", pipeline=ocean_pipeline())
-        ),
-        DummyModule(num_out=2),
-        DummyLoss(["mse"]),
-        DummyTrainer(),
-    )
-    cfg.prepare_directory(Root())
-    assert os.path.isdir(cfg.log_dir)
-
-
-def test_prepare_root_with_yaml(tmp_path):
-    yaml = tmp_path / "cfg.yaml"
-    yaml.write_text("x")
-
-    cfg = TrainConfig(
-        str(tmp_path),
-        1,
-        DummyTrainLoader(
-            DummyDatasetConfig(observation="obs", pipeline=ocean_pipeline())
-        ),
-        DummyModule(num_out=2),
+        DummyTrainLoader(DummyDatasetConfig(observation="obs")),
+        DummyModule("other", num_out=2),
         DummyLoss(["mse"]),
         DummyTrainer(),
     )
 
-    cfg.prepare_directory(Root(), yaml)
-    assert os.path.exists(Path(cfg.experiment_dir) / "config.yaml")
+    assert cfg.module._module_config.model.NUM_OUTPUT_DIMS == 2
 
 
-def test_prepare_non_root(tmp_path):
-    cfg = TrainConfig(
-        str(tmp_path),
-        1,
-        DummyTrainLoader(
-            DummyDatasetConfig(observation="obs", pipeline=ocean_pipeline())
-        ),
-        DummyModule(num_out=2),
-        DummyLoss(["mse"]),
-        DummyTrainer(),
-    )
-
-    cfg.prepare_directory(NonRoot())
-    assert cfg.log_dir
+# ============================================================
+# Seed and path property tests
+# ============================================================
 
 
-def test_prepare_non_root_yaml(tmp_path):
-    yaml = tmp_path / "cfg.yaml"
-    yaml.write_text("x")
+def test_set_seed_reproducible_numpy_and_torch():
+    set_seed(123)
+    np_first = np.random.rand()
+    torch_first = torch.rand(1)
 
-    cfg = TrainConfig(
-        str(tmp_path),
-        1,
-        DummyTrainLoader(
-            DummyDatasetConfig(observation="obs", pipeline=ocean_pipeline())
-        ),
-        DummyModule(num_out=2),
-        DummyLoss(["mse"]),
-        DummyTrainer(),
-    )
+    set_seed(123)
+    np_second = np.random.rand()
+    torch_second = torch.rand(1)
 
-    cfg.prepare_directory(NonRoot(), yaml)
-    assert cfg.checkpoint_dir
+    assert np_first == np_second
+    assert torch.allclose(torch_first, torch_second)
 
 
 def test_set_random_seed_none():
@@ -356,7 +373,10 @@ def test_set_random_seed_none():
         "x",
         1,
         DummyTrainLoader(
-            DummyDatasetConfig(observation="obs", pipeline=ocean_pipeline())
+            DummyDatasetConfig(
+                observation="obs",
+                pipeline=ocean_pipeline(),
+            )
         ),
         DummyModule(num_out=2),
         DummyLoss(["mse"]),
@@ -365,6 +385,7 @@ def test_set_random_seed_none():
     )
 
     cfg.set_random_seed()
+
     assert cfg.seed is None
 
 
@@ -373,7 +394,10 @@ def test_set_random_seed_reproducible():
         "x",
         1,
         DummyTrainLoader(
-            DummyDatasetConfig(observation="obs", pipeline=ocean_pipeline())
+            DummyDatasetConfig(
+                observation="obs",
+                pipeline=ocean_pipeline(),
+            )
         ),
         DummyModule(num_out=2),
         DummyLoss(["mse"]),
@@ -382,12 +406,30 @@ def test_set_random_seed_reproducible():
     )
 
     cfg.set_random_seed()
-    a = torch.rand(1)
+    first = torch.rand(1)
 
     cfg.set_random_seed()
-    b = torch.rand(1)
+    second = torch.rand(1)
 
-    assert torch.allclose(a, b)
+    assert torch.allclose(first, second)
+
+
+def test_experiment_dir_is_path():
+    cfg = TrainConfig(
+        "x",
+        1,
+        DummyTrainLoader(
+            DummyDatasetConfig(
+                observation="obs",
+                pipeline=ocean_pipeline(),
+            )
+        ),
+        DummyModule(num_out=2),
+        DummyLoss(["mse"]),
+        DummyTrainer(),
+    )
+
+    assert isinstance(cfg.experiment_dir, Path)
 
 
 def test_directory_properties():
@@ -395,7 +437,10 @@ def test_directory_properties():
         "my_exp",
         1,
         DummyTrainLoader(
-            DummyDatasetConfig(observation="obs", pipeline=ocean_pipeline())
+            DummyDatasetConfig(
+                observation="obs",
+                pipeline=ocean_pipeline(),
+            )
         ),
         DummyModule(num_out=2),
         DummyLoss(["mse"]),
@@ -407,7 +452,112 @@ def test_directory_properties():
     assert str(cfg.figures_dir).endswith("my_exp/figures")
 
 
-from cccma_ppp.train.train_configs import build_trainer
+# ============================================================
+# prepare_directory branch tests
+# ============================================================
+
+
+def test_prepare_root(tmp_path):
+    cfg = TrainConfig(
+        str(tmp_path),
+        1,
+        DummyTrainLoader(
+            DummyDatasetConfig(
+                observation="obs",
+                pipeline=ocean_pipeline(),
+            )
+        ),
+        DummyModule(num_out=2),
+        DummyLoss(["mse"]),
+        DummyTrainer(),
+    )
+
+    root = Root()
+    cfg.prepare_directory(root)
+
+    assert os.path.isdir(cfg.log_dir)
+    assert os.environ["GLOBAL_EXP_DIR"] == str(cfg.experiment_dir)
+    assert os.environ["GLOBAL_CHECKPOINT_DIR"] == str(cfg.checkpoint_dir)
+    assert os.environ["GLOBAL_FIGURES_DIR"] == str(cfg.figures_dir)
+    assert os.environ["GLOBAL_LOG_DIR"] == str(cfg.log_dir)
+    assert root.barrier_calls == 5
+
+
+def test_prepare_root_with_yaml(tmp_path):
+    yaml = tmp_path / "cfg.yaml"
+    yaml.write_text("x")
+
+    cfg = TrainConfig(
+        str(tmp_path),
+        1,
+        DummyTrainLoader(
+            DummyDatasetConfig(
+                observation="obs",
+                pipeline=ocean_pipeline(),
+            )
+        ),
+        DummyModule(num_out=2),
+        DummyLoss(["mse"]),
+        DummyTrainer(),
+    )
+
+    root = Root()
+    cfg.prepare_directory(root, yaml)
+
+    assert os.path.exists(Path(cfg.experiment_dir) / "config.yaml")
+    assert root.barrier_calls == 5
+
+
+def test_prepare_non_root(tmp_path):
+    cfg = TrainConfig(
+        str(tmp_path / "non_root_exp"),
+        1,
+        DummyTrainLoader(
+            DummyDatasetConfig(
+                observation="obs",
+                pipeline=ocean_pipeline(),
+            )
+        ),
+        DummyModule(num_out=2),
+        DummyLoss(["mse"]),
+        DummyTrainer(),
+    )
+
+    non_root = NonRoot()
+    cfg.prepare_directory(non_root)
+
+    assert not Path(cfg.experiment_dir).exists()
+    assert non_root.barrier_calls == 5
+
+
+def test_prepare_non_root_yaml(tmp_path):
+    yaml = tmp_path / "cfg.yaml"
+    yaml.write_text("x")
+
+    cfg = TrainConfig(
+        str(tmp_path / "non_root_yaml_exp"),
+        1,
+        DummyTrainLoader(
+            DummyDatasetConfig(
+                observation="obs",
+                pipeline=ocean_pipeline(),
+            )
+        ),
+        DummyModule(num_out=2),
+        DummyLoss(["mse"]),
+        DummyTrainer(),
+    )
+
+    non_root = NonRoot()
+    cfg.prepare_directory(non_root, yaml)
+
+    assert not os.path.exists(Path(cfg.experiment_dir) / "config.yaml")
+    assert non_root.barrier_calls == 5
+
+
+# ============================================================
+# build_trainer test doubles
+# ============================================================
 
 
 class DummyBuiltLoader:
@@ -425,30 +575,44 @@ class DummyBuiltLoader:
 class DummyTrainLoaderWithBuild(DummyTrainLoader):
     def setup_distributed(self, distributed):
         self.distributed = distributed
+        self.setup_distributed_called = True
 
     def build_train_loader(self):
+        self.train_loader_built = True
         return DummyBuiltLoader()
 
     def build_validation_loader(self):
+        self.validation_loader_built = True
         return DummyBuiltLoader()
 
 
-class DummyBuiltTorchModule(torch.nn.Module):
-    def __init__(self):
+class DummyBuiltTorchModule(nn.Module):
+    def __init__(self, model=None):
         super().__init__()
-        self.model = type("Model", (), {"NUM_OUTPUT_DIMS": 1})()
+        self.model = model or type("Model", (), {"NUM_OUTPUT_DIMS": 1})()
         self.loss = None
+        self.device_used = None
+        self.built = True
+
+    def to(self, device):
+        self.device_used = device
+        return self
 
     def init_loss_function(self, loss):
         self.loss = loss
 
 
 class DummyModuleWithBuild(DummyModule):
+    def __init__(self, type_="other", generator=False, num_out=1):
+        super().__init__(type_, generator=generator, num_out=num_out)
+        self.build_called = False
+
     def build_module(self, input_shape, output_shape=None, added_features_dim=None):
+        self.build_called = True
         self.input_shape = input_shape
         self.output_shape = output_shape
         self.added_features_dim = added_features_dim
-        return DummyBuiltTorchModule()
+        return DummyBuiltTorchModule(model=self._module_config.model)
 
 
 class DummyLossWithBuild(DummyLoss):
@@ -493,65 +657,267 @@ class DummyLogger:
         self.messages.append(msg)
 
 
-def test_build_trainer_basic():
-    cfg = TrainConfig(
+class DistributedRoot:
+    distributed = False
+    device = torch.device("cpu")
+    local_rank = 0
+
+    def is_root(self):
+        return True
+
+    def barrier(self):
+        pass
+
+
+class DistributedNonRoot:
+    distributed = False
+    device = torch.device("cpu")
+    local_rank = 0
+
+    def is_root(self):
+        return False
+
+    def barrier(self):
+        pass
+
+
+class DistributedDDP:
+    distributed = True
+    device = torch.device("cpu")
+    local_rank = 0
+
+    def is_root(self):
+        return True
+
+    def barrier(self):
+        pass
+
+
+class FakeDDP:
+    def __init__(
+        self,
+        module,
+        device_ids=None,
+        output_device=None,
+        find_unused_parameters=False,
+    ):
+        self.module = module
+        self.device_ids = device_ids
+        self.output_device = output_device
+        self.find_unused_parameters = find_unused_parameters
+
+    def __getattr__(self, name):
+        return getattr(self.module, name)
+
+
+def build_train_config_for_builder(module_num_out=1):
+    return TrainConfig(
         "x",
         1,
         DummyTrainLoaderWithBuild(
-            DummyDatasetConfig(observation="obs", pipeline=ocean_pipeline())
+            DummyDatasetConfig(
+                observation="obs",
+                pipeline=ocean_pipeline(),
+            )
         ),
-        DummyModuleWithBuild(num_out=1),
+        DummyModuleWithBuild("other", num_out=module_num_out),
         DummyLossWithBuild(["mse"]),
         DummyTrainerWithBuild(),
         optimization=DummyOptimizerConfig(),
     )
 
-    trainer = build_trainer(cfg, Root(), logger=DummyLogger())
+
+# ============================================================
+# build_trainer branch tests
+# ============================================================
+
+
+def test_build_trainer_basic_root_logger():
+    cfg = build_train_config_for_builder()
+    logger = DummyLogger()
+
+    trainer = build_trainer(cfg, DistributedRoot(), logger=logger)
 
     assert trainer == "trainer"
+    assert cfg.train_loader.setup_distributed_called is True
+    assert cfg.train_loader.train_loader_built is True
+    assert cfg.train_loader.validation_loader_built is True
+
+    assert cfg.module.build_called is True
+    assert cfg.module.input_shape == [6]
+    assert cfg.module.output_shape == [6]
+    assert cfg.module.added_features_dim == 0
+
     assert cfg.losspipeline.weights == "weights"
     assert cfg.losspipeline.num_output_dimensions == 1
+
     assert cfg.optimization.num_batches == 2
+    assert cfg.optimization.epochs == 1
+
+    assert cfg.trainer.train_data_loader is not None
+    assert cfg.trainer.validation_data_loader is not None
+    assert cfg.trainer.optimization == "optimizer"
     assert cfg.trainer.epochs == 1
+
+    assert any("creating data loaders" in msg for msg in logger.messages)
+    assert any("Creating loss function" in msg for msg in logger.messages)
 
 
 def test_build_trainer_logger_none_prints(capsys):
-    cfg = TrainConfig(
-        "x",
-        1,
-        DummyTrainLoaderWithBuild(
-            DummyDatasetConfig(observation="obs", pipeline=ocean_pipeline())
-        ),
-        DummyModuleWithBuild(num_out=1),
-        DummyLossWithBuild(["mse"]),
-        DummyTrainerWithBuild(),
-        optimization=DummyOptimizerConfig(),
-    )
+    cfg = build_train_config_for_builder()
 
-    out = build_trainer(cfg, Root(), logger=None)
+    trainer = build_trainer(cfg, DistributedRoot(), logger=None)
 
     captured = capsys.readouterr()
 
-    assert out == "trainer"
+    assert trainer == "trainer"
     assert "creating data loaders" in captured.out
+    assert "Creating loss function" in captured.out
 
 
-def test_build_trainer_non_root_no_print(capsys):
+def test_build_trainer_non_root_does_not_print(capsys):
+    cfg = build_train_config_for_builder()
+
+    trainer = build_trainer(cfg, DistributedNonRoot(), logger=None)
+
+    captured = capsys.readouterr()
+
+    assert trainer == "trainer"
+    assert "creating data loaders" not in captured.out
+    assert "Creating loss function" not in captured.out
+
+
+def test_build_trainer_distributed_wraps_module(monkeypatch):
+    monkeypatch.setattr(torch.nn.parallel, "DistributedDataParallel", FakeDDP)
+
+    cfg = build_train_config_for_builder()
+    trainer = build_trainer(cfg, DistributedDDP(), logger=None)
+
+    built_module = cfg.trainer.module
+
+    assert trainer == "trainer"
+    assert isinstance(built_module, FakeDDP)
+    assert built_module.device_ids == [0]
+    assert built_module.output_device == 0
+    assert built_module.find_unused_parameters is False
+
+
+def test_build_trainer_uses_len_output_shape_when_num_output_dims_missing():
+    class ModelWithoutNumOutputDims:
+        GENERATOR = False
+
     cfg = TrainConfig(
         "x",
         1,
         DummyTrainLoaderWithBuild(
-            DummyDatasetConfig(observation="obs", pipeline=ocean_pipeline())
+            DummyDatasetConfig(
+                observation="obs",
+                pipeline=ocean_pipeline(),
+            )
         ),
-        DummyModuleWithBuild(num_out=1),
+        DummyModuleWithBuild("other", num_out=2),
         DummyLossWithBuild(["mse"]),
         DummyTrainerWithBuild(),
         optimization=DummyOptimizerConfig(),
     )
 
-    out = build_trainer(cfg, NonRoot(), logger=None)
+    cfg.module._module_config.model = ModelWithoutNumOutputDims()
 
-    captured = capsys.readouterr()
+    trainer = build_trainer(cfg, DistributedRoot(), logger=None)
 
-    assert out == "trainer"
-    assert "creating data loaders" not in captured.out
+    assert trainer == "trainer"
+    assert cfg.losspipeline.num_output_dimensions == 1
+
+
+def test_build_trainer_passes_module_to_device():
+    cfg = build_train_config_for_builder()
+
+    trainer = build_trainer(cfg, DistributedRoot(), logger=None)
+
+    assert trainer == "trainer"
+    assert cfg.trainer.module.device_used == torch.device("cpu")
+
+
+def test_build_trainer_initializes_loss_on_module():
+    cfg = build_train_config_for_builder()
+
+    trainer = build_trainer(cfg, DistributedRoot(), logger=None)
+
+    assert trainer == "trainer"
+    assert cfg.trainer.module.loss == "loss"
+
+
+def test_build_trainer_optimizer_receives_module_batches_epochs():
+    cfg = build_train_config_for_builder()
+
+    trainer = build_trainer(cfg, DistributedRoot(), logger=None)
+
+    assert trainer == "trainer"
+    assert cfg.optimization.module is cfg.trainer.module
+    assert cfg.optimization.num_batches == 2
+    assert cfg.optimization.epochs == 1
+
+
+def test_build_trainer_trainer_receives_validation_loader():
+    cfg = build_train_config_for_builder()
+
+    trainer = build_trainer(cfg, DistributedRoot(), logger=None)
+
+    assert trainer == "trainer"
+    assert isinstance(cfg.trainer.validation_data_loader, DummyBuiltLoader)
+
+
+# ============================================================
+# Distributed test doubles
+# ============================================================
+
+
+class Root:
+    def __init__(self):
+        self.barrier_calls = 0
+
+    def is_root(self):
+        return True
+
+    def barrier(self):
+        self.barrier_calls += 1
+
+
+class NonRoot:
+    def __init__(self):
+        self.barrier_calls = 0
+
+    def is_root(self):
+        return False
+
+    def barrier(self):
+        self.barrier_calls += 1
+
+
+# ============================================================
+# Core TrainConfig branch tests
+# ============================================================
+
+
+def test_epochs_assertion():
+    with pytest.raises(AssertionError):
+        TrainConfig(
+            "x",
+            -1,
+            DummyTrainLoader(DummyDatasetConfig()),
+            DummyModule(),
+            DummyLoss(["mse"]),
+            DummyTrainer(),
+        )
+
+
+def test_no_observation_deterministic():
+    with pytest.raises(ValueError):
+        TrainConfig(
+            "x",
+            1,
+            DummyTrainLoader(DummyDatasetConfig()),
+            DummyModule("deterministic"),
+            DummyLoss(["mse"]),
+            DummyTrainer(),
+        )
