@@ -21,196 +21,123 @@ from cccma_ppp.loss.kld import BetaAnnealing
 
 @dataclasses.dataclass
 class TrainerConfig:
-    beta_finder: BetaAnnealing | None = None
-    earlystoppingbuffer: float = float("inf")
-    minimum_validation_improvement_percentage: float = 0.02
+    beta_finder : BetaAnnealing | None = None
+    earlystoppingbuffer : float = float("inf")
+    minimum_validation_improvement_percentage : float = 0.02
     gradient_accumulation_steps: int = 1
     mixed_precision: bool = True
     grad_clip: float | None = None
+
 
     def __post_init__(self):
 
         if self.grad_clip is not None:
             assert self.grad_clip > 0
 
-    def build(
-        self,
-        train_data_loader: Dataloader,
-        validation_data_loader: Dataloader,
-        optimization: OptimizerWrapper,
-        module: moduleABC,
-        epochs: int,
-    ):
+
+    def build(self,
+              train_data_loader : Dataloader,
+              validation_data_loader : Dataloader,
+              optimization : OptimizerWrapper,
+              module : moduleABC,
+              epochs : int):
+
 
         self.num_train_batches = len(train_data_loader)
         if validation_data_loader is not None:
             self.num_validation_batches = len(validation_data_loader)
 
-        assert module.built, "make sure the module is built."
+        assert module.built, 'make sure the module is built.'
 
         if isinstance(module, cVAE):
-            assert self.beta_finder is not None, (
-                "specify beta annealing config for cVAE module."
-            )
+            assert self.beta_finder is not None, 'specify beta annealing config for cVAE module.'
             self.beta_finder.build(self.num_train_batches)
 
-        return Trainer(
-            config=self,
-            train_data_loader=train_data_loader,
-            validation_data_loader=validation_data_loader,
-            module=module,
-            optimizer=optimization,
-            epochs=epochs,
-        )
+        return Trainer(config = self,
+                        train_data_loader = train_data_loader,
+                        validation_data_loader  = validation_data_loader,
+                        module = module,
+                        optimizer = optimization,
+                        epochs = epochs)
+
+
+
+
+
 
 
 class Trainer:
-    def __init__(
-        self,
-        config: TrainerConfig,
-        train_data_loader: Dataloader,
-        module: moduleABC,
-        optimizer: OptimizerWrapper,
-        epochs: int,
-        validation_data_loader: Dataloader | None = None,
-    ):
+        def __init__(
+            self,
+            config : TrainerConfig,
+            train_data_loader : Dataloader,
+            module : moduleABC,
+            optimizer : OptimizerWrapper,
+            epochs : int,
+            validation_data_loader : Dataloader | None = None):
 
-        self.config = config
-        self.optimizer = optimizer
-        self.module = module
-        self.TrainLoader = train_data_loader
-        self.ValidationLoader = validation_data_loader
 
-        self.epochs = epochs
-        self.global_step = 0
-        self.batch_step = 0
-        self._start_epoch = 0
-        self._epochs_trained = self._start_epoch
-        # self._current_epoch_num_batches_seen = 0   ###you can work with this if you need batch level checkpoining and restarting
-        self._best_validation_loss = float("inf")
-        self.earlystopping_counter = 0
+            self.config = config
+            self.optimizer = optimizer
+            self.module = module
+            self.TrainLoader = train_data_loader
+            self.ValidationLoader = validation_data_loader
 
-        if self.config.beta_finder is not None:
-            self.beta_finder = self.config.beta_finder
+            self.epochs = epochs
+            self.global_step = 0
+            self.batch_step = 0
+            self._start_epoch = 0
+            self._epochs_trained = self._start_epoch
+            # self._current_epoch_num_batches_seen = 0   ###you can work with this if you need batch level checkpoining and restarting
+            self._best_validation_loss = float("inf")
+            self.earlystopping_counter = 0
 
-        self._setup = False
+            if self.config.beta_finder is not None:
+                self.beta_finder =  self.config.beta_finder
 
-    def setup_distributed(
-        self,
-        distributed: Distributed,
-        logger: logging.Logger,
-        log_every_n_epochs: int = 1,
-        save_checkpoint: bool = True,
-    ):
+            self._setup = False
 
-        self.save_checkpoint = save_checkpoint
-        self.log_every_n_epochs = log_every_n_epochs
+        def setup_distributed(
+                    self,
+                    distributed  : Distributed,
+                    logger : logging.Logger,
+                    log_every_n_epochs : int = 1,
+                    save_checkpoint :  bool = True ):
 
-        self.logger = logger
-        if self.logger is None:
-            print("Logger is None. Print is used instead ... \n\n ")
+            self.save_checkpoint = save_checkpoint
+            self.log_every_n_epochs = log_every_n_epochs
 
-        self.distributed = distributed
-        self.device = distributed.device
-        self.rank = distributed.rank
-        self.local_rank = distributed.local_rank
-        self.world_size = distributed.world_size
-        self.is_distributed = distributed.distributed
-        self.is_on_root = distributed.is_root()
+            self.logger = logger
+            if self.logger is None:
+                print('Logger is None. Print is used instead ... \n\n ')
 
-        self.log_root(logging.INFO, "Setting up trainer.")
+            self.distributed = distributed
+            self.device = distributed.device
+            self.rank = distributed.rank
+            self.local_rank = distributed.local_rank
+            self.world_size = distributed.world_size
+            self.is_distributed = distributed.distributed
+            self.is_on_root = distributed.is_root()
 
-        self.log_root(
-            logging.INFO,
-            f"rank={self.rank} | local_rank={self.local_rank} | world_size={self.world_size} | device={self.device}",
-        )
+            self.log_root(logging.INFO, "Setting up trainer.")
 
-        if self.raw_module._get_device() != self.device:
-            raise RuntimeError(
-                f"Module is on {self.raw_module._get_device()}, but trainer device is {self.device}"
-            )
+            self.log_root(logging.INFO,
+                f"rank={self.rank} | local_rank={self.local_rank} | world_size={self.world_size} | device={self.device}")
 
-        self.scaler = GradScaler("cuda", enabled=self.config.mixed_precision)
 
-        self.train_aggregator = MetricsAggregator(distributed, name="Train")
-        self.validation_aggregator = (
-            MetricsAggregator(distributed, name="Validation")
-            if self.ValidationLoader is not None
-            else None
-        )  ##to do: add flexible validation loss
+            if self.raw_module._get_device() != self.device:
+                raise RuntimeError(f"Module is on {self.raw_module._get_device()}, but trainer device is {self.device}")
 
-        if not self.save_checkpoint:
-            self.log_root(
-                logging.warning,
-                "Configured value of save_checkpoint is false, no checkpoints whatsoever will be saved! ",
-            )
+            self.scaler = GradScaler("cuda", enabled=self.config.mixed_precision)
 
-        self.checkpoint_dir = Path(os.environ["GLOBAL_CHECKPOINT_DIR"])
-        resuming = os.path.isfile(self.checkpoint_dir / "*best*.pt")
-        if resuming:
-            self.log_root(
-                logging.INFO,
-                f"Resuming training from {self.checkpoint_dir / '*best*.pt'}",
-            )
-            self._load_checkpoint(self.checkpoint_dir / "*best*.pt")
-        else:
-            if self.is_on_root and self.save_checkpoint:
-                os.makedirs(self.checkpoint_dir, exist_ok=True)
+            self.train_aggregator = MetricsAggregator(distributed, name = 'Train')
+            self.validation_aggregator = MetricsAggregator(distributed, name = 'Validation')  if self.ValidationLoader is not None else None ##to do: add flexible validation loss
 
-        self.plot_dir = Path(os.environ["GLOBAL_FIGURES_DIR"])
-        if self.is_on_root:
-            os.makedirs(self.plot_dir, exist_ok=True)
 
-        if self.is_distributed:
-            self.distributed.barrier()
+            if not self.save_checkpoint:
+                self.log_root( logging.warning,
+                    "Configured value of save_checkpoint is false, no checkpoints whatsoever will be saved! ")
 
-        self._setup = True
-        self.log_root(logging.INFO, "Trainer setup complete.")
-
-    def train(self):
-        """
-        Main training loop.
-
-        Responsibilities:
-        - loop over epochs
-        - run training epoch
-        - optionally run validation epoch
-        - handle early stopping
-        - checkpoint from root rank only
-        """
-        assert self._setup, "make sure to setup the trainer first."
-        self.log_root(logging.INFO, "Starting Training Loop...")
-        self.start_time_train = time.time()
-        self._clear_memory()
-        self.optimizer.zero_grad(set_to_none=True)
-
-        while self._epochs_trained < self.epochs:
-            time_elapsed = self._train_on_epoch()
-            train_logs = self.train_aggregator._dist_compute()
-            self.train_aggregator.record_epoch(train_logs, time_elapsed=time_elapsed)
-
-            if self.ValidationLoader is not None:
-                self._validate_on_epoch()
-                validation_logs = self.validation_aggregator._dist_compute()
-                self.validation_aggregator.record_epoch(validation_logs)
-
-                validation_loss = validation_logs[
-                    "total_loss"
-                ]  ## can later be an input atgument that customizes validation loss
-                improved = self._is_improved(validation_loss)
-
-                if improved:
-                    self._best_validation_loss = validation_loss
-                    self.earlystopping_counter = 0
-
-                    if self.is_on_root and self.save_checkpoint:
-                        self._save_checkpoint(
-                            name="best",
-                            train_logs=train_logs,
-                            validation_logs=validation_logs,
-                        )
-                else:
-                    self.earlystopping_counter += 1
 
             self.checkpoint_dir = Path(os.environ["GLOBAL_CHECKPOINT_DIR"])
             resuming = os.path.isfile(self.checkpoint_dir / '*best*.pt')
@@ -218,64 +145,54 @@ class Trainer:
                 self.log_root(logging.INFO, f"Resuming training from {self.checkpoint_dir / '*best*.pt' }")
                 self._load_checkpoint(self.checkpoint_dir / '*best*.pt')
             else:
-                validation_logs = None
-                validation_loss = None
-
                 if self.is_on_root and self.save_checkpoint:
-                    self._save_checkpoint(
-                        name="best",
-                        train_logs=train_logs,
-                        validation_logs=None,
-                    )
+                    os.makedirs(self.checkpoint_dir, exist_ok=True)
 
+            self.plot_dir = Path(os.environ["GLOBAL_FIGURES_DIR"])
             if self.is_on_root:
-                if (self._epochs_trained) % self.log_every_n_epochs == 0:
-                    self._log_epoch(
-                        train_logs=train_logs,
-                        validation_logs=validation_logs,
-                    )
-                    MetricsAggregator.plot(
-                        [self.train_aggregator, self.validation_aggregator],
-                        plot_dir=self.plot_dir,
-                    )
+                    os.makedirs(self.plot_dir, exist_ok=True)
 
-            should_stop = self._should_stop_early()
             if self.is_distributed:
-                stop_tensor = torch.tensor(
-                    int(self._should_stop_early()), device=self.device
-                )
-                self.distributed.broadcast(stop_tensor, src=0)
-                should_stop = bool(stop_tensor.item())
+                self.distributed.barrier()
 
-            if should_stop:
-                self.log_root(
-                    logging.INFO,
-                    f"Early stopping triggered.  Best validation loss: {self._best_validation_loss:.6f}",
-                )
+            self._setup = True
+            self.log_root(logging.INFO, "Trainer setup complete.")
 
-                break
+        def train(self):
+            """
+            Main training loop.
 
-        if self.batch_step % self.config.gradient_accumulation_steps != 0:
-            # The model changed after the last validation/checkpoint,
-            # so  validate/checkpoint again.
+            Responsibilities:
+            - loop over epochs
+            - run training epoch
+            - optionally run validation epoch
+            - handle early stopping
+            - checkpoint from root rank only
+            """
+            assert self._setup, 'make sure to setup the trainer first.'
+            self.log_root(logging.INFO, "Starting Training Loop...")
+            self.start_time_train = time.time()
+            self._clear_memory()
+            self.optimizer.zero_grad(set_to_none=True)
 
-            if not self._should_stop_early():
-                self._optimizer_step()
+            while self._epochs_trained < self.epochs:
+
+                time_elapsed = self._train_on_epoch()
+                train_logs = self.train_aggregator._dist_compute()
+                self.train_aggregator.record_epoch(train_logs, time_elapsed = time_elapsed)
 
                 if self.ValidationLoader is not None:
+
                     self._validate_on_epoch()
                     validation_logs = self.validation_aggregator._dist_compute()
-                    self.validation_aggregator.record_epoch(validation_logs, index=-1)
+                    self.validation_aggregator.record_epoch(validation_logs)
 
-                    validation_loss = validation_logs[
-                        "total_loss"
-                    ]  ## can later be an input atgument that customizes validation loss
+                    validation_loss = validation_logs['total_loss'] ## can later be an input atgument that customizes validation loss
                     improved = self._is_improved(validation_loss)
 
                     if improved:
                         self._best_validation_loss = validation_loss
-
-                        self.validation_aggregator.remove_second_last_epoch()
+                        self.earlystopping_counter = 0
 
                         if self.is_on_root and self.save_checkpoint:
                             self._save_checkpoint(
@@ -283,14 +200,12 @@ class Trainer:
                                 train_logs=train_logs,
                                 validation_logs=validation_logs,
                             )
-                elif self.is_on_root and self.save_checkpoint:
-                    self._save_checkpoint(
-                        name="best",
-                        train_logs=train_logs,
-                        validation_logs=None,
-                    )
+                    else:
+                        self.earlystopping_counter += 1
 
-        time_elapsed = time.time() - self.start_time_train
+                else:
+                    validation_logs = None
+                    validation_loss = None
 
                     if self.is_on_root and self.save_checkpoint:
                         self._save_checkpoint(
@@ -299,59 +214,60 @@ class Trainer:
                             validation_logs=None,
                         )
 
-    def _train_on_epoch(self):
-        """
-        Train for one epoch.
+                if self.is_on_root:
+                    if (self._epochs_trained ) % self.log_every_n_epochs == 0:
+                        self._log_epoch(
+                            train_logs=train_logs,
+                            validation_logs=validation_logs,
+                        )
+                        MetricsAggregator.plot([self.train_aggregator, self.validation_aggregator], plot_dir = self.plot_dir)
 
-        Responsibilities:
-        - set the DistributedSampler epoch
-        - put module in train mode
-        - iterate over train batches
-        - call _train_on_batch()
-        - record batch metrics
-        """
-        # self.log_root( logging.INFO, f'epoch {self._epochs_trained + 1}/{self.epochs}')
-        self.TrainLoader.set_epoch(self._epochs_trained)
-        self.module.train()
 
-        # epoch_data = self.TrainLoader.subset_loader(start_batch=self._current_epoch_num_batches_seen)  ###you can work with this if you need batch level checkpoining and restarting
+                should_stop = self._should_stop_early()
+                if self.is_distributed:
+                    stop_tensor = torch.tensor(
+                            int(self._should_stop_early()),
+                            device=self.device)
+                    self.distributed.broadcast(stop_tensor, src=0)
+                    should_stop = bool(stop_tensor.item())
 
-        start_time = time.time()
-        for batch_id, batch in enumerate(self.TrainLoader):
-            batch_loss_dict = self._train_on_batch(batch)
+                if should_stop:
 
-            # self._current_epoch_num_batches_seen += 1      ###you can work with this if you need batch level checkpoining and restarting
-            self.train_aggregator.record(batch_loss_dict)
 
-        self._epochs_trained += 1
-        # self._current_epoch_num_batches_seen = 0 ###you can work with this if you need batch level checkpoining and restarting
-        time_elapsed = time.time() - start_time
+                    self.log_root(logging.INFO,
+                            f"Early stopping triggered.  Best validation loss: {self._best_validation_loss:.6f}",
+                            )
 
-        return time_elapsed
+                    break
 
-    def _train_on_batch(self, batch):
+            if self.batch_step % self.config.gradient_accumulation_steps != 0:
+                # The model changed after the last validation/checkpoint,
+                # so  validate/checkpoint again.
 
-        batch.to_device(self.device)
-        kwargs = {}
+                if not self._should_stop_early():
 
-        if hasattr(self, "beta_finder"):
-            beta = self.beta_finder(self.global_step)
-            kwargs = dict(beta=beta)
+                    self._optimizer_step()
 
-        with torch.cuda.amp.autocast(  # device_type=self.device.type,
-            enabled=self.scaler.is_enabled() and self.device.type == "cuda"
-        ):
-            loss, loss_dict = self.raw_module._compute_loss(data=batch, **kwargs)
-            loss = loss / self.config.gradient_accumulation_steps
+                    if self.ValidationLoader is not None:
+                        self._validate_on_epoch()
+                        validation_logs = self.validation_aggregator._dist_compute()
+                        self.validation_aggregator.record_epoch(validation_logs, index = -1)
 
-        self.scaler.scale(loss).backward()
+                        validation_loss = validation_logs['total_loss'] ## can later be an input atgument that customizes validation loss
+                        improved = self._is_improved(validation_loss)
 
-        self.batch_step += 1
+                        if improved:
+                            self._best_validation_loss = validation_loss
 
-        if self.batch_step % self.config.gradient_accumulation_steps == 0:
-            self._optimizer_step()
+                            self.validation_aggregator.remove_second_last_epoch()
 
-        return loss_dict
+                            if self.is_on_root and self.save_checkpoint:
+                                self._save_checkpoint(
+                                    name="best",
+                                    train_logs=train_logs,
+                                    validation_logs=validation_logs,
+                                )
+                    elif self.is_on_root and self.save_checkpoint:
 
                         self._save_checkpoint(
                                 name="best",
@@ -359,85 +275,30 @@ class Trainer:
                                 validation_logs=None,
                             )
 
-        Responsibilities:
-        - put module in eval mode
-        - iterate over validation batches
-        - record batch metrics
-        """
-        if self.ValidationLoader is None:
-            raise RuntimeError(
-                "ValidationLoader is None, but validation was requested."
-            )
 
-        self.module.eval()
+            time_elapsed = time.time() - self.start_time_train
 
-        for batch_id, batch in enumerate(self.ValidationLoader):
-            batch_loss_dict = self._validate_on_batch(batch)
+            if self.is_on_root:
+                MetricsAggregator.plot([self.train_aggregator, self.validation_aggregator], plot_dir = self.plot_dir)
+            self.log_root(logging.INFO, f"Training finished in {time_elapsed:.2f}s")
 
-            # self._current_epoch_num_batches_seen += 1      ###you can work with this if you need batch level checkpoining and restarting
-            self.validation_aggregator.record(batch_loss_dict)
 
-    @torch.no_grad()
-    def _validate_on_batch(self, batch):
 
-        batch.to_device(self.device)
-        kwargs = {}
+        def _train_on_epoch(self):
 
-        if hasattr(self, "beta_finder"):
-            beta = self.beta_finder(self.global_step)
-            kwargs = dict(beta=beta)
+            """
+            Train for one epoch.
 
-        with torch.cuda.amp.autocast(
-            # device_type=self.device.type,
-            enabled=self.scaler.is_enabled() and self.device.type == "cuda"
-        ):
-            _, loss_dict = self.raw_module._compute_loss(data=batch, **kwargs)
-
-        return loss_dict
-
-    def _optimizer_step(self):
-
-        if self.config.grad_clip is not None:
-            self.scaler.unscale_(self.optimizer.optimizer)
-            torch.nn.utils.clip_grad_norm_(
-                self.module.parameters(), self.config.grad_clip
-            )
-
-        old_scale = self.scaler.get_scale()
-        self.scaler.step(self.optimizer.optimizer)
-        self.scaler.update()
-        new_scale = self.scaler.get_scale()
-
-        step_was_skipped = new_scale < old_scale  ##sometimes
-        if not step_was_skipped:  ## With AMP, GradScaler.step() may skip the optimizer step if gradients contain inf/nan. If that happens, you probably should not step the LR scheduler or increment global_step
-            self.optimizer.scheduler_step()
-            self.global_step += 1
-
-        self.optimizer.zero_grad(set_to_none=True)
-
-    def _clear_memory(self):
-        gc.collect()
-
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-
-    def _is_improved(self, validation_loss: float | torch.Tensor) -> bool:
-        if isinstance(validation_loss, torch.Tensor):
-            validation_loss = validation_loss.item()
-
-        if self._best_validation_loss == float("inf"):
-            return True
-
-        required_improvement = (
-            self.config.minimum_validation_improvement_percentage
-            * abs(self._best_validation_loss)
-        )
-
-        return validation_loss < self._best_validation_loss - required_improvement
-
-    def _should_stop_early(self) -> bool:
-        if self.ValidationLoader is None:
-            return False
+            Responsibilities:
+            - set the DistributedSampler epoch
+            - put module in train mode
+            - iterate over train batches
+            - call _train_on_batch()
+            - record batch metrics
+            """
+            # self.log_root( logging.INFO, f'epoch {self._epochs_trained + 1}/{self.epochs}')
+            self.TrainLoader.set_epoch(self._epochs_trained)
+            self.module.train()
 
             # epoch_data = self.TrainLoader.subset_loader(start_batch=self._current_epoch_num_batches_seen)  ###you can work with this if you need batch level checkpoining and restarting
 
@@ -647,4 +508,55 @@ class Trainer:
             if path is None:
                 path = Path(self.checkpoint_dir) / f"best.pt"
             else:
-                print(msg)
+                path = Path(path)
+
+            if not path.exists():
+                raise FileNotFoundError(f"Checkpoint not found: {path}")
+
+            checkpoint = torch.load( path,map_location=self.device, weights_only=False)
+
+            self.raw_module.load_state_dict( checkpoint["module"],strict=strict)
+
+            self.optimizer.load_state_dict(checkpoint["optimizer"])
+
+            if "scaler" in checkpoint and checkpoint["scaler"] is not None:
+                self.scaler.load_state_dict(checkpoint["scaler"])
+
+            self._epochs_trained = checkpoint.get("epoch", 0)
+            self._start_epoch = self._epochs_trained
+            self.global_step = checkpoint.get("global_step", 0)
+            self.batch_step = checkpoint.get("batch_step", 0)
+
+            self._best_validation_loss = checkpoint.get("best_validation_loss",torch.inf)
+            self.earlystopping_counter = checkpoint.get("earlystopping_counter",0)
+
+            if "train_history" in checkpoint:
+                self.train_aggregator.load_state_dict(checkpoint["train_history"])
+
+            if ("validation_history" in checkpoint
+                and checkpoint["validation_history"] is not None
+                and self.validation_aggregator is not None):
+
+                self.validation_aggregator.load_state_dict(checkpoint["validation_history"])
+
+            if self.is_distributed:
+                self.distributed.barrier()
+
+            return checkpoint
+
+
+        @property
+        def raw_module(self):
+            if isinstance(self.module, torch.nn.parallel.DistributedDataParallel):
+                return self.module.module
+            return self.module
+
+        def log_root(self, level: int, msg: str, *args):
+            if self.is_on_root:
+                if self.logger is not None:
+                    self.logger.log(level, msg, *args)
+                else:
+                    print(msg)
+
+
+

@@ -19,34 +19,15 @@ class CheckpointConfig:
 
 
 
-
-@dataclasses.dataclass
-class CheckpointConfig:
-    load_path: Path | str
-    checkpoint_input_shape: np.ndarray
-    checkpoint_output_shape: np.ndarray
-    strict: bool = True
-    freeze_weights: bool = False
-
-
-class flowABC(nn.Module, abc.ABC):
-    @abc.abstractmethod
-    def forward(self, x, condition=None): ...
+class flowABC(nn.Module,abc.ABC):
 
     @abc.abstractmethod
-    def inverse(self, z, condition=None): ...
-
-
-class modelConfigABC(abc.ABC):
-    def __init__(self):
-        self.checkpoint_config: CheckpointConfig | None = None
-
-    @final
-    def _add_checkpoint_config(self, checkpoint_config: CheckpointConfig) -> None:
-        self.checkpoint_config = checkpoint_config
-
+    def forward(self, x, condition = None):
+        ...
+    
     @abc.abstractmethod
-    def build(self): ...
+    def inverse(self, z, condition = None):
+        ...
 
 
 
@@ -70,14 +51,13 @@ class modelABC(nn.Module,abc.ABC):
         self.init_method : str =  'trunc_normal'
 
     @abc.abstractmethod
-    def build(
-        self,
-        input_shape: np.ndarray,
-        output_shape: np.ndarray | None = None,
-        added_features_dim: int = None,
-        **kwargs,
-    ): ...
-
+    def build(self,
+                input_shape : np.ndarray, 
+                output_shape: np.ndarray|None = None,
+                added_features_dim : int = None , **kwargs):
+            
+            ...
+    
     @abc.abstractmethod
     def forward(self,
                 x):

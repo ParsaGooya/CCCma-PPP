@@ -10,7 +10,6 @@ class Registery:
         def decorator(cls):
             self._modules[name] = cls
             return cls
-
         return decorator
 
     def get(self, name, config=None):

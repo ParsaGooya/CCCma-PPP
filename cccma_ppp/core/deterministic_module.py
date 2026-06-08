@@ -86,15 +86,7 @@ class deterministic( moduleABC):
         self.built = False
         self.criterion = None
 
-    def build(
-        self,
-        input_shape: np.ndarray,
-        output_shape: np.ndarray | None = None,
-        added_features_dim: int = None,
-    ):
 
-        if output_shape is None:
-            output_shape = input_shape.copy()
 
     def build(self,
               input_shape : np.ndarray,
@@ -123,28 +115,30 @@ class deterministic( moduleABC):
 
         return self
 
-    def init_loss_function(self, reconstruction_loss: Losspipeline):
+    def init_loss_function(self, reconstruction_loss : Losspipeline):
 
         self.criterion = reconstruction_loss
 
-    def _compute_loss(self, data: BatchData):
+    def _compute_loss(self,
+                        data : BatchData):
 
-        assert self.criterion is not None, (
-            "crieterion should be specified before training is possible. Hint: call .init_loss_function() method in your module first."
-        )
+        assert self.criterion is not None, 'crieterion should be specified before training is possible. Hint: call .init_loss_function() method in your module first.'
 
         output = self.forward(data)
 
         if isinstance(data.target, (tuple, list)):
             target, target_mask = data.target
         else:
-            target, target_mask = data.target, None
+            target, target_mask = data.target , None
 
         total_loss, indiv_losses = self.criterion(
-            output.output, target, target_mask=target_mask, print_loss=False
-        )
+            output.output,
+            target,
+            target_mask = target_mask,
+            print_loss = False)
 
-        losses_dict = {"total_loss": total_loss.item()}
+        losses_dict = {
+            "total_loss": total_loss.item()}
 
         for key, value in indiv_losses.items():
             losses_dict[key] = value
@@ -159,7 +153,6 @@ class deterministic( moduleABC):
 
         return self.forward(data)
 
-    # def _save_state_dict(self, save_path : Path | str):
 
 
 
@@ -183,4 +176,3 @@ class deterministic( moduleABC):
 
     #     return checkpoint
 
-    #     return checkpoint

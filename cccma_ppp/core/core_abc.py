@@ -7,17 +7,19 @@ from typing import final
 import gc
 from pathlib import Path
 
-class moduleABC(nn.Module, abc.ABC):
+class moduleABC( nn.Module,abc.ABC):
+
     def __init__(self):
         super().__init__()
 
+
     @abc.abstractmethod
-    def build(
-        self,
-        input_shape: np.ndarray,
-        output_shape: np.ndarray | None = None,
-        added_features_dim: int = None,
-    ): ...
+    def build(self,
+              input_shape : np.ndarray,
+              output_shape: np.ndarray|None = None,
+              added_features_dim : int = None):
+
+        ...
     @abc.abstractmethod
     def init_loss_function(self,
                            reconstruction_loss : Losspipeline,
@@ -80,16 +82,3 @@ class moduleConfigABC(abc.ABC):
 
 
 
-class moduleConfigABC(abc.ABC):
-    def __init__(self):
-        super().__init__()
-
-    @abc.abstractmethod
-    def build(
-        self,
-        input_shape: np.ndarray,
-        output_shape: np.ndarray | None = None,
-        added_features_dim: int = None,
-    ): ...
-    @abc.abstractmethod
-    def _load_from_checkpoint(self): ...
