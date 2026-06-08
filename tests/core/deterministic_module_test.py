@@ -10,7 +10,7 @@ from cccma_ppp.core.deterministic_module import (
 
 
 class ConcreteDeterministic(deterministic):
-    def preidct(self, *args, **kwargs):
+    def predict(self, *args, **kwargs):
         return self.predict(*args, **kwargs)
 
 
@@ -350,12 +350,12 @@ def test_predict_calls_forward():
     assert isinstance(out, deterministicOutput)
 
 
-def test_preidct_alias_calls_predict():
+def test_predict_alias_calls_predict():
     module = make_module()
     module.build(input_shape=np.array([1]))
 
     batch = DummyBatch()
-    out = module.preidct(batch)
+    out = module.predict(batch)
 
     assert isinstance(out, deterministicOutput)
 

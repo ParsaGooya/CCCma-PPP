@@ -217,8 +217,8 @@ class cVAE_MLP(cVAEmodelsABC):
 
         x_in = x[0] if isinstance(x, (tuple, list)) else x
         self._shape_model_output = x_in.shape  ##cVAE autoencodes the input
-        B = x_in.shape[0]
-        opts = dict(device=x_in.device, dtype=x_in.dtype)
+        # B = x_in.shape[0]
+        # opts = dict(device=x_in.device, dtype=x_in.dtype)
         del x_in
 
         cond_mu, cond_log_var = self._condition(
@@ -568,7 +568,7 @@ class Autoencoder(deterministicmodelsABC):
         else:
             x_features = None
 
-        if (type(x) == list) or (type(x) == tuple):
+        if isinstance(x, list) or isinstance(x, tuple):
             if self.append_mode == 1:  # append at encoder
                 out = self.encoder(torch.cat([x_in, x_features], dim=-1))
                 out = self.decoder(out)

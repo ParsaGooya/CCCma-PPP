@@ -1,15 +1,14 @@
 import torch
 import numpy as np
 import pathlib as Path
-from pathlib import Path
 import dataclasses
 import gc
 import warnings
 from cccma_ppp.loss.loss import Losspipeline
-from cccma_ppp.core.registery import *
 from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC
-from cccma_ppp.core.selectors import *
+from cccma_ppp.core.selectors import ModuleSelector, deterministicModelSelector
 from cccma_ppp.data.dataloader import BatchData
+import dacite
 
 
 @dataclasses.dataclass
@@ -51,7 +50,7 @@ class deterministicConfig(moduleConfigABC):
             added_features_dim=added_features_dim,
         )
 
-    def _load_from_checkpoint(self, load_path: Path | str):
+    def _load_from_checkpoint(self, load_path: Path.Path | str):
 
         if not Path(load_path).exists():
             raise FileNotFoundError(f"Checkpoint not found: {load_path}")

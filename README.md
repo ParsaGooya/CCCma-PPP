@@ -4,12 +4,12 @@ A machine learning pipeline for post-processing seasonal-to-decadal predictions 
 
 The training framework supports a suite of deterministic and probabilistic models across multiple neural network architectures. Current applications include bias adjustment, ensemble boosting, and statistical downscaling.
 
-The package is currently under active development and quality assurance (QA) testing.
+The package is currently under active development and undergoing quality assurance (QA).
 
 ---
 ## Installation
 
-`pip` installabale with `pip install .`. Or for development mode, `pip install -e .`.
+`pip` installable with `pip install .`. Or for development mode, `pip install -e .`.
 
 
 ## Ownership and Use

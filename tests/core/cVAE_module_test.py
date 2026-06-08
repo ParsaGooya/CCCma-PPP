@@ -173,7 +173,7 @@ def test_forward_pass():
 def test_predict_pass():
     m = cVAE(cVAEConfig(ModelConfig=DummySelector()))
     m.build(np.array([1]))
-    assert isinstance(m.preidct(DummyBatch()), cVAEOutput)
+    assert isinstance(m.predict(DummyBatch()), cVAEOutput)
 
 
 def test_forward_with_added_features():
@@ -725,12 +725,12 @@ def test_build_with_prior_flow_and_min_variance_and_added_features():
     assert torch.is_tensor(m.min_posterior_variance)
 
 
-def test_preidct_with_sample_size_and_prior_flow():
+def test_predict_with_sample_size_and_prior_flow():
     cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
     m = cVAE(cfg)
     m.build(np.array([1]))
 
-    out = m.preidct(DummyBatch(), sample_size=3)
+    out = m.predict(DummyBatch(), sample_size=3)
 
     assert isinstance(out, cVAEOutput)
 

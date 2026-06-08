@@ -8,7 +8,7 @@ import os
 import time
 
 from cccma_ppp.core.core_abc import moduleABC
-from cccma_ppp.core.optimization import *
+from cccma_ppp.core.optimization import OptimizerWrapper
 from cccma_ppp.core.cVAE_module import cVAE
 from cccma_ppp.data.dataloader import Dataloader
 from cccma_ppp.generic.distributed import Distributed

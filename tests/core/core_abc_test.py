@@ -23,7 +23,7 @@ class DummyModule(moduleABC):
     def forward(self, x=None):
         return self.linear(torch.ones(1, 2))
 
-    def preidct(self):
+    def predict(self):
         return torch.tensor(0.0)
 
 
@@ -50,7 +50,7 @@ def test_dummy_module_basic():
 
     assert m.build(np.array([1, 2]))
     assert m.forward().shape == (1, 2)
-    assert m.preidct() is not None
+    assert m.predict() is not None
     assert m._compute_loss() >= 0
 
 
@@ -84,7 +84,7 @@ def test_get_device_from_buffer():
         def forward(self):
             pass
 
-        def preidct(self):
+        def predict(self):
             pass
 
     m = BufferOnly()
@@ -105,7 +105,7 @@ def test_get_device_cpu_fallback():
         def forward(self):
             pass
 
-        def preidct(self):
+        def predict(self):
             pass
 
     m = NoParams()

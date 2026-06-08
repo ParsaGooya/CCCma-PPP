@@ -35,7 +35,7 @@ class DummyModule(moduleABC):
             x = torch.ones(1, 2)
         return self.linear(x)
 
-    def preidct(self):
+    def predict(self):
         return self.forward()
 
 
