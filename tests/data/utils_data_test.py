@@ -3,6 +3,8 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import pytest
+import xarray as xr
+from cccma_ppp.data import utils_data as mod
 
 
 def test_condition_config_with_ensemble_list_sets_check_ensemble(monkeypatch):
@@ -718,11 +720,6 @@ def test_check_data_missing_variable(monkeypatch):
 
     with pytest.raises(ValueError):
         mod._check_data(CheckDummy())
-
-
-import xarray as xr
-
-from cccma_ppp.data import utils_data as mod
 
 
 ORIGINAL_CHECK_DATA = mod._check_data

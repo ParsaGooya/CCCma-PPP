@@ -1,6 +1,7 @@
 import pytest
 import torch
 import numpy as np
+import cccma_ppp.core.cVAE_module as mod
 from cccma_ppp.core.cVAE_module import cVAE, cVAEConfig, cVAEOutput
 
 
@@ -497,9 +498,6 @@ def test_kld_condition_expansion():
 
     total, _ = m._compute_loss(1.0, DummyBatch())
     assert total >= 0
-
-
-import cccma_ppp.core.cVAE_module as mod
 
 
 def test_config_load_dir_branch_success(monkeypatch):

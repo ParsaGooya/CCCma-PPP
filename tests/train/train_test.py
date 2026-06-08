@@ -1,7 +1,8 @@
 import argparse
-
 import pytest
 import yaml
+import cccma_ppp.train.train as train_mod
+from cccma_ppp.train.train import get_parser, prepare_config, main
 
 
 def test_get_parser_returns_argument_parser():
@@ -403,10 +404,6 @@ def test_main_propagates_train_error_and_does_not_cleanup(monkeypatch, tmp_path)
         main(str(yaml_path))
 
     assert distributed.cleanup_called is False
-
-
-import cccma_ppp.train.train as train_mod
-from cccma_ppp.train.train import get_parser, prepare_config, main
 
 
 class DummyDistributed:
