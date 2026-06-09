@@ -7,7 +7,6 @@ for path in pathlib.Path(".").rglob("*.py"):
     try:
         src = path.read_text(encoding="utf-8")
 
-                         
         tree = ast.parse(src)
         remove_lines = set()
 
@@ -31,14 +30,12 @@ for path in pathlib.Path(".").rglob("*.py"):
                     range(node.body[0].lineno, node.body[0].end_lineno + 1)
                 )
 
-                                
         src = "".join(
             line
             for i, line in enumerate(src.splitlines(True), 1)
             if i not in remove_lines
         )
 
-                         
         out = []
         tokgen = tokenize.generate_tokens(io.StringIO(src).readline)
 
