@@ -335,7 +335,7 @@ def _create_train_mask(
     x = np.arange(0, 12 * mask.shape[0], 12)
     y = np.arange(1, mask.shape[1] + 1)
     idx_array = x[..., None] + y
-                                                               
+
     mask[idx_array > idx_array[-1, exclude_idx + 11]] = True
 
     return xr.DataArray(

@@ -22,10 +22,8 @@ class ModuleSelector:
         self._module_config = self.registery.get(self.type.lower(), self.config)
 
     @classmethod
-    def register(cls, name: str) -> Callable[..., moduleABC]:               
-        return cls.registery.register(
-            name.lower()
-        )                                                                                                                                                                                                          
+    def register(cls, name: str) -> Callable[..., moduleABC]:
+        return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
@@ -82,10 +80,8 @@ class ModelSelector:
                 warnings.warn("Froze model weights ...")
 
     @classmethod
-    def register(cls, name: str) -> Callable[..., modelABC]:               
-        return cls.registery.register(
-            name.lower()
-        )                                                                                                                                                                                                          
+    def register(cls, name: str) -> Callable[..., modelABC]:
+        return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
@@ -108,12 +104,6 @@ class deterministicModelSelector(ModelSelector):
     pass
 
 
-                                                      
-                                                       
-                                                      
-                                              
-
-
 @dataclasses.dataclass
 class FlowSelector:
     type: str
@@ -124,10 +114,8 @@ class FlowSelector:
         pass
 
     @classmethod
-    def register(cls, name: str) -> Callable[..., flowABC]:               
-        return cls.registery.register(
-            name.lower()
-        )                                                                                                                                                                                                          
+    def register(cls, name: str) -> Callable[..., flowABC]:
+        return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):

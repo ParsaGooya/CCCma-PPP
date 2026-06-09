@@ -34,10 +34,8 @@ class LRSchedulerConfig:
 class OptimizerConfig:
     lr: float = 0.0001
     weight_decay: float = 0
-    optimizer_type: str = "adam"                                                  
-    lr_scheduler_config: LRSchedulerConfig | None = (
-        None                                                                   
-    )
+    optimizer_type: str = "adam"
+    lr_scheduler_config: LRSchedulerConfig | None = None
 
     OPTIMIZER_REGISTERY: ClassVar[dict] = {
         "adam": torch.optim.Adam,
@@ -49,8 +47,6 @@ class OptimizerConfig:
         self.optimizer = None
 
     def build(self, module: moduleABC, num_batches: int = None, max_epochs: int = None):
-
-                                                                           
 
         if self.lr_scheduler_config is not None:
             if self.lr_scheduler_config.total_epochs is None:
@@ -65,9 +61,7 @@ class OptimizerConfig:
                     "num_batches must be specified to set up learning rate scheduler."
                 )
 
-        return OptimizerWrapper(
-            self, module, num_batches, max_epochs
-        )                                                              
+        return OptimizerWrapper(self, module, num_batches, max_epochs)
 
 
 class OptimizerWrapper:

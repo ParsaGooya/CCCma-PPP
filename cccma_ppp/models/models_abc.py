@@ -96,10 +96,6 @@ class modelABC(nn.Module, abc.ABC):
     def _initialize_weights(self):
         self.apply(lambda m: weights_init(m, method=self.init_method))
 
-            
-                                                                                     
-                                                     
-
     @final
     def _get_device(self) -> torch.device:
         param = next(self.parameters(), None)

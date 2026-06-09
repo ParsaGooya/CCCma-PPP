@@ -17,14 +17,10 @@ class flowOutput:
 
 @dataclasses.dataclass
 class NormalizedFlowConfig:
-                                                                                                                   
-
     list_flows: list[FlowSelector]
     flow_sample_size: int = 5000
 
-    def build(
-        self, latent_size: int, condition_size: int = None
-    ):                                                            
+    def build(self, latent_size: int, condition_size: int = None):
 
         return NormalizedFlowModel(
             config=self, latent_size=latent_size, condition_size=condition_size
@@ -61,7 +57,6 @@ class NormalizedFlowModel(flowABC):
         for flow in self.flows:
             x, ld = flow.forward(x, condition=condition)
             log_det = log_det + ld
-                                                      
 
         return flowOutput(e_samples=x, log_det=log_det)
 
@@ -76,14 +71,7 @@ class NormalizedFlowModel(flowABC):
         return flowOutput(e_samples=x, log_det=log_det)
 
 
-                                                      
-                                                                                                                                                        
-                                                                                                                                                         
-                                                                                                                                                        
-
-
 class FCNN(nn.Module):
-
     def __init__(self, in_dim, out_dim, hidden_dim):
         super().__init__()
         self.network = nn.Sequential(
@@ -98,12 +86,8 @@ class FCNN(nn.Module):
         return self.network(x)
 
 
-                                       
-
-
 @FlowSelector.register("maf")
 class MAF(flowABC):
-
     def __init__(
         self,
         hidden_dim=16,
@@ -115,7 +99,7 @@ class MAF(flowABC):
 
     def build(self, dim, condition_size=None):
         self.dim = dim
-                                       
+
         layers = []
         added_features = condition_size if condition_size is not None else 0
         for i in range(1, self.dim):
@@ -124,7 +108,7 @@ class MAF(flowABC):
         if condition_size is None:
             self.register_parameter(
                 "initial_param", param=nn.Parameter(torch.Tensor(1, 2))
-            )                                                                                   
+            )
             self.reset_parameters()
         else:
             self.initial_param = self.base_network(added_features, 2, self.hidden_dim)
@@ -175,17 +159,13 @@ class MAF(flowABC):
                 out = self.layers[i - 1](x_in)
                 mu, alpha = out[:, 0], out[:, 1]
             x[:, i] = mu + torch.exp(alpha) * z[:, i]
-                          
-            log_det += alpha                                 
+
+            log_det += alpha
         return x, log_det
-
-
-                                           
 
 
 @FlowSelector.register("realnvp")
 class RealNVP(flowABC):
-
     def __init__(self, hidden_dim=16, base_network=FCNN):
         super().__init__()
         self.hidden_dim = hidden_dim

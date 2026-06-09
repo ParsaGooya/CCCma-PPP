@@ -6,11 +6,10 @@ import os
 
 from cccma_ppp.preprocessing.preprocessing import (
     PreprocessingStepSelector,
-)                         
+)
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 
-                                               
 @PreprocessingStepSelector.register("normalizer")
 class Normalizer(PreprocessModuleABC):
     def __init__(self, dims: list | None = None, **kwargs) -> None:
@@ -24,15 +23,13 @@ class Normalizer(PreprocessModuleABC):
 
     def fit(self, data: xr.DataArray, mask: xr.DataArray = None):
 
-        if all(
-            ["ensembles" in data.dims, self.dims is not None]
-        ):                                                                                                                                                               
+        if all(["ensembles" in data.dims, self.dims is not None]):
             if "ensembles" not in self.dims:
                 self.large_ensemble = True
                 self.dims = (
                     "ensembles",
                     *self.dims,
-                )                                                                                            
+                )
 
         if mask is not None:
             data_masked = data.where(~np.isnan(mask))
@@ -53,7 +50,6 @@ class Normalizer(PreprocessModuleABC):
         return data_raw
 
 
-                                                 
 @PreprocessingStepSelector.register("standardizer")
 class Standardizer(PreprocessModuleABC):
     def __init__(self, dims: list | None = None, **kwargs) -> None:
@@ -67,15 +63,13 @@ class Standardizer(PreprocessModuleABC):
 
     def fit(self, data: xr.DataArray, mask: xr.DataArray = None):
 
-        if all(
-            ["ensembles" in data.dims, self.dims is not None]
-        ):                                                                                                                                                               
+        if all(["ensembles" in data.dims, self.dims is not None]):
             if "ensembles" not in self.dims:
                 self.large_ensemble = True
                 self.dims = (
                     "ensembles",
                     *self.dims,
-                )                                                                                            
+                )
 
         if mask is not None:
             data_masked = data.where(~np.isnan(mask))
@@ -101,7 +95,6 @@ class Standardizer(PreprocessModuleABC):
         return data_raw
 
 
-                                              
 @PreprocessingStepSelector.register("anomalies")
 class AnomaliesScaler(PreprocessModuleABC):
     def __init__(self, dims: list | None = None, **kwargs) -> None:
@@ -114,20 +107,18 @@ class AnomaliesScaler(PreprocessModuleABC):
 
     def fit(self, data: xr.DataArray, mask: xr.DataArray = None):
 
-        if all(
-            ["ensembles" in data.dims, self.dims is not None]
-        ):                                                                                                                                                               
+        if all(["ensembles" in data.dims, self.dims is not None]):
             if "ensembles" not in self.dims:
                 self.large_ensemble = True
                 self.dims = (
                     "ensembles",
                     *self.dims,
-                )                                                                                            
+                )
 
         if mask is not None:
             data_masked = data.where(~np.isnan(mask))
         else:
-            data_masked = data      
+            data_masked = data
 
         self.mean = data_masked.mean(self.dims).load()
         self.fitted = True
@@ -150,9 +141,8 @@ class AnomaliesScaler(PreprocessModuleABC):
         return data_raw
 
 
-                                                    
 @PreprocessingStepSelector.register("oceannanremover")
-class Oceannanremove(PreprocessModuleABC):       
+class Oceannanremove(PreprocessModuleABC):
     def __init__(self, load_dir: Path | str = None, **kwargs):
 
         self.load_dir = load_dir
@@ -166,7 +156,7 @@ class Oceannanremove(PreprocessModuleABC):
         save: bool = False,
         save_name: str | None = None,
         save_path: Path | str = None,
-    ):                                                                    
+    ):
 
         if self.load_dir is None:
             if target is not None:
@@ -174,14 +164,10 @@ class Oceannanremove(PreprocessModuleABC):
                     coords={"lat": target["lat"], "lon": target["lon"]}
                 )
 
-                temp = target.stack(
-                    ref=["lat", "lon"]
-                ).sel(
+                temp = target.stack(ref=["lat", "lon"]).sel(
                     ref=data.stack(ref=["lat", "lon"]).dropna(dim="ref").ref
-                )                                                                               
-                self.final_locations = (
-                    temp.dropna("ref").load().ref
-                )                                                                                                  
+                )
+                self.final_locations = temp.dropna("ref").load().ref
                 self.common_to_input_and_target = True
             else:
                 self.reference_shape = xr.Dataset(
@@ -190,7 +176,7 @@ class Oceannanremove(PreprocessModuleABC):
 
                 self.final_locations = (
                     data.stack(ref=["lat", "lon"]).dropna(dim="ref").ref.load()
-                )                                                                               
+                )
                 self.common_to_input_and_target = False
 
             self.fitted = True
@@ -204,26 +190,20 @@ class Oceannanremove(PreprocessModuleABC):
 
         return self
 
-    def transform(
-        self, data: xr.DataArray
-    ):                                                               
+    def transform(self, data: xr.DataArray):
 
         conditions = ["lat" in data.dims, "lon" in data.dims]
 
-        if all(conditions):                             
+        if all(conditions):
             sampled = data.stack(ref=["lat", "lon"]).sel(ref=self.final_locations)
-        else:                                                    
+        else:
             sampled = data.sel(ref=self.final_locations)
 
         return sampled
 
-    def inverse_transform(
-        self, data: xr.DataArray
-    ):                                              
+    def inverse_transform(self, data: xr.DataArray):
 
-        return data.unstack().combine_first(
-            self.reference_shape
-        )                                                                                                                                    
+        return data.unstack().combine_first(self.reference_shape)
 
     def _load_from_memory(self, load_dir: Path | str):
 

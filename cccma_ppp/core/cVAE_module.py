@@ -56,9 +56,8 @@ class cVAEConfig(moduleConfigABC):
         self.latent_size = self.model_config.latent_size
 
         if self.prior_flow_config is not None:
-                                                                                                                    
             self.condition_dependant_flow = self.model_config.condition_dependant_latent
-                                                                                                                                                         
+
             if self.condition_dependant_flow:
                 self.model_config._resolve_flow_settings(self.condition_dependant_flow)
 
@@ -67,7 +66,7 @@ class cVAEConfig(moduleConfigABC):
         )
 
     def build(
-        self,                                                                  
+        self,
         input_shape: np.ndarray,
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
@@ -171,7 +170,7 @@ class cVAE(moduleABC):
         if self.min_posterior_variance is not None:
             self.min_posterior_variance = torch.log(
                 torch.tensor(self.min_posterior_variance)
-            )                             
+            )
 
         self.model = self.model_config.build(
             input_shape=input_shape,
@@ -211,13 +210,9 @@ class cVAE(moduleABC):
         else:
             target, target_mask = data.target, None
 
-        if (
-            target_mask is not None and target_mask.shape == target.shape
-        ):                                      
+        if target_mask is not None and target_mask.shape == target.shape:
             target_mask = target_mask.unsqueeze(0).expand_as(output.output)
-        target = target.unsqueeze(0).expand_as(
-            output.output
-        )                               
+        target = target.unsqueeze(0).expand_as(output.output)
 
         step_arguments = {"generative_modeling": True}
 

@@ -32,7 +32,6 @@ def set_seed(seed):
 
 @dataclasses.dataclass
 class TrainConfig:
-
     experiment_dir: str | None
     max_epochs: int
     train_loader: TrainDataloaderConfig | None
@@ -48,24 +47,7 @@ class TrainConfig:
     seed: int | None = None
     resume_dir: str | None = None
 
-                                                       
     def __post_init__(self):
-
-                                                                         
-                                                                                                                                                                          
-
-                                             
-
-                                         
-                                                                                                              
-
-                                                                                                  
-                                            
-                                    
-                                                                                           
-
-               
-                                                                             
 
         if self.max_epochs is None:
             self.max_epochs = float("inf")

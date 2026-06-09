@@ -44,8 +44,6 @@ class TrainerConfig:
         if validation_data_loader is not None:
             self.num_validation_batches = len(validation_data_loader)
 
-                                                               
-
         if isinstance(module, cVAE):
             assert self.beta_finder is not None, (
                 "specify beta annealing config for cVAE module."
@@ -84,7 +82,7 @@ class Trainer:
         self.batch_step = 0
         self._start_epoch = 0
         self._epochs_trained = self._start_epoch
-                                                                                                                                  
+
         self._best_validation_loss = float("inf")
         self.earlystopping_counter = 0
 
@@ -135,7 +133,7 @@ class Trainer:
             MetricsAggregator(distributed, name="Validation")
             if self.ValidationLoader is not None
             else None
-        )                                       
+        )
 
         if not self.save_checkpoint:
             self.log_root(
@@ -182,9 +180,7 @@ class Trainer:
                 validation_logs = self.validation_aggregator._dist_compute()
                 self.validation_aggregator.record_epoch(validation_logs)
 
-                validation_loss = validation_logs[
-                    "total_loss"
-                ]                                                                   
+                validation_loss = validation_logs["total_loss"]
                 improved = self._is_improved(validation_loss)
 
                 if improved:
@@ -239,9 +235,6 @@ class Trainer:
                 break
 
         if self.batch_step % self.config.gradient_accumulation_steps != 0:
-                                                                     
-                                            
-
             if not self._should_stop_early():
                 self._optimizer_step()
 
@@ -250,9 +243,7 @@ class Trainer:
                     validation_logs = self.validation_aggregator._dist_compute()
                     self.validation_aggregator.record_epoch(validation_logs, index=-1)
 
-                    validation_loss = validation_logs[
-                        "total_loss"
-                    ]                                                                   
+                    validation_loss = validation_logs["total_loss"]
                     improved = self._is_improved(validation_loss)
 
                     if improved:
@@ -283,21 +274,18 @@ class Trainer:
         self.log_root(logging.INFO, f"Training finished in {time_elapsed:.2f}s")
 
     def _train_on_epoch(self):
-                                                                                         
+
         self.TrainLoader.set_epoch(self._epochs_trained)
         self.module.train()
-
-                                                                                                                                                                                      
 
         start_time = time.time()
         for batch_id, batch in enumerate(self.TrainLoader):
             batch_loss_dict = self._train_on_batch(batch)
 
-                                                                                                                                          
             self.train_aggregator.record(batch_loss_dict)
 
         self._epochs_trained += 1
-                                                                                                                                
+
         time_elapsed = time.time() - start_time
 
         return time_elapsed
@@ -311,7 +299,7 @@ class Trainer:
             beta = self.beta_finder(self.global_step)
             kwargs = dict(beta=beta)
 
-        with torch.cuda.amp.autocast(                                 
+        with torch.cuda.amp.autocast(
             enabled=self.scaler.is_enabled() and self.device.type == "cuda"
         ):
             loss, loss_dict = self.raw_module._compute_loss(data=batch, **kwargs)
@@ -338,7 +326,6 @@ class Trainer:
         for batch_id, batch in enumerate(self.ValidationLoader):
             batch_loss_dict = self._validate_on_batch(batch)
 
-                                                                                                                                          
             self.validation_aggregator.record(batch_loss_dict)
 
     @torch.no_grad()
@@ -352,7 +339,6 @@ class Trainer:
             kwargs = dict(beta=beta)
 
         with torch.cuda.amp.autocast(
-                                           
             enabled=self.scaler.is_enabled() and self.device.type == "cuda"
         ):
             _, loss_dict = self.raw_module._compute_loss(data=batch, **kwargs)
@@ -372,8 +358,8 @@ class Trainer:
         self.scaler.update()
         new_scale = self.scaler.get_scale()
 
-        step_was_skipped = new_scale < old_scale             
-        if not step_was_skipped:                                                                                                                                                                                  
+        step_was_skipped = new_scale < old_scale
+        if not step_was_skipped:
             self.optimizer.scheduler_step()
             self.global_step += 1
 

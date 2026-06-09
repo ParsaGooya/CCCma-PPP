@@ -2,14 +2,12 @@ import abc
 
 
 class XarrayDatasetConfigABC(abc.ABC):
-
     @abc.abstractmethod
     def build(self):
         pass
 
 
 class XarrayDatasetABC(abc.ABC):
-
     @abc.abstractmethod
     def __getitem__(self, index):
         pass

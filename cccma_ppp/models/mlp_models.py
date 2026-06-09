@@ -79,7 +79,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
 
 class cVAE_MLP(cVAEmodelsABC):
     def __init__(
-        self,                                                                            
+        self,
         config: cVAE_MLPConfig,
         input_shape: np.ndarray,
         output_shape: np.ndarray | None = None,
@@ -195,7 +195,6 @@ class cVAE_MLP(cVAEmodelsABC):
             self.output_shape + self.add_condition_size + self.added_features_dim,
             *self.encoder_hidden_dims,
         ]
-                                                     
 
         layers = []
         for i in range(len(encoder_dims) - 1):
@@ -237,9 +236,8 @@ class cVAE_MLP(cVAEmodelsABC):
     ) -> cVAEOutput:
 
         x_in = x[0] if isinstance(x, (tuple, list)) else x
-        self._shape_model_output = x_in.shape                              
-                           
-                                                           
+        self._shape_model_output = x_in.shape
+
         del x_in
 
         cond_mu, cond_log_var = self._condition(
@@ -493,7 +491,7 @@ class Autoencoder(deterministicmodelsABC):
         input_shape: np.ndarray,
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
-    ):                                                                            
+    ):
 
         super().__init__(config)
         self.config = config
@@ -612,15 +610,15 @@ class Autoencoder(deterministicmodelsABC):
             x_features = None
 
         if isinstance(x, list) or isinstance(x, tuple):
-            if self.append_mode == 1:                     
+            if self.append_mode == 1:
                 out = self.encoder(torch.cat([x_in, x_features], dim=-1))
                 out = self.decoder(out)
 
-            elif self.append_mode == 2:                     
+            elif self.append_mode == 2:
                 out = self.encoder(x_in)
                 out = self.decoder(torch.cat([out, x_features], dim=-1))
 
-            elif self.append_mode == 3:                                 
+            elif self.append_mode == 3:
                 out = self.encoder(torch.cat([x_in, x_features], dim=-1))
                 out = self.decoder(torch.cat([out, x_features], dim=-1))
 

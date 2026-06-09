@@ -143,7 +143,6 @@ class PreprocessingPipeline:
 
     def _load_from_memory(self, load_dir: str | Path):
 
-                                                                               
         loaded = joblib.load(Path(load_dir))
 
         assert loaded.fitted, "the preprocessor to be loaded has to be fitted first."

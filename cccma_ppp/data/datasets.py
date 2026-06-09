@@ -544,7 +544,6 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             selection={"ensembles": config.info.coords["ensembles"]}
             if config.info.coords["ensembles"] is not None
             else None,
-                                                                                                           
             concat_dim=config.concat_dim,
             rename_dict=config.rename_dict,
         )
@@ -665,7 +664,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
 
             condition = self.config.condition.preprocessing_pipeline.transform(
                 self.condition_dataset.sel(**selection)
-            )                                        
+            )
             condition = _unwrap_data_variables(condition)
 
         if self.observation_dataset is not None:
@@ -678,7 +677,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
 
             target = self.config.observation.preprocessing_pipeline.transform(
                 self.observation_dataset.sel(**selection)
-            )                                        
+            )
             target = _unwrap_data_variables(target)
 
         year = float(self.model_indexes["year"][ind])
@@ -699,7 +698,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
 
             input = self.config.model.preprocessing_pipeline.transform(
                 self.model_dataset.sel(**selection)
-            )                                        
+            )
             input = _unwrap_data_variables(input)
 
             if self._autoencoding_input:
@@ -772,84 +771,3 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             ]
 
             return time_features
-
-                                 
-                                                 
-                                                           
-
-                                                
-
-                                                          
-                                                                      
-                   
-                                
-
-                                                                  
-                                                                                                           
-
-                                                                 
-                                                                             
-
-                                                                                                                                                                 
-                                                           
-
-                                                  
-                                                              
-                                                                    
-                                              
-                                                    
-
-                                                                                                                                
-                                                                                                             
-
-                                                                                                                                                                  
-                                                     
-
-                                                              
-
-                                                                                                                                   
-                               
-
-               
-                                                                                                                    
-                                                                             
-                                                                                                                                                     
-                                                   
-
-                                          
-                                
-
-                                                                                                        
-                                   
-
-                                                                                                             
-                                                                         
-
-                                            
-                                                                           
-                                                                                           
-
-                                                
-                                      
-
-                                                                                                                                                    
-                                                          
-                                                          
-                                                          
-
-                                                           
-                                                                                                  
-                                      
-                                                                                                                                       
-               
-                                  
-
-                                                                                         
-                                                                                           
-                                                                                              
-                                                                   
-
-                                  
-                                        
-               
-                             

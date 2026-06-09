@@ -40,8 +40,8 @@ class WeightedMSE(lossABC):
             assert low_ress_kernel_size % 2 == 1, "choose odd kernel size"
 
             if not has_channels:
-                weights_mask = weights_mask.unsqueeze(0)           
-                weights = weights.unsqueeze(0)           
+                weights_mask = weights_mask.unsqueeze(0)
+                weights = weights.unsqueeze(0)
 
             if self.num_output_dimensions == 1:
                 self.average_pool = F.avg_pool1d
@@ -55,9 +55,7 @@ class WeightedMSE(lossABC):
                 )
 
             weights_mask = self._downsample(weights_mask)
-            weights_mask = (
-                weights_mask == 1
-            ).float()                                                                  
+            weights_mask = (weights_mask == 1).float()
             weights = self._downsample(weights)
 
             if not has_channels:
@@ -69,9 +67,7 @@ class WeightedMSE(lossABC):
 
     def _downsample(self, tensor: torch.Tensor) -> torch.Tensor:
         squeeze = False
-        if (
-            len(tensor.shape) == self.num_output_dimensions + 1
-        ):                                            
+        if len(tensor.shape) == self.num_output_dimensions + 1:
             tensor = tensor.unsqueeze(0)
             squeeze = True
 
@@ -88,8 +84,8 @@ class WeightedMSE(lossABC):
 
     def forward(
         self,
-        data: torch.Tensor,                              
-        target: torch.Tensor,                        
+        data: torch.Tensor,
+        target: torch.Tensor,
         target_mask: torch.Tensor | None = None,
         generative_modeling: bool = False,
         generator: bool = False,
@@ -108,7 +104,7 @@ class WeightedMSE(lossABC):
         y_hat = data
 
         if self.low_ress_kernel_size is not None:
-            if generative_modeling:                                                                                                 
+            if generative_modeling:
                 if target_mask is not None and target_mask.shape == y.shape:
                     target_mask = torch.flatten(target_mask, start_dim=0, end_dim=1)
                 y = torch.flatten(y, start_dim=0, end_dim=1)
@@ -152,7 +148,7 @@ class WeightedMSE(lossABC):
             loss = torch.sum(
                 loss,
                 dim=tuple(-i for i in np.arange(1, self.num_output_dimensions + 1 + 1)),
-            ).mean()                                          
+            ).mean()
 
         else:
             raise NotImplementedError(
@@ -189,8 +185,8 @@ class WeightedCRPS(lossABC):
             assert low_ress_kernel_size % 2 == 1, "choose odd kernel size"
 
             if not has_channels:
-                weights_mask = weights_mask.unsqueeze(0)           
-                weights = weights.unsqueeze(0)           
+                weights_mask = weights_mask.unsqueeze(0)
+                weights = weights.unsqueeze(0)
 
             if self.num_output_dimensions == 1:
                 self.average_pool = F.avg_pool1d
@@ -204,9 +200,7 @@ class WeightedCRPS(lossABC):
                 )
 
             weights_mask = self._downsample(weights_mask)
-            weights_mask = (
-                weights_mask == 1
-            ).float()                                                                  
+            weights_mask = (weights_mask == 1).float()
             weights = self._downsample(weights)
 
             if not has_channels:
@@ -219,9 +213,7 @@ class WeightedCRPS(lossABC):
 
     def _downsample(self, tensor: torch.Tensor) -> torch.Tensor:
         squeeze = False
-        if (
-            len(tensor.shape) == self.num_output_dimensions + 1
-        ):                                            
+        if len(tensor.shape) == self.num_output_dimensions + 1:
             tensor = tensor.unsqueeze(0)
             squeeze = True
 
@@ -238,8 +230,8 @@ class WeightedCRPS(lossABC):
 
     def forward(
         self,
-        data: torch.Tensor,                                                                          
-        target: torch.Tensor,                         
+        data: torch.Tensor,
+        target: torch.Tensor,
         target_mask: torch.Tensor | None = None,
         generative_modeling: bool = False,
         generator: bool = True,
@@ -251,13 +243,11 @@ class WeightedCRPS(lossABC):
         )
         _check_generator_structure(data, target)
 
-        if generative_modeling:                                                                                       
+        if generative_modeling:
             if target_mask is not None and target_mask.shape == target.shape:
                 target_mask = torch.flatten(target_mask, start_dim=0, end_dim=1)
             y = torch.flatten(target, start_dim=0, end_dim=1)
-            y_hat = torch.flatten(
-                data, start_dim=1, end_dim=2
-            )                                                                                   
+            y_hat = torch.flatten(data, start_dim=1, end_dim=2)
         else:
             y = target
             y_hat = data
@@ -271,9 +261,7 @@ class WeightedCRPS(lossABC):
                 target_mask = self._downsample(target_mask)
 
             E, B = y_hat.shape[:2]
-            y_hat = y_hat.reshape(
-                E * B, *y_hat.shape[2:]
-            )                                                                                       
+            y_hat = y_hat.reshape(E * B, *y_hat.shape[2:])
             y_hat = self._downsample(y_hat)
             y_hat = y_hat.reshape(E, B, *y_hat.shape[1:])
 
@@ -321,7 +309,7 @@ class WeightedCRPS(lossABC):
             loss = torch.sum(
                 loss,
                 dim=tuple(-i for i in np.arange(1, self.num_output_dimensions + 1 + 1)),
-            ).mean()                                          
+            ).mean()
 
         else:
             raise NotImplementedError(
@@ -347,18 +335,12 @@ class Frobenius_norm(lossABC):
         self.num_output_dimensions = num_output_dimensions
         self.reduction = reduction
         self.output_size = np.prod(weights.shape[-self.num_output_dimensions :])
-                                                        
-                                                                          
-                                
-                                                                                                                                                                               
-                                                      
-               
-                                 
+
         assert self.covariance_dim in ["spatial", "channel"]
 
     def forward(
         self,
-        data: torch.Tensor,                                                                                                       
+        data: torch.Tensor,
         target: torch.Tensor,
         generative_modeling: bool = False,
         generator: bool = False,
@@ -374,7 +356,7 @@ class Frobenius_norm(lossABC):
         y = torch.flatten(target, start_dim=-self.num_output_dimensions, end_dim=-1)
         y_hat = torch.flatten(data, start_dim=-self.num_output_dimensions, end_dim=-1)
 
-        if generative_modeling:                                                                                             
+        if generative_modeling:
             y = torch.flatten(y, start_dim=0, end_dim=1)
             y_hat = torch.flatten(y_hat, start_dim=0, end_dim=1)
 
@@ -416,14 +398,10 @@ class Frobenius_norm(lossABC):
 
         if self.reduction.lower() == "mean":
             loss = loss / output_size
-                                   
-                                                                          
-                   
+
             loss = loss.mean()
 
         elif self.reduction.lower() == "sum":
-                                   
-                                                                   
             loss = loss.sum()
 
         return loss

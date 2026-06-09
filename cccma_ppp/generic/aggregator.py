@@ -176,7 +176,7 @@ class MetricsAggregator:
         loss_kinds: set[str] = set()
         epochs_range = np.arange(num_epochs - loss_lengths + 1, num_epochs + 1)
 
-        rng = random.Random()                                   
+        rng = random.Random()
         random_colors = [
             "tab:green",
             "tab:blue",
