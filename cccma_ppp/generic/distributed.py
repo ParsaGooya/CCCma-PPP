@@ -4,11 +4,12 @@ import os
 
 
 class Distributed:
-    _instance = None
 
+    _instance = None
     def __init__(self):
 
-        self.distributed = "RANK" in os.environ and "WORLD_SIZE" in os.environ
+
+        self.distributed = ("RANK" in os.environ and "WORLD_SIZE" in os.environ)
 
         if self.distributed:
             self.rank = int(os.environ["RANK"])
@@ -45,11 +46,11 @@ class Distributed:
         if self.distributed:
             dist.barrier()
 
-    def all_reduce_sum(self, local: torch.Tensor):
+    def all_reduce_sum(self, local : torch.Tensor):
 
         if dist.is_available() and dist.is_initialized():
-            dist.all_reduce(local, op=dist.ReduceOp.SUM)
+            dist.all_reduce(local, op=dist.ReduceOp.SUM )
 
-    def broadcast(self, lcoal: torch.Tensor, src=0):
+    def broadcast(self, lcoal : torch.Tensor, src = 0 ):
         if dist.is_available() and dist.is_initialized():
             dist.broadcast(lcoal, src=src)
