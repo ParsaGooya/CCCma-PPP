@@ -243,7 +243,7 @@ class cVAE(moduleABC):
         total_loss = reconstruction_loss + beta * kld_loss
 
         if self.combined_CGCN_weight > 0:
-            output_CGCN = self.preidct(data)
+            output_CGCN = self.predict(data)
             reconstruction_loss_CGCN, _ = self.criterion(
                 output_CGCN.output,
                 target,
@@ -274,7 +274,7 @@ class cVAE(moduleABC):
             sample_size=sample_size,
         )
 
-    def preidct(self, data: BatchData, sample_size=1) -> cVAEOutput:
+    def predict(self, data: BatchData, sample_size=1) -> cVAEOutput:
 
         return self.model.predict(
             condition=data.input,

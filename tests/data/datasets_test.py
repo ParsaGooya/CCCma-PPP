@@ -1199,7 +1199,6 @@ def test_dataset_get_target_shape_autoencoding(monkeypatch):
 
     ds = cfg.build(years=[2000])
 
-    # Source get_target_shape() returns self.input_shape in autoencoding mode.
     ds.input_shape = ds.get_input_shape()
 
     assert ds.get_target_shape() == ds.get_input_shape()

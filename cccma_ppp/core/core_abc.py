@@ -24,7 +24,7 @@ class moduleABC(nn.Module, abc.ABC):
         pass
 
     @abc.abstractmethod
-    def preidct(self):
+    def predict(self):
         pass
 
     @final

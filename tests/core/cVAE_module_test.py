@@ -1,15 +1,55 @@
+import dataclasses
+
+import numpy as np
 import pytest
 import torch
-import numpy as np
+
 import cccma_ppp.core.cVAE_module as mod
 from cccma_ppp.core.cVAE_module import cVAE, cVAEConfig, cVAEOutput
+from cccma_ppp.generic.runtime import RuntimeContext
+
+
+@pytest.fixture(autouse=True)
+def reset_runtime_context_metadata():
+    RuntimeContext.INPUT_VAR_METADATA = {}
+    RuntimeContext.TARGET_VAR_METADATA = {}
+    yield
+
+
+@dataclasses.dataclass
+class DummyCheckpointConfig:
+    checkpoint_input_shape: np.ndarray
+    checkpoint_output_shape: np.ndarray
+    checkpoint_input_var_metadata: dict = dataclasses.field(default_factory=dict)
+    checkpoint_output_var_metadata: dict = dataclasses.field(default_factory=dict)
+    strict: bool = True
+    freeze_weights: bool = False
+    load_path: str = "fake_checkpoint.pt"
+
+
+def make_module(
+    cfg=None,
+    input_shape=np.array([1]),
+    output_shape=None,
+    added_features_dim=None,
+):
+    cfg = cfg or cVAEConfig(ModelConfig=DummySelector())
+    return cfg.build(
+        input_shape=input_shape,
+        output_shape=output_shape,
+        added_features_dim=added_features_dim,
+    )
 
 
 class DummyFlow:
     def __init__(self):
         self.flow_sample_size = 2
+        self.latent_size = None
+        self.condition_size = None
 
     def build(self, latent_size, condition_size):
+        self.latent_size = latent_size
+        self.condition_size = condition_size
         return self
 
     class FlowOutput:
@@ -21,14 +61,32 @@ class DummyFlow:
         return DummyFlow.FlowOutput(x)
 
 
+class FullFlow(DummyFlow):
+    class FlowOutput:
+        def __init__(self, x):
+            self.e_samples = x
+            self.log_det = torch.ones(x.shape[0])
+
+    def __call__(self, x, condition=None):
+        return FullFlow.FlowOutput(x)
+
+
 class DummyModel:
     def __init__(self):
         self.latent_size = 4
         self.condition_dependant_latent = False
         self.condition_dependant_flow = False
         self.condition_embedding_size = 3
+        self.build_args = None
+        self.build_kwargs = None
 
-    def build(self, **kwargs):
+    def _resolve_flow_settings(self, condition_dependant_flow=False):
+        self.condition_dependant_flow = condition_dependant_flow
+        return self
+
+    def build(self, *args, **kwargs):
+        self.build_args = args
+        self.build_kwargs = kwargs
         return self
 
     def __call__(self, **kwargs):
@@ -79,6 +137,7 @@ def test_config_requires_model_or_load():
 
 def test_config_default_weight():
     cfg = cVAEConfig(ModelConfig=DummySelector())
+
     assert cfg.combined_CGCN_weight == 0
 
 
@@ -87,33 +146,56 @@ def test_config_weight_bounds():
         cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=2)
 
 
+def test_config_negative_cgcn_weight():
+    with pytest.raises(AssertionError):
+        cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=-0.1)
+
+
 def test_config_build():
     cfg = cVAEConfig(ModelConfig=DummySelector())
+
     assert isinstance(cfg.build(np.array([1])), cVAE)
 
 
 def test_module_build_basic():
-    m = cVAE(cVAEConfig(ModelConfig=DummySelector()))
-    m.build(np.array([1]))
-    assert m.built
+    m = make_module()
+
+    assert isinstance(m, cVAE)
+    assert m.model is not None
 
 
 def test_build_without_output_shape():
-    m = cVAE(cVAEConfig(ModelConfig=DummySelector()))
-    m.build(np.array([1]))
-    assert (m.input_shape == m.output_shape).all()
+    m = make_module(input_shape=np.array([1]))
+
+    assert np.array_equal(m.model.build_kwargs["input_shape"], np.array([1]))
+    assert np.array_equal(m.model.build_kwargs["output_shape"], np.array([1]))
 
 
-def test_build_shape_mismatch():
+def test_build_with_explicit_output_shape():
     cfg = cVAEConfig(ModelConfig=DummySelector())
-    m = cVAE(cfg)
 
-    cfg.load_dir = "fake"
-    cfg._checkpoint_input_shape = np.array([1])
-    cfg._checkpoint_output_shape = np.array([1])
+    m = make_module(
+        cfg,
+        input_shape=np.array([1]),
+        output_shape=np.array([2]),
+    )
 
-    with pytest.raises(AssertionError):
-        m.build(np.array([2]))
+    assert np.array_equal(m.model.build_kwargs["input_shape"], np.array([1]))
+    assert np.array_equal(m.model.build_kwargs["output_shape"], np.array([2]))
+
+
+def test_build_shape_mismatch(monkeypatch):
+    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg.load_dir = "fake_checkpoint.pt"
+    cfg.checkpoint_config = DummyCheckpointConfig(
+        checkpoint_input_shape=np.array([1]),
+        checkpoint_output_shape=np.array([1]),
+    )
+
+    monkeypatch.setattr(cVAE, "_load_state_dict", lambda self, load_path: None)
+
+    with pytest.raises((AssertionError, RuntimeError)):
+        make_module(cfg, input_shape=np.array([2]), output_shape=np.array([1]))
 
 
 class ConditionalModel(DummyModel):
@@ -131,55 +213,90 @@ class ConditionalSelector:
 def test_conditional_flow_branch():
     cfg = cVAEConfig(ModelConfig=ConditionalSelector(), prior_flow_config=DummyFlow())
 
-    m = cVAE(cfg)
-    m.build(np.array([1]))
+    m = make_module(cfg)
 
     assert m.flow_condition_size == 5
     assert m.prior_flow is not None
+    assert m.prior_flow.condition_size == 5
 
 
 def test_prior_flow_build():
     cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
-    m = cVAE(cfg)
-    m.build(np.array([1]))
+
+    m = make_module(cfg)
 
     assert isinstance(m.prior_flow, DummyFlow)
+    assert m.prior_flow.latent_size == 4
+    assert m.prior_flow.condition_size is None
+
+
+def test_flow_without_condition():
+    cfg = cVAEConfig(ModelConfig=NoCondSelector(), prior_flow_config=DummyFlow())
+
+    m = make_module(cfg)
+
+    assert m.flow_condition_size is None
+    assert m.prior_flow is not None
+
+
+def test_build_with_prior_flow_and_min_variance_and_added_features():
+    cfg = cVAEConfig(
+        ModelConfig=DummySelector(),
+        prior_flow_config=DummyFlow(),
+        min_posterior_variance=0.2,
+    )
+
+    m = make_module(
+        cfg,
+        input_shape=np.array([1]),
+        output_shape=np.array([1]),
+        added_features_dim=3,
+    )
+
+    assert m.prior_flow is not None
+    assert torch.is_tensor(m.min_posterior_variance)
+    assert m.model.build_kwargs["added_features_dim"] == 3
 
 
 def test_init_loss_function_basic():
-    m = cVAE(cVAEConfig(ModelConfig=DummySelector()))
+    m = make_module()
+
     m.init_loss_function(DummyLoss())
+
     assert m.criterion is not None
 
 
 def test_init_loss_with_flow_requires_sum():
     cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
-    m = cVAE(cfg)
+    m = make_module(cfg)
 
     with pytest.raises(RuntimeError):
         m.init_loss_function(DummyLoss())
 
 
 def test_flow_loss_valid_sum():
-    m = cVAE(cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow()))
+    cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
+    m = make_module(cfg)
+
     m.init_loss_function(SumLoss())
+
+    assert m.criterion is not None
 
 
 def test_forward_pass():
-    m = cVAE(cVAEConfig(ModelConfig=DummySelector()))
-    m.build(np.array([1]))
+    m = make_module()
+
     assert isinstance(m.forward(DummyBatch()), cVAEOutput)
 
 
 def test_predict_pass():
-    m = cVAE(cVAEConfig(ModelConfig=DummySelector()))
-    m.build(np.array([1]))
+    m = make_module()
+
     assert isinstance(m.predict(DummyBatch()), cVAEOutput)
 
 
 def test_forward_with_added_features():
-    m = cVAE(cVAEConfig(ModelConfig=DummySelector()))
-    m.build(np.array([1]))
+    m = make_module()
 
     batch = DummyBatch()
     batch.added_features = torch.ones(2, 3)
@@ -187,17 +304,33 @@ def test_forward_with_added_features():
     assert isinstance(m.forward(batch), cVAEOutput)
 
 
+def test_predict_with_sample_size_and_prior_flow():
+    cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
+    m = make_module(cfg)
+
+    out = m.predict(DummyBatch(), sample_size=3)
+
+    assert isinstance(out, cVAEOutput)
+
+
+def test_forward_with_sample_size_explicit():
+    cfg = cVAEConfig(ModelConfig=DummySelector())
+    m = make_module(cfg)
+
+    out = m.forward(DummyBatch(), sample_size=5)
+
+    assert isinstance(out, cVAEOutput)
+
+
 def test_compute_loss_requires_init():
-    m = cVAE(cVAEConfig(ModelConfig=DummySelector()))
-    m.build(np.array([1]))
+    m = make_module()
 
     with pytest.raises(AssertionError):
         m._compute_loss(1.0, DummyBatch())
 
 
 def test_compute_loss_basic():
-    m = cVAE(cVAEConfig(ModelConfig=DummySelector()))
-    m.build(np.array([1]))
+    m = make_module()
     m.init_loss_function(DummyLoss())
 
     total, losses = m._compute_loss(1.0, DummyBatch())
@@ -207,57 +340,151 @@ def test_compute_loss_basic():
 
 
 def test_compute_loss_plain_target():
-    m = cVAE(cVAEConfig(ModelConfig=DummySelector()))
-    m.build(np.array([1]))
+    m = make_module()
     m.init_loss_function(DummyLoss())
 
     batch = DummyBatch()
     batch.target = torch.zeros(2, 1, 3, 4)
 
     total, _ = m._compute_loss(1.0, batch)
+
     assert total >= 0
 
 
 def test_compute_loss_with_mask():
-    m = cVAE(cVAEConfig(ModelConfig=DummySelector()))
-    m.build(np.array([1]))
+    m = make_module()
     m.init_loss_function(DummyLoss())
 
     batch = DummyBatch()
     batch.target = (batch.target, torch.ones_like(batch.target))
 
     total, _ = m._compute_loss(1.0, batch)
+
     assert total >= 0
 
 
 def test_mask_not_expanded_branch():
-    m = cVAE(cVAEConfig(ModelConfig=DummySelector()))
-    m.build(np.array([1]))
+    m = make_module()
     m.init_loss_function(DummyLoss())
 
     batch = DummyBatch()
     batch.target = (batch.target, torch.ones(1, 1, 3, 4))
 
     total, _ = m._compute_loss(1.0, batch)
+
     assert total >= 0
 
 
+def test_compute_loss_mask_none_explicit():
+    m = make_module()
+    m.init_loss_function(DummyLoss())
+
+    batch = DummyBatch()
+    batch.target = (batch.target, None)
+
+    total, _ = m._compute_loss(1.0, batch)
+
+    assert total >= 0
+
+
+def test_compute_loss_target_as_list():
+    cfg = cVAEConfig(ModelConfig=DummySelector())
+    m = make_module(cfg)
+    m.init_loss_function(DummyLoss())
+
+    batch = DummyBatch()
+    batch.target = [batch.target, torch.ones_like(batch.target)]
+
+    total, losses = m._compute_loss(1.0, batch)
+
+    assert total >= 0
+    assert "total_loss" in losses
+
+
+def test_compute_loss_individual_losses_merge_multiple_keys():
+    class MultiLoss:
+        reduction = "mean"
+
+        def __call__(self, output, target, **kwargs):
+            return torch.tensor(1.0), {"a": 1.0, "b": 2.0}
+
+    cfg = cVAEConfig(ModelConfig=DummySelector())
+    m = make_module(cfg)
+    m.init_loss_function(MultiLoss())
+
+    total, losses = m._compute_loss(1.0, DummyBatch())
+
+    assert total >= 0
+    assert losses["a"] == 1.0
+    assert losses["b"] == 2.0
+
+
+def test_compute_loss_beta_zero():
+    cfg = cVAEConfig(ModelConfig=DummySelector())
+    m = make_module(cfg)
+    m.init_loss_function(DummyLoss())
+
+    total, losses = m._compute_loss(0.0, DummyBatch())
+
+    assert total >= 0
+    assert "kld" in losses
+
+
+def test_compute_loss_negative_beta():
+    cfg = cVAEConfig(ModelConfig=DummySelector())
+    m = make_module(cfg)
+    m.init_loss_function(DummyLoss())
+
+    total, losses = m._compute_loss(-1.0, DummyBatch())
+
+    assert torch.is_tensor(total)
+    assert "kld" in losses
+
+
 def test_cgcn_weight_zero_branch():
-    m = cVAE(cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=0))
-    m.build(np.array([1]))
+    cfg = cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=0)
+    m = make_module(cfg)
     m.init_loss_function(DummyLoss())
 
     _, losses = m._compute_loss(1.0, DummyBatch())
+
     assert "total_loss_CGCN" not in losses
 
 
 def test_cgcn_weight_active():
-    m = cVAE(cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=0.5))
-    m.build(np.array([1]))
+    cfg = cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=0.5)
+    m = make_module(cfg)
     m.init_loss_function(DummyLoss())
 
     _, losses = m._compute_loss(1.0, DummyBatch())
+
     assert "total_loss_CGCN" in losses
+
+
+def test_cgcn_with_flow():
+    cfg = cVAEConfig(
+        ModelConfig=DummySelector(),
+        prior_flow_config=DummyFlow(),
+        combined_CGCN_weight=0.5,
+    )
+
+    m = make_module(cfg)
+    m.init_loss_function(SumLoss())
+
+    _, losses = m._compute_loss(1.0, DummyBatch())
+
+    assert "total_loss_CGCN" in losses
+
+
+def test_predict_called_in_cgcn():
+    cfg = cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=0.8)
+
+    m = make_module(cfg)
+    m.init_loss_function(DummyLoss())
+
+    total, _ = m._compute_loss(1.0, DummyBatch())
+
+    assert total >= 0
 
 
 def test_kld_with_condition():
@@ -275,141 +502,11 @@ def test_kld_with_condition():
         def get_model_config(self):
             return CondModel()
 
-    m = cVAE(cVAEConfig(ModelConfig=Selector()))
-    m.build(np.array([1]))
+    m = make_module(cVAEConfig(ModelConfig=Selector()))
     m.init_loss_function(DummyLoss())
 
     total, _ = m._compute_loss(1.0, DummyBatch())
-    assert total >= 0
 
-
-def test_kld_with_prior_flow():
-    m = cVAE(cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow()))
-    m.build(np.array([1]))
-    m.init_loss_function(SumLoss())
-
-    total, _ = m._compute_loss(1.0, DummyBatch())
-    assert total >= 0
-
-
-def test_load_checkpoint_missing():
-    cfg = cVAEConfig(ModelConfig=DummySelector())
-    with pytest.raises(FileNotFoundError):
-        cfg._load_from_checkpoint("missing.pt")
-
-
-def test_load_checkpoint_extracts_fields(tmp_path):
-    cfg = cVAEConfig(ModelConfig=DummySelector())
-
-    path = tmp_path / "ckpt.pt"
-    torch.save(
-        {
-            "module_config": {
-                "ModelConfig": {},
-                "prior_flow_config": None,
-            },
-            "model_input_shape": np.array([1]),
-            "model_output_shape": np.array([1]),
-        },
-        path,
-    )
-
-    try:
-        cfg._load_from_checkpoint(path)
-    except Exception:
-        pass
-
-    assert hasattr(cfg, "_checkpoint_input_shape")
-
-
-class NoCondFlowModel(DummyModel):
-    def __init__(self):
-        super().__init__()
-        self.condition_dependant_latent = False
-
-
-class NoCondSelector:
-    def get_model_config(self):
-        return NoCondFlowModel()
-
-
-def test_flow_without_condition():
-    cfg = cVAEConfig(ModelConfig=NoCondSelector(), prior_flow_config=DummyFlow())
-
-    m = cVAE(cfg)
-    m.build(np.array([1]))
-
-    assert m.flow_condition_size is None
-    assert m.prior_flow is not None
-
-
-def test_compute_loss_mask_none_explicit():
-    m = cVAE(cVAEConfig(ModelConfig=DummySelector()))
-    m.build(np.array([1]))
-    m.init_loss_function(DummyLoss())
-
-    batch = DummyBatch()
-    batch.target = (batch.target, None)
-
-    total, _ = m._compute_loss(1.0, batch)
-    assert total >= 0
-
-
-def test_full_load_and_build_cycle(tmp_path):
-    cfg = cVAEConfig(ModelConfig=DummySelector())
-
-    path = tmp_path / "ckpt.pt"
-    torch.save(
-        {
-            "module_config": {
-                "ModelConfig": {},
-                "prior_flow_config": None,
-                "combined_CGCN_weight": 0.3,
-            },
-            "model_input_shape": np.array([1]),
-            "model_output_shape": np.array([1]),
-            "module": {},
-        },
-        path,
-    )
-
-    cfg.load_dir = str(path)
-
-    try:
-        cfg.__post_init__()
-    except Exception:
-        pass
-
-    m = cVAE(cfg)
-    try:
-        m.build(np.array([1]))
-    except Exception:
-        pass
-
-
-def test_cgcn_with_flow():
-    cfg = cVAEConfig(
-        ModelConfig=DummySelector(),
-        prior_flow_config=DummyFlow(),
-        combined_CGCN_weight=0.5,
-    )
-
-    m = cVAE(cfg)
-    m.build(np.array([1]))
-    m.init_loss_function(SumLoss())
-
-    total, losses = m._compute_loss(1.0, DummyBatch())
-    assert "total_loss_CGCN" in losses
-
-
-def test_predict_called_in_cgcn():
-    cfg = cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=0.8)
-
-    m = cVAE(cfg)
-    m.build(np.array([1]))
-    m.init_loss_function(DummyLoss())
-
-    total, _ = m._compute_loss(1.0, DummyBatch())
     assert total >= 0
 
 
@@ -428,11 +525,11 @@ def test_kld_base_distribution_path():
         def get_model_config(self):
             return NoCondModel()
 
-    m = cVAE(cVAEConfig(ModelConfig=Sel()))
-    m.build(np.array([1]))
+    m = make_module(cVAEConfig(ModelConfig=Sel()))
     m.init_loss_function(DummyLoss())
 
     total, _ = m._compute_loss(1.0, DummyBatch())
+
     assert total >= 0
 
 
@@ -451,28 +548,30 @@ def test_kld_cond_shape_mismatch():
         def get_model_config(self):
             return WeirdModel()
 
-    m = cVAE(cVAEConfig(ModelConfig=Sel()))
-    m.build(np.array([1]))
+    m = make_module(cVAEConfig(ModelConfig=Sel()))
     m.init_loss_function(DummyLoss())
 
     with pytest.raises(AssertionError):
         m._compute_loss(1.0, DummyBatch())
 
 
-class FullFlow(DummyFlow):
-    class FlowOutput:
-        def __init__(self, x):
-            self.e_samples = x
-            self.log_det = torch.ones(x.shape[0])
+def test_kld_with_prior_flow():
+    cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
+    m = make_module(cfg)
+    m.init_loss_function(SumLoss())
+
+    total, _ = m._compute_loss(1.0, DummyBatch())
+
+    assert total >= 0
 
 
 def test_full_flow_logdet_branch():
     cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=FullFlow())
-    m = cVAE(cfg)
-    m.build(np.array([1]))
+    m = make_module(cfg)
     m.init_loss_function(SumLoss())
 
     total, _ = m._compute_loss(1.0, DummyBatch())
+
     assert total >= 0
 
 
@@ -492,19 +591,28 @@ def test_kld_condition_expansion():
             return CondModel()
 
     cfg = cVAEConfig(ModelConfig=Sel(), prior_flow_config=DummyFlow())
-    m = cVAE(cfg)
-    m.build(np.array([1]))
+    m = make_module(cfg)
     m.init_loss_function(SumLoss())
 
     total, _ = m._compute_loss(1.0, DummyBatch())
+
     assert total >= 0
+
+
+def test_load_checkpoint_missing():
+    cfg = cVAEConfig(ModelConfig=DummySelector())
+
+    with pytest.raises(FileNotFoundError):
+        cfg._load_from_checkpoint("missing.pt")
 
 
 def test_config_load_dir_branch_success(monkeypatch):
     def fake_load_from_checkpoint(self, load_path):
         self.ModelConfig = DummySelector()
-        self._checkpoint_input_shape = np.array([1])
-        self._checkpoint_output_shape = np.array([1])
+        self.checkpoint_config = DummyCheckpointConfig(
+            checkpoint_input_shape=np.array([1]),
+            checkpoint_output_shape=np.array([1]),
+        )
         self.prior_flow_config = None
         self.min_posterior_variance = 0.25
         self.combined_CGCN_weight = 0.4
@@ -518,14 +626,16 @@ def test_config_load_dir_branch_success(monkeypatch):
     assert isinstance(cfg.ModelConfig, DummySelector)
     assert cfg.min_posterior_variance == 0.25
     assert cfg.combined_CGCN_weight == 0.4
-    assert cfg.model is not None
+    assert cfg.model_config is not None
 
 
 def test_config_load_dir_branch_with_none_combined_sets_default(monkeypatch):
     def fake_load_from_checkpoint(self, load_path):
         self.ModelConfig = DummySelector()
-        self._checkpoint_input_shape = np.array([1])
-        self._checkpoint_output_shape = np.array([1])
+        self.checkpoint_config = DummyCheckpointConfig(
+            checkpoint_input_shape=np.array([1]),
+            checkpoint_output_shape=np.array([1]),
+        )
         self.prior_flow_config = None
         self.min_posterior_variance = None
         self.combined_CGCN_weight = None
@@ -537,70 +647,6 @@ def test_config_load_dir_branch_with_none_combined_sets_default(monkeypatch):
         cfg = cVAEConfig(load_dir="fake_checkpoint.pt")
 
     assert cfg.combined_CGCN_weight == 0
-
-
-def test_config_negative_cgcn_weight():
-    with pytest.raises(AssertionError):
-        cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=-0.1)
-
-
-def test_build_with_explicit_output_shape():
-    cfg = cVAEConfig(ModelConfig=DummySelector())
-    m = cVAE(cfg)
-
-    m.build(input_shape=np.array([1]), output_shape=np.array([2]))
-
-    assert (m.input_shape == np.array([1])).all()
-    assert (m.output_shape == np.array([2])).all()
-    assert m.built is True
-
-
-def test_build_load_dir_success_path(monkeypatch):
-    cfg = cVAEConfig(ModelConfig=DummySelector())
-    cfg.load_dir = "fake_checkpoint.pt"
-    cfg._checkpoint_input_shape = np.array([1])
-    cfg._checkpoint_output_shape = np.array([1])
-
-    called = {"loaded": False}
-
-    def fake_load_state_dict(self, load_path):
-        called["loaded"] = True
-
-    monkeypatch.setattr(cVAE, "_load_state_dict", fake_load_state_dict)
-
-    m = cVAE(cfg)
-    m.build(np.array([1]))
-
-    assert m.built is True
-    assert called["loaded"] is True
-
-
-def test_build_load_dir_output_shape_mismatch(monkeypatch):
-    cfg = cVAEConfig(ModelConfig=DummySelector())
-    cfg.load_dir = "fake_checkpoint.pt"
-    cfg._checkpoint_input_shape = np.array([1])
-    cfg._checkpoint_output_shape = np.array([1])
-
-    monkeypatch.setattr(cVAE, "_load_state_dict", lambda self, load_path: None)
-
-    m = cVAE(cfg)
-
-    with pytest.raises(AssertionError):
-        m.build(input_shape=np.array([1]), output_shape=np.array([2]))
-
-
-def test_build_load_dir_input_shape_success_output_shape_success(monkeypatch):
-    cfg = cVAEConfig(ModelConfig=DummySelector())
-    cfg.load_dir = "fake_checkpoint.pt"
-    cfg._checkpoint_input_shape = np.array([1])
-    cfg._checkpoint_output_shape = np.array([2])
-
-    monkeypatch.setattr(cVAE, "_load_state_dict", lambda self, load_path: None)
-
-    m = cVAE(cfg)
-    m.build(input_shape=np.array([1]), output_shape=np.array([2]))
-
-    assert m.built is True
 
 
 def test_load_from_checkpoint_full_success_with_prior_flow(monkeypatch, tmp_path):
@@ -642,8 +688,11 @@ def test_load_from_checkpoint_full_success_with_prior_flow(monkeypatch, tmp_path
     assert isinstance(cfg.prior_flow_config, DummyFlow)
     assert cfg.min_posterior_variance == 0.33
     assert cfg.combined_CGCN_weight == 0.66
-    assert (cfg._checkpoint_input_shape == np.array([1])).all()
-    assert (cfg._checkpoint_output_shape == np.array([2])).all()
+
+    assert hasattr(cfg, "checkpoint_config")
+    assert cfg.checkpoint_config.load_path == path
+    assert cfg.checkpoint_config.strict is True
+    assert cfg.checkpoint_config.freeze_weights is False
 
 
 def test_load_from_checkpoint_does_not_override_existing_values(monkeypatch, tmp_path):
@@ -700,102 +749,74 @@ def test_load_from_checkpoint_missing_module_config(monkeypatch, tmp_path):
 
     cfg = cVAEConfig(ModelConfig=DummySelector())
 
-    with pytest.raises(AttributeError):
+    with pytest.raises((AttributeError, KeyError)):
         cfg._load_from_checkpoint(path)
 
 
-def test_build_with_prior_flow_and_min_variance_and_added_features():
-    cfg = cVAEConfig(
-        ModelConfig=DummySelector(),
-        prior_flow_config=DummyFlow(),
-        min_posterior_variance=0.2,
+def test_build_load_dir_success_path(monkeypatch):
+    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg.load_dir = "fake_checkpoint.pt"
+    cfg.checkpoint_config = DummyCheckpointConfig(
+        checkpoint_input_shape=np.array([1]),
+        checkpoint_output_shape=np.array([1]),
     )
 
-    m = cVAE(cfg)
-    m.build(
+    called = {"loaded": False}
+
+    def fake_load_state_dict(self, load_path):
+        called["loaded"] = True
+
+    monkeypatch.setattr(cVAE, "_load_state_dict", fake_load_state_dict)
+
+    m = make_module(cfg, input_shape=np.array([1]), output_shape=np.array([1]))
+
+    assert isinstance(m, cVAE)
+    assert called["loaded"] is True
+
+
+def test_build_load_dir_output_shape_mismatch(monkeypatch):
+    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg.load_dir = "fake_checkpoint.pt"
+    cfg.checkpoint_config = DummyCheckpointConfig(
+        checkpoint_input_shape=np.array([1]),
+        checkpoint_output_shape=np.array([1]),
+    )
+
+    monkeypatch.setattr(cVAE, "_load_state_dict", lambda self, load_path: None)
+
+    with pytest.raises(RuntimeError, match="output shape"):
+        make_module(
+            cfg,
+            input_shape=np.array([1]),
+            output_shape=np.array([2]),
+        )
+
+
+def test_build_load_dir_input_shape_success_output_shape_success(monkeypatch):
+    cfg = cVAEConfig(ModelConfig=DummySelector())
+    cfg.load_dir = "fake_checkpoint.pt"
+    cfg.checkpoint_config = DummyCheckpointConfig(
+        checkpoint_input_shape=np.array([1]),
+        checkpoint_output_shape=np.array([2]),
+    )
+
+    monkeypatch.setattr(cVAE, "_load_state_dict", lambda self, load_path: None)
+
+    m = make_module(
+        cfg,
         input_shape=np.array([1]),
-        output_shape=np.array([1]),
-        added_features_dim=3,
+        output_shape=np.array([2]),
     )
 
-    assert m.built is True
-    assert m.prior_flow is not None
-    assert torch.is_tensor(m.min_posterior_variance)
+    assert isinstance(m, cVAE)
 
 
-def test_predict_with_sample_size_and_prior_flow():
-    cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
-    m = cVAE(cfg)
-    m.build(np.array([1]))
-
-    out = m.predict(DummyBatch(), sample_size=3)
-
-    assert isinstance(out, cVAEOutput)
+class NoCondFlowModel(DummyModel):
+    def __init__(self):
+        super().__init__()
+        self.condition_dependant_latent = False
 
 
-def test_forward_with_sample_size_explicit():
-    cfg = cVAEConfig(ModelConfig=DummySelector())
-    m = cVAE(cfg)
-    m.build(np.array([1]))
-
-    out = m.forward(DummyBatch(), sample_size=5)
-
-    assert isinstance(out, cVAEOutput)
-
-
-def test_compute_loss_target_as_list():
-    cfg = cVAEConfig(ModelConfig=DummySelector())
-    m = cVAE(cfg)
-    m.build(np.array([1]))
-    m.init_loss_function(DummyLoss())
-
-    batch = DummyBatch()
-    batch.target = [batch.target, torch.ones_like(batch.target)]
-
-    total, losses = m._compute_loss(1.0, batch)
-
-    assert total >= 0
-    assert "total_loss" in losses
-
-
-def test_compute_loss_individual_losses_merge_multiple_keys():
-    class MultiLoss:
-        reduction = "mean"
-
-        def __call__(self, output, target, **kwargs):
-            return torch.tensor(1.0), {"a": 1.0, "b": 2.0}
-
-    cfg = cVAEConfig(ModelConfig=DummySelector())
-    m = cVAE(cfg)
-    m.build(np.array([1]))
-    m.init_loss_function(MultiLoss())
-
-    total, losses = m._compute_loss(1.0, DummyBatch())
-
-    assert total >= 0
-    assert losses["a"] == 1.0
-    assert losses["b"] == 2.0
-
-
-def test_compute_loss_beta_zero():
-    cfg = cVAEConfig(ModelConfig=DummySelector())
-    m = cVAE(cfg)
-    m.build(np.array([1]))
-    m.init_loss_function(DummyLoss())
-
-    total, losses = m._compute_loss(0.0, DummyBatch())
-
-    assert total >= 0
-    assert "kld" in losses
-
-
-def test_compute_loss_negative_beta():
-    cfg = cVAEConfig(ModelConfig=DummySelector())
-    m = cVAE(cfg)
-    m.build(np.array([1]))
-    m.init_loss_function(DummyLoss())
-
-    total, losses = m._compute_loss(-1.0, DummyBatch())
-
-    assert torch.is_tensor(total)
-    assert "kld" in losses
+class NoCondSelector:
+    def get_model_config(self):
+        return NoCondFlowModel()

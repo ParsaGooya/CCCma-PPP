@@ -43,10 +43,18 @@ def make_module(built=True):
     return DummyModule(built=built)
 
 
+def make_optimizer(module=None, lr=0.01):
+    if module is None:
+        module = make_module()
+    return torch.optim.Adam(module.parameters(), lr=lr)
+
+
 def test_lr_scheduler_config_valid_defaults():
     cfg = LRSchedulerConfig()
+
     assert cfg.min_lr == 0.0
     assert cfg.warmup_epochs == 0
+    assert cfg.total_epochs is None
 
 
 def test_lr_scheduler_config_invalid_min_lr():
@@ -59,39 +67,48 @@ def test_lr_scheduler_config_invalid_warmup():
         LRSchedulerConfig(warmup_epochs=-1)
 
 
-def test_lr_scheduler_build_invalid_total_epochs():
+def test_lr_scheduler_build_requires_total_epochs():
     module = make_module()
-    opt = torch.optim.Adam(module.parameters(), lr=0.01)
+    opt = make_optimizer(module)
     cfg = LRSchedulerConfig()
 
     with pytest.raises(AssertionError):
-        cfg.build(opt, num_batches=1, total_epochs=0)
+        cfg.build(opt, num_batches=1)
+
+
+def test_lr_scheduler_build_invalid_total_epochs():
+    module = make_module()
+    opt = make_optimizer(module)
+    cfg = LRSchedulerConfig(total_epochs=0)
+
+    with pytest.raises(AssertionError):
+        cfg.build(opt, num_batches=1)
 
 
 def test_lr_scheduler_build_invalid_num_batches():
     module = make_module()
-    opt = torch.optim.Adam(module.parameters(), lr=0.01)
-    cfg = LRSchedulerConfig()
+    opt = make_optimizer(module)
+    cfg = LRSchedulerConfig(total_epochs=2)
 
     with pytest.raises(AssertionError):
-        cfg.build(opt, num_batches=0, total_epochs=2)
+        cfg.build(opt, num_batches=0)
 
 
 def test_lr_scheduler_build_warmup_equals_total_epochs_invalid():
     module = make_module()
-    opt = torch.optim.Adam(module.parameters(), lr=0.01)
-    cfg = LRSchedulerConfig(warmup_epochs=2)
+    opt = make_optimizer(module)
+    cfg = LRSchedulerConfig(warmup_epochs=2, total_epochs=2)
 
     with pytest.raises(AssertionError):
-        cfg.build(opt, num_batches=1, total_epochs=2)
+        cfg.build(opt, num_batches=1)
 
 
 def test_lr_scheduler_build_sets_steps():
     module = make_module()
-    opt = torch.optim.Adam(module.parameters(), lr=0.01)
-    cfg = LRSchedulerConfig(warmup_epochs=1)
+    opt = make_optimizer(module)
+    cfg = LRSchedulerConfig(warmup_epochs=1, total_epochs=4)
 
-    scheduler = cfg.build(opt, num_batches=3, total_epochs=4)
+    scheduler = cfg.build(opt, num_batches=3)
 
     assert isinstance(scheduler, CosineAnnealingLRScheduler)
     assert cfg.total_steps == 12
@@ -100,41 +117,45 @@ def test_lr_scheduler_build_sets_steps():
 
 def test_cosine_scheduler_without_warmup():
     module = make_module()
-    opt = torch.optim.Adam(module.parameters(), lr=0.01)
+    opt = make_optimizer(module)
 
-    cfg = LRSchedulerConfig(min_lr=0.001, warmup_epochs=0)
+    cfg = LRSchedulerConfig(min_lr=0.001, warmup_epochs=0, total_epochs=10)
     cfg.total_steps = 10
     cfg.warmup_steps = 0
 
     scheduler = CosineAnnealingLRScheduler(cfg, opt)
 
     assert scheduler.scheduler is not None
+
     scheduler.step()
     state = scheduler.state_dict()
+
     assert isinstance(state, dict)
 
 
 def test_cosine_scheduler_with_warmup():
     module = make_module()
-    opt = torch.optim.Adam(module.parameters(), lr=0.01)
+    opt = make_optimizer(module)
 
-    cfg = LRSchedulerConfig(min_lr=0.001, warmup_epochs=1)
+    cfg = LRSchedulerConfig(min_lr=0.001, warmup_epochs=1, total_epochs=10)
     cfg.total_steps = 10
     cfg.warmup_steps = 2
 
     scheduler = CosineAnnealingLRScheduler(cfg, opt)
 
     assert scheduler.scheduler is not None
+
     scheduler.step()
     state = scheduler.state_dict()
+
     assert isinstance(state, dict)
 
 
 def test_cosine_scheduler_load_state_dict():
     module = make_module()
-    opt = torch.optim.Adam(module.parameters(), lr=0.01)
+    opt = make_optimizer(module)
 
-    cfg = LRSchedulerConfig(min_lr=0.001, warmup_epochs=0)
+    cfg = LRSchedulerConfig(min_lr=0.001, warmup_epochs=0, total_epochs=10)
     cfg.total_steps = 10
     cfg.warmup_steps = 0
 
@@ -151,9 +172,9 @@ def test_cosine_scheduler_load_state_dict():
 
 def test_cosine_scheduler_step_without_scheduler_attr():
     module = make_module()
-    opt = torch.optim.Adam(module.parameters(), lr=0.01)
+    opt = make_optimizer(module)
 
-    cfg = LRSchedulerConfig()
+    cfg = LRSchedulerConfig(total_epochs=10)
     cfg.total_steps = 10
     cfg.warmup_steps = 0
 
@@ -166,9 +187,9 @@ def test_cosine_scheduler_step_without_scheduler_attr():
 
 def test_cosine_scheduler_state_dict_without_scheduler_attr():
     module = make_module()
-    opt = torch.optim.Adam(module.parameters(), lr=0.01)
+    opt = make_optimizer(module)
 
-    cfg = LRSchedulerConfig()
+    cfg = LRSchedulerConfig(total_epochs=10)
     cfg.total_steps = 10
     cfg.warmup_steps = 0
 
@@ -181,9 +202,9 @@ def test_cosine_scheduler_state_dict_without_scheduler_attr():
 
 def test_cosine_scheduler_load_state_dict_without_scheduler_attr():
     module = make_module()
-    opt = torch.optim.Adam(module.parameters(), lr=0.01)
+    opt = make_optimizer(module)
 
-    cfg = LRSchedulerConfig()
+    cfg = LRSchedulerConfig(total_epochs=10)
     cfg.total_steps = 10
     cfg.warmup_steps = 0
 
@@ -209,12 +230,14 @@ def test_optimizer_config_invalid_weight_decay():
         OptimizerConfig(weight_decay=-1)
 
 
-def test_optimizer_build_requires_built_module():
+def test_optimizer_build_accepts_unbuilt_module_current_behavior():
     module = make_module(built=False)
     cfg = OptimizerConfig()
 
-    with pytest.raises(AssertionError):
-        cfg.build(module)
+    wrapper = cfg.build(module)
+
+    assert isinstance(wrapper, OptimizerWrapper)
+    assert wrapper.optimizer is not None
 
 
 def test_optimizer_build_without_scheduler():
@@ -233,6 +256,7 @@ def test_optimizer_build_adamw_case_insensitive():
 
     wrapper = cfg.build(module)
 
+    assert isinstance(wrapper, OptimizerWrapper)
     assert isinstance(wrapper.optimizer, torch.optim.AdamW)
 
 
@@ -254,10 +278,18 @@ def test_optimizer_build_scheduler_requires_num_batches_and_epochs_config_level(
 
 def test_optimizer_build_scheduler_requires_num_batches_wrapper_level():
     module = make_module()
+    cfg = OptimizerConfig(lr_scheduler_config=LRSchedulerConfig(total_epochs=2))
+
+    with pytest.raises(ValueError):
+        OptimizerWrapper(cfg, module, num_batches=None, max_epochs=2)
+
+
+def test_optimizer_build_scheduler_requires_epochs_wrapper_level():
+    module = make_module()
     cfg = OptimizerConfig(lr_scheduler_config=LRSchedulerConfig())
 
     with pytest.raises(ValueError):
-        OptimizerWrapper(cfg, module, num_batches=None, total_epochs=2)
+        OptimizerWrapper(cfg, module, num_batches=2, max_epochs=None)
 
 
 def test_optimizer_build_with_scheduler():
@@ -267,10 +299,34 @@ def test_optimizer_build_with_scheduler():
         lr_scheduler_config=LRSchedulerConfig(min_lr=0.001, warmup_epochs=0),
     )
 
-    wrapper = cfg.build(module, num_batches=2, total_epochs=3)
+    wrapper = cfg.build(module, num_batches=2, max_epochs=3)
 
+    assert isinstance(wrapper, OptimizerWrapper)
     assert isinstance(wrapper.optimizer, torch.optim.Adam)
     assert wrapper.lr_scheduler is not None
+    assert cfg.lr_scheduler_config.total_epochs == 3
+    assert cfg.lr_scheduler_config.total_steps == 6
+    assert cfg.lr_scheduler_config.warmup_steps == 0
+
+
+def test_optimizer_build_with_scheduler_total_epochs_preconfigured():
+    module = make_module()
+    cfg = OptimizerConfig(
+        lr=0.01,
+        lr_scheduler_config=LRSchedulerConfig(
+            min_lr=0.001,
+            warmup_epochs=0,
+            total_epochs=4,
+        ),
+    )
+
+    wrapper = cfg.build(module, num_batches=2)
+
+    assert isinstance(wrapper, OptimizerWrapper)
+    assert wrapper.lr_scheduler is not None
+    assert cfg.lr_scheduler_config.total_epochs == 4
+    assert cfg.lr_scheduler_config.total_steps == 8
+    assert cfg.lr_scheduler_config.warmup_steps == 0
 
 
 def test_optimizer_build_with_warmup_scheduler():
@@ -280,9 +336,11 @@ def test_optimizer_build_with_warmup_scheduler():
         lr_scheduler_config=LRSchedulerConfig(min_lr=0.001, warmup_epochs=1),
     )
 
-    wrapper = cfg.build(module, num_batches=2, total_epochs=3)
+    wrapper = cfg.build(module, num_batches=2, max_epochs=3)
 
+    assert isinstance(wrapper, OptimizerWrapper)
     assert wrapper.lr_scheduler is not None
+    assert cfg.lr_scheduler_config.total_epochs == 3
     assert cfg.lr_scheduler_config.total_steps == 6
     assert cfg.lr_scheduler_config.warmup_steps == 2
 
@@ -338,7 +396,7 @@ def test_optimizer_scheduler_step_with_scheduler():
         lr=0.01,
         lr_scheduler_config=LRSchedulerConfig(min_lr=0.001, warmup_epochs=0),
     )
-    wrapper = cfg.build(module, num_batches=2, total_epochs=3)
+    wrapper = cfg.build(module, num_batches=2, max_epochs=3)
 
     wrapper.scheduler_step()
 
@@ -360,7 +418,7 @@ def test_optimizer_state_dict_with_scheduler():
         lr=0.01,
         lr_scheduler_config=LRSchedulerConfig(min_lr=0.001, warmup_epochs=0),
     )
-    wrapper = cfg.build(module, num_batches=2, total_epochs=3)
+    wrapper = cfg.build(module, num_batches=2, max_epochs=3)
 
     state = wrapper.state_dict()
 
@@ -384,7 +442,7 @@ def test_optimizer_load_state_dict_with_scheduler():
         lr=0.01,
         lr_scheduler_config=LRSchedulerConfig(min_lr=0.001, warmup_epochs=0),
     )
-    wrapper = cfg.build(module, num_batches=2, total_epochs=3)
+    wrapper = cfg.build(module, num_batches=2, max_epochs=3)
 
     state = wrapper.state_dict()
 
@@ -393,7 +451,7 @@ def test_optimizer_load_state_dict_with_scheduler():
         lr=0.01,
         lr_scheduler_config=LRSchedulerConfig(min_lr=0.001, warmup_epochs=0),
     )
-    wrapper2 = cfg2.build(module2, num_batches=2, total_epochs=3)
+    wrapper2 = cfg2.build(module2, num_batches=2, max_epochs=3)
 
     wrapper2.load_state_dict(state)
 
@@ -406,7 +464,7 @@ def test_optimizer_load_state_dict_without_scheduler_state():
         lr=0.01,
         lr_scheduler_config=LRSchedulerConfig(min_lr=0.001, warmup_epochs=0),
     )
-    wrapper = cfg.build(module, num_batches=2, total_epochs=3)
+    wrapper = cfg.build(module, num_batches=2, max_epochs=3)
 
     state = wrapper.state_dict()
     state["lr_scheduler"] = None

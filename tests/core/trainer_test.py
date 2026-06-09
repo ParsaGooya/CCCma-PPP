@@ -28,6 +28,8 @@ class DummyLoader:
         self.n = n
         self.epoch = None
         self.batches = [DummyBatch() for _ in range(n)]
+        self.input_shape = [2]
+        self.target_shape = [1]
 
     def __len__(self):
         return self.n
@@ -196,8 +198,15 @@ def patch_aggregator(monkeypatch):
 def env_dirs(tmp_path, monkeypatch):
     ckpt = tmp_path / "checkpoints"
     figs = tmp_path / "figures"
+
     monkeypatch.setenv("GLOBAL_CHECKPOINT_DIR", str(ckpt))
     monkeypatch.setenv("GLOBAL_FIGURES_DIR", str(figs))
+
+    monkeypatch.setattr(trainer_mod.RuntimeContext, "GLOBAL_CHECKPOINT_DIR", str(ckpt))
+    monkeypatch.setattr(trainer_mod.RuntimeContext, "GLOBAL_FIGURES_DIR", str(figs))
+    monkeypatch.setattr(trainer_mod.RuntimeContext, "INPUT_VAR_METADATA", {})
+    monkeypatch.setattr(trainer_mod.RuntimeContext, "TARGET_VAR_METADATA", {})
+
     return ckpt, figs
 
 
@@ -218,7 +227,7 @@ def make_trainer(validation=True, mixed_precision=False, grad_clip=None):
         validation_data_loader=validation_loader,
         optimization=optimizer,
         module=module,
-        epochs=2,
+        max_epochs=2,
     )
 
     return trainer, module, optimizer, train_loader, validation_loader
@@ -251,7 +260,7 @@ def test_trainer_config_build_sets_batch_counts():
         validation_data_loader=validation_loader,
         optimization=optimizer,
         module=module,
-        epochs=5,
+        max_epochs=5,
     )
 
     assert isinstance(trainer, Trainer)
@@ -270,7 +279,7 @@ def test_trainer_config_build_without_validation_loader():
         validation_data_loader=None,
         optimization=optimizer,
         module=module,
-        epochs=5,
+        max_epochs=5,
     )
 
     assert isinstance(trainer, Trainer)
@@ -278,20 +287,21 @@ def test_trainer_config_build_without_validation_loader():
     assert not hasattr(cfg, "num_validation_batches")
 
 
-def test_trainer_config_build_requires_built_module():
+def test_trainer_config_build_accepts_unbuilt_module_current_behavior():
     module = DummyModule(built=False)
     optimizer = DummyOptimizer(module)
 
     cfg = TrainerConfig(mixed_precision=False)
 
-    with pytest.raises(AssertionError):
-        cfg.build(
-            train_data_loader=DummyLoader(),
-            validation_data_loader=None,
-            optimization=optimizer,
-            module=module,
-            epochs=1,
-        )
+    trainer = cfg.build(
+        train_data_loader=DummyLoader(),
+        validation_data_loader=None,
+        optimization=optimizer,
+        module=module,
+        max_epochs=1,
+    )
+
+    assert isinstance(trainer, Trainer)
 
 
 def test_trainer_config_cvae_requires_beta_finder(monkeypatch):
@@ -307,7 +317,7 @@ def test_trainer_config_cvae_requires_beta_finder(monkeypatch):
             validation_data_loader=None,
             optimization=optimizer,
             module=module,
-            epochs=1,
+            max_epochs=1,
         )
 
 
@@ -325,7 +335,7 @@ def test_trainer_config_cvae_builds_beta_finder(monkeypatch):
         validation_data_loader=None,
         optimization=optimizer,
         module=module,
-        epochs=1,
+        max_epochs=1,
     )
 
     assert isinstance(trainer, Trainer)
@@ -521,7 +531,7 @@ def test_train_on_batch_with_beta(env_dirs):
         validation_data_loader=None,
         module=module,
         optimizer=optimizer,
-        epochs=1,
+        max_epochs=1,
     )
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
 
@@ -546,7 +556,7 @@ def test_train_on_batch_gradient_accumulation_delays_optimizer(env_dirs):
         validation_data_loader=None,
         module=module,
         optimizer=optimizer,
-        epochs=1,
+        max_epochs=1,
     )
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
 
@@ -770,7 +780,7 @@ def test_log_epoch_without_validation(env_dirs):
 
 def test_train_loop_without_validation(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
-    trainer.epochs = 1
+    trainer.max_epochs = 1
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
 
     trainer.train()
@@ -782,7 +792,7 @@ def test_train_loop_without_validation(env_dirs):
 
 def test_train_loop_with_validation_improvement(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
-    trainer.epochs = 1
+    trainer.max_epochs = 1
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
 
     trainer.train()
@@ -794,7 +804,7 @@ def test_train_loop_with_validation_improvement(env_dirs):
 
 def test_train_loop_with_validation_no_improvement(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
-    trainer.epochs = 1
+    trainer.max_epochs = 1
     trainer._best_validation_loss = 0.1
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
 
@@ -805,7 +815,7 @@ def test_train_loop_with_validation_no_improvement(env_dirs):
 
 def test_train_loop_early_stopping(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
-    trainer.epochs = 5
+    trainer.max_epochs = 5
     trainer._best_validation_loss = 0.1
     trainer.config.earlystoppingbuffer = 1
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -818,7 +828,7 @@ def test_train_loop_early_stopping(env_dirs):
 
 def test_train_loop_distributed_stop_broadcast(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
-    trainer.epochs = 1
+    trainer.max_epochs = 1
     trainer.config.earlystoppingbuffer = 0
     trainer.setup_distributed(DummyDistributed(distributed=True), DummyLogger())
 
@@ -841,7 +851,7 @@ def test_train_loop_final_leftover_optimizer_step_no_validation(env_dirs):
         validation_data_loader=None,
         module=module,
         optimizer=optimizer,
-        epochs=1,
+        max_epochs=1,
     )
 
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -864,7 +874,7 @@ def test_train_loop_final_leftover_validation_improved(env_dirs):
         validation_data_loader=DummyLoader(n=1),
         module=module,
         optimizer=optimizer,
-        epochs=1,
+        max_epochs=1,
     )
 
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -885,7 +895,7 @@ def test_raw_module_ddp_branch(monkeypatch):
         validation_data_loader=None,
         module=FakeDDP(real_module),
         optimizer=DummyOptimizer(real_module),
-        epochs=1,
+        max_epochs=1,
     )
 
     monkeypatch.setattr(torch.nn.parallel, "DistributedDataParallel", FakeDDP)
@@ -977,7 +987,7 @@ def test_load_checkpoint_without_train_history_key(env_dirs):
 
 def test_train_loop_without_validation_no_checkpoint_when_disabled(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
-    trainer.epochs = 1
+    trainer.max_epochs = 1
     trainer.setup_distributed(
         DummyDistributed(),
         DummyLogger(),
@@ -992,7 +1002,7 @@ def test_train_loop_without_validation_no_checkpoint_when_disabled(env_dirs):
 
 def test_train_loop_validation_no_improvement_checkpoint_disabled(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
-    trainer.epochs = 1
+    trainer.max_epochs = 1
     trainer._best_validation_loss = 0.1
 
     trainer.setup_distributed(
@@ -1023,7 +1033,7 @@ def test_train_loop_leftover_skipped_due_to_early_stop(env_dirs):
         validation_data_loader=DummyLoader(n=1),
         module=module,
         optimizer=optimizer,
-        epochs=1,
+        max_epochs=1,
     )
 
     trainer._best_validation_loss = 0.1

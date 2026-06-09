@@ -1,169 +1,286 @@
+import numpy as np
 import pytest
 import torch
 import torch.nn as nn
-import numpy as np
 
 from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC
 
 
-class DummyModule(moduleABC):
+class ConcreteModule(moduleABC):
     def __init__(self):
         super().__init__()
         self.linear = nn.Linear(2, 2)
-
-    def build(self, input_shape, output_shape=None, added_features_dim=None):
-        return True
+        self.loss_function = None
 
     def init_loss_function(self, reconstruction_loss, **kwargs):
-        self.loss = reconstruction_loss
+        self.loss_function = reconstruction_loss
+        self.loss_kwargs = kwargs
 
     def _compute_loss(self):
-        return torch.tensor(1.0)
+        return "loss"
 
     def forward(self, x=None):
-        return self.linear(torch.ones(1, 2))
+        if x is None:
+            x = torch.ones(1, 2)
+        return self.linear(x)
 
     def predict(self):
-        return torch.tensor(0.0)
+        return "predict"
 
 
-class DummyConfig(moduleConfigABC):
-    def build(self, input_shape, output_shape=None, added_features_dim=None):
-        return "built"
+class EmptyConcreteModule(moduleABC):
+    def init_loss_function(self, reconstruction_loss, **kwargs):
+        self.loss_function = reconstruction_loss
+
+    def _compute_loss(self):
+        return "loss"
+
+    def forward(self):
+        return "forward"
+
+    def predict(self):
+        return "predict"
+
+
+class BufferOnlyConcreteModule(moduleABC):
+    def __init__(self):
+        super().__init__()
+        self.register_buffer("buffer_value", torch.ones(1))
+
+    def init_loss_function(self, reconstruction_loss, **kwargs):
+        self.loss_function = reconstruction_loss
+
+    def _compute_loss(self):
+        return "loss"
+
+    def forward(self):
+        return "forward"
+
+    def predict(self):
+        return "predict"
+
+
+class ConcreteModuleConfig(moduleConfigABC):
+    def __init__(self):
+        super().__init__()
+        self.loaded_from_checkpoint = False
+
+    def build(
+        self,
+        input_shape: np.ndarray,
+        output_shape: np.ndarray | None = None,
+        added_features_dim: int = None,
+    ):
+        self.input_shape = input_shape
+        self.output_shape = output_shape
+        self.added_features_dim = added_features_dim
+        return ConcreteModule()
 
     def _load_from_checkpoint(self):
+        self.loaded_from_checkpoint = True
         return "loaded"
 
 
-def test_module_cannot_instantiate_abstract():
+def test_module_abc_cannot_be_instantiated():
     with pytest.raises(TypeError):
         moduleABC()
 
 
-def test_config_cannot_instantiate_abstract():
+def test_module_config_abc_cannot_be_instantiated():
     with pytest.raises(TypeError):
         moduleConfigABC()
 
 
-def test_dummy_module_basic():
-    m = DummyModule()
+def test_concrete_module_methods_work():
+    module = ConcreteModule()
 
-    assert m.build(np.array([1, 2]))
-    assert m.forward().shape == (1, 2)
-    assert m.predict() is not None
-    assert m._compute_loss() >= 0
+    module.init_loss_function("loss_fn", alpha=1)
 
+    assert module.loss_function == "loss_fn"
+    assert module.loss_kwargs == {"alpha": 1}
+    assert module._compute_loss() == "loss"
+    assert module.predict() == "predict"
 
-def test_dummy_config_basic():
-    c = DummyConfig()
-    assert c.build(np.array([1])) == "built"
-    assert c._load_from_checkpoint() == "loaded"
+    output = module(torch.ones(1, 2))
 
-
-def test_get_device_from_parameters():
-    m = DummyModule()
-    device = m._get_device()
-    assert isinstance(device, torch.device)
+    assert output.shape == (1, 2)
 
 
-def test_get_device_from_buffer():
-    class BufferOnly(moduleABC):
-        def __init__(self):
-            super().__init__()
-            self.register_buffer("buf", torch.ones(1))
+def test_concrete_module_config_build_and_load():
+    config = ConcreteModuleConfig()
 
-        def build(self, *a, **k):
-            pass
+    built = config.build(
+        input_shape=np.array([2]),
+        output_shape=np.array([2]),
+        added_features_dim=3,
+    )
 
-        def init_loss_function(self, *a, **k):
-            pass
+    assert isinstance(built, ConcreteModule)
+    assert np.array_equal(config.input_shape, np.array([2]))
+    assert np.array_equal(config.output_shape, np.array([2]))
+    assert config.added_features_dim == 3
 
-        def _compute_loss(self):
-            pass
+    result = config._load_from_checkpoint()
 
-        def forward(self):
-            pass
-
-        def predict(self):
-            pass
-
-    m = BufferOnly()
-    assert m._get_device() == m.buf.device
+    assert result == "loaded"
+    assert config.loaded_from_checkpoint is True
 
 
-def test_get_device_cpu_fallback():
-    class NoParams(moduleABC):
-        def build(self, *a, **k):
-            pass
+def test_get_device_returns_parameter_device():
+    module = ConcreteModule()
 
-        def init_loss_function(self, *a, **k):
-            pass
+    expected_device = next(module.parameters()).device
 
-        def _compute_loss(self):
-            pass
-
-        def forward(self):
-            pass
-
-        def predict(self):
-            pass
-
-    m = NoParams()
-    assert m._get_device().type == "cpu"
+    assert module._get_device() == expected_device
 
 
-def test_load_state_dict_file_not_found(tmp_path):
-    m = DummyModule()
-    fake_path = tmp_path / "missing.pt"
+def test_get_device_returns_buffer_device_when_no_parameters():
+    module = BufferOnlyConcreteModule()
 
-    with pytest.raises(FileNotFoundError):
-        m._load_state_dict(fake_path)
+    assert module._get_device() == module.buffer_value.device
 
 
-def test_load_state_dict_success(tmp_path):
-    m = DummyModule()
+def test_get_device_returns_cpu_without_parameters_or_buffers():
+    module = EmptyConcreteModule()
 
-    checkpoint_path = tmp_path / "ckpt.pt"
-    torch.save({"module": m.state_dict()}, checkpoint_path)
-
-    new_model = DummyModule()
-    new_model._load_state_dict(checkpoint_path)
-
-    for k, v in m.state_dict().items():
-        assert torch.equal(v, new_model.state_dict()[k])
+    assert module._get_device() == torch.device("cpu")
 
 
-def test_load_state_dict_non_strict(tmp_path):
-    m = DummyModule()
+def test_load_state_dict_missing_file_raises(tmp_path):
+    module = ConcreteModule()
 
-    checkpoint_path = tmp_path / "ckpt.pt"
-    torch.save({"module": m.state_dict()}, checkpoint_path)
+    missing_path = tmp_path / "missing.pt"
 
-    new_model = DummyModule()
-
-    state = m.state_dict()
-    state.pop(list(state.keys())[0])
-    torch.save({"module": state}, checkpoint_path)
-
-    new_model._load_state_dict(checkpoint_path, strict=False)
+    with pytest.raises(FileNotFoundError, match="Checkpoint not found"):
+        module._load_state_dict(missing_path)
 
 
-def test_load_on_specific_device(tmp_path):
-    m = DummyModule()
+def test_load_state_dict_loads_checkpoint_strict_true(tmp_path):
+    source = ConcreteModule()
+    target = ConcreteModule()
 
-    checkpoint_path = tmp_path / "ckpt.pt"
-    torch.save({"module": m.state_dict()}, checkpoint_path)
+    for parameter in source.parameters():
+        nn.init.constant_(parameter, 0.25)
 
-    m.to(torch.device("cpu"))
+    checkpoint_path = tmp_path / "checkpoint.pt"
+    torch.save({"module": source.state_dict()}, checkpoint_path)
 
-    m._load_state_dict(checkpoint_path)
-    assert True
+    target._load_state_dict(checkpoint_path, strict=True)
+
+    for key, value in target.state_dict().items():
+        assert torch.allclose(value, source.state_dict()[key])
 
 
-def test_load_triggers_gc(tmp_path):
-    m = DummyModule()
+def test_load_state_dict_accepts_string_path(tmp_path):
+    source = ConcreteModule()
+    target = ConcreteModule()
 
-    checkpoint_path = tmp_path / "ckpt.pt"
-    torch.save({"module": m.state_dict()}, checkpoint_path)
+    for parameter in source.parameters():
+        nn.init.constant_(parameter, 0.5)
 
-    m._load_state_dict(checkpoint_path)
+    checkpoint_path = tmp_path / "checkpoint.pt"
+    torch.save({"module": source.state_dict()}, checkpoint_path)
+
+    target._load_state_dict(str(checkpoint_path), strict=True)
+
+    for key, value in target.state_dict().items():
+        assert torch.allclose(value, source.state_dict()[key])
+
+
+def test_load_state_dict_strict_false_allows_missing_keys(tmp_path):
+    module = ConcreteModule()
+
+    checkpoint_path = tmp_path / "partial_checkpoint.pt"
+    torch.save(
+        {
+            "module": {
+                "linear.bias": torch.zeros_like(module.linear.bias),
+            }
+        },
+        checkpoint_path,
+    )
+
+    module._load_state_dict(checkpoint_path, strict=False)
+
+    assert torch.allclose(module.linear.bias, torch.zeros_like(module.linear.bias))
+
+
+def test_load_state_dict_strict_true_raises_on_missing_keys(tmp_path):
+    module = ConcreteModule()
+
+    checkpoint_path = tmp_path / "partial_checkpoint.pt"
+    torch.save(
+        {
+            "module": {
+                "linear.bias": torch.zeros_like(module.linear.bias),
+            }
+        },
+        checkpoint_path,
+    )
+
+    with pytest.raises(RuntimeError):
+        module._load_state_dict(checkpoint_path, strict=True)
+
+
+def test_load_state_dict_strict_true_raises_on_unexpected_keys(tmp_path):
+    module = ConcreteModule()
+
+    checkpoint_path = tmp_path / "bad_checkpoint.pt"
+    torch.save(
+        {
+            "module": {
+                **module.state_dict(),
+                "unexpected.weight": torch.ones(1),
+            }
+        },
+        checkpoint_path,
+    )
+
+    with pytest.raises(RuntimeError):
+        module._load_state_dict(checkpoint_path, strict=True)
+
+
+def test_load_state_dict_strict_false_allows_unexpected_keys(tmp_path):
+    module = ConcreteModule()
+
+    checkpoint_path = tmp_path / "bad_checkpoint.pt"
+    torch.save(
+        {
+            "module": {
+                **module.state_dict(),
+                "unexpected.weight": torch.ones(1),
+            }
+        },
+        checkpoint_path,
+    )
+
+    module._load_state_dict(checkpoint_path, strict=False)
+
+
+def test_load_state_dict_uses_module_key(tmp_path):
+    module = ConcreteModule()
+
+    checkpoint_path = tmp_path / "invalid_checkpoint.pt"
+    torch.save({"not_module": module.state_dict()}, checkpoint_path)
+
+    with pytest.raises(KeyError):
+        module._load_state_dict(checkpoint_path)
+
+
+def test_load_state_dict_preserves_loaded_values(tmp_path):
+    module = ConcreteModule()
+
+    checkpoint_state = {
+        "linear.weight": torch.full_like(module.linear.weight, 2.0),
+        "linear.bias": torch.full_like(module.linear.bias, -1.0),
+    }
+
+    checkpoint_path = tmp_path / "checkpoint.pt"
+    torch.save({"module": checkpoint_state}, checkpoint_path)
+
+    module._load_state_dict(checkpoint_path)
+
+    assert torch.allclose(
+        module.linear.weight, torch.full_like(module.linear.weight, 2.0)
+    )
+    assert torch.allclose(module.linear.bias, torch.full_like(module.linear.bias, -1.0))

@@ -24,7 +24,6 @@ from cccma_ppp.core.optimization import OptimizerConfig
 from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
 
-
 def set_seed(seed):
 
     np.random.seed(seed)
