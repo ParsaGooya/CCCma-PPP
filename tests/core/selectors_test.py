@@ -96,11 +96,6 @@ def make_checkpoint(
     )
 
 
-# ---------------------------------------------------------------------------
-# ModuleSelector
-# ---------------------------------------------------------------------------
-
-
 def test_module_selector_build_without_output_shape():
     name = unique_name("module_no_output")
 
@@ -150,11 +145,6 @@ def test_module_selector_register_available_and_build():
     assert np.array_equal(built.input_shape, np.array([1]))
     assert np.array_equal(built.output_shape, np.array([2]))
     assert built.added_features_dim == 3
-
-
-# ---------------------------------------------------------------------------
-# ModelSelector base behavior
-# ---------------------------------------------------------------------------
 
 
 def test_model_selector_requires_config_or_load_dir():
@@ -329,11 +319,6 @@ def test_model_selector_load_dir_without_freeze_only_one_warning(monkeypatch, tm
     assert "overwritten" in str(record[0].message)
 
 
-# ---------------------------------------------------------------------------
-# cVAE / deterministic model selector registries
-# ---------------------------------------------------------------------------
-
-
 def test_cvae_model_selector_has_registry():
     name = unique_name("cvae_model")
 
@@ -372,11 +357,6 @@ def test_model_selector_subclass_registries_are_isolated():
 
     assert det_name in deterministicModelSelector.available()
     assert cvae_name not in deterministicModelSelector.available()
-
-
-# ---------------------------------------------------------------------------
-# FlowSelector
-# ---------------------------------------------------------------------------
 
 
 def test_flow_selector_register_available_and_get_model():
@@ -421,11 +401,6 @@ def test_flow_selector_case_insensitive_lookup():
 
     assert isinstance(flow, DummyFlow)
     assert flow.scale == 8
-
-
-# ---------------------------------------------------------------------------
-# _load_config_from_checkpoint
-# ---------------------------------------------------------------------------
 
 
 def test_load_config_from_checkpoint_missing_file():

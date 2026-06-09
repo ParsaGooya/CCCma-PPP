@@ -96,8 +96,6 @@ def make_cvae_config(
         init_method=init_method,
     )
 
-    # Current source expects condition_embedding_size to already be resolved.
-    # Treat final condition_embedding_dims entry as output embedding size.
     if condition_embedding_dims is not None:
         cfg.condition_embedding_size = condition_embedding_dims[-1]
         cfg.condition_embedding_dims = condition_embedding_dims[:-1]
@@ -106,7 +104,6 @@ def make_cvae_config(
         cfg.condition_embedding_dims = None
         cfg.condemb_to_decoder = False
 
-    # Current source reads this dynamically.
     if not hasattr(cfg, "condition_dependant_flow"):
         cfg.condition_dependant_flow = False
 
@@ -193,11 +190,6 @@ def build_autoencoder(
     )
 
 
-# ---------------------------------------------------------------------------
-# Registry / selector tests
-# ---------------------------------------------------------------------------
-
-
 def test_cvae_mlp_registered():
     selector = cVAEModelSelector(
         type="mlp",
@@ -223,11 +215,6 @@ def test_autoencoder_registered():
     cfg = selector.get_model_config()
 
     assert isinstance(cfg, AutoencoderConfig)
-
-
-# ---------------------------------------------------------------------------
-# cVAE config / construction branches
-# ---------------------------------------------------------------------------
 
 
 def test_cvae_config_build_returns_model():
@@ -433,11 +420,6 @@ def test_cvae_build_condition_dependant_latent_layers():
     assert hasattr(model, "condition_log_var")
 
 
-# ---------------------------------------------------------------------------
-# cVAE checkpoint branches
-# ---------------------------------------------------------------------------
-
-
 def test_cvae_build_checkpoint_input_shape_mismatch():
     cfg = make_cvae_config()
     cfg._add_checkpoint_config(
@@ -493,11 +475,6 @@ def test_cvae_build_checkpoint_success_calls_load(monkeypatch):
 
     assert isinstance(model, cVAE_MLP)
     assert called["load"] is True
-
-
-# ---------------------------------------------------------------------------
-# cVAE internal method branches
-# ---------------------------------------------------------------------------
 
 
 def test_cvae_recognition_plain():
@@ -690,11 +667,6 @@ def test_cvae_generate_with_condition_but_decoder_flag_false():
     assert out.shape == (3, 2, 6)
 
 
-# ---------------------------------------------------------------------------
-# cVAE forward / predict branches
-# ---------------------------------------------------------------------------
-
-
 def test_cvae_forward_basic():
     model = build_cvae()
 
@@ -836,11 +808,6 @@ def test_cvae_predict_with_prior_flow_conditioned():
     assert out.output.shape == (2, 2, 1, 6)
 
 
-# ---------------------------------------------------------------------------
-# Autoencoder config / construction branches
-# ---------------------------------------------------------------------------
-
-
 def test_autoencoder_config_build_returns_model():
     cfg = AutoencoderConfig(encoder_hidden_dims=[4])
 
@@ -938,11 +905,6 @@ def test_autoencoder_build_dropout_and_batchnorm():
     assert any(isinstance(layer, torch.nn.BatchNorm1d) for layer in model.encoder)
 
 
-# ---------------------------------------------------------------------------
-# Autoencoder checkpoint branches
-# ---------------------------------------------------------------------------
-
-
 def test_autoencoder_build_checkpoint_input_shape_mismatch():
     cfg = AutoencoderConfig(encoder_hidden_dims=[4])
     cfg._add_checkpoint_config(
@@ -998,11 +960,6 @@ def test_autoencoder_build_checkpoint_success_calls_load(monkeypatch):
 
     assert isinstance(model, Autoencoder)
     assert called["load"] is True
-
-
-# ---------------------------------------------------------------------------
-# Autoencoder forward branches
-# ---------------------------------------------------------------------------
 
 
 def test_autoencoder_forward_plain():
