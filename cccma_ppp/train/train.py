@@ -14,14 +14,14 @@ def get_parser() -> argparse.ArgumentParser:
         help="Path to the YAML config file.",
     )
 
-    # to-do
-    # parser.add_argument(
-    #     "--override",
-    #     nargs="*",
-    #     default=[],
-    #     help=(
-    #         "Optional config overrides, e.g. "
-    #         "--override trainer.epochs=20 optimizer.lr=1e-4"))
+           
+                          
+                       
+                    
+                     
+                
+                                                
+                                                                
 
     return parser
 
@@ -32,8 +32,8 @@ def main(yaml_config: str):
 
     config_data = prepare_config(yaml_config)
 
-    # to-do
-    # config.apply_overrides(args.override)
+           
+                                           
 
     config = dacite.from_dict(
         data_class=TrainConfig, data=config_data, config=dacite.Config(strict=True)
@@ -64,7 +64,7 @@ def main(yaml_config: str):
     distributed.cleanup()
 
 
-# if __name__ == "__main__":
-#     parser = get_parser()
-#     args = parser.parse_args()
-#     main(args.config)
+                            
+                           
+                                
+                       

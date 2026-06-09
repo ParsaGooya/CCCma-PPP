@@ -12,10 +12,13 @@ class lossABC(nn.Module, abc.ABC):
         generative_modeling: bool = False,
         generator: bool = False,
         print_loss=False,
-    ) -> torch.Tensor: ...
+    ) -> torch.Tensor:
+        pass
 
     @abc.abstractmethod
-    def _print_loss(self, loss): ...
+    def _print_loss(self, loss):
+        pass
 
     @abc.abstractmethod
-    def _aggregate(self, loss) -> torch.Tensor: ...
+    def _aggregate(self, loss) -> torch.Tensor:
+        pass

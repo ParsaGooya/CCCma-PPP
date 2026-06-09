@@ -6,11 +6,11 @@ import os
 
 from cccma_ppp.preprocessing.preprocessing import (
     PreprocessingStepSelector,
-)  # PreprocessingPipeline
+)                         
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 
-# @PreprocessingPipeline.register('normalizer')
+                                               
 @PreprocessingStepSelector.register("normalizer")
 class Normalizer(PreprocessModuleABC):
     def __init__(self, dims: list | None = None, **kwargs) -> None:
@@ -26,13 +26,13 @@ class Normalizer(PreprocessModuleABC):
 
         if all(
             ["ensembles" in data.dims, self.dims is not None]
-        ):  ## PG: if ensemble exists in the dimentions. Note that we always pass a map like data to this function. Even if it is flattened, we first write back to maps.
+        ):                                                                                                                                                               
             if "ensembles" not in self.dims:
                 self.large_ensemble = True
                 self.dims = (
                     "ensembles",
                     *self.dims,
-                )  ## PG: Tell the object to average over both years and ensembles for calculating anomalies.
+                )                                                                                            
 
         if mask is not None:
             data_masked = data.where(~np.isnan(mask))
@@ -53,7 +53,7 @@ class Normalizer(PreprocessModuleABC):
         return data_raw
 
 
-# @PreprocessingPipeline.register('standardizer')
+                                                 
 @PreprocessingStepSelector.register("standardizer")
 class Standardizer(PreprocessModuleABC):
     def __init__(self, dims: list | None = None, **kwargs) -> None:
@@ -69,13 +69,13 @@ class Standardizer(PreprocessModuleABC):
 
         if all(
             ["ensembles" in data.dims, self.dims is not None]
-        ):  ## PG: if ensemble exists in the dimentions. Note that we always pass a map like data to this function. Even if it is flattened, we first write back to maps.
+        ):                                                                                                                                                               
             if "ensembles" not in self.dims:
                 self.large_ensemble = True
                 self.dims = (
                     "ensembles",
                     *self.dims,
-                )  ## PG: Tell the object to average over both years and ensembles for calculating anomalies.
+                )                                                                                            
 
         if mask is not None:
             data_masked = data.where(~np.isnan(mask))
@@ -101,7 +101,7 @@ class Standardizer(PreprocessModuleABC):
         return data_raw
 
 
-# @PreprocessingPipeline.register('anomalies')
+                                              
 @PreprocessingStepSelector.register("anomalies")
 class AnomaliesScaler(PreprocessModuleABC):
     def __init__(self, dims: list | None = None, **kwargs) -> None:
@@ -116,18 +116,18 @@ class AnomaliesScaler(PreprocessModuleABC):
 
         if all(
             ["ensembles" in data.dims, self.dims is not None]
-        ):  ## PG: if ensemble exists in the dimentions. Note that we always pass a map like data to this function. Even if it is flattened, we first write back to maps.
+        ):                                                                                                                                                               
             if "ensembles" not in self.dims:
                 self.large_ensemble = True
                 self.dims = (
                     "ensembles",
                     *self.dims,
-                )  ## PG: Tell the object to average over both years and ensembles for calculating anomalies.
+                )                                                                                            
 
         if mask is not None:
             data_masked = data.where(~np.isnan(mask))
         else:
-            data_masked = data  # PG
+            data_masked = data      
 
         self.mean = data_masked.mean(self.dims).load()
         self.fitted = True
@@ -150,9 +150,9 @@ class AnomaliesScaler(PreprocessModuleABC):
         return data_raw
 
 
-# @PreprocessingPipeline.register('oceannanremover')
+                                                    
 @PreprocessingStepSelector.register("oceannanremover")
-class Oceannanremove(PreprocessModuleABC):  ## PG
+class Oceannanremove(PreprocessModuleABC):       
     def __init__(self, load_dir: Path | str = None, **kwargs):
 
         self.load_dir = load_dir
@@ -166,7 +166,7 @@ class Oceannanremove(PreprocessModuleABC):  ## PG
         save: bool = False,
         save_name: str | None = None,
         save_path: Path | str = None,
-    ):  ## PG: extract common grid points based on trainig and target data
+    ):                                                                    
 
         if self.load_dir is None:
             if target is not None:
@@ -178,10 +178,10 @@ class Oceannanremove(PreprocessModuleABC):  ## PG
                     ref=["lat", "lon"]
                 ).sel(
                     ref=data.stack(ref=["lat", "lon"]).dropna(dim="ref").ref
-                )  ## PG: flatten target in space and choose space points where data is not NaN.
+                )                                                                               
                 self.final_locations = (
                     temp.dropna("ref").load().ref
-                )  ## PG: Extract locations common to target and training data by dropping the remaining NaN values
+                )                                                                                                  
                 self.common_to_input_and_target = True
             else:
                 self.reference_shape = xr.Dataset(
@@ -190,7 +190,7 @@ class Oceannanremove(PreprocessModuleABC):  ## PG
 
                 self.final_locations = (
                     data.stack(ref=["lat", "lon"]).dropna(dim="ref").ref.load()
-                )  ## PG: flatten target in space and choose space points where data is not NaN.
+                )                                                                               
                 self.common_to_input_and_target = False
 
             self.fitted = True
@@ -206,24 +206,24 @@ class Oceannanremove(PreprocessModuleABC):  ## PG
 
     def transform(
         self, data: xr.DataArray
-    ):  ## PG: Pass a DataArray and sample at the extracted locations
+    ):                                                               
 
         conditions = ["lat" in data.dims, "lon" in data.dims]
 
-        if all(conditions):  ## PG: if a map get passeed
+        if all(conditions):                             
             sampled = data.stack(ref=["lat", "lon"]).sel(ref=self.final_locations)
-        else:  ## PG: If a flattened dataset is passed (in space)
+        else:                                                    
             sampled = data.sel(ref=self.final_locations)
 
         return sampled
 
     def inverse_transform(
         self, data: xr.DataArray
-    ):  ## PG: Write back the flattened data to maps
+    ):                                              
 
         return data.unstack().combine_first(
             self.reference_shape
-        )  ## Unstack the flattened spatial dim and write back to the initial format as saved in self.reference_shape using NaN as fill value
+        )                                                                                                                                    
 
     def _load_from_memory(self, load_dir: Path | str):
 

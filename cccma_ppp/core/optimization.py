@@ -34,9 +34,9 @@ class LRSchedulerConfig:
 class OptimizerConfig:
     lr: float = 0.0001
     weight_decay: float = 0
-    optimizer_type: str = "adam"  # type[torch.optim.Optimizer] = torch.optim.Adam
+    optimizer_type: str = "adam"                                                  
     lr_scheduler_config: LRSchedulerConfig | None = (
-        None  # = dataclasses.field(default_factory=CosineAnnealingLRScheduler)
+        None                                                                   
     )
 
     OPTIMIZER_REGISTERY: ClassVar[dict] = {
@@ -50,7 +50,7 @@ class OptimizerConfig:
 
     def build(self, module: moduleABC, num_batches: int = None, max_epochs: int = None):
 
-        # assert module.built, 'make sure module is built before optmizer.'
+                                                                           
 
         if self.lr_scheduler_config is not None:
             if self.lr_scheduler_config.total_epochs is None:
@@ -67,7 +67,7 @@ class OptimizerConfig:
 
         return OptimizerWrapper(
             self, module, num_batches, max_epochs
-        )  ## max_epochs will be used if total_epochs is not specified.
+        )                                                              
 
 
 class OptimizerWrapper:

@@ -574,3 +574,61 @@ def test_load_state_dict_explicit_none_values():
     assert agg.epoch_loss_terms is None
     assert agg.epoch_times is None
     assert agg.num_epochs_seen == 0
+
+
+def test_plot_skips_none_aggregator(tmp_path):
+    agg = make_agg("train", [1, 2])
+
+    MetricsAggregator.plot([agg, None], plot_dir=tmp_path)
+
+    assert len(list(tmp_path.glob("*.png"))) > 0
+
+
+def test_plot_uses_runtime_context_when_plot_dir_none(monkeypatch, tmp_path):
+    agg = make_agg("train", [1, 2])
+
+    monkeypatch.setattr(RuntimeContext, "GLOBAL_FIGURES_DIR", str(tmp_path))
+
+    MetricsAggregator.plot([agg], plot_dir=None)
+
+    assert len(list(tmp_path.glob("*.png"))) > 0
+
+
+def test_dist_compute_can_be_called_twice_without_new_records():
+    agg = MetricsAggregator(DummyDistributed(), "train")
+
+    agg.record({"loss": 4.0})
+
+    logs1 = agg._dist_compute()
+    logs2 = agg._dist_compute()
+
+    assert logs1["loss"] == 4.0
+    assert logs2["loss"] == 4.0
+    assert agg._aggregated_across_ranks is True
+
+
+def test_record_negative_value():
+    agg = MetricsAggregator(DummyDistributed(), "train")
+
+    agg.record({"loss": -2.0})
+
+    assert agg.loss_terms["loss"] == -2.0
+    assert agg.num_batches_seen == 1
+
+
+def test_record_numpy_scalar_value():
+    agg = MetricsAggregator(DummyDistributed(), "train")
+
+    agg.record({"loss": np.float64(3.5)})
+
+    assert agg.loss_terms["loss"] == 3.5
+    assert agg.num_batches_seen == 1
+
+
+def test_record_tensor_with_multiple_dimensions_uses_mean():
+    agg = MetricsAggregator(DummyDistributed(), "train")
+
+    value = torch.tensor([[1.0, 3.0], [5.0, 7.0]])
+    agg.record({"loss": value})
+
+    assert agg.loss_terms["loss"] == 4.0

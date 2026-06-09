@@ -17,14 +17,14 @@ class flowOutput:
 
 @dataclasses.dataclass
 class NormalizedFlowConfig:
-    # registery: ClassVar[Registery] = Registery()  ####  registery machinery is not part of the FlowSelector #####
+                                                                                                                   
 
     list_flows: list[FlowSelector]
     flow_sample_size: int = 5000
 
     def build(
         self, latent_size: int, condition_size: int = None
-    ):  ## this instatiates and build flow model at the same time.
+    ):                                                            
 
         return NormalizedFlowModel(
             config=self, latent_size=latent_size, condition_size=condition_size
@@ -61,7 +61,7 @@ class NormalizedFlowModel(flowABC):
         for flow in self.flows:
             x, ld = flow.forward(x, condition=condition)
             log_det = log_det + ld
-        # z, prior_logprob = x, self.prior.log_prob(x)
+                                                      
 
         return flowOutput(e_samples=x, log_det=log_det)
 
@@ -76,16 +76,13 @@ class NormalizedFlowModel(flowABC):
         return flowOutput(e_samples=x, log_det=log_det)
 
 
-# from core.config_classes import NormalizedFlowConfig
-########################################################################################################################################################
-#    Code below sourced from https://github.com/tonyduan/normalizing-flows/tree/master?tab=readme-ov-file with adjustments to make the flows conditional.
-########################################################################################################################################################
+                                                      
+                                                                                                                                                        
+                                                                                                                                                         
+                                                                                                                                                        
 
 
 class FCNN(nn.Module):
-    """
-    Simple fully connected neural network.
-    """
 
     def __init__(self, in_dim, out_dim, hidden_dim):
         super().__init__()
@@ -101,16 +98,11 @@ class FCNN(nn.Module):
         return self.network(x)
 
 
-# @NormalizedFlowConfig.register('maf')
+                                       
 
 
 @FlowSelector.register("maf")
 class MAF(flowABC):
-    """
-    Masked auto-regressive flow.
-
-    [Papamakarios et al. 2018]
-    """
 
     def __init__(
         self,
@@ -123,7 +115,7 @@ class MAF(flowABC):
 
     def build(self, dim, condition_size=None):
         self.dim = dim
-        # self.layers = nn.ModuleList()
+                                       
         layers = []
         added_features = condition_size if condition_size is not None else 0
         for i in range(1, self.dim):
@@ -132,7 +124,7 @@ class MAF(flowABC):
         if condition_size is None:
             self.register_parameter(
                 "initial_param", param=nn.Parameter(torch.Tensor(1, 2))
-            )  ## make sure to register the newly defined parameters so that they are trainable!
+            )                                                                                   
             self.reset_parameters()
         else:
             self.initial_param = self.base_network(added_features, 2, self.hidden_dim)
@@ -183,21 +175,16 @@ class MAF(flowABC):
                 out = self.layers[i - 1](x_in)
                 mu, alpha = out[:, 0], out[:, 1]
             x[:, i] = mu + torch.exp(alpha) * z[:, i]
-            # print(alpha)
-            log_det += alpha  # torch.clamp(-1*alpha, max=10)
+                          
+            log_det += alpha                                 
         return x, log_det
 
 
-# @NormalizedFlowConfig.register('realnvp')
+                                           
 
 
 @FlowSelector.register("realnvp")
 class RealNVP(flowABC):
-    """
-    Non-volume preserving flow.
-
-    [Dinh et. al. 2017]
-    """
 
     def __init__(self, hidden_dim=16, base_network=FCNN):
         super().__init__()

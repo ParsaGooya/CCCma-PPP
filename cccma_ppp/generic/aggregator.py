@@ -51,9 +51,6 @@ class MetricsAggregator:
 
     @torch.no_grad()
     def record(self, loss_dict: dict[str, torch.Tensor | int | float]) -> None:
-        """
-        Record one "local" batch losses.
-        """
         for name, value in loss_dict.items():
             if value is None:
                 continue
@@ -68,12 +65,6 @@ class MetricsAggregator:
 
     @torch.no_grad()
     def _dist_compute(self) -> dict[str, float]:
-        """
-        Returns globally averaged metrics across all ranks.
-
-        The average is:
-            total metric sum across all GPUs / total number of recorded batches
-        """
         logs = {}
 
         for name in sorted(self.loss_terms):
@@ -99,15 +90,6 @@ class MetricsAggregator:
     def record_epoch(
         self, logs: dict[str, float], replace_index: int = None, time_elapsed=None
     ):
-        """
-        Store already-synchronized epoch-level logs.
-
-        If replace_index is None:
-            append a new epoch.
-
-        If replace_index is not None:
-            replace an existing epoch entry without incrementing num_epochs_seen.
-        """
         if not self._aggregated_across_ranks:
             raise RuntimeError(
                 "Call _dist_compute() before record_epoch(), so losses are "
@@ -158,17 +140,6 @@ class MetricsAggregator:
         color_styles_list: list[tuple[str, str]] = None,
         plot_dir: str | Path | None = None,
     ) -> None:
-        """
-        Plot every recorded metric across all aggregators.
-
-        Known names:
-            train -> blue solid
-            val/validation -> orange dashed
-
-        Other names:
-            random color and linestyle.
-
-        """
         if plot_dir is None:
             plot_dir = Path(RuntimeContext.GLOBAL_FIGURES_DIR)
         else:
@@ -205,7 +176,7 @@ class MetricsAggregator:
         loss_kinds: set[str] = set()
         epochs_range = np.arange(num_epochs - loss_lengths + 1, num_epochs + 1)
 
-        rng = random.Random()  ## remove the already chosen ones
+        rng = random.Random()                                   
         random_colors = [
             "tab:green",
             "tab:blue",

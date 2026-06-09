@@ -1,8 +1,9 @@
 import numpy as np
 import dataclasses
-from cccma_ppp.core.registery import *
+import torch
+from cccma_ppp.core.registery import Registery
 from cccma_ppp.core.core_abc import moduleABC
-from cccma_ppp.models.models_abc import *
+from cccma_ppp.models.models_abc import modelABC, flowABC, CheckpointConfig
 
 from typing import Any, ClassVar
 from collections.abc import Callable, Mapping
@@ -21,10 +22,10 @@ class ModuleSelector:
         self._module_config = self.registery.get(self.type.lower(), self.config)
 
     @classmethod
-    def register(cls, name: str) -> Callable[..., moduleABC]:  # noqa: UP006
+    def register(cls, name: str) -> Callable[..., moduleABC]:               
         return cls.registery.register(
             name.lower()
-        )  ##attentin: the return is on cls.registery. This means even when register is called on an instance of StepSelector, it will still register the type on the class-level registery, which is what we want.
+        )                                                                                                                                                                                                          
 
     @classmethod
     def available(cls):
@@ -81,10 +82,10 @@ class ModelSelector:
                 warnings.warn("Froze model weights ...")
 
     @classmethod
-    def register(cls, name: str) -> Callable[..., modelABC]:  # noqa: UP006
+    def register(cls, name: str) -> Callable[..., modelABC]:               
         return cls.registery.register(
             name.lower()
-        )  ##attentin: the return is on cls.registery. This means even when register is called on an instance of StepSelector, it will still register the type on the class-level registery, which is what we want.
+        )                                                                                                                                                                                                          
 
     @classmethod
     def available(cls):
@@ -107,10 +108,10 @@ class deterministicModelSelector(ModelSelector):
     pass
 
 
-##### can deleter this and add the registery machinery
-#  to the NormalizedFlowConfig instead. This is because
-# similar to preprocessing, we need to be able to pass
-# a list of flows on top of each other #######
+                                                      
+                                                       
+                                                      
+                                              
 
 
 @dataclasses.dataclass
@@ -123,10 +124,10 @@ class FlowSelector:
         pass
 
     @classmethod
-    def register(cls, name: str) -> Callable[..., flowABC]:  # noqa: UP006
+    def register(cls, name: str) -> Callable[..., flowABC]:               
         return cls.registery.register(
             name.lower()
-        )  ##attentin: the return is on cls.registery. This means even when register is called on an instance of StepSelector, it will still register the type on the class-level registery, which is what we want.
+        )                                                                                                                                                                                                          
 
     @classmethod
     def available(cls):

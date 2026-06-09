@@ -23,7 +23,7 @@ class BatchData:
     target: torch.Tensor
     added_features: torch.Tensor = None
     return_spatial_mask: bool = False
-    reduce_spatial_mask: bool = False  # creates static mask
+    reduce_spatial_mask: bool = False                       
 
     def __post_init__(self):
         if self.return_spatial_mask:
@@ -115,7 +115,7 @@ class TrainDataloaderConfig:
         if distributed.distributed:
             self.dataset_config._load_fitted_preprocessors(
                 load_dir=save_path
-            )  # all ranks load from disk after the barrier, including rank 0, to guarantee everyone uses the exact saved state
+            )                                                                                                                  
 
         self._setup = True
 
@@ -191,13 +191,13 @@ class TrainDataloaderConfig:
 
 @dataclasses.dataclass
 class Dataloader:
-    config: TrainDataloaderConfig  # | InferenceDataloaderConfig
+    config: TrainDataloaderConfig                               
     dataset: XArrayDataset
     collate_fn: Callable
     rank: int = 0
     world_size: int = 1
-    return_spatial_mask: bool = False  ##later to be used for partial convs
-    reduce_spatial_mask: bool = False  ##later to be used for partial convs
+    return_spatial_mask: bool = False                                      
+    reduce_spatial_mask: bool = False                                      
 
     def __post_init__(self):
 
@@ -208,7 +208,7 @@ class Dataloader:
             batch_size=self.config.batch_size,
             shuffle=shuffle,
             sampler=self.sampler,
-            collate_fn=partial(  ###Safer alternative for lambda to avoid break on some multiprocessing backends because lambdas are not pickleable.
+            collate_fn=partial(                                                                                                                     
                 self.collate_fn,
                 return_spatial_mask=self.return_spatial_mask,
                 reduce_spatial_mask=self.reduce_spatial_mask,

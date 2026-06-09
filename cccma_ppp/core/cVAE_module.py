@@ -2,8 +2,9 @@ import torch
 import numpy as np
 from pathlib import Path
 import warnings
+import dataclasses
+import dacite
 from cccma_ppp.loss.loss import Losspipeline
-from cccma_ppp.core.registery import *
 from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC
 from cccma_ppp.core.selectors import (
     ModuleSelector,
@@ -55,9 +56,9 @@ class cVAEConfig(moduleConfigABC):
         self.latent_size = self.model_config.latent_size
 
         if self.prior_flow_config is not None:
-            ## read condition_dependant_latent from the model_config so that we know the flow should be conditional.
+                                                                                                                    
             self.condition_dependant_flow = self.model_config.condition_dependant_latent
-            ## if prior flow is requested, set the condition_dependant_flow tur for the model because we don't want to generate cond_mu and cond_log_var.
+                                                                                                                                                         
             if self.condition_dependant_flow:
                 self.model_config._resolve_flow_settings(self.condition_dependant_flow)
 
@@ -66,7 +67,7 @@ class cVAEConfig(moduleConfigABC):
         )
 
     def build(
-        self,  ## this instantiates cVAE module and builds it at the same time.
+        self,                                                                  
         input_shape: np.ndarray,
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
@@ -80,9 +81,6 @@ class cVAEConfig(moduleConfigABC):
         )
 
     def _load_from_checkpoint(self, load_path: Path | str):
-        """
-        Loads model and prior flow config but allows control over the rest.
-        """
 
         checkpoint_module, checkpoint_config = _load_config_from_checkpoint(
             Path(load_path)
@@ -173,7 +171,7 @@ class cVAE(moduleABC):
         if self.min_posterior_variance is not None:
             self.min_posterior_variance = torch.log(
                 torch.tensor(self.min_posterior_variance)
-            )  # .expand(self.latent_size)
+            )                             
 
         self.model = self.model_config.build(
             input_shape=input_shape,
@@ -215,11 +213,11 @@ class cVAE(moduleABC):
 
         if (
             target_mask is not None and target_mask.shape == target.shape
-        ):  ## checking if target_mask is static
+        ):                                      
             target_mask = target_mask.unsqueeze(0).expand_as(output.output)
         target = target.unsqueeze(0).expand_as(
             output.output
-        )  ## B x C x F -> Z x B x C x F
+        )                               
 
         step_arguments = {"generative_modeling": True}
 

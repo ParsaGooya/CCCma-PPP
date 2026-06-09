@@ -544,7 +544,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             selection={"ensembles": config.info.coords["ensembles"]}
             if config.info.coords["ensembles"] is not None
             else None,
-            #    preprocessor = self.model.preprocessing_pipeline,  ##checking if doing this once is faster
+                                                                                                           
             concat_dim=config.concat_dim,
             rename_dict=config.rename_dict,
         )
@@ -665,7 +665,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
 
             condition = self.config.condition.preprocessing_pipeline.transform(
                 self.condition_dataset.sel(**selection)
-            )  ##check if transforming once is faster
+            )                                        
             condition = _unwrap_data_variables(condition)
 
         if self.observation_dataset is not None:
@@ -678,7 +678,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
 
             target = self.config.observation.preprocessing_pipeline.transform(
                 self.observation_dataset.sel(**selection)
-            )  ##check if transforming once is faster
+            )                                        
             target = _unwrap_data_variables(target)
 
         year = float(self.model_indexes["year"][ind])
@@ -699,7 +699,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
 
             input = self.config.model.preprocessing_pipeline.transform(
                 self.model_dataset.sel(**selection)
-            )  ##check if transforming once is faster
+            )                                        
             input = _unwrap_data_variables(input)
 
             if self._autoencoding_input:
@@ -773,83 +773,83 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
 
             return time_features
 
-    # def __getitem__(self, ind):
-    #     year = float(self.indexes['year'][ind])
-    #     lead_time = float(self.indexes['lead_time'][ind])
+                                 
+                                                 
+                                                           
 
-    #     if self.condition_dataset is not None:
+                                                
 
-    #         if self.config.condition_method != 'static':
-    #             selection = dict(year = year, lead_time = lead_time)
-    #         else:
-    #             selection = {}
+                                                          
+                                                                      
+                   
+                                
 
-    #         if self.config.condition_method == 'cross_ensemble':
-    #             selection['ensembles'] = np.random.choice(self.config.condition.info.coords['ensembles'])
+                                                                  
+                                                                                                           
 
-    #         elif self.config.condition_method == 'same_member':
-    #             selection['ensembles'] = self.indexes[ind].ensembles.values
+                                                                 
+                                                                             
 
-    #         condition = self.config.condition.preprocessing_pipeline.transform(self.condition_dataset.sel(**selection))  ##check if transforming once is faster
-    #         condition = _unwrap_data_variables(condition)
+                                                                                                                                                                 
+                                                           
 
-    #     if self.observation_dataset is not None:
-    #         selection = dict(year = year, month = lead_time)
-    #         lead_year, lead_month = np.divmod(lead_time - 0.5, 12)
-    #         selection['year'] +=   lead_year
-    #         selection['month'] =  lead_month + 0.5
+                                                  
+                                                              
+                                                                    
+                                              
+                                                    
 
-    #         if all([not self.config.observation.ensemble_mean, self.config.observation.info.coords['ensembles'] is not None]):
-    #             selection['ensembles'] = np.random.choice(self.config.observation.info.coords['ensembles'])
+                                                                                                                                
+                                                                                                             
 
-    #         target = self.config.observation.preprocessing_pipeline.transform(self.observation_dataset.sel(**selection))  ##check if transforming once is faster
-    #         target = _unwrap_data_variables(target)
+                                                                                                                                                                  
+                                                     
 
-    #     selection = dict(year = year, lead_time = lead_time)
+                                                              
 
-    #     if all([self.condition_dataset is not None,  self.config._using_model_data_as_condition,  not self._autoencoding_input]):
-    #         input = condition
+                                                                                                                                   
+                               
 
-    #     else:
-    #         if all([not self.config.model.ensemble_mean, self.config.model.info.coords['ensembles'] is not None]):
-    #             selection['ensembles'] = self.indexes[ind].ensembles.values
-    #         input = self.config.model.preprocessing_pipeline.transform(self.model_dataset.sel(**selection))  ##check if transforming once is faster
-    #         input = _unwrap_data_variables(input)
+               
+                                                                                                                    
+                                                                             
+                                                                                                                                                     
+                                                   
 
-    #         if self._autoencoding_input:
-    #             target = input
+                                          
+                                
 
-    #         if all([self.condition_dataset is not None,  self.config._using_model_data_as_condition]):
-    #             input = condition
+                                                                                                        
+                                   
 
-    #         elif all([self.condition_dataset is not None, not self.config._using_model_data_as_condition]):
-    #             input = xr.concat([input, condition], dim = 'channels')
+                                                                                                             
+                                                                         
 
-    #     if self.time_features is not None:
-    #         time_features_list = np.array([self.time_features]).flatten()
-    #         feature_indices = {'year': 0, 'lead_time': 1, 'month_sin': 2, 'month_cos': 3}
+                                            
+                                                                           
+                                                                                           
 
-    #         target_time = year + lead_time//12
-    #         target_month = lead_time
+                                                
+                                      
 
-    #         y = (target_time - np.min(self.config.get_common_time)) /  (np.max(self.config.get_common_time) - np.min(self.config.get_common_time))
-    #         lt = lead_time / self.config.num_lead_months
-    #         msin = np.sin(2 * np.pi * target_month/12.0)
-    #         mcos = np.cos(2 * np.pi * target_month/12.0)
+                                                                                                                                                    
+                                                          
+                                                          
+                                                          
 
-    #         time_features = np.stack([y, lt, msin, mcos])
-    #         time_features = time_features[..., [feature_indices[k] for k in time_features_list]]
-    #         if len(input.shape) > 2:
-    #             time_features = np.broadcast_to(time_features[:, None, None], (len(time_features), input.shape[-2], input.shape[-1]))
-    #     else:
-    #         time_features = None
+                                                           
+                                                                                                  
+                                      
+                                                                                                                                       
+               
+                                  
 
-    #     datadict = dict(input = torch.as_tensor(input.to_numpy(), dtype=torch.float32),
-    #                     target = torch.as_tensor(target.to_numpy(), dtype=torch.float32),
-    #                     added_features = torch.as_tensor(time_features, dtype=torch.float32)
-    #                       if time_features is not None else None)
+                                                                                         
+                                                                                           
+                                                                                              
+                                                                   
 
-    #     if self.return_metadata:
-    #         return datadict, selection
-    #     else:
-    #         return datadict
+                                  
+                                        
+               
+                             

@@ -2,25 +2,28 @@ import abc
 
 
 class XarrayDatasetConfigABC(abc.ABC):
-    """Abstract base class for xarray dataset configuration."""
 
     @abc.abstractmethod
-    def build(self): ...
+    def build(self):
+        pass
 
 
 class XarrayDatasetABC(abc.ABC):
-    """Abstract base class for xarray datasets."""
 
     @abc.abstractmethod
-    def __getitem__(self, index): ...
+    def __getitem__(self, index):
+        pass
 
     @abc.abstractmethod
-    def __len__(self): ...
+    def __len__(self):
+        pass
 
 
 class DataConfig(abc.ABC):
     @abc.abstractmethod
-    def _allowed_dims(cls): ...
+    def _allowed_dims(cls):
+        pass
 
     @abc.abstractmethod
-    def _required_dims(cls): ...
+    def _required_dims(cls):
+        pass

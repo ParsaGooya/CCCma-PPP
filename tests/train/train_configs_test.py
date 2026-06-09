@@ -27,16 +27,6 @@ def _active_pipeline(loader):
 
 
 def make_cfg(*args, **kwargs):
-    """
-    Test-only wrapper around TrainConfig.
-
-    Production TrainConfig enforces:
-      - NUM_OUTPUT_DIMS == 1 requires Oceannanremove
-      - NUM_OUTPUT_DIMS != 1 forbids Oceannanremove
-
-    Many dummy tests are not about preprocessing, so this wrapper removes
-    Oceannanremove for non-MLP dummy modules before TrainConfig validation.
-    """
     loader = args[2]
     module = args[3]
     pipeline = _active_pipeline(loader)
@@ -152,9 +142,6 @@ class DummyTrainLoader:
         self.target_var_metadata = {}
 
     def sanitize(self, module):
-        """
-        Explicit sanitizer used only by builder tests.
-        """
         if not getattr(self, "_force_sanitize", False):
             return
 
@@ -244,13 +231,6 @@ def test_no_observation_other_type_valid():
 
 
 def test_cvae_lowercase_branch_current_source_behavior_beta_not_required():
-    """
-    Current source checks:
-
-        self.module.type.lower() in ["cVAE"]
-
-    Since "cvae" != "cVAE", this branch is unreachable for normal strings.
-    """
     cfg = make_cfg(
         "x",
         1,

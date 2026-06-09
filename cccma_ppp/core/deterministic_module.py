@@ -1,12 +1,11 @@
 import torch
 import numpy as np
-import pathlib as Path
 from pathlib import Path
+import dacite
 import dataclasses
 import gc
 import warnings
 from cccma_ppp.loss.loss import Losspipeline
-from cccma_ppp.core.registery import *
 from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC
 from cccma_ppp.core.selectors import (
     ModuleSelector,

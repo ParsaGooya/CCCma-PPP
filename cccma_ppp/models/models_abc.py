@@ -22,10 +22,12 @@ class CheckpointConfig:
 
 class flowABC(nn.Module, abc.ABC):
     @abc.abstractmethod
-    def forward(self, x, condition=None): ...
+    def forward(self, x, condition=None):
+        pass
 
     @abc.abstractmethod
-    def inverse(self, z, condition=None): ...
+    def inverse(self, z, condition=None):
+        pass
 
 
 class modelConfigABC(abc.ABC):
@@ -46,7 +48,8 @@ class modelConfigABC(abc.ABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
         **kwargs,
-    ): ...
+    ):
+        pass
 
 
 class cVAEmodelConfigABC(modelConfigABC, abc.ABC):
@@ -86,15 +89,16 @@ class modelABC(nn.Module, abc.ABC):
         self.GENERATOR = config.GENERATOR
 
     @abc.abstractmethod
-    def forward(self, x): ...
+    def forward(self, x):
+        pass
 
     @final
     def _initialize_weights(self):
         self.apply(lambda m: weights_init(m, method=self.init_method))
 
-    # @final
-    # def _add_checkpoint_config(self, checkpoint_config : CheckpointConfig) -> None:
-    #      self.checkpoint_config = checkpoint_config
+            
+                                                                                     
+                                                     
 
     @final
     def _get_device(self) -> torch.device:
@@ -152,16 +156,20 @@ class cVAEmodelsABC(modelABC, abc.ABC):
         self.generative_modeling = True
 
     @abc.abstractmethod
-    def predict(self, x): ...
+    def predict(self, x):
+        pass
 
     @abc.abstractmethod
-    def _recognition(self) -> tuple[torch.Tensor, ...]: ...
+    def _recognition(self) -> tuple[torch.Tensor, ...]:
+        pass
 
     @abc.abstractmethod
-    def _condition(self) -> tuple[torch.Tensor, ...]: ...
+    def _condition(self) -> tuple[torch.Tensor, ...]:
+        pass
 
     @abc.abstractmethod
-    def _generate(self) -> torch.Tensor: ...
+    def _generate(self) -> torch.Tensor:
+        pass
 
 
 def weights_init(m, method="xavier"):

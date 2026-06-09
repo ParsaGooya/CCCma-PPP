@@ -13,7 +13,8 @@ class moduleABC(nn.Module, abc.ABC):
         super().__init__()
 
     @abc.abstractmethod
-    def init_loss_function(self, reconstruction_loss: Losspipeline, **kwargs): ...
+    def init_loss_function(self, reconstruction_loss: Losspipeline, **kwargs):
+        pass
 
     @abc.abstractmethod
     def _compute_loss(self):
@@ -65,6 +66,9 @@ class moduleConfigABC(abc.ABC):
         input_shape: np.ndarray,
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
-    ): ...
+    ):
+        pass
+
     @abc.abstractmethod
-    def _load_from_checkpoint(self): ...
+    def _load_from_checkpoint(self):
+        pass

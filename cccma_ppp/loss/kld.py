@@ -59,10 +59,10 @@ class KLD(lossABC):
 
     def forward(
         self,
-        mu: torch.Tensor,  # samples x F
-        log_var: torch.Tensor,  # samples x F
-        cond_mu: torch.Tensor | None = None,  # samples x F
-        cond_log_var: torch.Tensor | None = None,  # samples x F
+        mu: torch.Tensor,               
+        log_var: torch.Tensor,               
+        cond_mu: torch.Tensor | None = None,               
+        cond_log_var: torch.Tensor | None = None,               
         prior_flow: NormalizedFlowModel = None,
         print_loss=False,
     ) -> torch.Tensor:
@@ -105,14 +105,14 @@ class KLD(lossABC):
             if cond_mu is None:
                 condition = None
             else:
-                # condition = cond_mu
-                # condition = condition.unsqueeze(0).expand(*posterior_samples.shape[0:-1], condition.shape[-1])
+                                     
+                                                                                                                
                 condition = cond_mu.unsqueeze(0).expand(
                     posterior_samples.shape[0], *cond_mu.shape
                 )
                 condition = torch.flatten(condition, start_dim=0, end_dim=1)
 
-            # e_samples, log_det =
+                                  
             flow_output = prior_flow(
                 torch.flatten(posterior_samples, start_dim=0, end_dim=1),
                 condition=condition,

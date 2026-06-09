@@ -8,7 +8,7 @@ import os
 import time
 
 from cccma_ppp.core.core_abc import moduleABC
-from cccma_ppp.core.optimization import *
+from cccma_ppp.core.optimization import OptimizerWrapper
 from cccma_ppp.core.cVAE_module import cVAE
 from cccma_ppp.data.dataloader import Dataloader
 from cccma_ppp.generic.distributed import Distributed
@@ -44,7 +44,7 @@ class TrainerConfig:
         if validation_data_loader is not None:
             self.num_validation_batches = len(validation_data_loader)
 
-        # assert module.built, 'make sure the module is built.'
+                                                               
 
         if isinstance(module, cVAE):
             assert self.beta_finder is not None, (
@@ -84,7 +84,7 @@ class Trainer:
         self.batch_step = 0
         self._start_epoch = 0
         self._epochs_trained = self._start_epoch
-        # self._current_epoch_num_batches_seen = 0   ###you can work with this if you need batch level checkpoining and restarting
+                                                                                                                                  
         self._best_validation_loss = float("inf")
         self.earlystopping_counter = 0
 
@@ -135,7 +135,7 @@ class Trainer:
             MetricsAggregator(distributed, name="Validation")
             if self.ValidationLoader is not None
             else None
-        )  ##to do: add flexible validation loss
+        )                                       
 
         if not self.save_checkpoint:
             self.log_root(
@@ -166,16 +166,6 @@ class Trainer:
         self.log_root(logging.INFO, "Trainer setup complete.")
 
     def train(self):
-        """
-        Main training loop.
-
-        Responsibilities:
-        - loop over epochs
-        - run training epoch
-        - optionally run validation epoch
-        - handle early stopping
-        - checkpoint from root rank only
-        """
         assert self._setup, "make sure to setup the trainer first."
         self.log_root(logging.INFO, "Starting Training Loop...")
         self.start_time_train = time.time()
@@ -194,7 +184,7 @@ class Trainer:
 
                 validation_loss = validation_logs[
                     "total_loss"
-                ]  ## can later be an input atgument that customizes validation loss
+                ]                                                                   
                 improved = self._is_improved(validation_loss)
 
                 if improved:
@@ -249,8 +239,8 @@ class Trainer:
                 break
 
         if self.batch_step % self.config.gradient_accumulation_steps != 0:
-            # The model changed after the last validation/checkpoint,
-            # so  validate/checkpoint again.
+                                                                     
+                                            
 
             if not self._should_stop_early():
                 self._optimizer_step()
@@ -262,7 +252,7 @@ class Trainer:
 
                     validation_loss = validation_logs[
                         "total_loss"
-                    ]  ## can later be an input atgument that customizes validation loss
+                    ]                                                                   
                     improved = self._is_improved(validation_loss)
 
                     if improved:
@@ -293,31 +283,21 @@ class Trainer:
         self.log_root(logging.INFO, f"Training finished in {time_elapsed:.2f}s")
 
     def _train_on_epoch(self):
-        """
-        Train for one epoch.
-
-        Responsibilities:
-        - set the DistributedSampler epoch
-        - put module in train mode
-        - iterate over train batches
-        - call _train_on_batch()
-        - record batch metrics
-        """
-        # self.log_root( logging.INFO, f'epoch {self._epochs_trained + 1}/{self.epochs}')
+                                                                                         
         self.TrainLoader.set_epoch(self._epochs_trained)
         self.module.train()
 
-        # epoch_data = self.TrainLoader.subset_loader(start_batch=self._current_epoch_num_batches_seen)  ###you can work with this if you need batch level checkpoining and restarting
+                                                                                                                                                                                      
 
         start_time = time.time()
         for batch_id, batch in enumerate(self.TrainLoader):
             batch_loss_dict = self._train_on_batch(batch)
 
-            # self._current_epoch_num_batches_seen += 1      ###you can work with this if you need batch level checkpoining and restarting
+                                                                                                                                          
             self.train_aggregator.record(batch_loss_dict)
 
         self._epochs_trained += 1
-        # self._current_epoch_num_batches_seen = 0 ###you can work with this if you need batch level checkpoining and restarting
+                                                                                                                                
         time_elapsed = time.time() - start_time
 
         return time_elapsed
@@ -331,7 +311,7 @@ class Trainer:
             beta = self.beta_finder(self.global_step)
             kwargs = dict(beta=beta)
 
-        with torch.cuda.amp.autocast(  # device_type=self.device.type,
+        with torch.cuda.amp.autocast(                                 
             enabled=self.scaler.is_enabled() and self.device.type == "cuda"
         ):
             loss, loss_dict = self.raw_module._compute_loss(data=batch, **kwargs)
@@ -348,14 +328,6 @@ class Trainer:
 
     @torch.no_grad()
     def _validate_on_epoch(self):
-        """
-        Validate for one epoch.
-
-        Responsibilities:
-        - put module in eval mode
-        - iterate over validation batches
-        - record batch metrics
-        """
         if self.ValidationLoader is None:
             raise RuntimeError(
                 "ValidationLoader is None, but validation was requested."
@@ -366,7 +338,7 @@ class Trainer:
         for batch_id, batch in enumerate(self.ValidationLoader):
             batch_loss_dict = self._validate_on_batch(batch)
 
-            # self._current_epoch_num_batches_seen += 1      ###you can work with this if you need batch level checkpoining and restarting
+                                                                                                                                          
             self.validation_aggregator.record(batch_loss_dict)
 
     @torch.no_grad()
@@ -380,7 +352,7 @@ class Trainer:
             kwargs = dict(beta=beta)
 
         with torch.cuda.amp.autocast(
-            # device_type=self.device.type,
+                                           
             enabled=self.scaler.is_enabled() and self.device.type == "cuda"
         ):
             _, loss_dict = self.raw_module._compute_loss(data=batch, **kwargs)
@@ -400,8 +372,8 @@ class Trainer:
         self.scaler.update()
         new_scale = self.scaler.get_scale()
 
-        step_was_skipped = new_scale < old_scale  ##sometimes
-        if not step_was_skipped:  ## With AMP, GradScaler.step() may skip the optimizer step if gradients contain inf/nan. If that happens, you probably should not step the LR scheduler or increment global_step
+        step_was_skipped = new_scale < old_scale             
+        if not step_was_skipped:                                                                                                                                                                                  
             self.optimizer.scheduler_step()
             self.global_step += 1
 
@@ -460,10 +432,6 @@ class Trainer:
     def _save_checkpoint(
         self, name: str, train_logs: dict, validation_logs: dict | None = None
     ):
-        """
-        Save checkpoint.
-        For DDP, save the underlying module, not the DDP wrapper.
-        """
 
         checkpoint = {
             "epoch": self._epochs_trained,
@@ -494,16 +462,6 @@ class Trainer:
             self.distributed.barrier()
 
     def _load_checkpoint(self, path: str | Path | None = None, strict: bool = True):
-        """
-        Load trainer checkpoint.
-
-        Assumes:
-        - setup() has already been called
-        - module has already been moved to device
-        - DDP wrapping has already happened if distributed
-        - optimizer has already been built
-        - scaler has already been created
-        """
 
         if path is None:
             path = Path(self.checkpoint_dir) / "best.pt"
