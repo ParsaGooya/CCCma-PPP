@@ -239,7 +239,7 @@ class WeightsConfig:
         if self.load_dir is not None:
             weights = xr.open_dataset(Path(self.load_dir))
             if isinstance(weights, xr.Dataset):
-                weights = _unwrape_data_variables(weights)
+                weights = _unwrap_data_variables(weights)
 
             if "ref" in weights.dims and {"lat", "lon"}.issubset(weights.coords):
                 weights = weights.set_index(ref=["lat", "lon"])
@@ -288,7 +288,7 @@ class WeightsConfig:
         return weights
 
 
-def _unwrape_data_variables(dataset: xr.Dataset):
+def _unwrap_data_variables(dataset: xr.Dataset):
 
     return xr.concat(
         [dataset[v].expand_dims("channels", axis=0) for v in list(dataset.data_vars)],

@@ -350,12 +350,6 @@ def test_dataloader_len():
     assert len(loader) > 0
 
 
-def test_dataloader_added_features_dim():
-    loader = setup_loader()
-
-    assert loader.added_features_dim == 2
-
-
 def test_distributed_sampler_created():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),

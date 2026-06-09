@@ -13,7 +13,7 @@ from cccma_ppp.data.utils_data import (
     ObsDataConfig,
     ConditionDataConfig,
     WeightsConfig,
-    _unwrape_data_variables,
+    _unwrap_data_variables,
     _load_xarray_data,
     _create_train_mask,
 )
@@ -666,7 +666,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             condition = self.config.condition.preprocessing_pipeline.transform(
                 self.condition_dataset.sel(**selection)
             )  ##check if transforming once is faster
-            condition = _unwrape_data_variables(condition)
+            condition = _unwrap_data_variables(condition)
 
         if self.observation_dataset is not None:
             year = float(self.obs_indexes["year"][ind])
@@ -679,7 +679,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             target = self.config.observation.preprocessing_pipeline.transform(
                 self.observation_dataset.sel(**selection)
             )  ##check if transforming once is faster
-            target = _unwrape_data_variables(target)
+            target = _unwrap_data_variables(target)
 
         year = float(self.model_indexes["year"][ind])
         lead_time = float(self.model_indexes["lead_time"][ind])
@@ -700,7 +700,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             input = self.config.model.preprocessing_pipeline.transform(
                 self.model_dataset.sel(**selection)
             )  ##check if transforming once is faster
-            input = _unwrape_data_variables(input)
+            input = _unwrap_data_variables(input)
 
             if self._autoencoding_input:
                 target = input
@@ -791,7 +791,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
     #             selection['ensembles'] = self.indexes[ind].ensembles.values
 
     #         condition = self.config.condition.preprocessing_pipeline.transform(self.condition_dataset.sel(**selection))  ##check if transforming once is faster
-    #         condition = _unwrape_data_variables(condition)
+    #         condition = _unwrap_data_variables(condition)
 
     #     if self.observation_dataset is not None:
     #         selection = dict(year = year, month = lead_time)
@@ -803,7 +803,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
     #             selection['ensembles'] = np.random.choice(self.config.observation.info.coords['ensembles'])
 
     #         target = self.config.observation.preprocessing_pipeline.transform(self.observation_dataset.sel(**selection))  ##check if transforming once is faster
-    #         target = _unwrape_data_variables(target)
+    #         target = _unwrap_data_variables(target)
 
     #     selection = dict(year = year, lead_time = lead_time)
 
@@ -814,7 +814,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
     #         if all([not self.config.model.ensemble_mean, self.config.model.info.coords['ensembles'] is not None]):
     #             selection['ensembles'] = self.indexes[ind].ensembles.values
     #         input = self.config.model.preprocessing_pipeline.transform(self.model_dataset.sel(**selection))  ##check if transforming once is faster
-    #         input = _unwrape_data_variables(input)
+    #         input = _unwrap_data_variables(input)
 
     #         if self._autoencoding_input:
     #             target = input

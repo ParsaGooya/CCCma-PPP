@@ -6,6 +6,7 @@ from cccma_ppp.preprocessing.preprocessing import (
     PreprocessingStepSelector,
     PreprocessingPipeline,
 )
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 class FakeLoaded:
@@ -210,6 +211,9 @@ def test_pipeline_save(monkeypatch, tmp_path):
     pipe = make_pipeline()
 
     fake_data = FakeData({"year": np.array([1])})
+
+    monkeypatch.setattr(RuntimeContext, "GLOBAL_EXP_DIR", str(tmp_path))
+
     pipe.fit(base_data=fake_data, save=True)
 
     saved = list(tmp_path.rglob("*.joblib"))
@@ -221,11 +225,14 @@ def test_pipeline_load(monkeypatch, tmp_path):
 
     pipe = make_pipeline()
     fake_data = FakeData({"year": np.array([1])})
+
+    monkeypatch.setattr(RuntimeContext, "GLOBAL_EXP_DIR", str(tmp_path))
+
     pipe.fit(base_data=fake_data, save=True)
 
     saved = list(tmp_path.rglob("*.joblib"))[0]
 
-    new_pipe = PreprocessingPipeline(load_dir=saved.parent, load_name=saved.name)
+    new_pipe = PreprocessingPipeline(load_dir=saved)
     new_pipe.fit()
 
     assert new_pipe.fitted
@@ -238,9 +245,11 @@ def test_load_unfitted_pipeline(tmp_path, monkeypatch):
 
     joblib.dump(FakeLoaded(fitted=False), bad)
 
-    pipe = PreprocessingPipeline(load_dir=tmp_path, load_name="bad.joblib")
+    pipe = PreprocessingPipeline(load_dir=bad)
 
     with pytest.raises(AssertionError):
+        monkeypatch.setattr(RuntimeContext, "GLOBAL_EXP_DIR", str(tmp_path))
+
         pipe.fit()
 
 
@@ -281,7 +290,7 @@ def test_fit_uses_load_dir(monkeypatch, tmp_path):
 
     joblib.dump(FakeLoaded(), file)
 
-    pipe = PreprocessingPipeline(load_dir=tmp_path, load_name="pipe.joblib")
+    pipe = PreprocessingPipeline(load_dir=file)
 
     pipe.fit()
 
@@ -293,9 +302,7 @@ def test_load_default_name(monkeypatch, tmp_path):
 
     joblib.dump(FakeLoaded(name="instance_1"), file)
 
-    pipe = PreprocessingPipeline(load_dir=tmp_path)
-    pipe.name = "instance_1"
-
+    pipe = PreprocessingPipeline(load_dir=file)
     pipe.fit()
 
     assert pipe.fitted
@@ -330,6 +337,7 @@ def test_add_preprocessor_mid_pipeline():
 
 def test_save_existing_directory(monkeypatch, tmp_path):
     monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
+    monkeypatch.setattr(RuntimeContext, "GLOBAL_EXP_DIR", str(tmp_path))
 
     dir_path = tmp_path / "preprocessing_pipeline"
     dir_path.mkdir()

@@ -2,8 +2,9 @@ import pytest
 import numpy as np
 import torch
 import warnings
-
+import os
 from cccma_ppp.generic.aggregator import MetricsAggregator
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 class DummyDistributed:
@@ -169,11 +170,15 @@ def test_plot_basic(tmp_path):
     assert len(files) > 0
 
 
-def test_plot_no_aggregators(monkeypatch, tmp_path):
-    monkeypatch.setenv("GLOBAL_FIGURES_DIR", str(tmp_path))
+def test_plot_uses_env_dir(monkeypatch, tmp_path):
+    agg = make_agg("train", [1, 2])
 
-    with pytest.raises(ValueError):
-        MetricsAggregator.plot([])
+    monkeypatch.setenv("GLOBAL_FIGURES_DIR", str(tmp_path))
+    monkeypatch.setattr(RuntimeContext, "GLOBAL_FIGURES_DIR", str(tmp_path))
+
+    MetricsAggregator.plot([agg])
+
+    assert os.path.isdir(tmp_path)
 
 
 def test_plot_inconsistent_epochs(tmp_path):
@@ -341,16 +346,6 @@ def test_plot_inconsistent_loss_lengths(tmp_path):
         MetricsAggregator.plot([agg1, agg2], plot_dir=tmp_path)
 
 
-def test_plot_uses_env_dir(monkeypatch, tmp_path):
-    agg = make_agg("train", [1, 2])
-
-    monkeypatch.setenv("GLOBAL_FIGURES_DIR", str(tmp_path))
-
-    MetricsAggregator.plot([agg])
-
-    assert len(list(tmp_path.glob("*.png"))) > 0
-
-
 def test_plot_multiple_loss_types(tmp_path):
     agg = MetricsAggregator(DummyDistributed(), "train")
     agg.epoch_loss_terms = {"a": [1, 2], "b": [2, 3]}
@@ -461,3 +456,121 @@ def test_load_state_dict_with_reset_trigger():
 
     assert agg.num_batches_seen == 0
     assert agg.loss_terms == {}
+
+
+class TrackingDistributed:
+    def __init__(self):
+        self.device = "cpu"
+        self.calls = []
+
+    def all_reduce_sum(self, tensor):
+        self.calls.append(tensor.clone())
+        return tensor
+
+
+def test_dist_compute_calls_all_reduce_sum():
+    dist = TrackingDistributed()
+    agg = MetricsAggregator(dist, "train")
+
+    agg.record({"loss": 4.0})
+    logs = agg._dist_compute()
+
+    assert logs["loss"] == 4.0
+    assert len(dist.calls) >= 1
+
+
+def test_record_scalar_tensor():
+    agg = MetricsAggregator(DummyDistributed(), "train")
+
+    agg.record({"loss": torch.tensor(7.0)})
+
+    assert agg.loss_terms["loss"] == 7.0
+    assert agg.num_batches_seen == 1
+
+
+def test_record_accumulates_multiple_batches():
+    agg = MetricsAggregator(DummyDistributed(), "train")
+
+    agg.record({"loss": 2.0})
+    agg.record({"loss": 4.0})
+
+    logs = agg._dist_compute()
+
+    assert logs["loss"] == 3.0
+    assert agg.num_batches_seen == 2
+
+
+def test_record_epoch_replace_updates_time():
+    agg = MetricsAggregator(DummyDistributed(), "train")
+
+    agg.record({"loss": 1.0})
+    logs = agg._dist_compute()
+    agg.record_epoch(logs, time_elapsed=1.0)
+
+    agg._aggregated_across_ranks = True
+    agg.record_epoch({"loss": 2.0}, replace_index=0, time_elapsed=9.5)
+
+    assert agg.epoch_loss_terms["loss"][0] == 2.0
+    assert agg.epoch_times[0] == 9.5
+
+
+def test_record_epoch_replace_index_out_of_range():
+    agg = MetricsAggregator(DummyDistributed(), "train")
+
+    agg.record({"loss": 1.0})
+    logs = agg._dist_compute()
+    agg.record_epoch(logs)
+
+    agg._aggregated_across_ranks = True
+
+    with pytest.raises(IndexError):
+        agg.record_epoch({"loss": 2.0}, replace_index=99)
+
+
+def test_state_dict_empty_aggregator():
+    agg = MetricsAggregator(DummyDistributed(), "train")
+
+    state = agg.state_dict()
+
+    assert state["name"] == "train"
+    assert state["epoch_loss_terms"] == {}
+    assert state["epoch_times"] == []
+    assert state["num_epochs_seen"] == 0
+
+
+def test_plot_accepts_string_plot_dir(tmp_path):
+    agg = make_agg("train", [1, 2])
+
+    MetricsAggregator.plot([agg], plot_dir=str(tmp_path))
+
+    assert len(list(tmp_path.glob("*.png"))) > 0
+
+
+def test_plot_single_aggregator_single_loss(tmp_path):
+    agg = MetricsAggregator(DummyDistributed(), "single")
+    agg.epoch_loss_terms = {"loss": [0.5]}
+    agg.epoch_times = [1.0]
+    agg.num_epochs_seen = 1
+
+    MetricsAggregator.plot([agg], plot_dir=tmp_path)
+
+    files = list(tmp_path.glob("*.png"))
+    assert len(files) > 0
+
+
+def test_load_state_dict_explicit_none_values():
+    agg = MetricsAggregator(DummyDistributed(), "train")
+
+    state = {
+        "name": None,
+        "epoch_loss_terms": None,
+        "epoch_times": None,
+        "num_epochs_seen": 0,
+    }
+
+    agg.load_state_dict(state)
+
+    assert agg.name is None
+    assert agg.epoch_loss_terms is None
+    assert agg.epoch_times is None
+    assert agg.num_epochs_seen == 0

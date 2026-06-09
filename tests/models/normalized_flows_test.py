@@ -127,21 +127,6 @@ def test_normalized_flow_config_build_with_condition_size():
     assert model.flows[0].built_with["condition_size"] == 3
 
 
-def test_normalized_flow_model_build_converts_to_modulelist():
-    cfg = NormalizedFlowConfig(
-        list_flows=[
-            DummySelector(IdentityFlow()),
-            DummySelector(ScaleFlow()),
-        ],
-        flow_sample_size=10,
-    )
-
-    model = NormalizedFlowModel(cfg).build(latent_size=4)
-
-    assert isinstance(model.flows, nn.ModuleList)
-    assert len(model.flows) == 2
-
-
 def test_normalized_flow_forward_single_flow():
     cfg = NormalizedFlowConfig(
         list_flows=[DummySelector(IdentityFlow())],

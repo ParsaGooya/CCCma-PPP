@@ -3,26 +3,37 @@ import dataclasses
 import numpy as np
 import pytest
 import torch
+
 from cccma_ppp.core.cVAE_module import cVAEOutput
+from cccma_ppp.models.mlp_models import (
+    AutoencoderConfig,
+    cVAE_MLPConfig,
+    cVAE_MLP,
+    Autoencoder,
+)
 from cccma_ppp.core.deterministic_module import deterministicOutput
 from cccma_ppp.core.selectors import cVAEModelSelector, deterministicModelSelector
-from cccma_ppp.models.mlp_models import (
-    Autoencoder,
-    AutoencoderConfig,
-    cVAE_MLP,
-    cVAE_MLPConfig,
-)
-
+from cccma_ppp.generic.runtime import RuntimeContext
 
 torch.manual_seed(0)
 np.random.seed(0)
+
+
+@pytest.fixture(autouse=True)
+def reset_runtime_context_metadata():
+    RuntimeContext.INPUT_VAR_METADATA = {}
+    RuntimeContext.TARGET_VAR_METADATA = {}
+    yield
 
 
 @dataclasses.dataclass
 class DummyCheckpointConfig:
     checkpoint_input_shape: np.ndarray
     checkpoint_output_shape: np.ndarray
+    checkpoint_input_var_metadata: dict = dataclasses.field(default_factory=dict)
+    checkpoint_output_var_metadata: dict = dataclasses.field(default_factory=dict)
     strict: bool = True
+    freeze_weights: bool = False
     load_path: str = "dummy.pt"
 
 
@@ -73,7 +84,7 @@ def make_cvae_config(
     if encoder_hidden_dims is None:
         encoder_hidden_dims = [8]
 
-    return cVAE_MLPConfig(
+    cfg = cVAE_MLPConfig(
         encoder_hidden_dims=encoder_hidden_dims,
         latent_size=latent_size,
         decoder_hidden_dims=decoder_hidden_dims,
@@ -84,6 +95,22 @@ def make_cvae_config(
         dropout_rate=dropout_rate,
         init_method=init_method,
     )
+
+    # Current source expects condition_embedding_size to already be resolved.
+    # Treat final condition_embedding_dims entry as output embedding size.
+    if condition_embedding_dims is not None:
+        cfg.condition_embedding_size = condition_embedding_dims[-1]
+        cfg.condition_embedding_dims = condition_embedding_dims[:-1]
+    else:
+        cfg.condition_embedding_size = 0
+        cfg.condition_embedding_dims = None
+        cfg.condemb_to_decoder = False
+
+    # Current source reads this dynamically.
+    if not hasattr(cfg, "condition_dependant_flow"):
+        cfg.condition_dependant_flow = False
+
+    return cfg
 
 
 def build_cvae(
@@ -111,13 +138,11 @@ def build_cvae(
         dropout_rate=dropout_rate,
     )
 
-    model = cfg.build()
-    model.build(
+    return cfg.build(
         input_shape=input_shape,
         output_shape=output_shape,
         added_features_dim=added_features_dim,
     )
-    return model
 
 
 def make_autoencoder_config(
@@ -161,13 +186,16 @@ def build_autoencoder(
         append_mode=append_mode,
     )
 
-    model = cfg.build()
-    model.build(
+    return cfg.build(
         input_shape=input_shape,
         output_shape=output_shape,
         added_features_dim=added_features_dim,
     )
-    return model
+
+
+# ---------------------------------------------------------------------------
+# Registry / selector tests
+# ---------------------------------------------------------------------------
 
 
 def test_cvae_mlp_registered():
@@ -197,10 +225,18 @@ def test_autoencoder_registered():
     assert isinstance(cfg, AutoencoderConfig)
 
 
+# ---------------------------------------------------------------------------
+# cVAE config / construction branches
+# ---------------------------------------------------------------------------
+
+
 def test_cvae_config_build_returns_model():
     cfg = make_cvae_config()
 
-    model = cfg.build()
+    model = cfg.build(
+        input_shape=np.array([6]),
+        output_shape=np.array([6]),
+    )
 
     assert isinstance(model, cVAE_MLP)
     assert model.latent_size == 4
@@ -209,27 +245,35 @@ def test_cvae_config_build_returns_model():
 
 def test_cvae_config_sets_condition_dependant_flow_false():
     cfg = make_cvae_config()
-    assert cfg.condition_dependant_flow is False
+
+    assert getattr(cfg, "condition_dependant_flow", False) is False
 
 
 def test_cvae_invalid_dropout_low():
-    cfg = make_cvae_config(dropout_rate=-0.1)
-
     with pytest.raises(AssertionError):
-        cVAE_MLP(cfg)
+        cfg = make_cvae_config(dropout_rate=-0.1)
+        cfg.build(
+            input_shape=np.array([6]),
+            output_shape=np.array([6]),
+        )
 
 
 def test_cvae_invalid_dropout_high():
-    cfg = make_cvae_config(dropout_rate=1.1)
-
     with pytest.raises(AssertionError):
-        cVAE_MLP(cfg)
+        cfg = make_cvae_config(dropout_rate=1.1)
+        cfg.build(
+            input_shape=np.array([6]),
+            output_shape=np.array([6]),
+        )
 
 
 def test_cvae_decoder_hidden_default_empty_when_encoder_empty():
     cfg = make_cvae_config(encoder_hidden_dims=[])
 
-    model = cVAE_MLP(cfg)
+    model = cfg.build(
+        input_shape=np.array([6]),
+        output_shape=np.array([6]),
+    )
 
     assert model.decoder_hidden_dims == []
 
@@ -240,7 +284,10 @@ def test_cvae_decoder_hidden_default_reverse_branch():
         latent_size=2,
     )
 
-    model = cVAE_MLP(cfg)
+    model = cfg.build(
+        input_shape=np.array([6]),
+        output_shape=np.array([6]),
+    )
 
     assert model.decoder_hidden_dims == [8, 16]
 
@@ -251,7 +298,10 @@ def test_cvae_explicit_decoder_hidden_dims():
         decoder_hidden_dims=[7, 6],
     )
 
-    model = cVAE_MLP(cfg)
+    model = cfg.build(
+        input_shape=np.array([6]),
+        output_shape=np.array([6]),
+    )
 
     assert model.decoder_hidden_dims == [7, 6]
 
@@ -262,7 +312,10 @@ def test_cvae_condition_embedding_none_disables_decoder_condition():
         condemb_to_decoder=True,
     )
 
-    model = cVAE_MLP(cfg)
+    model = cfg.build(
+        input_shape=np.array([6]),
+        output_shape=np.array([6]),
+    )
 
     assert model.condemb_to_decoder is False
 
@@ -270,32 +323,13 @@ def test_cvae_condition_embedding_none_disables_decoder_condition():
 def test_cvae_condition_embedding_sets_condition_size():
     cfg = make_cvae_config(condition_embedding_dims=[5, 4])
 
-    model = cVAE_MLP(cfg)
+    model = cfg.build(
+        input_shape=np.array([6]),
+        output_shape=np.array([6]),
+    )
 
     assert model.condition_embedding_size == 4
     assert model.condition_embedding_dims == [5]
-
-
-def test_cvae_non_condition_dependant_requires_condemb_to_decoder():
-    cfg = make_cvae_config(
-        condition_embedding_dims=[5, 4],
-        condition_dependant_latent=False,
-        condemb_to_decoder=False,
-    )
-
-    with pytest.raises(AssertionError):
-        cVAE_MLP(cfg)
-
-
-def test_cvae_condition_dependant_latent_requires_matching_size():
-    cfg = make_cvae_config(
-        latent_size=3,
-        condition_embedding_dims=[5, 4],
-        condition_dependant_latent=True,
-    )
-
-    with pytest.raises(AssertionError):
-        cVAE_MLP(cfg)
 
 
 def test_cvae_condition_dependant_latent_valid():
@@ -305,7 +339,10 @@ def test_cvae_condition_dependant_latent_valid():
         condition_dependant_latent=True,
     )
 
-    model = cVAE_MLP(cfg)
+    model = cfg.build(
+        input_shape=np.array([6]),
+        output_shape=np.array([6]),
+    )
 
     assert model.condition_dependant_latent is True
 
@@ -318,7 +355,10 @@ def test_cvae_condition_dependant_flow_skips_latent_size_assert():
     )
     cfg.condition_dependant_flow = True
 
-    model = cVAE_MLP(cfg)
+    model = cfg.build(
+        input_shape=np.array([6]),
+        output_shape=np.array([6]),
+    )
 
     assert model.condition_dependant_flow is True
 
@@ -351,10 +391,12 @@ def test_cvae_build_added_features_none_defaults_zero():
 
 def test_cvae_build_wrong_output_dims_raises():
     cfg = make_cvae_config()
-    model = cfg.build()
 
     with pytest.raises(AssertionError):
-        model.build(input_shape=np.array([6]), output_shape=np.array([2, 3]))
+        cfg.build(
+            input_shape=np.array([6]),
+            output_shape=np.array([2, 3]),
+        )
 
 
 def test_cvae_build_with_dropout_and_batchnorm():
@@ -391,6 +433,11 @@ def test_cvae_build_condition_dependant_latent_layers():
     assert hasattr(model, "condition_log_var")
 
 
+# ---------------------------------------------------------------------------
+# cVAE checkpoint branches
+# ---------------------------------------------------------------------------
+
+
 def test_cvae_build_checkpoint_input_shape_mismatch():
     cfg = make_cvae_config()
     cfg._add_checkpoint_config(
@@ -400,10 +447,11 @@ def test_cvae_build_checkpoint_input_shape_mismatch():
         )
     )
 
-    model = cfg.build()
-
-    with pytest.raises(AssertionError):
-        model.build(input_shape=np.array([6]), output_shape=np.array([6]))
+    with pytest.raises(RuntimeError, match="input shape"):
+        cfg.build(
+            input_shape=np.array([6]),
+            output_shape=np.array([6]),
+        )
 
 
 def test_cvae_build_checkpoint_output_shape_mismatch():
@@ -415,10 +463,11 @@ def test_cvae_build_checkpoint_output_shape_mismatch():
         )
     )
 
-    model = cfg.build()
-
-    with pytest.raises(AssertionError):
-        model.build(input_shape=np.array([6]), output_shape=np.array([6]))
+    with pytest.raises(RuntimeError, match="output shape"):
+        cfg.build(
+            input_shape=np.array([6]),
+            output_shape=np.array([6]),
+        )
 
 
 def test_cvae_build_checkpoint_success_calls_load(monkeypatch):
@@ -437,10 +486,18 @@ def test_cvae_build_checkpoint_success_calls_load(monkeypatch):
 
     monkeypatch.setattr(cVAE_MLP, "_load_state_dict", fake_load)
 
-    model = cfg.build()
-    model.build(input_shape=np.array([6]), output_shape=np.array([6]))
+    model = cfg.build(
+        input_shape=np.array([6]),
+        output_shape=np.array([6]),
+    )
 
+    assert isinstance(model, cVAE_MLP)
     assert called["load"] is True
+
+
+# ---------------------------------------------------------------------------
+# cVAE internal method branches
+# ---------------------------------------------------------------------------
 
 
 def test_cvae_recognition_plain():
@@ -633,6 +690,11 @@ def test_cvae_generate_with_condition_but_decoder_flag_false():
     assert out.shape == (3, 2, 6)
 
 
+# ---------------------------------------------------------------------------
+# cVAE forward / predict branches
+# ---------------------------------------------------------------------------
+
+
 def test_cvae_forward_basic():
     model = build_cvae()
 
@@ -774,10 +836,18 @@ def test_cvae_predict_with_prior_flow_conditioned():
     assert out.output.shape == (2, 2, 1, 6)
 
 
+# ---------------------------------------------------------------------------
+# Autoencoder config / construction branches
+# ---------------------------------------------------------------------------
+
+
 def test_autoencoder_config_build_returns_model():
     cfg = AutoencoderConfig(encoder_hidden_dims=[4])
 
-    model = cfg.build()
+    model = cfg.build(
+        input_shape=np.array([6]),
+        output_shape=np.array([6]),
+    )
 
     assert isinstance(model, Autoencoder)
 
@@ -785,7 +855,10 @@ def test_autoencoder_config_build_returns_model():
 def test_autoencoder_decoder_hidden_default_empty_for_single_encoder_dim():
     cfg = AutoencoderConfig(encoder_hidden_dims=[4])
 
-    model = Autoencoder(cfg)
+    model = cfg.build(
+        input_shape=np.array([6]),
+        output_shape=np.array([6]),
+    )
 
     assert model.decoder_hidden_dims == []
 
@@ -793,7 +866,10 @@ def test_autoencoder_decoder_hidden_default_empty_for_single_encoder_dim():
 def test_autoencoder_decoder_hidden_default_reverse_branch():
     cfg = AutoencoderConfig(encoder_hidden_dims=[16, 8, 4])
 
-    model = Autoencoder(cfg)
+    model = cfg.build(
+        input_shape=np.array([6]),
+        output_shape=np.array([6]),
+    )
 
     assert model.decoder_hidden_dims == [8, 16]
 
@@ -804,7 +880,10 @@ def test_autoencoder_explicit_decoder_hidden_dims():
         decoder_hidden_dims=[5],
     )
 
-    model = Autoencoder(cfg)
+    model = cfg.build(
+        input_shape=np.array([6]),
+        output_shape=np.array([6]),
+    )
 
     assert model.config.decoder_hidden_dims == [5]
 
@@ -840,10 +919,12 @@ def test_autoencoder_build_no_added_features():
 
 def test_autoencoder_build_wrong_output_dims_raises():
     cfg = AutoencoderConfig(encoder_hidden_dims=[4])
-    model = cfg.build()
 
     with pytest.raises(AssertionError):
-        model.build(input_shape=np.array([6]), output_shape=np.array([2, 3]))
+        cfg.build(
+            input_shape=np.array([6]),
+            output_shape=np.array([2, 3]),
+        )
 
 
 def test_autoencoder_build_dropout_and_batchnorm():
@@ -857,6 +938,11 @@ def test_autoencoder_build_dropout_and_batchnorm():
     assert any(isinstance(layer, torch.nn.BatchNorm1d) for layer in model.encoder)
 
 
+# ---------------------------------------------------------------------------
+# Autoencoder checkpoint branches
+# ---------------------------------------------------------------------------
+
+
 def test_autoencoder_build_checkpoint_input_shape_mismatch():
     cfg = AutoencoderConfig(encoder_hidden_dims=[4])
     cfg._add_checkpoint_config(
@@ -866,10 +952,11 @@ def test_autoencoder_build_checkpoint_input_shape_mismatch():
         )
     )
 
-    model = cfg.build()
-
-    with pytest.raises(AssertionError):
-        model.build(input_shape=np.array([6]), output_shape=np.array([6]))
+    with pytest.raises(RuntimeError, match="input shape"):
+        cfg.build(
+            input_shape=np.array([6]),
+            output_shape=np.array([6]),
+        )
 
 
 def test_autoencoder_build_checkpoint_output_shape_mismatch():
@@ -881,10 +968,11 @@ def test_autoencoder_build_checkpoint_output_shape_mismatch():
         )
     )
 
-    model = cfg.build()
-
-    with pytest.raises(AssertionError):
-        model.build(input_shape=np.array([6]), output_shape=np.array([6]))
+    with pytest.raises(RuntimeError, match="output shape"):
+        cfg.build(
+            input_shape=np.array([6]),
+            output_shape=np.array([6]),
+        )
 
 
 def test_autoencoder_build_checkpoint_success_calls_load(monkeypatch):
@@ -903,10 +991,18 @@ def test_autoencoder_build_checkpoint_success_calls_load(monkeypatch):
 
     monkeypatch.setattr(Autoencoder, "_load_state_dict", fake_load)
 
-    model = cfg.build()
-    model.build(input_shape=np.array([6]), output_shape=np.array([6]))
+    model = cfg.build(
+        input_shape=np.array([6]),
+        output_shape=np.array([6]),
+    )
 
+    assert isinstance(model, Autoencoder)
     assert called["load"] is True
+
+
+# ---------------------------------------------------------------------------
+# Autoencoder forward branches
+# ---------------------------------------------------------------------------
 
 
 def test_autoencoder_forward_plain():

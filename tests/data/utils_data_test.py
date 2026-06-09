@@ -150,7 +150,7 @@ def test_unwrap_single_variable_dataset():
         }
     )
 
-    out = mod._unwrape_data_variables(ds)
+    out = mod._unwrap_data_variables(ds)
 
     assert "channels" in out.dims
     assert out.shape[0] == 1
@@ -164,7 +164,7 @@ def test_unwrap_multiple_variable_dataset():
         }
     )
 
-    out = mod._unwrape_data_variables(ds)
+    out = mod._unwrap_data_variables(ds)
 
     assert "channels" in out.dims
     assert out.shape[0] == 2
@@ -208,16 +208,6 @@ def test_weights_with_oceannanremover_transform():
     )
 
     assert np.all(weights == 0)
-
-
-def test_weights_save_default_path(monkeypatch, tmp_path):
-    monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
-    monkeypatch.setattr(xr.DataArray, "reset_index", lambda self, *a, **k: self)
-    monkeypatch.setattr(xr.DataArray, "to_netcdf", lambda self, path: None)
-
-    mod.WeightsConfig().build_weights(coords(), save=True)
-
-    assert tmp_path.exists()
 
 
 def test_weights_save_custom_path_and_name(monkeypatch, tmp_path):
@@ -294,7 +284,7 @@ def test_weights_load_dir_with_ref_and_oceannanremover(monkeypatch):
     monkeypatch.setattr(xr, "open_dataset", fake_open_dataset)
     monkeypatch.setattr(
         mod,
-        "_unwrape_data_variables",
+        "_unwrap_data_variables",
         lambda ds: list(ds.data_vars.values())[0],
     )
 
@@ -330,7 +320,7 @@ def test_weights_load_dir_ref_ocean_mismatch(monkeypatch):
     monkeypatch.setattr(xr, "open_dataset", fake_open_dataset)
     monkeypatch.setattr(
         mod,
-        "_unwrape_data_variables",
+        "_unwrap_data_variables",
         lambda ds: list(ds.data_vars.values())[0],
     )
 

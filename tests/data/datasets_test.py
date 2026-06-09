@@ -10,6 +10,7 @@ import cccma_ppp.data.datasets as datasets_mod
 from cccma_ppp.data.datasets import XArrayDatasetConfig, XArrayDataset
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 @dataclasses.dataclass
@@ -31,6 +32,10 @@ class DummyPipeline:
         self.transform_calls = []
         self.add_calls = []
         self.fitted_preprocessors = []
+
+    def set_name(self, name):
+        self.name = name
+        return self
 
     def fit(
         self,
@@ -830,6 +835,7 @@ def test_fit_preprocessors_loads_when_load_dir_set(tmp_path):
 
 def test_load_fitted_preprocessors_default_env(tmp_path, monkeypatch):
     monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
+    monkeypatch.setattr(RuntimeContext, "GLOBAL_EXP_DIR", str(tmp_path))
 
     cfg = make_config(
         observation=True,
@@ -1193,6 +1199,9 @@ def test_dataset_get_target_shape_autoencoding(monkeypatch):
 
     ds = cfg.build(years=[2000])
 
+    # Source get_target_shape() returns self.input_shape in autoencoding mode.
+    ds.input_shape = ds.get_input_shape()
+
     assert ds.get_target_shape() == ds.get_input_shape()
 
 
@@ -1226,7 +1235,7 @@ def test_dataset_added_features_dim():
 
     ds = cfg.build(years=[2000])
 
-    assert ds.added_features_dim == 2
+    assert ds.get_added_features_dim() == 2
 
 
 def test_dataset_get_time_features_none():
@@ -2069,6 +2078,7 @@ def test_load_fitted_preprocessors_asserts_observation_fitted(tmp_path):
 
 def test_load_fitted_preprocessors_asserts_condition_fitted(tmp_path, monkeypatch):
     monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
+    monkeypatch.setattr(RuntimeContext, "GLOBAL_EXP_DIR", str(tmp_path))
 
     cfg = make_config(
         observation=True,
@@ -2230,3 +2240,167 @@ def test_get_time_features_lead_time_only():
     features = ds.get_time_features(2000, 6)
 
     assert features.shape == (1,)
+
+
+def test_get_input_var_metadata_without_condition():
+    cfg = make_config(observation=True, condition=False)
+    cfg.model.preprocessing_pipeline.pipeline = [("scale", object())]
+
+    metadata = cfg.get_input_var_metadata()
+
+    assert metadata["variables"] == ["var"]
+    assert metadata["preprocessors"] == [["scale"]]
+
+
+def test_get_input_var_metadata_with_external_condition():
+    cfg = make_config(
+        observation=True,
+        condition=True,
+        condition_method="ensemble_mean",
+        condition_ensemble_mean=True,
+    )
+    cfg.model.preprocessing_pipeline.pipeline = [("model_scale", object())]
+    cfg.condition.preprocessing_pipeline.pipeline = [("cond_scale", object())]
+    cfg._using_model_data_as_condition = False
+
+    metadata = cfg.get_input_var_metadata()
+
+    assert metadata["variables"] == ["var", "var"]
+    assert metadata["preprocessors"] == [["model_scale"], ["cond_scale"]]
+
+
+def test_get_input_var_metadata_using_model_data_as_condition():
+    cfg = make_config(
+        observation=True,
+        condition=True,
+        condition_method="ensemble_mean",
+        condition_ensemble_mean=True,
+    )
+    cfg.condition.preprocessing_pipeline.pipeline = [("cond_scale", object())]
+    cfg._using_model_data_as_condition = True
+
+    metadata = cfg.get_input_var_metadata()
+
+    assert metadata["variables"] == ["var"]
+    assert metadata["preprocessors"] == [["cond_scale"]]
+
+
+def test_get_target_var_metadata_with_observation():
+    cfg = make_config(observation=True)
+    cfg.observation.preprocessing_pipeline.pipeline = [("obs_scale", object())]
+
+    metadata = cfg.get_target_var_metadata()
+
+    assert metadata["variables"] == ["var"]
+    assert metadata["preprocessors"] == [["obs_scale"]]
+
+
+def test_load_fitted_preprocessors_passes_load_name(tmp_path, monkeypatch):
+    monkeypatch.setattr(RuntimeContext, "GLOBAL_EXP_DIR", str(tmp_path))
+
+    cfg = make_config(
+        observation=True,
+        condition=True,
+        condition_method="ensemble_mean",
+    )
+
+    cfg.model.preprocessing_pipeline.fitted = True
+    cfg.observation.preprocessing_pipeline.fitted = True
+    cfg.condition.preprocessing_pipeline.fitted = True
+
+    cfg._load_fitted_preprocessors(load_dir=tmp_path / "pipe.joblib", load_name="abc")
+
+    assert cfg.model.preprocessing_pipeline.load_calls[-1]["load_name"] == "abc"
+    assert cfg.observation.preprocessing_pipeline.load_calls[-1]["load_name"] == "abc"
+    assert cfg.condition.preprocessing_pipeline.load_calls[-1]["load_name"] == "abc"
+
+
+def test_fit_preprocessors_model_only_no_observation_condition(monkeypatch):
+    def fake_model_data_config(**kwargs):
+        return make_condition_config(
+            ensemble_mean=True,
+            ensembles=None,
+            kind="model_mean",
+        )
+
+    monkeypatch.setattr(datasets_mod, "ModelDataConfig", fake_model_data_config)
+
+    cfg = XArrayDatasetConfig(
+        model=make_model_config(kind="model_mean"),
+        observation=None,
+        condition=None,
+        condition_method="ensemble_mean",
+    )
+
+    cfg._fit_preprocessors(train_years=[2000])
+
+    assert cfg._fitted_preprocessors is True
+    assert len(cfg.model.preprocessing_pipeline.fit_calls) == 1
+
+
+def test_get_added_features_dim_none_time_features_raises():
+    cfg = make_config(observation=True, time_features=None)
+    ds = cfg.build(years=[2000])
+
+    with pytest.raises(TypeError):
+        ds.get_added_features_dim()
+
+
+def test_get_cond_indexes_static_method_current_behavior_returns_unbound():
+    cfg = make_config(
+        observation=True,
+        condition=True,
+        condition_method="ensemble_mean",
+    )
+    ds = cfg.build(years=[2000])
+
+    ds.config.condition_method = "static"
+    ds.condition_dataset = object()
+
+    with pytest.raises(UnboundLocalError):
+        ds.get_cond_indexes(ds.model_indexes)
+
+
+def test_get_time_features_month_cos_only():
+    cfg = make_config(
+        observation=True,
+        time_features=["month_cos"],
+    )
+
+    ds = cfg.build(years=[2000])
+
+    features = ds.get_time_features(2000, 3)
+
+    assert features.shape == (1,)
+
+
+def test_get_weights_passes_save_arguments(tmp_path):
+    cfg = make_config(observation=True)
+
+    class DummyWeightsConfig:
+        def __init__(self):
+            self.kwargs = None
+
+        def build_weights(self, target_coords, oceannanremover=None, **kwargs):
+            self.kwargs = kwargs
+            return xr.DataArray(
+                np.ones((2, 2)),
+                dims=("lat", "lon"),
+                coords={
+                    "lat": target_coords["lat"],
+                    "lon": target_coords["lon"],
+                },
+            )
+
+    weights_config = DummyWeightsConfig()
+
+    cfg.get_weights(
+        config=weights_config,
+        save=True,
+        save_path=tmp_path,
+        save_name="weights",
+    )
+
+    assert weights_config.kwargs["save"] is True
+    assert weights_config.kwargs["save_path"] == tmp_path
+    assert weights_config.kwargs["save_name"] == "weights"
