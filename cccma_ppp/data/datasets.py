@@ -7,7 +7,7 @@ from pathlib import Path
 
 import warnings
 import gc
-from cccma_ppp.data.data_abc import XarrayDatasetABC, XarrayDatasetConfigABC, DataConfig
+from cccma_ppp.data.data_abc import XarrayDatasetABC, XarrayDatasetConfigABC, DataConfigABC
 from cccma_ppp.data.utils_data import ModelDataConfig, ObsDataConfig, ConditionDataConfig, WeightsConfig, _unwrape_data_variables, _load_xarray_data, infoclass, _create_train_mask
 
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
@@ -252,7 +252,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
 
         metadata = dict( variables = list(), preprocessors = list())
         
-        def _update_metadata_with_dataconfig_metadata(metadata, dataconfig : ModelDataConfig |ObsDataConfig |ConditionDataConfig):
+        def _update_metadata_with_dataconfig_metadata(metadata, dataconfig : DataConfigABC):
                 preprocessor_names = [processor[0] for processor in dataconfig.preprocessing_pipeline.pipeline]
                 for var in dataconfig.names:
                     metadata['variables'].append(var)
@@ -277,7 +277,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
     def get_target_var_metadata(self):
 
         metadata = dict( variables = list(), preprocessors = list())
-        def _update_metadata_with_dataconfig_metadata(metadata, dataconfig : ModelDataConfig |ObsDataConfig |ConditionDataConfig):
+        def _update_metadata_with_dataconfig_metadata(metadata, dataconfig : DataConfigABC):
                 preprocessor_names = [processor[0] for processor in dataconfig.preprocessing_pipeline.pipeline]
                 for var in dataconfig.names:
                     metadata['variables'].append(var)
@@ -353,7 +353,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
 
         return self
        
-    def _load_xarray_data(self, config : DataConfig):
+    def _load_xarray_data(self, config : DataConfigABC):
 
         return _load_xarray_data(config.list_paths, 
                                                names = config.names, 

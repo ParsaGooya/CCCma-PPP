@@ -7,7 +7,7 @@ from pathlib import Path
 import glob
 from typing import final, ClassVar
 import os
-from cccma_ppp.data.data_abc import DataConfig
+from cccma_ppp.data.data_abc import DataConfigABC
 from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
@@ -24,7 +24,7 @@ class infoclass:
 
 
 @dataclasses.dataclass
-class ModelDataConfig(DataConfig):
+class ModelDataConfig(DataConfigABC):
     paths: str
     names: list[str]
     preprocessing_pipeline :  PreprocessingPipeline = dataclasses.field(default_factory= PreprocessingPipeline)
@@ -57,7 +57,7 @@ class ModelDataConfig(DataConfig):
         return [ 'lead_time', 'ensembles' , 'lat', 'lon']
 
 @dataclasses.dataclass
-class ObsDataConfig(DataConfig):
+class ObsDataConfig(DataConfigABC):
     paths: str
     names: list[str]
     preprocessing_pipeline :  PreprocessingPipeline = dataclasses.field(default_factory= PreprocessingPipeline)
@@ -91,7 +91,7 @@ class ObsDataConfig(DataConfig):
 
 
 @dataclasses.dataclass
-class ConditionDataConfig(DataConfig):
+class ConditionDataConfig(DataConfigABC):
     paths: str
     names: list[str]
     preprocessing_pipeline :  PreprocessingPipeline = dataclasses.field(default_factory= PreprocessingPipeline)

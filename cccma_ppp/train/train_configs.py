@@ -81,7 +81,7 @@ class TrainConfig:
 
 
     """
-    experiment_dir: str | None
+    experiment_dir: str 
     max_epochs : int
     train_loader: TrainDataloaderConfig | None
     module: ModuleSelector | None
@@ -97,21 +97,37 @@ class TrainConfig:
     # resume_results: ResumeResultsConfig | None = None
     def __post_init__(self):
         
-        # if all([self.resume_dir is None, self.experiment_dir is None]):
-        #     raise ValueError('User must specify an experiment_dir for the new experiment or point resume_dir to a previously stopped/finished experiment for resumming')
         
-        # if self.experiment_dir is not None:
+        if self.resume_dir is not None:
 
-        #     if self.resume_dir is None:
-        #         raise ValueError(f'resume_dir cannot be specified when a new experiment_dir is requersted.')
+            requested_experiment_dir = self.experiment_dir
+            requested_max_epochs = self.max_epochs
+            requested_resume_dir = self.resume_dir
+
+            resumed = self.read_config_from_halted_experiment(
+                                        resume_dir=requested_resume_dir,
+                                        experiment_dir=requested_experiment_dir,
+                                        max_epochs=requested_max_epochs,)
             
-        #     required_inputs = [self.train_loader, self.module, self.losspipeline, self.trainer ]
-        #     for config in required_inputs:
-        #         if config is None:
-        #             raise ValueError(f'{config} must be specified for a new experiment.')
+            self.__dict__.update(resumed.__dict__)
+
+            self.resume_dir = requested_resume_dir
+            self.experiment_dir = Path(requested_experiment_dir)
+
+            if Path(requested_experiment_dir) != Path(requested_resume_dir):
+                self.copy_resume_dir_to_new_path = True
+            else:
+                self.copy_resume_dir_to_new_path = False
+
+        else:
+            
+            required_inputs = [self.train_loader, self.module, self.losspipeline, self.trainer ]
+            for name, config in zip(["train_loader", "module", "losspipeline", "trainer"],
+                                required_inputs):
+                                            
+                if config is None:
+                    raise ValueError(f'{name} must be specified for a new experiment.')
                 
-        # else:
-        #     self = self.read_config_from_halted_experiment(self.resume_dir)
         
         if self.max_epochs is None: 
             self.max_epochs = float("inf")
@@ -152,12 +168,21 @@ class TrainConfig:
 
     
 
-    def read_config_from_halted_experiment(self, resume_dir : str ):
+    def read_config_from_halted_experiment(self, 
+                                           resume_dir : str | Path ,
+                                            experiment_dir: str | Path,
+                                            max_epochs: int) -> "TrainConfig":
+            resume_dir = Path(resume_dir)
+
+            if not resume_dir.is_dir():
+                raise ValueError(f"The directory {resume_dir} does not exist.")
+
             
-            config_data = prepare_config(Path(resume_dir) / 'config.yaml')
-            config_data['max_epochs'] = self.max_epochs
-            if config_data.get('seed', None) is None:
-                raise RuntimeError('the resume_dict experiment did not have a seed specified so it is not reproducable.')
+            config_data = prepare_config(resume_dir / 'config.yaml')
+            config_data["experiment_dir"] = str(experiment_dir)
+            config_data["max_epochs"] = max_epochs
+            config_data["resume_dir"] = None
+
             return dacite.from_dict(data_class=TrainConfig, data=config_data, config=dacite.Config(strict=True))      
 
 
@@ -205,11 +230,15 @@ class TrainConfig:
 
         self._prepare_runtime_variables()
 
-        for path in (self.experiment_dir , self.checkpoint_dir , self.figures_dir, self.log_dir ):
-            if distributed.is_root():
-                os.makedirs(path, exist_ok=True)
+        if distributed.is_root():
+            if getattr(self, 'copy_resume_dir_to_new_path', False):
+                    shutil.copytree(self.resume_dir, self.experiment_dir)
+            
+            else:
+                for path in (self.experiment_dir , self.checkpoint_dir , self.figures_dir, self.log_dir ):
+                        os.makedirs(path, exist_ok=True)
 
-            distributed.barrier()
+        distributed.barrier()
 
         if (yaml_config is not None and distributed.is_root()):
             shutil.copyfile(

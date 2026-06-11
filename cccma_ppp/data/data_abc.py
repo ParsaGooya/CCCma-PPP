@@ -23,7 +23,7 @@ class XarrayDatasetABC(abc.ABC):
 
 
 
-class DataConfig(abc.ABC):
+class DataConfigABC(abc.ABC):
 
     @abc.abstractmethod
     def _allowed_dims(cls):
