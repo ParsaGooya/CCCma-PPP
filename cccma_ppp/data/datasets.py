@@ -7,7 +7,11 @@ from pathlib import Path
 
 import warnings
 import gc
-from cccma_ppp.data.data_abc import XarrayDatasetABC, XarrayDatasetConfigABC, DataConfig
+from cccma_ppp.data.data_abc import (
+    XarrayDatasetABC,
+    XarrayDatasetConfigABC,
+    DataConfigABC,
+)
 from cccma_ppp.data.utils_data import (
     ModelDataConfig,
     ObsDataConfig,
@@ -401,7 +405,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
         metadata = dict(variables=list(), preprocessors=list())
 
         def _update_metadata_with_dataconfig_metadata(
-            metadata, dataconfig: ModelDataConfig | ObsDataConfig | ConditionDataConfig
+            metadata, dataconfig: DataConfigABC
         ):
             preprocessor_names = [
                 processor[0] for processor in dataconfig.preprocessing_pipeline.pipeline
@@ -434,7 +438,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
         metadata = dict(variables=list(), preprocessors=list())
 
         def _update_metadata_with_dataconfig_metadata(
-            metadata, dataconfig: ModelDataConfig | ObsDataConfig | ConditionDataConfig
+            metadata, dataconfig: DataConfigABC
         ):
             preprocessor_names = [
                 processor[0] for processor in dataconfig.preprocessing_pipeline.pipeline
@@ -535,7 +539,7 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
 
         return self
 
-    def _load_xarray_data(self, config: DataConfig):
+    def _load_xarray_data(self, config: DataConfigABC):
 
         return _load_xarray_data(
             config.list_paths,

@@ -1069,3 +1069,351 @@ def test_setup_distributed_non_root_does_not_create_checkpoint_dir(env_dirs):
     )
 
     assert trainer.is_on_root is False
+
+
+def test_setup_distributed_existing_dirs_no_crash(env_dirs):
+    trainer, _, _, _, _ = make_trainer(validation=False)
+
+    ckpt_dir, fig_dir = env_dirs
+    ckpt_dir.mkdir(parents=True, exist_ok=True)
+    fig_dir.mkdir(parents=True, exist_ok=True)
+
+    trainer.setup_distributed(
+        DummyDistributed(),
+        DummyLogger(),
+    )
+
+    assert ckpt_dir.exists()
+    assert fig_dir.exists()
+
+
+def test_setup_distributed_non_root_logger_none(env_dirs, capsys):
+    trainer, _, _, _, _ = make_trainer(validation=False)
+
+    trainer.setup_distributed(
+        DummyDistributed(root=False),
+        logger=None,
+    )
+
+    captured = capsys.readouterr()
+
+    assert "Logger is None" in captured.out
+
+
+def test_is_improved_equal_loss_not_improved():
+    trainer, _, _, _, _ = make_trainer(validation=True)
+
+    trainer._best_validation_loss = 1.0
+
+    assert trainer._is_improved(1.0) is False
+
+
+def test_should_stop_early_false_when_counter_below_buffer():
+    trainer, _, _, _, _ = make_trainer(validation=True)
+
+    trainer.config.earlystoppingbuffer = 3
+    trainer.earlystopping_counter = 2
+
+    assert trainer._should_stop_early() is False
+
+
+def test_train_on_batch_batch_step_increments_only(env_dirs):
+    trainer, _, _, _, _ = make_trainer(validation=False)
+
+    trainer.setup_distributed(DummyDistributed(), DummyLogger())
+
+    trainer._train_on_batch(DummyBatch())
+
+    assert trainer.batch_step == 1
+
+
+def test_validate_on_batch_keeps_module_eval(env_dirs):
+    trainer, module, _, _, _ = make_trainer(validation=True)
+
+    trainer.setup_distributed(DummyDistributed(), DummyLogger())
+
+    trainer._validate_on_epoch()
+
+    assert module.training is False
+
+
+def test_save_checkpoint_non_root_missing_dir_raises(env_dirs):
+    trainer, _, _, _, _ = make_trainer(validation=False)
+
+    trainer.setup_distributed(
+        DummyDistributed(root=False),
+        DummyLogger(),
+    )
+
+    with pytest.raises(RuntimeError):
+        trainer._save_checkpoint(
+            name="best",
+            train_logs={"total_loss": 1.0},
+            validation_logs=None,
+        )
+
+
+def test_load_checkpoint_restores_scaler_state(env_dirs):
+    trainer, _, _, _, _ = make_trainer(validation=False)
+
+    trainer.setup_distributed(DummyDistributed(), DummyLogger())
+
+    path = env_dirs[0] / "scaler.pt"
+
+    checkpoint = {
+        "module": trainer.raw_module.state_dict(),
+        "optimizer": trainer.optimizer.state_dict(),
+        "epoch": 1,
+        "global_step": 2,
+        "batch_step": 3,
+        "scaler": trainer.scaler.state_dict(),
+    }
+
+    torch.save(checkpoint, path)
+
+    trainer._load_checkpoint(path)
+
+    assert trainer.global_step == 2
+    assert trainer.batch_step == 3
+
+
+def test_train_loop_zero_epochs(env_dirs):
+    trainer, _, _, _, _ = make_trainer(validation=False)
+
+    trainer.max_epochs = 0
+
+    trainer.setup_distributed(
+        DummyDistributed(),
+        DummyLogger(),
+    )
+
+    trainer.train()
+
+    assert trainer._epochs_trained == 0
+
+
+def test_optimizer_step_without_grad_clip(env_dirs):
+    trainer, module, optimizer, _, _ = make_trainer(
+        validation=False,
+        grad_clip=None,
+    )
+
+    trainer.setup_distributed(DummyDistributed(), DummyLogger())
+
+    loss = module.linear(torch.ones(1, 2)).sum()
+    loss.backward()
+
+    trainer._optimizer_step()
+
+    assert trainer.global_step == 1
+
+
+def test_train_on_epoch_sets_module_train_mode(env_dirs):
+    trainer, module, _, _, _ = make_trainer(validation=False)
+
+    trainer.setup_distributed(DummyDistributed(), DummyLogger())
+
+    trainer._train_on_epoch()
+
+    assert module.training is True
+
+
+def test_load_checkpoint_validation_aggregator_none(env_dirs):
+    trainer, _, _, _, _ = make_trainer(validation=False)
+
+    trainer.setup_distributed(DummyDistributed(), DummyLogger())
+
+    trainer._save_checkpoint(
+        name="basic",
+        train_logs={"total_loss": 1.0},
+        validation_logs=None,
+    )
+
+    checkpoint = trainer._load_checkpoint(env_dirs[0] / "basic.pt")
+
+    assert checkpoint is not None
+    assert trainer.validation_aggregator is None
+
+
+def test_setup_distributed_stores_distributed_reference(env_dirs):
+    trainer, _, _, _, _ = make_trainer(validation=False)
+
+    dist = DummyDistributed()
+
+    trainer.setup_distributed(dist, DummyLogger())
+
+    assert trainer.distributed is dist
+
+
+def test_log_root_accepts_format_args(env_dirs):
+    trainer, _, _, _, _ = make_trainer(validation=False)
+
+    logger = DummyLogger()
+
+    trainer.setup_distributed(
+        DummyDistributed(root=True),
+        logger,
+    )
+
+    trainer.log_root(logging.INFO, "value %s", 123)
+
+    assert any(rec[2] == (123,) for rec in logger.records)
+
+
+def test_setup_distributed_save_checkpoint_false_no_warning_non_root(env_dirs):
+    trainer, _, _, _, _ = make_trainer(validation=False)
+
+    logger = DummyLogger()
+
+    trainer.setup_distributed(
+        DummyDistributed(root=False),
+        logger,
+        save_checkpoint=False,
+    )
+
+    assert not any("no checkpoints" in rec[1] for rec in logger.records)
+
+
+def test_setup_distributed_distributed_existing_dirs(env_dirs):
+    trainer, _, _, _, _ = make_trainer(validation=False)
+
+    dist = DummyDistributed(distributed=True)
+
+    trainer.setup_distributed(
+        dist,
+        DummyLogger(),
+    )
+
+    assert dist.barrier_calls >= 1
+
+
+def test_optimizer_step_amp_enabled_branch(env_dirs):
+    trainer, module, optimizer, _, _ = make_trainer(validation=False)
+
+    trainer.setup_distributed(
+        DummyDistributed(),
+        DummyLogger(),
+    )
+
+    class FakeScaler:
+        def scale(self, loss):
+            return loss
+
+        def step(self, optimizer):
+            pass
+
+        def update(self):
+            pass
+
+        def unscale_(self, optimizer):
+            pass
+
+        def get_scale(self):
+            return 1.0
+
+        def is_enabled(self):
+            return True
+
+        def state_dict(self):
+            return {}
+
+    trainer.scaler = FakeScaler()
+
+    loss = module.linear(torch.ones(1, 2)).sum()
+    loss.backward()
+
+    trainer._optimizer_step()
+
+    assert trainer.global_step == 1
+
+
+def test_log_epoch_root_without_logger(env_dirs, capsys):
+    trainer, _, _, _, _ = make_trainer(validation=False)
+
+    trainer.setup_distributed(
+        DummyDistributed(root=True),
+        logger=None,
+    )
+
+    trainer.start_time_train = 0
+    trainer._epochs_trained = 1
+
+    trainer._log_epoch(
+        train_logs={"total_loss": 1.0},
+        validation_logs=None,
+    )
+
+    assert "train loss" in capsys.readouterr().out.lower()
+
+
+def test_train_loop_no_validation_no_plot_when_non_root(env_dirs):
+    trainer, _, _, _, _ = make_trainer(validation=False)
+
+    trainer.max_epochs = 1
+
+    trainer.setup_distributed(
+        DummyDistributed(root=False),
+        DummyLogger(),
+    )
+
+    FakeAggregator.plot_calls.clear()
+
+    trainer.train()
+
+    assert trainer._epochs_trained == 1
+
+
+def test_load_checkpoint_restores_histories(env_dirs):
+    trainer, _, _, _, _ = make_trainer(validation=True)
+
+    trainer.setup_distributed(
+        DummyDistributed(),
+        DummyLogger(),
+    )
+
+    trainer.train_aggregator.records.append({"a": 1})
+    trainer.validation_aggregator.records.append({"b": 2})
+
+    trainer._save_checkpoint(
+        name="history",
+        train_logs={"total_loss": 1.0},
+        validation_logs={"total_loss": 1.0},
+    )
+
+    trainer._load_checkpoint(env_dirs[0] / "history.pt")
+
+    assert trainer.train_aggregator.loaded_state is not None
+    assert trainer.validation_aggregator.loaded_state is not None
+
+
+def test_train_loop_zero_epoch_no_batches_processed(env_dirs):
+    trainer, _, _, _, _ = make_trainer(validation=False)
+
+    trainer.max_epochs = 0
+
+    trainer.setup_distributed(
+        DummyDistributed(),
+        DummyLogger(),
+    )
+
+    trainer.train()
+
+    assert trainer.batch_step == 0
+    assert trainer.global_step == 0
+
+
+def test_should_stop_early_exact_buffer():
+    trainer, _, _, _, _ = make_trainer(validation=True)
+
+    trainer.config.earlystoppingbuffer = 3
+    trainer.earlystopping_counter = 3
+
+    assert trainer._should_stop_early() is True
+
+
+def test_is_improved_worse_loss():
+    trainer, _, _, _, _ = make_trainer(validation=True)
+
+    trainer._best_validation_loss = 1.0
+
+    assert trainer._is_improved(2.0) is False

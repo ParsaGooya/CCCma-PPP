@@ -142,13 +142,19 @@ class Trainer:
             )
 
         self.checkpoint_dir = Path(RuntimeContext.GLOBAL_CHECKPOINT_DIR)
-        resuming = os.path.isfile(self.checkpoint_dir / "*best*.pt")
+        resuming = os.path.isfile(self.checkpoint_dir / "best.pt")
+
         if resuming:
             self.log_root(
                 logging.INFO,
-                f"Resuming training from {self.checkpoint_dir / '*best*.pt'}",
+                f"Resuming training from {self.checkpoint_dir / 'best.pt'}. \n Warning: If all configurations don't match you will get RuntimeError!",
             )
-            self._load_checkpoint(self.checkpoint_dir / "*best*.pt")
+            self._load_checkpoint(self.checkpoint_dir / "best.pt")
+            if self._epochs_trained == self.max_epochs:
+                self.log_root(
+                    logging.INFO,
+                    "maximum epochs already reached in the resumed model. No training will be done.",
+                )
         else:
             if self.is_on_root and self.save_checkpoint:
                 os.makedirs(self.checkpoint_dir, exist_ok=True)

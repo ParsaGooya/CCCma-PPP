@@ -1,5 +1,5 @@
 experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/cccma_PPP_test
-epochs: 3
+max_epochs: 10
 train_loader:
     dataset_config:
         model:
@@ -17,8 +17,7 @@ train_loader:
           
         observation :
             paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations
-            names:
-                  - tas
+            names: [tas]
             preprocessing_pipeline :
                     preprocessors_list :
                             - name : standardizer
@@ -45,7 +44,8 @@ module:
                           encoder_hidden_dims : [3000,3000,3000]
                           latent_size : 10
                           decoder_hidden_dims: [3000,3000,3000]
-                          condition_embedding_dims :  [3000,3000,3000, 10]
+                          condition_embedding_dims :  [3000,3000,3000]
+                          condition_embedding_size : 10
                           condition_dependant_latent: True
                           condemb_to_decoder:  True
                           batch_normalization : True
@@ -62,7 +62,7 @@ module:
                                 args :
                                       hidden_dim : 5 
             combined_CGCN_weight : 0.1
-            
+                     
           
 losspipeline:
       loss_pipeline :
