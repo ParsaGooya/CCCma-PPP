@@ -16,7 +16,7 @@ train_loader:
           concat_dim : year
           
         observation :
-            paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations
+            paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5
             names: [tas]
             preprocessing_pipeline :
                     preprocessors_list :

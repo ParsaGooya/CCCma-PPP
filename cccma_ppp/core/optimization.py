@@ -5,6 +5,7 @@ from typing import ClassVar
 
 from cccma_ppp.core.core_abc import moduleABC
 
+
 @dataclasses.dataclass
 class LRSchedulerConfig:
     min_lr: float = 0.0
@@ -15,88 +16,88 @@ class LRSchedulerConfig:
         assert self.min_lr >= 0
         assert self.warmup_epochs >= 0
 
-    def build(
-        self,
-        optimizer: torch.optim.Optimizer,
-        num_batches: int
-    ):
+    def build(self, optimizer: torch.optim.Optimizer, num_batches: int):
         assert self.total_epochs is not None
         assert self.total_epochs > 0
         assert num_batches > 0
-        assert self.warmup_epochs < self.total_epochs, 'number of warmup epochs must be smaller than total epochs.'
+        if self.warmup_epochs >= self.total_epochs:
+            raise ValueError(
+                "number of warmup epochs must be smaller than total epochs."
+            )
 
         self.total_steps = num_batches * self.total_epochs
         self.warmup_steps = num_batches * self.warmup_epochs
 
-
-        return CosineAnnealingLRScheduler(self, optimizer )
-
-
-
+        return CosineAnnealingLRScheduler(self, optimizer)
 
 
 @dataclasses.dataclass
 class OptimizerConfig:
+    lr: float = 0.0001
+    weight_decay: float = 0
+    optimizer_type: str = "adam"
+    lr_scheduler_config: LRSchedulerConfig | None = None
 
-    lr : float = 0.0001
-    weight_decay : float = 0
-    optimizer_type : str  = 'adam'    # type[torch.optim.Optimizer] = torch.optim.Adam
-    lr_scheduler_config : LRSchedulerConfig | None = None # = dataclasses.field(default_factory=CosineAnnealingLRScheduler)
-
-    OPTIMIZER_REGISTERY : ClassVar[dict] = {
-    "adam": torch.optim.Adam,
-    "adamw": torch.optim.AdamW}
-
+    OPTIMIZER_REGISTERY: ClassVar[dict] = {
+        "adam": torch.optim.Adam,
+        "adamw": torch.optim.AdamW,
+    }
 
     def __post_init__(self):
-        assert self.weight_decay >= 0, 'weight_decay has to be postive'
+        if self.weight_decay < 0:
+            raise ValueError("weight_decay has to be positive")
         self.optimizer = None
 
-    def build(self,
-            module: moduleABC,
-            num_batches: int = None,
-            max_epochs: int = None):
-
-        # assert module.built, 'make sure module is built before optmizer.'
+    def build(self, module: moduleABC, num_batches: int = None, max_epochs: int = None):
 
         if self.lr_scheduler_config is not None:
-
             if self.lr_scheduler_config.total_epochs is None:
                 if max_epochs is None:
-                    raise ValueError('either max_epochs must be specified or total_epochs in the learning rate scheduler configuration.')
+                    raise ValueError(
+                        "either max_epochs must be specified or total_epochs in the learning rate scheduler configuration."
+                    )
 
                 self.lr_scheduler_config.total_epochs = max_epochs
             if num_batches is None:
-                raise ValueError('num_batches must be specified to set up learning rate scheduler.')
+                raise ValueError(
+                    "num_batches must be specified to set up learning rate scheduler."
+                )
 
-        return OptimizerWrapper(self, module, num_batches, max_epochs)  ## max_epochs will be used if total_epochs is not specified.
-
-
+        return OptimizerWrapper(self, module, num_batches, max_epochs)
 
 
 class OptimizerWrapper:
-
-    def __init__(self,
-                config : OptimizerConfig,
-                module: moduleABC,
-                num_batches : int = None,
-                max_epochs: int = None):
-
+    def __init__(
+        self,
+        config: OptimizerConfig,
+        module: moduleABC,
+        num_batches: int = None,
+        max_epochs: int = None,
+    ):
 
         params = [p for p in module.parameters() if p.requires_grad]
 
         self.optimizer = config.OPTIMIZER_REGISTERY.get(config.optimizer_type.lower())
-        self.optimizer = self.optimizer(params, lr = config.lr, weight_decay = config.weight_decay)
+        self.optimizer = self.optimizer(
+            params, lr=config.lr, weight_decay=config.weight_decay
+        )
 
         if config.lr_scheduler_config is not None:
-            if num_batches is None: 
-                raise ValueError('num_batches must be specified to set up learning rate scheduler.')
-            
-            if all([max_epochs is None, config.lr_scheduler_config.total_epochs is None]):
-                raise ValueError('either max_epochs must be specified or total_epochs in the learning rate scheduler configuration.')
+            if num_batches is None:
+                raise ValueError(
+                    "num_batches must be specified to set up learning rate scheduler."
+                )
 
-            self.lr_scheduler = config.lr_scheduler_config.build(self.optimizer,
-                                                 num_batches)
+            if all(
+                [max_epochs is None, config.lr_scheduler_config.total_epochs is None]
+            ):
+                raise ValueError(
+                    "either max_epochs must be specified or total_epochs in the learning rate scheduler configuration."
+                )
+
+            self.lr_scheduler = config.lr_scheduler_config.build(
+                self.optimizer, num_batches
+            )
 
     def step(self):
         if self.optimizer is None:
@@ -108,7 +109,7 @@ class OptimizerWrapper:
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
 
-    def zero_grad(self, set_to_none = True, **kwargs):
+    def zero_grad(self, set_to_none=True, **kwargs):
         if self.optimizer is None:
             raise RuntimeError("Optimizer must be built before zero_grad().")
         self.optimizer.zero_grad(set_to_none=set_to_none, **kwargs)
@@ -122,9 +123,9 @@ class OptimizerWrapper:
             "lr_scheduler": (
                 self.lr_scheduler.state_dict()
                 if self.lr_scheduler is not None
-                else None )}
-
-
+                else None
+            ),
+        }
 
     def load_state_dict(self, state_dict):
 
@@ -133,32 +134,38 @@ class OptimizerWrapper:
 
         self.optimizer.load_state_dict(state_dict["optimizer"])
 
-        if (self.lr_scheduler is not None and state_dict["lr_scheduler"] is not None):
-
+        if self.lr_scheduler is not None and state_dict["lr_scheduler"] is not None:
             self.lr_scheduler.load_state_dict(state_dict["lr_scheduler"])
 
 
-
-
-
 class CosineAnnealingLRScheduler:
-
-    def __init__(self,
-        config : LRSchedulerConfig,
-        optimizer: torch.optim.Optimizer):
+    def __init__(self, config: LRSchedulerConfig, optimizer: torch.optim.Optimizer):
 
         self.config = config
 
         if config.warmup_steps > 0:
+            warmup_scheduler = LinearLR(
+                optimizer,
+                start_factor=1e-4,
+                end_factor=1.0,
+                total_iters=config.warmup_steps,
+            )
+            cosine_scheduler = CosineAnnealingLR(
+                optimizer,
+                T_max=config.total_steps - config.warmup_steps,
+                eta_min=config.min_lr,
+            )
 
-            warmup_scheduler = LinearLR(optimizer, start_factor=1e-4,  end_factor=1.0,  total_iters= config.warmup_steps )
-            cosine_scheduler = CosineAnnealingLR( optimizer,  T_max= config.total_steps - config.warmup_steps,  eta_min= config.min_lr)
-
-            self.scheduler = SequentialLR( optimizer, schedulers=[warmup_scheduler, cosine_scheduler],milestones=[config.warmup_steps],  )
+            self.scheduler = SequentialLR(
+                optimizer,
+                schedulers=[warmup_scheduler, cosine_scheduler],
+                milestones=[config.warmup_steps],
+            )
 
         else:
-
-            self.scheduler = CosineAnnealingLR( optimizer, T_max= config.total_steps,  eta_min= config.min_lr )
+            self.scheduler = CosineAnnealingLR(
+                optimizer, T_max=config.total_steps, eta_min=config.min_lr
+            )
 
     def step(self):
 

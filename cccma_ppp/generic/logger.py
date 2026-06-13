@@ -1,6 +1,7 @@
 import logging
 import sys
 from pathlib import Path
+import os
 
 
 def setup_logger(
@@ -12,7 +13,6 @@ def setup_logger(
     logger = logging.getLogger(name)
     logger.setLevel(level)
 
-    # Avoid duplicate handlers if setup_logger is called more than once
     if logger.handlers:
         return logger
 
@@ -21,14 +21,12 @@ def setup_logger(
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    # Console handler: root rank only
     if rank == 0:
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(level)
         console_handler.setFormatter(formatter)
         logger.addHandler(console_handler)
 
-    # Optional file handler: root rank only
     if rank == 0:
         log_dir = Path(log_dir) or Path(os.environ["GLOBAL_LOG_DIR"])
         log_dir.mkdir(parents=True, exist_ok=True)
@@ -38,7 +36,6 @@ def setup_logger(
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
-    # Prevent messages from being propagated to root logger twice
     logger.propagate = False
 
     return logger
