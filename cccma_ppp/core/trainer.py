@@ -168,17 +168,17 @@ class Trainer:
         self._setup = True
         self.log_root(logging.INFO, "Trainer setup complete.")
 
-        def train(self):
-            """
-            Main training loop.
+    def train(self):
+        """
+        Main training loop.
 
-            Responsibilities:
-            - loop over epochs
-            - run training epoch
-            - optionally run validation epoch
-            - handle early stopping
-            - checkpoint from root rank only
-            """
+        Responsibilities:
+        - loop over epochs
+        - run training epoch
+        - optionally run validation epoch
+        - handle early stopping
+        - checkpoint from root rank only
+        """
         assert self._setup, "make sure to setup the trainer first."
         self.log_root(logging.INFO, "Starting Training Loop...")
         self.start_time_train = time.time()
