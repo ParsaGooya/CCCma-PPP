@@ -11,7 +11,7 @@ from typing import final
 from collections.abc import Callable, Iterator
 from itertools import islice
 
-from cccma_ppp.data.datasets import XArrayDataset, XArrayDatasetConfig
+from cccma_ppp.data.datasets import TrainDataset, TrainDatasetConfig
 from cccma_ppp.data.utils_data import _create_train_mask, WeightsConfig
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 from cccma_ppp.generic.distributed import Distributed
@@ -59,7 +59,7 @@ class BatchData:
 
 @dataclasses.dataclass
 class TrainDataloaderConfig:
-    dataset_config: XArrayDatasetConfig
+    dataset_config: TrainDatasetConfig
     batch_size: int
     train_years: tuple | list = None
     num_validation_years: int = 0
@@ -69,6 +69,7 @@ class TrainDataloaderConfig:
 
     def __post_init__(self):
         self._setup = False
+        self.dataset_processor = self.dataset_config.build_operator()
         self.available_train_years = self.dataset_config.available_train_time
 
         if self.num_validation_years > 0:
@@ -105,22 +106,23 @@ class TrainDataloaderConfig:
 
         self.rank = distributed.rank
         self.world_size = distributed.world_size
+        
 
         if distributed.is_root():
-            self.dataset_config._fit_preprocessors(
+            self.dataset_processor._fit_preprocessors(
                 self.train_years, save=True, save_path=save_path
             )
 
         distributed.barrier()
 
         if distributed.distributed:
-            self.dataset_config._load_fitted_preprocessors(load_dir=save_path)
+            self.dataset_processor._load_fitted_preprocessors(load_dir=save_path)
 
         self._setup = True
 
     def _add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
         assert preprocessor.fitted, "The preprocessor must be fitted"
-        self.dataset_config._add_fitted_preprocessor(preprocessor, index)
+        self.dataset_processor._add_fitted_preprocessor(preprocessor, index)
 
     def build_train_loader(self, return_spatial_mask=False, reduce_spatial_mask=False):
         if not self._setup:
@@ -133,7 +135,7 @@ class TrainDataloaderConfig:
             lead_times=np.arange(1, self.dataset_config.num_lead_months + 1),
         )
 
-        train_dataset = self.dataset_config.build(
+        train_dataset = self.dataset_processor.build_dataset(
             years=self.train_years, mask=train_mask, return_metadata=False
         )
 
@@ -160,7 +162,7 @@ class TrainDataloaderConfig:
                 years=self.validation_years,
                 lead_times=np.arange(1, self.dataset_config.num_lead_months + 1),
             )
-            validation_dataset = self.dataset_config.build(
+            validation_dataset = self.dataset_processor.build_dataset(
                 years=self.validation_years, mask=validation_mask, return_metadata=False
             )
             return Dataloader(
@@ -181,17 +183,17 @@ class TrainDataloaderConfig:
 
     @property
     def input_var_metadata(self):
-        return self.dataset_config.get_input_var_metadata()
+        return self.dataset_processor.get_input_var_metadata()
 
     @property
     def target_var_metadata(self):
-        return self.dataset_config.get_target_var_metadata()
+        return self.dataset_processor.get_target_var_metadata()
 
 
 @dataclasses.dataclass
 class Dataloader:
     config: TrainDataloaderConfig
-    dataset: XArrayDataset
+    dataset: TrainDataset
     collate_fn: Callable
     rank: int = 0
     world_size: int = 1
@@ -218,7 +220,7 @@ class Dataloader:
 
     def get_weights(self, config: WeightsConfig | None = None):
 
-        return self.config.dataset_config.get_weights(config)
+        return self.config.dataset_processor.get_weights(config)
 
     @property
     def input_shape(self):

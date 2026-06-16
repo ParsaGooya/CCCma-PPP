@@ -4,7 +4,7 @@ import dataclasses
 
 from pathlib import Path
 import glob
-from typing import final, ClassVar
+from typing import final
 import os
 from typing import Literal
 
@@ -40,14 +40,14 @@ class ModelDataConfig(DataConfigABC):
     concat_dim: str = "year"
     file_type: str = "*.nc"
     rename_dict: dict = None
-    TYPE: ClassVar[str] = "model"
 
     def __post_init__(self):
+        super().__init__()
         self._check_ensemble = False
         if self.ensemble_list is not None:
             self._check_ensemble = True
 
-        _check_data(self)
+        _resolve_data(self)
         self.info = _get_ds_info(self)
         self.year_range = np.arange(
             self.info.start_year,
@@ -55,14 +55,19 @@ class ModelDataConfig(DataConfigABC):
         )
 
     @final
-    @classmethod
-    def _allowed_dims(cls):
-        return ["year", "lead_time", "ensembles", "lat", "lon"]
+    @property
+    def TYPE(self):
+        return "model"
 
     @final
     @classmethod
-    def _required_dims(cls):
-        return ["lead_time", "ensembles", "lat", "lon"]
+    def _allowed_dims(cls) -> frozenset[str]:
+        return frozenset({"year", "lead_time", "ensembles", "lat", "lon"}) 
+
+    @final
+    @classmethod
+    def _required_dims(cls) -> frozenset[str]:
+        return frozenset({"lead_time", "ensembles", "lat", "lon"})  
 
 
 @dataclasses.dataclass
@@ -77,26 +82,31 @@ class ObsDataConfig(DataConfigABC):
     concat_dim: str = "year"
     file_type: str = "*.nc"
     rename_dict: dict = None
-    TYPE: ClassVar[str] = "observation"
 
     def __post_init__(self):
+        super().__init__()
         self._check_ensemble = False
         if self.ensemble_list is not None:
             self._check_ensemble = True
 
-        _check_data(self)
+        _resolve_data(self)
         self.info = _get_ds_info(self)
         self.year_range = np.arange(self.info.start_year, self.info.final_year + 1)
 
     @final
-    @classmethod
-    def _allowed_dims(cls):
-        return ["year", "month", "ensembles", "lat", "lon"]
+    @property
+    def TYPE(self):
+        return "observation"
 
     @final
     @classmethod
-    def _required_dims(cls):
-        return ["month", "lat", "lon"]
+    def _allowed_dims(cls) -> frozenset[str]:
+        return frozenset({"year", "month", "ensembles", "lat", "lon"}) 
+
+    @final
+    @classmethod
+    def _required_dims(cls) -> frozenset[str]:
+        return frozenset({"month", "ensembles", "lat", "lon"})
 
 
 @dataclasses.dataclass
@@ -111,14 +121,14 @@ class ConditionDataConfig(DataConfigABC):
     concat_dim: str = "year"
     file_type: str = "*.nc"
     rename_dict: dict = None
-    TYPE: ClassVar[str] = "model"
 
     def __post_init__(self):
+        super().__init__()
         self._check_ensemble = False
         if self.ensemble_list is not None:
             self._check_ensemble = True
 
-        _check_data(self)
+        _resolve_data(self)
         self.info = _get_ds_info(self)
         if self.info.start_year is not None and self.info.final_year is not None:
             self.year_range = np.arange(
@@ -127,17 +137,22 @@ class ConditionDataConfig(DataConfigABC):
             )
 
     @final
-    @classmethod
-    def _allowed_dims(cls):
-        return ["year", "lead_time", "ensembles", "lat", "lon"]
+    @property
+    def TYPE(self):
+        return "condition"
 
     @final
     @classmethod
-    def _required_dims(cls):
-        return ["lat", "lon"]
+    def _allowed_dims(cls) -> frozenset[str]:
+        return frozenset({"year", "lead_time", "ensembles", "lat", "lon"}) 
+
+    @final
+    @classmethod
+    def _required_dims(cls) -> frozenset[str]:
+        return frozenset({"lat", "lon"}) 
 
 
-def _check_data(dataconfig: ModelDataConfig | ObsDataConfig) -> None:
+def _resolve_data(dataconfig: DataConfigABC) -> None:
     if not Path(dataconfig.paths).exists():
         raise FileNotFoundError(
             "The following file does not exist:\n" + str(dataconfig.paths)
@@ -156,32 +171,37 @@ def _check_data(dataconfig: ModelDataConfig | ObsDataConfig) -> None:
             if dataconfig.rename_dict is not None:
                 ds = ds.rename(dataconfig.rename_dict)
 
-            for dim in dataconfig._required_dims():
-                if not dim in ds.dims:
-                    raise ValueError(
-                        f"{dataconfig.TYPE} data must have {dataconfig._required_dims()} dimensions. Current dims : {ds.dims}"
-                    )
+            ds_dims = set(ds.dims)
+
+            invalid = dataconfig._required_dims() - ds_dims
+            if invalid:
+                raise ValueError(
+                    f"{dataconfig.TYPE} data must have {sorted(dataconfig._required_dims())} dimensions. Current dims : {sorted(ds_dims)} for {p}"
+                )
 
             if dataconfig._check_ensemble:
                 if not "ensembles" in ds.dims:
                     raise ValueError(
-                        "Cannot select ensemble_list as ensembles dim does not exist"
+                        f"Cannot select ensemble_list as ensembles dim does not exist in {p}"
                     )
 
-            for dim in ds.dims:
-                if not dim in dataconfig._allowed_dims():
-                    raise ValueError(
-                        f'"{dim}" not a valid dimension for {dataconfig.TYPE} data: {dataconfig._allowed_dims()}'
-                    )
-                if not dim in ds.coords:
-                    raise ValueError(
-                        f'"coordinates for {dim} dimension does not exist. Available coords: {dict(ds.coords).keys()}'
+            invalid = ds_dims - dataconfig._allowed_dims() 
+            if invalid:
+                raise ValueError(
+                    f'invalid data dimensions {sorted(ds_dims)} for {dataconfig.TYPE} data. Must be a subset ot {sorted(dataconfig._allowed_dims())} for {p}'
+                )
+            invalid = ds_dims - set(ds.coords.keys())
+            if invalid:
+                raise ValueError(
+                    f'"coordinates for {sorted(ds_dims)} does not exist. Available coords: {sorted(set(ds.coords.keys()))} for {p}'
                     )
 
             missing = [name for name in dataconfig.names if name not in ds.data_vars]
             if missing:
                 raise ValueError(f"{p} is missing variables: {missing}")
+            
     dataconfig.list_paths = list_paths
+
 
 
 def _get_ds_info(dataconfig: ModelDataConfig | ObsDataConfig) -> infoclass:
