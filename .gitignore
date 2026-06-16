@@ -13,3 +13,4 @@ build/
 .pytest_cache
 dummy.nc
 .coverage
+cccma_ppp/train/registry_imports.py
