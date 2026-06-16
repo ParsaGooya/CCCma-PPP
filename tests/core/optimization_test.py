@@ -58,12 +58,12 @@ def test_lr_scheduler_config_valid_defaults():
 
 
 def test_lr_scheduler_config_invalid_min_lr():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         LRSchedulerConfig(min_lr=-1.0)
 
 
 def test_lr_scheduler_config_invalid_warmup():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         LRSchedulerConfig(warmup_epochs=-1)
 
 
@@ -72,7 +72,7 @@ def test_lr_scheduler_build_requires_total_epochs():
     opt = make_optimizer(module)
     cfg = LRSchedulerConfig()
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cfg.build(opt, num_batches=1)
 
 
@@ -81,7 +81,7 @@ def test_lr_scheduler_build_invalid_total_epochs():
     opt = make_optimizer(module)
     cfg = LRSchedulerConfig(total_epochs=0)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cfg.build(opt, num_batches=1)
 
 
@@ -90,7 +90,7 @@ def test_lr_scheduler_build_invalid_num_batches():
     opt = make_optimizer(module)
     cfg = LRSchedulerConfig(total_epochs=2)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cfg.build(opt, num_batches=0)
 
 
@@ -99,7 +99,7 @@ def test_lr_scheduler_build_warmup_equals_total_epochs_invalid():
     opt = make_optimizer(module)
     cfg = LRSchedulerConfig(warmup_epochs=2, total_epochs=2)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cfg.build(opt, num_batches=1)
 
 
@@ -226,7 +226,7 @@ def test_optimizer_config_defaults():
 
 
 def test_optimizer_config_invalid_weight_decay():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         OptimizerConfig(weight_decay=-1)
 
 

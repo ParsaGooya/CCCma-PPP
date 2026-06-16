@@ -1,6 +1,10 @@
 import abc
 import torch
 import torch.nn as nn
+from typing import Literal
+
+
+Reduction = Literal["mean", "sum"]
 
 
 class lossABC(nn.Module, abc.ABC):

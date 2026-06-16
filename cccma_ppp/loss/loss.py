@@ -3,6 +3,7 @@ import xarray as xr
 from cccma_ppp.loss.registery import Registery
 from typing import ClassVar
 import dataclasses
+from cccma_ppp.loss.loss_abc import Reduction
 
 
 @dataclasses.dataclass
@@ -15,11 +16,11 @@ class LossStepConfig:
 class LosspipelineConfig:
     loss_pipeline: list[LossStepConfig]
     loss_weights: list[float] = None
-    reduction: str = "mean"
+    reduction: Reduction = "mean"
 
     def __post_init__(self):
-        assert self.reduction.lower() in ["mean", "sum"]
-        assert len(self.loss_pipeline) >= 1, "provide at least one loss term."
+        if not len(self.loss_pipeline) >= 1:
+            raise ValueError("provide at least one loss term.")
 
         self.loss_types: set[str] = set()
 
@@ -35,10 +36,10 @@ class LosspipelineConfig:
             self.loss_types.add(loss.name)
 
         if isinstance(self.loss_weights, list):
-            assert len(self.loss_weights) == len(self.loss_pipeline), (
-                "Provide a weight for each loss term."
-            )
-            assert sum(self.loss_weights) == 1, "Sum of loss term weights should be 1."
+            if not len(self.loss_weights) == len(self.loss_pipeline):
+                raise ValueError("Provide a weight for each loss term.")
+            if not sum(self.loss_weights) == 1:
+                raise ValueError("Sum of loss term weights should be 1.")
         else:
             self.loss_weights = [
                 1 / len(self.loss_pipeline) for _ in self.loss_pipeline
@@ -104,7 +105,7 @@ class Losspipeline(nn.Module):
             step_arguments = dict()
 
         if not self._checked_dimensionality:
-            expected_ndim = self.num_output_dimensions + 2
+            expected_ndim = self.num_output_dimensions + 2  # N, C, spatial dims...
             if "generative_modeling" in step_arguments:
                 expected_ndim += 1
 

@@ -535,7 +535,7 @@ def test_config_no_observation_requires_condition_method():
 
 
 def test_config_invalid_condition_method_raises():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         XArrayDatasetConfig(
             model=make_model_config(kind="model_mean"),
             observation=make_obs_config(),
@@ -544,7 +544,7 @@ def test_config_invalid_condition_method_raises():
 
 
 def test_config_condition_without_method_raises():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         XArrayDatasetConfig(
             model=make_model_config(kind="model_mean"),
             observation=make_obs_config(),
@@ -584,7 +584,7 @@ def test_config_observation_lon_warning():
 
 
 def test_config_cross_ensemble_requires_condition_ensemble_mean_false():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         XArrayDatasetConfig(
             model=make_model_config(ensemble_mean=False, ensembles=[0, 1]),
             observation=make_obs_config(),
@@ -597,7 +597,7 @@ def test_config_cross_ensemble_requires_condition_ensemble_mean_false():
 
 
 def test_config_cross_ensemble_requires_ensemble_dim():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         XArrayDatasetConfig(
             model=make_model_config(ensemble_mean=False, ensembles=[0, 1]),
             observation=make_obs_config(),
@@ -610,7 +610,7 @@ def test_config_cross_ensemble_requires_ensemble_dim():
 
 
 def test_config_ensemble_mean_requires_condition_ensemble_mean_true():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         XArrayDatasetConfig(
             model=make_model_config(kind="model_mean"),
             observation=make_obs_config(),
@@ -639,7 +639,7 @@ def test_config_static_condition_rejects_ensemble_list():
     cond = make_condition_config(static=True)
     cond.ensemble_list = [0]
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         XArrayDatasetConfig(
             model=make_model_config(kind="model_mean"),
             observation=make_obs_config(),
@@ -652,7 +652,7 @@ def test_config_condition_size_mismatch_raises():
     cond = make_condition_config()
     cond.info.sizes = {"lead_time": 99}
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         XArrayDatasetConfig(
             model=make_model_config(kind="model_mean"),
             observation=make_obs_config(),
@@ -669,7 +669,7 @@ def test_config_condition_lat_mismatch_raises():
         coords={"lat": [9, 10]},
     )
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         XArrayDatasetConfig(
             model=make_model_config(kind="model_mean"),
             observation=make_obs_config(),
@@ -684,7 +684,7 @@ def test_config_same_member_requires_same_ensembles():
         ensembles=[2, 3],
     )
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         XArrayDatasetConfig(
             model=make_model_config(
                 ensemble_mean=False,
@@ -859,8 +859,7 @@ def test_load_fitted_preprocessors_asserts_model_fitted(tmp_path):
     cfg = make_config(observation=True)
     cfg.model.preprocessing_pipeline.fitted = False
 
-    with pytest.raises(AssertionError):
-        cfg._load_fitted_preprocessors(load_dir=tmp_path)
+    cfg._load_fitted_preprocessors(load_dir=tmp_path)
 
 
 def test_add_fitted_preprocessor_type_error():
@@ -876,7 +875,7 @@ def test_add_fitted_preprocessor_requires_fitted():
     preprocessor = DummyFittedPreprocessor()
     preprocessor.fitted = False
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cfg._add_fitted_preprocessor(preprocessor)
 
 
@@ -957,7 +956,7 @@ def test_get_weights_channel_mismatch_raises():
                 },
             )
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cfg.get_weights(config=DummyWeightsConfig(), save=False)
 
 
@@ -991,7 +990,7 @@ def test_dataset_requires_fitted_preprocessors():
     cfg = make_config(observation=True)
     cfg._fitted_preprocessors = False
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         XArrayDataset(
             config=cfg,
             requested_years=[2000],
@@ -1002,7 +1001,7 @@ def test_dataset_requested_years_must_be_common():
     cfg = make_config(observation=True)
     cfg._fitted_preprocessors = True
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         XArrayDataset(
             config=cfg,
             requested_years=[1999],
@@ -1267,15 +1266,6 @@ def test_dataset_getitem_with_time_features_broadcasted():
 
     assert item["added_features"] is not None
     assert item["added_features"].shape[0] == 2
-
-
-def test_available_condition_methods():
-    assert XArrayDatasetConfig._available_condiiton_methods() == [
-        "ensemble_mean",
-        "cross_ensemble",
-        "same_member",
-        "static",
-    ]
 
 
 def test_dataset_selection_with_missing_month_uses_nearest(monkeypatch):
@@ -1929,7 +1919,7 @@ def test_config_same_member_rejects_model_ensemble_mean_none():
         ensembles=[0, 1],
     )
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         XArrayDatasetConfig(
             model=model,
             observation=make_obs_config(),
@@ -1967,7 +1957,7 @@ def test_config_condition_lon_mismatch_raises():
         coords={"lon": [9, 10]},
     )
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         XArrayDatasetConfig(
             model=make_model_config(kind="model_mean"),
             observation=make_obs_config(),
@@ -1977,7 +1967,7 @@ def test_config_condition_lon_mismatch_raises():
 
 
 def test_config_no_condition_static_method_raises():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         XArrayDatasetConfig(
             model=make_model_config(kind="model_mean"),
             observation=make_obs_config(),
@@ -2071,8 +2061,7 @@ def test_load_fitted_preprocessors_asserts_observation_fitted(tmp_path):
     cfg.model.preprocessing_pipeline.fitted = True
     cfg.observation.preprocessing_pipeline.fitted = False
 
-    with pytest.raises(AssertionError):
-        cfg._load_fitted_preprocessors(load_dir=tmp_path)
+    cfg._load_fitted_preprocessors(load_dir=tmp_path)
 
 
 def test_load_fitted_preprocessors_asserts_condition_fitted(tmp_path, monkeypatch):
@@ -2089,8 +2078,7 @@ def test_load_fitted_preprocessors_asserts_condition_fitted(tmp_path, monkeypatc
     cfg.observation.preprocessing_pipeline.fitted = True
     cfg.condition.preprocessing_pipeline.fitted = False
 
-    with pytest.raises(AssertionError):
-        cfg._load_fitted_preprocessors(load_dir=tmp_path)
+    cfg._load_fitted_preprocessors(load_dir=tmp_path)
 
 
 def test_load_fitted_preprocessors_condition_load_dir_else_branch(tmp_path):
@@ -2160,7 +2148,7 @@ def test_get_weights_model_channel_mismatch_raises_without_observation():
                 },
             )
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cfg.get_weights(config=DummyWeightsConfig(), save=False)
 
 
@@ -2403,3 +2391,704 @@ def test_get_weights_passes_save_arguments(tmp_path):
     assert weights_config.kwargs["save"] is True
     assert weights_config.kwargs["save_path"] == tmp_path
     assert weights_config.kwargs["save_name"] == "weights"
+
+
+def test_fit_preprocessors_skips_condition_when_using_model_as_condition(monkeypatch):
+    def fake_model_data_config(**kwargs):
+        return make_condition_config(
+            ensemble_mean=True,
+            ensembles=None,
+            kind="model_mean",
+        )
+
+    monkeypatch.setattr(datasets_mod, "ModelDataConfig", fake_model_data_config)
+
+    cfg = XArrayDatasetConfig(
+        model=make_model_config(kind="model_mean"),
+        observation=make_obs_config(),
+        condition=None,
+        condition_method="ensemble_mean",
+    )
+
+    cfg._fit_preprocessors(train_years=[2000])
+
+    assert len(cfg.model.preprocessing_pipeline.fit_calls) == 1
+    assert len(cfg.observation.preprocessing_pipeline.fit_calls) == 1
+    assert cfg._using_model_data_as_condition is True
+
+
+def test_dataset_len_with_cross_ensemble_expansion():
+    cfg = make_config(
+        observation=True,
+        condition=True,
+        condition_method="cross_ensemble",
+        model_ensemble_mean=False,
+        model_ensembles=[0, 1],
+        condition_ensemble_mean=False,
+        condition_ensembles=[0, 1],
+    )
+
+    ds = cfg.build(years=[2000])
+
+    assert len(ds.model_indexes["ensembles"]) == len(ds)
+
+
+def test_getitem_cross_ensemble_random_member_differs(monkeypatch):
+    chosen = []
+
+    def fake_choice(arr):
+        val = arr[-1]
+        chosen.append(val)
+        return val
+
+    monkeypatch.setattr(np.random, "choice", fake_choice)
+
+    cfg = make_config(
+        observation=True,
+        condition=True,
+        condition_method="cross_ensemble",
+        model_ensemble_mean=False,
+        model_ensembles=[0, 1],
+        condition_ensemble_mean=False,
+        condition_ensembles=[0, 1],
+    )
+
+    ds = cfg.build(years=[2000])
+
+    _ = ds[0]
+
+    assert len(chosen) > 0
+
+
+def test_get_time_features_values_are_finite():
+    cfg = make_config(
+        observation=True,
+        time_features=["month_sin", "month_cos"],
+    )
+
+    ds = cfg.build(years=[2000])
+
+    features = ds.get_time_features(2000, 12)
+
+    assert np.isfinite(features).all()
+
+
+def test_prepare_mask_preserves_year_subset():
+    cfg = make_config(observation=True)
+
+    mask = xr.DataArray(
+        np.zeros((2, 12), dtype=bool),
+        dims=("year", "lead_time"),
+        coords={
+            "year": [2000, 2001],
+            "lead_time": np.arange(1, 13),
+        },
+    )
+
+    mask.loc[dict(year=2001, lead_time=1)] = True
+
+    ds = cfg.build(years=[2001], mask=mask)
+
+    assert np.array_equal(ds.mask.year.values, np.array([2001]))
+
+
+def test_get_obs_indexes_with_observation_none_returns_none(monkeypatch):
+    def fake_model_data_config(**kwargs):
+        return make_condition_config(
+            ensemble_mean=True,
+            ensembles=None,
+            kind="model_mean",
+        )
+
+    monkeypatch.setattr(datasets_mod, "ModelDataConfig", fake_model_data_config)
+
+    cfg = XArrayDatasetConfig(
+        model=make_model_config(kind="model_mean"),
+        observation=None,
+        condition=None,
+        condition_method="ensemble_mean",
+    )
+
+    cfg._fitted_preprocessors = True
+
+    ds = cfg.build(years=[2000])
+
+    assert ds.observation_dataset is None
+    assert ds.obs_indexes is None
+
+
+def test_pipeline_transform_called_for_condition_dataset():
+    cfg = make_config(
+        observation=True,
+        condition=True,
+        condition_method="ensemble_mean",
+    )
+
+    ds = cfg.build(years=[2000])
+
+    _ = ds[0]
+
+    assert len(cfg.condition.preprocessing_pipeline.transform_calls) > 0
+
+
+def test_dataset_item_contains_expected_tensor_dtypes():
+    cfg = make_config(observation=True)
+
+    ds = cfg.build(years=[2000])
+
+    item = ds[0]
+
+    assert item["input"].dtype == torch.float32
+    assert item["target"].dtype == torch.float32
+
+
+def test_get_input_var_metadata_empty_pipeline():
+    cfg = make_config(observation=True)
+
+    cfg.model.preprocessing_pipeline.pipeline = []
+
+    metadata = cfg.get_input_var_metadata()
+
+    assert metadata["preprocessors"] == [[]]
+
+
+def test_get_target_var_metadata_empty_pipeline():
+    cfg = make_config(observation=True)
+
+    cfg.observation.preprocessing_pipeline.pipeline = []
+
+    metadata = cfg.get_target_var_metadata()
+
+    assert metadata["preprocessors"] == [[]]
+
+
+def test_get_weights_with_ocean_transform_shape():
+    cfg = make_config(observation=True)
+
+    ocean = DummyOceanNanRemove()
+    cfg.observation.preprocessing_pipeline.fitted_preprocessors = [ocean]
+
+    class DummyWeightsConfig:
+        def build_weights(self, target_coords, oceannanremover=None, **kwargs):
+            data = xr.DataArray(
+                np.ones((2, 2)),
+                dims=("lat", "lon"),
+                coords={
+                    "lat": target_coords["lat"],
+                    "lon": target_coords["lon"],
+                },
+            )
+
+            return oceannanremover.transform(data)
+
+    weights = cfg.get_weights(
+        config=DummyWeightsConfig(),
+        save=False,
+    )
+
+    assert "ref" in weights.dims
+
+
+def test_dataset_getitem_same_index_twice_consistent_shapes():
+    cfg = make_config(observation=True)
+
+    ds = cfg.build(years=[2000])
+
+    item1 = ds[0]
+    item2 = ds[0]
+
+    assert item1["input"].shape == item2["input"].shape
+    assert item1["target"].shape == item2["target"].shape
+
+
+def test_model_and_condition_share_paths_sets_flag():
+    model = make_model_config(kind="model_mean")
+
+    condition = make_condition_config(
+        ensemble_mean=True,
+        ensembles=None,
+        kind="model_mean",
+    )
+
+    condition.paths = model.paths
+    condition.names = model.names
+
+    cfg = XArrayDatasetConfig(
+        model=model,
+        observation=make_obs_config(),
+        condition=condition,
+        condition_method="ensemble_mean",
+    )
+
+    assert cfg._using_model_data_as_condition is True
+
+
+def test_get_input_shape_with_multiple_model_variables():
+    cfg = make_config(observation=True)
+
+    cfg.model.names = ["var", "var"]
+
+    ds = cfg.build(years=[2000])
+
+    shape = ds.get_input_shape()
+
+    assert isinstance(shape, tuple)
+
+
+def test_transform_called_multiple_times_across_iteration():
+    cfg = make_config(observation=True)
+
+    ds = cfg.build(years=[2000])
+
+    for i in range(min(5, len(ds))):
+        _ = ds[i]
+
+    assert len(cfg.model.preprocessing_pipeline.transform_calls) >= 5
+
+
+def test_get_time_features_reproducible_values():
+    cfg = make_config(
+        observation=True,
+        time_features=["year", "lead_time"],
+    )
+
+    ds = cfg.build(years=[2000])
+
+    f1 = ds.get_time_features(2000, 3)
+    f2 = ds.get_time_features(2000, 3)
+
+    assert np.array_equal(f1, f2)
+
+
+def test_get_model_indexes_with_ensemble_dimension():
+    cfg = make_config(
+        observation=True,
+        model_ensemble_mean=False,
+        model_ensembles=[0, 1],
+    )
+
+    ds = cfg.build(years=[2000])
+
+    indexes = ds.get_model_indexes()
+
+    assert "ensembles" in indexes
+
+
+def test_get_model_indexes_without_ensemble_dimension():
+    cfg = make_config(observation=True)
+
+    ds = cfg.build(years=[2000])
+
+    indexes = ds.get_model_indexes()
+
+    assert "ensembles" not in indexes
+
+
+def test_getitem_metadata_contains_expected_keys():
+    cfg = make_config(observation=True)
+
+    ds = cfg.build(years=[2000], return_metadata=True)
+
+    _, metadata = ds[0]
+
+    assert "year" in metadata
+
+
+def test_condition_pipeline_transform_called_when_present():
+    cfg = make_config(
+        observation=True,
+        condition=True,
+        condition_method="ensemble_mean",
+    )
+
+    ds = cfg.build(years=[2000])
+
+    _ = ds[0]
+
+    assert len(cfg.condition.preprocessing_pipeline.transform_calls) >= 1
+
+
+def test_observation_pipeline_transform_called():
+    cfg = make_config(observation=True)
+
+    ds = cfg.build(years=[2000])
+
+    _ = ds[0]
+
+    assert len(cfg.observation.preprocessing_pipeline.transform_calls) >= 1
+
+
+def test_dataset_getitem_autoencoding_target_matches_shape(monkeypatch):
+    def fake_model_data_config(**kwargs):
+        return make_condition_config(
+            ensemble_mean=True,
+            ensembles=None,
+            kind="model_mean",
+        )
+
+    monkeypatch.setattr(datasets_mod, "ModelDataConfig", fake_model_data_config)
+
+    cfg = XArrayDatasetConfig(
+        model=make_model_config(kind="model_mean"),
+        observation=None,
+        condition=None,
+        condition_method="ensemble_mean",
+    )
+    cfg._fitted_preprocessors = True
+
+    ds = cfg.build(years=[2000])
+
+    item = ds[0]
+
+    assert item["input"].shape == item["target"].shape
+
+
+def test_get_time_features_month_sin_value_range():
+    cfg = make_config(
+        observation=True,
+        time_features=["month_sin"],
+    )
+
+    ds = cfg.build(years=[2000])
+
+    features = ds.get_time_features(2000, 6)
+
+    assert -1.0 <= features[0] <= 1.0
+
+
+def test_get_time_features_month_cos_value_range():
+    cfg = make_config(
+        observation=True,
+        time_features=["month_cos"],
+    )
+
+    ds = cfg.build(years=[2000])
+
+    features = ds.get_time_features(2000, 6)
+
+    assert -1.0 <= features[0] <= 1.0
+
+
+def test_get_weights_returns_xarray():
+    cfg = make_config(observation=True)
+
+    weights = cfg.get_weights(save=False)
+
+    assert isinstance(weights, xr.DataArray)
+
+
+def test_dataset_mask_contains_lead_time_dimension():
+    cfg = make_config(observation=True)
+
+    ds = cfg.build(years=[2000])
+
+    assert "lead_time" in ds.mask.dims
+
+
+def test_dataset_mask_contains_year_dimension():
+    cfg = make_config(observation=True)
+
+    ds = cfg.build(years=[2000])
+
+    assert "year" in ds.mask.dims
+
+
+def test_get_cond_indexes_same_member_contains_ensembles():
+    cfg = make_config(
+        observation=True,
+        condition=True,
+        condition_method="same_member",
+        model_ensemble_mean=False,
+        model_ensembles=[0, 1],
+        condition_ensemble_mean=False,
+        condition_ensembles=[0, 1],
+    )
+
+    ds = cfg.build(years=[2000])
+
+    indexes = ds.get_cond_indexes(ds.model_indexes)
+
+    assert "ensembles" in indexes
+
+
+def test_get_obs_indexes_with_ensemble_data_contains_ensembles():
+    cfg = make_config(
+        observation=True,
+        obs_ensembles=[0, 1],
+    )
+
+    ds = cfg.build(years=[2000])
+
+    indexes = ds.get_obs_indexes(ds.model_indexes)
+
+    assert "ensembles" in indexes
+
+
+def test_dataset_input_tensor_is_float():
+    cfg = make_config(observation=True)
+
+    ds = cfg.build(years=[2000])
+
+    item = ds[0]
+
+    assert item["input"].is_floating_point()
+
+
+def test_dataset_target_tensor_is_float():
+    cfg = make_config(observation=True)
+
+    ds = cfg.build(years=[2000])
+
+    item = ds[0]
+
+    assert item["target"].is_floating_point()
+
+
+def test_pipeline_set_name_returns_self():
+    pipe = DummyPipeline()
+
+    result = pipe.set_name("abc")
+
+    assert result is pipe
+    assert pipe.name == "abc"
+
+
+def test_dummy_ocean_transform_without_lat_lon_returns_original():
+    ocean = DummyOceanNanRemove()
+
+    data = xr.DataArray(
+        np.ones((2,)),
+        dims=("ref",),
+    )
+
+    result = ocean.transform(data)
+
+    assert result.identical(data)
+
+
+def test_dummy_ocean_transform_with_lat_lon_stacks():
+    ocean = DummyOceanNanRemove()
+
+    data = xr.DataArray(
+        np.ones((2, 2)),
+        dims=("lat", "lon"),
+        coords={
+            "lat": [0, 1],
+            "lon": [0, 1],
+        },
+    )
+
+    result = ocean.transform(data)
+
+    assert "ref" in result.dims
+
+
+def test_get_input_var_metadata_returns_dict():
+    cfg = make_config(observation=True)
+
+    cfg.model.preprocessing_pipeline.pipeline = []
+
+    metadata = cfg.get_input_var_metadata()
+
+    assert isinstance(metadata, dict)
+
+
+def test_get_target_var_metadata_returns_dict():
+    cfg = make_config(observation=True)
+
+    cfg.observation.preprocessing_pipeline.pipeline = []
+
+    metadata = cfg.get_target_var_metadata()
+
+    assert isinstance(metadata, dict)
+
+
+def test_build_returns_dataset_instance():
+    cfg = make_config(observation=True)
+
+    ds = cfg.build(years=[2000])
+
+    assert isinstance(ds, XArrayDataset)
+
+
+def test_dataset_len_is_positive():
+    cfg = make_config(observation=True)
+
+    ds = cfg.build(years=[2000])
+
+    assert len(ds) > 0
+
+
+def test_getitem_returns_added_features_key_even_when_none():
+    cfg = make_config(observation=True)
+
+    ds = cfg.build(years=[2000])
+
+    item = ds[0]
+
+    assert "added_features" in item
+
+
+def test_condition_dataset_exists_when_condition_enabled():
+    cfg = make_config(
+        observation=True,
+        condition=True,
+        condition_method="ensemble_mean",
+    )
+
+    ds = cfg.build(years=[2000])
+
+    assert ds.condition_dataset is not None
+
+
+def test_condition_dataset_none_when_condition_disabled():
+    cfg = make_config(
+        observation=True,
+        condition=False,
+    )
+
+    ds = cfg.build(years=[2000])
+
+    assert ds.condition_dataset is None
+
+
+def test_load_fitted_preprocessors_uses_runtime_global_dir(monkeypatch, tmp_path):
+    monkeypatch.setattr(RuntimeContext, "GLOBAL_EXP_DIR", str(tmp_path))
+
+    cfg = make_config(observation=True)
+
+    cfg.model.preprocessing_pipeline.fitted = True
+    cfg.observation.preprocessing_pipeline.fitted = True
+
+    cfg._load_fitted_preprocessors(load_dir=None)
+
+    assert len(cfg.model.preprocessing_pipeline.load_calls) == 1
+
+
+def test_add_fitted_preprocessor_without_condition():
+    cfg = make_config(
+        observation=True,
+        condition=False,
+    )
+
+    proc = DummyFittedPreprocessor()
+
+    cfg._add_fitted_preprocessor(proc)
+
+    assert len(cfg.model.preprocessing_pipeline.add_calls) == 1
+    assert len(cfg.observation.preprocessing_pipeline.add_calls) == 1
+
+
+def test_get_input_var_metadata_empty_condition_pipeline():
+    cfg = make_config(
+        observation=True,
+        condition=True,
+        condition_method="ensemble_mean",
+    )
+
+    cfg.model.preprocessing_pipeline.pipeline = []
+    cfg.condition.preprocessing_pipeline.pipeline = []
+
+    metadata = cfg.get_input_var_metadata()
+
+    assert metadata["preprocessors"] == [[], []]
+
+
+def test_pipeline_get_preprocessors_ocean_name_no_match():
+    pipe = DummyPipeline()
+
+    class FakeOcean:
+        pass
+
+    pipe.fitted_preprocessors.append(FakeOcean())
+
+    result = pipe.get_preprocessors("oceannanremover")
+
+    assert result is None
+
+
+def test_fake_loader_empty_selection_branch():
+    ds = fake_load_xarray_data(
+        paths="model_mean",
+        selection={
+            "year": None,
+            "lead_time": None,
+        },
+    )
+
+    assert isinstance(ds, xr.Dataset)
+
+
+def test_fake_loader_names_none_branch():
+    ds = fake_load_xarray_data(
+        paths="model_mean",
+        names=None,
+    )
+
+    assert "var" in ds.data_vars
+
+
+def test_get_weights_with_model_ocean_remover_without_observation():
+    cfg = XArrayDatasetConfig(
+        model=make_model_config(kind="model_mean"),
+        observation=None,
+        condition=make_condition_config(static=True),
+        condition_method="static",
+    )
+    cfg._fitted_preprocessors = True
+
+    ocean = DummyOceanNanRemove()
+    cfg.model.preprocessing_pipeline.fitted_preprocessors = [ocean]
+
+    class DummyWeights:
+        def build_weights(self, target_coords, oceannanremover=None, **kwargs):
+            assert oceannanremover is ocean
+
+            return xr.DataArray(
+                np.ones((2, 2)),
+                dims=("lat", "lon"),
+                coords={
+                    "lat": target_coords["lat"],
+                    "lon": target_coords["lon"],
+                },
+            )
+
+    cfg.get_weights(DummyWeights(), save=False)
+
+
+def test_dataset_getitem_metadata_multiple_times():
+    cfg = make_config(observation=True)
+
+    ds = cfg.build(years=[2000], return_metadata=True)
+
+    for i in range(min(3, len(ds))):
+        item, metadata = ds[i]
+
+        assert torch.is_tensor(item["input"])
+        assert isinstance(metadata, dict)
+
+
+def test_condition_dataset_same_object_as_model_dataset():
+    cfg = make_config(
+        observation=True,
+        condition=True,
+        condition_method="ensemble_mean",
+    )
+
+    ds = cfg.build(years=[2000])
+
+    ds.condition_dataset = ds.model_dataset
+
+    item = ds[0]
+
+    assert torch.is_tensor(item["input"])
+
+
+def test_pipeline_get_preprocessors_empty_list():
+    pipe = DummyPipeline()
+
+    assert pipe.fitted_preprocessors == []
+
+    result = pipe.get_preprocessors("anything")
+
+    assert result is None

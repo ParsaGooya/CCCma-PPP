@@ -243,7 +243,7 @@ def test_model_selector_load_dir_type_mismatch(monkeypatch, tmp_path):
         fake_load_config_from_checkpoint,
     )
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         LocalModelSelector(
             type="expected_type",
             config={},
@@ -283,7 +283,7 @@ def test_model_selector_freeze_weights_warning(monkeypatch, tmp_path):
     messages = [str(w.message) for w in record]
 
     assert any("overwritten" in msg for msg in messages)
-    assert any("Froze model weights" in msg for msg in messages)
+    assert any("freeze" in msg.lower() for msg in messages)
 
 
 def test_model_selector_load_dir_without_freeze_only_one_warning(monkeypatch, tmp_path):

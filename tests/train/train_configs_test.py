@@ -1,4 +1,5 @@
 import os
+import shutil
 import warnings
 from pathlib import Path
 
@@ -554,7 +555,7 @@ def test_zero_epochs_is_allowed():
 
 
 def test_negative_epochs_assertion():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         make_cfg(
             "x",
             -1,
@@ -1665,3 +1666,681 @@ def test_sanitize_mlp_existing_ocean_not_duplicated():
     oceans = [step for step in pipeline if isinstance(step[1], Oceannanremove)]
 
     assert len(oceans) == 1
+
+
+def test_prepare_runtime_variables_sets_input_target_metadata(tmp_path):
+    cfg = valid_directory_cfg(tmp_path / "runtime_meta")
+
+    cfg.train_loader.input_var_metadata = {"a": 1}
+    cfg.train_loader.target_var_metadata = {"b": 2}
+
+    cfg._prepare_runtime_variables()
+
+    assert RuntimeContext.INPUT_VAR_METADATA == {"a": 1}
+    assert RuntimeContext.TARGET_VAR_METADATA == {"b": 2}
+
+
+def test_set_seed_changes_random_state():
+    set_seed(1)
+    first = np.random.rand()
+
+    set_seed(2)
+    second = np.random.rand()
+
+    assert first != second
+
+
+def test_build_trainer_sets_distributed_on_loader():
+    cfg = build_train_config_for_builder()
+
+    distributed = DistributedRoot()
+
+    build_trainer(cfg, distributed, logger=None)
+
+    assert cfg.train_loader.distributed is distributed
+
+
+def test_build_trainer_builds_module_with_none_output_shape():
+    class Loader(DummyBuiltLoader):
+        target_shape = None
+
+    class TrainLoader(DummyTrainLoaderWithBuild):
+        def build_train_loader(self):
+            return Loader()
+
+        def build_validation_loader(self):
+            return Loader()
+
+    loader = TrainLoader(
+        DummyDatasetConfig(
+            observation="obs",
+            pipeline=ocean_pipeline(),
+        )
+    )
+
+    module = DummyModuleWithBuild("other", num_out=1)
+
+    cfg = build_train_config_for_builder(
+        loader=loader,
+        module=module,
+    )
+
+    build_trainer(cfg, DistributedRoot(), logger=None)
+
+    assert module.output_shape is None
+
+
+def test_build_trainer_passes_added_features_dim_value():
+    class Loader(DummyBuiltLoader):
+        added_features_dim = 5
+
+    class TrainLoader(DummyTrainLoaderWithBuild):
+        def build_train_loader(self):
+            return Loader()
+
+        def build_validation_loader(self):
+            return Loader()
+
+    loader = TrainLoader(
+        DummyDatasetConfig(
+            observation="obs",
+            pipeline=ocean_pipeline(),
+        )
+    )
+
+    module = DummyModuleWithBuild("other", num_out=1)
+
+    cfg = build_train_config_for_builder(
+        loader=loader,
+        module=module,
+    )
+
+    build_trainer(cfg, DistributedRoot(), logger=None)
+
+    assert module.added_features_dim == 5
+
+
+def test_build_trainer_uses_train_loader_length():
+    class Loader(DummyBuiltLoader):
+        def __len__(self):
+            return 7
+
+    class TrainLoader(DummyTrainLoaderWithBuild):
+        def build_train_loader(self):
+            return Loader()
+
+        def build_validation_loader(self):
+            return Loader()
+
+    cfg = build_train_config_for_builder(
+        loader=TrainLoader(
+            DummyDatasetConfig(
+                observation="obs",
+                pipeline=ocean_pipeline(),
+            )
+        )
+    )
+
+    build_trainer(cfg, DistributedRoot(), logger=None)
+
+    assert cfg.optimization.num_batches == 7
+
+
+def test_prepare_directory_root_without_set_env(tmp_path):
+    cfg = valid_directory_cfg(tmp_path / "plain_root")
+
+    root = Root()
+
+    cfg.prepare_directory(root)
+
+    assert Path(cfg.experiment_dir).exists()
+    assert root.barrier_calls == 2
+
+
+def test_prepare_directory_creates_checkpoint_dir(tmp_path):
+    cfg = valid_directory_cfg(tmp_path / "dirs")
+
+    cfg.prepare_directory(Root())
+
+    assert Path(cfg.checkpoint_dir).exists()
+
+
+def test_prepare_directory_creates_log_dir(tmp_path):
+    cfg = valid_directory_cfg(tmp_path / "dirs2")
+
+    cfg.prepare_directory(Root())
+
+    assert Path(cfg.log_dir).exists()
+
+
+def test_prepare_directory_creates_figures_dir(tmp_path):
+    cfg = valid_directory_cfg(tmp_path / "dirs3")
+
+    cfg.prepare_directory(Root())
+
+    assert Path(cfg.figures_dir).exists()
+
+
+def test_prepare_directory_preserves_yaml_contents(tmp_path):
+    yaml = tmp_path / "cfg.yaml"
+    yaml.write_text("abc: 123")
+
+    cfg = valid_directory_cfg(tmp_path / "exp")
+
+    cfg.prepare_directory(Root(), yaml)
+
+    saved = (Path(cfg.experiment_dir) / "config.yaml").read_text()
+
+    assert "abc: 123" in saved
+
+
+def test_dummy_pipeline_get_preprocessors_returns_none():
+    pipe = DummyPipeline()
+
+    result = pipe.get_preprocessors("missing")
+
+    assert result is None
+
+
+def test_dummy_pipeline_transform_returns_same_data():
+    pipe = DummyPipeline()
+
+    data = {"x": 1}
+
+    result = pipe.transform(data)
+
+    assert result is data
+
+
+def test_dummy_pipeline_add_fitted_preprocessor_order():
+    pipe = DummyPipeline()
+
+    p1 = DummyPipeline()
+    p2 = DummyPipeline()
+
+    pipe.add_fitted_preprocessor(p1, index=0)
+    pipe.add_fitted_preprocessor(p2, index=0)
+
+    assert pipe.fitted_preprocessors[0] is p2
+    assert pipe.fitted_preprocessors[1] is p1
+
+
+def test_dummy_pipeline_load_sets_fitted(tmp_path):
+    pipe = DummyPipeline(fitted=False)
+
+    pipe._load_from_memory(tmp_path)
+
+    assert pipe.fitted is True
+
+
+def test_dummy_pipeline_fit_sets_fitted():
+    pipe = DummyPipeline(fitted=False)
+
+    pipe.fit(base_data=None)
+
+    assert pipe.fitted is True
+
+
+def test_build_trainer_ddp_preserves_wrapped_module(monkeypatch):
+    monkeypatch.setattr(torch.nn.parallel, "DistributedDataParallel", FakeDDP)
+
+    cfg = build_train_config_for_builder()
+
+    build_trainer(cfg, DistributedDDP(), logger=None)
+
+    assert isinstance(cfg.trainer.module.module, DummyBuiltTorchModule)
+
+
+def test_build_trainer_logger_receives_optimizer_message():
+    cfg = build_train_config_for_builder()
+
+    logger = DummyLogger()
+
+    build_trainer(cfg, DistributedRoot(), logger=logger)
+
+    assert any("adam" in msg.lower() for msg in logger.messages)
+
+
+def test_build_trainer_calls_init_loss_function():
+    cfg = build_train_config_for_builder()
+
+    build_trainer(cfg, DistributedRoot(), logger=None)
+
+    assert cfg.trainer.module.loss == "loss"
+
+
+def test_non_root_prepare_directory_no_config_created(tmp_path):
+    cfg = valid_directory_cfg(tmp_path / "nonroot")
+
+    cfg.prepare_directory(NonRoot())
+
+    assert not (Path(cfg.experiment_dir) / "config.yaml").exists()
+
+
+def test_prepare_root_copies_yaml_exactly(tmp_path):
+    yaml = tmp_path / "cfg.yaml"
+    yaml.write_text("hello: world")
+
+    cfg = valid_directory_cfg(tmp_path / "exp")
+
+    cfg.prepare_directory(Root(), yaml)
+
+    copied = Path(cfg.experiment_dir) / "config.yaml"
+
+    assert copied.read_text() == "hello: world"
+
+
+def test_build_trainer_returns_trainer_object():
+    cfg = build_train_config_for_builder()
+
+    trainer = build_trainer(cfg, DistributedRoot(), logger=None)
+
+    assert trainer == "trainer"
+
+
+def test_make_cfg_preserves_max_epochs():
+    cfg = make_cfg(
+        "x",
+        5,
+        DummyTrainLoader(
+            DummyDatasetConfig(
+                observation="obs",
+                pipeline=ocean_pipeline(),
+            )
+        ),
+        DummyModule(num_out=2),
+        DummyLoss(["mse"]),
+        DummyTrainer(),
+    )
+
+    assert cfg.max_epochs == 5
+
+
+def test_prepare_directory_copy_resume_branch(tmp_path, monkeypatch):
+    resume = tmp_path / "resume"
+    resume.mkdir()
+
+    cfg = valid_directory_cfg(tmp_path / "new_exp")
+
+    cfg.resume_dir = resume
+    cfg.copy_resume_dir_to_new_path = True
+
+    called = {}
+
+    def fake_copytree(src, dst):
+        called["src"] = src
+        called["dst"] = dst
+
+    monkeypatch.setattr(shutil, "copytree", fake_copytree)
+
+    cfg.prepare_directory(Root())
+
+    assert called["src"] == resume
+    assert called["dst"] == cfg.experiment_dir
+
+
+def test_prepare_directory_yaml_not_copied_for_non_root(tmp_path):
+    yaml_file = tmp_path / "cfg.yaml"
+    yaml_file.write_text("x: 1")
+
+    cfg = valid_directory_cfg(tmp_path / "exp")
+
+    cfg.prepare_directory(NonRoot(), yaml_file)
+
+    assert not (cfg.experiment_dir / "config.yaml").exists()
+
+
+def test_checkpoint_dir_property_type():
+    cfg = valid_directory_cfg("abc")
+
+    assert isinstance(cfg.checkpoint_dir, str)
+
+
+def test_log_dir_property_type():
+    cfg = valid_directory_cfg("abc")
+
+    assert isinstance(cfg.log_dir, str)
+
+
+def test_figures_dir_property_type():
+    cfg = valid_directory_cfg("abc")
+
+    assert isinstance(cfg.figures_dir, str)
+
+
+def test_build_trainer_calls_build_validation_loader():
+    cfg = build_train_config_for_builder()
+
+    build_trainer(cfg, DistributedRoot(), logger=None)
+
+    assert cfg.train_loader.validation_loader_built is True
+
+
+def test_build_trainer_calls_build_train_loader():
+    cfg = build_train_config_for_builder()
+
+    build_trainer(cfg, DistributedRoot(), logger=None)
+
+    assert cfg.train_loader.train_loader_built is True
+
+
+def test_build_trainer_calls_setup_distributed():
+    cfg = build_train_config_for_builder()
+
+    build_trainer(cfg, DistributedRoot(), logger=None)
+
+    assert cfg.train_loader.setup_distributed_called is True
+
+
+def test_build_trainer_optimizer_return_used():
+    cfg = build_train_config_for_builder()
+
+    build_trainer(cfg, DistributedRoot(), logger=None)
+
+    assert cfg.trainer.optimization == "optimizer"
+
+
+def test_build_trainer_module_build_return_used():
+    cfg = build_train_config_for_builder()
+
+    build_trainer(cfg, DistributedRoot(), logger=None)
+
+    assert isinstance(cfg.trainer.module, DummyBuiltTorchModule)
+
+
+def test_build_trainer_train_loader_len_used():
+    cfg = build_train_config_for_builder()
+
+    build_trainer(cfg, DistributedRoot(), logger=None)
+
+    assert cfg.optimization.num_batches == 2
+
+
+def test_build_trainer_uses_max_epochs():
+    cfg = build_train_config_for_builder()
+
+    build_trainer(cfg, DistributedRoot(), logger=None)
+
+    assert cfg.optimization.epochs == 1
+
+
+def test_prepare_runtime_variables_sets_log_dir(tmp_path):
+    cfg = valid_directory_cfg(tmp_path / "runtime2")
+
+    cfg._prepare_runtime_variables()
+
+    assert RuntimeContext.GLOBAL_LOG_DIR == str(cfg.log_dir)
+
+
+def test_prepare_runtime_variables_sets_figures_dir(tmp_path):
+    cfg = valid_directory_cfg(tmp_path / "runtime3")
+
+    cfg._prepare_runtime_variables()
+
+    assert RuntimeContext.GLOBAL_FIGURES_DIR == str(cfg.figures_dir)
+
+
+def test_set_random_seed_does_not_fail_multiple_calls():
+    cfg = valid_directory_cfg("x")
+
+    cfg.seed = 123
+
+    cfg.set_random_seed()
+    cfg.set_random_seed()
+
+    assert cfg.seed == 123
+
+
+def test_prepare_directory_calls_barrier_twice(tmp_path):
+    cfg = valid_directory_cfg(tmp_path / "barrier")
+
+    root = Root()
+
+    cfg.prepare_directory(root)
+
+    assert root.barrier_calls == 2
+
+
+def test_non_root_prepare_directory_calls_barrier_twice(tmp_path):
+    cfg = valid_directory_cfg(tmp_path / "barrier2")
+
+    non_root = NonRoot()
+
+    cfg.prepare_directory(non_root)
+
+    assert non_root.barrier_calls == 2
+
+
+def test_build_trainer_logger_path_exercises_all_logs():
+    cfg = build_train_config_for_builder()
+
+    logger = DummyLogger()
+
+    build_trainer(cfg, DistributedRoot(), logger=logger)
+
+    assert len(logger.messages) >= 5
+
+
+def test_build_trainer_print_path_exercises_all_logs(capsys):
+    cfg = build_train_config_for_builder()
+
+    build_trainer(cfg, DistributedRoot(), logger=None)
+
+    captured = capsys.readouterr()
+
+    assert "Creating trainer" in captured.out
+
+
+def test_prepare_directory_root_creates_experiment_dir(tmp_path):
+    cfg = valid_directory_cfg(tmp_path / "root_exp")
+
+    cfg.prepare_directory(Root())
+
+    assert cfg.experiment_dir.exists()
+
+
+def test_cvae_requires_beta_finder():
+    with pytest.raises(ValueError, match="beta_finder"):
+        TrainConfig(
+            "x",
+            1,
+            DummyTrainLoader(
+                DummyDatasetConfig(
+                    observation="obs",
+                    condition_type="cond",
+                    pipeline=[],
+                )
+            ),
+            DummyModule(CvaeReachableType(), num_out=2),
+            DummyLoss(["mse"]),
+            DummyTrainer(None),
+        )
+
+
+def test_cvae_requires_condition_type():
+    with pytest.raises(ValueError, match="condition type"):
+        TrainConfig(
+            "x",
+            1,
+            DummyTrainLoader(
+                DummyDatasetConfig(
+                    observation="obs",
+                    condition_type=None,
+                    pipeline=[],
+                )
+            ),
+            DummyModule(CvaeReachableType(), num_out=2),
+            DummyLoss(["mse"]),
+            DummyTrainer(True),
+        )
+
+
+def test_resume_same_directory_sets_copy_flag_false(tmp_path, monkeypatch):
+    resume = tmp_path / "exp"
+    resume.mkdir()
+
+    cfg = object.__new__(TrainConfig)
+
+    resumed = valid_directory_cfg(resume)
+
+    monkeypatch.setattr(
+        TrainConfig,
+        "read_config_from_halted_experiment",
+        lambda *args, **kwargs: resumed,
+    )
+
+    cfg.experiment_dir = resume
+    cfg.resume_dir = resume
+    cfg.max_epochs = 1
+
+    cfg.train_loader = None
+    cfg.module = None
+    cfg.losspipeline = None
+    cfg.trainer = None
+
+    TrainConfig.__post_init__(cfg)
+
+    assert cfg.copy_resume_dir_to_new_path is False
+
+
+def test_prepare_directory_resume_same_path_skips_copytree(
+    tmp_path,
+    monkeypatch,
+):
+    cfg = valid_directory_cfg(tmp_path / "exp")
+
+    cfg.resume_dir = cfg.experiment_dir
+    cfg.copy_resume_dir_to_new_path = False
+
+    called = {"copytree": False}
+
+    def fake_copytree(*args, **kwargs):
+        called["copytree"] = True
+
+    monkeypatch.setattr(shutil, "copytree", fake_copytree)
+
+    cfg.prepare_directory(Root())
+
+    assert called["copytree"] is False
+
+
+def test_prepare_config_empty_yaml(tmp_path):
+    from cccma_ppp.train.train_configs import prepare_config
+
+    yaml_path = tmp_path / "empty.yaml"
+    yaml_path.write_text("")
+
+    data = prepare_config(yaml_path)
+
+    assert data is None
+
+
+def test_set_random_seed_calls_set_seed(monkeypatch):
+    cfg = valid_directory_cfg("x")
+
+    cfg.seed = 123
+
+    called = {"seed": None}
+
+    def fake_set_seed(seed):
+        called["seed"] = seed
+
+    monkeypatch.setattr(
+        "cccma_ppp.train.train_configs.set_seed",
+        fake_set_seed,
+    )
+
+    cfg.set_random_seed()
+
+    assert called["seed"] == 123
+
+
+def test_build_trainer_logger_info_kwargs_path():
+    class Logger:
+        def __init__(self):
+            self.calls = []
+
+        def info(self, msg, **kwargs):
+            self.calls.append((msg, kwargs))
+
+    cfg = build_train_config_for_builder()
+
+    logger = Logger()
+
+    build_trainer(cfg, DistributedRoot(), logger=logger)
+
+    assert len(logger.calls) > 0
+    assert all(isinstance(call[1], dict) for call in logger.calls)
+
+
+def test_build_trainer_num_output_dims_zero_falls_back_to_len():
+    class ZeroDimModel:
+        NUM_OUTPUT_DIMS = 0
+
+    cfg = build_train_config_for_builder()
+
+    cfg.module._module_config.model = ZeroDimModel()
+
+    trainer = build_trainer(cfg, DistributedRoot(), logger=None)
+
+    assert trainer == "trainer"
+    assert cfg.losspipeline.num_output_dimensions == 1
+
+
+def test_prepare_directory_root_with_yaml_calls_copyfile(
+    tmp_path,
+    monkeypatch,
+):
+    yaml_file = tmp_path / "cfg.yaml"
+    yaml_file.write_text("x: 1")
+
+    cfg = valid_directory_cfg(tmp_path / "exp")
+
+    called = {"copyfile": False}
+
+    def fake_copyfile(src, dst):
+        called["copyfile"] = True
+
+    monkeypatch.setattr(shutil, "copyfile", fake_copyfile)
+
+    cfg.prepare_directory(Root(), yaml_file)
+
+    assert called["copyfile"] is True
+
+
+def test_prepare_directory_without_yaml_skips_copyfile(
+    tmp_path,
+    monkeypatch,
+):
+    cfg = valid_directory_cfg(tmp_path / "exp")
+
+    called = {"copyfile": False}
+
+    def fake_copyfile(*args, **kwargs):
+        called["copyfile"] = True
+
+    monkeypatch.setattr(shutil, "copyfile", fake_copyfile)
+
+    cfg.prepare_directory(Root(), yaml_config=None)
+
+    assert called["copyfile"] is False
+
+
+def test_build_trainer_non_root_logger_object_no_messages():
+    cfg = build_train_config_for_builder()
+
+    logger = DummyLogger()
+
+    build_trainer(cfg, DistributedNonRoot(), logger=logger)
+
+    assert len(logger.messages) == 0
+
+
+def test_prepare_runtime_variables_overwrites_existing_globals(tmp_path):
+    RuntimeContext.GLOBAL_EXP_DIR = "old"
+
+    cfg = valid_directory_cfg(tmp_path / "runtime")
+
+    cfg._prepare_runtime_variables()
+
+    assert RuntimeContext.GLOBAL_EXP_DIR != "old"

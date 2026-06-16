@@ -72,6 +72,8 @@ class FullFlow(DummyFlow):
 
 
 class DummyModel:
+    GENERATOR = False
+
     def __init__(self):
         self.latent_size = 4
         self.condition_dependant_latent = False
@@ -131,7 +133,7 @@ class SumLoss:
 
 
 def test_config_requires_model_or_load():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cVAEConfig(ModelConfig=None, load_dir=None)
 
 
@@ -142,12 +144,12 @@ def test_config_default_weight():
 
 
 def test_config_weight_bounds():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=2)
 
 
 def test_config_negative_cgcn_weight():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=-0.1)
 
 
@@ -199,6 +201,8 @@ def test_build_shape_mismatch(monkeypatch):
 
 
 class ConditionalModel(DummyModel):
+    GENERATOR = False
+
     def __init__(self):
         super().__init__()
         self.condition_dependant_latent = True
@@ -325,7 +329,7 @@ def test_forward_with_sample_size_explicit():
 def test_compute_loss_requires_init():
     m = make_module()
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         m._compute_loss(1.0, DummyBatch())
 
 
@@ -489,6 +493,8 @@ def test_predict_called_in_cgcn():
 
 def test_kld_with_condition():
     class CondModel(DummyModel):
+        GENERATOR = False
+
         def __call__(self, **kwargs):
             return cVAEOutput(
                 output=torch.ones(1, 2, 1, 3, 4),
@@ -535,6 +541,8 @@ def test_kld_base_distribution_path():
 
 def test_kld_cond_shape_mismatch():
     class WeirdModel(DummyModel):
+        GENERATOR = False
+
         def __call__(self, **kwargs):
             return cVAEOutput(
                 output=torch.ones(1, 2, 1, 3, 4),
@@ -551,7 +559,7 @@ def test_kld_cond_shape_mismatch():
     m = make_module(cVAEConfig(ModelConfig=Sel()))
     m.init_loss_function(DummyLoss())
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         m._compute_loss(1.0, DummyBatch())
 
 
@@ -577,6 +585,8 @@ def test_full_flow_logdet_branch():
 
 def test_kld_condition_expansion():
     class CondModel(DummyModel):
+        GENERATOR = False
+
         def __call__(self, **kwargs):
             return cVAEOutput(
                 output=torch.ones(1, 2, 1, 3, 4),

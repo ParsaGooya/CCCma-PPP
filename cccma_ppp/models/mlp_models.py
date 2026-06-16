@@ -3,12 +3,14 @@ import torch.nn as nn
 import numpy as np
 from typing import ClassVar
 import dataclasses
+from typing import Literal
 
 from cccma_ppp.models.models_abc import (
     cVAEmodelsABC,
     deterministicmodelsABC,
     modelConfigABC,
     cVAEmodelConfigABC,
+    InitMethod,
 )
 from cccma_ppp.core.selectors import deterministicModelSelector, cVAEModelSelector
 from cccma_ppp.models.normalized_flows import NormalizedFlowModel
@@ -16,6 +18,9 @@ from cccma_ppp.models.normalized_flows import NormalizedFlowModel
 from cccma_ppp.core.cVAE_module import cVAEOutput
 from cccma_ppp.core.deterministic_module import deterministicOutput
 from cccma_ppp.generic.runtime import RuntimeContext
+
+
+AppendMode = Literal[1, 2, 3]
 
 
 @cVAEModelSelector.register("mlp")
@@ -30,7 +35,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     condemb_to_decoder: bool = True
     batch_normalization: bool = False
     dropout_rate: float = None
-    init_method: str = "trunc_normal"
+    init_method: InitMethod = "trunc_normal"
 
     NUM_OUTPUT_DIMS: ClassVar[int] = 1
     GENERATOR: ClassVar[int] = False
@@ -46,9 +51,8 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
             self.condemb_to_decoder = False
 
         if self.dropout_rate is not None:
-            assert self.dropout_rate <= 1 and self.dropout_rate >= 0, (
-                "drop out rate must be between 0 and 1"
-            )
+            if not self.dropout_rate <= 1 and self.dropout_rate >= 0:
+                raise ValueError("drop out rate must be between 0 and 1")
 
         if self.decoder_hidden_dims is None:
             if len(self.encoder_hidden_dims) == 0:
@@ -58,9 +62,10 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
 
         if not self.condition_dependant_latent:
             if self.condition_embedding_dims is not None:
-                assert self.condemb_to_decoder, (
-                    "condition embedding has to be passed to decoder for cVAE when latent is not condition dependant."
-                )
+                if not self.condemb_to_decoder:
+                    raise ValueError(
+                        "condition embedding has to be passed to decoder for cVAE when latent is not condition dependant."
+                    )
 
     def build(
         self,
@@ -106,9 +111,10 @@ class cVAE_MLP(cVAEmodelsABC):
             config, "condition_dependant_flow", False
         )
 
-        assert len(output_shape) == self.NUM_OUTPUT_DIMS, (
-            f"MLP models should creat {self.NUM_OUTPUT_DIMS}D outputs"
-        )
+        if not len(output_shape) == self.NUM_OUTPUT_DIMS:
+            raise RuntimeError(
+                f"MLP models should create {self.NUM_OUTPUT_DIMS}D outputs"
+            )
         if output_shape is None:
             output_shape = input_shape.copy()
 
@@ -236,7 +242,7 @@ class cVAE_MLP(cVAEmodelsABC):
     ) -> cVAEOutput:
 
         x_in = x[0] if isinstance(x, (tuple, list)) else x
-        self._shape_model_output = x_in.shape
+        self._shape_model_output = x_in.shape  ##cVAE autoencodes the input
 
         del x_in
 
@@ -454,8 +460,8 @@ class AutoencoderConfig(modelConfigABC):
     decoder_hidden_dims: list = None
     batch_normalization: bool = False
     dropout_rate: float = None
-    append_mode = 1
-    init_method: str = "trunc_normal"
+    append_mode: AppendMode = 1
+    init_method: InitMethod = "trunc_normal"
 
     NUM_OUTPUT_DIMS: ClassVar[int] = 1
     GENERATOR: ClassVar[int] = False
@@ -503,9 +509,10 @@ class Autoencoder(deterministicmodelsABC):
         self.encoder_hidden_dims = config.encoder_hidden_dims
         self.decoder_hidden_dims = config.decoder_hidden_dims
 
-        assert len(output_shape) == self.NUM_OUTPUT_DIMS, (
-            f"MLP models should creat {self.NUM_OUTPUT_DIMS}D outputs"
-        )
+        if not len(output_shape) == self.NUM_OUTPUT_DIMS:
+            raise RuntimeError(
+                f"MLP models should create {self.NUM_OUTPUT_DIMS}D outputs"
+            )
 
         if output_shape is None:
             output_shape = input_shape.copy()

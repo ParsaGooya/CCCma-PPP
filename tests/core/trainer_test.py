@@ -244,7 +244,7 @@ def test_trainer_config_defaults():
 
 
 def test_trainer_config_invalid_grad_clip():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         TrainerConfig(grad_clip=0)
 
 
@@ -311,7 +311,7 @@ def test_trainer_config_cvae_requires_beta_finder(monkeypatch):
     optimizer = DummyOptimizer(module)
     cfg = TrainerConfig(beta_finder=None, mixed_precision=False)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cfg.build(
             train_data_loader=DummyLoader(),
             validation_data_loader=None,
@@ -501,7 +501,7 @@ def test_should_stop_early_true():
 def test_train_requires_setup():
     trainer, _, _, _, _ = make_trainer(validation=False)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         trainer.train()
 
 

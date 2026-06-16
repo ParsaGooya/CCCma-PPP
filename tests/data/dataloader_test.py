@@ -159,7 +159,7 @@ def test_config_default_years():
 def test_config_invalid_years():
     cfg_obj = DummyDatasetConfig()
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         TrainDataloaderConfig(
             dataset_config=cfg_obj,
             batch_size=2,
@@ -199,7 +199,7 @@ def test_add_fitted_preprocessor_requires_fitted():
     class DummyPreprocessor:
         fitted = False
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cfg._add_fitted_preprocessor(DummyPreprocessor())
 
 

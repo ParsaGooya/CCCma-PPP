@@ -1,7 +1,7 @@
 import torch
 from torch.distributions import Normal, kl_divergence
 import dataclasses
-from cccma_ppp.loss.loss_abc import lossABC
+from cccma_ppp.loss.loss_abc import lossABC, Reduction
 
 from cccma_ppp.models.normalized_flows import NormalizedFlowModel
 
@@ -35,7 +35,7 @@ class BetaAnnealing:
 
     def __call__(self, step: int):
 
-        assert self.built, "make sure beta finder has is built."
+        assert self.built, "make sure beta finder has been built."
 
         if self.num_epochs_to_hold == 0:
             return self.beta_min + (self.beta - self.beta_min) * min(
@@ -51,7 +51,7 @@ class BetaAnnealing:
 class KLD(lossABC):
     def __init__(
         self,
-        reduction: str = "mean",
+        reduction: Reduction = "mean",
     ):
         super().__init__()
         self.reduction = reduction
@@ -59,10 +59,10 @@ class KLD(lossABC):
 
     def forward(
         self,
-        mu: torch.Tensor,
-        log_var: torch.Tensor,
-        cond_mu: torch.Tensor | None = None,
-        cond_log_var: torch.Tensor | None = None,
+        mu: torch.Tensor,  # samples x F
+        log_var: torch.Tensor,  # samples x F
+        cond_mu: torch.Tensor | None = None,  # samples x F
+        cond_log_var: torch.Tensor | None = None,  # samples x F
         prior_flow: NormalizedFlowModel = None,
         print_loss=False,
     ) -> torch.Tensor:

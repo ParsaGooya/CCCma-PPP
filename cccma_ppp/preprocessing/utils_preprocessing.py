@@ -208,7 +208,8 @@ class Oceannanremove(PreprocessModuleABC):
     def _load_from_memory(self, load_dir: Path | str):
 
         loaded = joblib.load(Path(load_dir))
-        assert loaded.fitted, "the preprocessor to be loaded has to be fitted first."
+        if not loaded.fitted:
+            raise RuntimeError("the preprocessor to be loaded has to be fitted first.")
 
         self.reference_shape = loaded.reference_shape
         self.final_locations = loaded.final_locations

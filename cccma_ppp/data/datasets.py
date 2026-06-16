@@ -7,6 +7,8 @@ from pathlib import Path
 
 import warnings
 import gc
+from typing import Literal
+
 from cccma_ppp.data.data_abc import (
     XarrayDatasetABC,
     XarrayDatasetConfigABC,
@@ -27,12 +29,15 @@ from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 from cccma_ppp.generic.runtime import RuntimeContext
 
 
+ConditionMethod = Literal["ensemble_mean", "cross_ensemble", "same_member", "static"]
+
+
 @dataclasses.dataclass
 class XArrayDatasetConfig(XarrayDatasetConfigABC):
     model: ModelDataConfig
     observation: ObsDataConfig | None = None
     condition: ConditionDataConfig | None = None
-    condition_method: str = None
+    condition_method: ConditionMethod | None = None
     time_features: list[str] | None = None
     num_lead_months: int | None = None
 
@@ -76,11 +81,6 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
         else:
             assert self.condition_method is not None, (
                 "No target observation is specified. Specify condition_method!"
-            )
-
-        if self.condition_method is not None:
-            assert self.condition_method in self._available_condiiton_methods(), (
-                f"condition_method must be from {self._available_condiiton_methods()} "
             )
 
         if self.condition is not None:
@@ -288,12 +288,12 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
         else:
             load_dir = Path(load_dir)
 
-        assert self.model.preprocessing_pipeline.fitted, (
-            "the loaded preprocessor for model data is not fitted!"
-        )
         self.model.preprocessing_pipeline._load_from_memory(
             Path(load_dir), load_name=load_name
         )
+
+        if not self.model.preprocessing_pipeline.fitted:
+            raise RuntimeError("the loaded preprocessor for model data is not fitted!")
 
         if self.observation is not None:
             if load_dir is None:
@@ -305,12 +305,14 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
             else:
                 load_dir = Path(load_dir)
 
-            assert self.observation.preprocessing_pipeline.fitted, (
-                "the loaded preprocessor for observation data is not fitted!"
-            )
             self.observation.preprocessing_pipeline._load_from_memory(
                 Path(load_dir), load_name=load_name
             )
+
+            if not self.observation.preprocessing_pipeline.fitted:
+                raise RuntimeError(
+                    "the loaded preprocessor for observation data is not fitted!"
+                )
 
         if self.condition is not None:
             if self.condition.preprocessing_pipeline.load_dir is None:
@@ -322,12 +324,14 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
             else:
                 load_dir = Path(load_dir)
 
-            assert self.condition.preprocessing_pipeline.fitted, (
-                "the loaded preprocessor for condition is not fitted!"
-            )
             self.condition.preprocessing_pipeline._load_from_memory(
                 Path(load_dir), load_name=load_name
             )
+
+            if not self.condition.preprocessing_pipeline.fitted:
+                raise RuntimeError(
+                    "the loaded preprocessor for condition is not fitted!"
+                )
 
         self._fitted_preprocessors = True
 
@@ -393,10 +397,12 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
         if "channels" in weights.dims:
             if self.observation is not None:
                 error_msg = f"inconsistent variable weights {weights.channels.values} for taget variables {self.observation.names}"
-                assert weights.channels.values == self.observation.names, error_msg
+                if not weights.channels.values == self.observation.names:
+                    raise RuntimeError(error_msg)
             else:
                 error_msg = f"inconsistent variable weights {weights.channels.values} for taget variables {self.model.names}"
-                assert weights.channels.values == self.model.names, error_msg
+                if not weights.channels.values == self.model.names:
+                    raise RuntimeError(error_msg)
 
         return weights
 
@@ -470,10 +476,6 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
             return_metadata=return_metadata,
         )
 
-    @classmethod
-    def _available_condiiton_methods(cls):
-        return ["ensemble_mean", "cross_ensemble", "same_member", "static"]
-
 
 @dataclasses.dataclass
 class XArrayDataset(Dataset, XarrayDatasetABC):
@@ -483,12 +485,14 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
     return_metadata: bool = False
 
     def __post_init__(self):
-        assert self.config._fitted_preprocessors, (
-            "Make sure to fit preprocessors first!. Hint:  XArrayDatasetConfig._fit_preprocessors()"
-        )
-        assert set(self.requested_years).issubset(set(self.config.get_common_time)), (
-            "the requested years are not common to input and target data."
-        )
+        if not self.config._fitted_preprocessors:
+            raise RuntimeError(
+                "Make sure to fit preprocessors first!. Hint:  XArrayDatasetConfig._fit_preprocessors()"
+            )
+        if not set(self.requested_years).issubset(set(self.config.get_common_time)):
+            raise ValueError(
+                "the requested years are not common to input and target data."
+            )
 
         self._autoencoding_input = False
         self.observation_dataset = self.condition_dataset = None

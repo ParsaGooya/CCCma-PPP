@@ -34,7 +34,7 @@ def test_init_with_existing_data():
 
 
 def test_init_invalid_lengths():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         MetricsAggregator(
             DummyDistributed(),
             "train",
@@ -43,7 +43,7 @@ def test_init_invalid_lengths():
 
 
 def test_init_epoch_times_mismatch():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         MetricsAggregator(
             DummyDistributed(),
             "train",

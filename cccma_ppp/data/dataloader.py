@@ -88,9 +88,10 @@ class TrainDataloaderConfig:
         else:
             self.train_years = np.arange(self.train_years[0], self.train_years[1] + 1)
 
-            assert set(self.train_years).issubset(set(self.available_train_years)), (
-                f"the requested train years are not available: available years: [{self.available_train_years.min()},{self.available_train_years.max()}]"
-            )
+            if not set(self.train_years).issubset(set(self.available_train_years)):
+                raise ValueError(
+                    f"the requested train years are not available: available years: [{self.available_train_years.min()},{self.available_train_years.max()}]"
+                )
 
             if self.num_validation_years > 0:
                 self.validation_years = np.arange(

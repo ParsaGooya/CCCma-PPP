@@ -77,7 +77,7 @@ class ModelSelector:
                 f"all model config overwritten by the saved model from {self.load_dir}"
             )
             if self.freeze_weights:
-                warnings.warn("Froze model weights ...")
+                warnings.warn("Model weights will be frozen.")
 
     @classmethod
     def register(cls, name: str) -> Callable[..., modelABC]:

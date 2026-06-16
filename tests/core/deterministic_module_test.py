@@ -46,7 +46,7 @@ def test_raw_deterministic_can_be_constructed():
 
 
 def test_config_requires_model_or_load():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         deterministicConfig(ModelConfig=None, load_dir=None)
 
 
@@ -404,7 +404,7 @@ def test_predict_alias_calls_predict():
 def test_compute_loss_requires_criterion():
     module = make_module(input_shape=np.array([1]))
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         module._compute_loss(DummyBatch())
 
 

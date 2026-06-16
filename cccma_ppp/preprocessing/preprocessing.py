@@ -122,7 +122,8 @@ class PreprocessingPipeline:
 
     def get_preprocessors(self, name=None):
 
-        assert self.fitted, "Pipeline needs to be fitted first"
+        if not self.fitted:
+            raise RuntimeError("Pipeline needs to be fitted first")
 
         if name is None:
             return self.fitted_preprocessors
@@ -145,7 +146,8 @@ class PreprocessingPipeline:
 
         loaded = joblib.load(Path(load_dir))
 
-        assert loaded.fitted, "the preprocessor to be loaded has to be fitted first."
+        if not loaded.fitted:
+            raise ValueError("the preprocessor to be loaded has to be fitted first.")
 
         self.preprocessors_list = loaded.preprocessors_list
         self.pipeline = loaded.pipeline

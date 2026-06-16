@@ -237,7 +237,7 @@ def test_cvae_config_sets_condition_dependant_flow_false():
 
 
 def test_cvae_invalid_dropout_low():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cfg = make_cvae_config(dropout_rate=-0.1)
         cfg.build(
             input_shape=np.array([6]),
@@ -246,7 +246,7 @@ def test_cvae_invalid_dropout_low():
 
 
 def test_cvae_invalid_dropout_high():
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cfg = make_cvae_config(dropout_rate=1.1)
         cfg.build(
             input_shape=np.array([6]),
@@ -379,7 +379,7 @@ def test_cvae_build_added_features_none_defaults_zero():
 def test_cvae_build_wrong_output_dims_raises():
     cfg = make_cvae_config()
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cfg.build(
             input_shape=np.array([6]),
             output_shape=np.array([2, 3]),
@@ -887,7 +887,7 @@ def test_autoencoder_build_no_added_features():
 def test_autoencoder_build_wrong_output_dims_raises():
     cfg = AutoencoderConfig(encoder_hidden_dims=[4])
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cfg.build(
             input_shape=np.array([6]),
             output_shape=np.array([2, 3]),

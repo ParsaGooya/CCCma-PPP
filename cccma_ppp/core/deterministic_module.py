@@ -30,9 +30,8 @@ class deterministicConfig(moduleConfigABC):
 
     def __post_init__(self):
         if self.load_dir is None:
-            assert self.ModelConfig is not None, (
-                "provide loading dir or model configurations"
-            )
+            if self.ModelConfig is None:
+                raise ValueError("provide loading dir or model configurations")
         else:
             self._load_from_checkpoint(self.load_dir)
             warnings.warn(
@@ -130,9 +129,10 @@ class deterministic(moduleABC):
 
     def _compute_loss(self, data: BatchData):
 
-        assert self.criterion is not None, (
-            "crieterion should be specified before training is possible. Hint: call .init_loss_function() method in your module first."
-        )
+        if self.criterion is None:
+            raise RuntimeError(
+                "Criterion should be specified before training is possible. Hint: call .init_loss_function() method in your module first."
+            )
 
         output = self.forward(data)
 

@@ -155,7 +155,7 @@ def test_get_named_preprocessor(monkeypatch, tmp_path):
 def test_get_preprocessor_not_fitted():
     pipe = make_pipeline()
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         pipe.get_preprocessors()
 
 
@@ -201,7 +201,7 @@ def test_add_preprocessor_not_fitted():
     pipe = make_pipeline()
     proc = DummyPreprocessor()
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         pipe.add_fitted_preprocessor(proc, "dummy")
 
 
@@ -247,7 +247,7 @@ def test_load_unfitted_pipeline(tmp_path, monkeypatch):
 
     pipe = PreprocessingPipeline(load_dir=bad)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         monkeypatch.setattr(RuntimeContext, "GLOBAL_EXP_DIR", str(tmp_path))
 
         pipe.fit()

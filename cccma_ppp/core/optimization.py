@@ -20,9 +20,10 @@ class LRSchedulerConfig:
         assert self.total_epochs is not None
         assert self.total_epochs > 0
         assert num_batches > 0
-        assert self.warmup_epochs < self.total_epochs, (
-            "number of warmup epochs must be smaller than total epochs."
-        )
+        if self.warmup_epochs >= self.total_epochs:
+            raise ValueError(
+                "number of warmup epochs must be smaller than total epochs."
+            )
 
         self.total_steps = num_batches * self.total_epochs
         self.warmup_steps = num_batches * self.warmup_epochs
@@ -43,7 +44,8 @@ class OptimizerConfig:
     }
 
     def __post_init__(self):
-        assert self.weight_decay >= 0, "weight_decay has to be postive"
+        if self.weight_decay < 0:
+            raise ValueError("weight_decay has to be positive")
         self.optimizer = None
 
     def build(self, module: moduleABC, num_batches: int = None, max_epochs: int = None):

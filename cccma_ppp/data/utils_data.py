@@ -6,11 +6,17 @@ from pathlib import Path
 import glob
 from typing import final, ClassVar
 import os
+from typing import Literal
+
+
 from cccma_ppp.data.data_abc import DataConfigABC
 from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
 from cccma_ppp.generic.runtime import RuntimeContext
+
+
+spatialmethod = Literal["uniform", "cosine_lat"]
 
 
 @dataclasses.dataclass
@@ -134,7 +140,7 @@ class ConditionDataConfig(DataConfigABC):
 def _check_data(dataconfig: ModelDataConfig | ObsDataConfig) -> None:
     if not Path(dataconfig.paths).exists():
         raise FileNotFoundError(
-            "The following file does not exist:\n" + "\n".join(dataconfig.paths)
+            "The following file does not exist:\n" + str(dataconfig.paths)
         )
 
     list_paths = glob.glob(str(Path(dataconfig.paths).joinpath(dataconfig.file_type)))
@@ -142,7 +148,7 @@ def _check_data(dataconfig: ModelDataConfig | ObsDataConfig) -> None:
     if len(list_paths) == 0:
         raise FileNotFoundError(
             f"The following file does is empty for {dataconfig.file_type} file type :\n"
-            + "\n".join(dataconfig.paths)
+            + str(dataconfig.paths)
         )
 
     for p in list_paths:
@@ -151,22 +157,26 @@ def _check_data(dataconfig: ModelDataConfig | ObsDataConfig) -> None:
                 ds = ds.rename(dataconfig.rename_dict)
 
             for dim in dataconfig._required_dims():
-                assert dim in ds.dims, (
-                    f"{dataconfig.TYPE} data must have {dataconfig._required_dims()} dimensions. Current dims : {ds.dims}"
-                )
+                if not dim in ds.dims:
+                    raise ValueError(
+                        f"{dataconfig.TYPE} data must have {dataconfig._required_dims()} dimensions. Current dims : {ds.dims}"
+                    )
 
             if dataconfig._check_ensemble:
-                assert "ensembles" in ds.dims, (
-                    "Cannot select ensemble_list as ensembles dim does not exist"
-                )
+                if not "ensembles" in ds.dims:
+                    raise ValueError(
+                        "Cannot select ensemble_list as ensembles dim does not exist"
+                    )
 
             for dim in ds.dims:
-                assert dim in dataconfig._allowed_dims(), (
-                    f'"{dim}" not a valid dimension for {dataconfig.TYPE} data: {dataconfig._allowed_dims()}'
-                )
-                assert dim in ds.coords, (
-                    f'"coordinates for {dim} dimension does not exist. Available coords: {dict(ds.coords).keys()}'
-                )
+                if not dim in dataconfig._allowed_dims():
+                    raise ValueError(
+                        f'"{dim}" not a valid dimension for {dataconfig.TYPE} data: {dataconfig._allowed_dims()}'
+                    )
+                if not dim in ds.coords:
+                    raise ValueError(
+                        f'"coordinates for {dim} dimension does not exist. Available coords: {dict(ds.coords).keys()}'
+                    )
 
             missing = [name for name in dataconfig.names if name not in ds.data_vars]
             if missing:
@@ -219,13 +229,14 @@ def _get_ds_info(dataconfig: ModelDataConfig | ObsDataConfig) -> infoclass:
 
 @dataclasses.dataclass
 class WeightsConfig:
-    spatial_method: str = "uniform"
+    spatial_method: spatialmethod = "uniform"
     variable_weights: dict[str, float] | None = None
     load_dir: Path | str | None = None
 
     def __post_init__(self):
-        if self.load_dir is None:
-            assert self.spatial_method.lower() in ["cosine_lat", "uniform"]
+        if self.load_dir is not None:
+            if not Path(self.load_dir).exists():
+                raise FileNotFoundError(f"weights file not found at {self.load_dir}")
 
     def build_weights(
         self,
@@ -244,11 +255,16 @@ class WeightsConfig:
             if "ref" in weights.dims and {"lat", "lon"}.issubset(weights.coords):
                 weights = weights.set_index(ref=["lat", "lon"])
 
+            msg = f"the loaded weights from {self.load_dir} must have lat and lon coordinates that match the target coordinates"
+
             if oceannanremover is not None:
-                assert weights.coords["ref"].equals(oceannanremover.final_locations)
+                if not weights.coords["ref"].equals(oceannanremover.final_locations):
+                    raise ValueError(msg)
             else:
-                assert weights.coords["lat"].equals(target_coords["lat"])
-                assert weights.coords["lon"].equals(target_coords["lon"])
+                if not weights.coords["lat"].equals(target_coords["lat"]):
+                    raise ValueError(msg)
+                if not weights.coords["lon"].equals(target_coords["lon"]):
+                    raise ValueError(msg)
 
         else:
             weights = np.cos(

@@ -88,6 +88,12 @@ class FCNN(nn.Module):
 
 @FlowSelector.register("maf")
 class MAF(flowABC):
+    """
+    Masked auto-regressive flow.
+
+    [Papamakarios et al. 2018]
+    """
+
     def __init__(
         self,
         hidden_dim=16,
@@ -166,6 +172,12 @@ class MAF(flowABC):
 
 @FlowSelector.register("realnvp")
 class RealNVP(flowABC):
+    """
+    Non-volume preserving flow.
+
+    [Dinh et. al. 2017]
+    """
+
     def __init__(self, hidden_dim=16, base_network=FCNN):
         super().__init__()
         self.hidden_dim = hidden_dim

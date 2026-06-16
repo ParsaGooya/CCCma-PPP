@@ -469,7 +469,7 @@ def test_oceannan_load_unfitted(tmp_path):
 
     proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
 
-    with pytest.raises(AssertionError):
+    with pytest.raises((AssertionError, ValueError, RuntimeError)):
         proc._load_from_memory(file)
 
 
