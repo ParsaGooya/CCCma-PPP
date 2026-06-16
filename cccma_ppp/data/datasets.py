@@ -540,38 +540,36 @@ class TrainDataset(Dataset):
                 "the requested years are not common to input and target data."
             )
 
-        self._autoencoding_input = False
+        self.time_features = self.config.time_features
         self.observation_dataset = self.condition_dataset = None
 
         self.model_dataset = self._load_xarray_data(self.config.model)
 
         if self.config.observation is not None:
             self.observation_dataset = self._load_xarray_data(self.config.observation)
-        else:
-            self._autoencoding_input = True
 
         if self.config.effective_condition is not None:
             self.condition_dataset = self._load_xarray_data(self.config.effective_condition)
 
-        self._prepare_mask()
-
-        self.mask = self.mask.where(~self.mask)
+        self.mask = self._prepare_mask()
         self.model_indexes = self.get_model_indexes()
         self.obs_indexes = self.get_obs_indexes(self.model_indexes)
         self.cond_indexes = self.get_cond_indexes(self.model_indexes)
 
-        self.time_features = self.config.time_features
+    @property
+    def _autoencoding_input(self):
+        return self.config.observation is None
 
     def _prepare_mask(self):
-
-        if self.mask is None:
-            self.mask = _create_train_mask(
+        mask = self.mask
+        if mask is None:
+            mask = _create_train_mask(
                 years=self.config.model.year_range,
                 lead_times=np.arange(1, self.config.model.info.sizes["lead_time"] + 1),
             )
-            self.mask = xr.full_like(self.mask, fill_value=False)
+            mask = xr.full_like(mask, fill_value=False)
 
-        self.mask = self.mask.sel(year=self.requested_years).sel(
+        mask = mask.sel(year=self.requested_years).sel(
             lead_time=np.arange(1, self.config.num_lead_months + 1)
         )
         if all(
@@ -580,14 +578,16 @@ class TrainDataset(Dataset):
                 self.config.model.info.coords["ensembles"] is not None,
             ]
         ):
-            self.mask = self.mask.expand_dims(
+            mask = mask.expand_dims(
                 ensembles=len(self.config.model.info.coords["ensembles"]), axis=0
             )
-            self.mask = self.mask.assign_coords(
+            mask = mask.assign_coords(
                 ensembles=self.config.model.info.coords["ensembles"]
             )
 
-        return self
+        mask = mask.where(~mask)
+
+        return mask
 
     def _load_xarray_data(self, config: DataConfigABC):
 
