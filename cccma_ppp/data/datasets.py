@@ -343,15 +343,12 @@ class TrainDatasetOperator(DatasetOperatorABC):
             load_dir: Path | str | None = None):
 
                 if load_dir is None:
-                    load_dir = Path(RuntimeContext.GLOBAL_EXP_DIR)
+                    load_dir = (Path(RuntimeContext.GLOBAL_EXP_DIR)
+                            / "preprocessing_pipeline"
+                            / f"{pipeline.name}_preprocessing_pipeline.joblib"
+                        )
                 else:
                     load_dir = Path(load_dir)
-
-                load_dir = (
-                    load_dir
-                    / "preprocessing_pipeline"
-                    / f"{pipeline.name}_preprocessing_pipeline.joblib"
-                )
 
                 pipeline._load_from_memory(
                     Path(load_dir),
