@@ -232,12 +232,12 @@ class TrainDatasetOperator(DatasetOperatorABC):
         save_name: str | None = None,
     ):
         
-        def _fit_preprocessor(
-                dataconfig: ModelDataConfig | ObsDataConfig | ConditionDataConfig,
-                selection: dict,
-                mask: bool = False,
-                save_path: Path | str | None = None,
-                save_name: str | None = None,
+        def _fit_processor(
+            dataconfig: ModelDataConfig | ObsDataConfig | ConditionDataConfig,
+            selection: dict,
+            mask: bool = False,
+            save_path: Path | str | None = None,
+            save_name: str | None = None,
         ):
             
             _base = _load_xarray_data(
@@ -271,7 +271,7 @@ class TrainDatasetOperator(DatasetOperatorABC):
             if self.config.model.info.coords["ensembles"] is not None:
                 selection["ensembles"] = self.config.model.info.coords["ensembles"]
 
-            _fit_preprocessor(self.config.model, 
+            _fit_processor(self.config.model, 
                               selection = selection, 
                               mask = True, 
                               save_path = save_path, 
@@ -289,7 +289,7 @@ class TrainDatasetOperator(DatasetOperatorABC):
                 if self.config.observation.info.coords["ensembles"] is not None:
                     selection["ensembles"] = self.config.observation.info.coords["ensembles"]
 
-                _fit_preprocessor(self.config.observation, 
+                _fit_processor(self.config.observation, 
                     selection = selection, 
                     save_path = save_path, 
                     save_name = save_name)
@@ -302,14 +302,17 @@ class TrainDatasetOperator(DatasetOperatorABC):
 
         if self.config.effective_condition is not None:
             if self.config.effective_condition.preprocessing_pipeline.load_dir is None:
-                selection = {
-                    "year": train_years,
-                    "lead_time": np.arange(1, self.config.num_lead_months + 1),
-                }
-                if self.config.effective_condition.info.coords["ensembles"] is not None:
-                    selection["ensembles"] = self.config.effective_condition.info.coords["ensembles"]
+                if self.config.condition_methodn == 'static':
+                    selection = {}
+                else:
+                    selection = {
+                        "year": train_years,
+                        "lead_time": np.arange(1, self.config.num_lead_months + 1),
+                    }
+                    if self.config.effective_condition.info.coords["ensembles"] is not None:
+                        selection["ensembles"] = self.config.effective_condition.info.coords["ensembles"]
                 
-                _fit_preprocessor(self.config.effective_condition, 
+                _fit_processor(self.config.effective_condition, 
                     selection = selection, 
                     mask = True,
                     save_path = save_path, 
@@ -328,9 +331,8 @@ class TrainDatasetOperator(DatasetOperatorABC):
     ):
         
         def _load_preprocessor(
-                            pipeline : PreprocessingPipeline,
-                            load_dir: Path | str | None = None):
-                
+            pipeline : PreprocessingPipeline,
+            load_dir: Path | str | None = None):
 
                 if load_dir is None:
                     load_dir = Path(RuntimeContext.GLOBAL_EXP_DIR)
@@ -480,7 +482,6 @@ class TrainDatasetOperator(DatasetOperatorABC):
                 metadata["variables"].append(var)
                 metadata["preprocessors"].append(preprocessor_names)
                 return metadata
-            
 
     def build_dataset(
         self,
