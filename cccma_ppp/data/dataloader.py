@@ -270,8 +270,14 @@ class Dataloader:
 
 
 def collate_batch(
-    batch, return_spatial_mask: bool = False, reduce_spatial_mask: bool = False
+    batch,
+    return_spatial_mask: bool = False,
+    reduce_spatial_mask: bool = False,
 ):
+    metadata = None
+
+    if isinstance(batch[0], tuple):
+        batch, metadata = zip(*batch)
 
     inputs = torch.stack([b["input"] for b in batch])
     targets = torch.stack([b["target"] for b in batch])
@@ -280,10 +286,15 @@ def collate_batch(
     if batch[0]["added_features"] is not None:
         added_features = torch.stack([b["added_features"] for b in batch])
 
-    return BatchData(
+    batch_data = BatchData(
         input=inputs,
         target=targets,
         added_features=added_features,
         return_spatial_mask=return_spatial_mask,
         reduce_spatial_mask=reduce_spatial_mask,
     )
+
+    if metadata is not None:
+        return batch_data, list(metadata)
+
+    return batch_data

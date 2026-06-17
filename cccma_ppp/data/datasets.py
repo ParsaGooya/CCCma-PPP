@@ -310,7 +310,7 @@ class TrainDatasetOperator(DatasetOperatorABC):
 
         if self.config.effective_condition is not None:
             if self.config.effective_condition.preprocessing_pipeline.load_dir is None:
-                if self.config.condition_methodn == 'static':
+                if self.config.condition_method == 'static':
                     selection = {}
                 else:
                     selection = {
