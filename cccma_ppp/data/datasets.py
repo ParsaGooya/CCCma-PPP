@@ -162,6 +162,15 @@ class TrainDatasetConfig(DatasetConfigABC):
     
     @property
     def _using_model_data_as_condition(self) -> bool:
+        '''
+        Check if the model data is going to be used as a condition for cVAE.
+        This should be true if:
+
+           1- No condition data is provided but condition_method is (subject to condition_method not being static, no-ensemble.)
+
+           2- The provided condition data points to the same files and variables
+        
+        '''
         if self.condition is None:
             return self.condition_method in {'ensemble_mean', 'cross_ensemble', 'same_member'}
         return (
@@ -557,8 +566,57 @@ class TrainDataset(Dataset):
         self.cond_indexes = self.get_cond_indexes(self.model_indexes)
 
     @property
-    def _autoencoding_input(self):
+    def _autoencoding_model_data(self):
         return self.config.observation is None
+
+    @property
+    def _load_model(self):
+        ''' 
+        Check if model data needs to be loaded. Is true if:
+
+            1- A different codition data than model is provided, which means
+            _using_model_data_as_condition is False, regardless of obs.
+        
+            1- No obervation is provided, hence, we are autoencoding 
+            the model data (condition_method is already asserted in config),
+            regardless of if stand alone condition is provided.
+
+        '''
+        return any( [
+                self._autoencoding_model_data,
+                not self.config._using_model_data_as_condition])
+    
+    @property
+    def _write_condition_to_input(self):
+        '''
+        Check if we need to use the condition data as input of the ML model.
+        Will be true if:
+
+            1- No stand alone condition is provided but condition_method is. Hence, _using_model_data_as_condition
+            is true and condition is read from model. Model will not be loaded if not necessary.
+
+            2- If stand alone condition is provided, but we are autoencoding model
+             as no obervation is available). Model will be loaded too.
+        
+        '''
+        if self.config._using_model_data_as_condition:
+                return True    
+        else:   
+            if self._autoencoding_model_data:
+                return True
+
+        return False    
+    
+    @property
+    def _concat_condition_to_input(self):
+        '''
+        Check if all stand alone condition, model and observation exist.
+        If so, _write_condition_to_input is False and effective_condition exists.
+        '''
+
+        return (self._write_condition_to_input is False and
+                self.config.effective_condition is not None)
+
 
     def _prepare_mask(self):
         mask = self.mask
@@ -703,7 +761,9 @@ class TrainDataset(Dataset):
 
         return len(self.time_features)
 
-    def __getitem__(self, ind):
+
+
+    def _index_condition_dataset(self, ind):
 
         if self.condition_dataset is not None:
             if self.config.condition_method != "static":
@@ -719,7 +779,11 @@ class TrainDataset(Dataset):
             condition = self.config.effective_condition.preprocessing_pipeline.transform(
                 self.condition_dataset.sel(**selection)
             )
-            condition = _unwrap_data_variables(condition)
+            condition = _unwrap_data_variables(condition)  
+
+            return condition    
+
+    def _index_observation_dataset(self, ind):
 
         if self.observation_dataset is not None:
             year = float(self.obs_indexes["year"][ind])
@@ -729,75 +793,31 @@ class TrainDataset(Dataset):
             if "ensembles" in self.obs_indexes:
                 selection["ensembles"] = self.obs_indexes["ensembles"][ind]
 
-            target = self.config.observation.preprocessing_pipeline.transform(
+            obs = self.config.observation.preprocessing_pipeline.transform(
                 self.observation_dataset.sel(**selection)
             )
-            target = _unwrap_data_variables(target)
+            obs = _unwrap_data_variables(obs)
+            return obs
+        
+    def _index_model_dataset(self, ind):
 
-        year = float(self.model_indexes["year"][ind])
-        lead_time = float(self.model_indexes["lead_time"][ind])
-        selection = dict(year=year, lead_time=lead_time)
+        if self._load_model:
+            year = float(self.model_indexes["year"][ind])
+            lead_time = float(self.model_indexes["lead_time"][ind])
+            selection = dict(year=year, lead_time=lead_time)
 
-        if all(
-            [
-                self.condition_dataset is not None,
-                self.config._using_model_data_as_condition,
-                not self._autoencoding_input,
-            ]
-        ):
-            input = condition
-        else:
             if "ensembles" in self.model_indexes:
                 selection["ensembles"] = self.model_indexes["ensembles"][ind]
 
-            input = self.config.model.preprocessing_pipeline.transform(
+            model = self.config.model.preprocessing_pipeline.transform(
                 self.model_dataset.sel(**selection)
             )
-            input = _unwrap_data_variables(input)
+            model = _unwrap_data_variables(model)
 
-            if self._autoencoding_input:
-                target = input
+            return model
 
-            if all(
-                [
-                    self.condition_dataset is not None,
-                    self.config._using_model_data_as_condition,
-                ]
-            ):
-                input = condition
 
-            elif all(
-                [
-                    self.condition_dataset is not None,
-                    not self.config._using_model_data_as_condition,
-                ]
-            ):
-                input = xr.concat([input, condition], dim="channels")
-
-        time_features = self.get_time_features(year, lead_time)
-        if time_features is not None and len(input.shape) > 2:
-            time_features = np.broadcast_to(
-                time_features[:, None, None],
-                (len(time_features), input.shape[-2], input.shape[-1]),
-            )
-
-        datadict = dict(
-            input=torch.as_tensor(input.to_numpy(), dtype=torch.float32),
-            target=torch.as_tensor(target.to_numpy(), dtype=torch.float32),
-            added_features=torch.as_tensor(time_features, dtype=torch.float32)
-            if time_features is not None
-            else None,
-        )
-
-        if self.return_metadata:
-            return datadict, selection
-        else:
-            return datadict
-
-    def __len__(self):
-        return len(self.model_indexes.get(list(self.model_indexes.keys())[0]))
-
-    def get_time_features(self, year, lead_time):
+    def _get_time_features(self, year, lead_time, input : xr.DataArray):
 
         if self.time_features is not None:
             time_features_list = np.array([self.time_features]).flatten()
@@ -824,4 +844,48 @@ class TrainDataset(Dataset):
                 ..., [feature_indices[k] for k in time_features_list]
             ]
 
+            if input.ndim > 2:
+                time_features = np.broadcast_to(
+                    time_features[(...,) + (None,) * (input.ndim - 1)],
+                    (time_features.shape[0],) + input.shape[1:],
+                )
+
             return time_features
+
+
+    def __getitem__(self, ind):
+        year = float(self.model_indexes["year"][ind])
+        lead_time = float(self.model_indexes["lead_time"][ind])
+        selection = dict(year=year, lead_time=lead_time)
+        
+        condition = self._index_condition_dataset(ind)
+        target = self._index_observation_dataset(ind)
+        input = self._index_model_dataset(ind)
+        
+
+        if self._autoencoding_model_data:
+            target = input
+
+        if self._write_condition_to_input:
+            input = condition
+
+        if self._concat_condition_to_input:
+            input = xr.concat([input, condition], dim="channels")
+
+        time_features = self._get_time_features(year, lead_time, input)
+ 
+        datadict = dict(
+            input=torch.as_tensor(input.to_numpy(), dtype=torch.float32),
+            target=torch.as_tensor(target.to_numpy(), dtype=torch.float32),
+            added_features=torch.as_tensor(time_features, dtype=torch.float32)
+            if time_features is not None
+            else None,
+        )
+
+        if self.return_metadata:
+            return datadict, selection
+        else:
+            return datadict
+
+    def __len__(self):
+        return len(self.model_indexes.get(list(self.model_indexes.keys())[0]))
