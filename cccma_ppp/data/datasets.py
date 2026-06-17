@@ -761,8 +761,6 @@ class TrainDataset(Dataset):
 
         return len(self.time_features)
 
-
-
     def _index_condition_dataset(self, ind):
 
         if self.condition_dataset is not None:
@@ -816,7 +814,6 @@ class TrainDataset(Dataset):
 
             return model
 
-
     def _get_time_features(self, year, lead_time, input : xr.DataArray):
 
         if self.time_features is not None:
@@ -862,14 +859,13 @@ class TrainDataset(Dataset):
         target = self._index_observation_dataset(ind)
         input = self._index_model_dataset(ind)
         
-
         if self._autoencoding_model_data:
             target = input
 
         if self._write_condition_to_input:
             input = condition
 
-        if self._concat_condition_to_input:
+        elif self._concat_condition_to_input:
             input = xr.concat([input, condition], dim="channels")
 
         time_features = self._get_time_features(year, lead_time, input)
