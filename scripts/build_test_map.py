@@ -3,22 +3,25 @@ import subprocess
 from pathlib import Path
 import os
 
-OUTPUT = "test_map.json"
-CHECKPOINT = "test_map_checkpoint.json"
-
-
 ROOT = Path(__file__).resolve().parents[1]
 os.chdir(ROOT)
 
 print("WORKING DIRECTORY:", os.getcwd())
 
-if Path(CHECKPOINT).exists():
+OUTPUT_DIR = Path("test_suite_analysis")
+OUTPUT_DIR.mkdir(exist_ok=True)
+
+OUTPUT = OUTPUT_DIR / "test_map.json"
+CHECKPOINT = OUTPUT_DIR / "test_map_checkpoint.json"
+TMP_COV = OUTPUT_DIR / "tmp_cov.json"
+
+if CHECKPOINT.exists():
     with open(CHECKPOINT) as f:
         test_map = json.load(f)
 
     completed_tests = set(test_map.keys())
 
-    print(f"Loaded checkpoint")
+    print("Loaded checkpoint")
     print(f"Completed tests: {len(completed_tests)}")
 
 else:
@@ -75,7 +78,7 @@ for i, test in enumerate(remaining, 1):
         continue
 
     json_result = subprocess.run(
-        ["coverage", "json", "-o", "tmp_cov.json"],
+        ["coverage", "json", "-o", str(TMP_COV)],
         capture_output=True,
         text=True,
     )
@@ -89,7 +92,7 @@ for i, test in enumerate(remaining, 1):
         continue
 
     try:
-        with open("tmp_cov.json") as f:
+        with open(TMP_COV) as f:
             cov = json.load(f)
 
     except Exception as e:
@@ -120,7 +123,6 @@ for i, test in enumerate(remaining, 1):
     with open(CHECKPOINT, "w") as f:
         json.dump(test_map, f, indent=2)
 
-    # also continuously update final output
     with open(OUTPUT, "w") as f:
         json.dump(test_map, f, indent=2)
 

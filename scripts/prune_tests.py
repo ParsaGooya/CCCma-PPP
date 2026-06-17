@@ -1,15 +1,46 @@
 import json
 from collections import defaultdict
+from pathlib import Path
+import os
 
+ROOT = Path(__file__).resolve().parents[1]
+os.chdir(ROOT)
+
+OUTPUT_DIR = ROOT / "test_suite_analysis"
+OUTPUT_DIR.mkdir(exist_ok=True)
 
 TARGET_BRANCH_COVERAGE = 0.90
 
-TEST_MAP_FILE = "test_map.json"
+TEST_MAP_FILE = OUTPUT_DIR / "test_map.json"
+BASELINE_COVERAGE = OUTPUT_DIR / "baseline_cov.json"
 
 with open(TEST_MAP_FILE) as f:
     raw_map = json.load(f)
 
+with open(BASELINE_COVERAGE) as f:
+    baseline = json.load(f)
+
+true_branch_totals = {}
+
+for module, data in baseline["files"].items():
+    if "site-packages" in module:
+        continue
+
+    if module.startswith("tests/"):
+        continue
+
+    total = data["summary"]["num_branches"]
+
+    if total > 0:
+        true_branch_totals[module] = total
+
+print("\n=== TRUE TOTAL BRANCHES ===")
+
+for module, total in sorted(true_branch_totals.items()):
+    print(f"{module}: {total}")
+
 test_branches = {}
+zero_branch_tests = []
 
 for test, modules in raw_map.items():
     normalized_modules = {}
@@ -18,7 +49,7 @@ for test, modules in raw_map.items():
         if "site-packages" in module:
             continue
 
-        if "cccma_ppp" not in module:
+        if module.startswith("tests/"):
             continue
 
         cleaned = set()
@@ -39,6 +70,11 @@ for test, modules in raw_map.items():
 
     if normalized_modules:
         test_branches[test] = normalized_modules
+    else:
+        zero_branch_tests.append(test)
+
+print("\n=== ZERO BRANCH TESTS ===")
+print(len(zero_branch_tests))
 
 all_module_branches = defaultdict(set)
 
@@ -46,7 +82,7 @@ for modules in test_branches.values():
     for module, branches in modules.items():
         all_module_branches[module] |= branches
 
-print("\n=== TOTAL BRANCHES PER MODULE ===")
+print("\n=== OBSERVED BRANCHES PER MODULE ===")
 
 for module, branches in sorted(all_module_branches.items()):
     print(f"{module}: {len(branches)}")
@@ -60,10 +96,6 @@ for modules in test_branches.values():
 
 
 def uniqueness(test_name):
-    """
-    Number of branches covered ONLY by this test.
-    """
-
     score = 0
 
     for module, branches in test_branches[test_name].items():
@@ -75,13 +107,6 @@ def uniqueness(test_name):
 
 
 def compute_module_coverage(selected_tests):
-    """
-    Returns:
-        {
-            module: coverage_ratio
-        }
-    """
-
     covered = defaultdict(set)
 
     for test in selected_tests:
@@ -90,12 +115,14 @@ def compute_module_coverage(selected_tests):
 
     coverage = {}
 
-    for module, total in all_module_branches.items():
-        if not total:
+    for module, true_total in true_branch_totals.items():
+        if true_total == 0:
             coverage[module] = 1.0
             continue
 
-        cov = len(covered[module]) / len(total)
+        covered_count = len(covered[module])
+
+        cov = covered_count / true_total
 
         coverage[module] = cov
 
@@ -103,7 +130,6 @@ def compute_module_coverage(selected_tests):
 
 
 def meets_threshold(selected_tests):
-
     coverage = compute_module_coverage(selected_tests)
 
     for module, cov in coverage.items():
@@ -125,7 +151,8 @@ for module, cov in sorted(initial_coverage.items()):
 print("\n=== STARTING PRUNING ===")
 
 sorted_tests = sorted(
-    current_selected, key=lambda t: (uniqueness(t), len(test_branches[t]))
+    current_selected,
+    key=lambda t: (uniqueness(t), len(test_branches[t])),
 )
 
 removed = []
@@ -158,11 +185,16 @@ final_coverage = compute_module_coverage(current_selected)
 
 print("\n=== FINAL SUMMARY ===")
 
-print(f"Original tests:  {len(test_branches)}")
+print(f"Original tests:  {len(raw_map)}")
+print(f"Branch tests:    {len(test_branches)}")
+print(f"Zero branch:     {len(zero_branch_tests)}")
 print(f"Remaining tests: {len(current_selected)}")
 print(f"Removed tests:   {len(removed)}")
 
-reduction = 100 * len(removed) / len(test_branches)
+if raw_map:
+    reduction = 100 * (len(raw_map) - len(current_selected)) / len(raw_map)
+else:
+    reduction = 0.0
 
 print(f"Reduction:       {reduction:.2f}%")
 
@@ -176,13 +208,16 @@ for module, cov in sorted(final_coverage.items()):
 
     print(f"{module}: {cov:.4f} [{status}]")
 
-with open("pruned_tests.json", "w") as f:
+with open(OUTPUT_DIR / "pruned_tests.json", "w") as f:
     json.dump(sorted(list(current_selected)), f, indent=2)
 
-with open("removed_tests.json", "w") as f:
+with open(OUTPUT_DIR / "removed_tests.json", "w") as f:
     json.dump(sorted(removed), f, indent=2)
 
-with open("final_module_coverage.json", "w") as f:
+with open(OUTPUT_DIR / "zero_branch_tests.json", "w") as f:
+    json.dump(sorted(zero_branch_tests), f, indent=2)
+
+with open(OUTPUT_DIR / "final_module_coverage.json", "w") as f:
     json.dump(
         {module: round(cov, 4) for module, cov in sorted(final_coverage.items())},
         f,
@@ -190,6 +225,7 @@ with open("final_module_coverage.json", "w") as f:
     )
 
 print("\nSaved:")
-print("  pruned_tests.json")
-print("  removed_tests.json")
-print("  final_module_coverage.json")
+print("  test_suite_analysis/pruned_tests.json")
+print("  test_suite_analysis/removed_tests.json")
+print("  test_suite_analysis/zero_branch_tests.json")
+print("  test_suite_analysis/final_module_coverage.json")
