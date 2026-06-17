@@ -29,29 +29,40 @@ from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.generic.runtime import RuntimeContext
 
 
-ConditionMethod = Literal['ensemble_mean' , 'cross_ensemble' , 'same_member',  'static']
+
 
 @dataclasses.dataclass
 class TrainDatasetConfig(DatasetConfigABC):
     model: ModelDataConfig
     observation: ObsDataConfig | None = None
     condition: ConditionDataConfig | None = None
-    condition_method: ConditionMethod | None = None
+    condition_method: str | None = None
     time_features: list[str] | None = None
     num_lead_months: int | None = None
 
-
+    _VALID_CONDITION_METHODS: ClassVar[frozenset[str]] = frozenset({'ensemble_mean' , 'cross_ensemble' , 'same_member',  'static'})
     _VALID_TIME_FEATURES: ClassVar[frozenset[str]] = frozenset({'year', 'lead_time', 'month_sin', 'month_cos'}) 
 
     def __post_init__(self):
         self._fitted_preprocessors: bool = False
         self._effective_condition: ConditionDataConfig | ModelDataConfig | None = None
 
+        self._check_condition_method()
         self._check_time_features()
         self._check_model()
         self._check_observation()
         self._check_condition()
         self._resolve_condition()
+
+    def _check_condition_method(self):
+        if self.condition_method is not None:
+  
+            if self.condition_method not in self._VALID_CONDITION_METHODS:
+                raise ValueError(
+                    f'Invalid condition_method: {self.condition_method}. '
+                    f'Must be a in {sorted(self._VALID_CONDITION_METHODS)}.'
+            )
+        return self
     
     def _check_time_features(self):
         if self.time_features is not None:
@@ -221,6 +232,7 @@ class TrainDatasetConfig(DatasetConfigABC):
 
 
 class TrainDatasetOperator(DatasetOperatorABC): 
+
     def __init__(self, config: TrainDatasetConfig):
         self.config = config
 
