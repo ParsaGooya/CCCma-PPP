@@ -21,6 +21,9 @@ dynamic = ["version"]
 requires-python = ">= 3.11"
 
 [tool.pytest.ini_options]
+markers = [
+    "pruned: redundant tests removed from optimized suite",
+]
 
 filterwarnings = [
     "ignore:Importing from timm.models.layers is deprecated:FutureWarning"
