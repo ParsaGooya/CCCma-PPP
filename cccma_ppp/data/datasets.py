@@ -103,7 +103,7 @@ class TrainDatasetConfig(DatasetConfigABC):
         return self
 
     
-    def _check_condition(self) -> 'TrainDatasetConfig':
+    def _check_condition(self):
         if self.effective_condition is not None:
             if self.condition_method is None:
                 raise ValueError(
@@ -127,7 +127,7 @@ class TrainDatasetConfig(DatasetConfigABC):
             else:
                 if self.effective_condition.ensemble_list is not None:
                     raise ValueError(
-                    'For "static" or "no_ensemble" conditioning fields cannot specify ensemble list.'
+                    'For "static" conditioning fields cannot specify ensemble list.'
                 )
                 if self._using_model_data_as_condition:
                     raise ValueError(
@@ -135,12 +135,10 @@ class TrainDatasetConfig(DatasetConfigABC):
                 )
 
         else: ##comeback
-            if self.condition_method in [
-                "static",
-                "no-ensemble",
-            ]:
+            if self.condition_method == "static":
+
                 raise ValueError(
-                "for static and no-ensemble conditioning methods condition dataset must be specified!"
+                "For static conditioning method condition dataset must be specified!"
             )
             
         return self
@@ -163,12 +161,12 @@ class TrainDatasetConfig(DatasetConfigABC):
     @property
     def _using_model_data_as_condition(self) -> bool:
         '''
-        Check if the model data is going to be used as a condition for cVAE.
-        This should be true if:
+        Check if the model data is going to be used as a condition.If so, we can avoid loading both model and condition data
+        if not necessary. This should be true if:
 
-           1- No condition data is provided but condition_method is (subject to condition_method not being static, no-ensemble.)
+           1- No condition data is provided but condition_method is (subject to condition_method not being "static")
 
-           2- The provided condition data points to the same files and variables
+           2- The provided condition data points to the same files and variables and ensemble members.
         
         '''
         if self.condition is None:
@@ -176,6 +174,7 @@ class TrainDatasetConfig(DatasetConfigABC):
         return (
             self.condition.paths == self.model.paths
             and self.condition.names == self.model.names
+            and self.condition.ensemble_list == self.model.ensemble_list
         )
 
     @property
@@ -589,14 +588,14 @@ class TrainDataset(Dataset):
     @property
     def _write_condition_to_input(self):
         '''
-        Check if we need to use the condition data as input of the ML model.
+        Check if we need to use the condition data as the only input of the ML model.
         Will be true if:
 
             1- No stand alone condition is provided but condition_method is. Hence, _using_model_data_as_condition
             is true and condition is read from model. Model will not be loaded if not necessary.
 
             2- If stand alone condition is provided, but we are autoencoding model
-             as no obervation is available). Model will be loaded too.
+             as no obervation is available. Model will be loaded too.
         
         '''
         if self.config._using_model_data_as_condition:
