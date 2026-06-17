@@ -29,14 +29,12 @@ from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.generic.runtime import RuntimeContext
 
 
-
-
 @dataclasses.dataclass
 class TrainDatasetConfig(DatasetConfigABC):
     model: ModelDataConfig
     observation: ObsDataConfig | None = None
     condition: ConditionDataConfig | None = None
-    condition_method: str | None = None
+    condition_method: str = None
     time_features: list[str] | None = None
     num_lead_months: int | None = None
 
@@ -193,7 +191,6 @@ class TrainDatasetConfig(DatasetConfigABC):
     def effective_condition(self) -> ConditionDataConfig | ModelDataConfig | None:
         return self._effective_condition
     
-
     def _model_as_condition(self) -> ModelDataConfig:
         ensemble_mean = self.condition_method == 'ensemble_mean'
         return  ModelDataConfig(
@@ -206,7 +203,6 @@ class TrainDatasetConfig(DatasetConfigABC):
                 ensemble_mean=ensemble_mean,
                 rename_dict=self.model.rename_dict,
             )
-
 
     @property
     def get_common_time(self):
