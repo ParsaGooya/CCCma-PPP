@@ -10,7 +10,7 @@ from cccma_ppp.models.models_abc import (
     deterministicmodelsABC,
     modelConfigABC,
     cVAEmodelConfigABC,
-    InitMethod
+    InitMethod,
 )
 from cccma_ppp.core.selectors import deterministicModelSelector, cVAEModelSelector
 from cccma_ppp.models.normalized_flows import NormalizedFlowModel
@@ -21,6 +21,7 @@ from cccma_ppp.generic.runtime import RuntimeContext
 
 
 AppendMode = Literal[1, 2, 3]
+
 
 @cVAEModelSelector.register("mlp")
 @dataclasses.dataclass
@@ -111,7 +112,9 @@ class cVAE_MLP(cVAEmodelsABC):
         )
 
         if not len(output_shape) == self.NUM_OUTPUT_DIMS:
-            raise RuntimeError(f"MLP models should create {self.NUM_OUTPUT_DIMS}D outputs")
+            raise RuntimeError(
+                f"MLP models should create {self.NUM_OUTPUT_DIMS}D outputs"
+            )
         if output_shape is None:
             output_shape = input_shape.copy()
 
@@ -239,7 +242,7 @@ class cVAE_MLP(cVAEmodelsABC):
     ) -> cVAEOutput:
 
         x_in = x[0] if isinstance(x, (tuple, list)) else x
-        self._shape_model_output = x_in.shape ##cVAE autoencodes the input
+        self._shape_model_output = x_in.shape  ##cVAE autoencodes the input
 
         del x_in
 
@@ -507,7 +510,9 @@ class Autoencoder(deterministicmodelsABC):
         self.decoder_hidden_dims = config.decoder_hidden_dims
 
         if not len(output_shape) == self.NUM_OUTPUT_DIMS:
-            raise RuntimeError(f"MLP models should create {self.NUM_OUTPUT_DIMS}D outputs")
+            raise RuntimeError(
+                f"MLP models should create {self.NUM_OUTPUT_DIMS}D outputs"
+            )
 
         if output_shape is None:
             output_shape = input_shape.copy()

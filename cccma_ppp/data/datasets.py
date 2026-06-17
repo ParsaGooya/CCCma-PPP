@@ -29,10 +29,7 @@ from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 from cccma_ppp.generic.runtime import RuntimeContext
 
 
-
-
-ConditionMethod = Literal['ensemble_mean' , 'cross_ensemble' , 'same_member',  'static']
-
+ConditionMethod = Literal["ensemble_mean", "cross_ensemble", "same_member", "static"]
 
 
 @dataclasses.dataclass
@@ -85,7 +82,6 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
             assert self.condition_method is not None, (
                 "No target observation is specified. Specify condition_method!"
             )
-
 
         if self.condition is not None:
             assert self.condition_method is not None, (
@@ -297,9 +293,7 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
         )
 
         if not self.model.preprocessing_pipeline.fitted:
-            raise RuntimeError(
-                "the loaded preprocessor for model data is not fitted!"
-            )
+            raise RuntimeError("the loaded preprocessor for model data is not fitted!")
 
         if self.observation is not None:
             if load_dir is None:
@@ -482,9 +476,6 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
             return_metadata=return_metadata,
         )
 
-
-
-        
 
 @dataclasses.dataclass
 class XArrayDataset(Dataset, XarrayDatasetABC):

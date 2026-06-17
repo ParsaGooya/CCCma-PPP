@@ -31,9 +31,7 @@ class deterministicConfig(moduleConfigABC):
     def __post_init__(self):
         if self.load_dir is None:
             if self.ModelConfig is None:
-                raise ValueError(
-                    "provide loading dir or model configurations"
-                )
+                raise ValueError("provide loading dir or model configurations")
         else:
             self._load_from_checkpoint(self.load_dir)
             warnings.warn(
