@@ -16,7 +16,7 @@ from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 from cccma_ppp.generic.runtime import RuntimeContext
 
 
-spatialmethod = Literal["uniform", "cosine_lat"]
+spatialmethod = Literal['uniform', 'cosine_lat']
 
 
 @dataclasses.dataclass
@@ -234,9 +234,9 @@ class WeightsConfig:
     load_dir: Path | str | None = None
 
     def __post_init__(self):
-        if self.load_dir is not None:
-            if not Path(self.load_dir).exists():
-                raise FileNotFoundError(f"weights file not found at {self.load_dir}")
+            if self.load_dir is not None:
+                if not Path(self.load_dir).exists():
+                    raise FileNotFoundError(f"weights file not found at {self.load_dir}")
 
     def build_weights(
         self,

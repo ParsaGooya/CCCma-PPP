@@ -93,7 +93,6 @@ class MAF(flowABC):
 
     [Papamakarios et al. 2018]
     """
-
     def __init__(
         self,
         hidden_dim=16,
@@ -177,7 +176,6 @@ class RealNVP(flowABC):
 
     [Dinh et. al. 2017]
     """
-
     def __init__(self, hidden_dim=16, base_network=FCNN):
         super().__init__()
         self.hidden_dim = hidden_dim
