@@ -25,6 +25,7 @@ from cccma_ppp.data.utils_data import (
 )
 
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
+from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.generic.runtime import RuntimeContext
 
 
@@ -131,7 +132,7 @@ class TrainDatasetConfig(DatasetConfigABC):
                 )
                 if self._using_model_data_as_condition:
                     raise ValueError(
-                    "static and no-ensemble conditioning methods cannot point to the same model data!"
+                    "'static' conditioning method cannot point to the same model data!"
                 )
 
         else: ##comeback
@@ -230,6 +231,37 @@ class TrainDatasetOperator(DatasetOperatorABC):
         save_path: Path | str | None = None,
         save_name: str | None = None,
     ):
+        
+        def _fit_preprocessor(
+                dataconfig: ModelDataConfig | ObsDataConfig | ConditionDataConfig,
+                selection: dict,
+                mask: bool = False,
+                save_path: Path | str | None = None,
+                save_name: str | None = None,
+        ):
+            
+            _base = _load_xarray_data(
+                dataconfig.list_paths,
+                names=dataconfig.names,
+                concat_dim=dataconfig.concat_dim,
+                selection=selection,
+                ensemble_mean=dataconfig.ensemble_mean,
+                rename_dict=dataconfig.rename_dict,
+            )
+            
+            _mask = _create_train_mask(_base.year, _base.lead_time) if mask else None
+
+            dataconfig.preprocessing_pipeline.fit(
+                base_data=_base.load(),
+                mask=_mask,
+                save=save,
+                save_path=save_path,
+                save_name=save_name,
+            )
+
+            _base.close()
+            del _base, _mask
+            gc.collect()
 
         if self.config.model.preprocessing_pipeline.load_dir is None:
             selection = {
@@ -238,25 +270,12 @@ class TrainDatasetOperator(DatasetOperatorABC):
             }
             if self.config.model.info.coords["ensembles"] is not None:
                 selection["ensembles"] = self.config.model.info.coords["ensembles"]
-            _base = _load_xarray_data(
-                self.config.model.list_paths,
-                names=self.config.model.names,
-                concat_dim=self.config.model.concat_dim,
-                selection=selection,
-                ensemble_mean=self.config.model.ensemble_mean,
-                rename_dict=self.config.model.rename_dict,
-            )
-            _mask = _create_train_mask(_base.year, _base.lead_time)
-            self.config.model.preprocessing_pipeline.fit(
-                base_data=_base.load(),
-                mask=_mask,
-                save=save,
-                save_path=save_path,
-                save_name=save_name,
-            )
-            _base.close()
-            del _base, _mask
-            gc.collect()
+
+            _fit_preprocessor(self.config.model, 
+                              selection = selection, 
+                              mask = True, 
+                              save_path = save_path, 
+                              save_name = save_name)
  
         else:
             self.config.model.preprocessing_pipeline._load_from_memory(
@@ -269,23 +288,11 @@ class TrainDatasetOperator(DatasetOperatorABC):
                 selection = {"year": train_years}
                 if self.config.observation.info.coords["ensembles"] is not None:
                     selection["ensembles"] = self.config.observation.info.coords["ensembles"]
-                _base = _load_xarray_data(
-                    self.config.observation.list_paths,
-                    names=self.config.observation.names,
-                    concat_dim=self.config.observation.concat_dim,
-                    selection=selection,
-                    ensemble_mean=self.config.observation.ensemble_mean,
-                    rename_dict=self.config.observation.rename_dict,
-                )
-                self.config.observation.preprocessing_pipeline.fit(
-                    base_data=_base.load(),
-                    save=save,
-                    save_path=save_path,
-                    save_name=save_name,
-                )
-                _base.close()
-                del _base
-                gc.collect()
+
+                _fit_preprocessor(self.config.observation, 
+                    selection = selection, 
+                    save_path = save_path, 
+                    save_name = save_name)
 
             else:
                 self.config.observation.preprocessing_pipeline._load_from_memory(
@@ -295,29 +302,19 @@ class TrainDatasetOperator(DatasetOperatorABC):
 
         if self.config.effective_condition is not None:
             if self.config.effective_condition.preprocessing_pipeline.load_dir is None:
-                selection = {"year": train_years}
+                selection = {
+                    "year": train_years,
+                    "lead_time": np.arange(1, self.config.num_lead_months + 1),
+                }
                 if self.config.effective_condition.info.coords["ensembles"] is not None:
                     selection["ensembles"] = self.config.effective_condition.info.coords["ensembles"]
-                _base = _load_xarray_data(
-                    self.config.effective_condition.list_paths,
-                    names=self.config.effective_condition.names,
-                    concat_dim=self.config.effective_condition.concat_dim,
-                    selection=selection,
-                    ensemble_mean=self.config.effective_condition.ensemble_mean,
-                    rename_dict=self.config.effective_condition.rename_dict,
-                )
-                _mask = _create_train_mask(_base.year, _base.lead_time)
-                self.config.effective_condition.preprocessing_pipeline.fit(
-                    base_data=_base.load(),
-                    mask=_mask,
-                    save=save,
-                    save_path=save_path,
-                    save_name=save_name,
-                )
-                _base.close()
-                del _base, _mask
-                gc.collect()
-  
+                
+                _fit_preprocessor(self.config.effective_condition, 
+                    selection = selection, 
+                    mask = True,
+                    save_path = save_path, 
+                    save_name = save_name)
+
             else:
                 self.config.effective_condition.preprocessing_pipeline._load_from_memory(
                     Path(self.config.effective_condition.preprocessing_pipeline.load_dir),
@@ -327,64 +324,43 @@ class TrainDatasetOperator(DatasetOperatorABC):
         self.config._fitted_preprocessors = True
 
     def _load_fitted_preprocessors(
-        self, load_dir: Path | str | None = None, load_name: str | None = None
+        self, load_dir: Path | str | None = None
     ):
+        
+        def _load_preprocessor(
+                            pipeline : PreprocessingPipeline,
+                            load_dir: Path | str | None = None):
+                
 
-        if load_dir is None:
-            load_dir = (
-                Path(RuntimeContext.GLOBAL_EXP_DIR)
-                / "preprocessing_pipeline"
-                / f"{self.config.model.preprocessing_pipeline.name}_preprocessing_pipeline.joblib"
-            )
-        else:
-            load_dir = Path(load_dir)
+                if load_dir is None:
+                    load_dir = Path(RuntimeContext.GLOBAL_EXP_DIR)
+                else:
+                    load_dir = Path(load_dir)
 
-        self.config.model.preprocessing_pipeline._load_from_memory(
-            Path(load_dir), load_name=load_name
-        )
+                load_dir = (
+                    load_dir
+                    / "preprocessing_pipeline"
+                    / f"{pipeline.name}_preprocessing_pipeline.joblib"
+                )
 
-        if not self.config.model.preprocessing_pipeline.fitted:
-            raise RuntimeError(
-                "the loaded preprocessor for model data is not fitted!"
-            )
+                pipeline._load_from_memory(
+                    Path(load_dir),
+                )
+
+                if not pipeline.fitted:
+                    raise RuntimeError(
+                        f"the loaded preprocessor for {pipeline.name} is not fitted!"
+                    )
+                
+        _load_preprocessor(self.config.model.preprocessing_pipeline, load_dir)
 
         if self.config.observation is not None:
-            if load_dir is None:
-                load_dir = (
-                    Path(RuntimeContext.GLOBAL_EXP_DIR)
-                    / "preprocessing_pipeline"
-                    / f"{self.config.observation.preprocessing_pipeline.name}_preprocessing_pipeline.joblib"
-                )
-            else:
-                load_dir = Path(load_dir)
 
-            self.config.observation.preprocessing_pipeline._load_from_memory(
-                Path(load_dir), load_name=load_name
-            )
-
-            if not self.config.observation.preprocessing_pipeline.fitted:
-                raise RuntimeError(
-                    "the loaded preprocessor for observation data is not fitted!"
-                )
+            _load_preprocessor(self.config.observation.preprocessing_pipeline, load_dir)
 
         if self.config.effective_condition is not None:
-            if self.config.effective_condition.preprocessing_pipeline.load_dir is None:
-                load_dir = (
-                    Path(RuntimeContext.GLOBAL_EXP_DIR)
-                    / "preprocessing_pipeline"
-                    / f"{self.config.effective_condition.preprocessing_pipeline.name}_preprocessing_pipeline.joblib"
-                )
-            else:
-                load_dir = Path(load_dir)
 
-            self.config.effective_condition.preprocessing_pipeline._load_from_memory(
-                Path(load_dir), load_name=load_name
-            )
-
-            if not self.config.effective_condition.preprocessing_pipeline.fitted:
-                raise RuntimeError(
-                    "the loaded preprocessor for condition is not fitted!"
-                )
+            _load_preprocessor(self.config.effective_condition.preprocessing_pipeline, load_dir)
 
         self.config._fitted_preprocessors = True
 
@@ -463,30 +439,19 @@ class TrainDatasetOperator(DatasetOperatorABC):
 
         metadata = dict(variables=list(), preprocessors=list())
 
-        def _update_metadata_with_dataconfig_metadata(
-            metadata, dataconfig: DataConfigABC
-        ):
-            preprocessor_names = [
-                processor[0] for processor in dataconfig.preprocessing_pipeline.pipeline
-            ]
-            for var in dataconfig.names:
-                metadata["variables"].append(var)
-                metadata["preprocessors"].append(preprocessor_names)
-                return metadata
-
         if self.config.effective_condition is None:
-            metadata = _update_metadata_with_dataconfig_metadata(metadata, self.config.model)
+            metadata = self._update_metadata_with_dataconfig_metadata(metadata, self.config.model)
 
         else:
             if not self.config._using_model_data_as_condition:
-                metadata = _update_metadata_with_dataconfig_metadata(
+                metadata = self._update_metadata_with_dataconfig_metadata(
                     metadata, self.config.model
                 )
-                metadata = _update_metadata_with_dataconfig_metadata(
+                metadata = self._update_metadata_with_dataconfig_metadata(
                     metadata, self.config.effective_condition
                 )
             else:
-                metadata = _update_metadata_with_dataconfig_metadata(
+                metadata = self._update_metadata_with_dataconfig_metadata(
                     metadata, self.config.effective_condition
                 )
 
@@ -496,8 +461,17 @@ class TrainDatasetOperator(DatasetOperatorABC):
 
         metadata = dict(variables=list(), preprocessors=list())
 
-        def _update_metadata_with_dataconfig_metadata(
-            metadata, dataconfig: DataConfigABC
+        if self.config.observation is None:
+            metadata = self._update_metadata_with_dataconfig_metadata(metadata, self.config.model)
+        else:
+            metadata = self._update_metadata_with_dataconfig_metadata(
+                metadata, self.config.observation
+            )
+
+        return metadata
+
+    def _update_metadata_with_dataconfig_metadata(
+            self, metadata: dict, dataconfig: DataConfigABC
         ):
             preprocessor_names = [
                 processor[0] for processor in dataconfig.preprocessing_pipeline.pipeline
@@ -506,15 +480,7 @@ class TrainDatasetOperator(DatasetOperatorABC):
                 metadata["variables"].append(var)
                 metadata["preprocessors"].append(preprocessor_names)
                 return metadata
-
-        if self.config.observation is None:
-            metadata = _update_metadata_with_dataconfig_metadata(metadata, self.config.model)
-        else:
-            metadata = _update_metadata_with_dataconfig_metadata(
-                metadata, self.config.observation
-            )
-
-        return metadata
+            
 
     def build_dataset(
         self,
