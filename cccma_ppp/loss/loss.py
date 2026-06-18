@@ -105,7 +105,7 @@ class Losspipeline(nn.Module):
             step_arguments = dict()
 
         if not self._checked_dimensionality:
-            expected_ndim = self.num_output_dimensions + 2  # N, C, spatial dims...
+            expected_ndim = self.num_output_dimensions + 2
             if "generative_modeling" in step_arguments:
                 expected_ndim += 1
 

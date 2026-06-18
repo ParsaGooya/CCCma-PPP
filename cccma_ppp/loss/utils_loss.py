@@ -45,8 +45,8 @@ class WeightedMSE(lossABC):
                 raise ValueError("choose odd kernel size")
 
             if not has_channels:
-                weights_mask = weights_mask.unsqueeze(0)  # C x ...
-                weights = weights.unsqueeze(0)  # C x ...
+                weights_mask = weights_mask.unsqueeze(0)
+                weights = weights.unsqueeze(0)
 
             if self.num_output_dimensions == 1:
                 self.average_pool = F.avg_pool1d
@@ -60,9 +60,7 @@ class WeightedMSE(lossABC):
                 )
 
             weights_mask = self._downsample(weights_mask)
-            weights_mask = (
-                weights_mask == 1
-            ).float()  ## just keep grid weights where all high res grids are available
+            weights_mask = (weights_mask == 1).float()
             weights = self._downsample(weights)
 
             if not has_channels:
@@ -73,16 +71,8 @@ class WeightedMSE(lossABC):
         self.register_buffer("weights", weights)
 
     def _downsample(self, tensor: torch.Tensor) -> torch.Tensor:
-        """
-        Downsample tenspr using the low-resolution kernel.
-
-
-        For masks with 1 valid and 0 invalid, the output is a fractional-validity mask between 0 and 1.
-        """
         squeeze = False
-        if (
-            len(tensor.shape) == self.num_output_dimensions + 1
-        ):  # check for static masks (space + channel)
+        if len(tensor.shape) == self.num_output_dimensions + 1:
             tensor = tensor.unsqueeze(0)
             squeeze = True
 
@@ -99,8 +89,8 @@ class WeightedMSE(lossABC):
 
     def forward(
         self,
-        data: torch.Tensor,  ## (E x) (Z x ) B x C x ....
-        target: torch.Tensor,  ## (Z x ) B x C x ....
+        data: torch.Tensor,
+        target: torch.Tensor,
         target_mask: torch.Tensor | None = None,
         generative_modeling: bool = False,
         generator: bool = False,
@@ -120,7 +110,7 @@ class WeightedMSE(lossABC):
         y_hat = data
 
         if self.low_ress_kernel_size is not None:
-            if generative_modeling:  ##generative_modeling models generate a latent ensemble of outputs (Z x batch x channels x ...)
+            if generative_modeling:
                 if target_mask is not None and target_mask.shape == y.shape:
                     target_mask = torch.flatten(target_mask, start_dim=0, end_dim=1)
                 y = torch.flatten(y, start_dim=0, end_dim=1)
@@ -202,8 +192,8 @@ class WeightedCRPS(lossABC):
                 raise ValueError("choose odd kernel size")
 
             if not has_channels:
-                weights_mask = weights_mask.unsqueeze(0)  # C x ...
-                weights = weights.unsqueeze(0)  # C x ...
+                weights_mask = weights_mask.unsqueeze(0)
+                weights = weights.unsqueeze(0)
 
             if self.num_output_dimensions == 1:
                 self.average_pool = F.avg_pool1d
@@ -217,9 +207,7 @@ class WeightedCRPS(lossABC):
                 )
 
             weights_mask = self._downsample(weights_mask)
-            weights_mask = (
-                weights_mask == 1
-            ).float()  ## just keep grid weights where all high res grids are available
+            weights_mask = (weights_mask == 1).float()
             weights = self._downsample(weights)
 
             if not has_channels:
@@ -231,16 +219,8 @@ class WeightedCRPS(lossABC):
         self.register_buffer("weights", weights)
 
     def _downsample(self, tensor: torch.Tensor) -> torch.Tensor:
-        """
-        Downsample tenspr using the low-resolution kernel.
-
-
-        For masks with 1 valid and 0 invalid, the output is a fractional-validity mask between 0 and 1.
-        """
         squeeze = False
-        if (
-            len(tensor.shape) == self.num_output_dimensions + 1
-        ):  # check for static masks (space + channel)
+        if len(tensor.shape) == self.num_output_dimensions + 1:
             tensor = tensor.unsqueeze(0)
             squeeze = True
 
@@ -257,8 +237,8 @@ class WeightedCRPS(lossABC):
 
     def forward(
         self,
-        data: torch.Tensor,  ## E x (Z x ) B x C x ....  for crps an ensemble of outputs are required
-        target: torch.Tensor,  ##  (Z x ) B x C x ....
+        data: torch.Tensor,
+        target: torch.Tensor,
         target_mask: torch.Tensor | None = None,
         generative_modeling: bool = False,
         generator: bool = True,
@@ -271,7 +251,7 @@ class WeightedCRPS(lossABC):
             )
         _check_generator_structure(data, target)
 
-        if generative_modeling:  ##generative_modeling models generate a latent ensemble  (Z x batch x channels x ...)
+        if generative_modeling:
             if target_mask is not None and target_mask.shape == target.shape:
                 target_mask = torch.flatten(target_mask, start_dim=0, end_dim=1)
             y = torch.flatten(target, start_dim=0, end_dim=1)
@@ -289,9 +269,7 @@ class WeightedCRPS(lossABC):
                 target_mask = self._downsample(target_mask)
 
             E, B = y_hat.shape[:2]
-            y_hat = y_hat.reshape(
-                E * B, *y_hat.shape[2:]
-            )  ##reshape output ensemble to calcualte the average pool first and then reshape again.
+            y_hat = y_hat.reshape(E * B, *y_hat.shape[2:])
             y_hat = self._downsample(y_hat)
             y_hat = y_hat.reshape(E, B, *y_hat.shape[1:])
 
@@ -368,7 +346,7 @@ class Frobenius_norm(lossABC):
 
     def forward(
         self,
-        data: torch.Tensor,  ## data shape is : in (Ens x) batch x channel x O_1, ... x O_n with n being the num_output_dimensions
+        data: torch.Tensor,
         target: torch.Tensor,
         generative_modeling: bool = False,
         generator: bool = False,
@@ -384,7 +362,7 @@ class Frobenius_norm(lossABC):
         y = torch.flatten(target, start_dim=-self.num_output_dimensions, end_dim=-1)
         y_hat = torch.flatten(data, start_dim=-self.num_output_dimensions, end_dim=-1)
 
-        if generative_modeling:  ##generative_modeling models generate an ensemble of outputs (enx x batch x channels x ...)
+        if generative_modeling:
             y = torch.flatten(y, start_dim=0, end_dim=1)
             y_hat = torch.flatten(y_hat, start_dim=0, end_dim=1)
 

@@ -79,9 +79,6 @@ class cVAEConfig(moduleConfigABC):
         )
 
     def _load_from_checkpoint(self, load_path: Path | str):
-        """
-        Loads model and prior flow config but allows control over the rest.
-        """
 
         checkpoint_module, checkpoint_config = _load_config_from_checkpoint(
             Path(load_path)

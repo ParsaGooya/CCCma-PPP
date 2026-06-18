@@ -242,7 +242,7 @@ class cVAE_MLP(cVAEmodelsABC):
     ) -> cVAEOutput:
 
         x_in = x[0] if isinstance(x, (tuple, list)) else x
-        self._shape_model_output = x_in.shape  ##cVAE autoencodes the input
+        self._shape_model_output = x_in.shape
 
         del x_in
 

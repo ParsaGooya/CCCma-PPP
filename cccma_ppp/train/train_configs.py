@@ -24,7 +24,6 @@ from cccma_ppp.core.optimization import OptimizerConfig
 from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
 
-
 def set_seed(seed):
 
     np.random.seed(seed)
@@ -33,52 +32,6 @@ def set_seed(seed):
 
 @dataclasses.dataclass
 class TrainConfig:
-    """
-    Configuration for training a model.
-
-    Arguments:
-        experiment_dir: Directory where checkpoints and logs are saved. For the
-            time being, this must be a local directory.
-
-        resume_dir : Directory of a previously stopped or finished training experiment to be resumed.
-
-        max_epochs : maximum number of epochs to train on. If early stopping buffer is not specified, this manu epochs will be trained for.
-
-        train_loader: Configuration for the training data loader.
-
-        module: Configuration for the training module.
-
-        optimization: Configuration for the optimization.
-
-        losspipeline: Configuration for the reconstruction loss.
-
-        trainer: Configuration for the trainer.
-
-        weights: Configuration for spatial weights for loss calculation.
-
-        save_checkpoint: Whether to save checkpoints. If false, no checkpoints
-            are saved regardless of other checkpoint configuration settings. If
-            true, checkpoints are saved at the end of the training loop, after
-            evaluation, and on catching a termination signal.
-
-        log_every_n_epochs: How often to log batch_loss during training.
-
-        seed: Random seed for reproducibility. If set, is used for all types of
-            randomization, including data shuffling and model initialization.
-            If unset, weight initialization is not reproducible but data shuffling is.
-
-
-
-        to do:
-
-            ema: Configuration for exponential moving average of model weights.
-
-            validate_using_ema: Whether to validate and perform inference using
-                the EMA model.
-
-
-    """
-
     experiment_dir: str
     max_epochs: int
     train_loader: TrainDataloaderConfig | None
@@ -204,23 +157,14 @@ class TrainConfig:
 
     @property
     def checkpoint_dir(self) -> str:
-        """
-        The directory where checkpoints are saved.
-        """
         return os.path.join(self.experiment_dir, "checkpoints")
 
     @property
     def log_dir(self) -> str:
-        """
-        The directory where output files are saved.
-        """
         return os.path.join(self.experiment_dir, "logs")
 
     @property
     def figures_dir(self) -> str:
-        """
-        The directory where output files are saved.
-        """
         return os.path.join(self.experiment_dir, "figures")
 
     def _prepare_runtime_variables(self):
@@ -233,9 +177,6 @@ class TrainConfig:
         RuntimeContext.TARGET_VAR_METADATA = self.train_loader.target_var_metadata
 
     def prepare_directory(self, distributed: Distributed, yaml_config: str = None):
-        """
-        Create experiment (sub)directories and dump config_data to it.
-        """
 
         self._prepare_runtime_variables()
 
@@ -264,7 +205,6 @@ class TrainConfig:
 
 
 def prepare_config(path: Path | str) -> dict:
-    """Get config and update with possible dotlist override."""
     with open(path) as f:
         data = yaml.safe_load(f)
     return data

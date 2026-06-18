@@ -51,9 +51,6 @@ class MetricsAggregator:
 
     @torch.no_grad()
     def record(self, loss_dict: dict[str, torch.Tensor | int | float]) -> None:
-        """
-        Record one "local" batch losses.
-        """
         for name, value in loss_dict.items():
             if value is None:
                 continue
@@ -68,12 +65,6 @@ class MetricsAggregator:
 
     @torch.no_grad()
     def _dist_compute(self) -> dict[str, float]:
-        """
-        Returns globally averaged metrics across all ranks.
-
-        The average is:
-            total metric sum across all GPUs / total number of recorded batches
-        """
         logs = {}
 
         for name in sorted(self.loss_terms):
@@ -102,15 +93,6 @@ class MetricsAggregator:
         replace_index: int = None,
         time_elapsed: float = None,
     ):
-        """
-        Store already-synchronized epoch-level logs.
-
-        If replace_index is None:
-            append a new epoch.
-
-        If replace_index is not None:
-            replace an existing epoch entry without incrementing num_epochs_seen.
-        """
         if not self._aggregated_across_ranks:
             raise RuntimeError(
                 "Call _dist_compute() before record_epoch(), so losses are "
@@ -162,17 +144,6 @@ class MetricsAggregator:
         plot_dir: str | Path | None = None,
         figsize=(8, 5),
     ) -> None:
-        """
-        Plot every recorded metric across all aggregators.
-
-        Known names:
-            train -> blue solid
-            val/validation -> orange dashed
-
-        Other names:
-            random color and linestyle.
-
-        """
         if plot_dir is None:
             plot_dir = Path(RuntimeContext.GLOBAL_FIGURES_DIR)
         else:
