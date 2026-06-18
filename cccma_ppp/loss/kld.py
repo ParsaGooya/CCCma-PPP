@@ -59,10 +59,10 @@ class KLD(lossABC):
 
     def forward(
         self,
-        mu: torch.Tensor, # samples x F
-        log_var: torch.Tensor,   # samples x F
-        cond_mu: torch.Tensor|None = None,   # samples x F
-        cond_log_var: torch.Tensor | None = None,   # samples x F
+        mu: torch.Tensor,  # samples x F
+        log_var: torch.Tensor,  # samples x F
+        cond_mu: torch.Tensor | None = None,  # samples x F
+        cond_log_var: torch.Tensor | None = None,  # samples x F
         prior_flow: NormalizedFlowModel = None,
         print_loss=False,
     ) -> torch.Tensor:
