@@ -112,9 +112,6 @@ class MetricsAggregator:
         dict of str to float
             Averaged loss values.
 
-        Notes
-        -----
-        Must be called before recording epoch-level statistics.
         """
 
         logs = {}
