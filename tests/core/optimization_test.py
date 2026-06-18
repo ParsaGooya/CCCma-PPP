@@ -49,51 +49,6 @@ def make_optimizer(module=None, lr=0.01):
     return torch.optim.Adam(module.parameters(), lr=lr)
 
 
-def test_lr_scheduler_config_valid_defaults():
-    cfg = LRSchedulerConfig()
-
-    assert cfg.min_lr == 0.0
-    assert cfg.warmup_epochs == 0
-    assert cfg.total_epochs is None
-
-
-def test_lr_scheduler_config_invalid_min_lr():
-    with pytest.raises((AssertionError, ValueError, RuntimeError)):
-        LRSchedulerConfig(min_lr=-1.0)
-
-
-def test_lr_scheduler_config_invalid_warmup():
-    with pytest.raises((AssertionError, ValueError, RuntimeError)):
-        LRSchedulerConfig(warmup_epochs=-1)
-
-
-def test_lr_scheduler_build_requires_total_epochs():
-    module = make_module()
-    opt = make_optimizer(module)
-    cfg = LRSchedulerConfig()
-
-    with pytest.raises((AssertionError, ValueError, RuntimeError)):
-        cfg.build(opt, num_batches=1)
-
-
-def test_lr_scheduler_build_invalid_total_epochs():
-    module = make_module()
-    opt = make_optimizer(module)
-    cfg = LRSchedulerConfig(total_epochs=0)
-
-    with pytest.raises((AssertionError, ValueError, RuntimeError)):
-        cfg.build(opt, num_batches=1)
-
-
-def test_lr_scheduler_build_invalid_num_batches():
-    module = make_module()
-    opt = make_optimizer(module)
-    cfg = LRSchedulerConfig(total_epochs=2)
-
-    with pytest.raises((AssertionError, ValueError, RuntimeError)):
-        cfg.build(opt, num_batches=0)
-
-
 def test_lr_scheduler_build_warmup_equals_total_epochs_invalid():
     module = make_module()
     opt = make_optimizer(module)

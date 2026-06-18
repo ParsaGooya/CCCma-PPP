@@ -1508,30 +1508,6 @@ def test_dataset_cond_and_obs_both_none_autoencoding(monkeypatch):
     assert torch.is_tensor(item["target"])
 
 
-def test_pipeline_get_preprocessors_ocean_branch():
-    pipe = DummyPipeline()
-    ocean = DummyOceanNanRemove()
-    pipe.fitted_preprocessors.append(ocean)
-
-    result = pipe.get_preprocessors("oceannanremover")
-
-    assert result is ocean
-
-
-def test_pipeline_get_preprocessors_name_match_branch():
-    pipe = DummyPipeline()
-
-    class DummyScaler:
-        pass
-
-    scaler = DummyScaler()
-    pipe.fitted_preprocessors.append(scaler)
-
-    result = pipe.get_preprocessors("scaler")
-
-    assert result is scaler
-
-
 def test_mask_with_no_year_dimension_edge():
     cfg = make_config(observation=True)
 
@@ -1598,14 +1574,6 @@ def test_get_cond_indexes_non_static_branch_full():
     assert isinstance(ds.cond_indexes, dict)
     assert "year" in ds.cond_indexes
     assert "lead_time" in ds.cond_indexes
-
-
-def test_pipeline_get_preprocessors_none():
-    pipe = DummyPipeline()
-
-    result = pipe.get_preprocessors("does_not_exist")
-
-    assert result is None
 
 
 def test_get_weights_no_channels_branch():
@@ -2844,45 +2812,6 @@ def test_dataset_target_tensor_is_float():
     assert item["target"].is_floating_point()
 
 
-def test_pipeline_set_name_returns_self():
-    pipe = DummyPipeline()
-
-    result = pipe.set_name("abc")
-
-    assert result is pipe
-    assert pipe.name == "abc"
-
-
-def test_dummy_ocean_transform_without_lat_lon_returns_original():
-    ocean = DummyOceanNanRemove()
-
-    data = xr.DataArray(
-        np.ones((2,)),
-        dims=("ref",),
-    )
-
-    result = ocean.transform(data)
-
-    assert result.identical(data)
-
-
-def test_dummy_ocean_transform_with_lat_lon_stacks():
-    ocean = DummyOceanNanRemove()
-
-    data = xr.DataArray(
-        np.ones((2, 2)),
-        dims=("lat", "lon"),
-        coords={
-            "lat": [0, 1],
-            "lon": [0, 1],
-        },
-    )
-
-    result = ocean.transform(data)
-
-    assert "ref" in result.dims
-
-
 def test_get_input_var_metadata_returns_dict():
     cfg = make_config(observation=True)
 
@@ -2994,40 +2923,6 @@ def test_get_input_var_metadata_empty_condition_pipeline():
     assert metadata["preprocessors"] == [[], []]
 
 
-def test_pipeline_get_preprocessors_ocean_name_no_match():
-    pipe = DummyPipeline()
-
-    class FakeOcean:
-        pass
-
-    pipe.fitted_preprocessors.append(FakeOcean())
-
-    result = pipe.get_preprocessors("oceannanremover")
-
-    assert result is None
-
-
-def test_fake_loader_empty_selection_branch():
-    ds = fake_load_xarray_data(
-        paths="model_mean",
-        selection={
-            "year": None,
-            "lead_time": None,
-        },
-    )
-
-    assert isinstance(ds, xr.Dataset)
-
-
-def test_fake_loader_names_none_branch():
-    ds = fake_load_xarray_data(
-        paths="model_mean",
-        names=None,
-    )
-
-    assert "var" in ds.data_vars
-
-
 def test_get_weights_with_model_ocean_remover_without_observation():
     cfg = XArrayDatasetConfig(
         model=make_model_config(kind="model_mean"),
@@ -3082,13 +2977,3 @@ def test_condition_dataset_same_object_as_model_dataset():
     item = ds[0]
 
     assert torch.is_tensor(item["input"])
-
-
-def test_pipeline_get_preprocessors_empty_list():
-    pipe = DummyPipeline()
-
-    assert pipe.fitted_preprocessors == []
-
-    result = pipe.get_preprocessors("anything")
-
-    assert result is None

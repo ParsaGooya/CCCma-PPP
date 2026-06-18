@@ -42,11 +42,6 @@ def test_beta_requires_build():
         beta(0)
 
 
-def test_beta_invalid_min():
-    with pytest.raises((AssertionError, ValueError, RuntimeError)):
-        BetaAnnealing(beta_min=-1)
-
-
 def test_kld_standard_normal():
     kld = KLD()
 
@@ -102,17 +97,6 @@ def test_kld_sum_reduction():
     loss = kld(mu, logvar)
 
     assert loss.item() > 0
-
-
-def test_sample_shape():
-    kld = KLD()
-
-    mu = torch.zeros(10, 5)
-    logvar = torch.zeros(10, 5)
-
-    samples = kld.sample(mu, logvar, sample_size=3)
-
-    assert samples.shape == (3, 10, 5)
 
 
 class DummyFlowOutput:

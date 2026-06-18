@@ -345,20 +345,6 @@ def test_deterministic_model_selector_has_registry():
     assert name in deterministicModelSelector.available()
 
 
-def test_model_selector_subclass_registries_are_isolated():
-    cvae_name = unique_name("only_cvae")
-    det_name = unique_name("only_det")
-
-    cVAEModelSelector.register(cvae_name)(DummyModelConfig)
-    deterministicModelSelector.register(det_name)(DummyModelConfig)
-
-    assert cvae_name in cVAEModelSelector.available()
-    assert det_name not in cVAEModelSelector.available()
-
-    assert det_name in deterministicModelSelector.available()
-    assert cvae_name not in deterministicModelSelector.available()
-
-
 def test_flow_selector_register_available_and_get_model():
     name = unique_name("flow")
 

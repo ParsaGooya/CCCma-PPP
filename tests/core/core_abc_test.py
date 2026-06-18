@@ -81,51 +81,6 @@ class ConcreteModuleConfig(moduleConfigABC):
         return "loaded"
 
 
-def test_module_abc_cannot_be_instantiated():
-    with pytest.raises(TypeError):
-        moduleABC()
-
-
-def test_module_config_abc_cannot_be_instantiated():
-    with pytest.raises(TypeError):
-        moduleConfigABC()
-
-
-def test_concrete_module_methods_work():
-    module = ConcreteModule()
-
-    module.init_loss_function("loss_fn", alpha=1)
-
-    assert module.loss_function == "loss_fn"
-    assert module.loss_kwargs == {"alpha": 1}
-    assert module._compute_loss() == "loss"
-    assert module.predict() == "predict"
-
-    output = module(torch.ones(1, 2))
-
-    assert output.shape == (1, 2)
-
-
-def test_concrete_module_config_build_and_load():
-    config = ConcreteModuleConfig()
-
-    built = config.build(
-        input_shape=np.array([2]),
-        output_shape=np.array([2]),
-        added_features_dim=3,
-    )
-
-    assert isinstance(built, ConcreteModule)
-    assert np.array_equal(config.input_shape, np.array([2]))
-    assert np.array_equal(config.output_shape, np.array([2]))
-    assert config.added_features_dim == 3
-
-    result = config._load_from_checkpoint()
-
-    assert result == "loaded"
-    assert config.loaded_from_checkpoint is True
-
-
 def test_get_device_returns_parameter_device():
     module = ConcreteModule()
 

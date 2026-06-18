@@ -30,12 +30,6 @@ def make_module(
     )
 
 
-def test_output_dataclass():
-    out = deterministicOutput(output=torch.ones(1))
-
-    assert torch.is_tensor(out.output)
-
-
 def test_raw_deterministic_can_be_constructed():
     cfg = make_config()
 

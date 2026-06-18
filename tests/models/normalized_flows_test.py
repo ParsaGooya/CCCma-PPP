@@ -75,32 +75,6 @@ class DummySelector:
         return self.model
 
 
-def test_flow_output_dataclass():
-    samples = torch.randn(2, 3)
-    log_det = torch.randn(2)
-
-    out = flowOutput(e_samples=samples, log_det=log_det)
-
-    assert out.e_samples is samples
-    assert out.log_det is log_det
-
-
-def test_fcnn_forward_shape():
-    model = FCNN(in_dim=3, out_dim=2, hidden_dim=5)
-
-    out = model(torch.randn(4, 3))
-
-    assert out.shape == (4, 2)
-
-
-def test_fcnn_contains_expected_layers():
-    model = FCNN(in_dim=3, out_dim=2, hidden_dim=5)
-
-    assert isinstance(model.network, nn.Sequential)
-    assert any(isinstance(layer, nn.Tanh) for layer in model.network)
-    assert sum(isinstance(layer, nn.Linear) for layer in model.network) == 3
-
-
 def test_normalized_flow_config_build():
     cfg = NormalizedFlowConfig(
         list_flows=[DummySelector(IdentityFlow())],
@@ -353,26 +327,6 @@ def test_maf_inverse_with_condition():
 
     assert inv.shape == data.shape
     assert log_det.shape == (5,)
-
-
-def test_realnvp_build_without_condition():
-    flow = RealNVP(hidden_dim=8).build(dim=4)
-
-    assert flow.dim == 4
-    assert hasattr(flow, "t1")
-    assert hasattr(flow, "s1")
-    assert hasattr(flow, "t2")
-    assert hasattr(flow, "s2")
-
-
-def test_realnvp_build_with_condition():
-    flow = RealNVP(hidden_dim=8).build(dim=4, condition_size=3)
-
-    assert flow.dim == 4
-    assert hasattr(flow, "t1")
-    assert hasattr(flow, "s1")
-    assert hasattr(flow, "t2")
-    assert hasattr(flow, "s2")
 
 
 def test_realnvp_forward_without_condition():

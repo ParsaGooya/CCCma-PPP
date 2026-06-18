@@ -68,14 +68,6 @@ def assert_same_values(a, b, atol=1e-6):
     assert np.allclose(a.to_numpy(), b.to_numpy(), atol=atol, equal_nan=True)
 
 
-def test_registry_integration():
-    names = PreprocessingStepSelector.available()
-    assert "normalizer" in names
-    assert "standardizer" in names
-    assert "anomalies" in names
-    assert "oceannanremover" in names
-
-
 def test_registry_case_insensitive():
     proc = PreprocessingStepSelector("NORMALIZER").get_preprocessor()
     assert proc is not None

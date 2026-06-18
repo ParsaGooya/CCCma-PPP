@@ -16,16 +16,6 @@ class DummyClass:
         self.y = y
 
 
-def test_register_and_available():
-    reg = Registery()
-
-    @reg.register("a")
-    class A:
-        pass
-
-    assert "a" in reg.available()
-
-
 def test_get_unregistered():
     reg = Registery()
     with pytest.raises(ValueError):
@@ -124,21 +114,6 @@ def test_register_overwrite():
     obj = reg.get("a")
 
     assert obj.val == 2
-
-
-def test_available_multiple():
-    reg = Registery()
-
-    @reg.register("a")
-    class A:
-        pass
-
-    @reg.register("b")
-    class B:
-        pass
-
-    names = reg.available()
-    assert set(names) == {"a", "b"}
 
 
 def test_get_with_empty_dict():

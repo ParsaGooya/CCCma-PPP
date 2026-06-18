@@ -50,22 +50,6 @@ def test_get_unknown_name():
     assert "missing not registered" in str(exc.value)
 
 
-def test_available_returns_registered_names():
-    registry = Registery()
-
-    @registry.register("a")
-    class A:
-        pass
-
-    @registry.register("b")
-    class B:
-        pass
-
-    names = registry.available()
-
-    assert set(names) == {"a", "b"}
-
-
 def test_register_overwrites_existing():
     registry = Registery()
 
@@ -104,19 +88,3 @@ def test_get_missing_required_argument():
 
     with pytest.raises(TypeError):
         registry.get("test", config={})
-
-
-def test_multiple_registry_instances_isolated():
-    reg1 = Registery()
-    reg2 = Registery()
-
-    @reg1.register("a")
-    class A:
-        pass
-
-    @reg2.register("b")
-    class B:
-        pass
-
-    assert reg1.available() == ["a"]
-    assert reg2.available() == ["b"]

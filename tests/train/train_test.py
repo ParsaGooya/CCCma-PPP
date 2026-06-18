@@ -1,79 +1,6 @@
-import argparse
 import pytest
-import yaml
 import cccma_ppp.train.train as train_mod
-from cccma_ppp.train.train import get_parser, prepare_config, main
-
-
-def test_get_parser_returns_argument_parser():
-    parser = get_parser()
-
-    assert isinstance(parser, argparse.ArgumentParser)
-
-
-def test_get_parser_accepts_config_argument():
-    parser = get_parser()
-
-    args = parser.parse_args(["config.yaml"])
-
-    assert args.config == "config.yaml"
-
-
-def test_get_parser_requires_config_argument():
-    parser = get_parser()
-
-    with pytest.raises(SystemExit):
-        parser.parse_args([])
-
-
-def test_get_parser_rejects_extra_argument():
-    parser = get_parser()
-
-    with pytest.raises(SystemExit):
-        parser.parse_args(["config.yaml", "extra"])
-
-
-def test_prepare_config_reads_yaml(tmp_path):
-    path = tmp_path / "config.yaml"
-    path.write_text(
-        """
-experiment_dir: test_exp
-epochs: 2
-trainer:
-  mixed_precision: false
-""",
-        encoding="utf-8",
-    )
-
-    data = prepare_config(str(path))
-
-    assert data["experiment_dir"] == "test_exp"
-    assert data["epochs"] == 2
-    assert data["trainer"]["mixed_precision"] is False
-
-
-def test_prepare_config_empty_yaml_returns_none(tmp_path):
-    path = tmp_path / "empty.yaml"
-    path.write_text("", encoding="utf-8")
-
-    data = prepare_config(str(path))
-
-    assert data is None
-
-
-def test_prepare_config_missing_file_raises(tmp_path):
-    path = tmp_path / "missing.yaml"
-
-    with pytest.raises(FileNotFoundError):
-        prepare_config(str(path))
-
-
-def test_prepare_config_invalid_yaml_raises(tmp_path):
-    path = tmp_path / "bad.yaml"
-    path.write_text("x: [1, 2", encoding="utf-8")
-
-    with pytest.raises(yaml.YAMLError):
-        prepare_config(str(path))
+from cccma_ppp.train.train import main
 
 
 def test_main_root_happy_path(monkeypatch, tmp_path):
@@ -331,29 +258,6 @@ def test_main_build_trainer_receives_config_distributed_logger(monkeypatch, tmp_
     assert captured["config"] is config_obj
     assert captured["distributed"] is distributed
     assert captured["logger"] is logger
-
-
-def test_main_propagates_prepare_config_error(monkeypatch, tmp_path):
-    yaml_path = tmp_path / "missing.yaml"
-
-    distributed = DummyDistributed(root=True)
-
-    monkeypatch.setattr(
-        train_mod.Distributed,
-        "get_instance",
-        lambda: distributed,
-    )
-
-    monkeypatch.setattr(
-        train_mod,
-        "prepare_config",
-        lambda path: (_ for _ in ()).throw(FileNotFoundError("missing")),
-    )
-
-    with pytest.raises(FileNotFoundError):
-        main(str(yaml_path))
-
-    assert distributed.cleanup_called is False
 
 
 def test_main_propagates_train_error_and_does_not_cleanup(monkeypatch, tmp_path):

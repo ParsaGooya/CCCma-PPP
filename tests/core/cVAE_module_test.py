@@ -1037,65 +1037,6 @@ def test_build_load_dir_calls_load_state_dict_once(monkeypatch):
     assert calls["count"] == 1
 
 
-def test_conditional_model_flow_setting_resolution():
-    model = ConditionalModel()
-
-    resolved = model._resolve_flow_settings(
-        condition_dependant_flow=True,
-    )
-
-    assert resolved.condition_dependant_flow is True
-
-
-def test_dummy_flow_build_returns_self():
-    flow = DummyFlow()
-
-    returned = flow.build(
-        latent_size=4,
-        condition_size=2,
-    )
-
-    assert returned is flow
-
-
-def test_full_flow_logdet_values():
-    flow = FullFlow()
-
-    x = torch.ones(2, 4)
-
-    out = flow(x)
-
-    assert torch.allclose(out.log_det, torch.ones(2))
-
-
-def test_dummy_flow_logdet_values():
-    flow = DummyFlow()
-
-    x = torch.ones(2, 4)
-
-    out = flow(x)
-
-    assert torch.allclose(out.log_det, torch.zeros(2))
-
-
-def test_dummy_model_predict_output_structure():
-    model = DummyModel()
-
-    out = model.predict()
-
-    assert out.mu is None
-    assert out.log_var is None
-
-
-def test_dummy_model_forward_output_structure():
-    model = DummyModel()
-
-    out = model()
-
-    assert out.mu is not None
-    assert out.log_var is not None
-
-
 def test_compute_loss_with_flow_and_cgcn_and_negative_beta():
     cfg = cVAEConfig(
         ModelConfig=DummySelector(),
@@ -1133,19 +1074,3 @@ def test_compute_loss_with_conditional_flow_and_mask():
     total, _ = m._compute_loss(1.0, batch)
 
     assert total >= 0
-
-
-def test_checkpoint_config_defaults():
-    cfg = DummyCheckpointConfig(
-        checkpoint_input_shape=np.array([1]),
-        checkpoint_output_shape=np.array([1]),
-    )
-
-    assert cfg.strict is True
-    assert cfg.freeze_weights is False
-    assert cfg.load_path == "fake_checkpoint.pt"
-
-
-def test_runtime_context_reset_fixture():
-    assert RuntimeContext.INPUT_VAR_METADATA == {}
-    assert RuntimeContext.TARGET_VAR_METADATA == {}

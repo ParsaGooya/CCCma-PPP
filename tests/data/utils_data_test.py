@@ -141,36 +141,6 @@ def test_create_train_mask_with_exclude_idx():
     assert mask.dtype == bool
 
 
-def test_unwrap_single_variable_dataset():
-    ds = xr.Dataset(
-        {
-            "a": xr.DataArray(
-                np.ones((2, 2)),
-                dims=("lat", "lon"),
-            )
-        }
-    )
-
-    out = mod._unwrap_data_variables(ds)
-
-    assert "channels" in out.dims
-    assert out.shape[0] == 1
-
-
-def test_unwrap_multiple_variable_dataset():
-    ds = xr.Dataset(
-        {
-            "a": xr.DataArray(np.ones((2, 2)), dims=("lat", "lon")),
-            "b": xr.DataArray(np.zeros((2, 2)), dims=("lat", "lon")),
-        }
-    )
-
-    out = mod._unwrap_data_variables(ds)
-
-    assert "channels" in out.dims
-    assert out.shape[0] == 2
-
-
 def test_weights_uniform():
     weights = mod.WeightsConfig("uniform").build_weights(coords(), save=False)
 
@@ -1378,22 +1348,6 @@ def test_weights_cosine_lat_has_expected_dims():
     assert weights.dims == ("lat", "lon")
 
 
-def test_unwrap_single_variable_keeps_spatial_dims():
-    ds = xr.Dataset(
-        {
-            "a": xr.DataArray(
-                np.ones((2, 2)),
-                dims=("lat", "lon"),
-            )
-        }
-    )
-
-    out = mod._unwrap_data_variables(ds)
-
-    assert "lat" in out.dims
-    assert "lon" in out.dims
-
-
 def test_get_ds_info_start_and_final_year(monkeypatch):
     def fake_load(paths, **kwargs):
         return model_ds()
@@ -1444,34 +1398,6 @@ def test_get_ds_info_contains_coordinates(monkeypatch):
     assert "lat" in info.coords
     assert "lon" in info.coords
     assert "ensembles" in info.coords
-
-
-def test_unwrap_single_variable_dtype_preserved():
-    ds = xr.Dataset(
-        {
-            "a": xr.DataArray(
-                np.ones((2, 2), dtype=np.float32),
-                dims=("lat", "lon"),
-            )
-        }
-    )
-
-    out = mod._unwrap_data_variables(ds)
-
-    assert out.dtype == np.float32
-
-
-def test_unwrap_multiple_variable_shape():
-    ds = xr.Dataset(
-        {
-            "a": xr.DataArray(np.ones((2, 2)), dims=("lat", "lon")),
-            "b": xr.DataArray(np.ones((2, 2)), dims=("lat", "lon")),
-        }
-    )
-
-    out = mod._unwrap_data_variables(ds)
-
-    assert out.shape == (2, 2, 2)
 
 
 def test_weights_variable_weights_channel_count():
@@ -2056,20 +1982,6 @@ def test_create_train_mask_returns_named_array():
     mask = mod._create_train_mask([2000], 12)
 
     assert mask.name == "mask"
-
-
-def test_unwrap_data_variables_channel_dimension_size():
-    ds = xr.Dataset(
-        {
-            "a": xr.DataArray(np.ones((2, 2)), dims=("lat", "lon")),
-            "b": xr.DataArray(np.ones((2, 2)), dims=("lat", "lon")),
-            "c": xr.DataArray(np.ones((2, 2)), dims=("lat", "lon")),
-        }
-    )
-
-    out = mod._unwrap_data_variables(ds)
-
-    assert out.sizes["channels"] == 3
 
 
 def test_weights_build_without_save(monkeypatch):

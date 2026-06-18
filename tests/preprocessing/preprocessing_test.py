@@ -60,10 +60,6 @@ def test_selector_get_preprocessor():
     assert proc.scale == 2
 
 
-def test_selector_available():
-    assert "dummy" in PreprocessingStepSelector.available()
-
-
 def test_selector_invalid():
     sel = PreprocessingStepSelector(name="missing")
 

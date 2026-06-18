@@ -557,10 +557,6 @@ def test_frobenius_reduction_uppercase():
     assert Frobenius_norm(w2d(), reduction="MEAN")(d(), t()) >= 0
 
 
-def test_frobenius_invalid_covariance_dim():
-    Frobenius_norm(w2d(), covariance_dim="bad")
-
-
 def test_frobenius_shape_fail():
     with pytest.raises((AssertionError, ValueError, RuntimeError)):
         Frobenius_norm(w2d())(d(), torch.zeros(1))

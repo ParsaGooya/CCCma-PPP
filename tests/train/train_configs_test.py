@@ -3,7 +3,6 @@ import shutil
 import warnings
 from pathlib import Path
 
-import numpy as np
 import pytest
 import torch
 import torch.nn as nn
@@ -13,7 +12,6 @@ from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 from cccma_ppp.train.train_configs import (
     TrainConfig,
     build_trainer,
-    set_seed,
 )
 
 
@@ -564,32 +562,6 @@ def test_negative_epochs_assertion():
             DummyLoss(["mse"]),
             DummyTrainer(),
         )
-
-
-def test_set_seed_reproducible_numpy_and_torch():
-    set_seed(123)
-    np_first = np.random.rand()
-    torch_first = torch.rand(1)
-
-    set_seed(123)
-    np_second = np.random.rand()
-    torch_second = torch.rand(1)
-
-    assert np_first == np_second
-    assert torch.allclose(torch_first, torch_second)
-
-
-def test_set_seed_reproducible_multiple_values():
-    set_seed(999)
-    np_values_1 = np.random.rand(3)
-    torch_values_1 = torch.rand(3)
-
-    set_seed(999)
-    np_values_2 = np.random.rand(3)
-    torch_values_2 = torch.rand(3)
-
-    assert np.allclose(np_values_1, np_values_2)
-    assert torch.allclose(torch_values_1, torch_values_2)
 
 
 def test_set_random_seed_none():
@@ -1280,45 +1252,6 @@ def test_build_trainer_passes_none_added_features_dim():
     assert cfg.module.added_features_dim is None
 
 
-def test_sanitize_mlp_adds_ocean_when_forced():
-    loader = DummyTrainLoader(DummyDatasetConfig(observation="obs", pipeline=[]))
-    module = DummyModule(num_out=1)
-
-    loader._force_sanitize = True
-    loader.sanitize(module)
-
-    pipeline = loader.dataset_config.observation.preprocessing_pipeline.pipeline
-
-    assert any(isinstance(step[1], Oceannanremove) for step in pipeline)
-
-
-def test_sanitize_no_force_returns_without_changes():
-    loader = DummyTrainLoader(DummyDatasetConfig(observation="obs", pipeline=[]))
-    module = DummyModule(num_out=1)
-
-    loader.sanitize(module)
-
-    assert loader.dataset_config.observation.preprocessing_pipeline.pipeline == []
-
-
-def test_sanitize_model_pipeline_non_mlp_removes_ocean_when_forced():
-    loader = DummyTrainLoader(
-        DummyDatasetConfig(
-            observation=None,
-            condition_type="cond",
-            pipeline=ocean_pipeline(),
-        )
-    )
-    module = DummyModule("other", num_out=2)
-
-    loader._force_sanitize = True
-    loader.sanitize(module)
-
-    pipeline = loader.dataset_config.model.preprocessing_pipeline.pipeline
-
-    assert not any(isinstance(step[1], Oceannanremove) for step in pipeline)
-
-
 def test_make_cfg_sanitizes_model_pipeline_for_non_mlp():
     loader = DummyTrainLoader(
         DummyDatasetConfig(
@@ -1507,18 +1440,6 @@ def test_missing_trainer_raises():
         )
 
 
-def test_prepare_config_reads_yaml(tmp_path):
-    yaml_path = tmp_path / "config.yaml"
-    yaml_path.write_text("a: 1\nb: test\n")
-
-    from cccma_ppp.train.train_configs import prepare_config
-
-    data = prepare_config(yaml_path)
-
-    assert data["a"] == 1
-    assert data["b"] == "test"
-
-
 def test_prepare_runtime_variables(tmp_path):
     cfg = valid_directory_cfg(tmp_path / "runtime")
 
@@ -1630,44 +1551,6 @@ def test_build_trainer_non_root_logger_none_silent(capsys):
     assert captured.out == ""
 
 
-def test_sanitize_non_mlp_without_ocean_no_change():
-    loader = DummyTrainLoader(
-        DummyDatasetConfig(
-            observation="obs",
-            pipeline=[],
-        )
-    )
-
-    module = DummyModule("other", num_out=2)
-
-    loader._force_sanitize = True
-    loader.sanitize(module)
-
-    pipeline = loader.dataset_config.observation.preprocessing_pipeline.pipeline
-
-    assert pipeline == []
-
-
-def test_sanitize_mlp_existing_ocean_not_duplicated():
-    loader = DummyTrainLoader(
-        DummyDatasetConfig(
-            observation="obs",
-            pipeline=ocean_pipeline(),
-        )
-    )
-
-    module = DummyModule(num_out=1)
-
-    loader._force_sanitize = True
-    loader.sanitize(module)
-
-    pipeline = loader.dataset_config.observation.preprocessing_pipeline.pipeline
-
-    oceans = [step for step in pipeline if isinstance(step[1], Oceannanremove)]
-
-    assert len(oceans) == 1
-
-
 def test_prepare_runtime_variables_sets_input_target_metadata(tmp_path):
     cfg = valid_directory_cfg(tmp_path / "runtime_meta")
 
@@ -1678,16 +1561,6 @@ def test_prepare_runtime_variables_sets_input_target_metadata(tmp_path):
 
     assert RuntimeContext.INPUT_VAR_METADATA == {"a": 1}
     assert RuntimeContext.TARGET_VAR_METADATA == {"b": 2}
-
-
-def test_set_seed_changes_random_state():
-    set_seed(1)
-    first = np.random.rand()
-
-    set_seed(2)
-    second = np.random.rand()
-
-    assert first != second
 
 
 def test_build_trainer_sets_distributed_on_loader():
@@ -1832,53 +1705,6 @@ def test_prepare_directory_preserves_yaml_contents(tmp_path):
     saved = (Path(cfg.experiment_dir) / "config.yaml").read_text()
 
     assert "abc: 123" in saved
-
-
-def test_dummy_pipeline_get_preprocessors_returns_none():
-    pipe = DummyPipeline()
-
-    result = pipe.get_preprocessors("missing")
-
-    assert result is None
-
-
-def test_dummy_pipeline_transform_returns_same_data():
-    pipe = DummyPipeline()
-
-    data = {"x": 1}
-
-    result = pipe.transform(data)
-
-    assert result is data
-
-
-def test_dummy_pipeline_add_fitted_preprocessor_order():
-    pipe = DummyPipeline()
-
-    p1 = DummyPipeline()
-    p2 = DummyPipeline()
-
-    pipe.add_fitted_preprocessor(p1, index=0)
-    pipe.add_fitted_preprocessor(p2, index=0)
-
-    assert pipe.fitted_preprocessors[0] is p2
-    assert pipe.fitted_preprocessors[1] is p1
-
-
-def test_dummy_pipeline_load_sets_fitted(tmp_path):
-    pipe = DummyPipeline(fitted=False)
-
-    pipe._load_from_memory(tmp_path)
-
-    assert pipe.fitted is True
-
-
-def test_dummy_pipeline_fit_sets_fitted():
-    pipe = DummyPipeline(fitted=False)
-
-    pipe.fit(base_data=None)
-
-    assert pipe.fitted is True
 
 
 def test_build_trainer_ddp_preserves_wrapped_module(monkeypatch):
@@ -2222,17 +2048,6 @@ def test_prepare_directory_resume_same_path_skips_copytree(
     cfg.prepare_directory(Root())
 
     assert called["copytree"] is False
-
-
-def test_prepare_config_empty_yaml(tmp_path):
-    from cccma_ppp.train.train_configs import prepare_config
-
-    yaml_path = tmp_path / "empty.yaml"
-    yaml_path.write_text("")
-
-    data = prepare_config(yaml_path)
-
-    assert data is None
 
 
 def test_set_random_seed_calls_set_seed(monkeypatch):

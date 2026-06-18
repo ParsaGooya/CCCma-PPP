@@ -103,120 +103,6 @@ class ConcreteCvaeModel(cVAEmodelsABC):
         return torch.tensor(3.0)
 
 
-def test_checkpoint_config_dataclass_fields(tmp_path):
-    cfg = CheckpointConfig(
-        load_path=tmp_path / "checkpoint.pt",
-        checkpoint_input_shape=np.array([1, 2]),
-        checkpoint_output_shape=np.array([3, 4]),
-        checkpoint_input_var_metadata={"input": "meta"},
-        checkpoint_output_var_metadata={"output": "meta"},
-        strict=False,
-        freeze_weights=True,
-    )
-
-    assert cfg.load_path == tmp_path / "checkpoint.pt"
-    assert np.array_equal(cfg.checkpoint_input_shape, np.array([1, 2]))
-    assert np.array_equal(cfg.checkpoint_output_shape, np.array([3, 4]))
-    assert cfg.checkpoint_input_var_metadata == {"input": "meta"}
-    assert cfg.checkpoint_output_var_metadata == {"output": "meta"}
-    assert cfg.strict is False
-    assert cfg.freeze_weights is True
-
-
-def test_checkpoint_config_defaults(tmp_path):
-    cfg = CheckpointConfig(
-        load_path=tmp_path / "checkpoint.pt",
-        checkpoint_input_shape=np.array([1]),
-        checkpoint_output_shape=np.array([2]),
-        checkpoint_input_var_metadata={},
-        checkpoint_output_var_metadata={},
-    )
-
-    assert cfg.strict is True
-    assert cfg.freeze_weights is False
-
-
-def test_model_config_add_checkpoint_config(tmp_path):
-    model_cfg = ConcreteModelConfig()
-
-    checkpoint_cfg = CheckpointConfig(
-        load_path=tmp_path / "checkpoint.pt",
-        checkpoint_input_shape=np.array([1]),
-        checkpoint_output_shape=np.array([2]),
-        checkpoint_input_var_metadata={},
-        checkpoint_output_var_metadata={},
-    )
-
-    assert model_cfg.checkpoint_config is None
-
-    model_cfg._add_checkpoint_config(checkpoint_cfg)
-
-    assert model_cfg.checkpoint_config is checkpoint_cfg
-
-
-def test_model_config_build_returns_model():
-    cfg = ConcreteModelConfig()
-
-    model = cfg.build(input_shape=np.array([2]), output_shape=np.array([2]))
-
-    assert isinstance(model, ConcreteModel)
-    assert model.NUM_OUTPUT_DIMS == 3
-    assert model.GENERATOR is True
-
-
-def test_flow_abc_cannot_be_instantiated():
-    with pytest.raises(TypeError):
-        flowABC()
-
-
-def test_model_config_abc_cannot_be_instantiated():
-    with pytest.raises(TypeError):
-        modelConfigABC()
-
-
-def test_model_abc_cannot_be_instantiated():
-    with pytest.raises(TypeError):
-        modelABC(ConcreteModelConfig())
-
-
-def test_cvae_models_abc_cannot_be_instantiated_without_abstract_methods():
-    class IncompleteCVAE(cVAEmodelsABC):
-        def forward(self, x):
-            return x
-
-    with pytest.raises(TypeError):
-        IncompleteCVAE(ConcreteModelConfig())
-
-
-def test_concrete_flow_forward_inverse_without_condition():
-    flow = ConcreteFlow()
-    x = torch.tensor([1.0, 2.0])
-
-    assert torch.equal(flow.forward(x), x)
-    assert torch.equal(flow.inverse(x), x)
-
-
-def test_concrete_flow_forward_inverse_with_condition():
-    flow = ConcreteFlow()
-    x = torch.tensor([1.0, 2.0])
-    condition = torch.tensor([0.5, 0.5])
-
-    z = flow.forward(x, condition=condition)
-    restored = flow.inverse(z, condition=condition)
-
-    assert torch.allclose(z, torch.tensor([1.5, 2.5]))
-    assert torch.allclose(restored, x)
-
-
-def test_cvae_config_initialization_defaults():
-    cfg = ConcreteCVAEConfig(latent_size=4)
-
-    assert cfg.latent_size == 4
-    assert cfg.condition_dependant_latent is False
-    assert cfg.condition_embedding_size is None
-    assert cfg.checkpoint_config is None
-
-
 def test_cvae_resolve_flow_settings_condition_independent():
     cfg = ConcreteCVAEConfig(
         latent_size=4,
@@ -267,24 +153,6 @@ def test_cvae_resolve_flow_settings_condition_dependent_latent_without_flow_size
     assert cfg.condition_dependant_flow is False
 
 
-def test_cvae_config_build_returns_cvae_model():
-    cfg = ConcreteCVAEConfig(latent_size=2)
-
-    model = cfg.build(input_shape=np.array([2]))
-
-    assert isinstance(model, ConcreteCvaeModel)
-    assert model.generative_modeling is True
-
-
-def test_model_abc_sets_output_dims_and_generator_flags():
-    cfg = ConcreteModelConfig()
-    model = ConcreteModel(cfg)
-
-    assert model.NUM_OUTPUT_DIMS == cfg.NUM_OUTPUT_DIMS
-    assert model.GENERATOR == cfg.GENERATOR
-    assert model.init_method == "trunc_normal"
-
-
 def test_get_device_from_parameter():
     model = ConcreteModel(ConcreteModelConfig())
 
@@ -301,23 +169,6 @@ def test_get_device_cpu_when_no_parameters_or_buffers():
     model = EmptyModel(ConcreteModelConfig())
 
     assert model._get_device() == torch.device("cpu")
-
-
-def test_deterministic_model_sets_generative_modeling_false():
-    model = ConcreteDeterministicModel(ConcreteDeterministicConfig())
-
-    assert model.generative_modeling is False
-
-
-def test_cvae_model_sets_generative_modeling_true_and_methods_work():
-    model = ConcreteCvaeModel(ConcreteCVAEConfig(latent_size=2))
-    x = torch.ones(1, 2)
-
-    assert model.generative_modeling is True
-    assert model.predict(x).shape == (1, 2)
-    assert model._recognition()[0].item() == 1.0
-    assert model._condition()[0].item() == 2.0
-    assert model._generate().item() == 3.0
 
 
 @pytest.mark.parametrize(

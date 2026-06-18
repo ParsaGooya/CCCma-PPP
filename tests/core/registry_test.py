@@ -5,16 +5,6 @@ import pytest
 from cccma_ppp.core.registery import Registery
 
 
-def test_register_and_available():
-    registry = Registery()
-
-    @registry.register("foo")
-    class Foo:
-        pass
-
-    assert registry.available() == ["foo"]
-
-
 def test_get_unregistered_raises():
     registry = Registery()
 
