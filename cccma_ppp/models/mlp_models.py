@@ -40,11 +40,6 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     GENERATOR: ClassVar[int] = False
 
     def __post_init__(self):
-        super().__init__(
-            self.latent_size,
-            self.condition_dependant_latent,
-            self.condition_embedding_size,
-        )
 
         if self.condition_embedding_dims is None:
             self.condemb_to_decoder = False
@@ -89,8 +84,7 @@ class cVAE_MLP(cVAEmodelsABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
-
-        super().__init__(config)
+        super().__init__()
 
         self.config = config
 
@@ -110,8 +104,8 @@ class cVAE_MLP(cVAEmodelsABC):
             config, "condition_dependant_flow", False
         )
 
-        if not len(output_shape) == self.NUM_OUTPUT_DIMS:
-            raise RuntimeError(f"MLP models should create {self.NUM_OUTPUT_DIMS}D outputs")
+        if not len(output_shape) == self.config.NUM_OUTPUT_DIMS:
+            raise RuntimeError(f"MLP models should create {self.config.NUM_OUTPUT_DIMS}D outputs")
         if output_shape is None:
             output_shape = input_shape.copy()
 
@@ -227,7 +221,7 @@ class cVAE_MLP(cVAEmodelsABC):
             self._load_state_dict(self.config.checkpoint_config)
 
         else:
-            self._initialize_weights()
+            self._initialize_weights(self.init_method)
 
     def forward(
         self,
@@ -464,7 +458,6 @@ class AutoencoderConfig(modelConfigABC):
     GENERATOR: ClassVar[int] = False
 
     def __post_init__(self):
-        super().__init__()
 
         if self.decoder_hidden_dims is None:
             if len(self.encoder_hidden_dims) == 1:
@@ -495,8 +488,8 @@ class Autoencoder(deterministicmodelsABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
+        super().__init__()
 
-        super().__init__(config)
         self.config = config
         self.batch_normalization = config.batch_normalization
         self.dropout_rate = config.dropout_rate
@@ -506,8 +499,8 @@ class Autoencoder(deterministicmodelsABC):
         self.encoder_hidden_dims = config.encoder_hidden_dims
         self.decoder_hidden_dims = config.decoder_hidden_dims
 
-        if not len(output_shape) == self.NUM_OUTPUT_DIMS:
-            raise RuntimeError(f"MLP models should create {self.NUM_OUTPUT_DIMS}D outputs")
+        if not len(output_shape) == self.config.NUM_OUTPUT_DIMS:
+            raise RuntimeError(f"MLP models should create {self.config.NUM_OUTPUT_DIMS}D outputs")
 
         if output_shape is None:
             output_shape = input_shape.copy()
@@ -591,7 +584,7 @@ class Autoencoder(deterministicmodelsABC):
         if self.config.checkpoint_config is not None:
             self._load_state_dict(self.config.checkpoint_config)
         else:
-            self._initialize_weights()
+            self._initialize_weights(self.init_method)
 
     def forward(self, x: torch.Tensor, added_features=None) -> deterministicOutput:
 

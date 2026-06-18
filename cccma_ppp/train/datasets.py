@@ -3,30 +3,24 @@ import xarray as xr
 from torch.utils.data import Dataset
 import torch
 import dataclasses
-from pathlib import Path
-import pydantic
 import warnings
-import gc
-from typing import Literal, ClassVar
+from pathlib import Path
 
-from cccma_ppp.data.data_abc import (
-    DatasetConfigABC,
-    DatasetOperatorABC,
+from cccma_ppp.data_modules.dataset import DatasetConfigABC
+from cccma_ppp.data_modules.data import (
     DataConfigABC,
-)
-from cccma_ppp.data.utils_data import (
     ModelDataConfig,
     ObsDataConfig,
-    ConditionDataConfig,
-    WeightsConfig,
+    ConditionDataConfig)
+
+from cccma_ppp.data_modules import (
     _unwrap_data_variables,
     _load_xarray_data,
     _create_train_mask,
 )
 
+from cccma_ppp.data_modules.dataset.operator import DatasetOperator
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
-from cccma_ppp.generic.runtime import RuntimeContext
 
 
 @dataclasses.dataclass
@@ -38,40 +32,17 @@ class TrainDatasetConfig(DatasetConfigABC):
     time_features: list[str] | None = None
     num_lead_months: int | None = None
 
-    _VALID_CONDITION_METHODS: ClassVar[frozenset[str]] = frozenset({'ensemble_mean' , 'cross_ensemble' , 'same_member',  'static'})
-    _VALID_TIME_FEATURES: ClassVar[frozenset[str]] = frozenset({'year', 'lead_time', 'month_sin', 'month_cos'}) 
-
     def __post_init__(self):
         self._fitted_preprocessors: bool = False
         self._effective_condition: ConditionDataConfig | ModelDataConfig | None = None
 
-        self._check_condition_method()
-        self._check_time_features()
+        super().__init__()
+
         self._check_model()
         self._check_observation()
-        self._check_condition()
-        self._resolve_condition()
 
-    def _check_condition_method(self):
-        if self.condition_method is not None:
-  
-            if self.condition_method not in self._VALID_CONDITION_METHODS:
-                raise ValueError(
-                    f'Invalid condition_method: {self.condition_method}. '
-                    f'Must be a in {sorted(self._VALID_CONDITION_METHODS)}.'
-            )
-        return self
-    
-    def _check_time_features(self):
-        if self.time_features is not None:
-  
-            invalid = set(self.time_features) - self._VALID_TIME_FEATURES
-            if invalid:
-                raise ValueError(
-                    f'Invalid time features: {sorted(invalid)}. '
-                    f'Must be a subset of {sorted(self._VALID_TIME_FEATURES)}.'
-            )
-        return self
+        self._resolve_condition()
+        self._check_condition()
 
     def _check_model(self):
 
@@ -153,57 +124,14 @@ class TrainDatasetConfig(DatasetConfigABC):
             
         return self
 
-    def _resolve_condition(self):
-        """Resolve the conditioning dataset, falling back to model data if no condition is provided but condition_method is."""
-        if self.condition is not None:
-            self._effective_condition = self.condition
-        elif self._using_model_data_as_condition:
-            self._effective_condition = self._model_as_condition()
-        else:
-            self._effective_condition = None
-
-        return self
+    @property
+    def ds_operator(self):
+        return DatasetOperator(self)
 
     @property
     def num_model_lead_months(self) -> int:
         return self.model.info.sizes["lead_time"]
     
-    @property
-    def _using_model_data_as_condition(self) -> bool:
-        '''
-        Check if the model data is going to be used as a condition.If so, we can avoid loading both model and condition data
-        if not necessary. This should be true if:
-
-           1- No condition data is provided but condition_method is (subject to condition_method not being "static")
-
-           2- The provided condition data points to the same files and variables and ensemble members.
-        
-        '''
-        if self.condition is None:
-            return self.condition_method in {'ensemble_mean', 'cross_ensemble', 'same_member'}
-        return (
-            self.condition.paths == self.model.paths
-            and self.condition.names == self.model.names
-            and self.condition.ensemble_list == self.model.ensemble_list
-        )
-
-    @property
-    def effective_condition(self) -> ConditionDataConfig | ModelDataConfig | None:
-        return self._effective_condition
-    
-    def _model_as_condition(self) -> ModelDataConfig:
-        ensemble_mean = self.condition_method == 'ensemble_mean'
-        return  ModelDataConfig(
-                paths=self.model.paths,
-                names=self.model.names,
-                preprocessing_pipeline=self.model.preprocessing_pipeline,
-                ensemble_list=self.model.ensemble_list,
-                concat_dim=self.model.concat_dim,
-                file_type=self.model.file_type,
-                ensemble_mean=ensemble_mean,
-                rename_dict=self.model.rename_dict,
-            )
-
     @property
     def get_common_time(self):
         if self.observation is not None:
@@ -222,16 +150,6 @@ class TrainDatasetConfig(DatasetConfigABC):
         else:
             return self.get_common_time
 
-    def build_operator(self):
-        return TrainDatasetOperator(self)
-
-
-
-class TrainDatasetOperator(DatasetOperatorABC): 
-
-    def __init__(self, config: TrainDatasetConfig):
-        self.config = config
-
     def _fit_preprocessors(
         self,
         train_years: np.ndarray | list | tuple,
@@ -239,254 +157,20 @@ class TrainDatasetOperator(DatasetOperatorABC):
         save_path: Path | str | None = None,
         save_name: str | None = None,
     ):
-        
-        def _fit_processor(
-            dataconfig: ModelDataConfig | ObsDataConfig | ConditionDataConfig,
-            selection: dict,
-            mask: bool = False,
-            save_path: Path | str | None = None,
-            save_name: str | None = None,
-        ):
-            
-            _base = _load_xarray_data(
-                dataconfig.list_paths,
-                names=dataconfig.names,
-                concat_dim=dataconfig.concat_dim,
-                selection=selection,
-                ensemble_mean=dataconfig.ensemble_mean,
-                rename_dict=dataconfig.rename_dict,
-            )
-            
-            _mask = _create_train_mask(_base.year, _base.lead_time) if mask else None
-
-            dataconfig.preprocessing_pipeline.fit(
-                base_data=_base.load(),
-                mask=_mask,
-                save=save,
-                save_path=save_path,
-                save_name=save_name,
-            )
-
-            _base.close()
-            del _base, _mask
-            gc.collect()
-
-        if self.config.model.preprocessing_pipeline.load_dir is None:
-            selection = {
-                "year": train_years,
-                "lead_time": np.arange(1, self.config.num_lead_months + 1),
-            }
-            if self.config.model.info.coords["ensembles"] is not None:
-                selection["ensembles"] = self.config.model.info.coords["ensembles"]
-
-            _fit_processor(self.config.model, 
-                              selection = selection, 
-                              mask = True, 
-                              save_path = save_path, 
-                              save_name = save_name)
- 
-        else:
-            self.config.model.preprocessing_pipeline._load_from_memory(
-                Path(self.config.model.preprocessing_pipeline.load_dir),
-                load_name=self.config.model.preprocessing_pipeline.load_name,
-            )
-
-        if self.config.observation is not None:
-            if self.config.observation.preprocessing_pipeline.load_dir is None:
-                selection = {"year": train_years}
-                if self.config.observation.info.coords["ensembles"] is not None:
-                    selection["ensembles"] = self.config.observation.info.coords["ensembles"]
-
-                _fit_processor(self.config.observation, 
-                    selection = selection, 
-                    save_path = save_path, 
-                    save_name = save_name)
-
-            else:
-                self.config.observation.preprocessing_pipeline._load_from_memory(
-                    Path(self.config.observation.preprocessing_pipeline.load_dir),
-                    load_name=self.config.observation.preprocessing_pipeline.load_name,
-                )
-
-        if self.config.effective_condition is not None:
-            if self.config.effective_condition.preprocessing_pipeline.load_dir is None:
-                if self.config.condition_method == 'static':
-                    selection = {}
-                else:
-                    selection = {
-                        "year": train_years,
-                        "lead_time": np.arange(1, self.config.num_lead_months + 1),
-                    }
-                    if self.config.effective_condition.info.coords["ensembles"] is not None:
-                        selection["ensembles"] = self.config.effective_condition.info.coords["ensembles"]
-                
-                _fit_processor(self.config.effective_condition, 
-                    selection = selection, 
-                    mask = True,
-                    save_path = save_path, 
-                    save_name = save_name)
-
-            else:
-                self.config.effective_condition.preprocessing_pipeline._load_from_memory(
-                    Path(self.config.effective_condition.preprocessing_pipeline.load_dir),
-                    load_name=self.config.effective_condition.preprocessing_pipeline.load_name,
-                )
-
-        self.config._fitted_preprocessors = True
+        self.ds_operator._fit_preprocessors(train_years = train_years,
+                                            save = save,
+                                            save_path = save_path,
+                                            save_name = save_name,
+        )
 
     def _load_fitted_preprocessors(
-        self, load_dir: Path | str | None = None
+        self, load_dir: Path | str
     ):
-        
-        def _load_preprocessor(
-            pipeline : PreprocessingPipeline,
-            load_dir: Path | str | None = None):
-
-                if load_dir is None:
-                    load_dir = (Path(RuntimeContext.GLOBAL_EXP_DIR)
-                            / "preprocessing_pipeline"
-                            / f"{pipeline.name}_preprocessing_pipeline.joblib"
-                        )
-                else:
-                    load_dir = Path(load_dir)
-
-                pipeline._load_from_memory(
-                    Path(load_dir),
-                )
-
-                if not pipeline.fitted:
-                    raise RuntimeError(
-                        f"the loaded preprocessor for {pipeline.name} is not fitted!"
-                    )
-                
-        _load_preprocessor(self.config.model.preprocessing_pipeline, load_dir)
-
-        if self.config.observation is not None:
-
-            _load_preprocessor(self.config.observation.preprocessing_pipeline, load_dir)
-
-        if self.config.effective_condition is not None:
-
-            _load_preprocessor(self.config.effective_condition.preprocessing_pipeline, load_dir)
-
-        self.config._fitted_preprocessors = True
+        self.ds_operator._load_fitted_preprocessors(load_dir)
 
     def _add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
-        if not isinstance(preprocessor, PreprocessModuleABC):
-            raise TypeError(
-                f"preprocessor must be an instance of ProcessorConfig, "
-                f"got {type(preprocessor)}"
-            )
-        assert preprocessor.fitted, "The preprocessor must be fitted"
 
-        self.config.model.preprocessing_pipeline.add_fitted_preprocessor(
-            preprocessor, index=index
-        )
-        if self.config.observation is not None:
-            self.config.observation.preprocessing_pipeline.add_fitted_preprocessor(
-                preprocessor, index=index
-            )
-        if self.config.effective_condition is not None:
-            self.config.effective_condition.preprocessing_pipeline.add_fitted_preprocessor(
-                preprocessor, index=index
-            )
-
-    def get_weights(
-        self,
-        config: WeightsConfig | None = None,
-        save=True,
-        save_path: Path | str | None = None,
-        save_name: str | None = None,
-    ):
-        if config is None:
-            config = WeightsConfig()
-
-        if self.config.observation is not None:
-            target_coords = self.config.observation.info.coords.copy()
-        else:
-            target_coords = self.config.model.info.coords.copy()
-
-        if "ensembles" in target_coords:
-            del target_coords["ensembles"]
-
-        from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
-
-        if self.config.observation is not None:
-            pipeline = self.config.observation.preprocessing_pipeline
-        else:
-            pipeline = self.config.model.preprocessing_pipeline
-
-        checklist = [
-            isinstance(item, Oceannanremove) for item in pipeline.fitted_preprocessors
-        ]
-
-        weights = config.build_weights(
-            target_coords,
-            oceannanremover=pipeline.get_preprocessors("oceannanremover")
-            if any(checklist)
-            else None,
-            save=save,
-            save_path=save_path,
-            save_name=save_name,
-        )
-
-        if "channels" in weights.dims:
-            if self.config.observation is not None:
-                error_msg = f"inconsistent variable weights {weights.channels.values} for taget variables {self.config.observation.names}"
-                if not weights.channels.values == self.config.observation.names:
-                    raise RuntimeError(error_msg)
-            else:
-                error_msg = f"inconsistent variable weights {weights.channels.values} for taget variables {self.config.model.names}"
-                if not weights.channels.values == self.config.model.names:
-                    raise RuntimeError(error_msg)
-
-        return weights
-
-    def get_input_var_metadata(self):
-
-        metadata = dict(variables=list(), preprocessors=list())
-
-        if self.config.effective_condition is None:
-            metadata = self._update_metadata_with_dataconfig_metadata(metadata, self.config.model)
-
-        else:
-            if not self.config._using_model_data_as_condition:
-                metadata = self._update_metadata_with_dataconfig_metadata(
-                    metadata, self.config.model
-                )
-                metadata = self._update_metadata_with_dataconfig_metadata(
-                    metadata, self.config.effective_condition
-                )
-            else:
-                metadata = self._update_metadata_with_dataconfig_metadata(
-                    metadata, self.config.effective_condition
-                )
-
-        return metadata
-
-    def get_target_var_metadata(self):
-
-        metadata = dict(variables=list(), preprocessors=list())
-
-        if self.config.observation is None:
-            metadata = self._update_metadata_with_dataconfig_metadata(metadata, self.config.model)
-        else:
-            metadata = self._update_metadata_with_dataconfig_metadata(
-                metadata, self.config.observation
-            )
-
-        return metadata
-
-    def _update_metadata_with_dataconfig_metadata(
-            self, metadata: dict, dataconfig: DataConfigABC
-        ):
-            preprocessor_names = [
-                processor[0] for processor in dataconfig.preprocessing_pipeline.pipeline
-            ]
-            for var in dataconfig.names:
-                metadata["variables"].append(var)
-                metadata["preprocessors"].append(preprocessor_names)
-                return metadata
+        self.ds_operator._add_fitted_preprocessor(preprocessor, index)
 
     def build_dataset(
         self,
@@ -495,13 +179,13 @@ class TrainDatasetOperator(DatasetOperatorABC):
         return_metadata: bool = False,
     ):
         return TrainDataset(
-            config=self.config,
+            config=self,
             requested_years=years,
             mask=mask,
             return_metadata=return_metadata,
 
         )
-      
+    
 
 @dataclasses.dataclass
 class TrainDataset(Dataset):
@@ -513,7 +197,7 @@ class TrainDataset(Dataset):
     def __post_init__(self):
         if not self.config._fitted_preprocessors:
             raise RuntimeError(
-                "Make sure to fit preprocessors first!. Hint:  TrainDatasetConfig._fit_preprocessors()"
+                "Make sure to fit preprocessors first!. Hint:  DatasetOperators._fit_preprocessors()"
             )
         if not set(self.requested_years).issubset(set(self.config.get_common_time)):
             raise ValueError(

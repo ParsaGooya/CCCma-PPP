@@ -2,12 +2,11 @@ import abc
 import numpy as np
 import torch
 import torch.nn as nn
-from typing import final
+from typing import final, Literal, ClassVar
 from timm.models.layers import trunc_normal_
 import gc
 from pathlib import Path
 import dataclasses
-from typing import Literal
 
 
 InitMethod = Literal['trunc_normal', 'xavier']
@@ -34,11 +33,13 @@ class flowABC(nn.Module, abc.ABC):
 
 
 class modelConfigABC(abc.ABC):
-    NUM_OUTPUT_DIMS = None
-    GENERATOR = False
+    NUM_OUTPUT_DIMS: ClassVar[int | None]
+    GENERATOR: ClassVar[bool]
 
-    def __init__(self):
-        self.checkpoint_config: CheckpointConfig | None = None
+    def __init_subclass__(cls):
+        super().__init_subclass__()
+        cls.checkpoint_config = None
+
 
     @final
     def _add_checkpoint_config(self, checkpoint_config: CheckpointConfig) -> None:
@@ -55,18 +56,10 @@ class modelConfigABC(abc.ABC):
         pass
 
 
-class cVAEmodelConfigABC(modelConfigABC, abc.ABC):
-    def __init__(
-        self,
-        latent_size: int,
-        condition_dependant_latent: bool = False,
-        condition_embedding_size: int = None,
-    ):
-
-        super().__init__()
-        self.condition_dependant_latent = condition_dependant_latent
-        self.latent_size = latent_size
-        self.condition_embedding_size = condition_embedding_size
+class cVAEmodelConfigABC(modelConfigABC):
+    latent_size: int
+    condition_dependant_latent: bool
+    condition_embedding_size: int
 
     def _resolve_flow_settings(self, condition_dependant_flow: bool = False):
 
@@ -85,19 +78,14 @@ class cVAEmodelConfigABC(modelConfigABC, abc.ABC):
 
 
 class modelABC(nn.Module, abc.ABC):
-    def __init__(self, config: modelConfigABC):
-        super().__init__()
-        self.init_method: InitMethod =  "trunc_normal"
-        self.NUM_OUTPUT_DIMS = config.NUM_OUTPUT_DIMS
-        self.GENERATOR = config.GENERATOR
 
     @abc.abstractmethod
     def forward(self, x):
         pass
 
     @final
-    def _initialize_weights(self):
-        self.apply(lambda m: weights_init(m, method=self.init_method))
+    def _initialize_weights(self, init_method = "trunc_normal"):
+        self.apply(lambda m: weights_init(m, method=init_method))
 
     @final
     def _get_device(self) -> torch.device:
@@ -143,15 +131,14 @@ class modelABC(nn.Module, abc.ABC):
                 param.requires_grad = False
 
 
-class deterministicmodelsABC(modelABC, abc.ABC):
-    def __init__(self, config: modelConfigABC):
-        super().__init__(config)
+class deterministicmodelsABC(modelABC):
+    def __init__(self):
+        super().__init__()
         self.generative_modeling = False
 
-
-class cVAEmodelsABC(modelABC, abc.ABC):
-    def __init__(self, config: modelConfigABC):
-        super().__init__(config)
+class cVAEmodelsABC(modelABC):
+    def __init__(self):
+        super().__init__()
         self.generative_modeling = True
 
     @abc.abstractmethod

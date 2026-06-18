@@ -1,20 +1,14 @@
 import numpy as np
 import dataclasses
-import torch
 import warnings
-from torch.utils.data import DataLoader
-from torch.utils.data.distributed import DistributedSampler
-from functools import partial
+import torch
 from pathlib import Path
 
-from typing import final
-from collections.abc import Callable, Iterator
-from itertools import islice
 
-from cccma_ppp.data.datasets import TrainDataset, TrainDatasetConfig
-from cccma_ppp.data.utils_data import _create_train_mask, WeightsConfig
-from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
-from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.train.datasets import TrainDatasetConfig
+from cccma_ppp.data_modules import _create_train_mask, WeightsConfig
+from cccma_ppp.data_modules.dataloader import Dataloader, DataloaderConfigABC
+from cccma_ppp.generic import Distributed
 
 
 @dataclasses.dataclass
@@ -58,7 +52,7 @@ class BatchData:
 
 
 @dataclasses.dataclass
-class TrainDataloaderConfig:
+class TrainDataloaderConfig(DataloaderConfigABC):
     dataset_config: TrainDatasetConfig
     batch_size: int
     train_years: tuple | list = None
@@ -69,7 +63,6 @@ class TrainDataloaderConfig:
 
     def __post_init__(self):
         self._setup = False
-        self.dataset_processor = self.dataset_config.build_operator()
         self.available_train_years = self.dataset_config.available_train_time
 
         if self.num_validation_years > 0:
@@ -109,20 +102,17 @@ class TrainDataloaderConfig:
         
 
         if distributed.is_root():
-            self.dataset_processor._fit_preprocessors(
+            self.dataset_config._fit_preprocessors(
                 self.train_years, save=True, save_path=save_path
             )
 
         distributed.barrier()
 
         if distributed.distributed:
-            self.dataset_processor._load_fitted_preprocessors(load_dir=save_path)
+            self.dataset_config._load_fitted_preprocessors(load_dir=save_path)
 
         self._setup = True
 
-    def _add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
-        assert preprocessor.fitted, "The preprocessor must be fitted"
-        self.dataset_processor._add_fitted_preprocessor(preprocessor, index)
 
     def build_train_loader(self, return_spatial_mask=False, reduce_spatial_mask=False):
         if not self._setup:
@@ -135,7 +125,7 @@ class TrainDataloaderConfig:
             lead_times=np.arange(1, self.dataset_config.num_lead_months + 1),
         )
 
-        train_dataset = self.dataset_processor.build_dataset(
+        train_dataset = self.dataset_config.build_dataset(
             years=self.train_years, mask=train_mask, return_metadata=False
         )
 
@@ -162,7 +152,7 @@ class TrainDataloaderConfig:
                 years=self.validation_years,
                 lead_times=np.arange(1, self.dataset_config.num_lead_months + 1),
             )
-            validation_dataset = self.dataset_processor.build_dataset(
+            validation_dataset = self.dataset_config.build_dataset(
                 years=self.validation_years, mask=validation_mask, return_metadata=False
             )
             return Dataloader(
@@ -180,93 +170,19 @@ class TrainDataloaderConfig:
                 f"Validation dataoader could not be built for num_validation_years = {self.num_validation_years} "
             )
             return None
+        
+    def get_weights(self, config: WeightsConfig | None = None):
+        return self.dataset_config.ds_operator.get_weights(config)
 
     @property
     def input_var_metadata(self):
-        return self.dataset_processor.get_input_var_metadata()
+        return self.dataset_config.ds_operator.get_input_var_metadata()
 
     @property
     def target_var_metadata(self):
-        return self.dataset_processor.get_target_var_metadata()
+        return self.dataset_config.ds_operator.get_target_var_metadata()
 
 
-@dataclasses.dataclass
-class Dataloader:
-    config: TrainDataloaderConfig
-    dataset: TrainDataset
-    collate_fn: Callable
-    rank: int = 0
-    world_size: int = 1
-    return_spatial_mask: bool = False
-    reduce_spatial_mask: bool = False
-
-    def __post_init__(self):
-
-        self.sampler = self._get_dataloader_sampler()
-        shuffle = self.world_size == 1
-        self._torch_loader = DataLoader(
-            self.dataset,
-            batch_size=self.config.batch_size,
-            shuffle=shuffle,
-            sampler=self.sampler,
-            collate_fn=partial(
-                self.collate_fn,
-                return_spatial_mask=self.return_spatial_mask,
-                reduce_spatial_mask=self.reduce_spatial_mask,
-            ),
-            num_workers=self.config.num_data_workers,
-            prefetch_factor=self.config.prefetch_factor,
-        )
-
-    def get_weights(self, config: WeightsConfig | None = None):
-
-        return self.config.dataset_processor.get_weights(config)
-
-    @property
-    def input_shape(self):
-        return self.dataset.get_input_shape()
-
-    @property
-    def target_shape(self):
-        return self.dataset.get_target_shape()
-
-    @property
-    def added_features_dim(self):
-        return self.dataset.get_added_features_dim()
-
-    @final
-    def __iter__(self) -> Iterator[BatchData]:
-        return iter(self._torch_loader)
-
-    @final
-    def _get_dataloader_sampler(self, **kwargs):
-
-        if self.world_size > 1:
-            return DistributedSampler(
-                self.dataset,
-                num_replicas=self.world_size,
-                rank=self.rank,
-                shuffle=True,
-                drop_last=self.config.drop_last,
-                **kwargs,
-            )
-
-        return None
-
-    @final
-    def __len__(self) -> int:
-        return len(self._torch_loader)
-
-    @final
-    def set_epoch(self, epoch):
-        if self.sampler is not None:
-            self.sampler.set_epoch(epoch)
-        return self
-
-    @final
-    def subset_loader(self, start_batch=0):
-
-        return islice(iter(self), start_batch, None)
 
 
 def collate_batch(

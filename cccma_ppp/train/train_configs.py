@@ -11,20 +11,19 @@ import dacite
 
 from cccma_ppp.loss.loss import LosspipelineConfig
 
-from cccma_ppp.data.dataloader import TrainDataloaderConfig
-from cccma_ppp.data.utils_data import WeightsConfig
+from cccma_ppp.train.dataloader import TrainDataloaderConfig
+from cccma_ppp.data_modules import WeightsConfig
 
-from cccma_ppp.generic.distributed import Distributed
-from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.generic import (Distributed, 
+                                RuntimeContext)
 
 from cccma_ppp.core.selectors import ModuleSelector
 from cccma_ppp.core.trainer import TrainerConfig
 from cccma_ppp.core.optimization import OptimizerConfig
 
-from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
+from cccma_ppp.preprocessing import Oceannanremove
 
 import cccma_ppp.train.registry_imports
-
 
 
 
@@ -296,13 +295,13 @@ def build_trainer(
 
     train_loader = config.train_loader.build_train_loader()
     validation_loader = config.train_loader.build_validation_loader()
+    weights = config.train_loader.get_weights(config.weights)
 
     num_train_batches = len(train_loader)
     input_shape = train_loader.input_shape
     output_shape = train_loader.target_shape
     added_features_dim = train_loader.added_features_dim
 
-    weights = train_loader.get_weights(config.weights)
 
     log(f"Creating {config.module.type} module ...")
 
@@ -326,7 +325,7 @@ def build_trainer(
 
     reconstruction_loss = config.losspipeline.build(
         weights=weights,
-        num_output_dimensions=getattr(module.model, "NUM_OUTPUT_DIMS", None)
+        num_output_dimensions=getattr(module.model.config, "NUM_OUTPUT_DIMS", None)
         or len(output_shape),
     )
 
