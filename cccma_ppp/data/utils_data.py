@@ -16,7 +16,7 @@ from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 from cccma_ppp.generic.runtime import RuntimeContext
 
 
-spatialmethod = Literal["uniform", "cosine_lat"]
+spatialmethod = Literal['uniform', 'cosine_lat']
 
 
 @dataclasses.dataclass
@@ -157,23 +157,23 @@ def _check_data(dataconfig: ModelDataConfig | ObsDataConfig) -> None:
                 ds = ds.rename(dataconfig.rename_dict)
 
             for dim in dataconfig._required_dims():
-                if dim not in ds.dims:
+                if not dim in ds.dims:
                     raise ValueError(
                         f"{dataconfig.TYPE} data must have {dataconfig._required_dims()} dimensions. Current dims : {ds.dims}"
                     )
 
             if dataconfig._check_ensemble:
-                if "ensembles" not in ds.dims:
+                if not "ensembles" in ds.dims:
                     raise ValueError(
                         "Cannot select ensemble_list as ensembles dim does not exist"
                     )
 
             for dim in ds.dims:
-                if dim not in dataconfig._allowed_dims():
+                if not dim in dataconfig._allowed_dims():
                     raise ValueError(
                         f'"{dim}" not a valid dimension for {dataconfig.TYPE} data: {dataconfig._allowed_dims()}'
                     )
-                if dim not in ds.coords:
+                if not dim in ds.coords:
                     raise ValueError(
                         f'"coordinates for {dim} dimension does not exist. Available coords: {dict(ds.coords).keys()}'
                     )
@@ -234,9 +234,9 @@ class WeightsConfig:
     load_dir: Path | str | None = None
 
     def __post_init__(self):
-        if self.load_dir is not None:
-            if not Path(self.load_dir).exists():
-                raise FileNotFoundError(f"weights file not found at {self.load_dir}")
+            if self.load_dir is not None:
+                if not Path(self.load_dir).exists():
+                    raise FileNotFoundError(f"weights file not found at {self.load_dir}")
 
     def build_weights(
         self,

@@ -5,7 +5,6 @@ from typing import ClassVar
 import dataclasses
 from cccma_ppp.loss.loss_abc import Reduction
 
-
 @dataclasses.dataclass
 class LossStepConfig:
     name: str

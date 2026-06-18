@@ -46,7 +46,7 @@ class TrainerConfig:
 
         if isinstance(module, cVAE):
             if self.beta_finder is None:
-                raise ValueError("specify beta annealing config for cVAE module.")
+                raise ValueError('specify beta annealing config for cVAE module.')
             self.beta_finder.build(self.num_train_batches)
 
         return Trainer(

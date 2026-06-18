@@ -23,6 +23,10 @@ from cccma_ppp.core.optimization import OptimizerConfig
 
 from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
+import cccma_ppp.train.registry_imports
+
+
+
 
 def set_seed(seed):
 
@@ -67,7 +71,7 @@ class TrainConfig:
             If unset, weight initialization is not reproducible but data shuffling is.
 
 
-
+            
         to do:
 
             ema: Configuration for exponential moving average of model weights.
@@ -77,7 +81,6 @@ class TrainConfig:
 
 
     """
-
     experiment_dir: str
     max_epochs: int
     train_loader: TrainDataloaderConfig | None
@@ -148,7 +151,9 @@ class TrainConfig:
                     "with cVAE model TrainerConfig.beta_finder must be set up."
                 )
             if not self.train_loader.dataset_config.condition_type is not None:
-                raise ValueError("with cVAE you must specify condition type!")
+                raise ValueError(
+                "with cVAE you must specify condition type!"
+            )
 
         if getattr(self.module._module_config.model_config, "GENERATOR", False):
             if "crps" not in self.losspipeline.loss_pipeline.loss_types:
@@ -221,7 +226,7 @@ class TrainConfig:
         The directory where output files are saved.
         """
         return os.path.join(self.experiment_dir, "figures")
-
+    
     def _prepare_runtime_variables(self):
 
         RuntimeContext.GLOBAL_EXP_DIR = str(self.experiment_dir)
@@ -231,7 +236,9 @@ class TrainConfig:
         RuntimeContext.INPUT_VAR_METADATA = self.train_loader.input_var_metadata
         RuntimeContext.TARGET_VAR_METADATA = self.train_loader.target_var_metadata
 
-    def prepare_directory(self, distributed: Distributed, yaml_config: str = None):
+
+    def prepare_directory(self, distributed: Distributed, yaml_config : str = None):
+
         """
         Create experiment (sub)directories and dump config_data to it.
         """

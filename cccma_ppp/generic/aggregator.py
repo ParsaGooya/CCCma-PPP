@@ -96,12 +96,11 @@ class MetricsAggregator:
         self._aggregated_across_ranks = True
         return logs
 
+
+
     def record_epoch(
-        self,
-        logs: dict[str, float],
-        replace_index: int = None,
-        time_elapsed: float = None,
-    ):
+            self, logs: dict[str, float], replace_index: int = None, time_elapsed: float = None
+            ):
         """
         Store already-synchronized epoch-level logs.
 
@@ -256,7 +255,7 @@ class MetricsAggregator:
                     style_by_name[aggregator.name] = color_styles_list[ind]
 
         for loss_name in list(loss_kinds):
-            fig, ax = plt.subplots(1, 1, figsize=figsize)
+            fig, ax = plt.subplots(1, 1, figsize= figsize)
 
             for aggregator in aggregator_list:
                 if aggregator is not None:
