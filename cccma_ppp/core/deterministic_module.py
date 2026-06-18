@@ -12,7 +12,7 @@ from cccma_ppp.core.selectors import (
     deterministicModelSelector,
     _load_config_from_checkpoint,
 )
-from cccma_ppp.data.dataloader import BatchData
+from cccma_ppp.train.dataloader import BatchData
 from cccma_ppp.generic.runtime import RuntimeContext
 
 
