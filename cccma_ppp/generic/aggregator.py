@@ -12,6 +12,24 @@ from pathlib import Path
 
 @dataclasses.dataclass
 class MetricsAggregator:
+    """
+    Utility class for aggregating and tracking training metrics across batches and epochs,
+    with support for distributed synchronization.
+
+    Parameters
+    ----------
+    distributed : Distributed
+        Distributed training utility used for cross-rank aggregation.
+    name : str
+        Name of the metric group (e.g., "train" or "val").
+    epoch_loss_terms : dict of str to list of float, optional
+        Pre-existing recorded epoch losses.
+    epoch_times : list of float, optional
+        Recorded epoch durations.
+    num_epochs_seen : int, optional
+        Number of epochs already processed.
+    """
+
     distributed: Distributed
     name: str
 
@@ -20,6 +38,14 @@ class MetricsAggregator:
     num_epochs_seen: int = 0
 
     def __post_init__(self):
+        """
+        Initialize internal state and validate provided historical metrics.
+
+        Raises
+        ------
+        AssertionError
+            If historical loss lists or timings are inconsistent in length.
+        """
 
         self.loss_terms = defaultdict(float)
         self.num_batches_seen = 0
@@ -51,6 +77,19 @@ class MetricsAggregator:
 
     @torch.no_grad()
     def record(self, loss_dict: dict[str, torch.Tensor | int | float]) -> None:
+        """
+        Accumulate batch-level loss values.
+
+        Parameters
+        ----------
+        loss_dict : dict of str to tensor or float
+            Dictionary of loss components from a batch.
+
+        Returns
+        -------
+        None
+        """
+
         for name, value in loss_dict.items():
             if value is None:
                 continue
@@ -65,6 +104,19 @@ class MetricsAggregator:
 
     @torch.no_grad()
     def _dist_compute(self) -> dict[str, float]:
+        """
+        Compute averaged metrics across all distributed ranks.
+
+        Returns
+        -------
+        dict of str to float
+            Averaged loss values.
+
+        Notes
+        -----
+        Must be called before recording epoch-level statistics.
+        """
+
         logs = {}
 
         for name in sorted(self.loss_terms):
@@ -93,6 +145,30 @@ class MetricsAggregator:
         replace_index: int = None,
         time_elapsed: float = None,
     ):
+        """
+        Store epoch-level metrics.
+
+        Parameters
+        ----------
+        logs : dict of str to float
+            Aggregated metric values.
+        replace_index : int or None, optional
+            Index to replace existing epoch entry.
+        time_elapsed : float or None, optional
+            Time taken for the epoch.
+
+        Returns
+        -------
+        dict
+            Recorded metrics.
+
+        Raises
+        ------
+        RuntimeError
+            If distributed aggregation has not been performed.
+        ValueError
+            If attempting to replace a non-existing metric.
+        """
         if not self._aggregated_across_ranks:
             raise RuntimeError(
                 "Call _dist_compute() before record_epoch(), so losses are "
@@ -127,6 +203,19 @@ class MetricsAggregator:
         return logs
 
     def reset_batch_losses(self):
+        """
+        Reset accumulated batch metrics.
+
+        Returns
+        -------
+        None
+
+        Warns
+        -----
+        UserWarning
+            If called before any epoch has been submitted.
+        """
+
         if self.epochs_submitted:
             self.loss_terms = defaultdict(float)
             self.num_batches_seen = 0
@@ -144,6 +233,30 @@ class MetricsAggregator:
         plot_dir: str | Path | None = None,
         figsize=(8, 5),
     ) -> None:
+        """
+        Plot loss curves and epoch times for one or more aggregators.
+
+        Parameters
+        ----------
+        aggregator_list : list of MetricsAggregator
+            List of aggregators to plot.
+        color_styles_list : list of tuple, optional
+            List of (color, linestyle) for each aggregator.
+        plot_dir : str or pathlib.Path or None, optional
+            Directory to save plots.
+        figsize : tuple, optional
+            Size of the figure.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If aggregators are inconsistent or no data is available.
+        """
+
         if plot_dir is None:
             plot_dir = Path(RuntimeContext.GLOBAL_FIGURES_DIR)
         else:
@@ -287,6 +400,15 @@ class MetricsAggregator:
         plt.close()
 
     def state_dict(self):
+        """
+        Return serializable state of aggregator.
+
+        Returns
+        -------
+        dict
+            Aggregator state.
+        """
+
         return {
             "name": self.name,
             "epoch_loss_terms": self.epoch_loss_terms,
@@ -295,6 +417,18 @@ class MetricsAggregator:
         }
 
     def load_state_dict(self, state_dict):
+        """
+        Load aggregator state from dictionary.
+
+        Parameters
+        ----------
+        state_dict : dict
+            State dictionary.
+
+        Returns
+        -------
+        None
+        """
 
         self.name = state_dict.get("name")
         self.epoch_loss_terms = state_dict.get("epoch_loss_terms", None)
