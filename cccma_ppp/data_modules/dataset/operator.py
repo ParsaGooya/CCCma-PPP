@@ -13,6 +13,11 @@ class DatasetOperator:
     def __init__(self, config: DatasetConfigABC):
         self.config = config
 
+    @property
+    def config_observation(self):
+        if hasattr(self.config, 'observation', False):
+            return self.config.observation
+
     def _fit_preprocessors(
         self,
         train_years: np.ndarray | list | tuple,
@@ -37,12 +42,12 @@ class DatasetOperator:
                                 save_name = save_name)
  
 
-        if self.config.observation is not None:
+        if self.config_observation is not None:
                 selection = {"year": train_years}
-                if self.config.observation.info.coords["ensembles"] is not None:
-                    selection["ensembles"] = self.config.observation.info.coords["ensembles"]
+                if self.config_observation.info.coords["ensembles"] is not None:
+                    selection["ensembles"] = self.config_observation.info.coords["ensembles"]
 
-                self.config.observation._fit_preprocessor_pipeline( 
+                self.config_observation._fit_preprocessor_pipeline( 
                     selection = selection, 
                     save = save,
                     save_path = save_path, 
@@ -78,9 +83,9 @@ class DatasetOperator:
 
             self.config.model._load_preprocessor_pipeline(load_dir)
 
-        if self.config.observation is not None:
+        if self.config_observation is not None:
 
-            self.config.observation._load_preprocessor_pipeline(load_dir)
+            self.config_observation._load_preprocessor_pipeline(load_dir)
 
         if self.config.effective_condition is not None:
 
@@ -101,8 +106,8 @@ class DatasetOperator:
             self.config.model.preprocessing_pipeline.add_fitted_preprocessor(
                 preprocessor, index=index
             )
-        if self.config.observation is not None:
-            self.config.observation.preprocessing_pipeline.add_fitted_preprocessor(
+        if self.config_observation is not None:
+            self.config_observation.preprocessing_pipeline.add_fitted_preprocessor(
                 preprocessor, index=index
             )
         if self.config.effective_condition is not None:
@@ -120,8 +125,8 @@ class DatasetOperator:
         if config is None:
             config = WeightsConfig()
 
-        if self.config.observation is not None:
-            target_coords = self.config.observation.info.coords.copy()
+        if self.config_observation is not None:
+            target_coords = self.config_observation.info.coords.copy()
         elif self.config.model is not None:
             target_coords = self.config.model.info.coords.copy()
         else:
@@ -134,8 +139,8 @@ class DatasetOperator:
 
         from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 
-        if self.config.observation is not None:
-            pipeline = self.config.observation.preprocessing_pipeline
+        if self.config_observation is not None:
+            pipeline = self.config_observation.preprocessing_pipeline
         else:
             pipeline = self.config.model.preprocessing_pipeline
 
@@ -154,9 +159,9 @@ class DatasetOperator:
         )
 
         if "channels" in weights.dims:
-            if self.config.observation is not None:
-                error_msg = f"inconsistent variable weights {weights.channels.values} for taget variables {self.config.observation.names}"
-                if not weights.channels.values == self.config.observation.names:
+            if self.config_observation is not None:
+                error_msg = f"inconsistent variable weights {weights.channels.values} for taget variables {self.config_observation.names}"
+                if not weights.channels.values == self.config_observation.names:
                     raise RuntimeError(error_msg)
             else:
                 error_msg = f"inconsistent variable weights {weights.channels.values} for taget variables {self.config.model.names}"
@@ -191,7 +196,7 @@ class DatasetOperator:
 
         metadata = dict(variables=list(), preprocessors=list())
 
-        if self.config.observation is None:
+        if self.config_observation is None:
             if self.config.model is None:
                 raise ValueError(
                 'No model or observation data is availablle. ' \
@@ -202,7 +207,7 @@ class DatasetOperator:
                                                                       )
         else:
             metadata = self._update_metadata_with_dataconfig_metadata(
-                metadata, self.config.observation
+                metadata, self.config_observation
             )
 
         return metadata

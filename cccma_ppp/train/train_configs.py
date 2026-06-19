@@ -117,9 +117,9 @@ class TrainConfig:
                 raise ValueError(
                     "with cVAE model TrainerConfig.beta_finder must be set up."
                 )
-            if not self.train_loader.dataset_config.condition_type is not None:
+            if self.train_loader.dataset_config.condition_method is None:
                 raise ValueError(
-                "with cVAE you must specify condition type!"
+                "with cVAE you must specify condition method!"
             )
 
         if getattr(self.module._module_config.model_config, "GENERATOR", False):

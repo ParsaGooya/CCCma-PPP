@@ -12,7 +12,7 @@ from cccma_ppp.generic import Distributed
 
 
 @dataclasses.dataclass
-class BatchData:
+class BatchData(BatchDataABC):
     input: torch.Tensor
     target: torch.Tensor
     added_features: torch.Tensor = None
