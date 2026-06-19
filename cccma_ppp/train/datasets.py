@@ -19,7 +19,7 @@ from cccma_ppp.data_modules import (
     _create_train_mask,
 )
 
-from cccma_ppp.preprocessing import PreprocessModuleABC
+from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 
 @dataclasses.dataclass
@@ -372,16 +372,16 @@ class TrainDataset(Dataset):
 
     def get_input_shape(self):
 
-        from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
+        from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 
         checklist = [
-            isinstance(item, Oceannanremove)
+            isinstance(item, Flattennanremove)
             for item in self.config.model.preprocessing_pipeline.fitted_preprocessors
         ]
 
         if any(checklist):
             return self.config.model.preprocessing_pipeline.get_preprocessors(
-                "oceannanremover"
+                "flattener"
             ).final_locations.shape * len(self.config.model.names)
         else:
             return (
@@ -391,17 +391,17 @@ class TrainDataset(Dataset):
 
     def get_target_shape(self):
 
-        from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
+        from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 
         if self.observation_dataset is not None:
             checklist = [
-                isinstance(item, Oceannanremove)
+                isinstance(item, Flattennanremove)
                 for item in self.config.observation.preprocessing_pipeline.fitted_preprocessors
             ]
 
             if any(checklist):
                 return self.config.observation.preprocessing_pipeline.get_preprocessors(
-                    "oceannanremover"
+                    "flattener"
                 ).final_locations.shape * len(self.config.observation.names)
             else:
                 return (

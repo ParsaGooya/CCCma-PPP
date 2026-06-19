@@ -1,5 +1,5 @@
 experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/cccma_PPP_test
-max_epochs: 18
+max_epochs: 3
 train_loader:
     dataset_config:
         model:
@@ -10,7 +10,7 @@ train_loader:
               - name: anomalies
                 args:
                   dims: [year, lead_time]
-              - name: oceannanremover
+              - name: flattener
 
           ensemble_mean : True
           concat_dim : year
@@ -21,7 +21,7 @@ train_loader:
             preprocessing_pipeline :
                     preprocessors_list :
                             - name : standardizer
-                            - name : oceannanremover
+                            - name : flattener
 
             concat_dim : year
             rename_dict :

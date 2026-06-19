@@ -13,7 +13,7 @@ from cccma_ppp.models.models_abc import (
     InitMethod
 )
 from cccma_ppp.core.selectors import deterministicModelSelector, cVAEModelSelector
-from cccma_ppp.models import NormalizedFlowModel
+from cccma_ppp.models.normalized_flows import NormalizedFlowModel
 from cccma_ppp.core import cVAEOutput, deterministicOutput
 from cccma_ppp.generic import RuntimeContext
 

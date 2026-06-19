@@ -6,7 +6,7 @@ from pathlib import Path
 import os
 from typing import Literal
 
-from cccma_ppp.preprocessing import PreprocessingPipeline, Oceannanremove
+from cccma_ppp.preprocessing import PreprocessingPipeline, Flattennanremove
 from cccma_ppp.generic import RuntimeContext
 
 
@@ -27,7 +27,7 @@ class WeightsConfig:
     def build_weights(
         self,
         target_coords=None,
-        oceannanremover: Oceannanremove | None = None,
+        Flattennanremover: Flattennanremove | None = None,
         save=True,
         save_path: Path | str | None = None,
         save_name: str | None = None,
@@ -43,8 +43,8 @@ class WeightsConfig:
 
             msg = f"the loaded weights from {self.load_dir} must have lat and lon coordinates that match the target coordinates"
 
-            if oceannanremover is not None:
-                if not weights.coords["ref"].equals(oceannanremover.final_locations):
+            if Flattennanremover is not None:
+                if not weights.coords["ref"].equals(Flattennanremover.final_locations):
                     raise ValueError(msg)
             elif target_coords is not None:
                 if not weights.coords["lat"].equals(target_coords["lat"]):
@@ -71,8 +71,8 @@ class WeightsConfig:
                     * weights
                 )
 
-            if oceannanremover is not None:
-                weights = oceannanremover.transform(weights)
+            if Flattennanremover is not None:
+                weights = Flattennanremover.transform(weights)
 
             if save:
                 save_path = (

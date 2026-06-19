@@ -4,7 +4,7 @@ from pathlib import Path
 from cccma_ppp.data_modules.data import DataConfigABC
 from cccma_ppp.data_modules.dataset import DatasetConfigABC
 from cccma_ppp.data_modules import WeightsConfig
-from cccma_ppp.preprocessing import PreprocessModuleABC
+from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 
 
@@ -132,7 +132,7 @@ class DatasetOperator:
         if "ensembles" in target_coords:
             del target_coords["ensembles"]
 
-        from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
+        from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 
         if self.config.observation is not None:
             pipeline = self.config.observation.preprocessing_pipeline
@@ -140,12 +140,12 @@ class DatasetOperator:
             pipeline = self.config.model.preprocessing_pipeline
 
         checklist = [
-            isinstance(item, Oceannanremove) for item in pipeline.fitted_preprocessors
+            isinstance(item, Flattennanremove) for item in pipeline.fitted_preprocessors
         ]
 
         weights = config.build_weights(
             target_coords,
-            oceannanremover=pipeline.get_preprocessors("oceannanremover")
+            Flattennanremover=pipeline.get_preprocessors("flattener")
             if any(checklist)
             else None,
             save=save,

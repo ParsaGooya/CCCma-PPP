@@ -4,12 +4,33 @@ from pathlib import Path
 import joblib
 import os
 
-from cccma_ppp.preprocessing import PreprocessingStepSelector, PreprocessModuleABC
+from cccma_ppp.preprocessing import PreprocessingStepSelector
+from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 
 @PreprocessingStepSelector.register("normalizer")
 class Normalizer(PreprocessModuleABC):
+    """
+    Min-max normalization preprocessor.
+    """
+
     def __init__(self, dims: list | None = None, **kwargs) -> None:
+
+        """
+        Initialize normalizer.
+
+        Parameters
+        ----------
+        dims : list of str or None, optional
+            Dimensions over which min/max statistics are computed.
+        **kwargs
+            Unused additional arguments.
+
+        Returns
+        -------
+        None
+        """
+
         self.min = None
         self.max = None
         self.dims = dims
@@ -39,6 +60,7 @@ class Normalizer(PreprocessModuleABC):
         return self
 
     def transform(self, data: xr.DataArray):
+
         data_normalized = (data - self.min) / (self.max - self.min)
         return data_normalized
 
@@ -49,7 +71,27 @@ class Normalizer(PreprocessModuleABC):
 
 @PreprocessingStepSelector.register("standardizer")
 class Standardizer(PreprocessModuleABC):
+    """
+    Z-score standardization preprocessor.
+    """
+
     def __init__(self, dims: list | None = None, **kwargs) -> None:
+
+        """
+        Initialize standardizer.
+
+        Parameters
+        ----------
+        dims : list of str or None, optional
+            Dimensions over which mean/std are computed.
+        **kwargs
+            Unused arguments.
+
+        Returns
+        -------
+        None
+        """
+
         self.mean = None
         self.std = None
         self.dims = dims
@@ -94,7 +136,27 @@ class Standardizer(PreprocessModuleABC):
 
 @PreprocessingStepSelector.register("anomalies")
 class AnomaliesScaler(PreprocessModuleABC):
+    """
+    Compute anomalies by subtracting mean.
+    """
+
     def __init__(self, dims: list | None = None, **kwargs) -> None:
+
+        """
+        Initialize anomalies scaler.
+
+        Parameters
+        ----------
+        dims : list of str or None
+            Dimensions over which mean is computed.
+        **kwargs
+            Unused arguments.
+
+        Returns
+        -------
+        None
+        """
+
         self.mean = None
         self.dims = dims
         self.fitted = False
@@ -138,9 +200,26 @@ class AnomaliesScaler(PreprocessModuleABC):
         return data_raw
 
 
-@PreprocessingStepSelector.register("oceannanremover")
-class Oceannanremove(PreprocessModuleABC):
+@PreprocessingStepSelector.register("flattener")
+class Flattennanremove(PreprocessModuleABC):
+    """
+    Remove spatial locations with NaNs and optionally align with target grid.
+    """
     def __init__(self, load_dir: Path | str = None, **kwargs):
+        """
+        Initialize ocean/NaN remover.
+
+        Parameters
+        ----------
+        load_dir : pathlib.Path or str or None
+            Path to load a pretrained preprocessor.
+        **kwargs
+            Unused arguments.
+
+        Returns
+        -------
+        None
+        """
 
         self.load_dir = load_dir
         self.fitted = False
@@ -178,7 +257,7 @@ class Oceannanremove(PreprocessModuleABC):
 
             self.fitted = True
             if save:
-                save_name = save_name or "oceannanremover"
+                save_name = save_name or "flattener"
                 save_path = Path(save_path) or Path(os.get["GLOBAL_EXP_DIR"])
 
                 joblib.dump(self, save_path.joinpath(f"{save_name}.joblib"))
@@ -188,6 +267,18 @@ class Oceannanremove(PreprocessModuleABC):
         return self
 
     def transform(self, data: xr.DataArray):
+        """
+        Select valid spatial locations.
+
+        Parameters
+        ----------
+        data : xr.DataArray
+
+        Returns
+        -------
+        xr.DataArray
+            Flattened data with valid spatial locations.
+        """
 
         conditions = ["lat" in data.dims, "lon" in data.dims]
 

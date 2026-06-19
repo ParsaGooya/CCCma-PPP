@@ -6,13 +6,14 @@ import dataclasses
 import dacite
 import gc
 
-from cccma_ppp.loss import Losspipeline, KLD
+from cccma_ppp.loss import Losspipeline
+from cccma_ppp.loss.kld import KLD
 from cccma_ppp.core import moduleABC, moduleConfigABC, _load_config_from_checkpoint
 from cccma_ppp.core.selectors import (
     ModuleSelector,
     cVAEModelSelector,
 )
-from cccma_ppp.models import NormalizedFlowConfig
+from cccma_ppp.models.normalized_flows import NormalizedFlowConfig
 from cccma_ppp.train import BatchData
 from cccma_ppp.generic import RuntimeContext
 

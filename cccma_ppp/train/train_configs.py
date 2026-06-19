@@ -21,7 +21,7 @@ from cccma_ppp.core.selectors import ModuleSelector
 from cccma_ppp.core.trainer import TrainerConfig
 from cccma_ppp.core.optimization import OptimizerConfig
 
-from cccma_ppp.preprocessing import Oceannanremove
+from cccma_ppp.preprocessing import Flattennanremove
 
 import cccma_ppp.train.registry_imports
 
@@ -142,14 +142,14 @@ class TrainConfig:
             )
 
         if self.module._module_config.model_config.NUM_OUTPUT_DIMS == 1:
-            if not any([isinstance(step[1], Oceannanremove) for step in pipeline]):
+            if not any([isinstance(step[1], Flattennanremove) for step in pipeline]):
                 raise RuntimeError(
-                    "for MLP models, add Oceannanremove as a preprocessing step to flatten the maps."
+                    "for MLP models, add Flattennanremove as a preprocessing step to flatten the maps."
                 )
         else:
-            if any([isinstance(step[1], Oceannanremove) for step in pipeline]):
+            if any([isinstance(step[1], Flattennanremove) for step in pipeline]):
                 raise RuntimeError(
-                    "for non-MLP models, do add Oceannanremove as a preprocessing step because it flattens the maps."
+                    "for non-MLP models, do add Flattennanremove as a preprocessing step because it flattens the maps."
                 )
 
     def set_random_seed(self):

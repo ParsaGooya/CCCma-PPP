@@ -14,7 +14,7 @@ from cccma_ppp.generic import (Distributed,
                                 MetricsAggregator, 
                                 RuntimeContext)
 
-from cccma_ppp.loss import BetaAnnealing
+from cccma_ppp.loss.kld import BetaAnnealing
 
 
 @dataclasses.dataclass
@@ -440,7 +440,7 @@ class Trainer:
 
         msg += (
             f" | global step: {self.global_step} | "
-            f"| early stopping counter: {self.earlystopping_counter} |"
+            f" early stopping counter: {self.earlystopping_counter} |"
             f" elapsed time: {elapsed_time:.2f}"
         )
 
