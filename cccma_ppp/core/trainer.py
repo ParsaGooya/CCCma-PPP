@@ -7,15 +7,14 @@ import gc
 import os
 import time
 
-from cccma_ppp.core.core_abc import moduleABC
-from cccma_ppp.core.optimization import OptimizerWrapper
+from cccma_ppp.core import moduleABC, OptimizerWrapper
 from cccma_ppp.core.cVAE_module import cVAE
 from cccma_ppp.data_modules.dataloader import Dataloader
 from cccma_ppp.generic import (Distributed, 
                                 MetricsAggregator, 
                                 RuntimeContext)
 
-from cccma_ppp.loss.kld import BetaAnnealing
+from cccma_ppp.loss import BetaAnnealing
 
 
 @dataclasses.dataclass

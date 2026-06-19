@@ -6,7 +6,7 @@ import dataclasses
 import warnings
 from pathlib import Path
 
-from cccma_ppp.data_modules.dataset import DatasetConfigABC
+from cccma_ppp.data_modules.dataset import DatasetConfigABC, DatasetOperator
 from cccma_ppp.data_modules.data import (
     DataConfigABC,
     ModelDataConfig,
@@ -19,8 +19,7 @@ from cccma_ppp.data_modules import (
     _create_train_mask,
 )
 
-from cccma_ppp.data_modules.dataset.operator import DatasetOperator
-from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
+from cccma_ppp.preprocessing import PreprocessModuleABC
 
 
 @dataclasses.dataclass

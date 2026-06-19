@@ -4,11 +4,10 @@ import torch
 from collections import defaultdict
 import warnings
 import matplotlib.pyplot as plt
-from cccma_ppp.generic.distributed import Distributed
-from cccma_ppp.generic.runtime import RuntimeContext
 import random
 from pathlib import Path
 
+from cccma_ppp.generic import Distributed, RuntimeContext
 
 @dataclasses.dataclass
 class MetricsAggregator:

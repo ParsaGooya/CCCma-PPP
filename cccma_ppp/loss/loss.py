@@ -1,9 +1,9 @@
 import torch.nn as nn
 import xarray as xr
-from cccma_ppp.loss.registery import Registery
 from typing import ClassVar
 import dataclasses
-from cccma_ppp.loss.loss_abc import Reduction
+
+from cccma_ppp.loss import Registery, Reduction
 
 @dataclasses.dataclass
 class LossStepConfig:

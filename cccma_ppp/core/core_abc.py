@@ -1,12 +1,12 @@
 import abc
 import numpy as np
-from cccma_ppp.loss.loss import Losspipeline
 import torch
 import torch.nn as nn
 from typing import final
 import gc
 from pathlib import Path
 
+from cccma_ppp.loss import Losspipeline
 
 class moduleABC(nn.Module, abc.ABC):
     def __init__(self):
