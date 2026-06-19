@@ -4,35 +4,9 @@ import os
 
 
 class Distributed:
-    """
-    Utility class for managing distributed training using PyTorch Distributed.
-
-    Methods
-    -------
-    get_instance()
-        Return singleton instance of the Distributed manager.
-    cleanup()
-        Destroy the distributed process group.
-    is_root()
-        Check if current process is the root rank.
-    barrier()
-        Synchronize all processes.
-    all_reduce_sum(local)
-        Perform sum reduction across all processes.
-    broadcast(local, src=0)
-        Broadcast tensor from source process to all processes.
-    """
-
     _instance = None
 
     def __init__(self):
-        """
-        Initialize distributed environment and device configuration.
-
-        Returns
-        -------
-        None
-        """
 
         self.distributed = "RANK" in os.environ and "WORLD_SIZE" in os.environ
 
@@ -56,84 +30,26 @@ class Distributed:
 
     @classmethod
     def get_instance(cls):
-        """
-        Return singleton instance of Distributed.
-
-        Returns
-        -------
-        Distributed
-            Shared instance managing distributed state.
-        """
-
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
 
-    def cleanup(self):
-        """
-        Clean up distributed process group.
-
-        Returns
-        -------
-        None
-        """
+    def cleanup(cls):
         if dist.is_available() and dist.is_initialized():
             dist.destroy_process_group()
 
     def is_root(self) -> bool:
-        """
-        Check if current process is the root rank.
-
-        Returns
-        -------
-        bool
-            True if rank equals zero.
-        """
-
         return self.rank == 0
 
     def barrier(self):
-        """
-        Synchronize all processes.
-
-        Returns
-        -------
-        None
-        """
         if self.distributed:
             dist.barrier()
 
     def all_reduce_sum(self, local: torch.Tensor):
-        """
-        Perform sum reduction across all processes.
-
-        Parameters
-        ----------
-        local : torch.Tensor
-            Tensor to be reduced.
-
-        Returns
-        -------
-        None
-        """
 
         if dist.is_available() and dist.is_initialized():
             dist.all_reduce(local, op=dist.ReduceOp.SUM)
 
-    def broadcast(self, local: torch.Tensor, src=0):
-        """
-        Broadcast tensor from source rank to all processes.
-
-        Parameters
-        ----------
-        local : torch.Tensor
-            Tensor to broadcast.
-        src : int, optional
-            Source rank.
-
-        Returns
-        -------
-        None
-        """
+    def broadcast(self, lcoal: torch.Tensor, src=0):
         if dist.is_available() and dist.is_initialized():
-            dist.broadcast(local, src=src)
+            dist.broadcast(lcoal, src=src)

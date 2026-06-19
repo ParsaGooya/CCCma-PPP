@@ -13,27 +13,6 @@ CovarianceDim = Literal["spatial", "channel"]
 
 @Losspipeline.register("mse")
 class WeightedMSE(lossABC):
-    """
-    Weighted mean squared error loss with optional masking and resolution downsampling.
-
-    Parameters
-    ----------
-    weights : xr.DataArray
-        Spatial or feature-wise weights.
-    reduction : Reduction, optional
-        Reduction method ("mean" or "sum").
-    num_output_dimensions : int, optional
-        Number of output spatial dimensions.
-    low_ress_kernel_size : int or None, optional
-        Kernel size for optional spatial downsampling.
-    hyperparam : float, optional
-        Scaling factor for threshold-based weighting.
-    min_threshold : float, optional
-        Lower threshold for asymmetric weighting.
-    max_threshold : float, optional
-        Upper threshold for asymmetric weighting.
-    """
-
     def __init__(
         self,
         weights: xr.DataArray,
@@ -45,34 +24,6 @@ class WeightedMSE(lossABC):
         max_threshold=0,
         **kwargs,
     ):
-        """
-        Initialize weighted MSE loss.
-
-        Parameters
-        ----------
-        weights : xr.DataArray
-            Spatial or channel-wise weights. NaN values are treated as invalid regions
-            and excluded via masking.
-        reduction : {"mean", "sum"}, optional
-            Reduction method applied to the final loss.
-        num_output_dimensions : int, optional
-            Number of spatial dimensions in the output.
-        low_ress_kernel_size : int or None, optional
-            Kernel size used for optional spatial downsampling. Must be odd if provided.
-        hyperparam : float, optional
-            Scaling factor applied to asymmetric errors based on thresholds.
-        min_threshold : float, optional
-            Lower threshold below which predictions are penalized asymmetrically.
-        max_threshold : float, optional
-            Upper threshold above which predictions are penalized asymmetrically.
-        **kwargs
-            Additional unused keyword arguments.
-
-        Raises
-        ------
-        ValueError
-            If `low_ress_kernel_size` is not odd.
-        """
 
         super().__init__()
         self.reduction = reduction
@@ -94,8 +45,8 @@ class WeightedMSE(lossABC):
                 raise ValueError("choose odd kernel size")
 
             if not has_channels:
-                weights_mask = weights_mask.unsqueeze(0)
-                weights = weights.unsqueeze(0)
+                weights_mask = weights_mask.unsqueeze(0) # C x ...
+                weights = weights.unsqueeze(0)  # C x ...
 
             if self.num_output_dimensions == 1:
                 self.average_pool = F.avg_pool1d
@@ -109,7 +60,7 @@ class WeightedMSE(lossABC):
                 )
 
             weights_mask = self._downsample(weights_mask)
-            weights_mask = (weights_mask == 1).float()
+            weights_mask = (weights_mask == 1).float() ## just keep grid weights where all high res grids are available
             weights = self._downsample(weights)
 
             if not has_channels:
@@ -121,21 +72,13 @@ class WeightedMSE(lossABC):
 
     def _downsample(self, tensor: torch.Tensor) -> torch.Tensor:
         """
-        Downsample tensor using average pooling.
+        Downsample tenspr using the low-resolution kernel.
 
-        Parameters
-        ----------
-        tensor : torch.Tensor
-            Input tensor with spatial dimensions.
 
-        Returns
-        -------
-        torch.Tensor
-            Downsampled tensor.
+        For masks with 1 valid and 0 invalid, the output is a fractional-validity mask between 0 and 1.
         """
-
         squeeze = False
-        if len(tensor.shape) == self.num_output_dimensions + 1:
+        if len(tensor.shape) == self.num_output_dimensions + 1:  #check for static masks (space + channel)
             tensor = tensor.unsqueeze(0)
             squeeze = True
 
@@ -152,41 +95,13 @@ class WeightedMSE(lossABC):
 
     def forward(
         self,
-        data: torch.Tensor,
-        target: torch.Tensor,
+        data: torch.Tensor,    ## (E x) (Z x ) B x C x ....
+        target: torch.Tensor,  ## (Z x ) B x C x ....
         target_mask: torch.Tensor | None = None,
         generative_modeling: bool = False,
         generator: bool = False,
         print_loss=False,
     ) -> torch.Tensor:
-        """
-        Compute weighted mean squared error.
-
-        Parameters
-        ----------
-        data : torch.Tensor
-            Model predictions.
-        target : torch.Tensor
-            Ground truth targets.
-        target_mask : torch.Tensor or None, optional
-            Mask applied to target values.
-        generative_modeling : bool, optional
-            Whether inputs include sample dimension.
-        generator : bool, optional
-            Whether input corresponds to generator output.
-        print_loss : bool, optional
-            Whether to print loss value.
-
-        Returns
-        -------
-        torch.Tensor
-            Computed MSE loss.
-
-        Raises
-        ------
-        RuntimeError
-            If data and target shapes do not match.
-        """
 
         if generator:
             _check_generator_structure(data, target)
@@ -201,7 +116,7 @@ class WeightedMSE(lossABC):
         y_hat = data
 
         if self.low_ress_kernel_size is not None:
-            if generative_modeling:
+            if generative_modeling:  ##generative_modeling models generate a latent ensemble of outputs (Z x batch x channels x ...)
                 if target_mask is not None and target_mask.shape == y.shape:
                     target_mask = torch.flatten(target_mask, start_dim=0, end_dim=1)
                 y = torch.flatten(y, start_dim=0, end_dim=1)
@@ -226,40 +141,12 @@ class WeightedMSE(lossABC):
         return loss
 
     def _print_loss(self, loss):
-        """
-        Print formatted MSE loss value.
-
-        Parameters
-        ----------
-        loss : torch.Tensor
-            Computed loss.
-
-        Returns
-        -------
-        None
-        """
-
         if self.low_ress_kernel_size is not None:
             print(f"MSE_lowress : {loss.item():.5f}")
         else:
             print(f"MSE : {loss.item():.5f}")
 
     def _aggregate(self, loss, mask):
-        """
-        Apply weights, mask, and reduction to loss.
-
-        Parameters
-        ----------
-        loss : torch.Tensor
-            Element-wise squared error.
-        mask : torch.Tensor or None
-            Mask indicating valid elements.
-
-        Returns
-        -------
-        torch.Tensor
-            Aggregated scalar loss.
-        """
         weight = self.weights
         loss = loss * weight
         if mask is not None:
@@ -285,50 +172,14 @@ class WeightedMSE(lossABC):
 
 @Losspipeline.register("crps")
 class WeightedCRPS(lossABC):
-    """
-    Weighted Continuous Ranked Probability Score (CRPS) loss.
-
-    Parameters
-    ----------
-    weights : xr.DataArray
-        Spatial or channel-wise weights.
-    reduction : {"mean", "sum"}, optional
-        Reduction method for loss aggregation.
-    num_output_dimensions : int, optional
-        Number of spatial output dimensions.
-    low_ress_kernel_size : int or None, optional
-        Kernel size for spatial downsampling.
-    """
-
     def __init__(
         self,
         weights: xr.DataArray,
-        reduction: Reduction = "mean",
+        reduction: Reduction ="mean",
         num_output_dimensions: int = 2,
         low_ress_kernel_size: int = None,
         **kwargs,
     ):
-        """
-        Initialize weighted CRPS loss.
-
-        Parameters
-        ----------
-        weights : xr.DataArray
-            Spatial or channel-wise weights. NaNs define masked regions.
-        reduction : {"mean", "sum"}, optional
-            Reduction method.
-        num_output_dimensions : int, optional
-            Number of spatial output dimensions.
-        low_ress_kernel_size : int or None, optional
-            Kernel size for optional spatial downsampling. Must be odd if provided.
-        **kwargs
-            Additional unused keyword arguments.
-
-        Raises
-        ------
-        ValueError
-            If `low_ress_kernel_size` is not odd.
-        """
 
         super().__init__()
         self.reduction = reduction
@@ -347,8 +198,8 @@ class WeightedCRPS(lossABC):
                 raise ValueError("choose odd kernel size")
 
             if not has_channels:
-                weights_mask = weights_mask.unsqueeze(0)
-                weights = weights.unsqueeze(0)
+                weights_mask = weights_mask.unsqueeze(0) # C x ...
+                weights = weights.unsqueeze(0) # C x ...
 
             if self.num_output_dimensions == 1:
                 self.average_pool = F.avg_pool1d
@@ -362,7 +213,7 @@ class WeightedCRPS(lossABC):
                 )
 
             weights_mask = self._downsample(weights_mask)
-            weights_mask = (weights_mask == 1).float()
+            weights_mask = (weights_mask == 1).float() ## just keep grid weights where all high res grids are available
             weights = self._downsample(weights)
 
             if not has_channels:
@@ -375,20 +226,13 @@ class WeightedCRPS(lossABC):
 
     def _downsample(self, tensor: torch.Tensor) -> torch.Tensor:
         """
-        Apply spatial downsampling via average pooling.
+        Downsample tenspr using the low-resolution kernel.
 
-        Parameters
-        ----------
-        tensor : torch.Tensor
-            Input tensor.
 
-        Returns
-        -------
-        torch.Tensor
-            Downsampled tensor.
+        For masks with 1 valid and 0 invalid, the output is a fractional-validity mask between 0 and 1.
         """
         squeeze = False
-        if len(tensor.shape) == self.num_output_dimensions + 1:
+        if len(tensor.shape) == self.num_output_dimensions + 1:  #check for static masks (space + channel)
             tensor = tensor.unsqueeze(0)
             squeeze = True
 
@@ -405,49 +249,19 @@ class WeightedCRPS(lossABC):
 
     def forward(
         self,
-        data: torch.Tensor,
-        target: torch.Tensor,
+        data: torch.Tensor,   ## E x (Z x ) B x C x ....  for crps an ensemble of outputs are required
+        target: torch.Tensor,   ##  (Z x ) B x C x ....
         target_mask: torch.Tensor | None = None,
         generative_modeling: bool = False,
         generator: bool = True,
         print_loss=False,
     ) -> torch.Tensor:
-        """
-        Compute CRPS loss for probabilistic predictions.
-
-        Parameters
-        ----------
-        data : torch.Tensor
-            Ensemble predictions with sample dimension.
-        target : torch.Tensor
-            Ground truth targets.
-        target_mask : torch.Tensor or None, optional
-            Mask applied to targets.
-        generative_modeling : bool, optional
-            Whether inputs are flattened across samples.
-        generator : bool, optional
-            Must be True for CRPS.
-        print_loss : bool, optional
-            Whether to print loss.
-
-        Returns
-        -------
-        torch.Tensor
-            Scalar CRPS loss.
-
-        Raises
-        ------
-        RuntimeError
-            If generator is False.
-        """
 
         if not generator:
-            raise RuntimeError(
-                "generator cannot be False as a step_argument in Losspipeline.forward()"
-            )
+            raise RuntimeError('generator cannot be False as a step_argument in Losspipeline.forward()')
         _check_generator_structure(data, target)
 
-        if generative_modeling:
+        if generative_modeling:  ##generative_modeling models generate a latent ensemble  (Z x batch x channels x ...)
             if target_mask is not None and target_mask.shape == target.shape:
                 target_mask = torch.flatten(target_mask, start_dim=0, end_dim=1)
             y = torch.flatten(target, start_dim=0, end_dim=1)
@@ -465,7 +279,7 @@ class WeightedCRPS(lossABC):
                 target_mask = self._downsample(target_mask)
 
             E, B = y_hat.shape[:2]
-            y_hat = y_hat.reshape(E * B, *y_hat.shape[2:])
+            y_hat = y_hat.reshape(E * B, *y_hat.shape[2:])   ##reshape output ensemble to calcualte the average pool first and then reshape again.
             y_hat = self._downsample(y_hat)
             y_hat = y_hat.reshape(E, B, *y_hat.shape[1:])
 
@@ -493,38 +307,12 @@ class WeightedCRPS(lossABC):
         return loss
 
     def _print_loss(self, loss):
-        """
-        Print formatted CRPS value.
-
-        Parameters
-        ----------
-        loss : torch.Tensor
-
-        Returns
-        -------
-        None
-        """
         if self.low_ress_kernel_size is not None:
             print(f"CRPS_lowress : {loss.item():.5f}")
         else:
             print(f"CRPS : {loss.item():.5f}")
 
     def _aggregate(self, loss, mask):
-        """
-        Apply weights, masking, and reduction to CRPS.
-
-        Parameters
-        ----------
-        loss : torch.Tensor
-            Element-wise CRPS.
-        mask : torch.Tensor or None
-            Mask indicating valid elements.
-
-        Returns
-        -------
-        torch.Tensor
-            Aggregated scalar loss.
-        """
 
         weight = self.weights
         loss = loss * weight
@@ -551,42 +339,13 @@ class WeightedCRPS(lossABC):
 
 @Losspipeline.register("frobenius_norm")
 class Frobenius_norm(lossABC):
-    """
-    Frobenius norm loss based on covariance differences.
-
-    Parameters
-    ----------
-    weights : xr.DataArray
-        Used to determine spatial dimensions.
-    reduction : {"mean", "sum"}, optional
-        Reduction method.
-    num_output_dimensions : int, optional
-        Number of spatial dimensions.
-    covariance_dim : {"spatial", "channel"}, optional
-        Dimension along which covariance is computed.
-    """
-
     def __init__(
         self,
         weights: xr.DataArray,
-        reduction: Reduction = "mean",
+        reduction: Reduction ="mean",
         num_output_dimensions: int = 2,
         covariance_dim: CovarianceDim = "spatial",
     ):
-        """
-        Initialize Frobenius norm loss.
-
-        Parameters
-        ----------
-        weights : xr.DataArray
-            Used to determine output dimensionality.
-        reduction : {"mean", "sum"}, optional
-            Reduction method.
-        num_output_dimensions : int, optional
-            Number of spatial dimensions in the output.
-        covariance_dim : {"spatial", "channel"}, optional
-            Dimension along which covariance matrices are computed.
-        """
 
         super().__init__()
 
@@ -597,33 +356,12 @@ class Frobenius_norm(lossABC):
 
     def forward(
         self,
-        data: torch.Tensor,
+        data: torch.Tensor,  ## data shape is : in (Ens x) batch x channel x O_1, ... x O_n with n being the num_output_dimensions
         target: torch.Tensor,
         generative_modeling: bool = False,
         generator: bool = False,
         print_loss=False,
     ) -> torch.Tensor:
-        """
-        Compute Frobenius norm of covariance difference.
-
-        Parameters
-        ----------
-        data : torch.Tensor
-            Model predictions.
-        target : torch.Tensor
-            Ground truth.
-        generative_modeling : bool, optional
-            Whether data includes sample dimension.
-        generator : bool, optional
-            Whether predictions come from generator.
-        print_loss : bool, optional
-            Whether to print loss.
-
-        Returns
-        -------
-        torch.Tensor
-            Frobenius norm loss.
-        """
 
         if generator:
             _check_generator_structure(data, target)
@@ -634,7 +372,7 @@ class Frobenius_norm(lossABC):
         y = torch.flatten(target, start_dim=-self.num_output_dimensions, end_dim=-1)
         y_hat = torch.flatten(data, start_dim=-self.num_output_dimensions, end_dim=-1)
 
-        if generative_modeling:
+        if generative_modeling: ##generative_modeling models generate an ensemble of outputs (enx x batch x channels x ...)
             y = torch.flatten(y, start_dim=0, end_dim=1)
             y_hat = torch.flatten(y_hat, start_dim=0, end_dim=1)
 
@@ -668,35 +406,9 @@ class Frobenius_norm(lossABC):
         return loss
 
     def _print_loss(self, loss):
-        """
-        Print Frobenius norm value.
-
-        Parameters
-        ----------
-        loss : torch.Tensor
-
-        Returns
-        -------
-        None
-        """
         print(f"FLN : {loss.item():.5f}")
 
     def _aggregate(self, loss, output_size=None):
-        """
-        Aggregate Frobenius norm loss.
-
-        Parameters
-        ----------
-        loss : torch.Tensor
-            Computed Frobenius norm.
-        output_size : int or None, optional
-            Normalization factor.
-
-        Returns
-        -------
-        torch.Tensor
-            Aggregated scalar loss.
-        """
         if output_size is None:
             output_size = self.output_size
 
@@ -712,26 +424,6 @@ class Frobenius_norm(lossABC):
 
 
 def _check_generator_structure(data: torch.Tensor, target: torch.Tensor):
-    """
-    Validate that generator output has an additional sample dimension.
-
-    Parameters
-    ----------
-    data : torch.Tensor
-        Generated samples.
-    target : torch.Tensor
-        Ground truth tensor.
-
-    Returns
-    -------
-    bool
-        True if structure is valid.
-
-    Raises
-    ------
-    ValueError
-        If structure does not match expected format.
-    """
     bool = data.shape[1:] == (1,) * (data.dim() - target.dim() - 1) + target.shape
     if bool:
         return True

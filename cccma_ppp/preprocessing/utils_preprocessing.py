@@ -12,25 +12,7 @@ from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 @PreprocessingStepSelector.register("normalizer")
 class Normalizer(PreprocessModuleABC):
-    """
-    Min-max normalization preprocessor.
-    """
-
     def __init__(self, dims: list | None = None, **kwargs) -> None:
-        """
-        Initialize normalizer.
-
-        Parameters
-        ----------
-        dims : list of str or None, optional
-            Dimensions over which min/max statistics are computed.
-        **kwargs
-            Unused additional arguments.
-
-        Returns
-        -------
-        None
-        """
         self.min = None
         self.max = None
         self.dims = dims
@@ -40,21 +22,6 @@ class Normalizer(PreprocessModuleABC):
             self.dims = tuple(self.dims)
 
     def fit(self, data: xr.DataArray, mask: xr.DataArray = None):
-        """
-        Compute min and max statistics.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-            Input data.
-        mask : xr.DataArray or None, optional
-            Mask for excluding values.
-
-        Returns
-        -------
-        Normalizer
-            Fitted instance.
-        """
 
         if all(["ensembles" in data.dims, self.dims is not None]):
             if "ensembles" not in self.dims:
@@ -75,60 +42,17 @@ class Normalizer(PreprocessModuleABC):
         return self
 
     def transform(self, data: xr.DataArray):
-        """
-        Apply min-max scaling.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-
-        Returns
-        -------
-        xr.DataArray
-            Normalized data.
-        """
-
         data_normalized = (data - self.min) / (self.max - self.min)
         return data_normalized
 
     def inverse_transform(self, data: xr.DataArray):
-        """
-        Revert normalization.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-
-        Returns
-        -------
-        xr.DataArray
-            Original-scale data.
-        """
         data_raw = data * (self.max - self.min) + self.min
         return data_raw
 
 
 @PreprocessingStepSelector.register("standardizer")
 class Standardizer(PreprocessModuleABC):
-    """
-    Z-score standardization preprocessor.
-    """
-
     def __init__(self, dims: list | None = None, **kwargs) -> None:
-        """
-        Initialize standardizer.
-
-        Parameters
-        ----------
-        dims : list of str or None, optional
-            Dimensions over which mean/std are computed.
-        **kwargs
-            Unused arguments.
-
-        Returns
-        -------
-        None
-        """
         self.mean = None
         self.std = None
         self.dims = dims
@@ -138,19 +62,6 @@ class Standardizer(PreprocessModuleABC):
             self.dims = tuple(self.dims)
 
     def fit(self, data: xr.DataArray, mask: xr.DataArray = None):
-        """
-        Compute mean and standard deviation.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-        mask : xr.DataArray or None, optional
-
-        Returns
-        -------
-        Standardizer
-            Fitted instance.
-        """
 
         if all(["ensembles" in data.dims, self.dims is not None]):
             if "ensembles" not in self.dims:
@@ -172,34 +83,12 @@ class Standardizer(PreprocessModuleABC):
         return self
 
     def transform(self, data: xr.DataArray):
-        """
-        Apply z-score transformation.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-
-        Returns
-        -------
-        xr.DataArray
-        """
 
         data_standardized = (data - self.mean) / self.std
 
         return data_standardized
 
     def inverse_transform(self, data: xr.DataArray):
-        """
-        Revert standardization.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-
-        Returns
-        -------
-        xr.DataArray
-        """
 
         data_raw = data * self.std + self.mean
 
@@ -208,25 +97,7 @@ class Standardizer(PreprocessModuleABC):
 
 @PreprocessingStepSelector.register("anomalies")
 class AnomaliesScaler(PreprocessModuleABC):
-    """
-    Compute anomalies by subtracting mean.
-    """
-
     def __init__(self, dims: list | None = None, **kwargs) -> None:
-        """
-        Initialize anomalies scaler.
-
-        Parameters
-        ----------
-        dims : list of str or None
-            Dimensions over which mean is computed.
-        **kwargs
-            Unused arguments.
-
-        Returns
-        -------
-        None
-        """
         self.mean = None
         self.dims = dims
         self.fitted = False
@@ -235,18 +106,6 @@ class AnomaliesScaler(PreprocessModuleABC):
             self.dims = tuple(self.dims)
 
     def fit(self, data: xr.DataArray, mask: xr.DataArray = None):
-        """
-        Compute mean for anomaly calculation.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-        mask : xr.DataArray or None
-
-        Returns
-        -------
-        AnomaliesScaler
-        """
 
         if all(["ensembles" in data.dims, self.dims is not None]):
             if "ensembles" not in self.dims:
@@ -266,32 +125,10 @@ class AnomaliesScaler(PreprocessModuleABC):
         return self
 
     def transform(self, data: xr.DataArray):
-        """
-        Subtract mean to produce anomalies.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-
-        Returns
-        -------
-        xr.DataArray
-        """
         data_anomalies = data - self.mean
         return data_anomalies
 
     def inverse_transform(self, data: xr.DataArray):
-        """
-        Reconstruct original data from anomalies.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-
-        Returns
-        -------
-        xr.DataArray
-        """
 
         if data.shape[-3] > 12 and self.mean.shape[-3] <= 12:
             lead_years = int(data.shape[-3] / 12)
@@ -306,25 +143,7 @@ class AnomaliesScaler(PreprocessModuleABC):
 
 @PreprocessingStepSelector.register("oceannanremover")
 class Oceannanremove(PreprocessModuleABC):
-    """
-    Remove spatial locations with NaNs and optionally align with target grid.
-    """
-
     def __init__(self, load_dir: Path | str = None, **kwargs):
-        """
-        Initialize ocean/NaN remover.
-
-        Parameters
-        ----------
-        load_dir : pathlib.Path or str or None
-            Path to load a pretrained preprocessor.
-        **kwargs
-            Unused arguments.
-
-        Returns
-        -------
-        None
-        """
 
         self.load_dir = load_dir
         self.fitted = False
@@ -338,33 +157,6 @@ class Oceannanremove(PreprocessModuleABC):
         save_name: str | None = None,
         save_path: Path | str = None,
     ):
-        """
-        Identify valid spatial locations and optionally align with target.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-            Input data.
-        target : xr.DataArray or None
-            Optional target dataset for alignment.
-        mask : xr.DataArray or None
-            Unused mask.
-        save : bool
-            Whether to save the fitted object.
-        save_name : str or None
-            File name for saving.
-        save_path : Path or str
-            Directory for saving.
-
-        Returns
-        -------
-        Oceannanremove
-
-        Raises
-        ------
-        RuntimeError
-            If loading an unfitted preprocessor.
-        """
 
         if self.load_dir is None:
             if target is not None:
@@ -399,18 +191,6 @@ class Oceannanremove(PreprocessModuleABC):
         return self
 
     def transform(self, data: xr.DataArray):
-        """
-        Select valid spatial locations.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-
-        Returns
-        -------
-        xr.DataArray
-            Flattened data with valid spatial locations.
-        """
 
         conditions = ["lat" in data.dims, "lon" in data.dims]
 
@@ -422,38 +202,10 @@ class Oceannanremove(PreprocessModuleABC):
         return sampled
 
     def inverse_transform(self, data: xr.DataArray):
-        """
-        Restore flattened data to original spatial grid.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-
-        Returns
-        -------
-        xr.DataArray
-            Data restored to original grid with NaNs.
-        """
 
         return data.unstack().combine_first(self.reference_shape)
 
     def _load_from_memory(self, load_dir: Path | str):
-        """
-        Load fitted preprocessor from disk.
-
-        Parameters
-        ----------
-        load_dir : pathlib.Path or str
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        RuntimeError
-            If loaded object is not fitted.
-        """
 
         loaded = joblib.load(Path(load_dir))
         if not loaded.fitted:
