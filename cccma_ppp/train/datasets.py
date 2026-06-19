@@ -6,7 +6,7 @@ import dataclasses
 import warnings
 from pathlib import Path
 
-from cccma_ppp.data_modules.dataset import DatasetConfigABC, DatasetOperator
+from cccma_ppp.data_modules.dataset import DatasetConfigABC, DatasetOperator, lead_months_config, _get_time_features
 from cccma_ppp.data_modules.data import (
     DataConfigABC,
     ModelDataConfig,
@@ -29,7 +29,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     condition: ConditionDataConfig | None = None
     condition_method: str = None
     time_features: list[str] | None = None
-    num_lead_months: int | None = None
+    lead_months: lead_months_config | None = None
 
     def __post_init__(self):
         self._fitted_preprocessors: bool = False
@@ -50,10 +50,10 @@ class TrainDatasetConfig(DatasetConfigABC):
                 raise ValueError(
                 "for same member coniditioning the model data should not be ensemble mean."
             )
-        
-        if self.num_lead_months is None:
-            self.num_lead_months = self.num_model_lead_months
-        if not self.num_lead_months <= self.num_model_lead_months:
+
+        if self.lead_months is None:
+            self.lead_months = np.arange(1, self.num_model_lead_months + 1)
+        if not max(self.lead_months) <= self.num_model_lead_months:
             raise ValueError(
             f"Maximum available lead months is {self.num_model_lead_months}"
         )
@@ -140,7 +140,7 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     @property
     def available_train_time(self):
-        num_lead_years = self.num_lead_months // 12
+        num_lead_years = max(self.lead_months) // 12
         if self.observation is None:
             return np.arange(
                 np.min(self.get_common_time),
@@ -203,7 +203,6 @@ class TrainDataset(Dataset):
                 "the requested years are not common to input and target data."
             )
 
-        self.time_features = self.config.time_features
         self.observation_dataset = self.condition_dataset = None
 
         self.model_dataset = self._load_xarray_data(self.config.model)
@@ -282,7 +281,7 @@ class TrainDataset(Dataset):
             mask = xr.full_like(mask, fill_value=False)
 
         mask = mask.sel(year=self.requested_years).sel(
-            lead_time=np.arange(1, self.config.num_lead_months + 1)
+            lead_time= self.config.lead_months
         )
         if all(
             [
@@ -413,7 +412,7 @@ class TrainDataset(Dataset):
 
     def get_added_features_dim(self):
 
-        return len(self.time_features)
+        return len(self.config.time_features)
 
     def _index_condition_dataset(self, ind):
 
@@ -468,42 +467,6 @@ class TrainDataset(Dataset):
 
             return model
 
-    def _get_time_features(self, year, lead_time, input : xr.DataArray):
-
-        if self.time_features is not None:
-            time_features_list = np.array([self.time_features]).flatten()
-            feature_indices = {
-                "year": 0,
-                "lead_time": 1,
-                "month_sin": 2,
-                "month_cos": 3,
-            }
-
-            target_time = year + lead_time // 12
-            target_month = lead_time
-
-            y = (target_time - np.min(self.config.get_common_time)) / (
-                np.max(self.config.get_common_time)
-                - np.min(self.config.get_common_time)
-            )
-            lt = lead_time / self.config.num_lead_months
-            msin = np.sin(2 * np.pi * target_month / 12.0)
-            mcos = np.cos(2 * np.pi * target_month / 12.0)
-
-            time_features = np.stack([y, lt, msin, mcos])
-            time_features = time_features[
-                ..., [feature_indices[k] for k in time_features_list]
-            ]
-
-            if input.ndim > 2:
-                time_features = np.broadcast_to(
-                    time_features[(...,) + (None,) * (input.ndim - 1)],
-                    (time_features.shape[0],) + input.shape[1:],
-                )
-
-            return time_features
-
-
     def __getitem__(self, ind):
         year = float(self.model_indexes["year"][ind])
         lead_time = float(self.model_indexes["lead_time"][ind])
@@ -522,7 +485,7 @@ class TrainDataset(Dataset):
         elif self._concat_condition_to_input:
             input = xr.concat([input, condition], dim="channels")
 
-        time_features = self._get_time_features(year, lead_time, input)
+        time_features = _get_time_features(self.config, year, lead_time, input)
  
         datadict = dict(
             input=torch.as_tensor(input.to_numpy(), dtype=torch.float32),

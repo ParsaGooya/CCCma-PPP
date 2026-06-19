@@ -1,12 +1,31 @@
 
 import abc
 from typing import ClassVar, final
+import dataclasses
+import numpy as np
 
 from cccma_ppp.data_modules.data import (
     ModelDataConfig,
     ConditionDataConfig
 )
 
+
+@dataclasses.dataclass
+class lead_months_config:
+    list_months: list | None = None
+    start: int = 1
+    end: int = None
+
+    def __post_init__(self):
+        if self.list_months is None:
+            if self.end is None:
+                raise ValueError(
+                    'Provide a list of lead_months to train on,' \
+                    'or specify the start-end pair to choose a slice.' \
+                )
+
+    def build_lead_months(self): 
+        return self.list_months or np.arange(self.start, self.end + 1)
 
 class DatasetConfigABC(abc.ABC):
 
@@ -17,13 +36,14 @@ class DatasetConfigABC(abc.ABC):
     condition: ConditionDataConfig | None
     condition_method: str | None
     time_features: list[str] | None
+    lead_months: lead_months_config | None
     _effective_condition: ConditionDataConfig | ModelDataConfig | None
 
     def __init__(self):
         self._check_required_input_source()
         self._check_condition_method()
         self._check_time_features()
-
+        self._resolve_lead_months()
 
     @final
     def _check_required_input_source(self):
@@ -56,6 +76,11 @@ class DatasetConfigABC(abc.ABC):
                     f'Must be a subset of {sorted(self._VALID_TIME_FEATURES)}.'
             )
         return self
+
+    @final
+    def _resolve_lead_months(self):
+        if self.lead_months is not None:
+            self.lead_months = self.lead_months.build_lead_months() 
     
     @abc.abstractmethod
     def _check_model(self):

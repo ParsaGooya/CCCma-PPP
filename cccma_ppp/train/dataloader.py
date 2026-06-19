@@ -7,7 +7,7 @@ from pathlib import Path
 
 from cccma_ppp.train.datasets import TrainDatasetConfig
 from cccma_ppp.data_modules import _create_train_mask, WeightsConfig
-from cccma_ppp.data_modules.dataloader import Dataloader, DataloaderConfigABC
+from cccma_ppp.data_modules.dataloader import Dataloader, DataloaderConfigABC, BatchDataABC
 from cccma_ppp.generic import Distributed
 
 
@@ -122,7 +122,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
         train_mask = _create_train_mask(
             years=self.train_years,
-            lead_times=np.arange(1, self.dataset_config.num_lead_months + 1),
+            lead_times=self.dataset_config.lead_months,
         )
 
         train_dataset = self.dataset_config.build_dataset(
@@ -150,7 +150,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         if self.num_validation_years > 0:
             validation_mask = _create_train_mask(
                 years=self.validation_years,
-                lead_times=np.arange(1, self.dataset_config.num_lead_months + 1),
+                lead_times=self.dataset_config.lead_months,
             )
             validation_dataset = self.dataset_config.build_dataset(
                 years=self.validation_years, mask=validation_mask, return_metadata=False

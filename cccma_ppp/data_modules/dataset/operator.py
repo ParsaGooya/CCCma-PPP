@@ -1,5 +1,6 @@
 import numpy as np
 from pathlib import Path
+import xarray as xr
 
 from cccma_ppp.data_modules.data import DataConfigABC
 from cccma_ppp.data_modules.dataset import DatasetConfigABC
@@ -15,7 +16,7 @@ class DatasetOperator:
 
     @property
     def config_observation(self):
-        if hasattr(self.config, 'observation', False):
+        if hasattr(self.config, 'observation'):
             return self.config.observation
 
     def _fit_preprocessors(
@@ -29,7 +30,7 @@ class DatasetOperator:
         if self.config.model is not None:
             selection = {
                 "year": train_years,
-                "lead_time": np.arange(1, self.config.num_lead_months + 1),
+                "lead_time": self.config.lead_months,
             }
             if self.config.model.info.coords["ensembles"] is not None:
                 selection["ensembles"] = self.config.model.info.coords["ensembles"]
@@ -60,7 +61,7 @@ class DatasetOperator:
                 else:
                     selection = {
                         "year": train_years,
-                        "lead_time": np.arange(1, self.config.num_lead_months + 1),
+                        "lead_time": self.config.lead_months,
                     }
                     if self.config.effective_condition.info.coords["ensembles"] is not None:
                         selection["ensembles"] = self.config.effective_condition.info.coords["ensembles"]
@@ -226,3 +227,40 @@ class DatasetOperator:
 
 
       
+def _get_time_features(config: DatasetConfigABC, 
+                       year: int, 
+                       lead_time: int, 
+                       input : xr.DataArray):
+
+    if config.time_features is not None:
+        time_features_list = np.array([config.time_features]).flatten()
+        feature_indices = {
+            "year": 0,
+            "lead_time": 1,
+            "month_sin": 2,
+            "month_cos": 3,
+        }
+
+        target_time = year + lead_time // 12
+        target_month = lead_time
+
+        y = (target_time - np.min(config.get_common_time)) / (
+            np.max(config.get_common_time)
+            - np.min(config.get_common_time)
+        )
+        lt = lead_time / max(config.lead_months)
+        msin = np.sin(2 * np.pi * target_month / 12.0)
+        mcos = np.cos(2 * np.pi * target_month / 12.0)
+
+        time_features = np.stack([y, lt, msin, mcos])
+        time_features = time_features[
+            ..., [feature_indices[k] for k in time_features_list]
+        ]
+
+        if input.ndim > 2:
+            time_features = np.broadcast_to(
+                time_features[(...,) + (None,) * (input.ndim - 1)],
+                (time_features.shape[0],) + input.shape[1:],
+            )
+
+        return time_features
