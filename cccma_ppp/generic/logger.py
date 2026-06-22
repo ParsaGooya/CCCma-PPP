@@ -10,6 +10,26 @@ def setup_logger(
     rank: int = 0,
     level: int = logging.INFO,
 ) -> logging.Logger:
+    """
+    Create and configure a logger for training.
+
+    Parameters
+    ----------
+    name : str, optional
+        Name of the logger.
+    log_dir : str or pathlib.Path or None, optional
+        Directory where log file will be saved. If None, falls back
+        to environment variable `GLOBAL_LOG_DIR`.
+    rank : int, optional
+        Process rank. Logging is only enabled for the root process (rank 0).
+    level : int, optional
+        Logging level (e.g., logging.INFO, logging.DEBUG).
+
+    Returns
+    -------
+    logging.Logger
+        Configured logger instance.
+    """
     logger = logging.getLogger(name)
     logger.setLevel(level)
 
