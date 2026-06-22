@@ -46,7 +46,7 @@ class TrainerConfig:
 
         if isinstance(module, cVAE):
             if self.beta_finder is None:
-                raise ValueError("specify beta annealing config for cVAE module.")
+                raise ValueError('specify beta annealing config for cVAE module.')
             self.beta_finder.build(self.num_train_batches)
 
         return Trainer(
@@ -169,6 +169,16 @@ class Trainer:
         self.log_root(logging.INFO, "Trainer setup complete.")
 
     def train(self):
+        """
+        Main training loop.
+
+        Responsibilities:
+        - loop over epochs
+        - run training epoch
+        - optionally run validation epoch
+        - handle early stopping
+        - checkpoint from root rank only
+        """
         assert self._setup, "make sure to setup the trainer first."
         self.log_root(logging.INFO, "Starting Training Loop...")
         self.start_time_train = time.time()
@@ -279,6 +289,16 @@ class Trainer:
         self.log_root(logging.INFO, f"Training finished in {time_elapsed:.2f}s")
 
     def _train_on_epoch(self):
+        """
+        Train for one epoch.
+
+        Responsibilities:
+        - set the DistributedSampler epoch
+        - put module in train mode
+        - iterate over train batches
+        - call _train_on_batch()
+        - record batch metrics
+        """
         self.TrainLoader.set_epoch(self._epochs_trained)
         self.module.train()
 
@@ -334,6 +354,14 @@ class Trainer:
 
     @torch.no_grad()
     def _validate_on_batch(self, batch):
+        """
+        Validate for one epoch.
+
+        Responsibilities:
+        - put module in eval mode
+        - iterate over validation batches
+        - record batch metrics
+        """
         batch.to_device(self.device)
         kwargs = {}
 
@@ -451,6 +479,16 @@ class Trainer:
             self.distributed.barrier()
 
     def _load_checkpoint(self, path: str | Path | None = None, strict: bool = True):
+        """
+        Load trainer checkpoint.
+
+        Assumes:
+        - setup() has already been called
+        - module has already been moved to device
+        - DDP wrapping has already happened if distributed
+        - optimizer has already been built
+        - scaler has already been created
+        """
         if path is None:
             path = Path(self.checkpoint_dir) / "best.pt"
         else:
