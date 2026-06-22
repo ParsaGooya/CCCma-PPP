@@ -918,13 +918,6 @@ class Autoencoder(deterministicmodelsABC):
         -------
         deterministicOutput
             Reconstructed output tensor.
-
-        Notes
-        -----
-        Behavior depends on `append_mode`:
-        - 1 : features appended to encoder
-        - 2 : features appended to decoder
-        - 3 : features appended to both
         """
 
         if isinstance(x, (tuple, list)):

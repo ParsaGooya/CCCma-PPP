@@ -59,10 +59,6 @@ class BetaAnnealing:
         Returns
         -------
         None
-
-        Notes
-        -----
-        Computes total number of steps used for annealing.
         """
 
         self.num_batches = num_batches

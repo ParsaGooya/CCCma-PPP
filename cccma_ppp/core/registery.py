@@ -39,11 +39,6 @@ class Registery:
         -------
         Callable
             Decorator that registers the class in the registry.
-
-        Notes
-        -----
-        If a name is registered more than once, the latest registration
-        overwrites the previous one.
         """
 
         def decorator(cls):

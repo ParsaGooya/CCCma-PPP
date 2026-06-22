@@ -116,10 +116,6 @@ class MetricsAggregator:
         -------
         dict of str to float
             Averaged loss values across all ranks.
-
-        Notes
-        -----
-        Uses all-reduce to compute global sums and counts.
         """
 
         logs = {}

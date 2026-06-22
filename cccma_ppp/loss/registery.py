@@ -40,10 +40,6 @@ class Registery:
         -------
         Callable
             Decorator that registers the class.
-
-        Notes
-        -----
-        If a name is reused, the existing entry is overwritten.
         """
 
         def decorator(cls):
