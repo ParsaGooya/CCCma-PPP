@@ -1,3 +1,4 @@
+from __future__ import annotations
 import abc
 import numpy as np
 from cccma_ppp.loss.loss import Losspipeline

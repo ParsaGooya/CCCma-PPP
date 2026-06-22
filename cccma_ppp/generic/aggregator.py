@@ -1,3 +1,4 @@
+from __future__ import annotations
 import numpy as np
 import dataclasses
 import torch
@@ -106,6 +107,42 @@ class MetricsAggregator:
                 self.loss_terms[name] += float(value)
 
         self.num_batches_seen += 1
+
+    @torch.no_grad()
+    def _dist_compute(self) -> dict[str, float]:
+        """
+        Aggregate batch-level losses across distributed processes.
+
+        Performs an all-reduce sum over both accumulated loss values
+        and batch counts, and computes global averages for each metric.
+
+        Returns
+        -------
+        dict of str to float
+            Dictionary mapping loss names to globally averaged values.
+        """
+
+        logs = {}
+
+        for name in sorted(self.loss_terms):
+            local = torch.tensor(
+                [self.loss_terms[name], self.num_batches_seen],
+                dtype=torch.float64,
+                device=self.distributed.device,
+            )
+
+            self.distributed.all_reduce_sum(local)
+
+            global_sum = local[0].item()
+            global_count = int(local[1].item())
+
+            if global_count == 0:
+                logs[name] = float("nan")
+            else:
+                logs[name] = global_sum / global_count
+
+        self._aggregated_across_ranks = True
+        return logs
 
     @torch.no_grad()
     def aggregate_losses(self) -> dict[str, float]:

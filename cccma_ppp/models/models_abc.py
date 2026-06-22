@@ -1,3 +1,4 @@
+from __future__ import annotations
 import abc
 import numpy as np
 import torch
@@ -16,26 +17,27 @@ InitMethod = Literal["trunc_normal", "xavier"]
 @dataclasses.dataclass
 class CheckpointConfig:
     """
-    Configuration for loading model checkpoints.
+    Configuration for loading and validating model checkpoints.
 
     Parameters
     ----------
     load_path : pathlib.Path or str
-        Path to checkpoint file.
+        Path to the checkpoint file.
     checkpoint_input_shape : np.ndarray
-        Input shape used during training.
+        Input shape expected by the checkpointed model.
     checkpoint_output_shape : np.ndarray
-        Output shape used during training.
+        Output shape produced by the checkpointed model.
     checkpoint_input_var_metadata : dict
-        Metadata describing input variables and preprocessing.
+        Metadata describing input variables and preprocessing used during training.
     checkpoint_output_var_metadata : dict
-        Metadata describing target variables and preprocessing.
+        Metadata describing output variables and preprocessing used during training.
     strict : bool, optional
-        Whether to strictly enforce state_dict matching.
+        Whether to strictly enforce that checkpoint keys match model keys.
     freeze_weights : bool, optional
         Whether to freeze model parameters after loading.
     """
 
+    load_path: Path | str
     checkpoint_input_shape: np.ndarray
     checkpoint_output_shape: np.ndarray
     checkpoint_input_var_metadata: dict
