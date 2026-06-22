@@ -38,10 +38,8 @@ class cVAEConfig(moduleConfigABC):
 
     def __post_init__(self):
         if self.load_dir is None:
-            if self.ModelConfig is None: 
-                raise ValueError(
-                "provide loading dir or model configurations"
-            )
+            if self.ModelConfig is None:
+                raise ValueError("provide loading dir or model configurations")
 
         else:
             self._load_from_checkpoint(self.load_dir)
@@ -81,10 +79,6 @@ class cVAEConfig(moduleConfigABC):
         )
 
     def _load_from_checkpoint(self, load_path: Path | str):
-        
-        '''
-        Loads model and prior flow config but allows control over the rest.
-        '''
 
         checkpoint_module, checkpoint_config = _load_config_from_checkpoint(
             Path(load_path)
@@ -220,9 +214,8 @@ class cVAE(moduleABC):
             target_mask = target_mask.unsqueeze(0).expand_as(output.output)
         target = target.unsqueeze(0).expand_as(output.output)
 
-
         generator = self.model_config.GENERATOR
-        step_arguments = {"generative_modeling": True, "generator" : generator}
+        step_arguments = {"generative_modeling": True, "generator": generator}
 
         reconstruction_loss, indiv_losses = self.criterion(
             output.output,

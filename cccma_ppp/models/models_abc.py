@@ -10,7 +10,8 @@ import dataclasses
 from typing import Literal
 
 
-InitMethod = Literal['trunc_normal', 'xavier']
+InitMethod = Literal["trunc_normal", "xavier"]
+
 
 @dataclasses.dataclass
 class CheckpointConfig:
@@ -87,7 +88,7 @@ class cVAEmodelConfigABC(modelConfigABC, abc.ABC):
 class modelABC(nn.Module, abc.ABC):
     def __init__(self, config: modelConfigABC):
         super().__init__()
-        self.init_method: InitMethod =  "trunc_normal"
+        self.init_method: InitMethod = "trunc_normal"
         self.NUM_OUTPUT_DIMS = config.NUM_OUTPUT_DIMS
         self.GENERATOR = config.GENERATOR
 
@@ -171,7 +172,7 @@ class cVAEmodelsABC(modelABC, abc.ABC):
         pass
 
 
-def weights_init(m, method: InitMethod = 'xavier'):
+def weights_init(m, method: InitMethod = "xavier"):
 
     if not isinstance(m, (nn.Linear, nn.Conv1d, nn.Conv2d, nn.Conv3d)):
         return
