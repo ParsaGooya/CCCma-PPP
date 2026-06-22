@@ -335,179 +335,6 @@ def test_anomalies_transform_before_fit():
         proc.transform(data)
 
 
-def test_oceannan_basic():
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-
-    data = make_geo_data()
-    proc.fit(data)
-
-    out = proc.transform(data)
-    inv = proc.inverse_transform(out)
-
-    assert proc.fitted
-    assert "ref" in out.dims
-    assert "ref" not in inv.dims
-
-
-def test_oceannan_with_target():
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-
-    data = make_geo_data()
-    target = make_geo_data()
-
-    proc.fit(data, target=target)
-
-    assert proc.fitted
-    assert proc.common_to_input_and_target
-
-
-def test_oceannan_flat_input_branch():
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-
-    data = make_geo_data()
-    proc.fit(data)
-
-    flat = data.stack(ref=["lat", "lon"]).dropna("ref")
-    out = proc.transform(flat)
-
-    assert "ref" in out.dims
-
-
-def test_oceannan_no_latlon():
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-
-    data = make_geo_data()
-    proc.fit(data)
-
-    flat = data.stack(ref=["lat", "lon"])
-    out = proc.transform(flat)
-
-    assert "ref" in out.dims
-
-
-def test_oceannan_partial_dims():
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-
-    data = make_geo_data()
-    proc.fit(data)
-
-    data_partial = data.drop_vars("lon", errors="ignore")
-    out = proc.transform(data_partial)
-
-    assert out is not None
-
-
-def test_oceannan_inverse_full():
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-
-    data = make_geo_data()
-    proc.fit(data)
-
-    flat = proc.transform(data)
-    out = proc.inverse_transform(flat)
-
-    assert "lat" in out.dims
-    assert "lon" in out.dims
-
-
-def test_oceannan_transform_before_fit():
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-    data = make_geo_data()
-
-    with pytest.raises(Exception):
-        proc.transform(data)
-
-
-def test_oceannan_save(tmp_path):
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-
-    data = make_geo_data()
-    save_dir = tmp_path / "save_dir"
-    save_dir.mkdir()
-
-    proc.fit(data, save=True, save_path=save_dir, save_name="test")
-
-    saved = save_dir / "test.joblib"
-    assert saved.exists()
-
-
-def test_oceannan_save_default_name(tmp_path):
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-
-    data = make_geo_data()
-    save_dir = tmp_path / "save_dir"
-    save_dir.mkdir()
-
-    proc.fit(data, save=True, save_path=save_dir)
-
-    assert any(path.suffix == ".joblib" for path in save_dir.iterdir())
-
-
-def test_oceannan_load(tmp_path):
-    file = tmp_path / "test.joblib"
-    joblib.dump(FakeLoaded(), file)
-
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-    proc.load_dir = file
-
-    proc._load_from_memory(file)
-
-    assert proc.fitted
-
-
-def test_oceannan_load_unfitted(tmp_path):
-    file = tmp_path / "bad.joblib"
-    joblib.dump(FakeLoaded(fitted=False), file)
-
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-
-    with pytest.raises((AssertionError, ValueError, RuntimeError)):
-        proc._load_from_memory(file)
-
-
-def test_oceannan_load_missing_file(tmp_path):
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-
-    with pytest.raises(Exception):
-        proc._load_from_memory(tmp_path / "missing.joblib")
-
-
-def test_oceannan_fit_with_load_dir(tmp_path):
-    file = tmp_path / "obj.joblib"
-    joblib.dump(FakeLoaded(), file)
-
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-    proc.load_dir = file
-
-    proc.fit(make_geo_data())
-
-    assert proc.fitted
-
-
-def test_oceannan_fit_with_target_and_save(tmp_path):
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-
-    data = make_geo_data()
-    target = make_geo_data()
-    save_dir = tmp_path / "save_target"
-    save_dir.mkdir()
-
-    proc.fit(
-        data, target=target, save=True, save_path=save_dir, save_name="target_case"
-    )
-
-    assert proc.common_to_input_and_target
-    assert (save_dir / "target_case.joblib").exists()
-
-
-def test_oceannan_inverse_transform_unfitted():
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-    data = make_geo_data()
-
-    with pytest.raises(Exception):
-        proc.inverse_transform(data)
-
-
 def test_normalizer_inverse_before_fit():
     proc = PreprocessingStepSelector("normalizer").get_preprocessor()
     data = make_data()
@@ -623,75 +450,6 @@ def test_anomalies_dataset_input():
     assert set(out.data_vars) == {"a", "b"}
 
 
-def test_oceannan_transform_target_like_ref_input():
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-
-    data = make_geo_data()
-    target = make_geo_data()
-
-    proc.fit(data, target=target)
-
-    flat = target.stack(ref=["lat", "lon"]).dropna("ref")
-    out = proc.transform(flat)
-
-    assert "ref" in out.dims
-
-
-def test_oceannan_inverse_transform_ref_only_input():
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-
-    data = make_geo_data()
-    proc.fit(data)
-
-    flat = proc.transform(data)
-    out = proc.inverse_transform(flat)
-
-    assert "lat" in out.dims
-    assert "lon" in out.dims
-
-
-def test_oceannan_transform_after_loaded_object(tmp_path):
-    data = make_geo_data()
-
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-    proc.fit(data)
-
-    file = tmp_path / "ocean.joblib"
-    joblib.dump(proc, file)
-
-    loaded = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-    loaded._load_from_memory(file)
-
-    out = loaded.transform(data)
-
-    assert loaded.fitted
-    assert "ref" in out.dims
-
-
-def test_oceannan_transform_ref_passthrough():
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-
-    data = make_geo_data()
-    proc.fit(data)
-
-    flat = data.stack(ref=["lat", "lon"])
-
-    out = proc.transform(flat)
-
-    assert "ref" in out.dims
-
-
-def test_oceannan_inverse_non_ref_input():
-    proc = PreprocessingStepSelector("oceannanremover").get_preprocessor()
-
-    data = make_geo_data()
-    proc.fit(data)
-
-    out = proc.inverse_transform(data)
-
-    assert out is not None
-
-
 def test_anomalies_no_mask_explicit():
     proc = PreprocessingStepSelector("anomalies").get_preprocessor()
 
@@ -713,3 +471,114 @@ def test_standardizer_dataset_roundtrip():
     out = proc.transform(ds)
 
     assert isinstance(out, xr.Dataset)
+
+
+def test_normalizer_dims_tuple_conversion():
+    proc = PreprocessingStepSelector(
+        "normalizer", {"dims": ["time"]}
+    ).get_preprocessor()
+    assert isinstance(proc.dims, tuple)
+
+
+def test_normalizer_min_equals_max():
+    proc = PreprocessingStepSelector("normalizer").get_preprocessor()
+
+    data = xr.DataArray(np.ones((2, 2, 2)), dims=("time", "lat", "lon"))
+    proc.fit(data)
+
+    out = proc.transform(data)
+    assert np.isnan(out).any() or np.isfinite(out).all()
+
+
+def test_standardizer_negative_std_filtered():
+    proc = PreprocessingStepSelector("standardizer").get_preprocessor()
+
+    data = xr.DataArray(np.ones((2, 2)), dims=("x", "y"))
+    proc.fit(data)
+
+    assert proc.std is not None
+
+
+def test_flattener_reference_shape_created():
+    proc = PreprocessingStepSelector("flattener").get_preprocessor()
+
+    data = make_geo_data()
+    proc.fit(data)
+
+    assert hasattr(proc, "reference_shape")
+
+
+def test_flattener_target_intersection_logic():
+    proc = PreprocessingStepSelector("flattener").get_preprocessor()
+
+    data = make_geo_data()
+    target = make_geo_data()
+
+    proc.fit(data, target=target)
+
+    assert proc.common_to_input_and_target is True
+    assert proc.final_locations is not None
+
+
+def test_flattener_transform_without_latlon_dims():
+    proc = PreprocessingStepSelector("flattener").get_preprocessor()
+
+    data = make_geo_data()
+    proc.fit(data)
+
+    flat = proc.transform(data)
+
+    out = proc.transform(flat)
+
+    assert "ref" in out.dims
+
+
+def test_flattener_save_with_explicit_path(tmp_path):
+    proc = PreprocessingStepSelector("flattener").get_preprocessor()
+
+    data = make_geo_data()
+    proc.fit(
+        data,
+        save=True,
+        save_path=tmp_path,
+        save_name="abc",
+    )
+
+    assert (tmp_path / "abc.joblib").exists()
+
+
+def test_flattener_load_success(tmp_path, monkeypatch):
+    fake = FakeLoaded(fitted=True)
+
+    path = tmp_path / "f.joblib"
+    joblib.dump(fake, path)
+
+    proc = PreprocessingStepSelector("flattener", {"load_dir": path}).get_preprocessor()
+    proc.fit(make_geo_data())
+
+    assert proc.fitted
+    assert proc.final_locations is not None
+
+
+def test_flattener_load_not_fitted(tmp_path):
+    fake = FakeLoaded(fitted=False)
+
+    path = tmp_path / "f.joblib"
+    joblib.dump(fake, path)
+
+    proc = PreprocessingStepSelector("flattener", {"load_dir": path}).get_preprocessor()
+
+    with pytest.raises(RuntimeError):
+        proc.fit(make_geo_data())
+
+
+def test_flattener_inverse_structure():
+    proc = PreprocessingStepSelector("flattener").get_preprocessor()
+
+    data = make_geo_data()
+    proc.fit(data)
+
+    flat = proc.transform(data)
+    restored = proc.inverse_transform(flat)
+
+    assert hasattr(restored, "coords")

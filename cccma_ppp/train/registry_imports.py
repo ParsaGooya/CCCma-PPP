@@ -1,4 +1,3 @@
-from __future__ import annotations
 import cccma_ppp.models.mlp_models
 import cccma_ppp.core.cVAE_module
 import cccma_ppp.core.deterministic_module

@@ -1,35 +1,17 @@
-from __future__ import annotations
 import numpy as np
 import dataclasses
 import torch
 from collections import defaultdict
 import warnings
 import matplotlib.pyplot as plt
-from cccma_ppp.generic.distributed import Distributed
-from cccma_ppp.generic.runtime import RuntimeContext
 import random
 from pathlib import Path
+
+from cccma_ppp.generic import Distributed, RuntimeContext
 
 
 @dataclasses.dataclass
 class MetricsAggregator:
-    """
-    Aggregate training and validation metrics across batches and epochs.
-
-    Parameters
-    ----------
-    distributed : Distributed
-        Distributed training context.
-    name : str
-        Name of the aggregator (e.g., "Train", "Validation").
-    epoch_loss_terms : dict of str to list of float, optional
-        Stored loss values per epoch.
-    epoch_times : list of float, optional
-        Time per epoch.
-    num_epochs_seen : int, optional
-        Number of processed epochs.
-    """
-
     distributed: Distributed
     name: str
 
@@ -38,21 +20,6 @@ class MetricsAggregator:
     num_epochs_seen: int = 0
 
     def __post_init__(self):
-        """
-        Initialize internal state for batch and epoch aggregation.
-
-        Validates consistency of stored epoch history and initializes
-        batch-level accumulators.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        AssertionError
-            If epoch loss lists have inconsistent lengths.
-        """
 
         self.loss_terms = defaultdict(float)
         self.num_batches_seen = 0
@@ -84,18 +51,7 @@ class MetricsAggregator:
 
     @torch.no_grad()
     def record(self, loss_dict: dict[str, torch.Tensor | int | float]) -> None:
-        """
-        Accumulate batch-level loss values.
 
-        Parameters
-        ----------
-        loss_dict : dict of str to Tensor or float
-            Loss components for a batch.
-
-        Returns
-        -------
-        None
-        """
         for name, value in loss_dict.items():
             if value is None:
                 continue
@@ -110,50 +66,6 @@ class MetricsAggregator:
 
     @torch.no_grad()
     def _dist_compute(self) -> dict[str, float]:
-        """
-        Aggregate batch-level losses across distributed processes.
-
-        Performs an all-reduce sum over both accumulated loss values
-        and batch counts, and computes global averages for each metric.
-
-        Returns
-        -------
-        dict of str to float
-            Dictionary mapping loss names to globally averaged values.
-        """
-
-        logs = {}
-
-        for name in sorted(self.loss_terms):
-            local = torch.tensor(
-                [self.loss_terms[name], self.num_batches_seen],
-                dtype=torch.float64,
-                device=self.distributed.device,
-            )
-
-            self.distributed.all_reduce_sum(local)
-
-            global_sum = local[0].item()
-            global_count = int(local[1].item())
-
-            if global_count == 0:
-                logs[name] = float("nan")
-            else:
-                logs[name] = global_sum / global_count
-
-        self._aggregated_across_ranks = True
-        return logs
-
-    @torch.no_grad()
-    def aggregate_losses(self) -> dict[str, float]:
-        """
-        Aggregate losses across distributed processes.
-
-        Returns
-        -------
-        dict of str to float
-            Averaged loss values across all ranks.
-        """
 
         logs = {}
 
@@ -180,33 +92,9 @@ class MetricsAggregator:
     def record_epoch(
         self,
         logs: dict[str, float],
-        replace_index: int | None = None,
-        time_elapsed: float | None = None,
-    ) -> dict:
-        """
-        Record aggregated metrics for an epoch.
-
-        Parameters
-        ----------
-        logs : dict of str to float
-            Aggregated loss values.
-        replace_index : int or None, optional
-            Index to overwrite existing epoch values.
-        time_elapsed : float or None, optional
-            Time taken for the epoch.
-
-        Returns
-        -------
-        dict
-            Recorded logs.
-
-        Raises
-        ------
-        RuntimeError
-            If distributed aggregation has not been performed.
-        ValueError
-            If attempting to replace a non-existing metric.
-        """
+        replace_index: int = None,
+        time_elapsed: float = None,
+    ):
 
         if not self._aggregated_across_ranks:
             raise RuntimeError(
@@ -242,17 +130,6 @@ class MetricsAggregator:
         return logs
 
     def reset_batch_losses(self):
-        """
-        Reset batch-level accumulators.
-
-        Returns
-        -------
-        None
-
-        Warns
-        -----
-        If called before any epoch has been recorded.
-        """
 
         if self.epochs_submitted:
             self.loss_terms = defaultdict(float)
@@ -271,29 +148,6 @@ class MetricsAggregator:
         plot_dir: str | Path | None = None,
         figsize=(8, 5),
     ) -> None:
-        """
-        Plot loss curves and epoch times.
-
-        Parameters
-        ----------
-        aggregator_list : list of MetricsAggregator
-            Aggregators to plot.
-        color_styles_list : list of (str, str), optional
-            Custom color and linestyle pairs.
-        plot_dir : Path or str or None, optional
-            Directory for saving plots.
-        figsize : tuple, optional
-            Figure size.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        ValueError
-            If aggregators are inconsistent or contain no data.
-        """
         if plot_dir is None:
             plot_dir = Path(RuntimeContext.GLOBAL_FIGURES_DIR)
         else:
@@ -437,15 +291,6 @@ class MetricsAggregator:
         plt.close()
 
     def state_dict(self):
-        """
-        Return serialized aggregator state.
-
-        Returns
-        -------
-        dict
-            State dictionary containing history and metadata.
-        """
-
         return {
             "name": self.name,
             "epoch_loss_terms": self.epoch_loss_terms,
@@ -453,19 +298,7 @@ class MetricsAggregator:
             "num_epochs_seen": self.num_epochs_seen,
         }
 
-    def load_state_dict(self, state_dict: dict) -> None:
-        """
-        Load aggregator state from dictionary.
-
-        Parameters
-        ----------
-        state_dict : dict
-            Stored state.
-
-        Returns
-        -------
-        None
-        """
+    def load_state_dict(self, state_dict):
 
         self.name = state_dict.get("name")
         self.epoch_loss_terms = state_dict.get("epoch_loss_terms", None)

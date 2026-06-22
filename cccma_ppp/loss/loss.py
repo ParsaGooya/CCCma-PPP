@@ -1,63 +1,25 @@
-from __future__ import annotations
 import torch.nn as nn
 import xarray as xr
-from cccma_ppp.loss.registery import Registery
 from typing import ClassVar
 import dataclasses
+
 from cccma_ppp.loss.loss_abc import Reduction
+from cccma_ppp.loss.registery import Registery
 
 
 @dataclasses.dataclass
 class LossStepConfig:
-    """
-    Configuration for a single loss step in a loss pipeline.
-
-    Parameters
-    ----------
-    name : str
-        Name of the registered loss function.
-    args : dict[str, object], optional
-        Arguments used to initialize the loss function.
-    """
-
     name: str
     args: dict[str, object] = dataclasses.field(default_factory=dict)
 
 
 @dataclasses.dataclass
 class LosspipelineConfig:
-    """
-    Configuration for combining multiple loss functions.
-
-    Parameters
-    ----------
-    loss_pipeline : list of LossStepConfig
-        Sequence of loss steps.
-    loss_weights : list of float or None, optional
-        Weights applied to each loss term.
-    reduction : {"mean", "sum"}, optional
-        Reduction method applied to individual losses.
-    """
-
     loss_pipeline: list[LossStepConfig]
     loss_weights: list[float] = None
     reduction: Reduction = "mean"
 
     def __post_init__(self):
-        """
-        Validate loss pipeline configuration.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        ValueError
-            If no loss terms are provided.
-        ValueError
-            If loss weights are inconsistent or invalid.
-        """
 
         if not len(self.loss_pipeline) >= 1:
             raise ValueError("provide at least one loss term.")
@@ -86,46 +48,11 @@ class LosspipelineConfig:
             ]
 
     def build(self, weights: xr.DataArray, num_output_dimensions: int = 2):
-        """
-        Construct loss pipeline.
-
-        Parameters
-        ----------
-        weights : xr.DataArray
-            Spatial or variable weights applied to loss computation.
-        num_output_dimensions : int, optional
-            Dimensionality of model outputs.
-
-        Returns
-        -------
-        Losspipeline
-            Initialized loss pipeline.
-        """
 
         return Losspipeline(self, weights, num_output_dimensions)
 
 
 class Losspipeline(nn.Module):
-    """
-    Container for sequentially applying multiple loss functions.
-
-    Combines multiple loss terms using configurable weights,
-    supports spatial weighting, and enforces dimensionality checks.
-
-    Attributes
-    ----------
-    config : LosspipelineConfig
-        Configuration object.
-    weights : xr.DataArray
-        Spatial or variable weights.
-    num_output_dimensions : int
-        Output dimensionality used for validation.
-    pipeline : list
-        List of instantiated loss functions.
-    steps : list of str
-        Names of loss steps.
-    """
-
     registery: ClassVar[Registery] = Registery()
 
     def __init__(
@@ -134,18 +61,6 @@ class Losspipeline(nn.Module):
         weights: xr.DataArray,
         num_output_dimensions: int = 2,
     ):
-        """
-        Initialize loss pipeline.
-
-        Parameters
-        ----------
-        config : LossPipelineConfig
-            Configuration for the loss pipeline.
-        weights : xr.DataArray
-            Precomputed spatial/variable weights.
-        num_output_dimensions : int, optional
-            Number of output dimensions handled by the loss.
-        """
 
         super().__init__()
         self._checked_dimensionality = False
@@ -175,19 +90,7 @@ class Losspipeline(nn.Module):
 
     @classmethod
     def register(cls, name: str):
-        """
-        Register a loss function.
 
-        Parameters
-        ----------
-        name : str
-            Name used for registration.
-
-        Returns
-        -------
-        Callable
-            Decorator for registering loss functions.
-        """
         return cls.registery.register(name.lower())
 
     def forward(
@@ -198,37 +101,6 @@ class Losspipeline(nn.Module):
         print_loss=False,
         step_arguments: dict = None,
     ):
-        """
-        Compute combined loss from all pipeline steps.
-
-        Parameters
-        ----------
-        data : torch.Tensor
-            Model predictions.
-        target : torch.Tensor
-            Ground truth targets.
-        target_mask : torch.Tensor or None, optional
-            Optional mask applied to targets.
-        print_loss : bool, optional
-            Whether to print individual loss values.
-        step_arguments : dict or None, optional
-            Additional arguments passed to each loss step.
-
-        Returns
-        -------
-        tuple
-            (total_loss, individual_losses)
-
-            total_loss : torch.Tensor
-                Weighted combined loss.
-            individual_losses : dict of str to float
-                Individual loss contributions.
-
-        Raises
-        ------
-        AssertionError
-            If input dimensionality does not match expectations.
-        """
 
         total_loss = None
         indiv_loses = {}

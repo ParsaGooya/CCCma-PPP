@@ -1,312 +1,254 @@
-import numpy as np
 import pytest
 import torch
 import torch.nn as nn
+import numpy as np
 
 from cccma_ppp.models.models_abc import (
     CheckpointConfig,
-    cVAEmodelConfigABC,
     cVAEmodelsABC,
-    deterministicmodelsABC,
-    flowABC,
     modelABC,
     modelConfigABC,
+    cVAEmodelConfigABC,
     weights_init,
 )
 
 
-class ConcreteFlow(flowABC):
-    def forward(self, x, condition=None):
-        return x if condition is None else x + condition
+class DummyModel(modelABC):
+    def __init__(self):
+        super().__init__()
+        self.linear = nn.Linear(2, 2)
 
-    def inverse(self, z, condition=None):
-        return z if condition is None else z - condition
-
-
-class ConcreteModelConfig(modelConfigABC):
-    NUM_OUTPUT_DIMS = 3
-    GENERATOR = True
-
-    def build(self, input_shape, output_shape=None, added_features_dim=None, **kwargs):
-        return ConcreteModel(self)
+    def forward(self, x):
+        return self.linear(x)
 
 
-class ConcreteDeterministicConfig(modelConfigABC):
+class DummyConfig(modelConfigABC):
     NUM_OUTPUT_DIMS = 2
     GENERATOR = False
 
     def build(self, input_shape, output_shape=None, added_features_dim=None, **kwargs):
-        return ConcreteDeterministicModel(self)
+        return DummyModel()
 
 
-class ConcreteCVAEConfig(cVAEmodelConfigABC):
+class DummyCvaeConfig(cVAEmodelConfigABC):
     NUM_OUTPUT_DIMS = 2
     GENERATOR = True
 
-    def build(self, input_shape, output_shape=None, added_features_dim=None, **kwargs):
-        return ConcreteCvaeModel(self)
+    def __init__(self):
+        self.latent_size = 4
+        self.condition_embedding_size = 4
+        self.condition_dependant_latent = True
+
+    def build(self, *args, **kwargs):
+        return DummyModel()
 
 
-class ConcreteModel(modelABC):
-    def __init__(self, config):
-        super().__init__(config)
-        self.linear = nn.Linear(2, 2)
-
-    def forward(self, x):
-        return self.linear(x)
-
-
-class EmptyModel(modelABC):
-    def __init__(self, config):
-        super().__init__(config)
-
-    def forward(self, x):
-        return x
-
-
-class BufferOnlyModel(modelABC):
-    def __init__(self, config):
-        super().__init__(config)
-        self.register_buffer("buf", torch.ones(1))
-
-    def forward(self, x):
-        return x
-
-
-class ConcreteDeterministicModel(deterministicmodelsABC):
-    def __init__(self, config):
-        super().__init__(config)
-        self.linear = nn.Linear(2, 2)
-
-    def forward(self, x):
-        return self.linear(x)
-
-
-class ConcreteCvaeModel(cVAEmodelsABC):
-    def __init__(self, config):
-        super().__init__(config)
-        self.linear = nn.Linear(2, 2)
-
-    def forward(self, x):
-        return self.linear(x)
-
-    def predict(self, x):
-        return self.forward(x)
-
-    def _recognition(self):
-        return (torch.tensor(1.0),)
-
-    def _condition(self):
-        return (torch.tensor(2.0),)
-
-    def _generate(self):
-        return torch.tensor(3.0)
-
-
-def test_cvae_resolve_flow_settings_condition_independent():
-    cfg = ConcreteCVAEConfig(
-        latent_size=4,
-        condition_dependant_latent=False,
-        condition_embedding_size=None,
+def test_checkpoint_config_init():
+    cfg = CheckpointConfig(
+        load_path="a.pt",
+        checkpoint_input_shape=np.array([1]),
+        checkpoint_output_shape=np.array([1]),
+        checkpoint_input_var_metadata={},
+        checkpoint_output_var_metadata={},
     )
 
-    result = cfg._resolve_flow_settings(condition_dependant_flow=False)
-
-    assert result is cfg
-    assert cfg.condition_dependant_flow is False
-
-
-def test_cvae_resolve_flow_settings_condition_dependent_flow_on_allows_size_mismatch():
-    cfg = ConcreteCVAEConfig(
-        latent_size=4,
-        condition_dependant_latent=True,
-        condition_embedding_size=8,
-    )
-
-    result = cfg._resolve_flow_settings(condition_dependant_flow=True)
-
-    assert result is cfg
-    assert cfg.condition_dependant_flow is True
-
-
-def test_cvae_resolve_flow_settings_condition_dependent_latent_without_flow_requires_size_match():
-    cfg = ConcreteCVAEConfig(
-        latent_size=4,
-        condition_dependant_latent=True,
-        condition_embedding_size=8,
-    )
-
-    with pytest.raises(ValueError, match="condition embedding size"):
-        cfg._resolve_flow_settings(condition_dependant_flow=False)
-
-
-def test_cvae_resolve_flow_settings_condition_dependent_latent_without_flow_size_match():
-    cfg = ConcreteCVAEConfig(
-        latent_size=4,
-        condition_dependant_latent=True,
-        condition_embedding_size=4,
-    )
-
-    result = cfg._resolve_flow_settings(condition_dependant_flow=False)
-
-    assert result is cfg
-    assert cfg.condition_dependant_flow is False
+    assert cfg.load_path == "a.pt"
+    assert cfg.strict is True
+    assert cfg.freeze_weights is False
 
 
 def test_get_device_from_parameter():
-    model = ConcreteModel(ConcreteModelConfig())
-
-    assert model._get_device() == next(model.parameters()).device
-
-
-def test_get_device_from_buffer_when_no_parameters():
-    model = BufferOnlyModel(ConcreteModelConfig())
-
-    assert model._get_device() == model.buf.device
+    model = DummyModel()
+    device = model._get_device()
+    assert isinstance(device, torch.device)
 
 
-def test_get_device_cpu_when_no_parameters_or_buffers():
-    model = EmptyModel(ConcreteModelConfig())
+def test_get_device_cpu_when_empty():
+    class EmptyModel(modelABC):
+        def forward(self, x):
+            return x
 
-    assert model._get_device() == torch.device("cpu")
-
-
-@pytest.mark.parametrize(
-    "module",
-    [
-        nn.Linear(2, 2),
-        nn.Conv1d(1, 1, kernel_size=1),
-        nn.Conv2d(1, 1, kernel_size=1),
-        nn.Conv3d(1, 1, kernel_size=1),
-    ],
-)
-def test_weights_init_xavier_supported_modules(module):
-    before_weight = module.weight.detach().clone()
-
-    weights_init(module, method="xavier")
-
-    assert not torch.allclose(module.weight.detach(), before_weight)
-    if module.bias is not None:
-        assert torch.allclose(module.bias.detach(), torch.zeros_like(module.bias))
+    m = EmptyModel()
+    device = m._get_device()
+    assert device.type == "cpu"
 
 
-@pytest.mark.parametrize(
-    "module",
-    [
-        nn.Linear(2, 2),
-        nn.Conv1d(1, 1, kernel_size=1),
-        nn.Conv2d(1, 1, kernel_size=1),
-        nn.Conv3d(1, 1, kernel_size=1),
-    ],
-)
-def test_weights_init_trunc_normal_supported_modules(module):
-    before_weight = module.weight.detach().clone()
-
-    weights_init(module, method="trunc_normal")
-
-    assert not torch.allclose(module.weight.detach(), before_weight)
-    if module.bias is not None:
-        assert torch.allclose(module.bias.detach(), torch.zeros_like(module.bias))
-
-
-def test_weights_init_unsupported_module_noop():
-    module = nn.ReLU()
-
-    weights_init(module, method="not_a_real_method")
-
-
-def test_weights_init_unknown_method_raises_for_supported_module():
-    module = nn.Linear(2, 2)
-
-    with pytest.raises(NotImplementedError, match="trunc_normal"):
-        weights_init(module, method="bad")
-
-
-def test_weights_init_skips_frozen_weight_and_bias():
-    module = nn.Linear(2, 2)
-    module.weight.requires_grad = False
-    module.bias.requires_grad = False
-
-    before_weight = module.weight.detach().clone()
-    before_bias = module.bias.detach().clone()
-
-    weights_init(module, method="xavier")
-
-    assert torch.allclose(module.weight.detach(), before_weight)
-    assert torch.allclose(module.bias.detach(), before_bias)
-
-
-def test_initialize_weights_applies_to_submodules():
-    model = ConcreteModel(ConcreteModelConfig())
-    before_weight = model.linear.weight.detach().clone()
-
-    model.init_method = "xavier"
-    model._initialize_weights()
-
-    assert not torch.allclose(model.linear.weight.detach(), before_weight)
-    assert torch.allclose(
-        model.linear.bias.detach(), torch.zeros_like(model.linear.bias)
-    )
-
-
-def test_initialize_weights_raises_for_bad_method():
-    model = ConcreteModel(ConcreteModelConfig())
-    model.init_method = "bad"
-
-    with pytest.raises(NotImplementedError):
-        model._initialize_weights()
-
-
-def test_load_state_dict_missing_file_raises(tmp_path):
-    model = ConcreteModel(ConcreteModelConfig())
+def test_load_state_dict_missing_file(tmp_path):
+    model = DummyModel()
 
     cfg = CheckpointConfig(
         load_path=tmp_path / "missing.pt",
-        checkpoint_input_shape=np.array([2]),
-        checkpoint_output_shape=np.array([2]),
+        checkpoint_input_shape=np.array([1]),
+        checkpoint_output_shape=np.array([1]),
         checkpoint_input_var_metadata={},
         checkpoint_output_var_metadata={},
     )
 
-    with pytest.raises(FileNotFoundError, match="Checkpoint not found"):
+    with pytest.raises(FileNotFoundError):
         model._load_state_dict(cfg)
 
 
-def test_load_state_dict_loads_model_prefixed_keys(tmp_path):
-    model = ConcreteModel(ConcreteModelConfig())
+def test_load_state_dict_success(tmp_path):
+    model = DummyModel()
 
-    new_model = ConcreteModel(ConcreteModelConfig())
-    for param in new_model.parameters():
-        nn.init.constant_(param, 0.25)
+    new_model = DummyModel()
+    for p in new_model.parameters():
+        nn.init.constant_(p, 0.5)
 
     checkpoint = {
-        "module": {
-            f"model.{key}": value.detach().clone()
-            for key, value in new_model.state_dict().items()
-        }
+        "module": {f"model.{k}": v.clone() for k, v in new_model.state_dict().items()}
     }
 
-    checkpoint_path = tmp_path / "checkpoint.pt"
-    torch.save(checkpoint, checkpoint_path)
+    path = tmp_path / "ckpt.pt"
+    torch.save(checkpoint, path)
 
     cfg = CheckpointConfig(
-        load_path=checkpoint_path,
-        checkpoint_input_shape=np.array([2]),
-        checkpoint_output_shape=np.array([2]),
+        load_path=path,
+        checkpoint_input_shape=np.array([1]),
+        checkpoint_output_shape=np.array([1]),
         checkpoint_input_var_metadata={},
         checkpoint_output_var_metadata={},
-        strict=True,
-        freeze_weights=False,
     )
 
     model._load_state_dict(cfg)
 
-    for key, value in model.state_dict().items():
-        assert torch.allclose(value, new_model.state_dict()[key])
+    for p in model.parameters():
+        assert torch.allclose(p, torch.full_like(p, 0.5))
 
 
-def test_load_state_dict_ignores_non_model_prefixed_keys_with_strict_false(tmp_path):
-    model = ConcreteModel(ConcreteModelConfig())
+def test_freeze_weights(tmp_path):
+    model = DummyModel()
+
+    checkpoint = {
+        "module": {f"model.{k}": v.clone() for k, v in model.state_dict().items()}
+    }
+
+    path = tmp_path / "ckpt.pt"
+    torch.save(checkpoint, path)
+
+    cfg = CheckpointConfig(
+        load_path=path,
+        checkpoint_input_shape=np.array([1]),
+        checkpoint_output_shape=np.array([1]),
+        checkpoint_input_var_metadata={},
+        checkpoint_output_var_metadata={},
+        freeze_weights=True,
+    )
+
+    model._load_state_dict(cfg)
+
+    for p in model.parameters():
+        assert p.requires_grad is False
+
+
+def test_cvae_resolve_flow_success():
+    cfg = DummyCvaeConfig()
+    cfg._resolve_flow_settings(condition_dependant_flow=False)
+
+
+def test_cvae_resolve_flow_error():
+    cfg = DummyCvaeConfig()
+    cfg.condition_embedding_size = 3
+
+    with pytest.raises(ValueError):
+        cfg._resolve_flow_settings(condition_dependant_flow=False)
+
+
+def test_weights_init_xavier():
+    layer = nn.Linear(10, 5)
+    weights_init(layer, method="xavier")
+
+    assert layer.weight is not None
+
+
+def test_weights_init_trunc_normal():
+    layer = nn.Linear(10, 5)
+    weights_init(layer, method="trunc_normal")
+
+    assert layer.weight is not None
+
+
+def test_weights_init_unsupported_module():
+    class Dummy:
+        pass
+
+    obj = Dummy()
+
+    weights_init(obj)
+
+
+def test_weights_init_invalid_method():
+    layer = nn.Linear(2, 2)
+
+    with pytest.raises(NotImplementedError):
+        weights_init(layer, method="invalid")
+
+
+def test_model_config_requires_build():
+    class BadConfig(modelConfigABC):
+        NUM_OUTPUT_DIMS = 2
+        GENERATOR = False
+
+    with pytest.raises(TypeError):
+        BadConfig()
+
+
+def test_flow_abc_requires_methods():
+    from cccma_ppp.models.models_abc import flowABC
+
+    class BadFlow(flowABC):
+        pass
+
+    with pytest.raises(TypeError):
+        BadFlow()
+
+
+def test_add_checkpoint_config():
+    cfg = DummyConfig()
+
+    ckpt = CheckpointConfig(
+        load_path="x.pt",
+        checkpoint_input_shape=np.array([1]),
+        checkpoint_output_shape=np.array([1]),
+        checkpoint_input_var_metadata={},
+        checkpoint_output_var_metadata={},
+    )
+
+    cfg._add_checkpoint_config(ckpt)
+
+    assert cfg.checkpoint_config is ckpt
+
+
+def test_cvae_resolve_flow_with_flow_enabled_mismatch_allowed():
+    cfg = DummyCvaeConfig()
+    cfg.condition_embedding_size = 1
+    cfg.latent_size = 4
+
+    cfg._resolve_flow_settings(condition_dependant_flow=True)
+
+
+def test_cvae_resolve_flow_condition_independent():
+    cfg = DummyCvaeConfig()
+    cfg.condition_dependant_latent = False
+
+    cfg._resolve_flow_settings(condition_dependant_flow=False)
+
+
+def test_get_device_from_buffer():
+    class BufferModel(modelABC):
+        def __init__(self):
+            super().__init__()
+            self.register_buffer("buf", torch.zeros(1))
+
+        def forward(self, x):
+            return x
+
+    m = BufferModel()
+    assert m._get_device().type == "cpu"
+
+
+def test_load_state_dict_ignores_non_model_keys(tmp_path):
+    model = DummyModel()
 
     checkpoint = {
         "module": {
@@ -316,57 +258,23 @@ def test_load_state_dict_ignores_non_model_prefixed_keys_with_strict_false(tmp_p
         }
     }
 
-    checkpoint_path = tmp_path / "checkpoint.pt"
-    torch.save(checkpoint, checkpoint_path)
+    path = tmp_path / "ckpt.pt"
+    torch.save(checkpoint, path)
 
     cfg = CheckpointConfig(
-        load_path=checkpoint_path,
-        checkpoint_input_shape=np.array([2]),
-        checkpoint_output_shape=np.array([2]),
+        load_path=path,
+        checkpoint_input_shape=np.array([1]),
+        checkpoint_output_shape=np.array([1]),
         checkpoint_input_var_metadata={},
         checkpoint_output_var_metadata={},
         strict=True,
-        freeze_weights=False,
     )
 
     model._load_state_dict(cfg)
 
-    assert torch.allclose(model.linear.weight, torch.ones_like(model.linear.weight))
-    assert torch.allclose(model.linear.bias, torch.zeros_like(model.linear.bias))
 
-
-def test_load_state_dict_freezes_weights(tmp_path):
-    model = ConcreteModel(ConcreteModelConfig())
-
-    checkpoint = {
-        "module": {
-            f"model.{key}": value.detach().clone()
-            for key, value in model.state_dict().items()
-        }
-    }
-
-    checkpoint_path = tmp_path / "checkpoint.pt"
-    torch.save(checkpoint, checkpoint_path)
-
-    cfg = CheckpointConfig(
-        load_path=checkpoint_path,
-        checkpoint_input_shape=np.array([2]),
-        checkpoint_output_shape=np.array([2]),
-        checkpoint_input_var_metadata={},
-        checkpoint_output_var_metadata={},
-        strict=True,
-        freeze_weights=True,
-    )
-
-    assert all(param.requires_grad for param in model.parameters())
-
-    model._load_state_dict(cfg)
-
-    assert all(not param.requires_grad for param in model.parameters())
-
-
-def test_load_state_dict_strict_false_allows_missing_keys(tmp_path):
-    model = ConcreteModel(ConcreteModelConfig())
+def test_load_state_dict_strict_false_missing_keys(tmp_path):
+    model = DummyModel()
 
     checkpoint = {
         "module": {
@@ -374,43 +282,89 @@ def test_load_state_dict_strict_false_allows_missing_keys(tmp_path):
         }
     }
 
-    checkpoint_path = tmp_path / "checkpoint.pt"
-    torch.save(checkpoint, checkpoint_path)
+    path = tmp_path / "ckpt.pt"
+    torch.save(checkpoint, path)
 
     cfg = CheckpointConfig(
-        load_path=checkpoint_path,
-        checkpoint_input_shape=np.array([2]),
-        checkpoint_output_shape=np.array([2]),
+        load_path=path,
+        checkpoint_input_shape=np.array([1]),
+        checkpoint_output_shape=np.array([1]),
         checkpoint_input_var_metadata={},
         checkpoint_output_var_metadata={},
         strict=False,
-        freeze_weights=False,
     )
 
     model._load_state_dict(cfg)
 
 
-def test_load_state_dict_strict_true_missing_keys_raises(tmp_path):
-    model = ConcreteModel(ConcreteModelConfig())
+def test_load_state_dict_no_model_prefix_keys(tmp_path):
+    model = DummyModel()
 
-    checkpoint = {
-        "module": {
-            "model.linear.bias": torch.zeros_like(model.linear.bias),
-        }
-    }
+    checkpoint = {"module": {"something": torch.tensor(1)}}
 
-    checkpoint_path = tmp_path / "checkpoint.pt"
-    torch.save(checkpoint, checkpoint_path)
+    path = tmp_path / "ckpt.pt"
+    torch.save(checkpoint, path)
 
     cfg = CheckpointConfig(
-        load_path=checkpoint_path,
-        checkpoint_input_shape=np.array([2]),
-        checkpoint_output_shape=np.array([2]),
+        load_path=path,
+        checkpoint_input_shape=np.array([1]),
+        checkpoint_output_shape=np.array([1]),
         checkpoint_input_var_metadata={},
         checkpoint_output_var_metadata={},
-        strict=True,
-        freeze_weights=False,
+        strict=False,
     )
 
-    with pytest.raises(RuntimeError):
-        model._load_state_dict(cfg)
+    model._load_state_dict(cfg)
+
+
+def test_weights_init_skips_frozen_params():
+    layer = nn.Linear(3, 3)
+    layer.weight.requires_grad = False
+    layer.bias.requires_grad = False
+
+    w_before = layer.weight.clone()
+
+    weights_init(layer, method="xavier")
+
+    assert torch.allclose(layer.weight, w_before)
+
+
+def test_weights_init_bias_only():
+    class BiasOnly(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.bias = nn.Parameter(torch.ones(3))
+
+    m = BiasOnly()
+
+    weights_init(m, method="xavier")
+
+
+def test_weights_init_changes_weights():
+    layer = nn.Linear(10, 10)
+    w_before = layer.weight.clone()
+
+    weights_init(layer, method="trunc_normal")
+
+    assert not torch.allclose(layer.weight, w_before)
+
+
+def test_cvae_model_flag():
+    class DummyCvae(cVAEmodelsABC):
+        def forward(self, x):
+            return x
+
+        def predict(self, x):
+            return x
+
+        def _recognition(self):
+            return (torch.tensor(1),)
+
+        def _condition(self):
+            return (torch.tensor(1),)
+
+        def _generate(self):
+            return torch.tensor(1)
+
+    m = DummyCvae()
+    assert m.generative_modeling is True

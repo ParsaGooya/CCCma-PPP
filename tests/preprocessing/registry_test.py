@@ -1,90 +1,195 @@
 import pytest
-
+import dataclasses
 from cccma_ppp.preprocessing.registery import Registery
 
 
-def test_register_and_get_class():
-    registry = Registery()
+def test_register_and_get_class_without_config():
+    reg = Registery()
 
-    @registry.register("test")
-    class Dummy:
-        pass
+    @reg.register("A")
+    class A:
+        def __init__(self):
+            self.value = 1
 
-    cls = registry.get("test")
+    obj = reg.get("A", {})
+    assert isinstance(obj, A)
+    assert obj.value == 1
 
-    assert cls is Dummy
 
+def test_register_and_get_with_config():
+    reg = Registery()
 
-def test_get_with_config_instantiates():
-    registry = Registery()
-
-    @registry.register("test")
-    class Dummy:
-        def __init__(self, x):
+    @reg.register("B")
+    class B:
+        def __init__(self, x, y):
             self.x = x
+            self.y = y
 
-    obj = registry.get("test", config={"x": 10})
+    obj = reg.get("B", {"x": 2, "y": 3})
 
-    assert isinstance(obj, Dummy)
-    assert obj.x == 10
+    assert isinstance(obj, B)
+    assert obj.x == 2
+    assert obj.y == 3
 
 
-def test_get_without_config():
-    registry = Registery()
+def test_get_unregistered_raises():
+    reg = Registery()
 
-    @registry.register("test")
-    class Dummy:
+    with pytest.raises(ValueError):
+        reg.get("missing")
+
+
+def test_overwrite_registration():
+    reg = Registery()
+
+    @reg.register("C")
+    class C1:
         pass
 
-    result = registry.get("test", config=None)
+    @reg.register("C")
+    class C2:
+        pass
 
-    assert result is Dummy
+    cls = reg.get("C")
 
-
-def test_get_unknown_name():
-    registry = Registery()
-
-    with pytest.raises(ValueError) as exc:
-        registry.get("missing")
-
-    assert "missing not registered" in str(exc.value)
+    assert cls is C2
 
 
-def test_register_overwrites_existing():
-    registry = Registery()
+def test_available_returns_registered_names():
+    reg = Registery()
 
-    @registry.register("name")
+    @reg.register("x")
+    class X:
+        def __init__(self, _=None):
+            pass
+
+    @reg.register("y")
+    class Y:
+        def __init__(self, _=None):
+            pass
+
+    names = reg.available()
+
+    assert set(names) == {"x", "y"}
+
+
+def test_get_with_empty_config_dict():
+    reg = Registery()
+
+    @reg.register("D")
+    class D:
+        def __init__(self):
+            self.ok = True
+
+    obj = reg.get("D", {})
+
+    assert isinstance(obj, D)
+    assert obj.ok
+
+
+def test_get_with_none_config_passes_none():
+    reg = Registery()
+
+    @reg.register("E")
+    class E:
+        def __init__(self, value=None):
+            self.value = value
+
+    cls = reg.get("E")
+
+    assert cls is E
+
+
+def test_multiple_registrations_independent():
+    reg = Registery()
+
+    @reg.register("A")
     class A:
         pass
 
-    @registry.register("name")
+    @reg.register("B")
     class B:
         pass
 
-    result = registry.get("name")
+    assert reg.get("A") is A
+    assert reg.get("B") is B
 
-    assert result is B
+
+def test_config_passed_as_kwargs_correctly():
+    reg = Registery()
+
+    @reg.register("F")
+    class F:
+        def __init__(self, a=0, b=0):
+            self.a = a
+            self.b = b
+
+    obj = reg.get("F", {"a": 5})
+
+    assert obj.a == 5
+    assert obj.b == 0
 
 
-def test_get_invalid_config_type():
-    registry = Registery()
+def test_get_dataclass_with_config():
+    reg = Registery()
 
-    @registry.register("test")
-    class Dummy:
+    @dataclasses.dataclass
+    class D:
+        x: int
+        y: int
+
+    reg.register("dataclass")(D)
+
+    obj = reg.get("dataclass", {"x": 1, "y": 2})
+
+    assert isinstance(obj, D)
+    assert obj.x == 1
+    assert obj.y == 2
+
+
+def test_get_returns_class_when_config_none():
+    reg = Registery()
+
+    @reg.register("A")
+    class A:
+        pass
+
+    cls = reg.get("A")
+
+    assert cls is A
+
+
+def test_get_with_invalid_config_raises_typeerror():
+    reg = Registery()
+
+    @reg.register("A")
+    class A:
         def __init__(self, x):
             self.x = x
 
     with pytest.raises(TypeError):
-        registry.get("test", config="not_a_dict")
+        reg.get("A", {})
 
 
-def test_get_missing_required_argument():
-    registry = Registery()
+def test_get_with_non_dict_non_none_config():
+    reg = Registery()
 
-    @registry.register("test")
-    class Dummy:
+    @reg.register("A")
+    class A:
+        def __init__(self, value):
+            self.value = value
+
+    with pytest.raises(TypeError):
+        reg.get("A", 123)
+
+
+def test_get_with_extra_kwargs_raises():
+    reg = Registery()
+
+    @reg.register("A")
+    class A:
         def __init__(self, x):
             self.x = x
 
     with pytest.raises(TypeError):
-        registry.get("test", config={})
+        reg.get("A", {"x": 1, "y": 2})
