@@ -19,6 +19,23 @@ from cccma_ppp.generic.distributed import Distributed
 
 @dataclasses.dataclass
 class BatchData:
+    """
+    Container for batched data and optional masks.
+
+    Parameters
+    ----------
+    input : torch.Tensor
+        Input tensor.
+    target : torch.Tensor
+        Target tensor.
+    added_features : torch.Tensor, optional
+        Additional input features.
+    return_spatial_mask : bool, optional
+        Whether to compute spatial masks.
+    reduce_spatial_mask : bool, optional
+        Whether to reduce masks across batch dimension.
+    """
+
     input: torch.Tensor
     target: torch.Tensor
     added_features: torch.Tensor = None
@@ -26,6 +43,14 @@ class BatchData:
     reduce_spatial_mask: bool = False
 
     def __post_init__(self):
+        """
+        Initialize masks and replace NaNs.
+
+        Returns
+        -------
+        None
+        """
+
         if self.return_spatial_mask:
             self.input_mask = (~torch.isnan(self.input)).to(torch.int)
             self.target_mask = (~torch.isnan(self.target)).to(torch.int)
@@ -43,6 +68,18 @@ class BatchData:
             self.target = (self.target, self.target_mask)
 
     def to_device(self, device):
+        """
+        Move batch data to specified device.
+
+        Parameters
+        ----------
+        device : torch.device
+
+        Returns
+        -------
+        BatchData
+            Updated batch on target device.
+        """
 
         if self.return_spatial_mask:
             self.input = (self.input[0].to(device), self.input[1].to(device))
@@ -59,6 +96,27 @@ class BatchData:
 
 @dataclasses.dataclass
 class TrainDataloaderConfig:
+    """
+    Configuration for training and validation dataloaders.
+
+    Parameters
+    ----------
+    dataset_config : XArrayDatasetConfig
+        Dataset configuration.
+    batch_size : int
+        Batch size.
+    train_years : tuple or list, optional
+        Range of training years.
+    num_validation_years : int, optional
+        Number of validation years.
+    num_data_workers : int, optional
+        Number of worker processes.
+    prefetch_factor : int, optional
+        Prefetch factor for DataLoader.
+    drop_last : bool, optional
+        Whether to drop last batch.
+    """
+
     dataset_config: XArrayDatasetConfig
     batch_size: int
     train_years: tuple | list = None
@@ -68,6 +126,15 @@ class TrainDataloaderConfig:
     drop_last: bool = False
 
     def __post_init__(self):
+        """
+        Initialize training/validation splits.
+
+        Raises
+        ------
+        ValueError
+            If requested years are not available.
+        """
+
         self._setup = False
         self.available_train_years = self.dataset_config.available_train_time
 
@@ -100,8 +167,24 @@ class TrainDataloaderConfig:
                 )
 
     def setup_distributed(
-        self, distributed: Distributed, save_path: Path | str | None = None
+        self,
+        distributed: Distributed,
+        save_path: Path | str | None = None,
     ):
+        """
+        Setup multiprocessing preprocessing and synchronization.
+
+        Parameters
+        ----------
+        distributed : Distributed
+            Distributed configuration or manager object.
+        save_path : Path or str or None, optional
+            Optional path for saving distributed artifacts.
+
+        Returns
+        -------
+        None
+        """
 
         self.rank = distributed.rank
         self.world_size = distributed.world_size
@@ -119,10 +202,45 @@ class TrainDataloaderConfig:
         self._setup = True
 
     def _add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
+        """
+        Add fitted preprocessor to pipeline.
+
+        Parameters
+        ----------
+        preprocessor : PreprocessModuleABC
+        index : int, optional
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        AssertionError
+            If preprocessor is not fitted.
+        """
         assert preprocessor.fitted, "The preprocessor must be fitted"
         self.dataset_config._add_fitted_preprocessor(preprocessor, index)
 
     def build_train_loader(self, return_spatial_mask=False, reduce_spatial_mask=False):
+        """
+        Build training dataloader.
+
+        Parameters
+        ----------
+        return_spatial_mask : bool, optional
+        reduce_spatial_mask : bool, optional
+
+        Returns
+        -------
+        Dataloader
+
+        Raises
+        ------
+        RuntimeError
+            If distributed setup not completed.
+        """
+
         if not self._setup:
             raise RuntimeError(
                 "Dataloader has to be setup for distributed training first by calling .setup_distributed()"
@@ -150,6 +268,22 @@ class TrainDataloaderConfig:
     def build_validation_loader(
         self, return_spatial_mask=False, reduce_spatial_mask=False
     ):
+        """
+        Build validation dataloader.
+
+        Parameters
+        ----------
+        return_spatial_mask : bool, optional
+        reduce_spatial_mask : bool, optional
+
+        Returns
+        -------
+        Dataloader or None
+
+        Warns
+        -----
+        If validation dataset is unavailable.
+        """
         if not self._setup:
             raise RuntimeError(
                 "Dataloader has to be setup for distributed training first by calling .setup_distributed()"
@@ -181,15 +315,43 @@ class TrainDataloaderConfig:
 
     @property
     def input_var_metadata(self):
+        """
+        Return input variable metadata.
+
+        Returns
+        -------
+        dict
+        """
         return self.dataset_config.get_input_var_metadata()
 
     @property
     def target_var_metadata(self):
+        """
+        Return target variable metadata.
+
+        Returns
+        -------
+        dict
+        """
         return self.dataset_config.get_target_var_metadata()
 
 
 @dataclasses.dataclass
 class Dataloader:
+    """
+    Wrapper around PyTorch DataLoader with distributed support.
+
+    Parameters
+    ----------
+    config : TrainDataloaderConfig
+    dataset : XArrayDataset
+    collate_fn : Callable
+    rank : int, optional
+    world_size : int, optional
+    return_spatial_mask : bool, optional
+    reduce_spatial_mask : bool, optional
+    """
+
     config: TrainDataloaderConfig
     dataset: XArrayDataset
     collate_fn: Callable
@@ -199,6 +361,13 @@ class Dataloader:
     reduce_spatial_mask: bool = False
 
     def __post_init__(self):
+        """
+        Initialize PyTorch DataLoader and sampler.
+
+        Returns
+        -------
+        None
+        """
 
         self.sampler = self._get_dataloader_sampler()
         shuffle = self.world_size == 1
@@ -217,27 +386,73 @@ class Dataloader:
         )
 
     def get_weights(self, config: WeightsConfig | None = None):
+        """
+        Retrieve dataset weights.
+
+        Parameters
+        ----------
+        config : WeightsConfig or None
+
+        Returns
+        -------
+        torch.Tensor or xr.DataArray
+        """
 
         return self.config.dataset_config.get_weights(config)
 
     @property
     def input_shape(self):
+        """
+        Input tensor shape.
+
+        Returns
+        -------
+        np.ndarray
+        """
         return self.dataset.get_input_shape()
 
     @property
     def target_shape(self):
+        """
+        Target tensor shape.
+
+        Returns
+        -------
+        np.ndarray
+        """
         return self.dataset.get_target_shape()
 
     @property
     def added_features_dim(self):
+        """
+        Dimension of additional features.
+
+        Returns
+        -------
+        int
+        """
         return self.dataset.get_added_features_dim()
 
     @final
     def __iter__(self) -> Iterator[BatchData]:
+        """
+        Iterate over batches.
+
+        Returns
+        -------
+        Iterator of BatchData
+        """
         return iter(self._torch_loader)
 
     @final
     def _get_dataloader_sampler(self, **kwargs):
+        """
+        Create distributed sampler if needed.
+
+        Returns
+        -------
+        DistributedSampler or None
+        """
 
         if self.world_size > 1:
             return DistributedSampler(
@@ -253,16 +468,45 @@ class Dataloader:
 
     @final
     def __len__(self) -> int:
+        """
+        Number of batches.
+
+        Returns
+        -------
+        int
+        """
         return len(self._torch_loader)
 
     @final
     def set_epoch(self, epoch):
+        """
+        Set epoch for distributed sampler.
+
+        Parameters
+        ----------
+        epoch : int
+
+        Returns
+        -------
+        self
+        """
         if self.sampler is not None:
             self.sampler.set_epoch(epoch)
         return self
 
     @final
     def subset_loader(self, start_batch=0):
+        """
+        Return iterator starting from specific batch.
+
+        Parameters
+        ----------
+        start_batch : int, optional
+
+        Returns
+        -------
+        Iterator
+        """
 
         return islice(iter(self), start_batch, None)
 
@@ -270,6 +514,20 @@ class Dataloader:
 def collate_batch(
     batch, return_spatial_mask: bool = False, reduce_spatial_mask: bool = False
 ):
+    """
+    Collate dataset samples into BatchData.
+
+    Parameters
+    ----------
+    batch : list of dict
+        List of dataset samples.
+    return_spatial_mask : bool, optional
+    reduce_spatial_mask : bool, optional
+
+    Returns
+    -------
+    BatchData
+    """
 
     inputs = torch.stack([b["input"] for b in batch])
     targets = torch.stack([b["target"] for b in batch])

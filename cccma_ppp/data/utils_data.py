@@ -21,6 +21,23 @@ spatialmethod = Literal["uniform", "cosine_lat"]
 
 @dataclasses.dataclass
 class infoclass:
+    """
+    Container for dataset metadata.
+
+    Parameters
+    ----------
+    sizes : dict or None
+        Sizes of non-spatial/non-ensemble dimensions.
+    start_year : array-like or scalar or None
+        First available year.
+    final_year : array-like or scalar or None
+        Last available year.
+    coords : dict
+        Coordinate information (e.g., ensembles, lat, lon).
+    spatial_mask : xr.Dataset or None, optional
+        Spatial mask.
+    """
+
     sizes: dict | None
     start_year: xr.DataArray | np.ndarray | str | int | None
     final_year: xr.DataArray | np.ndarray | str | int | None
@@ -30,6 +47,29 @@ class infoclass:
 
 @dataclasses.dataclass
 class ModelDataConfig(DataConfigABC):
+    """
+    Configuration for model input data.
+
+    Parameters
+    ----------
+    paths : str
+        Directory containing dataset files.
+    names : list of str
+        Variables to load.
+    preprocessing_pipeline : PreprocessingPipeline, optional
+        Preprocessing pipeline.
+    ensemble_list : list or None, optional
+        Selected ensemble members.
+    ensemble_mean : bool, optional
+        Whether to average across ensembles.
+    concat_dim : str, optional
+        Dimension used to concatenate files.
+    file_type : str, optional
+        File pattern (e.g., "*.nc").
+    rename_dict : dict, optional
+        Variable renaming mapping.
+    """
+
     paths: str
     names: list[str]
     preprocessing_pipeline: PreprocessingPipeline = dataclasses.field(
@@ -43,6 +83,21 @@ class ModelDataConfig(DataConfigABC):
     TYPE: ClassVar[str] = "model"
 
     def __post_init__(self):
+        """
+        Initialize dataset and compute metadata.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        FileNotFoundError
+            If required files are not found.
+        ValueError
+            If configuration is invalid.
+        """
+
         self._check_ensemble = False
         if self.ensemble_list is not None:
             self._check_ensemble = True
@@ -57,16 +112,45 @@ class ModelDataConfig(DataConfigABC):
     @final
     @classmethod
     def _allowed_dims(cls):
+        """
+        Allowed dataset dimensions.
+
+        Returns
+        -------
+        list of str
+        """
         return ["year", "lead_time", "ensembles", "lat", "lon"]
 
     @final
     @classmethod
     def _required_dims(cls):
+        """
+        Required dataset dimensions.
+
+        Returns
+        -------
+        list of str
+        """
         return ["lead_time", "ensembles", "lat", "lon"]
 
 
 @dataclasses.dataclass
 class ObsDataConfig(DataConfigABC):
+    """
+    Configuration for observational (target) data.
+
+    Parameters
+    ----------
+    paths : str
+    names : list of str
+    preprocessing_pipeline : PreprocessingPipeline
+    ensemble_list : list or None
+    ensemble_mean : bool
+    concat_dim : str
+    file_type : str
+    rename_dict : dict
+    """
+
     paths: str
     names: list[str]
     preprocessing_pipeline: PreprocessingPipeline = dataclasses.field(
@@ -80,6 +164,13 @@ class ObsDataConfig(DataConfigABC):
     TYPE: ClassVar[str] = "observation"
 
     def __post_init__(self):
+        """
+        Validate dataset configuration and initialize metadata.
+
+        Returns
+        -------
+        None
+        """
         self._check_ensemble = False
         if self.ensemble_list is not None:
             self._check_ensemble = True
@@ -91,16 +182,53 @@ class ObsDataConfig(DataConfigABC):
     @final
     @classmethod
     def _allowed_dims(cls):
+        """
+        Allowed dimensions.
+
+        Returns
+        -------
+        list of str
+        """
         return ["year", "month", "ensembles", "lat", "lon"]
 
     @final
     @classmethod
     def _required_dims(cls):
+        """
+        Required dimensions.
+
+        Returns
+        -------
+        list of str
+        """
         return ["month", "lat", "lon"]
 
 
 @dataclasses.dataclass
 class ConditionDataConfig(DataConfigABC):
+    """
+    Configuration for conditioning data.
+
+    Parameters
+    ----------
+    paths : str
+        Path or pattern to input data files.
+    names : list of str
+        Names of input variables.
+    preprocessing_pipeline : PreprocessingPipeline
+        Pipeline used to preprocess conditioning data.
+    ensemble_list : list or None
+        Optional list of ensemble members.
+    ensemble_mean : bool
+        Whether to average over ensemble members.
+    concat_dim : str
+        Dimension used for concatenation.
+    file_type : str
+        File format/type of input data.
+    rename_dict : dict
+        Mapping for renaming variables.
+    """
+
     paths: str
     names: list[str]
     preprocessing_pipeline: PreprocessingPipeline = dataclasses.field(
@@ -114,6 +242,13 @@ class ConditionDataConfig(DataConfigABC):
     TYPE: ClassVar[str] = "model"
 
     def __post_init__(self):
+        """
+        Validate dataset configuration and initialize metadata with lead-time extension.
+
+        Returns
+        -------
+        None
+        """
         self._check_ensemble = False
         if self.ensemble_list is not None:
             self._check_ensemble = True
@@ -129,15 +264,48 @@ class ConditionDataConfig(DataConfigABC):
     @final
     @classmethod
     def _allowed_dims(cls):
+        """
+        Allowed dimensions.
+
+        Returns
+        -------
+        list of str
+        """
         return ["year", "lead_time", "ensembles", "lat", "lon"]
 
     @final
     @classmethod
     def _required_dims(cls):
+        """
+        Required dimensions.
+
+        Returns
+        -------
+        list of str
+        """
         return ["lat", "lon"]
 
 
 def _check_data(dataconfig: ModelDataConfig | ObsDataConfig) -> None:
+    """
+    Validate dataset files and structure.
+
+    Parameters
+    ----------
+    dataconfig : ModelDataConfig or ObsDataConfig
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    FileNotFoundError
+        If files are missing.
+    ValueError
+        If dimensions, variables, or coordinates are invalid.
+    """
+
     if not Path(dataconfig.paths).exists():
         raise FileNotFoundError(
             "The following file does not exist:\n" + str(dataconfig.paths)
@@ -185,6 +353,20 @@ def _check_data(dataconfig: ModelDataConfig | ObsDataConfig) -> None:
 
 
 def _get_ds_info(dataconfig: ModelDataConfig | ObsDataConfig) -> infoclass:
+    """
+    Extract dataset metadata from configuration.
+
+    Parameters
+    ----------
+    dataconfig : ModelDataConfig or ObsDataConfig
+        Dataset configuration object.
+
+    Returns
+    -------
+    InfoClass
+        Dataset metadata.
+    """
+
     if getattr(dataconfig, "list_paths", None) is None:
         list_paths = glob.glob(
             str(Path(dataconfig.paths).joinpath(dataconfig.file_type))
@@ -229,23 +411,71 @@ def _get_ds_info(dataconfig: ModelDataConfig | ObsDataConfig) -> infoclass:
 
 @dataclasses.dataclass
 class WeightsConfig:
+    """
+    Spatial and variable weighting configuration.
+
+    Parameters
+    ----------
+    spatial_method : {"uniform", "cosine_lat"}, optional
+        Spatial weighting method.
+    variable_weights : dict[str, float] or None, optional
+        Per-variable weights.
+    load_dir : Path or str or None, optional
+        Path to precomputed weights.
+    """
+
     spatial_method: spatialmethod = "uniform"
     variable_weights: dict[str, float] | None = None
     load_dir: Path | str | None = None
 
     def __post_init__(self):
+        """
+        Validate loading path.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the loading path does not exist.
+        """
+
         if self.load_dir is not None:
             if not Path(self.load_dir).exists():
                 raise FileNotFoundError(f"weights file not found at {self.load_dir}")
 
     def build_weights(
         self,
-        target_coords=None,
+        target_coords: dict | None = None,
         oceannanremover: Oceannanremove | None = None,
-        save=True,
+        save: bool = True,
         save_path: Path | str | None = None,
         save_name: str | None = None,
     ):
+        """
+        Construct or load spatial/variable weights.
+
+        Parameters
+        ----------
+        target_coords : dict or None
+            Target coordinate mapping for weight construction.
+        oceannanremover : Oceannanremove or None
+            Optional ocean masking/removal utility.
+        save : bool, optional
+            Whether to save computed weights.
+        save_path : Path or str or None, optional
+            Directory to save weights.
+        save_name : str or None, optional
+            Name of saved weights file.
+
+        Returns
+        -------
+        xr.DataArray
+            Computed or loaded weights.
+
+        Raises
+        ------
+        ValueError
+            If loaded weights are inconsistent with coordinates.
+        """
 
         if self.load_dir is not None:
             weights = xr.open_dataset(Path(self.load_dir))
@@ -305,6 +535,17 @@ class WeightsConfig:
 
 
 def _unwrap_data_variables(dataset: xr.Dataset):
+    """
+    Convert dataset variables into channel dimension.
+
+    Parameters
+    ----------
+    dataset : xr.Dataset
+
+    Returns
+    -------
+    xr.DataArray
+    """
 
     return xr.concat(
         [dataset[v].expand_dims("channels", axis=0) for v in list(dataset.data_vars)],
@@ -321,6 +562,23 @@ def _load_xarray_data(
     concat_dim="year",
     rename_dict: dict = None,
 ):
+    """
+    Load and optionally preprocess xarray dataset.
+
+    Parameters
+    ----------
+    paths : list of str
+    selection : dict or None
+    names : list or None
+    ensemble_mean : bool
+    preprocessor : PreprocessingPipeline or None
+    concat_dim : str
+    rename_dict : dict or None
+
+    Returns
+    -------
+    xr.Dataset
+    """
 
     ds = xr.open_mfdataset(paths, combine="nested", concat_dim=concat_dim)
 
@@ -341,8 +599,24 @@ def _load_xarray_data(
 
 
 def _create_train_mask(
-    years: list | xr.DataArray, lead_times: list | xr.DataArray | int, exclude_idx=0
+    years: list | xr.DataArray,
+    lead_times: list | xr.DataArray | int,
+    exclude_idx=0,
 ):
+    """
+    Create mask for valid training samples.
+
+    Parameters
+    ----------
+    years : list or xr.DataArray
+    lead_times : list, xr.DataArray, or int
+    exclude_idx : int, optional
+
+    Returns
+    -------
+    xr.DataArray
+        Boolean mask.
+    """
 
     if isinstance(lead_times, int):
         lead_times = np.arange(1, lead_times + 1)

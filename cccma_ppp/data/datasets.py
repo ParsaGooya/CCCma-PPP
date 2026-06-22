@@ -34,6 +34,28 @@ ConditionMethod = Literal["ensemble_mean", "cross_ensemble", "same_member", "sta
 
 @dataclasses.dataclass
 class XArrayDatasetConfig(XarrayDatasetConfigABC):
+    """
+    Configuration for building XArray-based datasets.
+
+    Supports model, observation, and conditioning data, including
+    preprocessing pipelines and time-dependent features.
+
+    Parameters
+    ----------
+    model : ModelDataConfig
+        Configuration for model input data.
+    observation : ObsDataConfig or None, optional
+        Configuration for target data.
+    condition : ConditionDataConfig or None, optional
+        Configuration for conditioning data.
+    condition_method : {"ensemble_mean", "cross_ensemble", "same_member", "static"}, optional
+        Conditioning strategy.
+    time_features : list of str or None, optional
+        Temporal features to include.
+    num_lead_months : int or None, optional
+        Number of lead months to include.
+    """
+
     model: ModelDataConfig
     observation: ObsDataConfig | None = None
     condition: ConditionDataConfig | None = None
@@ -42,6 +64,15 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
     num_lead_months: int | None = None
 
     def __post_init__(self):
+        """
+        Validate configuration and initialize conditioning logic.
+
+        Raises
+        ------
+        AssertionError
+            If configuration constraints are violated.
+        """
+
         self._fitted_preprocessors = False
         self._using_model_data_as_condition = False
 
@@ -159,6 +190,14 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
 
     @property
     def get_common_time(self):
+        """
+        Compute intersection of available years across datasets.
+
+        Returns
+        -------
+        np.ndarray
+        """
+
         if self.observation is not None:
             return np.intersect1d(self.model.year_range, self.observation.year_range)
         else:
@@ -166,6 +205,13 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
 
     @property
     def available_train_time(self):
+        """
+        Compute valid training years.
+
+        Returns
+        -------
+        np.ndarray
+        """
         num_lead_years = self.num_lead_months // 12
         if self.observation is None:
             return np.arange(
@@ -177,11 +223,25 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
 
     def _fit_preprocessors(
         self,
-        train_years: np.ndarray | list | tuple,
+        train_years,
         save=False,
-        save_path: Path | str | None = None,
-        save_name: str | None = None,
+        save_path=None,
+        save_name=None,
     ):
+        """
+        Fit preprocessing pipelines for all datasets.
+
+        Parameters
+        ----------
+        train_years : array-like
+        save : bool, optional
+        save_path : Path or str or None
+        save_name : str or None
+
+        Returns
+        -------
+        None
+        """
 
         if self.model.preprocessing_pipeline.load_dir is None:
             selection = {
@@ -276,8 +336,29 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
         self._fitted_preprocessors = True
 
     def _load_fitted_preprocessors(
-        self, load_dir: Path | str | None = None, load_name: str | None = None
+        self,
+        load_dir: Path | str | None = None,
+        load_name: str | None = None,
     ):
+        """
+        Load preprocessing pipelines from disk.
+
+        Parameters
+        ----------
+        load_dir : Path or str or None
+            Directory containing saved preprocessors.
+        load_name : str or None
+            Optional name of the saved preprocessor bundle.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RuntimeError
+            If loaded preprocessors are not fitted.
+        """
 
         if load_dir is None:
             load_dir = (
@@ -336,6 +417,26 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
         self._fitted_preprocessors = True
 
     def _add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
+        """
+        Add fitted preprocessor to all pipelines.
+
+        Parameters
+        ----------
+        preprocessor : PreprocessModuleABC
+        index : int, optional
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        TypeError
+            If invalid preprocessor type.
+        AssertionError
+            If preprocessor is not fitted.
+        """
+
         if not isinstance(preprocessor, PreprocessModuleABC):
             raise TypeError(
                 f"preprocessor must be an instance of ProcessorConfig, "
@@ -358,10 +459,35 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
     def get_weights(
         self,
         config: WeightsConfig | None = None,
-        save=True,
+        save: bool = True,
         save_path: Path | str | None = None,
         save_name: str | None = None,
     ):
+        """
+        Compute or load spatial/feature weights.
+
+        Parameters
+        ----------
+        config : WeightsConfig or None
+            Configuration for weight computation.
+        save : bool, optional
+            Whether to save computed weights.
+        save_path : Path or str or None, optional
+            Directory to save weights.
+        save_name : str or None, optional
+            Name of saved weights file.
+
+        Returns
+        -------
+        xr.DataArray
+            Computed or loaded weights.
+
+        Raises
+        ------
+        RuntimeError
+            If weight channels mismatch variables.
+        """
+
         if config is None:
             config = WeightsConfig()
 
@@ -407,6 +533,14 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
         return weights
 
     def get_input_var_metadata(self):
+        """
+        Get input variables metadata.
+
+        Returns
+        -------
+        dict
+            Dictionary with variable names and preprocessing steps.
+        """
 
         metadata = dict(variables=list(), preprocessors=list())
 
@@ -440,6 +574,14 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
         return metadata
 
     def get_target_var_metadata(self):
+        """
+        Retrieve metadata for target variables.
+
+        Returns
+        -------
+        dict
+            Dictionary containing metadata for target variables.
+        """
 
         metadata = dict(variables=list(), preprocessors=list())
 
@@ -466,9 +608,27 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
     def build(
         self,
         years: np.ndarray,
-        mask: xr.DataArray = None,
+        mask: xr.DataArray | None = None,
         return_metadata: bool = False,
     ):
+        """
+        Construct dataset instance.
+
+        Parameters
+        ----------
+        years : np.ndarray
+            Array of years used to build the dataset.
+        mask : xr.DataArray or None, optional
+            Optional mask applied to the dataset.
+        return_metadata : bool, optional
+            Whether to return dataset metadata.
+
+        Returns
+        -------
+        Dataset
+            Constructed dataset instance (or dataset + metadata depending on flag).
+        """
+
         return XArrayDataset(
             config=self,
             requested_years=years,
@@ -479,12 +639,35 @@ class XArrayDatasetConfig(XarrayDatasetConfigABC):
 
 @dataclasses.dataclass
 class XArrayDataset(Dataset, XarrayDatasetABC):
+    """
+    Dataset wrapping xarray data for PyTorch training.
+
+    Parameters
+    ----------
+    config : XArrayDatasetConfig
+        Dataset configuration object.
+    requested_years : array-like
+        Years to include in the dataset.
+    mask : xr.DataArray or None
+        Optional spatial/temporal mask.
+    return_metadata : bool
+        Whether to return dataset metadata.
+    """
+
     config: XArrayDatasetConfig
     requested_years: list[int] | tuple[int] | np.ndarray
     mask: xr.DataArray = None
     return_metadata: bool = False
 
     def __post_init__(self):
+        """
+        Initialize dataset and load data.
+
+        Returns
+        -------
+        None
+        """
+
         if not self.config._fitted_preprocessors:
             raise RuntimeError(
                 "Make sure to fit preprocessors first!. Hint:  XArrayDatasetConfig._fit_preprocessors()"
@@ -517,6 +700,13 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
         self.time_features = self.config.time_features
 
     def _prepare_mask(self):
+        """
+        Prepare mask for selecting valid samples.
+
+        Returns
+        -------
+        self
+        """
 
         if self.mask is None:
             self.mask = _create_train_mask(
@@ -544,6 +734,17 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
         return self
 
     def _load_xarray_data(self, config: DataConfigABC):
+        """
+        Load xarray dataset based on configuration.
+
+        Parameters
+        ----------
+        config : DataConfigABC
+
+        Returns
+        -------
+        xr.Dataset
+        """
 
         return _load_xarray_data(
             config.list_paths,
@@ -557,6 +758,13 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
         )
 
     def get_model_indexes(self):
+        """
+        Compute valid indices for model data.
+
+        Returns
+        -------
+        dict
+        """
 
         mask = (
             self.mask.stack(batch=dict(self.mask.sizes).keys())
@@ -573,6 +781,17 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
         return indexes
 
     def get_obs_indexes(self, model_indexes: dict):
+        """
+        Compute target (observation) indices.
+
+        Parameters
+        ----------
+        model_indexes : dict
+
+        Returns
+        -------
+        dict or None
+        """
 
         if self.observation_dataset is not None:
             indexes = {}
@@ -594,6 +813,17 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             return indexes
 
     def get_cond_indexes(self, model_indexes: dict):
+        """
+        Compute conditioning indices.
+
+        Parameters
+        ----------
+        model_indexes : dict
+
+        Returns
+        -------
+        dict or None
+        """
 
         if self.condition_dataset is not None:
             if self.config.condition_method != "static":
@@ -613,6 +843,14 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             return indexes
 
     def get_input_shape(self):
+        """
+        Determine input shape after preprocessing.
+
+        Returns
+        -------
+        tuple
+            Shape of the processed input data.
+        """
 
         from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
@@ -632,6 +870,14 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             )
 
     def get_target_shape(self):
+        """
+        Determine target shape.
+
+        Returns
+        -------
+        tuple
+            Shape of the target data.
+        """
 
         from cccma_ppp.preprocessing.utils_preprocessing import Oceannanremove
 
@@ -654,10 +900,29 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             return self.input_shape
 
     def get_added_features_dim(self):
+        """
+        Number of temporal features.
+
+        Returns
+        -------
+        int
+        """
 
         return len(self.time_features)
 
     def __getitem__(self, ind):
+        """
+        Retrieve dataset sample.
+
+        Parameters
+        ----------
+        ind : int
+
+        Returns
+        -------
+        dict or tuple
+            Data sample (and optional metadata).
+        """
 
         if self.condition_dataset is not None:
             if self.config.condition_method != "static":
@@ -749,9 +1014,28 @@ class XArrayDataset(Dataset, XarrayDatasetABC):
             return datadict
 
     def __len__(self):
+        """
+        Dataset size.
+
+        Returns
+        -------
+        int
+        """
         return len(self.model_indexes.get(list(self.model_indexes.keys())[0]))
 
     def get_time_features(self, year, lead_time):
+        """
+        Generate time-based features.
+
+        Parameters
+        ----------
+        year : float
+        lead_time : float
+
+        Returns
+        -------
+        np.ndarray or None
+        """
 
         if self.time_features is not None:
             time_features_list = np.array([self.time_features]).flatten()
