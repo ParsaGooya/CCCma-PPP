@@ -8,15 +8,58 @@ from cccma_ppp.core.core_abc import moduleABC
 
 @dataclasses.dataclass
 class LRSchedulerConfig:
+    """
+    Configuration for learning rate scheduler.
+
+    Parameters
+    ----------
+    min_lr : float, optional
+        Minimum learning rate for cosine annealing.
+    warmup_epochs : int, optional
+        Number of warmup epochs with linearly increasing learning rate.
+    total_epochs : int or None, optional
+        Total number of training epochs.
+    """
+
     min_lr: float = 0.0
     warmup_epochs: int = 0
     total_epochs: int = None
 
     def __post_init__(self):
+        """
+        Validate scheduler configuration parameters.
+
+        Raises
+        ------
+        AssertionError
+            If `min_lr` or `warmup_epochs` are negative.
+        """
         assert self.min_lr >= 0
         assert self.warmup_epochs >= 0
 
     def build(self, optimizer: torch.optim.Optimizer, num_batches: int):
+        """
+        Construct learning rate scheduler.
+
+        Parameters
+        ----------
+        optimizer : torch.optim.Optimizer
+            Optimizer instance.
+        num_batches : int
+            Number of batches per epoch.
+
+        Returns
+        -------
+        CosineAnnealingLRScheduler
+            Configured scheduler.
+
+        Raises
+        ------
+        AssertionError
+            If required configuration values are invalid.
+        ValueError
+            If warmup exceeds total epochs.
+        """
         assert self.total_epochs is not None
         assert self.total_epochs > 0
         assert num_batches > 0
@@ -33,6 +76,21 @@ class LRSchedulerConfig:
 
 @dataclasses.dataclass
 class OptimizerConfig:
+    """
+    Configuration for optimizer and optional learning rate scheduler.
+
+    Parameters
+    ----------
+    lr : float, optional
+        Learning rate.
+    weight_decay : float, optional
+        Weight decay coefficient.
+    optimizer_type : str, optional
+        Optimizer type ("adam", "adamw").
+    lr_scheduler_config : LRSchedulerConfig or None, optional
+        Learning rate scheduler configuration.
+    """
+
     lr: float = 0.0001
     weight_decay: float = 0
     optimizer_type: str = "adam"
@@ -44,11 +102,47 @@ class OptimizerConfig:
     }
 
     def __post_init__(self):
+        """
+        Validate optimizer configuration.
+
+        Raises
+        ------
+        ValueError
+            If weight_decay is negative.
+        """
+
         if self.weight_decay < 0:
             raise ValueError("weight_decay has to be positive")
         self.optimizer = None
 
-    def build(self, module: moduleABC, num_batches: int = None, max_epochs: int = None):
+    def build(
+        self,
+        module: moduleABC,
+        num_batches: int = None,
+        max_epochs: int = None,
+    ):
+        """
+        Construct optimizer wrapper.
+
+        Parameters
+        ----------
+        module : ModuleABC
+            Model whose parameters are optimized.
+        num_batches : int, optional
+            Number of batches per epoch.
+        max_epochs : int, optional
+            Total number of training epochs.
+
+        Returns
+        -------
+        OptimizerWrapper
+            Wrapped optimizer and scheduler.
+
+        Raises
+        ------
+        ValueError
+            If scheduler configuration is incomplete.
+        """
 
         if self.lr_scheduler_config is not None:
             if self.lr_scheduler_config.total_epochs is None:
@@ -67,6 +161,21 @@ class OptimizerConfig:
 
 
 class OptimizerWrapper:
+    """
+    Wrapper around optimizer and optional learning rate scheduler.
+
+    Parameters
+    ----------
+    config : OptimizerConfig
+        Optimizer configuration.
+    module : moduleABC
+        Model instance.
+    num_batches : int or None
+        Number of batches per epoch.
+    max_epochs : int or None
+        Total number of training epochs.
+    """
+
     def __init__(
         self,
         config: OptimizerConfig,
@@ -74,6 +183,21 @@ class OptimizerWrapper:
         num_batches: int = None,
         max_epochs: int = None,
     ):
+        """
+        Initialize optimizer and optional scheduler.
+
+        Parameters
+        ----------
+        config : OptimizerConfig
+        module : ModuleABC
+        num_batches : int or None
+        max_epochs : int or None
+
+        Raises
+        ------
+        ValueError
+            If scheduler configuration requirements are not met.
+        """
 
         params = [p for p in module.parameters() if p.requires_grad]
 
@@ -100,21 +224,74 @@ class OptimizerWrapper:
             )
 
     def step(self):
+        """
+        Perform optimizer step.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RuntimeError
+            If optimizer has not been initialized.
+        """
+
         if self.optimizer is None:
             raise RuntimeError("Optimizer must be built before step().")
 
         self.optimizer.step()
 
     def scheduler_step(self):
+        """
+        Perform scheduler step.
+
+        Returns
+        -------
+        None
+        """
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
 
     def zero_grad(self, set_to_none=True, **kwargs):
+        """
+        Reset gradients of model parameters.
+
+        Parameters
+        ----------
+        set_to_none : bool, optional
+            Whether to set gradients to None instead of zero.
+        **kwargs
+            Additional arguments passed to optimizer.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RuntimeError
+            If optimizer has not been initialized.
+        """
         if self.optimizer is None:
             raise RuntimeError("Optimizer must be built before zero_grad().")
         self.optimizer.zero_grad(set_to_none=set_to_none, **kwargs)
 
     def state_dict(self):
+        """
+        Return optimizer and scheduler state.
+
+        Returns
+        -------
+        dict
+            State dictionary containing optimizer and scheduler states.
+
+        Raises
+        ------
+        RuntimeError
+            If optimizer has not been initialized.
+        """
+
         if self.optimizer is None:
             raise RuntimeError("Optimizer must be built before state_dict().")
 
@@ -128,6 +305,23 @@ class OptimizerWrapper:
         }
 
     def load_state_dict(self, state_dict):
+        """
+        Load optimizer and scheduler state.
+
+        Parameters
+        ----------
+        state_dict : dict
+            State dictionary.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RuntimeError
+            If optimizer is not initialized.
+        """
 
         if self.optimizer is None:
             raise RuntimeError("Optimizer must be built before load_state_dict().")
@@ -139,7 +333,30 @@ class OptimizerWrapper:
 
 
 class CosineAnnealingLRScheduler:
+    """
+    Learning rate scheduler with optional warmup and cosine annealing.
+
+    Parameters
+    ----------
+    config : LRSchedulerConfig
+        Scheduler configuration.
+    optimizer : torch.optim.Optimizer
+        Optimizer instance.
+    """
+
     def __init__(self, config: LRSchedulerConfig, optimizer: torch.optim.Optimizer):
+        """
+        Initialize scheduler with optional warmup phase.
+
+        Parameters
+        ----------
+        config : LRSchedulerConfig
+        optimizer : torch.optim.Optimizer
+
+        Returns
+        -------
+        None
+        """
 
         self.config = config
 
@@ -168,18 +385,61 @@ class CosineAnnealingLRScheduler:
             )
 
     def step(self):
+        """
+        Advance scheduler by one step.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RuntimeError
+            If scheduler has not been initialized.
+        """
 
         if not hasattr(self, "scheduler"):
             raise RuntimeError("Scheduler must be built before stepping.")
         self.scheduler.step()
 
     def state_dict(self):
+        """
+        Return scheduler state.
+
+        Returns
+        -------
+        dict
+            Scheduler state dictionary.
+
+        Raises
+        ------
+        RuntimeError
+            If scheduler has not been initialized.
+        """
         if not hasattr(self, "scheduler"):
             raise RuntimeError("Scheduler must be built before stepping.")
 
         return self.scheduler.state_dict()
 
     def load_state_dict(self, state_dict):
+        """
+        Load scheduler state.
+
+        Parameters
+        ----------
+        state_dict : dict
+            Scheduler state dictionary.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RuntimeError
+            If scheduler has not been initialized.
+        """
+
         if not hasattr(self, "scheduler"):
             raise RuntimeError("Scheduler must be built before stepping.")
 
