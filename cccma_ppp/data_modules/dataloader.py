@@ -23,11 +23,14 @@ class BatchDataABC(abc.ABC):
         Target batch.
     added_features : torch.Tensor or None
         Additional features.
+    metadata : list[dict] or None
+        Optional metadata associated with each batch element.
     """
 
     input: torch.Tensor
     target: torch.Tensor | None
     added_features: torch.Tensor | None
+    metadata: list[dict] | None = None
 
     @abc.abstractmethod
     def to_device(self, device: torch.device | str):

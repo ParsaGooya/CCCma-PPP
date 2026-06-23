@@ -7,10 +7,6 @@ class RuntimeContext:
     """
     Global runtime configuration for experiment-level settings.
 
-    Stores shared directories and metadata accessible across the
-    training pipeline, including logging, checkpointing, and
-    data-related metadata.
-
     Parameters
     ----------
     GLOBAL_EXP_DIR : pathlib.Path or str or None, optional
@@ -21,6 +17,8 @@ class RuntimeContext:
         Directory for saving figures and plots.
     GLOBAL_LOG_DIR : pathlib.Path or str or None, optional
         Directory for log files.
+    GLOBAL_OUTPUT_DIR : pathlib.Path or str or None, optional
+        General output directory for experiment artifacts.
 
     INPUT_VAR_METADATA : dict or None, optional
         Metadata describing input variables and preprocessing steps.
@@ -32,6 +30,7 @@ class RuntimeContext:
     GLOBAL_CHECKPOINT_DIR: Path | str | None = None
     GLOBAL_FIGURES_DIR: Path | str | None = None
     GLOBAL_LOG_DIR: Path | str | None = None
+    GLOBAL_OUTPUT_DIR: Path | str | None = None
 
     INPUT_VAR_METADATA: dict | None = None
     TARGET_VAR_METADATA: dict | None = None

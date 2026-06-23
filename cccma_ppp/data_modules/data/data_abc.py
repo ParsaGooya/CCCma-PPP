@@ -12,6 +12,7 @@ from cccma_ppp.data_modules.utils import (
     _load_xarray_data,
     _create_train_mask,
 )
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 @dataclasses.dataclass
@@ -179,13 +180,13 @@ class DataConfigABC(abc.ABC):
         gc.collect()
 
     @final
-    def _load_preprocessor_pipeline(self, load_dir: Path | str):
+    def _load_preprocessor_pipeline(self, load_dir: Path | str | None = None):
         """
         Load fitted preprocessing pipeline.
 
         Parameters
         ----------
-        load_dir : pathlib.Path or str
+        load_dir : pathlib.Path or str or None
 
         Returns
         -------
@@ -196,6 +197,8 @@ class DataConfigABC(abc.ABC):
         RuntimeError
             If loaded pipeline is not fitted.
         """
+        if load_dir is None:
+            load_dir = Path(RuntimeContext.GLOBAL_EXP_DIR) / "preprocessing_pipeline"
 
         load_dir = (
             Path(load_dir)

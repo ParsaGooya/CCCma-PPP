@@ -123,13 +123,13 @@ class DatasetOperator:
 
         self.config._fitted_preprocessors = True
 
-    def _load_fitted_preprocessors(self, load_dir: Path | str):
+    def _load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         """
         Load fitted preprocessing pipelines.
 
         Parameters
         ----------
-        load_dir : pathlib.Path or str
+        load_dir : pathlib.Path or str or None
 
         Returns
         -------
