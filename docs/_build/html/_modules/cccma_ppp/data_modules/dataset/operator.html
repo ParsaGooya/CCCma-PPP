@@ -1,0 +1,537 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cccma_ppp.data_modules.dataset.operator &mdash; CCCma PPP  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=18aa9b61" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            CCCma PPP
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../cccma_ppp.html">cccma_ppp package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">CCCma PPP</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">cccma_ppp.data_modules.dataset.operator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cccma_ppp.data_modules.dataset.operator</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataConfigABC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">DatasetConfigABC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules</span><span class="w"> </span><span class="kn">import</span> <span class="n">WeightsConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.preprocessing.preprocessing_ABC</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreprocessModuleABC</span>
+
+
+<div class="viewcode-block" id="DatasetOperator">
+<a class="viewcode-back" href="../../../../cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatasetOperator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for managing dataset-level operations.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    config : DatasetConfigABC</span>
+<span class="sd">        Dataset configuration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">DatasetConfigABC</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize dataset operator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config : DatasetConfigABC</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">config_observation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Observation dataset configuration if available.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ObsDataConfig or None</span>
+<span class="sd">            Observation configuration if present, otherwise None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">observation</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fit_preprocessors</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">train_years</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">list</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">,</span>
+        <span class="n">save</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">save_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">save_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit preprocessing pipelines for all datasets.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        train_years : array-like</span>
+<span class="sd">            Training years used for fitting.</span>
+<span class="sd">        save : bool, optional</span>
+<span class="sd">            Whether to persist fitted pipelines.</span>
+<span class="sd">        save_path : pathlib.Path or str or None, optional</span>
+<span class="sd">        save_name : str or None, optional</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Applies fitting to model, observation, and condition datasets.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">selection</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="n">train_years</span><span class="p">,</span>
+                <span class="s2">&quot;lead_time&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">lead_months</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_fit_preprocessor_pipeline</span><span class="p">(</span>
+                <span class="n">selection</span><span class="o">=</span><span class="n">selection</span><span class="p">,</span>
+                <span class="n">mask</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">,</span>
+                <span class="n">save_path</span><span class="o">=</span><span class="n">save_path</span><span class="p">,</span>
+                <span class="n">save_name</span><span class="o">=</span><span class="n">save_name</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_observation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">selection</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="n">train_years</span><span class="p">}</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_observation</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_observation</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span>
+                    <span class="s2">&quot;ensembles&quot;</span>
+                <span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">config_observation</span><span class="o">.</span><span class="n">_fit_preprocessor_pipeline</span><span class="p">(</span>
+                <span class="n">selection</span><span class="o">=</span><span class="n">selection</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">,</span> <span class="n">save_path</span><span class="o">=</span><span class="n">save_path</span><span class="p">,</span> <span class="n">save_name</span><span class="o">=</span><span class="n">save_name</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">condition_method</span> <span class="o">==</span> <span class="s2">&quot;static&quot;</span><span class="p">:</span>
+                <span class="n">selection</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">selection</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="n">train_years</span><span class="p">,</span>
+                    <span class="s2">&quot;lead_time&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">lead_months</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span>
+                    <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span><span class="o">.</span><span class="n">_fit_preprocessor_pipeline</span><span class="p">(</span>
+                <span class="n">selection</span><span class="o">=</span><span class="n">selection</span><span class="p">,</span>
+                <span class="n">mask</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">,</span>
+                <span class="n">save_path</span><span class="o">=</span><span class="n">save_path</span><span class="p">,</span>
+                <span class="n">save_name</span><span class="o">=</span><span class="n">save_name</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_fitted_preprocessors</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_fitted_preprocessors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">load_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load fitted preprocessing pipelines.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        load_dir : pathlib.Path or str or None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_load_preprocessor_pipeline</span><span class="p">(</span><span class="n">load_dir</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_observation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config_observation</span><span class="o">.</span><span class="n">_load_preprocessor_pipeline</span><span class="p">(</span><span class="n">load_dir</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span><span class="o">.</span><span class="n">_load_preprocessor_pipeline</span><span class="p">(</span><span class="n">load_dir</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_fitted_preprocessors</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_fitted_preprocessor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preprocessor</span><span class="p">:</span> <span class="n">PreprocessModuleABC</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a fitted preprocessor to all relevant pipelines.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        preprocessor : PreprocessModuleABC</span>
+<span class="sd">        index : int, optional</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If preprocessor type is invalid.</span>
+<span class="sd">        AssertionError</span>
+<span class="sd">            If preprocessor is not fitted.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">preprocessor</span><span class="p">,</span> <span class="n">PreprocessModuleABC</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;preprocessor must be an instance of ProcessorConfig, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">preprocessor</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">assert</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">fitted</span><span class="p">,</span> <span class="s2">&quot;The preprocessor must be fitted&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">preprocessing_pipeline</span><span class="o">.</span><span class="n">add_fitted_preprocessor</span><span class="p">(</span>
+                <span class="n">preprocessor</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_observation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config_observation</span><span class="o">.</span><span class="n">preprocessing_pipeline</span><span class="o">.</span><span class="n">add_fitted_preprocessor</span><span class="p">(</span>
+                <span class="n">preprocessor</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span><span class="o">.</span><span class="n">preprocessing_pipeline</span><span class="o">.</span><span class="n">add_fitted_preprocessor</span><span class="p">(</span>
+                <span class="n">preprocessor</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="DatasetOperator.get_weights">
+<a class="viewcode-back" href="../../../../cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_weights">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_weights</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">WeightsConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">save_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">save_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute spatial and variable weights.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config : WeightsConfig or None, optional</span>
+<span class="sd">            Configuration controlling weight computation.</span>
+<span class="sd">        save : bool, optional</span>
+<span class="sd">            Whether to save computed weights.</span>
+<span class="sd">        save_path : pathlib.Path or str or None, optional</span>
+<span class="sd">            Directory where weights should be saved.</span>
+<span class="sd">        save_name : str or None, optional</span>
+<span class="sd">            Filename for saved weights.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        xr.DataArray</span>
+<span class="sd">            Computed spatial and variable weights.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If no valid dataset is available.</span>
+<span class="sd">        RuntimeError</span>
+<span class="sd">            If variable weights do not match expected variables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">WeightsConfig</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_observation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">target_coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_observation</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">target_coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;No model or observation data is availablle. &quot;</span>
+                <span class="s2">&quot;Weights could not be generated&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;ensembles&quot;</span> <span class="ow">in</span> <span class="n">target_coords</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">target_coords</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.preprocessing.utils_preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flattennanremove</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_observation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_observation</span><span class="o">.</span><span class="n">preprocessing_pipeline</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">preprocessing_pipeline</span>
+
+        <span class="n">checklist</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Flattennanremove</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">fitted_preprocessors</span>
+        <span class="p">]</span>
+
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">build_weights</span><span class="p">(</span>
+            <span class="n">target_coords</span><span class="p">,</span>
+            <span class="n">Flattennanremover</span><span class="o">=</span><span class="n">pipeline</span><span class="o">.</span><span class="n">get_preprocessors</span><span class="p">(</span><span class="s2">&quot;flattener&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">checklist</span><span class="p">)</span>
+            <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">,</span>
+            <span class="n">save_path</span><span class="o">=</span><span class="n">save_path</span><span class="p">,</span>
+            <span class="n">save_name</span><span class="o">=</span><span class="n">save_name</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;channels&quot;</span> <span class="ow">in</span> <span class="n">weights</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_observation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">error_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;inconsistent variable weights </span><span class="si">{</span><span class="n">weights</span><span class="o">.</span><span class="n">channels</span><span class="o">.</span><span class="n">values</span><span class="si">}</span><span class="s2"> for taget variables </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config_observation</span><span class="o">.</span><span class="n">names</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">weights</span><span class="o">.</span><span class="n">channels</span><span class="o">.</span><span class="n">values</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_observation</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">error_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;inconsistent variable weights </span><span class="si">{</span><span class="n">weights</span><span class="o">.</span><span class="n">channels</span><span class="o">.</span><span class="n">values</span><span class="si">}</span><span class="s2"> for taget variables </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">names</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">weights</span><span class="o">.</span><span class="n">channels</span><span class="o">.</span><span class="n">values</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">weights</span></div>
+
+
+<div class="viewcode-block" id="DatasetOperator.get_input_var_metadata">
+<a class="viewcode-back" href="../../../../cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_input_var_metadata">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_input_var_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve metadata for input variables.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Variable names and preprocessing steps.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">metadata</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="nb">list</span><span class="p">(),</span> <span class="n">preprocessors</span><span class="o">=</span><span class="nb">list</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata_with_dataconfig_metadata</span><span class="p">(</span>
+                <span class="n">metadata</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_using_model_data_as_condition</span><span class="p">:</span>
+                <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata_with_dataconfig_metadata</span><span class="p">(</span>
+                    <span class="n">metadata</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span>
+                <span class="p">)</span>
+                <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata_with_dataconfig_metadata</span><span class="p">(</span>
+                    <span class="n">metadata</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata_with_dataconfig_metadata</span><span class="p">(</span>
+                    <span class="n">metadata</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">metadata</span></div>
+
+
+<div class="viewcode-block" id="DatasetOperator.get_target_var_metadata">
+<a class="viewcode-back" href="../../../../cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_target_var_metadata">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_target_var_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve metadata for target variables.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If no target data is available.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">metadata</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="nb">list</span><span class="p">(),</span> <span class="n">preprocessors</span><span class="o">=</span><span class="nb">list</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_observation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;No model or observation data is availablle. &quot;</span>
+                    <span class="s2">&quot;target variable metadata could not be generated&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata_with_dataconfig_metadata</span><span class="p">(</span>
+                <span class="n">metadata</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_metadata_with_dataconfig_metadata</span><span class="p">(</span>
+                <span class="n">metadata</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_observation</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">metadata</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_metadata_with_dataconfig_metadata</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">dataconfig</span><span class="p">:</span> <span class="n">DataConfigABC</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update metadata with dataset configuration information.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        metadata : dict</span>
+<span class="sd">        dataconfig : DataConfigABC</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">preprocessor_names</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">processor</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">processor</span> <span class="ow">in</span> <span class="n">dataconfig</span><span class="o">.</span><span class="n">preprocessing_pipeline</span><span class="o">.</span><span class="n">pipeline</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">dataconfig</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+            <span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+            <span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;preprocessors&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">preprocessor_names</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">metadata</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_time_features</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">DatasetConfigABC</span><span class="p">,</span>
+    <span class="n">year</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">lead_time</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="nb">input</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate time-based features.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    config : DatasetConfigABC</span>
+<span class="sd">        Configuration containing feature definitions.</span>
+<span class="sd">    year : int</span>
+<span class="sd">        Base year of sample.</span>
+<span class="sd">    lead_time : int</span>
+<span class="sd">        Lead time in months.</span>
+<span class="sd">    input : xr.DataArray</span>
+<span class="sd">        Input data used for shape alignment.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray or None</span>
+<span class="sd">        Array of time features.</span>
+
+<span class="sd">    Broadcasts features to match spatial input dimensions if needed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">time_features</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">time_features_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">config</span><span class="o">.</span><span class="n">time_features</span><span class="p">])</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="n">feature_indices</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;lead_time&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;month_sin&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="s2">&quot;month_cos&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">target_time</span> <span class="o">=</span> <span class="n">year</span> <span class="o">+</span> <span class="n">lead_time</span> <span class="o">//</span> <span class="mi">12</span>
+        <span class="n">target_month</span> <span class="o">=</span> <span class="n">lead_time</span>
+
+        <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">target_time</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get_common_time</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get_common_time</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get_common_time</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">lt</span> <span class="o">=</span> <span class="n">lead_time</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">lead_months</span><span class="p">)</span>
+        <span class="n">msin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">target_month</span> <span class="o">/</span> <span class="mf">12.0</span><span class="p">)</span>
+        <span class="n">mcos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">target_month</span> <span class="o">/</span> <span class="mf">12.0</span><span class="p">)</span>
+
+        <span class="n">time_features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">y</span><span class="p">,</span> <span class="n">lt</span><span class="p">,</span> <span class="n">msin</span><span class="p">,</span> <span class="n">mcos</span><span class="p">])</span>
+        <span class="n">time_features</span> <span class="o">=</span> <span class="n">time_features</span><span class="p">[</span>
+            <span class="o">...</span><span class="p">,</span> <span class="p">[</span><span class="n">feature_indices</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">time_features_list</span><span class="p">]</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">input</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">time_features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span>
+                <span class="n">time_features</span><span class="p">[(</span><span class="o">...</span><span class="p">,)</span> <span class="o">+</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span> <span class="o">*</span> <span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)],</span>
+                <span class="p">(</span><span class="n">time_features</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],)</span> <span class="o">+</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">time_features</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

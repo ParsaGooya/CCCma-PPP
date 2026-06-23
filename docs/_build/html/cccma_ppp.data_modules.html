@@ -1,0 +1,544 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cccma_ppp.data_modules package &mdash; CCCma PPP  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=18aa9b61" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="cccma_ppp.data_modules.data package" href="cccma_ppp.data_modules.data.html" />
+    <link rel="prev" title="cccma_ppp.core package" href="cccma_ppp.core.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            CCCma PPP
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="cccma_ppp.html">cccma_ppp package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="cccma_ppp.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.core.html">cccma_ppp.core package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">cccma_ppp.data_modules package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-cccma_ppp.data_modules.dataloader">cccma_ppp.data_modules.dataloader module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-cccma_ppp.data_modules.utils">cccma_ppp.data_modules.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.generic.html">cccma_ppp.generic package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.loss.html">cccma_ppp.loss package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.models.html">cccma_ppp.models package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.preprocessing.html">cccma_ppp.preprocessing package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.train.html">cccma_ppp.train package</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CCCma PPP</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="cccma_ppp.html">cccma_ppp package</a></li>
+      <li class="breadcrumb-item active">cccma_ppp.data_modules package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cccma_ppp.data_modules.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-cccma_ppp.data_modules">
+<span id="cccma-ppp-data-modules-package"></span><h1>cccma_ppp.data_modules package<a class="headerlink" href="#module-cccma_ppp.data_modules" title="Link to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cccma_ppp.data_modules.data.html">cccma_ppp.data_modules.data package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.data_modules.data.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.data_modules.data.html#module-cccma_ppp.data_modules.data.data_abc">cccma_ppp.data_modules.data.data_abc module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_abc.infoclass"><code class="docutils literal notranslate"><span class="pre">infoclass</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_abc.infoclass.sizes"><code class="docutils literal notranslate"><span class="pre">infoclass.sizes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_abc.infoclass.start_year"><code class="docutils literal notranslate"><span class="pre">infoclass.start_year</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_abc.infoclass.final_year"><code class="docutils literal notranslate"><span class="pre">infoclass.final_year</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_abc.infoclass.coords"><code class="docutils literal notranslate"><span class="pre">infoclass.coords</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_abc.infoclass.spatial_mask"><code class="docutils literal notranslate"><span class="pre">infoclass.spatial_mask</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_abc.DataConfigABC"><code class="docutils literal notranslate"><span class="pre">DataConfigABC</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_abc.DataConfigABC.TYPE"><code class="docutils literal notranslate"><span class="pre">DataConfigABC.TYPE</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.data_modules.data.html#module-cccma_ppp.data_modules.data.data_configs">cccma_ppp.data_modules.data.data_configs module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig"><code class="docutils literal notranslate"><span class="pre">ModelDataConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig.paths"><code class="docutils literal notranslate"><span class="pre">ModelDataConfig.paths</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig.names"><code class="docutils literal notranslate"><span class="pre">ModelDataConfig.names</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig.preprocessing_pipeline"><code class="docutils literal notranslate"><span class="pre">ModelDataConfig.preprocessing_pipeline</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig.ensemble_list"><code class="docutils literal notranslate"><span class="pre">ModelDataConfig.ensemble_list</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig.ensemble_mean"><code class="docutils literal notranslate"><span class="pre">ModelDataConfig.ensemble_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig.concat_dim"><code class="docutils literal notranslate"><span class="pre">ModelDataConfig.concat_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig.file_type"><code class="docutils literal notranslate"><span class="pre">ModelDataConfig.file_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig.rename_dict"><code class="docutils literal notranslate"><span class="pre">ModelDataConfig.rename_dict</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig.TYPE"><code class="docutils literal notranslate"><span class="pre">ModelDataConfig.TYPE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ObsDataConfig"><code class="docutils literal notranslate"><span class="pre">ObsDataConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ObsDataConfig.paths"><code class="docutils literal notranslate"><span class="pre">ObsDataConfig.paths</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ObsDataConfig.names"><code class="docutils literal notranslate"><span class="pre">ObsDataConfig.names</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ObsDataConfig.preprocessing_pipeline"><code class="docutils literal notranslate"><span class="pre">ObsDataConfig.preprocessing_pipeline</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ObsDataConfig.ensemble_list"><code class="docutils literal notranslate"><span class="pre">ObsDataConfig.ensemble_list</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ObsDataConfig.ensemble_mean"><code class="docutils literal notranslate"><span class="pre">ObsDataConfig.ensemble_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ObsDataConfig.concat_dim"><code class="docutils literal notranslate"><span class="pre">ObsDataConfig.concat_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ObsDataConfig.file_type"><code class="docutils literal notranslate"><span class="pre">ObsDataConfig.file_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ObsDataConfig.rename_dict"><code class="docutils literal notranslate"><span class="pre">ObsDataConfig.rename_dict</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ObsDataConfig.TYPE"><code class="docutils literal notranslate"><span class="pre">ObsDataConfig.TYPE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig.paths"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.paths</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig.names"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.names</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig.preprocessing_pipeline"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.preprocessing_pipeline</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig.ensemble_list"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.ensemble_list</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig.ensemble_mean"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.ensemble_mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig.concat_dim"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.concat_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig.file_type"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.file_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig.rename_dict"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.rename_dict</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig.TYPE"><code class="docutils literal notranslate"><span class="pre">ConditionDataConfig.TYPE</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html">cccma_ppp.data_modules.dataset package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#module-cccma_ppp.data_modules.dataset.config_abc">cccma_ppp.data_modules.dataset.config_abc module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.lead_months_config"><code class="docutils literal notranslate"><span class="pre">lead_months_config</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.lead_months_config.list_months"><code class="docutils literal notranslate"><span class="pre">lead_months_config.list_months</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.lead_months_config.start"><code class="docutils literal notranslate"><span class="pre">lead_months_config.start</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.lead_months_config.end"><code class="docutils literal notranslate"><span class="pre">lead_months_config.end</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.lead_months_config.build_lead_months"><code class="docutils literal notranslate"><span class="pre">lead_months_config.build_lead_months()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.DatasetConfigABC"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.DatasetConfigABC.model"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.model</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.DatasetConfigABC.condition"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.condition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.DatasetConfigABC.condition_method"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.condition_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.DatasetConfigABC.time_features"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.time_features</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.DatasetConfigABC.lead_months"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.lead_months</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#id0"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.model</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#id1"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.condition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#id2"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.condition_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#id3"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.time_features</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#id4"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.lead_months</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.DatasetConfigABC.ds_operator"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.ds_operator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.DatasetConfigABC.num_input_lead_months"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.num_input_lead_months</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.DatasetConfigABC.effective_condition"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.effective_condition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.DatasetConfigABC.build_dataset"><code class="docutils literal notranslate"><span class="pre">DatasetConfigABC.build_dataset()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#module-cccma_ppp.data_modules.dataset.operator">cccma_ppp.data_modules.dataset.operator module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator"><code class="docutils literal notranslate"><span class="pre">DatasetOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.config_observation"><code class="docutils literal notranslate"><span class="pre">DatasetOperator.config_observation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_weights"><code class="docutils literal notranslate"><span class="pre">DatasetOperator.get_weights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_input_var_metadata"><code class="docutils literal notranslate"><span class="pre">DatasetOperator.get_input_var_metadata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_target_var_metadata"><code class="docutils literal notranslate"><span class="pre">DatasetOperator.get_target_var_metadata()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-cccma_ppp.data_modules.dataloader">
+<span id="cccma-ppp-data-modules-dataloader-module"></span><h2>cccma_ppp.data_modules.dataloader module<a class="headerlink" href="#module-cccma_ppp.data_modules.dataloader" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.BatchDataABC">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.data_modules.dataloader.</span></span><span class="sig-name descname"><span class="pre">BatchDataABC</span></span><a class="reference internal" href="_modules/cccma_ppp/data_modules/dataloader.html#BatchDataABC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.BatchDataABC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for batched data containers.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.BatchDataABC.input">
+<span class="sig-name descname"><span class="pre">input</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.BatchDataABC.input" title="Link to this definition"></a></dt>
+<dd><p>Input batch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.BatchDataABC.target">
+<span class="sig-name descname"><span class="pre">target</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.BatchDataABC.target" title="Link to this definition"></a></dt>
+<dd><p>Target batch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.BatchDataABC.added_features">
+<span class="sig-name descname"><span class="pre">added_features</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.BatchDataABC.added_features" title="Link to this definition"></a></dt>
+<dd><p>Additional features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.BatchDataABC.metadata">
+<span class="sig-name descname"><span class="pre">metadata</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.BatchDataABC.metadata" title="Link to this definition"></a></dt>
+<dd><p>Optional metadata associated with each batch element.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[dict] or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">input</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></span><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">target</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">added_features</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">metadata</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.BatchDataABC.to_device">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">to_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/data_modules/dataloader.html#BatchDataABC.to_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.BatchDataABC.to_device" title="Link to this definition"></a></dt>
+<dd><p>Move batch to specified device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">device</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Target device to move the batch to.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Batch moved to the target device.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.data_modules.dataloader.BatchDataABC" title="cccma_ppp.data_modules.dataloader.BatchDataABC">BatchDataABC</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.DataloaderConfigABC">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.data_modules.dataloader.</span></span><span class="sig-name descname"><span class="pre">DataloaderConfigABC</span></span><a class="reference internal" href="_modules/cccma_ppp/data_modules/dataloader.html#DataloaderConfigABC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.DataloaderConfigABC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for dataloader configuration.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.DataloaderConfigABC.dataset_config">
+<span class="sig-name descname"><span class="pre">dataset_config</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.dataset_config" title="Link to this definition"></a></dt>
+<dd><p>Dataset configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.DatasetConfigABC" title="cccma_ppp.data_modules.dataset.config_abc.DatasetConfigABC">DatasetConfigABC</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">dataset_config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.DatasetConfigABC" title="cccma_ppp.data_modules.dataset.config_abc.DatasetConfigABC"><span class="pre">DatasetConfigABC</span></a></span><a class="headerlink" href="#id4" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.DataloaderConfigABC.setup_distributed">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">setup_distributed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/data_modules/dataloader.html#DataloaderConfigABC.setup_distributed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.DataloaderConfigABC.setup_distributed" title="Link to this definition"></a></dt>
+<dd><p>Prepare dataloader for distributed execution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.Dataloader">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.data_modules.dataloader.</span></span><span class="sig-name descname"><span class="pre">Dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collate_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/data_modules/dataloader.html#Dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.Dataloader" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Wrapper around PyTorch DataLoader with distributed support.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#cccma_ppp.data_modules.dataloader.DataloaderConfigABC" title="cccma_ppp.data_modules.dataloader.DataloaderConfigABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataloaderConfigABC</span></code></a></span>) – Dataloader configuration.</p></li>
+<li><p><strong>dataset</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></span>) – Dataset instance.</p></li>
+<li><p><strong>rank</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Process rank in distributed setup.</p></li>
+<li><p><strong>world_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Total number of processes.</p></li>
+<li><p><strong>return_spatial_mask</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to include spatial masks.</p></li>
+<li><p><strong>reduce_spatial_mask</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to reduce masks across batch dimension.</p></li>
+<li><p><strong>collate_fn</strong> (<em>Callable</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.Dataloader.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#cccma_ppp.data_modules.dataloader.DataloaderConfigABC" title="cccma_ppp.data_modules.dataloader.DataloaderConfigABC"><span class="pre">DataloaderConfigABC</span></a></span><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.Dataloader.config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.Dataloader.dataset">
+<span class="sig-name descname"><span class="pre">dataset</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dataset</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.Dataloader.dataset" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.Dataloader.collate_fn">
+<span class="sig-name descname"><span class="pre">collate_fn</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.Dataloader.collate_fn" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.Dataloader.rank">
+<span class="sig-name descname"><span class="pre">rank</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.Dataloader.rank" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.Dataloader.world_size">
+<span class="sig-name descname"><span class="pre">world_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.Dataloader.world_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.Dataloader.return_spatial_mask">
+<span class="sig-name descname"><span class="pre">return_spatial_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.Dataloader.return_spatial_mask" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.Dataloader.reduce_spatial_mask">
+<span class="sig-name descname"><span class="pre">reduce_spatial_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.Dataloader.reduce_spatial_mask" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.Dataloader.input_shape">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">input_shape</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.Dataloader.input_shape" title="Link to this definition"></a></dt>
+<dd><p>Input data shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Shape of the input data.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.Dataloader.target_shape">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">target_shape</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.Dataloader.target_shape" title="Link to this definition"></a></dt>
+<dd><p>Target data shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.Dataloader.added_features_dim">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">added_features_dim</span></span><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.Dataloader.added_features_dim" title="Link to this definition"></a></dt>
+<dd><p>Additional feature dimension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.Dataloader.set_epoch">
+<span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">set_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/data_modules/dataloader.html#Dataloader.set_epoch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.Dataloader.set_epoch" title="Link to this definition"></a></dt>
+<dd><p>Set epoch for distributed sampler.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>epoch</strong> (<em>int</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#cccma_ppp.data_modules.dataloader.Dataloader" title="cccma_ppp.data_modules.dataloader.Dataloader">Dataloader</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.dataloader.Dataloader.subset_loader">
+<span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">subset_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/data_modules/dataloader.html#Dataloader.subset_loader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.data_modules.dataloader.Dataloader.subset_loader" title="Link to this definition"></a></dt>
+<dd><p>Create iterator over subset of batches.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>start_batch</strong> (<em>int</em><em>, </em><em>optional</em>) – Starting batch index.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>iterator</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cccma_ppp.data_modules.utils">
+<span id="cccma-ppp-data-modules-utils-module"></span><h2>cccma_ppp.data_modules.utils module<a class="headerlink" href="#module-cccma_ppp.data_modules.utils" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.utils.WeightsConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.data_modules.utils.</span></span><span class="sig-name descname"><span class="pre">WeightsConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spatial_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'uniform'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/data_modules/utils.html#WeightsConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.data_modules.utils.WeightsConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configuration for computing spatial and variable weights.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spatial_method</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'uniform'</span></code>, <code class="docutils literal notranslate"><span class="pre">'cosine_lat'</span></code>]</span>) – Method used to compute spatial weights.</p></li>
+<li><p><strong>variable_weights</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Per-variable weighting factors.</p></li>
+<li><p><strong>load_dir</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Path to load precomputed weights.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.utils.WeightsConfig.spatial_method">
+<span class="sig-name descname"><span class="pre">spatial_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'uniform'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'cosine_lat'</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'uniform'</span></span><a class="headerlink" href="#cccma_ppp.data_modules.utils.WeightsConfig.spatial_method" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.utils.WeightsConfig.variable_weights">
+<span class="sig-name descname"><span class="pre">variable_weights</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.data_modules.utils.WeightsConfig.variable_weights" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.utils.WeightsConfig.load_dir">
+<span class="sig-name descname"><span class="pre">load_dir</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.data_modules.utils.WeightsConfig.load_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.data_modules.utils.WeightsConfig.build_weights">
+<span class="sig-name descname"><span class="pre">build_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_coords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Flattennanremover</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/data_modules/utils.html#WeightsConfig.build_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.data_modules.utils.WeightsConfig.build_weights" title="Link to this definition"></a></dt>
+<dd><p>Generate or load spatial weights.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_coords</strong> (<em>dict</em><em>, </em><em>optional</em>) – Spatial coordinates of target data.</p></li>
+<li><p><strong>Flattennanremover</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="cccma_ppp.preprocessing.html#cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove" title="cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove"><code class="xref py py-class docutils literal notranslate"><span class="pre">Flattennanremove</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Preprocessor for flattened spatial representation.</p></li>
+<li><p><strong>save</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to save computed weights.</p></li>
+<li><p><strong>save_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+<li><p><strong>save_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Spatial (and optional variable) weights.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.DataArray</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If loaded weights are incompatible with target coordinates.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cccma_ppp.core.html" class="btn btn-neutral float-left" title="cccma_ppp.core package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cccma_ppp.data_modules.data.html" class="btn btn-neutral float-right" title="cccma_ppp.data_modules.data package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

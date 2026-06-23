@@ -1,0 +1,857 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cccma_ppp.train package &mdash; CCCma PPP  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=18aa9b61" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="cccma_ppp.preprocessing package" href="cccma_ppp.preprocessing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            CCCma PPP
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="cccma_ppp.html">cccma_ppp package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="cccma_ppp.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.core.html">cccma_ppp.core package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.html">cccma_ppp.data_modules package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.generic.html">cccma_ppp.generic package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.loss.html">cccma_ppp.loss package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.models.html">cccma_ppp.models package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.preprocessing.html">cccma_ppp.preprocessing package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">cccma_ppp.train package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-cccma_ppp.train.dataloader">cccma_ppp.train.dataloader module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-cccma_ppp.train.datasets">cccma_ppp.train.datasets module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-cccma_ppp.train.registry_imports">cccma_ppp.train.registry_imports module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-cccma_ppp.train.train">cccma_ppp.train.train module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-cccma_ppp.train.train_configs">cccma_ppp.train.train_configs module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CCCma PPP</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="api.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="cccma_ppp.html">cccma_ppp package</a></li>
+      <li class="breadcrumb-item active">cccma_ppp.train package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cccma_ppp.train.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-cccma_ppp.train">
+<span id="cccma-ppp-train-package"></span><h1>cccma_ppp.train package<a class="headerlink" href="#module-cccma_ppp.train" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-cccma_ppp.train.dataloader">
+<span id="cccma-ppp-train-dataloader-module"></span><h2>cccma_ppp.train.dataloader module<a class="headerlink" href="#module-cccma_ppp.train.dataloader" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.BatchData">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">BatchData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/dataloader.html#BatchData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.dataloader.BatchData" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.BatchDataABC" title="cccma_ppp.data_modules.dataloader.BatchDataABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BatchDataABC</span></code></a></p>
+<p>Container for batched training data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – Input tensor.</p></li>
+<li><p><strong>target</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – Target tensor.</p></li>
+<li><p><strong>added_features</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – Additional input features.</p></li>
+<li><p><strong>return_spatial_mask</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to compute and include spatial masks.</p></li>
+<li><p><strong>reduce_spatial_mask</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to reduce masks across batch dimension.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.BatchData.input">
+<span class="sig-name descname"><span class="pre">input</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></span><a class="headerlink" href="#cccma_ppp.train.dataloader.BatchData.input" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.BatchData.target">
+<span class="sig-name descname"><span class="pre">target</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></span><a class="headerlink" href="#cccma_ppp.train.dataloader.BatchData.target" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.BatchData.added_features">
+<span class="sig-name descname"><span class="pre">added_features</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.train.dataloader.BatchData.added_features" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.BatchData.return_spatial_mask">
+<span class="sig-name descname"><span class="pre">return_spatial_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#cccma_ppp.train.dataloader.BatchData.return_spatial_mask" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.BatchData.reduce_spatial_mask">
+<span class="sig-name descname"><span class="pre">reduce_spatial_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#cccma_ppp.train.dataloader.BatchData.reduce_spatial_mask" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.BatchData.to_device">
+<span class="sig-name descname"><span class="pre">to_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/dataloader.html#BatchData.to_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.dataloader.BatchData.to_device" title="Link to this definition"></a></dt>
+<dd><p>Move batch data to specified device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">device</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Updated instance on target device.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.train.dataloader.BatchData" title="cccma_ppp.train.dataloader.BatchData">BatchData</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.TrainDataloaderConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">TrainDataloaderConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_years</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_validation_years</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_data_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefetch_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/dataloader.html#TrainDataloaderConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.dataloader.TrainDataloaderConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.DataloaderConfigABC" title="cccma_ppp.data_modules.dataloader.DataloaderConfigABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataloaderConfigABC</span></code></a></p>
+<p>Configuration for training and validation data loaders.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset_config</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#cccma_ppp.train.datasets.TrainDatasetConfig" title="cccma_ppp.train.datasets.TrainDatasetConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainDatasetConfig</span></code></a></span>) – Dataset configuration.</p></li>
+<li><p><strong>batch_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of samples per batch.</p></li>
+<li><p><strong>train_years</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span>) – Range of training years.</p></li>
+<li><p><strong>num_validation_years</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of years reserved for validation.</p></li>
+<li><p><strong>num_data_workers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of parallel data workers.</p></li>
+<li><p><strong>prefetch_factor</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Data prefetching factor.</p></li>
+<li><p><strong>drop_last</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to drop incomplete batches.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.TrainDataloaderConfig.dataset_config">
+<span class="sig-name descname"><span class="pre">dataset_config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#cccma_ppp.train.datasets.TrainDatasetConfig" title="cccma_ppp.train.datasets.TrainDatasetConfig"><span class="pre">TrainDatasetConfig</span></a></span><a class="headerlink" href="#cccma_ppp.train.dataloader.TrainDataloaderConfig.dataset_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.TrainDataloaderConfig.batch_size">
+<span class="sig-name descname"><span class="pre">batch_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#cccma_ppp.train.dataloader.TrainDataloaderConfig.batch_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.TrainDataloaderConfig.train_years">
+<span class="sig-name descname"><span class="pre">train_years</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.train.dataloader.TrainDataloaderConfig.train_years" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.TrainDataloaderConfig.num_validation_years">
+<span class="sig-name descname"><span class="pre">num_validation_years</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#cccma_ppp.train.dataloader.TrainDataloaderConfig.num_validation_years" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.TrainDataloaderConfig.num_data_workers">
+<span class="sig-name descname"><span class="pre">num_data_workers</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#cccma_ppp.train.dataloader.TrainDataloaderConfig.num_data_workers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.TrainDataloaderConfig.prefetch_factor">
+<span class="sig-name descname"><span class="pre">prefetch_factor</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="headerlink" href="#cccma_ppp.train.dataloader.TrainDataloaderConfig.prefetch_factor" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.TrainDataloaderConfig.drop_last">
+<span class="sig-name descname"><span class="pre">drop_last</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#cccma_ppp.train.dataloader.TrainDataloaderConfig.drop_last" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.TrainDataloaderConfig.available_train_years">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">available_train_years</span></span><a class="headerlink" href="#cccma_ppp.train.dataloader.TrainDataloaderConfig.available_train_years" title="Link to this definition"></a></dt>
+<dd><p>Training years excluding validation period.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Array of years used for training.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.TrainDataloaderConfig.setup_distributed">
+<span class="sig-name descname"><span class="pre">setup_distributed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/dataloader.html#TrainDataloaderConfig.setup_distributed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.dataloader.TrainDataloaderConfig.setup_distributed" title="Link to this definition"></a></dt>
+<dd><p>Prepare dataloader for distributed training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>distributed</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed" title="cccma_ppp.generic.distributed.Distributed"><code class="xref py py-class docutils literal notranslate"><span class="pre">Distributed</span></code></a></span>) – Distributed training context.</p></li>
+<li><p><strong>save_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Path to save fitted preprocessors.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.TrainDataloaderConfig.build_train_loader">
+<span class="sig-name descname"><span class="pre">build_train_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/dataloader.html#TrainDataloaderConfig.build_train_loader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.dataloader.TrainDataloaderConfig.build_train_loader" title="Link to this definition"></a></dt>
+<dd><p>Construct training dataloader.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>return_spatial_mask</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to return the spatial mask along with the dataloader output.</p></li>
+<li><p><strong>reduce_spatial_mask</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to reduce the spatial mask before returning it.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Training dataloader.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.Dataloader" title="cccma_ppp.data_modules.dataloader.Dataloader">Dataloader</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If setup has not been called.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.TrainDataloaderConfig.build_validation_loader">
+<span class="sig-name descname"><span class="pre">build_validation_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/dataloader.html#TrainDataloaderConfig.build_validation_loader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.dataloader.TrainDataloaderConfig.build_validation_loader" title="Link to this definition"></a></dt>
+<dd><p>Construct validation dataloader.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>return_spatial_mask</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to return the spatial mask along with the dataloader output.</p></li>
+<li><p><strong>reduce_spatial_mask</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to reduce the spatial mask before returning it.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Validation dataloader, or None if no validation years are specified.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.dataloader.Dataloader" title="cccma_ppp.data_modules.dataloader.Dataloader">Dataloader</a> or None</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If setup has not been called.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.TrainDataloaderConfig.get_weights">
+<span class="sig-name descname"><span class="pre">get_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/dataloader.html#TrainDataloaderConfig.get_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.dataloader.TrainDataloaderConfig.get_weights" title="Link to this definition"></a></dt>
+<dd><p>Retrieve weights for loss computation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.utils.WeightsConfig" title="cccma_ppp.data_modules.utils.WeightsConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeightsConfig</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Configuration used to compute or retrieve weights.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Weights for loss computation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xr.DataArray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.TrainDataloaderConfig.input_var_metadata">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">input_var_metadata</span></span><a class="headerlink" href="#cccma_ppp.train.dataloader.TrainDataloaderConfig.input_var_metadata" title="Link to this definition"></a></dt>
+<dd><p>Retrieve input variable metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.TrainDataloaderConfig.target_var_metadata">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">target_var_metadata</span></span><a class="headerlink" href="#cccma_ppp.train.dataloader.TrainDataloaderConfig.target_var_metadata" title="Link to this definition"></a></dt>
+<dd><p>Retrieve target variable metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cccma_ppp.train.dataloader.collate_batch">
+<span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">collate_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/dataloader.html#collate_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.dataloader.collate_batch" title="Link to this definition"></a></dt>
+<dd><p>Collate dataset samples into a batch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> (<em>list</em>) – List of dataset samples.</p></li>
+<li><p><strong>return_spatial_mask</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to include spatial masks.</p></li>
+<li><p><strong>reduce_spatial_mask</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to reduce masks across the batch.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Batched data, optionally paired with metadata.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.train.dataloader.BatchData" title="cccma_ppp.train.dataloader.BatchData">BatchData</a> or tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-cccma_ppp.train.datasets">
+<span id="cccma-ppp-train-datasets-module"></span><h2>cccma_ppp.train.datasets module<a class="headerlink" href="#module-cccma_ppp.train.datasets" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDatasetConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.datasets.</span></span><span class="sig-name descname"><span class="pre">TrainDatasetConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lead_months</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/datasets.html#TrainDatasetConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDatasetConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.DatasetConfigABC" title="cccma_ppp.data_modules.dataset.config_abc.DatasetConfigABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">DatasetConfigABC</span></code></a></p>
+<p>Configuration for training dataset construction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig" title="cccma_ppp.data_modules.data.data_configs.ModelDataConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelDataConfig</span></code></a></span>) – Model dataset configuration.</p></li>
+<li><p><strong>observation</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ObsDataConfig" title="cccma_ppp.data_modules.data.data_configs.ObsDataConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObsDataConfig</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Observation dataset configuration.</p></li>
+<li><p><strong>condition</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig" title="cccma_ppp.data_modules.data.data_configs.ConditionDataConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConditionDataConfig</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Conditioning dataset configuration.</p></li>
+<li><p><strong>condition_method</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Method for conditioning (e.g., “cross_ensemble”, “same_member”, “static”).</p></li>
+<li><p><strong>time_features</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Time-based features to include.</p></li>
+<li><p><strong>lead_months</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.lead_months_config" title="cccma_ppp.data_modules.dataset.config_abc.lead_months_config"><code class="xref py py-class docutils literal notranslate"><span class="pre">lead_months_config</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Lead months to use.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDatasetConfig.model">
+<span class="sig-name descname"><span class="pre">model</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig" title="cccma_ppp.data_modules.data.data_configs.ModelDataConfig"><span class="pre">ModelDataConfig</span></a></span><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDatasetConfig.model" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDatasetConfig.observation">
+<span class="sig-name descname"><span class="pre">observation</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ObsDataConfig" title="cccma_ppp.data_modules.data.data_configs.ObsDataConfig"><span class="pre">ObsDataConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDatasetConfig.observation" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDatasetConfig.condition">
+<span class="sig-name descname"><span class="pre">condition</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig" title="cccma_ppp.data_modules.data.data_configs.ConditionDataConfig"><span class="pre">ConditionDataConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDatasetConfig.condition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDatasetConfig.condition_method">
+<span class="sig-name descname"><span class="pre">condition_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDatasetConfig.condition_method" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDatasetConfig.time_features">
+<span class="sig-name descname"><span class="pre">time_features</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDatasetConfig.time_features" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDatasetConfig.lead_months">
+<span class="sig-name descname"><span class="pre">lead_months</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.config_abc.lead_months_config" title="cccma_ppp.data_modules.dataset.config_abc.lead_months_config"><span class="pre">lead_months_config</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDatasetConfig.lead_months" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDatasetConfig.ds_operator">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ds_operator</span></span><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDatasetConfig.ds_operator" title="Link to this definition"></a></dt>
+<dd><p>Access dataset operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator" title="cccma_ppp.data_modules.dataset.operator.DatasetOperator">DatasetOperator</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDatasetConfig.num_input_lead_months">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">num_input_lead_months</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDatasetConfig.num_input_lead_months" title="Link to this definition"></a></dt>
+<dd><p>Number of lead months in model dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDatasetConfig.get_common_time">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_common_time</span></span><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDatasetConfig.get_common_time" title="Link to this definition"></a></dt>
+<dd><p>Compute common time range.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDatasetConfig.available_train_time">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">available_train_time</span></span><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDatasetConfig.available_train_time" title="Link to this definition"></a></dt>
+<dd><p>Available training years.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDatasetConfig.build_dataset">
+<span class="sig-name descname"><span class="pre">build_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">years</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/datasets.html#TrainDatasetConfig.build_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDatasetConfig.build_dataset" title="Link to this definition"></a></dt>
+<dd><p>Construct training dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.train.datasets.TrainDataset" title="cccma_ppp.train.datasets.TrainDataset">TrainDataset</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDataset">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.datasets.</span></span><span class="sig-name descname"><span class="pre">TrainDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requested_years</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/datasets.html#TrainDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDataset" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></p>
+<p>Training dataset for model learning.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#cccma_ppp.train.datasets.TrainDatasetConfig" title="cccma_ppp.train.datasets.TrainDatasetConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainDatasetConfig</span></code></a></span>)</p></li>
+<li><p><strong>requested_years</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>] | <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>] | <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>)</p></li>
+<li><p><strong>mask</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataArray</span></code></span>)</p></li>
+<li><p><strong>return_metadata</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDataset.config">
+<span class="sig-name descname"><span class="pre">config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#cccma_ppp.train.datasets.TrainDatasetConfig" title="cccma_ppp.train.datasets.TrainDatasetConfig"><span class="pre">TrainDatasetConfig</span></a></span><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDataset.config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDataset.requested_years">
+<span class="sig-name descname"><span class="pre">requested_years</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDataset.requested_years" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDataset.mask">
+<span class="sig-name descname"><span class="pre">mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataArray</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDataset.mask" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDataset.return_metadata">
+<span class="sig-name descname"><span class="pre">return_metadata</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDataset.return_metadata" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDataset.get_model_indexes">
+<span class="sig-name descname"><span class="pre">get_model_indexes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/datasets.html#TrainDataset.get_model_indexes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDataset.get_model_indexes" title="Link to this definition"></a></dt>
+<dd><p>Compute indexes for model dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDataset.get_obs_indexes">
+<span class="sig-name descname"><span class="pre">get_obs_indexes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_indexes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/datasets.html#TrainDataset.get_obs_indexes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDataset.get_obs_indexes" title="Link to this definition"></a></dt>
+<dd><p>Compute indexes for observation dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDataset.get_cond_indexes">
+<span class="sig-name descname"><span class="pre">get_cond_indexes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_indexes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/datasets.html#TrainDataset.get_cond_indexes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDataset.get_cond_indexes" title="Link to this definition"></a></dt>
+<dd><p>Compute indexes for conditioning dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDataset.get_input_shape">
+<span class="sig-name descname"><span class="pre">get_input_shape</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/datasets.html#TrainDataset.get_input_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDataset.get_input_shape" title="Link to this definition"></a></dt>
+<dd><p>Determine input shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDataset.get_target_shape">
+<span class="sig-name descname"><span class="pre">get_target_shape</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/datasets.html#TrainDataset.get_target_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDataset.get_target_shape" title="Link to this definition"></a></dt>
+<dd><p>Determine target shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.train.datasets.TrainDataset.get_added_features_dim">
+<span class="sig-name descname"><span class="pre">get_added_features_dim</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/datasets.html#TrainDataset.get_added_features_dim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.datasets.TrainDataset.get_added_features_dim" title="Link to this definition"></a></dt>
+<dd><p>Number of additional features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cccma_ppp.train.registry_imports">
+<span id="cccma-ppp-train-registry-imports-module"></span><h2>cccma_ppp.train.registry_imports module<a class="headerlink" href="#module-cccma_ppp.train.registry_imports" title="Link to this heading"></a></h2>
+</section>
+<section id="module-cccma_ppp.train.train">
+<span id="cccma-ppp-train-train-module"></span><h2>cccma_ppp.train.train module<a class="headerlink" href="#module-cccma_ppp.train.train" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="cccma_ppp.train.train.get_parser">
+<span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.train.</span></span><span class="sig-name descname"><span class="pre">get_parser</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/train.html#get_parser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.train.get_parser" title="Link to this definition"></a></dt>
+<dd><p>Create argument parser for training script.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Configured parser expecting a YAML configuration path.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArgumentParser</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cccma_ppp.train.train.main">
+<span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.train.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yaml_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/train.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.train.main" title="Link to this definition"></a></dt>
+<dd><p>Run training from configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>yaml_config</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Path to YAML configuration file.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-cccma_ppp.train.train_configs">
+<span id="cccma-ppp-train-train-configs-module"></span><h2>cccma_ppp.train.train_configs module<a class="headerlink" href="#module-cccma_ppp.train.train_configs" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.set_seed">
+<span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.train_configs.</span></span><span class="sig-name descname"><span class="pre">set_seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/train_configs.html#set_seed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.train_configs.set_seed" title="Link to this definition"></a></dt>
+<dd><p>Set random seeds for reproducibility.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>seed</strong> (<em>int</em>) – Random seed value.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.train_configs.</span></span><span class="sig-name descname"><span class="pre">TrainConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">losspipeline</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_every_n_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_checkpoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resume_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/train_configs.html#TrainConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configuration for training experiments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>experiment_dir</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Root directory for experiment outputs.</p></li>
+<li><p><strong>max_epochs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Maximum number of training epochs.</p></li>
+<li><p><strong>train_loader</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#cccma_ppp.train.dataloader.TrainDataloaderConfig" title="cccma_ppp.train.dataloader.TrainDataloaderConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainDataloaderConfig</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Data loader configuration.</p></li>
+<li><p><strong>module</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.selectors.ModuleSelector" title="cccma_ppp.core.selectors.ModuleSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSelector</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Model selector.</p></li>
+<li><p><strong>losspipeline</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss.LosspipelineConfig" title="cccma_ppp.loss.loss.LosspipelineConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">LosspipelineConfig</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Loss pipeline configuration.</p></li>
+<li><p><strong>trainer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.trainer.TrainerConfig" title="cccma_ppp.core.trainer.TrainerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerConfig</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Trainer configuration.</p></li>
+<li><p><strong>optimization</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.optimization.OptimizerConfig" title="cccma_ppp.core.optimization.OptimizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizerConfig</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Optimization configuration.</p></li>
+<li><p><strong>weights</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.utils.WeightsConfig" title="cccma_ppp.data_modules.utils.WeightsConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeightsConfig</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Weight configuration for loss.</p></li>
+<li><p><strong>log_every_n_epochs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Logging frequency.</p></li>
+<li><p><strong>save_checkpoint</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to save checkpoints.</p></li>
+<li><p><strong>seed</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Random seed.</p></li>
+<li><p><strong>resume_dir</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Directory of a previous experiment to resume from.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.experiment_dir">
+<span class="sig-name descname"><span class="pre">experiment_dir</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.experiment_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.max_epochs">
+<span class="sig-name descname"><span class="pre">max_epochs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.max_epochs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.train_loader">
+<span class="sig-name descname"><span class="pre">train_loader</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#cccma_ppp.train.dataloader.TrainDataloaderConfig" title="cccma_ppp.train.dataloader.TrainDataloaderConfig"><span class="pre">TrainDataloaderConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.train_loader" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.module">
+<span class="sig-name descname"><span class="pre">module</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.selectors.ModuleSelector" title="cccma_ppp.core.selectors.ModuleSelector"><span class="pre">ModuleSelector</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.module" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.losspipeline">
+<span class="sig-name descname"><span class="pre">losspipeline</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss.LosspipelineConfig" title="cccma_ppp.loss.loss.LosspipelineConfig"><span class="pre">LosspipelineConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.losspipeline" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.trainer">
+<span class="sig-name descname"><span class="pre">trainer</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.trainer.TrainerConfig" title="cccma_ppp.core.trainer.TrainerConfig"><span class="pre">TrainerConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.trainer" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.optimization">
+<span class="sig-name descname"><span class="pre">optimization</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.optimization.OptimizerConfig" title="cccma_ppp.core.optimization.OptimizerConfig"><span class="pre">OptimizerConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.optimization" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.weights">
+<span class="sig-name descname"><span class="pre">weights</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.data_modules.html#cccma_ppp.data_modules.utils.WeightsConfig" title="cccma_ppp.data_modules.utils.WeightsConfig"><span class="pre">WeightsConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.weights" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.log_every_n_epochs">
+<span class="sig-name descname"><span class="pre">log_every_n_epochs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></span><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.log_every_n_epochs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.save_checkpoint">
+<span class="sig-name descname"><span class="pre">save_checkpoint</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.save_checkpoint" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.seed">
+<span class="sig-name descname"><span class="pre">seed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.seed" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.resume_dir">
+<span class="sig-name descname"><span class="pre">resume_dir</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.resume_dir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.set_random_seed">
+<span class="sig-name descname"><span class="pre">set_random_seed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/train_configs.html#TrainConfig.set_random_seed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.set_random_seed" title="Link to this definition"></a></dt>
+<dd><p>Apply configured random seed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.checkpoint_dir">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">checkpoint_dir</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.checkpoint_dir" title="Link to this definition"></a></dt>
+<dd><p>Path to checkpoint directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.log_dir">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">log_dir</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.log_dir" title="Link to this definition"></a></dt>
+<dd><p>Path to logging directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.figures_dir">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">figures_dir</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.figures_dir" title="Link to this definition"></a></dt>
+<dd><p>Path to figures directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.prepare_directory">
+<span class="sig-name descname"><span class="pre">prepare_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yaml_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/train_configs.html#TrainConfig.prepare_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.prepare_directory" title="Link to this definition"></a></dt>
+<dd><p>Prepare experiment directory structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>distributed</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed" title="cccma_ppp.generic.distributed.Distributed"><code class="xref py py-class docutils literal notranslate"><span class="pre">Distributed</span></code></a></span>) – Distributed context used for coordinating directory creation.</p></li>
+<li><p><strong>yaml_config</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Path to configuration file to copy into the experiment directory.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.TrainConfig.read_config_from_halted_experiment">
+<span class="sig-name descname"><span class="pre">read_config_from_halted_experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resume_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experiment_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/train_configs.html#TrainConfig.read_config_from_halted_experiment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.train_configs.TrainConfig.read_config_from_halted_experiment" title="Link to this definition"></a></dt>
+<dd><p>Load configuration from a previous experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resume_dir</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – Path to existing experiment.</p></li>
+<li><p><strong>experiment_dir</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – New experiment directory.</p></li>
+<li><p><strong>max_epochs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Updated number of epochs.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#cccma_ppp.train.train_configs.TrainConfig" title="cccma_ppp.train.train_configs.TrainConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainConfig</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If resume directory does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.prepare_config">
+<span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.train_configs.</span></span><span class="sig-name descname"><span class="pre">prepare_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/train_configs.html#prepare_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.train_configs.prepare_config" title="Link to this definition"></a></dt>
+<dd><p>Load configuration from YAML file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Parsed configuration dictionary.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cccma_ppp.train.train_configs.build_trainer">
+<span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.train_configs.</span></span><span class="sig-name descname"><span class="pre">build_trainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/train_configs.html#build_trainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.train.train_configs.build_trainer" title="Link to this definition"></a></dt>
+<dd><p>Construct training pipeline.</p>
+<p>Builds data loaders, model, loss function, optimizer,
+and trainer object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#cccma_ppp.train.train_configs.TrainConfig" title="cccma_ppp.train.train_configs.TrainConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainConfig</span></code></a></span>) – Training configuration.</p></li>
+<li><p><strong>distributed</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed" title="cccma_ppp.generic.distributed.Distributed"><code class="xref py py-class docutils literal notranslate"><span class="pre">Distributed</span></code></a></span>) – Distributed training context.</p></li>
+<li><p><strong>logger</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Logger</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Logger for output.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Initialized trainer instance.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.trainer.Trainer" title="cccma_ppp.core.trainer.Trainer">Trainer</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cccma_ppp.preprocessing.html" class="btn btn-neutral float-left" title="cccma_ppp.preprocessing package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import numpy as np
 import dataclasses
 from typing import final, Literal
@@ -9,7 +10,6 @@ from cccma_ppp.preprocessing import PreprocessingPipeline
 spatialmethod = Literal["uniform", "cosine_lat"]
 
 
-@dataclasses.dataclass
 @dataclasses.dataclass
 class ModelDataConfig(DataConfigABC):
     """
