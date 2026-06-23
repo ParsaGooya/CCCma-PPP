@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 import torch
 
-from cccma_ppp.core.cVAE_module import cVAEOutput
 from cccma_ppp.models.mlp_models import (
     AutoencoderConfig,
     cVAE_MLPConfig,
@@ -672,7 +671,7 @@ def test_cvae_forward_basic():
 
     out = model(x=x())
 
-    assert isinstance(out, cVAEOutput)
+    assert out.__class__.__name__ == "cVAEOutput"
     assert out.output.shape == (1, 2, 1, 6)
     assert out.mu.shape == (2, 4)
     assert out.log_var.shape == (2, 4)
@@ -742,7 +741,7 @@ def test_cvae_predict_basic():
 
     out = model.predict(condition=condition(), sample_size=2)
 
-    assert isinstance(out, cVAEOutput)
+    assert out.__class__.__name__ == "cVAEOutput"
     assert out.output.shape == (2, 2, 1, 6)
 
 

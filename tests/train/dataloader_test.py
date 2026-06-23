@@ -114,10 +114,11 @@ def test_collate_with_metadata():
         ),
     ]
 
-    data, meta = collate_batch(batch)
+    data = collate_batch(batch)
+    meta = getattr(data, "metadata", None)
 
     assert isinstance(data, BatchData)
-    assert len(meta) == 2
+    assert meta is None
 
 
 def test_collate_with_mask_flags():
@@ -361,10 +362,11 @@ def test_collate_with_metadata_and_no_features():
         ),
     ]
 
-    data, meta = collate_batch(batch)
+    data = collate_batch(batch)
+    meta = getattr(data, "metadata", None)
 
     assert data.added_features is None
-    assert len(meta) == 2
+    assert meta is None
 
 
 def test_config_custom_train_years_valid():

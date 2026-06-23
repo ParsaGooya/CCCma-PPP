@@ -126,7 +126,7 @@ class DummyDistributed:
         pass
 
 
-def make_valid_config(tmp_path):
+def make_valid_config_with(tmp_path):
     return TrainConfig(
         experiment_dir=tmp_path,
         max_epochs=1,
@@ -139,7 +139,7 @@ def make_valid_config(tmp_path):
 
 
 def test_basic_init(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
     assert cfg.max_epochs == 1
     assert isinstance(cfg.experiment_dir, Path)
 
@@ -205,13 +205,13 @@ def test_generator_requires_crps(tmp_path):
 
 
 def test_set_random_seed(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
     cfg.seed = 42
     cfg.set_random_seed()
 
 
 def test_prepare_directory_creates_dirs(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
 
     cfg.prepare_directory(d)
@@ -220,7 +220,7 @@ def test_prepare_directory_creates_dirs(tmp_path):
 
 
 def test_prepare_directory_yaml_copy(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
 
     yaml_file = tmp_path / "cfg.yaml"
@@ -238,7 +238,7 @@ def test_resolve_resuming_same_path(tmp_path):
     cfg.max_epochs = 1
 
     def fake_read(**kwargs):
-        return make_valid_config(tmp_path)
+        return make_valid_config_with(tmp_path)
 
     cfg.read_config_from_halted_experiment = fake_read
 
@@ -254,7 +254,7 @@ def test_resolve_resuming_different_path(tmp_path):
     cfg.max_epochs = 1
 
     def fake_read(**kwargs):
-        return make_valid_config(tmp_path)
+        return make_valid_config_with(tmp_path)
 
     cfg.read_config_from_halted_experiment = fake_read
 
@@ -272,7 +272,7 @@ def test_prepare_config_reads_yaml(tmp_path):
 
 
 def test_build_trainer_basic(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
 
     trainer = build_trainer(cfg, d)
@@ -281,7 +281,7 @@ def test_build_trainer_basic(tmp_path):
 
 
 def test_build_trainer_with_logger(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
 
     logger = logging.getLogger("x")
@@ -290,7 +290,7 @@ def test_build_trainer_with_logger(tmp_path):
 
 
 def test_prepare_directory_without_yaml(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
 
     cfg.prepare_directory(d, yaml_config=None)
@@ -305,7 +305,7 @@ def test_resolve_resuming_updates_config(tmp_path):
     cfg.experiment_dir = tmp_path
     cfg.max_epochs = 1
 
-    halted = make_valid_config(tmp_path)
+    halted = make_valid_config_with(tmp_path)
 
     def fake_read(**kwargs):
         return halted
@@ -318,7 +318,7 @@ def test_resolve_resuming_updates_config(tmp_path):
 
 
 def test_set_random_seed_none(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.seed = None
 
@@ -326,7 +326,7 @@ def test_set_random_seed_none(tmp_path):
 
 
 def test_build_trainer_non_distributed(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
     d.distributed = False
@@ -337,7 +337,7 @@ def test_build_trainer_non_distributed(tmp_path):
 
 
 def test_build_trainer_with_validation_loader(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class Loader(DummyTrainLoader):
         def build_validation_loader(self):
@@ -353,7 +353,7 @@ def test_build_trainer_with_validation_loader(tmp_path):
 
 
 def test_build_trainer_without_validation_loader(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class Loader(DummyTrainLoader):
         def build_validation_loader(self):
@@ -369,7 +369,7 @@ def test_build_trainer_without_validation_loader(tmp_path):
 
 
 def test_build_trainer_beta_finder_false(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class T(DummyTrainer):
         beta_finder = False
@@ -384,7 +384,7 @@ def test_build_trainer_beta_finder_false(tmp_path):
 
 
 def test_build_trainer_beta_finder_true(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class T(DummyTrainer):
         beta_finder = True
@@ -448,7 +448,7 @@ def test_prepare_config_invalid_yaml(tmp_path):
 
 
 def test_prepare_directory_existing_dir(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     os.makedirs(cfg.experiment_dir, exist_ok=True)
 
@@ -466,7 +466,7 @@ def test_train_loader_setup_distributed_called(tmp_path):
         def setup_distributed(self, d):
             called["x"] = True
 
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
     cfg.train_loader = Loader()
 
     d = DummyDistributed()
@@ -481,7 +481,7 @@ def test_build_trainer_with_weights(tmp_path):
         def get_weights(self, w):
             return [1.0]
 
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
     cfg.train_loader = Loader()
 
     d = DummyDistributed()
@@ -496,7 +496,7 @@ def test_build_trainer_without_weights(tmp_path):
         def get_weights(self, w):
             return None
 
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
     cfg.train_loader = Loader()
 
     d = DummyDistributed()
@@ -514,7 +514,7 @@ def test_module_build_called(tmp_path):
             called["x"] = True
             return super().build_module(**kwargs)
 
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
     cfg.module = Module()
 
     d = DummyDistributed()
@@ -532,7 +532,7 @@ def test_loss_build_called(tmp_path):
             called["x"] = True
             return "loss"
 
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
     cfg.losspipeline = Loss()
 
     d = DummyDistributed()
@@ -550,7 +550,7 @@ def test_optimizer_build_called(tmp_path):
             called["x"] = True
             return "opt"
 
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
     cfg.optimization = Opt()
 
     d = DummyDistributed()
@@ -568,7 +568,7 @@ def test_trainer_build_called(tmp_path):
             called["x"] = True
             return "trainer"
 
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
     cfg.trainer = T()
 
     d = DummyDistributed()
@@ -579,7 +579,7 @@ def test_trainer_build_called(tmp_path):
 
 
 def test_build_trainer_logger_none(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
 
@@ -589,7 +589,7 @@ def test_build_trainer_logger_none(tmp_path):
 
 
 def test_build_trainer_device_cpu(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
     d.device = "cpu"
@@ -600,7 +600,7 @@ def test_build_trainer_device_cpu(tmp_path):
 
 
 def test_build_trainer_local_rank_zero(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
     d.local_rank = 0
@@ -611,7 +611,7 @@ def test_build_trainer_local_rank_zero(tmp_path):
 
 
 def test_prepare_directory_checkpoint_exists(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
 
@@ -621,7 +621,7 @@ def test_prepare_directory_checkpoint_exists(tmp_path):
 
 
 def test_prepare_directory_logs_exists(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
 
@@ -631,37 +631,37 @@ def test_prepare_directory_logs_exists(tmp_path):
 
 
 def test_max_epochs_positive(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     assert cfg.max_epochs > 0
 
 
 def test_train_loader_exists(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     assert cfg.train_loader is not None
 
 
 def test_module_exists(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     assert cfg.module is not None
 
 
 def test_loss_pipeline_exists(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     assert cfg.losspipeline is not None
 
 
 def test_trainer_exists(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     assert cfg.trainer is not None
 
 
 def test_optimization_exists(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     assert cfg.optimization is not None
 
@@ -728,7 +728,7 @@ def test_non_mlp_without_flattener_valid(tmp_path):
 
 
 def test_prepare_runtime_variables(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg._prepare_runtime_variables()
 
@@ -736,19 +736,19 @@ def test_prepare_runtime_variables(tmp_path):
 
 
 def test_checkpoint_dir_property(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     assert "checkpoints" in str(cfg.checkpoint_dir)
 
 
 def test_log_dir_property(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     assert "logs" in str(cfg.log_dir)
 
 
 def test_figures_dir_property(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     assert "figures" in str(cfg.figures_dir)
 
@@ -759,7 +759,7 @@ def test_prepare_directory_copy_resume_branch(tmp_path):
 
     src.mkdir()
 
-    cfg = make_valid_config(dst)
+    cfg = make_valid_config_with(dst)
 
     cfg.resume_dir = src
     cfg.copy_resume_dir_to_new_path = True
@@ -772,7 +772,7 @@ def test_prepare_directory_copy_resume_branch(tmp_path):
 
 
 def test_prepare_directory_without_copy_resume(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.copy_resume_dir_to_new_path = False
 
@@ -784,7 +784,7 @@ def test_prepare_directory_without_copy_resume(tmp_path):
 
 
 def test_prepare_directory_yaml_none(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
 
@@ -816,7 +816,7 @@ def test_prepare_config_roundtrip(tmp_path):
 
 
 def test_build_trainer_print_logger_branch(tmp_path, capsys):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
 
@@ -828,7 +828,7 @@ def test_build_trainer_print_logger_branch(tmp_path, capsys):
 
 
 def test_build_trainer_logger_info_branch(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
 
@@ -847,7 +847,7 @@ def test_build_trainer_logger_info_branch(tmp_path):
 
 
 def test_build_trainer_distributed_false(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
     d.distributed = False
@@ -878,7 +878,7 @@ def test_module_to_called(tmp_path):
         def build_module(self, **kwargs):
             return M()
 
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
     cfg.module = Module()
 
     d = DummyDistributed()
@@ -908,7 +908,7 @@ def test_module_init_loss_called(tmp_path):
         def build_module(self, **kwargs):
             return M()
 
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
     cfg.module = Module()
 
     d = DummyDistributed()
@@ -919,7 +919,7 @@ def test_module_init_loss_called(tmp_path):
 
 
 def test_build_trainer_num_output_dims_fallback(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class M:
         model = type("X", (), {"config": type("C", (), {})()})
@@ -956,7 +956,7 @@ def test_set_seed_function():
 
 
 def test_set_random_seed_executes(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.seed = 123
 
@@ -970,7 +970,7 @@ def test_resolve_resuming_updates_resume_dir(tmp_path):
     cfg.experiment_dir = tmp_path
     cfg.max_epochs = 5
 
-    resumed = make_valid_config(tmp_path)
+    resumed = make_valid_config_with(tmp_path)
 
     def fake_read(**kwargs):
         return resumed
@@ -989,7 +989,7 @@ def test_resolve_resuming_sets_experiment_dir_path(tmp_path):
     cfg.experiment_dir = tmp_path
     cfg.max_epochs = 5
 
-    resumed = make_valid_config(tmp_path)
+    resumed = make_valid_config_with(tmp_path)
 
     def fake_read(**kwargs):
         return resumed
@@ -1002,7 +1002,7 @@ def test_resolve_resuming_sets_experiment_dir_path(tmp_path):
 
 
 def test_missing_flattener_for_mlp(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.train_loader.dataset_config.observation.preprocessing_pipeline.pipeline = []
 
@@ -1028,7 +1028,7 @@ def test_resolve_resuming_none_branch(tmp_path):
 
 
 def test_build_trainer_distributed_true_monkeypatch(tmp_path, monkeypatch):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class FakeDDP:
         def __init__(self, module, **kwargs):
@@ -1052,7 +1052,7 @@ def test_build_trainer_distributed_true_monkeypatch(tmp_path, monkeypatch):
 
 
 def test_prepare_runtime_sets_checkpoint_dir(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg._prepare_runtime_variables()
 
@@ -1060,7 +1060,7 @@ def test_prepare_runtime_sets_checkpoint_dir(tmp_path):
 
 
 def test_prepare_runtime_sets_log_dir(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg._prepare_runtime_variables()
 
@@ -1068,7 +1068,7 @@ def test_prepare_runtime_sets_log_dir(tmp_path):
 
 
 def test_prepare_runtime_sets_figures_dir(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg._prepare_runtime_variables()
 
@@ -1076,7 +1076,7 @@ def test_prepare_runtime_sets_figures_dir(tmp_path):
 
 
 def test_prepare_runtime_sets_input_metadata(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg._prepare_runtime_variables()
 
@@ -1084,7 +1084,7 @@ def test_prepare_runtime_sets_input_metadata(tmp_path):
 
 
 def test_prepare_runtime_sets_target_metadata(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg._prepare_runtime_variables()
 
@@ -1092,7 +1092,7 @@ def test_prepare_runtime_sets_target_metadata(tmp_path):
 
 
 def test_checkpoint_dir_exists_after_prepare(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
 
@@ -1102,7 +1102,7 @@ def test_checkpoint_dir_exists_after_prepare(tmp_path):
 
 
 def test_log_dir_exists_after_prepare(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
 
@@ -1112,7 +1112,7 @@ def test_log_dir_exists_after_prepare(tmp_path):
 
 
 def test_figures_dir_exists_after_prepare(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
 
@@ -1122,7 +1122,7 @@ def test_figures_dir_exists_after_prepare(tmp_path):
 
 
 def test_prepare_directory_root_false(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class D(DummyDistributed):
         def is_root(self):
@@ -1161,7 +1161,7 @@ c:
 
 
 def test_build_trainer_train_loader_len_used(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
 
@@ -1171,7 +1171,7 @@ def test_build_trainer_train_loader_len_used(tmp_path):
 
 
 def test_build_trainer_output_shape_exists(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     loader = cfg.train_loader.build_train_loader()
 
@@ -1179,7 +1179,7 @@ def test_build_trainer_output_shape_exists(tmp_path):
 
 
 def test_build_trainer_input_shape_exists(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     loader = cfg.train_loader.build_train_loader()
 
@@ -1187,7 +1187,7 @@ def test_build_trainer_input_shape_exists(tmp_path):
 
 
 def test_build_trainer_added_features_none(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     loader = cfg.train_loader.build_train_loader()
 
@@ -1226,7 +1226,7 @@ def test_dummy_distributed_defaults():
 
 
 def test_prepare_directory_with_existing_checkpoint_dir(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     os.makedirs(cfg.checkpoint_dir, exist_ok=True)
 
@@ -1238,7 +1238,7 @@ def test_prepare_directory_with_existing_checkpoint_dir(tmp_path):
 
 
 def test_prepare_directory_with_existing_logs_dir(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     os.makedirs(cfg.log_dir, exist_ok=True)
 
@@ -1250,7 +1250,7 @@ def test_prepare_directory_with_existing_logs_dir(tmp_path):
 
 
 def test_prepare_directory_with_existing_figures_dir(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     os.makedirs(cfg.figures_dir, exist_ok=True)
 
@@ -1262,7 +1262,7 @@ def test_prepare_directory_with_existing_figures_dir(tmp_path):
 
 
 def test_prepare_directory_copy_resume_false_branch(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.copy_resume_dir_to_new_path = False
 
@@ -1281,7 +1281,7 @@ def test_prepare_directory_copy_resume_true_branch(tmp_path):
 
     (src / "x.txt").write_text("hello")
 
-    cfg = make_valid_config(dst)
+    cfg = make_valid_config_with(dst)
 
     cfg.copy_resume_dir_to_new_path = True
     cfg.resume_dir = src
@@ -1294,7 +1294,7 @@ def test_prepare_directory_copy_resume_true_branch(tmp_path):
 
 
 def test_prepare_directory_yaml_copy_again(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     yaml_path = tmp_path / "a.yaml"
     yaml_path.write_text("x: 1")
@@ -1307,7 +1307,7 @@ def test_prepare_directory_yaml_copy_again(tmp_path):
 
 
 def test_prepare_directory_non_root_yaml_branch(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class D(DummyDistributed):
         def is_root(self):
@@ -1322,25 +1322,25 @@ def test_prepare_directory_non_root_yaml_branch(tmp_path):
 
 
 def test_checkpoint_dir_type(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     assert isinstance(cfg.checkpoint_dir, str)
 
 
 def test_log_dir_type(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     assert isinstance(cfg.log_dir, str)
 
 
 def test_figures_dir_type(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     assert isinstance(cfg.figures_dir, str)
 
 
 def test_prepare_runtime_variables_checkpoint(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg._prepare_runtime_variables()
 
@@ -1348,7 +1348,7 @@ def test_prepare_runtime_variables_checkpoint(tmp_path):
 
 
 def test_prepare_runtime_variables_logs(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg._prepare_runtime_variables()
 
@@ -1356,7 +1356,7 @@ def test_prepare_runtime_variables_logs(tmp_path):
 
 
 def test_prepare_runtime_variables_figures(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg._prepare_runtime_variables()
 
@@ -1364,7 +1364,7 @@ def test_prepare_runtime_variables_figures(tmp_path):
 
 
 def test_prepare_runtime_variables_input_metadata(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg._prepare_runtime_variables()
 
@@ -1372,7 +1372,7 @@ def test_prepare_runtime_variables_input_metadata(tmp_path):
 
 
 def test_prepare_runtime_variables_target_metadata(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg._prepare_runtime_variables()
 
@@ -1392,7 +1392,7 @@ def test_set_seed_changes_numpy_state():
 
 
 def test_set_random_seed_with_none(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.seed = None
 
@@ -1400,7 +1400,7 @@ def test_set_random_seed_with_none(tmp_path):
 
 
 def test_set_random_seed_with_integer(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.seed = 999
 
@@ -1440,7 +1440,7 @@ x:
 
 
 def test_build_train_loader_len(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     loader = cfg.train_loader.build_train_loader()
 
@@ -1448,7 +1448,7 @@ def test_build_train_loader_len(tmp_path):
 
 
 def test_build_train_loader_input_shape(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     loader = cfg.train_loader.build_train_loader()
 
@@ -1456,7 +1456,7 @@ def test_build_train_loader_input_shape(tmp_path):
 
 
 def test_build_train_loader_target_shape(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     loader = cfg.train_loader.build_train_loader()
 
@@ -1464,7 +1464,7 @@ def test_build_train_loader_target_shape(tmp_path):
 
 
 def test_build_train_loader_added_features_none(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     loader = cfg.train_loader.build_train_loader()
 
@@ -1472,7 +1472,7 @@ def test_build_train_loader_added_features_none(tmp_path):
 
 
 def test_build_trainer_returns_trainer_again(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
 
@@ -1482,7 +1482,7 @@ def test_build_trainer_returns_trainer_again(tmp_path):
 
 
 def test_build_trainer_logger_object(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class L:
         called = False
@@ -1500,7 +1500,7 @@ def test_build_trainer_logger_object(tmp_path):
 
 
 def test_build_trainer_no_logger_stdout(tmp_path, capsys):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
 
@@ -1519,7 +1519,7 @@ def test_build_trainer_module_build(tmp_path):
             called["x"] = True
             return super().build_module(**kwargs)
 
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.module = Module()
 
@@ -1538,7 +1538,7 @@ def test_build_trainer_loss_build(tmp_path):
             called["x"] = True
             return "loss"
 
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.losspipeline = Loss()
 
@@ -1557,7 +1557,7 @@ def test_build_trainer_optimizer_build(tmp_path):
             called["x"] = True
             return "opt"
 
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.optimization = Opt()
 
@@ -1576,7 +1576,7 @@ def test_build_trainer_trainer_build(tmp_path):
             called["x"] = True
             return "trainer"
 
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.trainer = T()
 
@@ -1608,7 +1608,7 @@ def test_module_to_executes(tmp_path):
         def build_module(self, **kwargs):
             return M()
 
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.module = Module()
 
@@ -1639,7 +1639,7 @@ def test_init_loss_function_executes(tmp_path):
         def build_module(self, **kwargs):
             return M()
 
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.module = Module()
 
@@ -1651,7 +1651,7 @@ def test_init_loss_function_executes(tmp_path):
 
 
 def test_build_trainer_distributed_false_again(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
     d.distributed = False
@@ -1662,7 +1662,7 @@ def test_build_trainer_distributed_false_again(tmp_path):
 
 
 def test_build_trainer_validation_loader_none(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class Loader(DummyTrainLoader):
         def build_validation_loader(self):
@@ -1678,7 +1678,7 @@ def test_build_trainer_validation_loader_none(tmp_path):
 
 
 def test_build_trainer_validation_loader_present(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class Loader(DummyTrainLoader):
         def build_validation_loader(self):
@@ -1718,7 +1718,7 @@ def test_prepare_directory_copytree_branch_real(tmp_path):
     src.mkdir()
     (src / "hello.txt").write_text("hello")
 
-    cfg = make_valid_config(dst)
+    cfg = make_valid_config_with(dst)
 
     cfg.copy_resume_dir_to_new_path = True
     cfg.resume_dir = src
@@ -1784,7 +1784,7 @@ def test_generator_false_branch(tmp_path):
 
 
 def test_build_trainer_distributed_real_completion(tmp_path, monkeypatch):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class FakeDDP:
         def __init__(self, module, **kwargs):
@@ -1813,7 +1813,7 @@ def test_prepare_directory_root_false_with_copy_resume(tmp_path):
 
     src.mkdir()
 
-    cfg = make_valid_config(dst)
+    cfg = make_valid_config_with(dst)
 
     cfg.resume_dir = src
     cfg.copy_resume_dir_to_new_path = True
@@ -1830,7 +1830,7 @@ def test_prepare_directory_root_false_with_copy_resume(tmp_path):
 
 
 def test_prepare_directory_root_true_without_copy_resume(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.copy_resume_dir_to_new_path = False
 
@@ -1842,7 +1842,7 @@ def test_prepare_directory_root_true_without_copy_resume(tmp_path):
 
 
 def test_prepare_runtime_variables_all_fields(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg._prepare_runtime_variables()
 
@@ -1859,7 +1859,7 @@ def test_resolve_resuming_copy_flag_true(tmp_path):
     cfg.experiment_dir = tmp_path / "new"
     cfg.max_epochs = 1
 
-    resumed = make_valid_config(tmp_path)
+    resumed = make_valid_config_with(tmp_path)
 
     def fake_read(**kwargs):
         return resumed
@@ -1878,7 +1878,7 @@ def test_resolve_resuming_copy_flag_false(tmp_path):
     cfg.experiment_dir = tmp_path
     cfg.max_epochs = 1
 
-    resumed = make_valid_config(tmp_path)
+    resumed = make_valid_config_with(tmp_path)
 
     def fake_read(**kwargs):
         return resumed
@@ -1891,7 +1891,7 @@ def test_resolve_resuming_copy_flag_false(tmp_path):
 
 
 def test_logger_not_called_when_not_root(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class D(DummyDistributed):
         def is_root(self):
@@ -1913,7 +1913,7 @@ def test_logger_not_called_when_not_root(tmp_path):
 
 
 def test_prepare_directory_root_false_yaml_none(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class D(DummyDistributed):
         def is_root(self):
@@ -1925,7 +1925,7 @@ def test_prepare_directory_root_false_yaml_none(tmp_path):
 
 
 def test_prepare_directory_root_true_yaml_present(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     yaml_path = tmp_path / "cfg.yaml"
     yaml_path.write_text("x: 1")
@@ -1938,7 +1938,7 @@ def test_prepare_directory_root_true_yaml_present(tmp_path):
 
 
 def test_prepare_directory_root_false_yaml_present(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class D(DummyDistributed):
         def is_root(self):
@@ -1960,7 +1960,7 @@ def test_prepare_directory_copy_resume_root_false(tmp_path):
 
     src.mkdir()
 
-    cfg = make_valid_config(dst)
+    cfg = make_valid_config_with(dst)
 
     cfg.resume_dir = src
     cfg.copy_resume_dir_to_new_path = True
@@ -1983,7 +1983,7 @@ def test_prepare_directory_copy_resume_root_true(tmp_path):
     src.mkdir()
     (src / "a.txt").write_text("hello")
 
-    cfg = make_valid_config(dst)
+    cfg = make_valid_config_with(dst)
 
     cfg.resume_dir = src
     cfg.copy_resume_dir_to_new_path = True
@@ -1996,7 +1996,7 @@ def test_prepare_directory_copy_resume_root_true(tmp_path):
 
 
 def test_prepare_directory_no_copy_root_true(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.copy_resume_dir_to_new_path = False
 
@@ -2008,7 +2008,7 @@ def test_prepare_directory_no_copy_root_true(tmp_path):
 
 
 def test_prepare_directory_no_copy_root_false(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.copy_resume_dir_to_new_path = False
 
@@ -2022,7 +2022,7 @@ def test_prepare_directory_no_copy_root_false(tmp_path):
 
 
 def test_build_trainer_logger_none_non_root(tmp_path, capsys):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class D(DummyDistributed):
         def is_root(self):
@@ -2038,7 +2038,7 @@ def test_build_trainer_logger_none_non_root(tmp_path, capsys):
 
 
 def test_build_trainer_logger_present_non_root(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class D(DummyDistributed):
         def is_root(self):
@@ -2060,7 +2060,7 @@ def test_build_trainer_logger_present_non_root(tmp_path):
 
 
 def test_build_trainer_logger_present_root(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class Logger:
         called = False
@@ -2078,7 +2078,7 @@ def test_build_trainer_logger_present_root(tmp_path):
 
 
 def test_build_trainer_distributed_true_full(tmp_path, monkeypatch):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class FakeDDP:
         def __init__(self, module, **kwargs):
@@ -2102,7 +2102,7 @@ def test_build_trainer_distributed_true_full(tmp_path, monkeypatch):
 
 
 def test_build_trainer_distributed_false_full(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     d = DummyDistributed()
     d.distributed = False
@@ -2113,7 +2113,7 @@ def test_build_trainer_distributed_false_full(tmp_path):
 
 
 def test_build_trainer_num_output_dims_from_model(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     called = {"value": None}
 
@@ -2132,7 +2132,7 @@ def test_build_trainer_num_output_dims_from_model(tmp_path):
 
 
 def test_build_trainer_num_output_dims_fallback_len(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class M:
         model = type("X", (), {"config": type("C", (), {})()})
@@ -2182,7 +2182,7 @@ def test_resolve_resuming_same_dir_flag(tmp_path):
     cfg.experiment_dir = tmp_path
     cfg.max_epochs = 1
 
-    resumed = make_valid_config(tmp_path)
+    resumed = make_valid_config_with(tmp_path)
 
     cfg.read_config_from_halted_experiment = lambda **kwargs: resumed
 
@@ -2198,7 +2198,7 @@ def test_resolve_resuming_different_dir_flag(tmp_path):
     cfg.experiment_dir = tmp_path / "new"
     cfg.max_epochs = 1
 
-    resumed = make_valid_config(tmp_path)
+    resumed = make_valid_config_with(tmp_path)
 
     cfg.read_config_from_halted_experiment = lambda **kwargs: resumed
 
@@ -2214,7 +2214,7 @@ def test_resolve_resuming_restores_resume_dir(tmp_path):
     cfg.experiment_dir = tmp_path
     cfg.max_epochs = 1
 
-    resumed = make_valid_config(tmp_path)
+    resumed = make_valid_config_with(tmp_path)
 
     cfg.read_config_from_halted_experiment = lambda **kwargs: resumed
 
@@ -2230,7 +2230,7 @@ def test_resolve_resuming_restores_experiment_dir(tmp_path):
     cfg.experiment_dir = tmp_path
     cfg.max_epochs = 1
 
-    resumed = make_valid_config(tmp_path)
+    resumed = make_valid_config_with(tmp_path)
 
     cfg.read_config_from_halted_experiment = lambda **kwargs: resumed
 
@@ -2328,7 +2328,7 @@ def test_prepare_directory_root_false_copy_resume_true_yaml_none(tmp_path):
 
     src.mkdir()
 
-    cfg = make_valid_config(dst)
+    cfg = make_valid_config_with(dst)
     cfg.resume_dir = src
     cfg.copy_resume_dir_to_new_path = True
 
@@ -2342,7 +2342,7 @@ def test_prepare_directory_root_false_copy_resume_true_yaml_none(tmp_path):
 
 
 def test_prepare_directory_root_true_copy_resume_false_yaml_none(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.copy_resume_dir_to_new_path = False
 
@@ -2354,7 +2354,7 @@ def test_prepare_directory_root_true_copy_resume_false_yaml_none(tmp_path):
 
 
 def test_prepare_directory_root_true_copy_resume_false_yaml_present(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.copy_resume_dir_to_new_path = False
 
@@ -2369,7 +2369,7 @@ def test_prepare_directory_root_true_copy_resume_false_yaml_present(tmp_path):
 
 
 def test_prepare_directory_root_false_copy_resume_false_yaml_present(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.copy_resume_dir_to_new_path = False
 
@@ -2395,7 +2395,7 @@ def test_prepare_directory_root_true_copy_resume_true_yaml_present(tmp_path):
     yaml_path = tmp_path / "cfg.yaml"
     yaml_path.write_text("x: 1")
 
-    cfg = make_valid_config(dst)
+    cfg = make_valid_config_with(dst)
 
     cfg.resume_dir = src
     cfg.copy_resume_dir_to_new_path = True
@@ -2409,7 +2409,7 @@ def test_prepare_directory_root_true_copy_resume_true_yaml_present(tmp_path):
 
 
 def test_build_trainer_logger_none_non_root_branch(tmp_path, capsys):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class D(DummyDistributed):
         def is_root(self):
@@ -2425,7 +2425,7 @@ def test_build_trainer_logger_none_non_root_branch(tmp_path, capsys):
 
 
 def test_build_trainer_logger_present_non_root_branch(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class Logger:
         called = False
@@ -2447,7 +2447,7 @@ def test_build_trainer_logger_present_non_root_branch(tmp_path):
 
 
 def test_build_trainer_logger_present_root_branch(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     class Logger:
         called = False
@@ -2465,7 +2465,7 @@ def test_build_trainer_logger_present_root_branch(tmp_path):
 
 
 def test_num_output_dims_equals_one_branch(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.module._module_config.model_config.NUM_OUTPUT_DIMS = 1
 
@@ -2605,7 +2605,7 @@ def test_default_model_beta_warning(tmp_path):
 
 
 def test_mlp_with_flattener_valid(tmp_path):
-    cfg = make_valid_config(tmp_path)
+    cfg = make_valid_config_with(tmp_path)
 
     cfg.module._module_config.model_config.NUM_OUTPUT_DIMS = 1
 

@@ -170,22 +170,22 @@ class DatasetConfigABC(abc.ABC):
                         " on the same lead_times as model data."
                     )
 
-                if hasattr(self, "observation"):
-                    if self.observation is not None:
-                        if not self.condition.info.coords["lat"].equals(
-                            self.model.info.coords["lat"]
-                        ):
-                            raise ValueError(
-                                "model and condition data do not have the same latitudes cooridnates."
-                                / "when bias correcting to observations"
-                            )
-                        if not self.condition.info.coords["lon"].equals(
-                            self.model.info.coords["lon"]
-                        ):
-                            raise ValueError(
-                                "model and condition data do not have the same longitudes cooridnates."
-                                / "when bias correcting to observations"
-                            )
+            if hasattr(self, "observation"):
+                if self.observation is not None:
+                    if not self.condition.info.coords["lat"].equals(
+                        self.model.info.coords["lat"]
+                    ):
+                        raise ValueError(
+                            "model and condition data do not have the same latitudes cooridnates."
+                            / "when bias correcting to observations"
+                        )
+                    if not self.condition.info.coords["lon"].equals(
+                        self.model.info.coords["lon"]
+                    ):
+                        raise ValueError(
+                            "model and condition data do not have the same longitudes cooridnates."
+                            / "when bias correcting to observations"
+                        )
 
     @final
     def _check_condition_method(self):
