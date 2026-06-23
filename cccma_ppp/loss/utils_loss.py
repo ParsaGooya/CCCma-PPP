@@ -237,10 +237,6 @@ class WeightedMSE(lossABC):
         Returns
         -------
         None
-
-        Notes
-        -----
-        Prints a different label when low-resolution mode is active.
         """
 
         if self.low_ress_kernel_size is not None:
@@ -507,10 +503,6 @@ class WeightedCRPS(lossABC):
         Returns
         -------
         None
-
-        Notes
-        -----
-        Prints a different label when low-resolution mode is active.
         """
 
         if self.low_ress_kernel_size is not None:

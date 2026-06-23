@@ -211,10 +211,6 @@ class ModelSelector:
         -------
         modelABC
             Model configuration instance.
-
-        Notes
-        -----
-        If a checkpoint was loaded, its configuration is attached to the model config.
         """
 
         model_config = self.registery.get(self.type.lower(), self.config)
