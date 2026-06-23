@@ -8,11 +8,36 @@ from cccma_ppp.data_modules.data import ModelDataConfig, ConditionDataConfig
 
 @dataclasses.dataclass
 class lead_months_config:
+    """
+    Configuration for selecting lead months.
+
+    Parameters
+    ----------
+    list_months : list of int or None, optional
+        Explicit list of lead months.
+    start : int, optional
+        Start of lead month range (inclusive).
+    end : int or None, optional
+        End of lead month range (inclusive).
+    """
+
     list_months: list | None = None
     start: int = 1
     end: int = None
 
     def __post_init__(self):
+        """
+        Validate lead month configuration.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If neither list nor range is properly specified.
+        """
         if self.list_months is None:
             if self.end is None:
                 raise ValueError(
@@ -21,10 +46,30 @@ class lead_months_config:
                 )
 
     def build_lead_months(self):
+        """
+        Construct lead month array.
+
+        Returns
+        -------
+        np.ndarray or list
+            Lead months defined either explicitly or as a range.
+        """
         return self.list_months or np.arange(self.start, self.end + 1)
 
 
 class DatasetConfigABC(abc.ABC):
+    """
+    Abstract base class for dataset configuration.
+
+    Attributes
+    ----------
+    model : ModelDataConfig or None
+    condition : ConditionDataConfig or None
+    condition_method : str or None
+    time_features : list of str or None
+    lead_months : lead_months_config or None
+    """
+
     _VALID_CONDITION_METHODS: ClassVar[frozenset[str]] = frozenset(
         {"ensemble_mean", "cross_ensemble", "same_member", "static"}
     )
@@ -40,6 +85,13 @@ class DatasetConfigABC(abc.ABC):
     _effective_condition: ConditionDataConfig | ModelDataConfig | None
 
     def __init__(self):
+        """
+        Initialize dataset configuration.
+
+        Returns
+        -------
+        None
+        """
         self._check_required_input_source()
         self._check_condition_method()
         self._check_time_features()
@@ -47,6 +99,18 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _check_required_input_source(self):
+        """
+        Ensure at least one input source is provided.
+
+        Returns
+        -------
+        self
+
+        Raises
+        ------
+        ValueError
+            If both model and condition are missing.
+        """
         if self.model is None and self.condition is None:
             raise ValueError(
                 "For a PPP dataset to create an input, either model or "
@@ -56,6 +120,18 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _check_condition_method(self):
+        """
+        Validate conditioning method.
+
+        Returns
+        -------
+        self
+
+        Raises
+        ------
+        ValueError
+            If condition method is not supported.
+        """
         if self.condition_method is not None:
             if self.condition_method not in self._VALID_CONDITION_METHODS:
                 raise ValueError(
@@ -66,6 +142,18 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _check_time_features(self):
+        """
+        Validate time feature selection.
+
+        Returns
+        -------
+        self
+
+        Raises
+        ------
+        ValueError
+            If invalid time features are specified.
+        """
         if self.time_features is not None:
             invalid = set(self.time_features) - self._VALID_TIME_FEATURES
             if invalid:
@@ -77,25 +165,60 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _resolve_lead_months(self):
+        """
+        Resolve lead month configuration.
+
+        Returns
+        -------
+        None
+        """
         if self.lead_months is not None:
             self.lead_months = self.lead_months.build_lead_months()
 
     @abc.abstractmethod
     def _check_model(self):
+        """
+        Validate model configuration.
+
+        Returns
+        -------
+        self
+        """
         pass
 
     @abc.abstractmethod
     def _check_condition(self):
+        """
+        Validate condition configuration.
+
+        Returns
+        -------
+        self
+        """
         pass
 
     @property
     @abc.abstractmethod
     def ds_operator(self):
+        """
+        Dataset operator instance.
+
+        Returns
+        -------
+        DatasetOperator
+        """
         pass
 
     @final
     @property
     def _using_model_data_as_condition(self) -> bool:
+        """
+        Determine whether model data is reused as condition.
+
+        Returns
+        -------
+        bool
+        """
         if self.condition is None:
             return self.condition_method in {
                 "ensemble_mean",
@@ -115,10 +238,24 @@ class DatasetConfigABC(abc.ABC):
     @final
     @property
     def effective_condition(self) -> ConditionDataConfig | ModelDataConfig | None:
+        """
+        Effective conditioning dataset.
+
+        Returns
+        -------
+        ConditionDataConfig or ModelDataConfig or None
+        """
         return self._effective_condition
 
     @final
     def _model_as_condition(self) -> ModelDataConfig:
+        """
+        Create model-based condition configuration.
+
+        Returns
+        -------
+        ModelDataConfig
+        """
         ensemble_mean = self.condition_method == "ensemble_mean"
         return ModelDataConfig(
             paths=self.model.paths,
@@ -133,6 +270,13 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _resolve_condition(self):
+        """
+        Resolve effective condition dataset.
+
+        Returns
+        -------
+        self
+        """
         if self.condition is not None:
             self._effective_condition = self.condition
         elif self._using_model_data_as_condition:
@@ -144,4 +288,11 @@ class DatasetConfigABC(abc.ABC):
 
     @abc.abstractmethod
     def build_dataset(self):
+        """
+        Build dataset instance.
+
+        Returns
+        -------
+        Dataset
+        """
         pass

@@ -16,6 +16,23 @@ from cccma_ppp.data_modules.utils import (
 
 @dataclasses.dataclass
 class infoclass:
+    """
+    Container for dataset metadata.
+
+    Parameters
+    ----------
+    sizes : dict or None
+        Sizes of non-spatial dataset dimensions.
+    start_year : xr.DataArray or np.ndarray or str or int or None
+        Earliest available year.
+    final_year : xr.DataArray or np.ndarray or str or int or None
+        Latest available year.
+    coords : dict
+        Spatial and ensemble coordinates.
+    spatial_mask : xr.Dataset or None, optional
+        Optional spatial mask.
+    """
+
     sizes: dict | None
     start_year: xr.DataArray | np.ndarray | str | int | None
     final_year: xr.DataArray | np.ndarray | str | int | None
@@ -24,7 +41,25 @@ class infoclass:
 
 
 class DataConfigABC(abc.ABC):
+    """
+    Abstract base class for dataset configuration.
+    """
+
     def __init__(self):
+        """
+        Initialize data configuration.
+
+        Ensures preprocessing pipeline exists and assigns its name.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        AttributeError
+            If preprocessing_pipeline is not defined.
+        """
         if not hasattr(self, "preprocessing_pipeline"):
             raise AttributeError(
                 f"{type(self).__name__} must define preprocessing_pipeline"
@@ -35,24 +70,61 @@ class DataConfigABC(abc.ABC):
     @property
     @abc.abstractmethod
     def TYPE(self) -> str:
+        """
+        Type identifier for dataset.
+
+        Returns
+        -------
+        str
+        """
+
         pass
 
     @classmethod
     @abc.abstractmethod
     def _allowed_dims(cls) -> frozenset[str]:
+        """
+        Allowed dataset dimensions.
+
+        Returns
+        -------
+        frozenset of str
+            Set of allowed dataset dimension names.
+        """
         pass
 
     @classmethod
     @abc.abstractmethod
     def _required_dims(cls) -> frozenset[str]:
+        """
+        Required dataset dimensions.
+
+        Returns
+        -------
+        frozenset of str
+        """
         pass
 
     @final
     def _resolve_data(self):
+        """
+        Validate dataset files and structure.
+
+        Returns
+        -------
+        None
+        """
         _resolve_data(self)
 
     @final
     def _get_ds_info(self):
+        """
+        Extract dataset metadata.
+
+        Returns
+        -------
+        infoclass
+        """
         return _get_ds_info(self)
 
     @final
@@ -64,6 +136,24 @@ class DataConfigABC(abc.ABC):
         save_path: Path | str | None = None,
         save_name: str | None = None,
     ):
+        """
+        Fit preprocessing pipeline on dataset.
+
+        Parameters
+        ----------
+        selection : dict
+            Subset selection for dataset.
+        mask : bool, optional
+            Whether to apply training mask.
+        save : bool, optional
+            Whether to save pipeline.
+        save_path : pathlib.Path or str or None, optional
+        save_name : str or None, optional
+
+        Returns
+        -------
+        None
+        """
 
         _base = _load_xarray_data(
             self.list_paths,
@@ -90,6 +180,22 @@ class DataConfigABC(abc.ABC):
 
     @final
     def _load_preprocessor_pipeline(self, load_dir: Path | str):
+        """
+        Load fitted preprocessing pipeline.
+
+        Parameters
+        ----------
+        load_dir : pathlib.Path or str
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RuntimeError
+            If loaded pipeline is not fitted.
+        """
 
         load_dir = (
             Path(load_dir)
@@ -107,6 +213,24 @@ class DataConfigABC(abc.ABC):
 
 
 def _resolve_data(dataconfig: DataConfigABC) -> None:
+    """
+    Validate dataset files and dimensions.
+
+    Parameters
+    ----------
+    dataconfig : DataConfigABC
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    FileNotFoundError
+        If data files do not exist.
+    ValueError
+        If dataset dimensions or variables are invalid.
+    """
     if not Path(dataconfig.paths).exists():
         raise FileNotFoundError(
             "The following file does not exist:\n" + str(dataconfig.paths)
@@ -158,6 +282,18 @@ def _resolve_data(dataconfig: DataConfigABC) -> None:
 
 
 def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
+    """
+    Extract dataset metadata information.
+
+    Parameters
+    ----------
+    dataconfig : DataConfigABC
+
+    Returns
+    -------
+    infoclass
+        Metadata describing dataset dimensions and coordinates.
+    """
     if getattr(dataconfig, "list_paths", None) is None:
         list_paths = glob.glob(
             str(Path(dataconfig.paths).joinpath(dataconfig.file_type))
