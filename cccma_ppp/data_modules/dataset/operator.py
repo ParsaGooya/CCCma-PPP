@@ -77,7 +77,7 @@ class DatasetOperator:
         self.config._fitted_preprocessors = True
 
     def _load_fitted_preprocessors(
-        self, load_dir: Path | str
+        self, load_dir: Path | str | None = None
     ):
 
         if self.config.model is not None:

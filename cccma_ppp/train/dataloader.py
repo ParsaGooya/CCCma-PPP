@@ -36,7 +36,7 @@ class BatchData(BatchDataABC):
             self.input = (self.input, self.input_mask)
             self.target = (self.target, self.target_mask)
 
-    def to_device(self, device):
+    def to_device(self, device: torch.device | str):
 
         if self.return_spatial_mask:
             self.input = (self.input[0].to(device), self.input[1].to(device))
@@ -63,12 +63,6 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
     def __post_init__(self):
         self._setup = False
-        self.available_train_years = self.dataset_config.available_train_time
-
-        if self.num_validation_years > 0:
-            self.available_train_years = self.dataset_config.available_train_time[
-                : -self.num_validation_years
-            ]
 
         if self.num_data_workers == 0:
             self.prefetch_factor = None
@@ -92,6 +86,14 @@ class TrainDataloaderConfig(DataloaderConfigABC):
                     self.train_years[-1] + 1,
                     self.train_years[-1] + 1 + self.num_validation_years,
                 )
+
+    @property
+    def available_train_years(self):
+        if self.num_validation_years > 0:
+            return self.dataset_config.available_train_time[
+                : -self.num_validation_years
+            ]
+        return self.dataset_config.available_train_time
 
     def setup_distributed(
         self, distributed: Distributed, save_path: Path | str | None = None
@@ -202,15 +204,11 @@ def collate_batch(
     if batch[0]["added_features"] is not None:
         added_features = torch.stack([b["added_features"] for b in batch])
 
-    batch_data = BatchData(
+    return BatchData(
         input=inputs,
         target=targets,
         added_features=added_features,
+        metadata=list(metadata) if metadata is not None else None,
         return_spatial_mask=return_spatial_mask,
         reduce_spatial_mask=reduce_spatial_mask,
     )
-
-    if metadata is not None:
-        return batch_data, list(metadata)
-
-    return batch_data

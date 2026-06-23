@@ -12,7 +12,7 @@ from cccma_ppp.data_modules.utils import (
     _load_xarray_data,
     _create_train_mask,
 )
-
+from cccma_ppp.generic import RuntimeContext
 
 
 @dataclasses.dataclass
@@ -94,9 +94,12 @@ class DataConfigABC(abc.ABC):
     @final
     def _load_preprocessor_pipeline(
         self,
-        load_dir: Path | str
+        load_dir: Path | str | None = None
         ):
-  
+
+        if load_dir is None:
+            load_dir = Path(RuntimeContext.GLOBAL_EXP_DIR) / "preprocessing_pipeline"
+
         load_dir = (Path(load_dir)
                 / f"{self.preprocessing_pipeline.name}_preprocessing_pipeline.joblib"
             )

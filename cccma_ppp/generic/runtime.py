@@ -28,6 +28,7 @@ class RuntimeContext:
     GLOBAL_CHECKPOINT_DIR: Path | str | None = None
     GLOBAL_FIGURES_DIR: Path | str | None = None
     GLOBAL_LOG_DIR: Path | str | None = None
+    GLOBAL_OUTPUT_DIR: Path | str | None = None
 
     INPUT_VAR_METADATA: dict | None = None
     TARGET_VAR_METADATA: dict | None = None

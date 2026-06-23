@@ -6,12 +6,19 @@ import dataclasses
 import warnings
 from pathlib import Path
 
-from cccma_ppp.data_modules.dataset import DatasetConfigABC, DatasetOperator, lead_months_config, _get_time_features
+from cccma_ppp.data_modules.dataset import (
+    DatasetConfigABC, 
+    DatasetOperator, 
+    lead_months_config,
+    _get_time_features
+)
+
 from cccma_ppp.data_modules.data import (
     DataConfigABC,
     ModelDataConfig,
     ObsDataConfig,
-    ConditionDataConfig)
+    ConditionDataConfig
+)
 
 from cccma_ppp.data_modules import (
     _unwrap_data_variables,
@@ -39,9 +46,9 @@ class TrainDatasetConfig(DatasetConfigABC):
 
         self._check_model()
         self._check_observation()
-
-        self._resolve_condition()
         self._check_condition()
+            
+        return self
 
     def _check_model(self):
 
@@ -51,13 +58,6 @@ class TrainDatasetConfig(DatasetConfigABC):
                 "for same member coniditioning the model data should not be ensemble mean."
             )
 
-        if self.lead_months is None:
-            self.lead_months = np.arange(1, self.num_model_lead_months + 1)
-        if not max(self.lead_months) <= self.num_model_lead_months:
-            raise ValueError(
-            f"Maximum available lead months is {self.num_model_lead_months}"
-        )
-            
         return self
     
     def _check_observation(self):
@@ -128,7 +128,7 @@ class TrainDatasetConfig(DatasetConfigABC):
         return DatasetOperator(self)
 
     @property
-    def num_model_lead_months(self) -> int:
+    def num_input_lead_months(self) -> int:
         return self.model.info.sizes["lead_time"]
     
     @property
@@ -163,7 +163,7 @@ class TrainDatasetConfig(DatasetConfigABC):
         )
 
     def _load_fitted_preprocessors(
-        self, load_dir: Path | str
+        self, load_dir: Path | str | None = None
     ):
         self.ds_operator._load_fitted_preprocessors(load_dir)
 
@@ -196,9 +196,9 @@ class TrainDataset(Dataset):
     def __post_init__(self):
         if not self.config._fitted_preprocessors:
             raise RuntimeError(
-                "Make sure to fit preprocessors first!. Hint:  DatasetOperators._fit_preprocessors()"
+                "Make sure to fit preprocessors first!. Hint:  TrainDatasetConfig._fit_preprocessors()"
             )
-        if not set(self.requested_years).issubset(set(self.config.get_common_time)):
+        if not set(self.requested_years).issubset(set(self.config.available_train_time)):
             raise ValueError(
                 "the requested years are not common to input and target data."
             )
@@ -367,7 +367,7 @@ class TrainDataset(Dataset):
                 elif self.config.condition_method == "same_member":
                     indexes["ensembles"] = model_indexes["ensembles"]
 
-            return indexes
+                return indexes
 
     def get_input_shape(self):
 
@@ -378,10 +378,15 @@ class TrainDataset(Dataset):
             for item in self.config.model.preprocessing_pipeline.fitted_preprocessors
         ]
 
+        len_names = len(self.config.model.names)
+        if self._concat_condition_to_input:
+            len_names += len(self.config.effective_condition.names)
+
         if any(checklist):
-            return self.config.model.preprocessing_pipeline.get_preprocessors(
-                "flattener"
-            ).final_locations.shape * len(self.config.model.names)
+            return (self.config.model.preprocessing_pipeline
+                    .get_preprocessors("flattener")
+                    .final_locations.size * len_names,)
+            
         else:
             return (
                 self.config.model.info.coords["lat"].size,
@@ -412,7 +417,7 @@ class TrainDataset(Dataset):
 
     def get_added_features_dim(self):
 
-        return len(self.config.time_features)
+        return 0 if self.config.time_features is None else len(self.config.time_features)
 
     def _index_condition_dataset(self, ind):
 

@@ -16,6 +16,7 @@ class BatchDataABC(abc.ABC):
     input: torch.Tensor
     target: torch.Tensor | None
     added_features: torch.Tensor | None
+    metadata: list[dict] | None = None
 
     @abc.abstractmethod
     def to_device(self, device: torch.device | str):
@@ -29,7 +30,6 @@ class DataloaderConfigABC(abc.ABC):
     @abc.abstractmethod
     def setup_distributed(self):
         pass
-
 
 
 

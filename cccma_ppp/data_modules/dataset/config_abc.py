@@ -43,7 +43,16 @@ class DatasetConfigABC(abc.ABC):
         self._check_required_input_source()
         self._check_condition_method()
         self._check_time_features()
+        self._check_model_vs_condition()
         self._resolve_lead_months()
+        self._resolve_condition()
+
+        if self.lead_months is None:
+            self.lead_months = np.arange(1, self.num_input_lead_months + 1)
+        if not max(self.lead_months) <= self.num_input_lead_months:
+            raise ValueError(
+            f"Maximum available lead months is {self.num_input_lead_months}"
+        )
 
     @final
     def _check_required_input_source(self):
@@ -53,6 +62,43 @@ class DatasetConfigABC(abc.ABC):
                 "condition data must be provided."
             )
         return self
+
+    @final
+    def _check_model_vs_condition(self):
+        if all([self.condition is not None,
+            self.model is not None, 
+            not self._using_model_data_as_condition]):
+            if self.condition_method != "static":
+
+                if not set(self.model.year_range).issubset(
+                    set(self.condition.year_range)):
+
+                    raise ValueError('Condition data should be available'
+                    ' on the same time period as model data.')
+
+                if not (self.model.info.sizes['lead_time'] <=
+                        self.condition.info.sizes['lead_time']):
+
+                    raise ValueError('Condition data should be available'
+                    ' on the same lead_times as model data.')
+
+                if hasattr(self, 'observation'):
+                    if self.observation is not None:
+                        if not self.condition.info.coords["lat"].equals(
+                                self.model.info.coords["lat"]
+                            ):
+                            raise ValueError(
+                                "model and condition data do not have the same latitudes cooridnates." /
+                                "when bias correcting to observations"
+                            )
+                        if not self.condition.info.coords["lon"].equals(
+                            self.model.info.coords["lon"]
+                            ):
+                            raise ValueError(
+                                "model and condition data do not have the same longitudes cooridnates." /
+                                "when bias correcting to observations"
+                            )
+                
 
     @final
     def _check_condition_method(self):
@@ -93,6 +139,11 @@ class DatasetConfigABC(abc.ABC):
     @property
     @abc.abstractmethod
     def ds_operator(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def num_input_lead_months(self) -> int:
         pass
     
     @final
@@ -149,8 +200,8 @@ class DatasetConfigABC(abc.ABC):
             self._effective_condition = None
 
         return self
-    
-    
+
+
     @abc.abstractmethod
     def build_dataset(self):
         pass
