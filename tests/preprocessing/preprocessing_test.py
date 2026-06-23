@@ -52,6 +52,7 @@ class RegisteredDummy(DummyPreprocessor):
     pass
 
 
+@pytest.mark.pruned
 def test_selector_get_preprocessor():
     sel = PreprocessingStepSelector(name="dummy", args={"scale": 2})
     proc = sel.get_preprocessor()
@@ -72,6 +73,7 @@ def make_pipeline(scale=2):
     return PreprocessingPipeline([sel])
 
 
+@pytest.mark.pruned
 def test_pipeline_fit_basic(monkeypatch, tmp_path):
     monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
 
@@ -124,6 +126,7 @@ def test_inverse_invalid_step():
         pipe.inverse_transform(np.array([1]), step_arguments={"bad": {}})
 
 
+@pytest.mark.pruned
 def test_get_all_preprocessors(monkeypatch, tmp_path):
     monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
 
@@ -193,6 +196,7 @@ def test_add_preprocessor_with_index():
     assert pipe.steps[0] == "dummy"
 
 
+@pytest.mark.pruned
 def test_add_preprocessor_not_fitted():
     pipe = make_pipeline()
     proc = DummyPreprocessor()
@@ -201,6 +205,7 @@ def test_add_preprocessor_not_fitted():
         pipe.add_fitted_preprocessor(proc, "dummy")
 
 
+@pytest.mark.pruned
 def test_pipeline_save(monkeypatch, tmp_path):
     monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
 
@@ -249,6 +254,7 @@ def test_load_unfitted_pipeline(tmp_path, monkeypatch):
         pipe.fit()
 
 
+@pytest.mark.pruned
 def test_custom_save_path_and_name(monkeypatch, tmp_path):
     pipe = make_pipeline()
 
@@ -267,6 +273,7 @@ def test_custom_save_path_and_name(monkeypatch, tmp_path):
     assert (custom_dir / custom_name).exists()
 
 
+@pytest.mark.pruned
 def test_transform_with_step_arguments(monkeypatch, tmp_path):
     monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
 
@@ -281,6 +288,7 @@ def test_transform_with_step_arguments(monkeypatch, tmp_path):
     assert out is not None
 
 
+@pytest.mark.pruned
 def test_fit_uses_load_dir(monkeypatch, tmp_path):
     file = tmp_path / "pipe.joblib"
 
@@ -293,6 +301,7 @@ def test_fit_uses_load_dir(monkeypatch, tmp_path):
     assert pipe.fitted
 
 
+@pytest.mark.pruned
 def test_load_default_name(monkeypatch, tmp_path):
     file = tmp_path / "instance_1_preprocessing_pipeline.joblib"
 
@@ -304,6 +313,7 @@ def test_load_default_name(monkeypatch, tmp_path):
     assert pipe.fitted
 
 
+@pytest.mark.pruned
 def test_multiple_steps_pipeline(monkeypatch, tmp_path):
     monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
 
@@ -318,6 +328,7 @@ def test_multiple_steps_pipeline(monkeypatch, tmp_path):
     assert len(pipe.steps) == 2
 
 
+@pytest.mark.pruned
 def test_add_preprocessor_mid_pipeline():
     pipe = make_pipeline()
     pipe.steps = ["a"]
@@ -346,6 +357,7 @@ def test_save_existing_directory(monkeypatch, tmp_path):
     assert dir_path.exists()
 
 
+@pytest.mark.pruned
 def test_transform_empty_args(monkeypatch, tmp_path):
     monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
 

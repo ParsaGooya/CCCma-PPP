@@ -98,6 +98,8 @@ class DummyPreprocessor(PreprocessModuleABC):
         return x
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_dataset_operator_init():
     cfg = DummyDatasetConfig()
 
@@ -106,6 +108,7 @@ def test_dataset_operator_init():
     assert op.config == cfg
 
 
+@pytest.mark.pruned
 def test_config_observation_exists():
     cfg = DummyDatasetConfig()
 
@@ -124,6 +127,7 @@ def test_config_observation_missing():
     assert op.config_observation is None
 
 
+@pytest.mark.pruned
 def test_fit_preprocessors_model_called():
     cfg = DummyDatasetConfig()
 
@@ -134,6 +138,7 @@ def test_fit_preprocessors_model_called():
     assert cfg.model.fit_called is not None
 
 
+@pytest.mark.pruned
 def test_fit_preprocessors_observation_called():
     cfg = DummyDatasetConfig()
 
@@ -144,6 +149,7 @@ def test_fit_preprocessors_observation_called():
     assert cfg.observation.fit_called is not None
 
 
+@pytest.mark.pruned
 def test_fit_preprocessors_condition_called():
     cfg = DummyDatasetConfig()
 
@@ -166,6 +172,7 @@ def test_fit_preprocessors_static_condition():
     assert cfg.effective_condition.fit_called["selection"] == {}
 
 
+@pytest.mark.pruned
 def test_fit_preprocessors_with_ensemble_selection():
     cfg = DummyDatasetConfig()
 
@@ -178,6 +185,7 @@ def test_fit_preprocessors_with_ensemble_selection():
     assert "ensembles" in cfg.model.fit_called["selection"]
 
 
+@pytest.mark.pruned
 def test_fit_preprocessors_sets_flag():
     cfg = DummyDatasetConfig()
 
@@ -224,6 +232,7 @@ def test_fit_preprocessors_without_condition():
     assert cfg._fitted_preprocessors is True
 
 
+@pytest.mark.pruned
 def test_load_fitted_preprocessors_model():
     cfg = DummyDatasetConfig()
 
@@ -234,6 +243,7 @@ def test_load_fitted_preprocessors_model():
     assert cfg.model.load_called == "x"
 
 
+@pytest.mark.pruned
 def test_load_fitted_preprocessors_observation():
     cfg = DummyDatasetConfig()
 
@@ -244,6 +254,7 @@ def test_load_fitted_preprocessors_observation():
     assert cfg.observation.load_called == "x"
 
 
+@pytest.mark.pruned
 def test_load_fitted_preprocessors_condition():
     cfg = DummyDatasetConfig()
 
@@ -254,6 +265,7 @@ def test_load_fitted_preprocessors_condition():
     assert cfg.effective_condition.load_called == "x"
 
 
+@pytest.mark.pruned
 def test_load_fitted_preprocessors_sets_flag():
     cfg = DummyDatasetConfig()
 
@@ -273,6 +285,7 @@ def test_add_fitted_preprocessor_invalid_type():
         op._add_fitted_preprocessor(object())
 
 
+@pytest.mark.pruned
 def test_add_fitted_preprocessor_not_fitted():
     class BadPreprocessor(DummyPreprocessor):
         fitted = False
@@ -285,6 +298,7 @@ def test_add_fitted_preprocessor_not_fitted():
         op._add_fitted_preprocessor(BadPreprocessor())
 
 
+@pytest.mark.pruned
 def test_add_fitted_preprocessor_model():
     cfg = DummyDatasetConfig()
 
@@ -297,6 +311,7 @@ def test_add_fitted_preprocessor_model():
     assert cfg.model.preprocessing_pipeline.added[0] == preprocessor
 
 
+@pytest.mark.pruned
 def test_add_fitted_preprocessor_observation():
     cfg = DummyDatasetConfig()
 
@@ -309,6 +324,7 @@ def test_add_fitted_preprocessor_observation():
     assert cfg.observation.preprocessing_pipeline.added[0] == preprocessor
 
 
+@pytest.mark.pruned
 def test_add_fitted_preprocessor_condition():
     cfg = DummyDatasetConfig()
 
@@ -321,6 +337,7 @@ def test_add_fitted_preprocessor_condition():
     assert cfg.effective_condition.preprocessing_pipeline.added[0] == preprocessor
 
 
+@pytest.mark.pruned
 def test_get_weights_with_config():
     cfg = DummyDatasetConfig()
 
@@ -404,6 +421,7 @@ def test_get_weights_channels_mismatch():
             op.get_weights(config=Config())
 
 
+@pytest.mark.pruned
 def test_get_weights_with_flattennanremove():
     cfg = DummyDatasetConfig()
 
@@ -471,6 +489,7 @@ def test_get_target_var_metadata_observation():
     assert metadata["variables"] == ["var"]
 
 
+@pytest.mark.pruned
 def test_get_target_var_metadata_model():
     cfg = DummyDatasetConfig()
 
@@ -495,6 +514,7 @@ def test_get_target_var_metadata_missing():
         op.get_target_var_metadata()
 
 
+@pytest.mark.pruned
 def test_update_metadata():
     cfg = DummyDatasetConfig()
 
@@ -513,6 +533,7 @@ def test_update_metadata():
     assert result["variables"] == ["var"]
 
 
+@pytest.mark.pruned
 def test_get_time_features_none():
     cfg = DummyDatasetConfig()
 
@@ -543,6 +564,7 @@ def test_get_time_features_year():
     assert result.shape[0] == 1
 
 
+@pytest.mark.pruned
 def test_get_time_features_multiple():
     cfg = DummyDatasetConfig()
 
@@ -579,6 +601,7 @@ def test_get_time_features_broadcast():
     assert result.ndim > 1
 
 
+@pytest.mark.pruned
 def test_get_time_features_values():
     cfg = DummyDatasetConfig()
 
@@ -685,6 +708,7 @@ def test_add_fitted_preprocessor_without_observation():
     assert cfg.model.preprocessing_pipeline.added[0] == p
 
 
+@pytest.mark.pruned
 def test_add_fitted_preprocessor_without_condition():
     cfg = DummyDatasetConfig()
 
@@ -721,6 +745,7 @@ def test_get_weights_model_channel_mismatch():
             op.get_weights(config=Config())
 
 
+@pytest.mark.pruned
 def test_get_weights_without_flattennanremove():
     cfg = DummyDatasetConfig()
 
@@ -742,6 +767,7 @@ def test_get_weights_without_flattennanremove():
     assert captured["Flattennanremover"] is None
 
 
+@pytest.mark.pruned
 def test_update_metadata_multiple_variables():
     cfg = DummyDatasetConfig()
 
@@ -762,6 +788,7 @@ def test_update_metadata_multiple_variables():
     assert result["variables"] == ["a", "b"]
 
 
+@pytest.mark.pruned
 def test_get_time_features_lead_time_only():
     cfg = DummyDatasetConfig()
 
@@ -777,6 +804,7 @@ def test_get_time_features_lead_time_only():
     assert result.shape[0] == 1
 
 
+@pytest.mark.pruned
 def test_get_time_features_month_cos_only():
     cfg = DummyDatasetConfig()
 
@@ -792,6 +820,7 @@ def test_get_time_features_month_cos_only():
     assert result.shape[0] == 1
 
 
+@pytest.mark.pruned
 def test_get_time_features_full_feature_set():
     cfg = DummyDatasetConfig()
 
@@ -812,6 +841,7 @@ def test_get_time_features_full_feature_set():
     assert result.shape[0] == 4
 
 
+@pytest.mark.pruned
 def test_get_time_features_no_broadcast():
     cfg = DummyDatasetConfig()
 

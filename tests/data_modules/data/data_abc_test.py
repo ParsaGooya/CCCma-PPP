@@ -106,6 +106,8 @@ class DummyDataConfig(DataConfigABC):
         return frozenset({"year", "lead_time"})
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_infoclass_creation():
     info = infoclass(
         sizes={"x": 1},
@@ -134,6 +136,7 @@ def test_missing_preprocessing_pipeline():
         BadConfig()
 
 
+@pytest.mark.pruned
 def test_pipeline_name_set(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -154,6 +157,7 @@ def test_resolve_data_empty_directory(tmp_path):
         _resolve_data(cfg)
 
 
+@pytest.mark.pruned
 def test_resolve_data_valid(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -280,6 +284,7 @@ def test_resolve_data_ensemble_present(tmp_path):
     assert len(cfg.list_paths) == 1
 
 
+@pytest.mark.pruned
 def test_resolve_data_with_rename_dict(tmp_path):
     ds = xr.Dataset(
         {
@@ -309,6 +314,7 @@ def test_resolve_data_with_rename_dict(tmp_path):
     assert len(cfg.list_paths) == 1
 
 
+@pytest.mark.pruned
 def test_get_ds_info_basic(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -321,6 +327,7 @@ def test_get_ds_info_basic(tmp_path):
     assert info.start_year == 2000
 
 
+@pytest.mark.pruned
 def test_get_ds_info_final_year(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -333,6 +340,7 @@ def test_get_ds_info_final_year(tmp_path):
     assert info.final_year == 2001
 
 
+@pytest.mark.pruned
 def test_get_ds_info_sizes(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -345,6 +353,7 @@ def test_get_ds_info_sizes(tmp_path):
     assert info.sizes["year"] == 2
 
 
+@pytest.mark.pruned
 def test_get_ds_info_coords(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -397,6 +406,7 @@ def test_get_ds_info_with_ensemble_selection(tmp_path):
     assert info.coords["ensembles"] is not None
 
 
+@pytest.mark.pruned
 def test_get_ds_info_sizes_none(tmp_path):
     ds = xr.Dataset(
         {

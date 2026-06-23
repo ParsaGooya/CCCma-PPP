@@ -43,6 +43,8 @@ class DummyCvaeConfig(cVAEmodelConfigABC):
         return DummyModel()
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_checkpoint_config_init():
     cfg = CheckpointConfig(
         load_path="a.pt",
@@ -57,6 +59,7 @@ def test_checkpoint_config_init():
     assert cfg.freeze_weights is False
 
 
+@pytest.mark.pruned
 def test_get_device_from_parameter():
     model = DummyModel()
     device = model._get_device()
@@ -154,6 +157,7 @@ def test_cvae_resolve_flow_error():
         cfg._resolve_flow_settings(condition_dependant_flow=False)
 
 
+@pytest.mark.pruned
 def test_weights_init_xavier():
     layer = nn.Linear(10, 5)
     weights_init(layer, method="xavier")
@@ -161,6 +165,7 @@ def test_weights_init_xavier():
     assert layer.weight is not None
 
 
+@pytest.mark.pruned
 def test_weights_init_trunc_normal():
     layer = nn.Linear(10, 5)
     weights_init(layer, method="trunc_normal")
@@ -168,6 +173,7 @@ def test_weights_init_trunc_normal():
     assert layer.weight is not None
 
 
+@pytest.mark.pruned
 def test_weights_init_unsupported_module():
     class Dummy:
         pass
@@ -177,6 +183,7 @@ def test_weights_init_unsupported_module():
     weights_init(obj)
 
 
+@pytest.mark.pruned
 def test_weights_init_invalid_method():
     layer = nn.Linear(2, 2)
 
@@ -184,6 +191,8 @@ def test_weights_init_invalid_method():
         weights_init(layer, method="invalid")
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_model_config_requires_build():
     class BadConfig(modelConfigABC):
         NUM_OUTPUT_DIMS = 2
@@ -193,6 +202,8 @@ def test_model_config_requires_build():
         BadConfig()
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_flow_abc_requires_methods():
     from cccma_ppp.models.models_abc import flowABC
 
@@ -203,6 +214,8 @@ def test_flow_abc_requires_methods():
         BadFlow()
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_add_checkpoint_config():
     cfg = DummyConfig()
 
@@ -247,6 +260,7 @@ def test_get_device_from_buffer():
     assert m._get_device().type == "cpu"
 
 
+@pytest.mark.pruned
 def test_load_state_dict_ignores_non_model_keys(tmp_path):
     model = DummyModel()
 
@@ -273,6 +287,7 @@ def test_load_state_dict_ignores_non_model_keys(tmp_path):
     model._load_state_dict(cfg)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strict_false_missing_keys(tmp_path):
     model = DummyModel()
 
@@ -297,6 +312,7 @@ def test_load_state_dict_strict_false_missing_keys(tmp_path):
     model._load_state_dict(cfg)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_no_model_prefix_keys(tmp_path):
     model = DummyModel()
 
@@ -329,6 +345,7 @@ def test_weights_init_skips_frozen_params():
     assert torch.allclose(layer.weight, w_before)
 
 
+@pytest.mark.pruned
 def test_weights_init_bias_only():
     class BiasOnly(nn.Module):
         def __init__(self):
@@ -340,6 +357,7 @@ def test_weights_init_bias_only():
     weights_init(m, method="xavier")
 
 
+@pytest.mark.pruned
 def test_weights_init_changes_weights():
     layer = nn.Linear(10, 10)
     w_before = layer.weight.clone()
@@ -349,6 +367,8 @@ def test_weights_init_changes_weights():
     assert not torch.allclose(layer.weight, w_before)
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_cvae_model_flag():
     class DummyCvae(cVAEmodelsABC):
         def forward(self, x):

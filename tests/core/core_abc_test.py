@@ -81,6 +81,7 @@ class ConcreteModuleConfig(moduleConfigABC):
         return "loaded"
 
 
+@pytest.mark.pruned
 def test_get_device_returns_parameter_device():
     module = ConcreteModule()
 
@@ -126,6 +127,7 @@ def test_load_state_dict_loads_checkpoint_strict_true(tmp_path):
         assert torch.allclose(value, source.state_dict()[key])
 
 
+@pytest.mark.pruned
 def test_load_state_dict_accepts_string_path(tmp_path):
     source = ConcreteModule()
     target = ConcreteModule()
@@ -142,6 +144,7 @@ def test_load_state_dict_accepts_string_path(tmp_path):
         assert torch.allclose(value, source.state_dict()[key])
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strict_false_allows_missing_keys(tmp_path):
     module = ConcreteModule()
 
@@ -160,6 +163,7 @@ def test_load_state_dict_strict_false_allows_missing_keys(tmp_path):
     assert torch.allclose(module.linear.bias, torch.zeros_like(module.linear.bias))
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strict_true_raises_on_missing_keys(tmp_path):
     module = ConcreteModule()
 
@@ -177,6 +181,7 @@ def test_load_state_dict_strict_true_raises_on_missing_keys(tmp_path):
         module._load_state_dict(checkpoint_path, strict=True)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strict_true_raises_on_unexpected_keys(tmp_path):
     module = ConcreteModule()
 
@@ -195,6 +200,7 @@ def test_load_state_dict_strict_true_raises_on_unexpected_keys(tmp_path):
         module._load_state_dict(checkpoint_path, strict=True)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strict_false_allows_unexpected_keys(tmp_path):
     module = ConcreteModule()
 
@@ -212,6 +218,7 @@ def test_load_state_dict_strict_false_allows_unexpected_keys(tmp_path):
     module._load_state_dict(checkpoint_path, strict=False)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_uses_module_key(tmp_path):
     module = ConcreteModule()
 
@@ -222,6 +229,7 @@ def test_load_state_dict_uses_module_key(tmp_path):
         module._load_state_dict(checkpoint_path)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_preserves_loaded_values(tmp_path):
     module = ConcreteModule()
 

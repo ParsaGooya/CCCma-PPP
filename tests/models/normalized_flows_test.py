@@ -75,6 +75,7 @@ class DummySelector:
         return self.model
 
 
+@pytest.mark.pruned
 def test_normalized_flow_config_build():
     cfg = NormalizedFlowConfig(
         list_flows=[DummySelector(IdentityFlow())],
@@ -89,6 +90,7 @@ def test_normalized_flow_config_build():
     assert len(model.flows) == 1
 
 
+@pytest.mark.pruned
 def test_normalized_flow_config_build_with_condition_size():
     cfg = NormalizedFlowConfig(
         list_flows=[DummySelector(IdentityFlow())],
@@ -135,6 +137,7 @@ def test_normalized_flow_inverse_single_flow():
     assert torch.allclose(out.log_det, -torch.ones(data.shape[0]))
 
 
+@pytest.mark.pruned
 def test_normalized_flow_forward_multiple_flows_logdet_accumulates():
     cfg = NormalizedFlowConfig(
         list_flows=[
@@ -156,6 +159,7 @@ def test_normalized_flow_forward_multiple_flows_logdet_accumulates():
     )
 
 
+@pytest.mark.pruned
 def test_normalized_flow_inverse_multiple_flows_reverse_order():
     f1 = IdentityFlow()
     f2 = ScaleFlow(scale=2.0)
@@ -180,6 +184,7 @@ def test_normalized_flow_inverse_multiple_flows_reverse_order():
     )
 
 
+@pytest.mark.pruned
 def test_normalized_flow_forward_with_condition():
     cfg = NormalizedFlowConfig(
         list_flows=[DummySelector(IdentityFlow())],
@@ -196,6 +201,7 @@ def test_normalized_flow_forward_with_condition():
     assert out.log_det.shape == (data.shape[0],)
 
 
+@pytest.mark.pruned
 def test_normalized_flow_inverse_with_condition():
     cfg = NormalizedFlowConfig(
         list_flows=[DummySelector(IdentityFlow())],
@@ -212,6 +218,7 @@ def test_normalized_flow_inverse_with_condition():
     assert out.log_det.shape == (data.shape[0],)
 
 
+@pytest.mark.pruned
 def test_normalized_flow_empty_flow_list_forward():
     cfg = NormalizedFlowConfig(list_flows=[], flow_sample_size=10)
     model = cfg.build(latent_size=4)
@@ -223,6 +230,7 @@ def test_normalized_flow_empty_flow_list_forward():
     assert torch.allclose(out.log_det, torch.zeros(data.shape[0]))
 
 
+@pytest.mark.pruned
 def test_normalized_flow_empty_flow_list_inverse():
     cfg = NormalizedFlowConfig(list_flows=[], flow_sample_size=10)
     model = cfg.build(latent_size=4)
@@ -234,6 +242,7 @@ def test_normalized_flow_empty_flow_list_inverse():
     assert torch.allclose(out.log_det, torch.zeros(data.shape[0]))
 
 
+@pytest.mark.pruned
 def test_flow_selector_maf_registered():
     selector = FlowSelector(type="maf", args={"hidden_dim": 8})
 
@@ -243,6 +252,7 @@ def test_flow_selector_maf_registered():
     assert flow.hidden_dim == 8
 
 
+@pytest.mark.pruned
 def test_flow_selector_realnvp_registered():
     selector = FlowSelector(type="realnvp", args={"hidden_dim": 8})
 
@@ -252,6 +262,7 @@ def test_flow_selector_realnvp_registered():
     assert flow.hidden_dim == 8
 
 
+@pytest.mark.pruned
 def test_normalized_flow_config_with_real_selectors():
     cfg = NormalizedFlowConfig(
         list_flows=[
@@ -269,6 +280,7 @@ def test_normalized_flow_config_with_real_selectors():
     assert isinstance(model.flows[1], RealNVP)
 
 
+@pytest.mark.pruned
 def test_maf_build_without_condition():
     maf = MAF(hidden_dim=8).build(dim=4)
 
@@ -278,6 +290,7 @@ def test_maf_build_without_condition():
     assert isinstance(maf.initial_param, torch.nn.Parameter)
 
 
+@pytest.mark.pruned
 def test_maf_build_with_condition():
     maf = MAF(hidden_dim=8).build(dim=4, condition_size=3)
 
@@ -287,6 +300,7 @@ def test_maf_build_with_condition():
     assert isinstance(maf.initial_param, FCNN)
 
 
+@pytest.mark.pruned
 def test_maf_reset_parameters_changes_parameter():
     maf = MAF(hidden_dim=8).build(dim=4)
 
@@ -329,6 +343,7 @@ def test_maf_inverse_with_condition():
     assert log_det.shape == (5,)
 
 
+@pytest.mark.pruned
 def test_realnvp_forward_without_condition():
     flow = RealNVP(hidden_dim=8).build(dim=4)
     data = x(batch=5, dim=4)
@@ -339,6 +354,7 @@ def test_realnvp_forward_without_condition():
     assert log_det.shape == (5,)
 
 
+@pytest.mark.pruned
 def test_realnvp_inverse_without_condition():
     flow = RealNVP(hidden_dim=8).build(dim=4)
     data = x(batch=5, dim=4)
@@ -381,6 +397,7 @@ def test_realnvp_forward_inverse_roundtrip_shape():
     assert inv.shape == data.shape
 
 
+@pytest.mark.pruned
 def test_realnvp_odd_dimension_shape_behavior():
     flow = RealNVP(hidden_dim=8).build(dim=5)
     data = x(batch=4, dim=5)

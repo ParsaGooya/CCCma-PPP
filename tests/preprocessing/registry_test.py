@@ -3,6 +3,7 @@ import dataclasses
 from cccma_ppp.preprocessing.registery import Registery
 
 
+@pytest.mark.pruned
 def test_register_and_get_class_without_config():
     reg = Registery()
 
@@ -16,6 +17,7 @@ def test_register_and_get_class_without_config():
     assert obj.value == 1
 
 
+@pytest.mark.pruned
 def test_register_and_get_with_config():
     reg = Registery()
 
@@ -32,6 +34,7 @@ def test_register_and_get_with_config():
     assert obj.y == 3
 
 
+@pytest.mark.pruned
 def test_get_unregistered_raises():
     reg = Registery()
 
@@ -55,6 +58,8 @@ def test_overwrite_registration():
     assert cls is C2
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_available_returns_registered_names():
     reg = Registery()
 
@@ -73,6 +78,7 @@ def test_available_returns_registered_names():
     assert set(names) == {"x", "y"}
 
 
+@pytest.mark.pruned
 def test_get_with_empty_config_dict():
     reg = Registery()
 
@@ -87,6 +93,7 @@ def test_get_with_empty_config_dict():
     assert obj.ok
 
 
+@pytest.mark.pruned
 def test_get_with_none_config_passes_none():
     reg = Registery()
 
@@ -100,6 +107,7 @@ def test_get_with_none_config_passes_none():
     assert cls is E
 
 
+@pytest.mark.pruned
 def test_multiple_registrations_independent():
     reg = Registery()
 
@@ -115,6 +123,7 @@ def test_multiple_registrations_independent():
     assert reg.get("B") is B
 
 
+@pytest.mark.pruned
 def test_config_passed_as_kwargs_correctly():
     reg = Registery()
 
@@ -130,6 +139,7 @@ def test_config_passed_as_kwargs_correctly():
     assert obj.b == 0
 
 
+@pytest.mark.pruned
 def test_get_dataclass_with_config():
     reg = Registery()
 
@@ -147,6 +157,7 @@ def test_get_dataclass_with_config():
     assert obj.y == 2
 
 
+@pytest.mark.pruned
 def test_get_returns_class_when_config_none():
     reg = Registery()
 
@@ -159,6 +170,7 @@ def test_get_returns_class_when_config_none():
     assert cls is A
 
 
+@pytest.mark.pruned
 def test_get_with_invalid_config_raises_typeerror():
     reg = Registery()
 
@@ -171,6 +183,7 @@ def test_get_with_invalid_config_raises_typeerror():
         reg.get("A", {})
 
 
+@pytest.mark.pruned
 def test_get_with_non_dict_non_none_config():
     reg = Registery()
 
@@ -183,6 +196,7 @@ def test_get_with_non_dict_non_none_config():
         reg.get("A", 123)
 
 
+@pytest.mark.pruned
 def test_get_with_extra_kwargs_raises():
     reg = Registery()
 

@@ -83,6 +83,7 @@ def make_ensemble_dataset():
     )
 
 
+@pytest.mark.pruned
 def test_weights_config_default():
     cfg = WeightsConfig()
 
@@ -96,6 +97,7 @@ def test_weights_config_missing_load_dir(tmp_path):
         WeightsConfig(load_dir=missing)
 
 
+@pytest.mark.pruned
 def test_build_weights_uniform():
     cfg = WeightsConfig(
         spatial_method="uniform",
@@ -138,6 +140,7 @@ def test_build_weights_variable_weights():
     assert "channels" in weights.dims
 
 
+@pytest.mark.pruned
 def test_build_weights_with_flattennanremover():
     cfg = WeightsConfig()
 
@@ -296,6 +299,8 @@ def test_build_weights_loaded_lon_mismatch(tmp_path):
             )
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_unwrap_data_variables():
     ds = make_dataset()
 
@@ -304,6 +309,8 @@ def test_unwrap_data_variables():
     assert "channels" in result.dims
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_unwrap_data_variables_channel_size():
     ds = make_dataset()
 
@@ -312,6 +319,7 @@ def test_unwrap_data_variables_channel_size():
     assert result.sizes["channels"] == 2
 
 
+@pytest.mark.pruned
 def test_load_xarray_data_basic():
     ds = make_dataset()
 
@@ -326,6 +334,7 @@ def test_load_xarray_data_basic():
     assert result is not None
 
 
+@pytest.mark.pruned
 def test_load_xarray_data_selection():
     ds = make_dataset()
 
@@ -371,6 +380,7 @@ def test_load_xarray_data_ensemble_mean():
     assert "ensembles" not in result.dims
 
 
+@pytest.mark.pruned
 def test_load_xarray_data_no_ensemble_mean():
     ds = make_ensemble_dataset()
 
@@ -427,6 +437,7 @@ def test_load_xarray_data_rename():
     assert "new" in result.data_vars
 
 
+@pytest.mark.pruned
 def test_create_train_mask_basic():
     mask = _create_train_mask(
         years=[2000, 2001],
@@ -436,6 +447,7 @@ def test_create_train_mask_basic():
     assert mask.shape == (2, 12)
 
 
+@pytest.mark.pruned
 def test_create_train_mask_int_lead_times():
     mask = _create_train_mask(
         years=[2000, 2001],
@@ -445,6 +457,7 @@ def test_create_train_mask_int_lead_times():
     assert mask.lead_time.size == 12
 
 
+@pytest.mark.pruned
 def test_create_train_mask_dims():
     mask = _create_train_mask(
         years=[2000],
@@ -454,6 +467,7 @@ def test_create_train_mask_dims():
     assert mask.dims == ("year", "lead_time")
 
 
+@pytest.mark.pruned
 def test_create_train_mask_name():
     mask = _create_train_mask(
         years=[2000],

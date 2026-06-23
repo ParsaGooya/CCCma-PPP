@@ -9,6 +9,7 @@ from cccma_ppp.train.dataloader import (
 )
 
 
+@pytest.mark.pruned
 def test_batchdata_basic_nan_cleanup():
     x = torch.tensor([[1.0, float("nan")]])
     y = torch.tensor([[float("nan"), 2.0]])
@@ -19,6 +20,7 @@ def test_batchdata_basic_nan_cleanup():
     assert not torch.isnan(b.target).any()
 
 
+@pytest.mark.pruned
 def test_batchdata_with_mask():
     x = torch.tensor([[1.0, float("nan")]])
     y = torch.tensor([[float("nan"), 2.0]])
@@ -32,6 +34,7 @@ def test_batchdata_with_mask():
     assert mask.shape == x.shape
 
 
+@pytest.mark.pruned
 def test_batchdata_reduce_mask():
     x = torch.tensor([[1.0, float("nan")], [1.0, 2.0]])
     y = torch.tensor([[1.0, 2.0], [float("nan"), 2.0]])
@@ -41,6 +44,7 @@ def test_batchdata_reduce_mask():
     assert isinstance(b.input, tuple)
 
 
+@pytest.mark.pruned
 def test_batchdata_to_device_no_mask():
     x = torch.ones((2, 2))
     y = torch.ones((2, 2))
@@ -72,6 +76,7 @@ def test_batchdata_with_added_features():
     assert b.added_features.shape == (2, 3)
 
 
+@pytest.mark.pruned
 def test_collate_basic():
     batch = [
         {"input": torch.ones(2), "target": torch.zeros(2), "added_features": None},
@@ -121,6 +126,7 @@ def test_collate_with_metadata():
     assert meta is None
 
 
+@pytest.mark.pruned
 def test_collate_with_mask_flags():
     batch = [
         {"input": torch.ones(2), "target": torch.zeros(2), "added_features": None},
@@ -177,6 +183,7 @@ class DummyDistributed:
         pass
 
 
+@pytest.mark.pruned
 def test_config_default_train_years():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -186,6 +193,7 @@ def test_config_default_train_years():
     assert len(cfg.train_years) > 0
 
 
+@pytest.mark.pruned
 def test_config_validation_split():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -196,6 +204,7 @@ def test_config_validation_split():
     assert hasattr(cfg, "validation_years")
 
 
+@pytest.mark.pruned
 def test_config_workers_zero_sets_prefetch_none():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -217,6 +226,7 @@ def test_config_invalid_train_years():
         )
 
 
+@pytest.mark.pruned
 def test_setup_distributed_sets_flags(tmp_path):
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -231,6 +241,7 @@ def test_setup_distributed_sets_flags(tmp_path):
     assert cfg.rank == 0
 
 
+@pytest.mark.pruned
 def test_setup_distributed_with_ddp_load():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -299,6 +310,7 @@ def test_build_validation_loader_success():
     assert out is not None
 
 
+@pytest.mark.pruned
 def test_get_weights():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -308,6 +320,7 @@ def test_get_weights():
     assert cfg.get_weights() == "w"
 
 
+@pytest.mark.pruned
 def test_metadata_properties():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -340,6 +353,7 @@ def test_batchdata_reduce_mask_branch(monkeypatch):
     assert mask is not None
 
 
+@pytest.mark.pruned
 def test_batchdata_to_device_without_features():
     x = torch.ones((2, 2))
     y = torch.ones((2, 2))
@@ -350,6 +364,7 @@ def test_batchdata_to_device_without_features():
     assert b.added_features is None
 
 
+@pytest.mark.pruned
 def test_collate_with_metadata_and_no_features():
     batch = [
         (
@@ -408,6 +423,7 @@ def test_setup_distributed_non_root():
     assert cfg._setup
 
 
+@pytest.mark.pruned
 def test_get_weights_with_config():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -420,6 +436,7 @@ def test_get_weights_with_config():
     assert cfg.get_weights(DummyWeights()) == "w"
 
 
+@pytest.mark.pruned
 def test_build_validation_loader_with_mask_flags():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -438,6 +455,7 @@ def test_build_validation_loader_with_mask_flags():
     assert out is not None
 
 
+@pytest.mark.pruned
 def test_build_train_loader_with_mask_flags():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),

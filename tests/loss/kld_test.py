@@ -27,6 +27,7 @@ def test_beta_no_warmup():
     assert beta(1) == pytest.approx(1.0)
 
 
+@pytest.mark.pruned
 def test_beta_linear_increase():
     beta = BetaAnnealing(beta=1.0, beta_min=0.0, num_epoch_to_warmup=2)
     beta.build(num_batches=10)
@@ -50,12 +51,14 @@ def test_beta_with_hold_cycle():
     assert beta(25) == pytest.approx(1.0)
 
 
+@pytest.mark.pruned
 def test_beta_requires_build():
     beta = BetaAnnealing()
     with pytest.raises((AssertionError, ValueError, RuntimeError)):
         beta(0)
 
 
+@pytest.mark.pruned
 def test_kld_standard_normal():
     kld = KLD()
 
@@ -67,6 +70,7 @@ def test_kld_standard_normal():
     assert loss.item() < 1e-5
 
 
+@pytest.mark.pruned
 def test_kld_nonzero_mean():
     kld = KLD()
 
@@ -92,6 +96,7 @@ def test_kld_with_condition():
     assert loss.item() > 0
 
 
+@pytest.mark.pruned
 def test_kld_shape_mismatch():
     kld = KLD()
 
@@ -102,6 +107,7 @@ def test_kld_shape_mismatch():
         kld(mu, logvar)
 
 
+@pytest.mark.pruned
 def test_kld_sum_reduction():
     kld = KLD(reduction="sum")
 
@@ -131,6 +137,7 @@ class DummyFlow:
         )
 
 
+@pytest.mark.pruned
 def test_kld_with_flow():
     kld = KLD()
 
@@ -144,6 +151,7 @@ def test_kld_with_flow():
     assert loss.item() >= 0
 
 
+@pytest.mark.pruned
 def test_kld_with_flow_and_condition():
     kld = KLD()
 
@@ -163,6 +171,7 @@ def test_kld_with_flow_and_condition():
     assert loss.item() >= 0
 
 
+@pytest.mark.pruned
 def test_flow_clamps_loss():
     kld = KLD()
 
@@ -174,6 +183,7 @@ def test_flow_clamps_loss():
     assert result.item() == 0
 
 
+@pytest.mark.pruned
 def test_mean_aggregation():
     kld = KLD(reduction="mean")
     loss = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
