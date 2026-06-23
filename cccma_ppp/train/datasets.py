@@ -30,6 +30,25 @@ from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 @dataclasses.dataclass
 class TrainDatasetConfig(DatasetConfigABC):
+    """
+    Configuration for training dataset construction.
+
+    Parameters
+    ----------
+    model : ModelDataConfig
+        Model dataset configuration.
+    observation : ObsDataConfig or None, optional
+        Observation dataset configuration.
+    condition : ConditionDataConfig or None, optional
+        Conditioning dataset configuration.
+    condition_method : str or None, optional
+        Method for conditioning (e.g., "cross_ensemble", "same_member", "static").
+    time_features : list of str or None, optional
+        Time-based features to include.
+    lead_months : array-like or None, optional
+        Lead months to use.
+    """
+
     model: ModelDataConfig
     observation: ObsDataConfig | None = None
     condition: ConditionDataConfig | None = None
@@ -38,6 +57,13 @@ class TrainDatasetConfig(DatasetConfigABC):
     lead_months: lead_months_config | None = None
 
     def __post_init__(self):
+        """
+        Initialize and validate dataset configuration.
+
+        Returns
+        -------
+        None
+        """
         self._fitted_preprocessors: bool = False
         self._effective_condition: ConditionDataConfig | ModelDataConfig | None = None
 
@@ -50,6 +76,18 @@ class TrainDatasetConfig(DatasetConfigABC):
         self._check_condition()
 
     def _check_model(self):
+        """
+        Validate model dataset configuration.
+
+        Returns
+        -------
+        self
+
+        Raises
+        ------
+        ValueError
+            If configuration is inconsistent.
+        """
 
         if self.condition_method == "same_member":
             if self.model.ensemble_mean:
@@ -67,6 +105,18 @@ class TrainDatasetConfig(DatasetConfigABC):
         return self
 
     def _check_observation(self):
+        """
+        Validate observation dataset configuration.
+
+        Returns
+        -------
+        self
+
+        Raises
+        ------
+        AssertionError
+            If required observation data is missing.
+        """
         if self.observation is not None:
             if not self.observation.info.coords["lat"].equals(
                 self.model.info.coords["lat"]
@@ -89,6 +139,19 @@ class TrainDatasetConfig(DatasetConfigABC):
         return self
 
     def _check_condition(self):
+        """
+        Validate conditioning dataset configuration.
+
+        Returns
+        -------
+        self
+            The validated instance.
+
+        Raises
+        ------
+        ValueError
+            If the conditioning dataset configuration is invalid.
+        """
         if self.effective_condition is not None:
             if self.condition_method is None:
                 raise ValueError(
@@ -129,14 +192,38 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     @property
     def ds_operator(self):
+        """
+        Access dataset operator.
+
+        Returns
+        -------
+        DatasetOperator
+        """
+
         return DatasetOperator(self)
 
     @property
     def num_model_lead_months(self) -> int:
+        """
+        Number of lead months in model dataset.
+
+        Returns
+        -------
+        int
+        """
+
         return self.model.info.sizes["lead_time"]
 
     @property
     def get_common_time(self):
+        """
+        Compute common time range.
+
+        Returns
+        -------
+        np.ndarray
+        """
+
         if self.observation is not None:
             return np.intersect1d(self.model.year_range, self.observation.year_range)
         else:
@@ -144,6 +231,14 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     @property
     def available_train_time(self):
+        """
+        Available training years.
+
+        Returns
+        -------
+        np.ndarray
+        """
+
         num_lead_years = max(self.lead_months) // 12
         if self.observation is None:
             return np.arange(
@@ -155,11 +250,18 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     def _fit_preprocessors(
         self,
-        train_years: np.ndarray | list | tuple,
+        train_years,
         save=False,
-        save_path: Path | str | None = None,
-        save_name: str | None = None,
+        save_path=None,
+        save_name=None,
     ):
+        """
+        Fit preprocessing pipeline.
+
+        Returns
+        -------
+        None
+        """
         self.ds_operator._fit_preprocessors(
             train_years=train_years,
             save=save,
@@ -167,19 +269,45 @@ class TrainDatasetConfig(DatasetConfigABC):
             save_name=save_name,
         )
 
-    def _load_fitted_preprocessors(self, load_dir: Path | str):
+    def _load_fitted_preprocessors(self, load_dir):
+        """
+        Load fitted preprocessors.
+
+        Returns
+        -------
+        None
+        """
         self.ds_operator._load_fitted_preprocessors(load_dir)
 
-    def _add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
+    def _add_fitted_preprocessor(self, preprocessor, index=0):
+        """
+        Add fitted preprocessor.
+
+        Parameters
+        ----------
+        preprocessor : PreprocessModuleABC
+        index : int, optional
+
+        Returns
+        -------
+        None
+        """
 
         self.ds_operator._add_fitted_preprocessor(preprocessor, index)
 
     def build_dataset(
         self,
-        years: np.ndarray,
-        mask: xr.DataArray = None,
-        return_metadata: bool = False,
+        years,
+        mask=None,
+        return_metadata=False,
     ):
+        """
+        Construct training dataset.
+
+        Returns
+        -------
+        TrainDataset
+        """
         return TrainDataset(
             config=self,
             requested_years=years,
@@ -190,12 +318,37 @@ class TrainDatasetConfig(DatasetConfigABC):
 
 @dataclasses.dataclass
 class TrainDataset(Dataset):
+    """
+    Training dataset for model learning.
+
+    Parameters
+    ----------
+    config : TrainDatasetConfig
+    requested_years : array-like
+    mask : xr.DataArray or None, optional
+    return_metadata : bool, optional
+    """
+
     config: TrainDatasetConfig
     requested_years: list[int] | tuple[int] | np.ndarray
     mask: xr.DataArray = None
     return_metadata: bool = False
 
     def __post_init__(self):
+        """
+        Initialize dataset and load required data.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RuntimeError
+            If preprocessors are not fitted.
+        ValueError
+            If requested years are invalid.
+        """
         if not self.config._fitted_preprocessors:
             raise RuntimeError(
                 "Make sure to fit preprocessors first!. Hint:  DatasetOperators._fit_preprocessors()"
@@ -224,10 +377,24 @@ class TrainDataset(Dataset):
 
     @property
     def _autoencoding_model_data(self):
+        """
+        Whether model is used for autoencoding.
+
+        Returns
+        -------
+        bool
+        """
         return self.config.observation is None
 
     @property
     def _load_model(self):
+        """
+        Determine whether to load model dataset.
+
+        Returns
+        -------
+        bool
+        """
         return any(
             [
                 self._autoencoding_model_data,
@@ -237,6 +404,13 @@ class TrainDataset(Dataset):
 
     @property
     def _write_condition_to_input(self):
+        """
+        Determine whether condition replaces input.
+
+        Returns
+        -------
+        bool
+        """
         if self.config._using_model_data_as_condition:
             return True
         else:
@@ -247,6 +421,13 @@ class TrainDataset(Dataset):
 
     @property
     def _concat_condition_to_input(self):
+        """
+        Determine whether to concatenate condition to input.
+
+        Returns
+        -------
+        bool
+        """
 
         return (
             self._write_condition_to_input is False
@@ -254,6 +435,13 @@ class TrainDataset(Dataset):
         )
 
     def _prepare_mask(self):
+        """
+        Prepare dataset mask.
+
+        Returns
+        -------
+        xr.DataArray
+        """
         mask = self.mask
         if mask is None:
             mask = _create_train_mask(
@@ -282,7 +470,14 @@ class TrainDataset(Dataset):
 
         return mask
 
-    def _load_xarray_data(self, config: DataConfigABC):
+    def _load_xarray_data(self, config):
+        """
+        Load dataset from xarray sources.
+
+        Returns
+        -------
+        xr.DataArray
+        """
 
         return _load_xarray_data(
             config.list_paths,
@@ -296,6 +491,13 @@ class TrainDataset(Dataset):
         )
 
     def get_model_indexes(self):
+        """
+        Compute indexes for model dataset.
+
+        Returns
+        -------
+        dict
+        """
 
         mask = (
             self.mask.stack(batch=dict(self.mask.sizes).keys())
@@ -311,7 +513,14 @@ class TrainDataset(Dataset):
 
         return indexes
 
-    def get_obs_indexes(self, model_indexes: dict):
+    def get_obs_indexes(self, model_indexes):
+        """
+        Compute indexes for observation dataset.
+
+        Returns
+        -------
+        dict or None
+        """
 
         if self.observation_dataset is not None:
             indexes = {}
@@ -332,7 +541,14 @@ class TrainDataset(Dataset):
 
             return indexes
 
-    def get_cond_indexes(self, model_indexes: dict):
+    def get_cond_indexes(self, model_indexes):
+        """
+        Compute indexes for conditioning dataset.
+
+        Returns
+        -------
+        dict or None
+        """
 
         if self.condition_dataset is not None:
             if self.config.condition_method != "static":
@@ -357,6 +573,13 @@ class TrainDataset(Dataset):
         return None
 
     def get_input_shape(self):
+        """
+        Determine input shape.
+
+        Returns
+        -------
+        tuple
+        """
 
         from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 
@@ -376,6 +599,13 @@ class TrainDataset(Dataset):
             )
 
     def get_target_shape(self):
+        """
+        Determine target shape.
+
+        Returns
+        -------
+        tuple
+        """
 
         from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 
@@ -398,10 +628,24 @@ class TrainDataset(Dataset):
             return self.input_shape
 
     def get_added_features_dim(self):
+        """
+        Number of additional features.
+
+        Returns
+        -------
+        int
+        """
 
         return len(self.config.time_features)
 
     def _index_condition_dataset(self, ind):
+        """
+        Index condition dataset.
+
+        Returns
+        -------
+        xr.DataArray or None
+        """
 
         if self.condition_dataset is not None:
             if self.config.condition_method != "static":
@@ -424,6 +668,13 @@ class TrainDataset(Dataset):
             return condition
 
     def _index_observation_dataset(self, ind):
+        """
+        Index observation dataset.
+
+        Returns
+        -------
+        xr.DataArray or None
+        """
 
         if self.observation_dataset is not None:
             year = float(self.obs_indexes["year"][ind])
@@ -440,6 +691,13 @@ class TrainDataset(Dataset):
             return obs
 
     def _index_model_dataset(self, ind):
+        """
+        Index model dataset.
+
+        Returns
+        -------
+        xr.DataArray or None
+        """
 
         if self._load_model:
             year = float(self.model_indexes["year"][ind])
@@ -457,6 +715,18 @@ class TrainDataset(Dataset):
             return model
 
     def __getitem__(self, ind):
+        """
+        Retrieve dataset sample.
+
+        Parameters
+        ----------
+        ind : int
+
+        Returns
+        -------
+        dict or tuple
+            Sample dictionary, optionally with metadata.
+        """
         year = float(self.model_indexes["year"][ind])
         lead_time = float(self.model_indexes["lead_time"][ind])
         selection = dict(year=year, lead_time=lead_time)
@@ -490,4 +760,11 @@ class TrainDataset(Dataset):
             return datadict
 
     def __len__(self):
+        """
+        Dataset length.
+
+        Returns
+        -------
+        int
+        """
         return len(self.model_indexes.get(list(self.model_indexes.keys())[0]))
