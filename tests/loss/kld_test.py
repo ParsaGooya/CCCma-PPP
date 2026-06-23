@@ -1,5 +1,19 @@
 import pytest
 import torch
+import sys
+import types
+
+
+fake_cvae_module = types.ModuleType("cccma_ppp.core.cVAE_module")
+
+
+class DummyCvaeOutput:
+    pass
+
+
+fake_cvae_module.cVAEOutput = DummyCvaeOutput
+
+sys.modules["cccma_ppp.core.cVAE_module"] = fake_cvae_module
 
 from cccma_ppp.loss.kld import BetaAnnealing, KLD
 
