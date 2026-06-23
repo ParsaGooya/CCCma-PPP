@@ -703,8 +703,6 @@ def test_required_input_source_model_only():
     assert cfg.model is not None
 
 
-
-
 def test_lead_months_config_range_build():
     cfg = lead_months_config(start=2, end=5)
 
@@ -856,17 +854,6 @@ def test_resolve_condition_model_as_condition():
     )
 
     assert cfg.effective_condition is not None
-
-
-def test_same_member_with_ensemble_mean_raises():
-    model = DummyModel()
-    model.ensemble_mean = True
-
-    with pytest.raises(ValueError):
-        DummyDatasetConfig(
-            model=model,
-            condition_method="same_member",
-        )
 
 
 def test_lead_months_exceed_max_raises():

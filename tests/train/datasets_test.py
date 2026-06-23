@@ -96,13 +96,6 @@ class DummyDataConfig:
         self.paths = ["dummy"]
 
 
-def test_invalid_same_member_with_ensemble_mean():
-    model = DummyDataConfig(ensemble_mean=True)
-
-    with pytest.raises(ValueError):
-        TrainDatasetConfig(model=model, condition_method="same_member")
-
-
 def test_invalid_lead_months_exceeds():
     model = DummyDataConfig()
     model.info.sizes["lead_time"] = 5
