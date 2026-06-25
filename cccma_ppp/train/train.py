@@ -1,6 +1,7 @@
 from __future__ import annotations
 from cccma_ppp.train.train_configs import TrainConfig, build_trainer, prepare_config
-from cccma_ppp.generic import Distributed, setup_logger
+from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic.logger import setup_logger
 
 import argparse
 import dacite

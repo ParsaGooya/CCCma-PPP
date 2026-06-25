@@ -8,7 +8,6 @@
   <title>cccma_ppp.generic.distributed &mdash; CCCma PPP  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=18aa9b61" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
@@ -40,9 +39,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
@@ -78,7 +75,7 @@
 
 
 <div class="viewcode-block" id="Distributed">
-<a class="viewcode-back" href="../../../cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.core.trainer.Distributed">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Distributed</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Single class for managing distributed training setup.</span>
@@ -129,7 +126,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Distributed.get_instance">
-<a class="viewcode-back" href="../../../cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed.get_instance">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.core.trainer.Distributed.get_instance">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_instance</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -147,7 +144,7 @@
 
 
 <div class="viewcode-block" id="Distributed.cleanup">
-<a class="viewcode-back" href="../../../cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed.cleanup">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.core.trainer.Distributed.cleanup">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">cleanup</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Destroy distributed process group.</span>
@@ -162,7 +159,7 @@
 
 
 <div class="viewcode-block" id="Distributed.is_root">
-<a class="viewcode-back" href="../../../cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed.is_root">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.core.trainer.Distributed.is_root">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_root</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check if current process is the root process.</span>
@@ -177,7 +174,7 @@
 
 
 <div class="viewcode-block" id="Distributed.barrier">
-<a class="viewcode-back" href="../../../cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed.barrier">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.core.trainer.Distributed.barrier">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">barrier</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Synchronize all processes.</span>
@@ -192,7 +189,7 @@
 
 
 <div class="viewcode-block" id="Distributed.all_reduce_sum">
-<a class="viewcode-back" href="../../../cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed.all_reduce_sum">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.core.trainer.Distributed.all_reduce_sum">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">all_reduce_sum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform all-reduce sum across processes.</span>
@@ -212,7 +209,7 @@
 
 
 <div class="viewcode-block" id="Distributed.broadcast">
-<a class="viewcode-back" href="../../../cccma_ppp.generic.html#cccma_ppp.generic.distributed.Distributed.broadcast">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.core.trainer.Distributed.broadcast">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lcoal</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Broadcast tensor from source process to all processes.</span>

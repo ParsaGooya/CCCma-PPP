@@ -8,7 +8,6 @@
   <title>cccma_ppp.loss.utils_loss &mdash; CCCma PPP  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=18aa9b61" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
@@ -40,9 +39,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
@@ -78,7 +75,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">Losspipeline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss.loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">Losspipeline</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss.loss_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">lossABC</span><span class="p">,</span> <span class="n">Reduction</span>
 
 
@@ -86,7 +83,7 @@
 
 
 <div class="viewcode-block" id="WeightedMSE">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.utils_loss.WeightedMSE">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.utils_loss.WeightedMSE">[docs]</a>
 <span class="nd">@Losspipeline</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">WeightedMSE</span><span class="p">(</span><span class="n">lossABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -228,7 +225,7 @@
         <span class="k">return</span> <span class="n">tensor_</span>
 
 <div class="viewcode-block" id="WeightedMSE.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.utils_loss.WeightedMSE.forward">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.utils_loss.WeightedMSE.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
@@ -265,6 +262,17 @@
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
 <span class="sd">            If shapes do not match.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Expected tensor shapes are:</span>
+
+<span class="sd">        - Standard mode: ``(B, C, ...)``</span>
+<span class="sd">        - Generator mode: ``(E, B, C, ...)``</span>
+<span class="sd">        - Generative modeling mode: ``(Z, B, C, ...)``</span>
+<span class="sd">        - Generator + generative modeling: ``(E, Z, B, C, ...)``</span>
+
+<span class="sd">        where ``E`` is the ensemble/sample dimension, ``Z`` is the latent sample dimension, ``B`` is batch size, and ``C`` is the channel dimension.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">generator</span><span class="p">:</span>
@@ -362,7 +370,7 @@
 
 
 <div class="viewcode-block" id="WeightedCRPS">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.utils_loss.WeightedCRPS">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.utils_loss.WeightedCRPS">[docs]</a>
 <span class="nd">@Losspipeline</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;crps&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">WeightedCRPS</span><span class="p">(</span><span class="n">lossABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -491,7 +499,7 @@
         <span class="k">return</span> <span class="n">tensor_</span>
 
 <div class="viewcode-block" id="WeightedCRPS.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.utils_loss.WeightedCRPS.forward">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.utils_loss.WeightedCRPS.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
@@ -523,6 +531,17 @@
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
 <span class="sd">            If generator flag is False.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        CRPS requires an ensemble of predictions. The first dimension of ``data`` is interpreted as the ensemble/sample dimension.</span>
+
+<span class="sd">        Expected shapes are:</span>
+
+<span class="sd">        - ``data``: ``(E, B, C, ...)`` or ``(E, Z, B, C, ...)``</span>
+<span class="sd">        - ``target``: ``(B, C, ...)`` or ``(Z, B, C, ...)``</span>
+
+<span class="sd">        where ``E`` is the ensemble size.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">generator</span><span class="p">:</span>
@@ -634,7 +653,7 @@
 
 
 <div class="viewcode-block" id="Frobenius_norm">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.utils_loss.Frobenius_norm">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.utils_loss.Frobenius_norm">[docs]</a>
 <span class="nd">@Losspipeline</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;frobenius_norm&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Frobenius_norm</span><span class="p">(</span><span class="n">lossABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -687,7 +706,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="p">:])</span>
 
 <div class="viewcode-block" id="Frobenius_norm.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.utils_loss.Frobenius_norm.forward">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.utils_loss.Frobenius_norm.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
@@ -710,6 +729,10 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        torch.Tensor</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Spatial dimensions are flattened before covariance matrices are computed. Covariance is computed either across spatial locations (``covariance_dim=&quot;spatial&quot;``) or across channels (``covariance_dim=&quot;channel&quot;``).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">generator</span><span class="p">:</span>
@@ -818,6 +841,10 @@
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If structure is inconsistent.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    ``data`` must contain exactly one additional leading sample dimension relative to ``target``. Any intermediate dimensions between the sample dimension and the target shape must have size 1.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nb">bool</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">-</span> <span class="n">target</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">target</span><span class="o">.</span><span class="n">shape</span>

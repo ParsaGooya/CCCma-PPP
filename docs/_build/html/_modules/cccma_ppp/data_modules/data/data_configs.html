@@ -8,7 +8,6 @@
   <title>cccma_ppp.data_modules.data.data_configs &mdash; CCCma PPP  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=18aa9b61" />
 
   
       <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
@@ -40,9 +39,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API Reference</a></li>
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
@@ -76,15 +73,15 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">final</span><span class="p">,</span> <span class="n">Literal</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataConfigABC</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreprocessingPipeline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.data.data_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataConfigABC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.preprocessing.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreprocessingPipeline</span>
 
 
 <span class="n">spatialmethod</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span> <span class="s2">&quot;cosine_lat&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="ModelDataConfig">
-<a class="viewcode-back" href="../../../../cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig">[docs]</a>
+<a class="viewcode-back" href="../../../../cccma_ppp.train.datasets.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ModelDataConfig</span><span class="p">(</span><span class="n">DataConfigABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -105,7 +102,7 @@
 <span class="sd">    concat_dim : str, optional</span>
 <span class="sd">        Dimension along which files are concatenated.</span>
 <span class="sd">    file_type : str, optional</span>
-<span class="sd">        File pattern (e.g., &quot;*.nc&quot;).</span>
+<span class="sd">        File pattern (e.g., &quot;``*.nc``&quot;).</span>
 <span class="sd">    rename_dict : dict or None, optional</span>
 <span class="sd">        Variable renaming mapping.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -181,7 +178,7 @@
 
 
 <div class="viewcode-block" id="ObsDataConfig">
-<a class="viewcode-back" href="../../../../cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ObsDataConfig">[docs]</a>
+<a class="viewcode-back" href="../../../../cccma_ppp.train.datasets.html#cccma_ppp.data_modules.data.data_configs.ObsDataConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ObsDataConfig</span><span class="p">(</span><span class="n">DataConfigABC</span><span class="p">):</span>
@@ -278,7 +275,7 @@
 
 
 <div class="viewcode-block" id="ConditionDataConfig">
-<a class="viewcode-back" href="../../../../cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig">[docs]</a>
+<a class="viewcode-back" href="../../../../cccma_ppp.train.datasets.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ConditionDataConfig</span><span class="p">(</span><span class="n">DataConfigABC</span><span class="p">):</span>

@@ -2,6 +2,7 @@ cccma\_ppp package
 ==================
 
 .. automodule:: cccma_ppp
+   :no-index:
    :members:
    :show-inheritance:
    :undoc-members:

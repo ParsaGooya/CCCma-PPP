@@ -8,7 +8,6 @@
   <title>cccma_ppp.train.train_configs &mdash; CCCma PPP  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=18aa9b61" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
@@ -40,9 +39,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
@@ -83,22 +80,23 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">dacite</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">LosspipelineConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss.loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">LosspipelineConfig</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrainDataloaderConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules</span><span class="w"> </span><span class="kn">import</span> <span class="n">WeightsConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.train.dataloader</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrainDataloaderConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">WeightsConfig</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Distributed</span><span class="p">,</span> <span class="n">RuntimeContext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic.distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">Distributed</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic.runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeContext</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.selectors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModuleSelector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.trainer</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrainerConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizerConfig</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flattennanremove</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.preprocessing.utils_preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flattennanremove</span>
 
 
 <div class="viewcode-block" id="set_seed">
-<a class="viewcode-back" href="../../../cccma_ppp.train.html#cccma_ppp.train.train_configs.set_seed">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.train.train.set_seed">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">set_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Set random seeds for reproducibility.</span>
@@ -119,7 +117,7 @@
 
 
 <div class="viewcode-block" id="TrainConfig">
-<a class="viewcode-back" href="../../../cccma_ppp.train.html#cccma_ppp.train.train_configs.TrainConfig">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.train.train.TrainConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TrainConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -151,6 +149,13 @@
 <span class="sd">        Random seed.</span>
 <span class="sd">    resume_dir : str or None, optional</span>
 <span class="sd">        Directory of a previous experiment to resume from.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - If ``resume_dir`` is specified, the configuration is loaded from the previous experiment and merged with the requested values for ``experiment_dir`` and ``max_epochs``.</span>
+<span class="sd">    - ``experiment_dir`` currently refers to a local filesystem path.</span>
+<span class="sd">    - If ``seed`` is provided, it is used to make training reproducible by controlling model initialization and other randomized operations.</span>
+<span class="sd">    - Checkpoints are written only when ``save_checkpoint`` is ``True``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">experiment_dir</span><span class="p">:</span> <span class="nb">str</span>
@@ -243,7 +248,7 @@
                 <span class="p">)</span>
 
 <div class="viewcode-block" id="TrainConfig.set_random_seed">
-<a class="viewcode-back" href="../../../cccma_ppp.train.html#cccma_ppp.train.train_configs.TrainConfig.set_random_seed">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.train.train.TrainConfig.set_random_seed">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_random_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Apply configured random seed.</span>
@@ -310,7 +315,7 @@
         <span class="n">RuntimeContext</span><span class="o">.</span><span class="n">TARGET_VAR_METADATA</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_loader</span><span class="o">.</span><span class="n">target_var_metadata</span>
 
 <div class="viewcode-block" id="TrainConfig.prepare_directory">
-<a class="viewcode-back" href="../../../cccma_ppp.train.html#cccma_ppp.train.train_configs.TrainConfig.prepare_directory">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.train.train.TrainConfig.prepare_directory">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">prepare_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distributed</span><span class="p">:</span> <span class="n">Distributed</span><span class="p">,</span> <span class="n">yaml_config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Prepare experiment directory structure.</span>
@@ -403,7 +408,7 @@
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be specified for a new experiment.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TrainConfig.read_config_from_halted_experiment">
-<a class="viewcode-back" href="../../../cccma_ppp.train.html#cccma_ppp.train.train_configs.TrainConfig.read_config_from_halted_experiment">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.train.train.TrainConfig.read_config_from_halted_experiment">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">read_config_from_halted_experiment</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">resume_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">experiment_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">max_epochs</span><span class="p">:</span> <span class="nb">int</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TrainConfig&quot;</span><span class="p">:</span>
@@ -447,7 +452,7 @@
 
 
 <div class="viewcode-block" id="prepare_config">
-<a class="viewcode-back" href="../../../cccma_ppp.train.html#cccma_ppp.train.train_configs.prepare_config">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.train.train.prepare_config">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">prepare_config</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Load configuration from YAML file.</span>
@@ -469,7 +474,7 @@
 
 
 <div class="viewcode-block" id="build_trainer">
-<a class="viewcode-back" href="../../../cccma_ppp.train.html#cccma_ppp.train.train_configs.build_trainer">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.train.train.build_trainer">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">build_trainer</span><span class="p">(</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">TrainConfig</span><span class="p">,</span> <span class="n">distributed</span><span class="p">:</span> <span class="n">Distributed</span><span class="p">,</span> <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">):</span>

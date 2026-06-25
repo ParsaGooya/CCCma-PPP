@@ -7,19 +7,18 @@ import dataclasses
 import warnings
 from pathlib import Path
 
-from cccma_ppp.data_modules.dataset import (
+from cccma_ppp.data_modules.dataset.config_abc import (
     DatasetConfigABC,
-    DatasetOperator,
     lead_months_config,
-    _get_time_features,
 )
-from cccma_ppp.data_modules.data import (
+from cccma_ppp.data_modules.dataset.operator import DatasetOperator, _get_time_features
+from cccma_ppp.data_modules.data.data_configs import (
     ModelDataConfig,
     ObsDataConfig,
     ConditionDataConfig,
 )
 
-from cccma_ppp.data_modules import (
+from cccma_ppp.data_modules.utils import (
     _unwrap_data_variables,
     _load_xarray_data,
     _create_train_mask,

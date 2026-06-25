@@ -2,6 +2,7 @@ cccma\_ppp.models package
 =========================
 
 .. automodule:: cccma_ppp.models
+   :no-index:
    :members:
    :show-inheritance:
    :undoc-members:
@@ -9,26 +10,9 @@ cccma\_ppp.models package
 Submodules
 ----------
 
-cccma\_ppp.models.mlp\_models module
-------------------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: cccma_ppp.models.mlp_models
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-cccma\_ppp.models.models\_abc module
-------------------------------------
-
-.. automodule:: cccma_ppp.models.models_abc
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-cccma\_ppp.models.normalized\_flows module
-------------------------------------------
-
-.. automodule:: cccma_ppp.models.normalized_flows
-   :members:
-   :show-inheritance:
-   :undoc-members:
+   cccma_ppp.models.mlp_models
+   cccma_ppp.models.models_abc
+   cccma_ppp.models.normalized_flows

@@ -4,7 +4,7 @@ from typing import ClassVar, final
 import dataclasses
 import numpy as np
 
-from cccma_ppp.data_modules.data import ModelDataConfig, ConditionDataConfig
+from cccma_ppp.data_modules.data.data_configs import ModelDataConfig, ConditionDataConfig
 
 
 @dataclasses.dataclass

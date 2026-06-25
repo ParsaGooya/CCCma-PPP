@@ -8,7 +8,6 @@
   <title>cccma_ppp.loss.loss_abc &mdash; CCCma PPP  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=18aa9b61" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
@@ -40,9 +39,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
@@ -82,7 +79,7 @@
 
 
 <div class="viewcode-block" id="lossABC">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.loss_abc.lossABC">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.kld.lossABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">lossABC</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Abstract base class for loss functions.</span>
@@ -101,7 +98,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="lossABC.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.loss_abc.lossABC.forward">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.kld.lossABC.forward">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -137,7 +134,7 @@
 
 
 <div class="viewcode-block" id="lossABC._print_loss">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.loss_abc.lossABC._print_loss">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.kld.lossABC._print_loss">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_print_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -152,7 +149,7 @@
 
 
 <div class="viewcode-block" id="lossABC._aggregate">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.loss_abc.lossABC._aggregate">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.kld.lossABC._aggregate">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_aggregate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

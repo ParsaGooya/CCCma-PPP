@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import xarray as xr
 from typing import Literal
 
-from cccma_ppp.loss import Losspipeline
+from cccma_ppp.loss.loss import Losspipeline
 from cccma_ppp.loss.loss_abc import lossABC, Reduction
 
 

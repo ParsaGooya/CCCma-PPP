@@ -12,7 +12,7 @@ from itertools import islice
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from cccma_ppp.data_modules.dataset import DatasetConfigABC
+    from cccma_ppp.data_modules.dataset.config_abc import DatasetConfigABC
 
 
 class BatchDataABC(abc.ABC):

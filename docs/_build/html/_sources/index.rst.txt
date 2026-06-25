@@ -1,9 +1,7 @@
 CCCma PPP
-==============================
+=========
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents
+   :maxdepth: 3
 
-   api
    cccma_ppp
