@@ -76,6 +76,20 @@ class WeightedMSE(lossABC):
             If kernel size is not odd.
         NotImplementedError
             If unsupported number of output dimensions is used.
+
+        Notes
+        -----
+        Expected weight tensor layouts:
+
+        - With channels: ``(C, O1, ..., On)``
+        - Without channels: ``(O1, ..., On)``
+
+        where:
+
+        - ``C`` is the channel dimension
+        - ``O1 ... On`` are spatial/output dimensions
+
+        If channels are not present, a singleton channel dimension may be temporarily added during low-resolution downsampling.
         """
 
         super().__init__()
@@ -134,6 +148,20 @@ class WeightedMSE(lossABC):
         Returns
         -------
         torch.Tensor
+
+        Notes
+        -----
+        Expected input shapes:
+
+        - Static weights/masks:
+        ``(C, O1, ..., On)``
+        - Batched tensors:
+        ``(B, C, O1, ..., On)``
+        - Generative tensors:
+        ``(Z, B, C, O1, ..., On)``
+
+        The method temporarily inserts a batch dimension for static weight tensors so that PyTorch pooling operators can be applied. The original dimensionality is restored before returning.
+
         """
 
         squeeze = False
@@ -268,6 +296,19 @@ class WeightedMSE(lossABC):
         Returns
         -------
         torch.Tensor
+
+        Notes
+        -----
+        Expected loss shape before reduction:
+
+        ``(B, C, O1, ..., On)``
+
+        or, for generative modeling:
+
+        ``(Z, B, C, O1, ..., On)``
+
+        Weights are broadcast across all leading dimensions and applied
+        along the channel and spatial dimensions.
         """
 
         weight = self.weights
@@ -344,6 +385,10 @@ class WeightedCRPS(lossABC):
             If kernel size is not odd.
         NotImplementedError
             If unsupported number of output dimensions is used.
+
+        Notes
+        -----
+        Both `weights` and the internally constructed `weights_mask` are expected to follow the shape `(C, ...)`, where `C` is the channel dimension.
         """
 
         super().__init__()
@@ -456,10 +501,29 @@ class WeightedCRPS(lossABC):
         -----
         CRPS requires an ensemble of predictions. The first dimension of ``data`` is interpreted as the ensemble/sample dimension.
 
-        Expected shapes are:
+        Expected tensor layouts:
 
-        - ``data``: ``(E, B, C, ...)`` or ``(E, Z, B, C, ...)``
-        - ``target``: ``(B, C, ...)`` or ``(Z, B, C, ...)``
+        Standard ensemble prediction:
+
+        - ``data``:
+        ``(E, B, C, O1, ..., On)``
+        - ``target``:
+        ``(B, C, O1, ..., On)``
+
+        Generative modeling:
+
+        - ``data``:
+        ``(E, Z, B, C, O1, ..., On)``
+        - ``target``:
+        ``(Z, B, C, O1, ..., On)``
+
+        where:
+
+        - ``E`` = ensemble/sample dimension
+        - ``Z`` = latent realization dimension
+        - ``B`` = batch dimension
+        - ``C`` = channel dimension
+        - ``O1...On`` = output dimensions
 
         where ``E`` is the ensemble size.
         """
@@ -646,7 +710,34 @@ class Frobenius_norm(lossABC):
 
         Notes
         -----
-        Spatial dimensions are flattened before covariance matrices are computed. Covariance is computed either across spatial locations (``covariance_dim="spatial"``) or across channels (``covariance_dim="channel"``).
+        Expected tensor layouts:
+
+        Standard mode:
+
+        - ``data``:
+        ``(B, C, O1, ..., On)``
+        - ``target``:
+        ``(B, C, O1, ..., On)``
+
+        Generative modeling:
+
+        - ``data``:
+        ``(Z, B, C, O1, ..., On)``
+        - ``target``:
+        ``(Z, B, C, O1, ..., On)``
+
+        Processing steps:
+
+        1. Spatial dimensions ``O1...On`` are flattened into a single
+        feature dimension.
+        2. If generative modeling is enabled, the latent dimension ``Z``
+        is merged with the batch dimension.
+        3. Covariance matrices are computed either:
+
+        - across spatial features (``covariance_dim="spatial"``)
+        - across channels (``covariance_dim="channel"``)
+
+        4. The Frobenius norm of the covariance difference is returned.
         """
 
         if generator:
@@ -756,7 +847,31 @@ def _check_generator_structure(data: torch.Tensor, target: torch.Tensor):
 
     Notes
     -----
-    ``data`` must contain exactly one additional leading sample dimension relative to ``target``. Any intermediate dimensions between the sample dimension and the target shape must have size 1.
+    Generator outputs must contain exactly one additional leading
+    ensemble/sample dimension compared to the target.
+
+    Valid examples:
+
+    - target:
+    ``(B, C, O1, O2)``
+    - data:
+    ``(E, B, C, O1, O2)``
+
+    Generative example:
+
+    - target:
+    ``(Z, B, C, O1, O2)``
+    - data:
+    ``(E, Z, B, C, O1, O2)``
+
+    Invalid examples:
+
+    - data:
+    ``(B, E, C, O1, O2)``
+    - data:
+    ``(E, C, O1, O2)``
+
+    The ensemble dimension must always be the left-most dimension.
     """
 
     bool = data.shape[1:] == (1,) * (data.dim() - target.dim() - 1) + target.shape

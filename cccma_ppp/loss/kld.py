@@ -174,6 +174,36 @@ class KLD(lossABC):
         -------
         torch.Tensor
             KL divergence loss.
+
+
+        Raises
+        ------
+        AssertionError
+            If posterior and prior parameter shapes are inconsistent.
+
+        Notes
+        -----
+        Expected tensor layouts:
+
+        - ``mu``:
+          ``(N, F)``
+        - ``log_var``:
+          ``(N, F)``
+
+        Optional conditional prior parameters:
+
+        - ``cond_mu``:
+          ``(N, F)``
+        - ``cond_log_var``:
+          ``(N, F)``
+
+        where:
+
+        - ``N`` is the number of latent samples
+          (typically batch size or flattened batch size)
+        - ``F`` is the latent feature dimension
+
+        When a flow prior is used, latent samples are drawn from the posterior and transformed through the flow before estimating the KL divergence.
         """
 
         if prior_flow is not None:
@@ -255,6 +285,19 @@ class KLD(lossABC):
         Returns
         -------
         torch.Tensor
+
+        Notes
+        -----
+        For standard Gaussian KL divergence, ``loss`` is expected to have shape:
+
+        ``(N, F)``
+
+        where:
+
+        - ``N`` is the number of latent samples
+        - ``F`` is the latent dimensionality
+
+        Reduction is applied over the latent dimension before producing a scalar loss.
         """
 
         if not self._has_prior_flow:
@@ -284,23 +327,45 @@ class KLD(lossABC):
 
     def sample(self, mu, log_var, sample_size=1, std=1):
         """
-        Sample from Gaussian distribution.
+        Sample latent variables using the reparameterization trick.
 
         Parameters
         ----------
         mu : torch.Tensor
-            Mean.
+            Mean of the latent distribution.
         log_var : torch.Tensor
-            Log variance.
+            Log-variance of the latent distribution.
         sample_size : int, optional
-            Number of samples.
+            Number of Monte-Carlo samples.
         std : float, optional
-            Scaling factor for standard deviation.
+            Scaling factor applied to the sampling noise.
 
         Returns
         -------
         torch.Tensor
-            Sampled values.
+            Sampled latent variables.
+
+        Notes
+        -----
+        Expected input shapes:
+
+        - ``mu``:
+          ``(N, F)``
+        - ``log_var``:
+          ``(N, F)``
+
+        Returned shape:
+
+        - ``(S, N, F)``
+
+        where:
+
+        - ``S`` is ``sample_size``
+        - ``N`` is the number of latent samples
+        - ``F`` is the latent dimensionality
+
+        This corresponds to drawing ``S`` independent samples from
+        each posterior distribution.
         """
 
         var = torch.exp(log_var) + 1e-4
