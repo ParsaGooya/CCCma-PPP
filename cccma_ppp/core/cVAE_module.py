@@ -10,8 +10,6 @@ import gc
 from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC
 from cccma_ppp.core.selectors import _load_config_from_checkpoint
 from cccma_ppp.loss.kld import KLD
-from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC
-from cccma_ppp.core.selectors import _load_config_from_checkpoint
 from cccma_ppp.core.selectors import (
     ModuleSelector,
     cVAEModelSelector,
