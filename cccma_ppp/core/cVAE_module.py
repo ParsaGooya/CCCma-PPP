@@ -17,6 +17,7 @@ from cccma_ppp.core.selectors import (
 from cccma_ppp.models.normalized_flows import NormalizedFlowConfig
 from cccma_ppp.train.dataloader import BatchData
 from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.loss.loss import Losspipeline
 
 
 @dataclasses.dataclass
