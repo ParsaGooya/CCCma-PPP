@@ -1,3 +1,4 @@
+from __future__ import annotations
 import dataclasses
 import os
 import numpy as np
@@ -14,8 +15,7 @@ from cccma_ppp.loss import LosspipelineConfig
 from cccma_ppp.train import TrainDataloaderConfig
 from cccma_ppp.data_modules import WeightsConfig
 
-from cccma_ppp.generic import (Distributed, 
-                                RuntimeContext)
+from cccma_ppp.generic import Distributed, RuntimeContext
 
 from cccma_ppp.core.selectors import ModuleSelector
 from cccma_ppp.core.trainer import TrainerConfig
@@ -23,11 +23,20 @@ from cccma_ppp.core.optimization import OptimizerConfig
 
 from cccma_ppp.preprocessing import Flattennanremove
 
-import cccma_ppp.train.registry_imports
-
-
 
 def set_seed(seed):
+    """
+    Set random seeds for reproducibility.
+
+    Parameters
+    ----------
+    seed : int
+        Random seed value.
+
+    Returns
+    -------
+    None
+    """
 
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -36,50 +45,43 @@ def set_seed(seed):
 @dataclasses.dataclass
 class TrainConfig:
     """
-    Configuration for training a model.
+    Configuration for training experiments.
 
-    Arguments:
-        experiment_dir: Directory where checkpoints and logs are saved. For the
-            time being, this must be a local directory.
+    Parameters
+    ----------
+    experiment_dir : str
+        Root directory for experiment outputs.
+    max_epochs : int
+        Maximum number of training epochs.
+    train_loader : TrainDataloaderConfig or None
+        Data loader configuration.
+    module : ModuleSelector or None
+        Model selector.
+    losspipeline : LosspipelineConfig or None
+        Loss pipeline configuration.
+    trainer : TrainerConfig or None
+        Trainer configuration.
+    optimization : OptimizerConfig, optional
+        Optimization configuration.
+    weights : WeightsConfig, optional
+        Weight configuration for loss.
+    log_every_n_epochs : int, optional
+        Logging frequency.
+    save_checkpoint : bool, optional
+        Whether to save checkpoints.
+    seed : int or None, optional
+        Random seed.
+    resume_dir : str or None, optional
+        Directory of a previous experiment to resume from.
 
-        resume_dir : Directory of a previously stopped or finished training experiment to be resumed.
-
-        max_epochs : maximum number of epochs to train on. If early stopping buffer is not specified, this manu epochs will be trained for.
-
-        train_loader: Configuration for the training data loader.
-
-        module: Configuration for the training module.
-
-        optimization: Configuration for the optimization.
-
-        losspipeline: Configuration for the reconstruction loss.
-
-        trainer: Configuration for the trainer.
-
-        weights: Configuration for spatial weights for loss calculation.
-
-        save_checkpoint: Whether to save checkpoints. If false, no checkpoints
-            are saved regardless of other checkpoint configuration settings. If
-            true, checkpoints are saved at the end of the training loop, after
-            evaluation, and on catching a termination signal.
-
-        log_every_n_epochs: How often to log batch_loss during training.
-
-        seed: Random seed for reproducibility. If set, is used for all types of
-            randomization, including data shuffling and model initialization.
-            If unset, weight initialization is not reproducible but data shuffling is.
-
-
-            
-        to do:
-
-            ema: Configuration for exponential moving average of model weights.
-
-            validate_using_ema: Whether to validate and perform inference using
-                the EMA model.
-
-
+    Notes
+    -----
+    - If ``resume_dir`` is specified, the configuration is loaded from the previous experiment and merged with the requested values for ``experiment_dir`` and ``max_epochs``.
+    - ``experiment_dir`` currently refers to a local filesystem path.
+    - If ``seed`` is provided, it is used to make training reproducible by controlling model initialization and other randomized operations.
+    - Checkpoints are written only when ``save_checkpoint`` is ``True``.
     """
+
     experiment_dir: str
     max_epochs: int
     train_loader: TrainDataloaderConfig | None
@@ -96,6 +98,25 @@ class TrainConfig:
     resume_dir: str | None = None
 
     def __post_init__(self):
+        """
+        Validate and initialize training configuration.
+
+        Handles resume logic, validates inputs, sets defaults,
+        and enforces consistency across model, data, and loss.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If required configuration fields are missing or inconsistent.
+        RuntimeError
+            If incompatible preprocessing or loss setup is detected.
+        AssertionError
+            If max_epochs is invalid.
+        """
 
         self._resolve_resuming()
 
@@ -112,15 +133,13 @@ class TrainConfig:
                     "with determisitic models target observation must be specified."
                 )
 
-        if self.module.type.lower() in ["cVAE"]:
+        if self.module.type.lower() in ["cvae"]:
             if self.trainer.beta_finder is None:
                 raise ValueError(
                     "with cVAE model TrainerConfig.beta_finder must be set up."
                 )
             if self.train_loader.dataset_config.condition_method is None:
-                raise ValueError(
-                "with cVAE you must specify condition method!"
-            )
+                raise ValueError("with cVAE you must specify condition method!")
 
         if getattr(self.module._module_config.model_config, "GENERATOR", False):
             if "crps" not in self.losspipeline.loss_pipeline.loss_types:
@@ -153,31 +172,61 @@ class TrainConfig:
                 )
 
     def set_random_seed(self):
+        """
+        Apply configured random seed.
+
+        Returns
+        -------
+        None
+        """
+
         if self.seed is not None:
             set_seed(self.seed)
 
     @property
     def checkpoint_dir(self) -> str:
         """
-        The directory where checkpoints are saved.
+        Path to checkpoint directory.
+
+        Returns
+        -------
+        str
         """
+
         return os.path.join(self.experiment_dir, "checkpoints")
 
     @property
     def log_dir(self) -> str:
         """
-        The directory where output files are saved.
+        Path to logging directory.
+
+        Returns
+        -------
+        str
         """
+
         return os.path.join(self.experiment_dir, "logs")
 
     @property
     def figures_dir(self) -> str:
         """
-        The directory where output files are saved.
+        Path to figures directory.
+
+        Returns
+        -------
+        str
         """
+
         return os.path.join(self.experiment_dir, "figures")
-    
+
     def _prepare_runtime_variables(self):
+        """
+        Populate global runtime context variables.
+
+        Returns
+        -------
+        None
+        """
 
         RuntimeContext.GLOBAL_EXP_DIR = str(self.experiment_dir)
         RuntimeContext.GLOBAL_CHECKPOINT_DIR = str(self.checkpoint_dir)
@@ -186,11 +235,20 @@ class TrainConfig:
         RuntimeContext.INPUT_VAR_METADATA = self.train_loader.input_var_metadata
         RuntimeContext.TARGET_VAR_METADATA = self.train_loader.target_var_metadata
 
-
-    def prepare_directory(self, distributed: Distributed, yaml_config : str = None):
-
+    def prepare_directory(self, distributed: Distributed, yaml_config: str = None):
         """
-        Create experiment (sub)directories and dump config_data to it.
+        Prepare experiment directory structure.
+
+        Parameters
+        ----------
+        distributed : Distributed
+            Distributed context used for coordinating directory creation.
+        yaml_config : str or None, optional
+            Path to configuration file to copy into the experiment directory.
+
+        Returns
+        -------
+        None
         """
 
         self._prepare_runtime_variables()
@@ -219,6 +277,20 @@ class TrainConfig:
         distributed.barrier()
 
     def _resolve_resuming(self):
+        """
+        Handle configuration logic for resuming experiments.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If required components (`train_loader`, `module`,
+            `losspipeline`, `trainer`) are missing for a new experiment.
+        """
+
         if self.resume_dir is not None:
             requested_experiment_dir = self.experiment_dir
             requested_max_epochs = self.max_epochs
@@ -256,6 +328,28 @@ class TrainConfig:
     def read_config_from_halted_experiment(
         self, resume_dir: str | Path, experiment_dir: str | Path, max_epochs: int
     ) -> "TrainConfig":
+        """
+        Load configuration from a previous experiment.
+
+        Parameters
+        ----------
+        resume_dir : str or pathlib.Path
+            Path to existing experiment.
+        experiment_dir : str or pathlib.Path
+            New experiment directory.
+        max_epochs : int
+            Updated number of epochs.
+
+        Returns
+        -------
+        TrainConfig
+
+        Raises
+        ------
+        ValueError
+            If resume directory does not exist.
+        """
+
         resume_dir = Path(resume_dir)
 
         if not resume_dir.is_dir():
@@ -271,9 +365,20 @@ class TrainConfig:
         )
 
 
-
 def prepare_config(path: Path | str) -> dict:
-    """Get config and update with possible dotlist override."""
+    """
+    Load configuration from YAML file.
+
+    Parameters
+    ----------
+    path : pathlib.Path or str
+
+    Returns
+    -------
+    dict
+        Parsed configuration dictionary.
+    """
+
     with open(path) as f:
         data = yaml.safe_load(f)
     return data
@@ -282,6 +387,27 @@ def prepare_config(path: Path | str) -> dict:
 def build_trainer(
     config: TrainConfig, distributed: Distributed, logger: logging.Logger | None = None
 ):
+    """
+    Construct training pipeline.
+
+    Builds data loaders, model, loss function, optimizer,
+    and trainer object.
+
+    Parameters
+    ----------
+    config : TrainConfig
+        Training configuration.
+    distributed : Distributed
+        Distributed training context.
+    logger : logging.Logger or None, optional
+        Logger for output.
+
+    Returns
+    -------
+    Trainer
+        Initialized trainer instance.
+    """
+
     def log(msg, **kwargs):
         if distributed.is_root():
             if logger is not None:
@@ -301,7 +427,6 @@ def build_trainer(
     input_shape = train_loader.input_shape
     output_shape = train_loader.target_shape
     added_features_dim = train_loader.added_features_dim
-
 
     log(f"Creating {config.module.type} module ...")
 

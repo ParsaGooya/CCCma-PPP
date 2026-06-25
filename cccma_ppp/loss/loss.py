@@ -1,3 +1,4 @@
+from __future__ import annotations
 import torch.nn as nn
 import xarray as xr
 from typing import ClassVar
@@ -6,17 +7,18 @@ import dataclasses
 from cccma_ppp.loss.loss_abc import Reduction
 from cccma_ppp.loss.registery import Registery
 
+
 @dataclasses.dataclass
 class LossStepConfig:
     """
-    Configuration for a single loss function in the loss pipeline.
+    Configuration for a single loss step in a loss pipeline.
 
     Parameters
     ----------
     name : str
         Name of the registered loss function.
-    args : dict of str to object, optional
-        Arguments for initializing the loss function.
+    args : dict[str, object], optional
+        Arguments used to initialize the loss function.
     """
 
     name: str
@@ -25,18 +27,17 @@ class LossStepConfig:
 
 @dataclasses.dataclass
 class LosspipelineConfig:
-
     """
-    Configuration for constructing a composite loss pipeline.
+    Configuration for combining multiple loss functions.
 
     Parameters
     ----------
     loss_pipeline : list of LossStepConfig
-        Sequence of loss definitions forming the pipeline.
-    loss_weights : list of float, optional
-        Weights assigned to each loss component. Must sum to 1.
-    reduction : Reduction, optional
-        Reduction method applied to each loss ("mean" or "sum").
+        Sequence of loss steps.
+    loss_weights : list of float or None, optional
+        Weights applied to each loss term.
+    reduction : {"mean", "sum"}, optional
+        Reduction method applied to individual losses.
     """
 
     loss_pipeline: list[LossStepConfig]
@@ -44,19 +45,19 @@ class LosspipelineConfig:
     reduction: Reduction = "mean"
 
     def __post_init__(self):
-
         """
         Validate loss pipeline configuration.
 
-        Ensures:
-        - At least one loss term is provided.
-        - No restricted arguments are manually passed to individual losses.
-        - Loss weights match number of loss terms and sum to 1.
+        Returns
+        -------
+        None
 
         Raises
         ------
         ValueError
-            If configuration is invalid.
+            If no loss terms are provided.
+        ValueError
+            If loss weights are inconsistent or invalid.
         """
 
         if not len(self.loss_pipeline) >= 1:
@@ -86,16 +87,15 @@ class LosspipelineConfig:
             ]
 
     def build(self, weights: xr.DataArray, num_output_dimensions: int = 2):
-
         """
-        Construct a Losspipeline instance.
+        Construct loss pipeline.
 
         Parameters
         ----------
         weights : xr.DataArray
             Spatial or variable weights applied to loss computation.
         num_output_dimensions : int, optional
-            Number of output spatial dimensions.
+            Dimensionality of model outputs.
 
         Returns
         -------
@@ -107,18 +107,24 @@ class LosspipelineConfig:
 
 
 class Losspipeline(nn.Module):
-
     """
-    Composite loss module combining multiple loss functions with weights.
+    Container for sequentially applying multiple loss functions.
 
-    Parameters
+    Combines multiple loss terms using configurable weights,
+    supports spatial weighting, and enforces dimensionality checks.
+
+    Attributes
     ----------
     config : LosspipelineConfig
-        Configuration defining loss pipeline and weights.
+        Configuration object.
     weights : xr.DataArray
-        Spatial or variable weights applied to losses.
-    num_output_dimensions : int, optional
-        Number of spatial output dimensions.
+        Spatial or variable weights.
+    num_output_dimensions : int
+        Output dimensionality used for validation.
+    pipeline : list
+        List of instantiated loss functions.
+    steps : list of str
+        Names of loss steps.
     """
 
     registery: ClassVar[Registery] = Registery()
@@ -129,6 +135,18 @@ class Losspipeline(nn.Module):
         weights: xr.DataArray,
         num_output_dimensions: int = 2,
     ):
+        """
+        Initialize loss pipeline.
+
+        Parameters
+        ----------
+        config : LossPipelineConfig
+            Configuration for the loss pipeline.
+        weights : xr.DataArray
+            Precomputed spatial/variable weights.
+        num_output_dimensions : int, optional
+            Number of output dimensions handled by the loss.
+        """
 
         super().__init__()
         self._checked_dimensionality = False
@@ -159,7 +177,7 @@ class Losspipeline(nn.Module):
     @classmethod
     def register(cls, name: str):
         """
-        Register a loss function in the pipeline registry.
+        Register a loss function.
 
         Parameters
         ----------
@@ -169,7 +187,7 @@ class Losspipeline(nn.Module):
         Returns
         -------
         Callable
-            Decorator for registering loss classes.
+            Decorator for registering loss functions.
         """
 
         return cls.registery.register(name.lower())
@@ -182,9 +200,8 @@ class Losspipeline(nn.Module):
         print_loss=False,
         step_arguments: dict = None,
     ):
-
         """
-        Compute weighted loss from all configured loss components.
+        Compute combined loss from all pipeline steps.
 
         Parameters
         ----------
@@ -193,21 +210,26 @@ class Losspipeline(nn.Module):
         target : torch.Tensor
             Ground truth targets.
         target_mask : torch.Tensor or None, optional
-            Mask applied to target values.
+            Optional mask applied to targets.
         print_loss : bool, optional
             Whether to print individual loss values.
-        step_arguments : dict, optional
-            Additional keyword arguments passed to each loss function.
+        step_arguments : dict or None, optional
+            Additional arguments passed to each loss step.
 
         Returns
         -------
         tuple
-            Final aggregated loss tensor and dictionary of individual loss values.
+            (total_loss, individual_losses)
+
+            total_loss : torch.Tensor
+                Weighted combined loss.
+            individual_losses : dict of str to float
+                Individual loss contributions.
 
         Raises
         ------
         AssertionError
-            If target dimensionality is inconsistent with configuration.
+            If input dimensionality does not match expectations.
         """
 
         total_loss = None
@@ -217,7 +239,7 @@ class Losspipeline(nn.Module):
             step_arguments = dict()
 
         if not self._checked_dimensionality:
-            expected_ndim = self.num_output_dimensions + 2  # N, C, spatial dims...
+            expected_ndim = self.num_output_dimensions + 2
             if "generative_modeling" in step_arguments:
                 expected_ndim += 1
 

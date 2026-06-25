@@ -1,3 +1,4 @@
+from __future__ import annotations
 import torch
 import torch.distributed as dist
 import os
@@ -5,28 +6,27 @@ import os
 
 class Distributed:
     """
-    Utility class for managing distributed training using PyTorch Distributed.
+    Single class for managing distributed training setup.
 
-    Methods
-    -------
-    get_instance()
-        Return singleton instance of the Distributed manager.
-    cleanup()
-        Destroy the distributed process group.
-    is_root()
-        Check if current process is the root rank.
-    barrier()
-        Synchronize all processes.
-    all_reduce_sum(local)
-        Perform sum reduction across all processes.
-    broadcast(local, src=0)
-        Broadcast tensor from source process to all processes.
+    Attributes
+    ----------
+    distributed : bool
+        Whether distributed training is enabled.
+    rank : int
+        Global process rank.
+    local_rank : int
+        Local process rank (GPU index).
+    world_size : int
+        Total number of processes.
+    device : torch.device
+        Device assigned to the current process.
     """
+
     _instance = None
 
     def __init__(self):
         """
-        Initialize distributed environment and device configuration.
+        Initialize distributed environment.
 
         Returns
         -------
@@ -56,12 +56,12 @@ class Distributed:
     @classmethod
     def get_instance(cls):
         """
-        Return singleton instance of Distributed.
+        Retrieve singleton instance.
 
         Returns
         -------
         Distributed
-            Shared instance managing distributed state.
+            Shared instance.
         """
 
         if cls._instance is None:
@@ -70,7 +70,7 @@ class Distributed:
 
     def cleanup(cls):
         """
-        Clean up distributed process group.
+        Destroy distributed process group.
 
         Returns
         -------
@@ -82,13 +82,14 @@ class Distributed:
 
     def is_root(self) -> bool:
         """
-        Check if current process is the root rank.
+        Check if current process is the root process.
 
         Returns
         -------
         bool
-            True if rank equals zero.
+            True if rank is 0.
         """
+
         return self.rank == 0
 
     def barrier(self):
@@ -99,17 +100,19 @@ class Distributed:
         -------
         None
         """
+
         if self.distributed:
             dist.barrier()
 
     def all_reduce_sum(self, local: torch.Tensor):
         """
-        Perform sum reduction across all processes.
+        Perform all-reduce sum across processes.
 
         Parameters
         ----------
         local : torch.Tensor
-            Tensor to be reduced.
+            Tensor to be summed across all ranks.
+
         Returns
         -------
         None
@@ -120,7 +123,7 @@ class Distributed:
 
     def broadcast(self, lcoal: torch.Tensor, src=0):
         """
-        Broadcast tensor from source rank to all processes.
+        Broadcast tensor from source process to all processes.
 
         Parameters
         ----------
@@ -133,6 +136,6 @@ class Distributed:
         -------
         None
         """
-        
+
         if dist.is_available() and dist.is_initialized():
             dist.broadcast(lcoal, src=src)

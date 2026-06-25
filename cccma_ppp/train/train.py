@@ -1,3 +1,4 @@
+from __future__ import annotations
 from cccma_ppp.train.train_configs import TrainConfig, build_trainer, prepare_config
 from cccma_ppp.generic import Distributed, setup_logger
 
@@ -6,6 +7,15 @@ import dacite
 
 
 def get_parser() -> argparse.ArgumentParser:
+    """
+    Create argument parser for training script.
+
+    Returns
+    -------
+    argparse.ArgumentParser
+        Configured parser expecting a YAML configuration path.
+    """
+
     parser = argparse.ArgumentParser(description="Train model from config file")
 
     parser.add_argument(
@@ -18,6 +28,18 @@ def get_parser() -> argparse.ArgumentParser:
 
 
 def main(yaml_config: str):
+    """
+    Run training from configuration file.
+
+    Parameters
+    ----------
+    yaml_config : str
+        Path to YAML configuration file.
+
+    Returns
+    -------
+    None
+    """
 
     distributed = Distributed.get_instance()
 

@@ -1,11 +1,11 @@
+from __future__ import annotations
 import dacite
 import dataclasses
 
 
 class Registery:
-
     """
-    Generic registry for mapping string identifiers to classes and instantiating them.
+    Registry for mapping string identifiers to classes and instantiating them.
 
     Methods
     -------
@@ -14,17 +14,23 @@ class Registery:
     get(name, config=None)
         Retrieve and instantiate a registered class.
     available()
-        Return the list of registered names.
+        Return all registered names.
     """
 
     def __init__(self):
+        """
+        Initialize an empty registry.
+
+        Returns
+        -------
+        None
+        """
 
         self._modules = {}
 
     def register(self, name):
-
         """
-        Register a class under a given name.
+        Register a class under a specified name.
 
         Parameters
         ----------
@@ -35,7 +41,9 @@ class Registery:
         -------
         Callable
             Decorator that registers the class.
+
         """
+
         def decorator(cls):
             self._modules[name] = cls
             return cls
@@ -51,15 +59,16 @@ class Registery:
         name : str
             Name of the registered class.
         config : dict or object or None, optional
-            Configuration used to initialize the class:
-            - If dict and class is a dataclass, uses dacite for construction.
-            - If dict and class is not a dataclass, calls class(**config).
-            - Otherwise, passes config directly to constructor.
+            Configuration used for instantiation.
+
+            - If dict and class is a dataclass, uses `dacite.from_dict`.
+            - If dict and class is not a dataclass, uses `cls(**config)`.
+            - Otherwise, instantiates using `cls(config)`.
 
         Returns
         -------
         object
-            Instantiated class corresponding to the given name.
+            Instantiated object.
 
         Raises
         ------
@@ -86,11 +95,12 @@ class Registery:
 
     def available(self):
         """
-        Return the list of registered names.
+        Get available class names.
 
         Returns
         -------
         list of str
-            Names of all registered classes.
+            Registered identifiers.
         """
+
         return list(self._modules.keys())

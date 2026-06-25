@@ -1,3 +1,4 @@
+from __future__ import annotations
 import dataclasses
 from pathlib import Path
 
@@ -5,25 +6,27 @@ from pathlib import Path
 @dataclasses.dataclass
 class RuntimeContext:
     """
-    Container for global runtime configuration and experiment context.
+    Global runtime configuration for experiment-level settings.
 
-    Attributes
+    Parameters
     ----------
-    GLOBAL_EXP_DIR : pathlib.Path or str or None
-        Root directory for the experiment.
-    GLOBAL_CHECKPOINT_DIR : pathlib.Path or str or None
-        Directory where model checkpoints are saved.
-    GLOBAL_FIGURES_DIR : pathlib.Path or str or None
-        Directory where generated figures are stored.
-    GLOBAL_LOG_DIR : pathlib.Path or str or None
-        Directory where logs are written.
+    GLOBAL_EXP_DIR : pathlib.Path or str or None, optional
+        Root directory for experiment outputs.
+    GLOBAL_CHECKPOINT_DIR : pathlib.Path or str or None, optional
+        Directory for saving model checkpoints.
+    GLOBAL_FIGURES_DIR : pathlib.Path or str or None, optional
+        Directory for saving figures and plots.
+    GLOBAL_LOG_DIR : pathlib.Path or str or None, optional
+        Directory for log files.
+    GLOBAL_OUTPUT_DIR : pathlib.Path or str or None, optional
+        General output directory for experiment artifacts.
 
-    INPUT_VAR_METADATA : dict or None
-        Metadata associated with input variables.
-    TARGET_VAR_METADATA : dict or None
-        Metadata associated with target variables.
+    INPUT_VAR_METADATA : dict or None, optional
+        Metadata describing input variables and preprocessing steps.
+    TARGET_VAR_METADATA : dict or None, optional
+        Metadata describing target variables and preprocessing steps.
     """
-    
+
     GLOBAL_EXP_DIR: Path | str | None = None
     GLOBAL_CHECKPOINT_DIR: Path | str | None = None
     GLOBAL_FIGURES_DIR: Path | str | None = None

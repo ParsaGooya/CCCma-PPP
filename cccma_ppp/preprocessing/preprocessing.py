@@ -1,3 +1,4 @@
+from __future__ import annotations
 import numpy as np
 import dataclasses
 from typing import Callable, ClassVar
@@ -13,16 +14,15 @@ from cccma_ppp.preprocessing.registery import Registery
 
 @dataclasses.dataclass
 class PreprocessingStepSelector:
-
     """
-    Selector for retrieving and instantiating preprocessing modules from a registry.
+    Selector for preprocessing modules.
 
     Parameters
     ----------
     name : str
         Name of the registered preprocessing module.
     args : dict of str to object, optional
-        Arguments used to initialize the preprocessing module.
+        Arguments used to initialize the module.
     """
 
     name: str
@@ -30,52 +30,43 @@ class PreprocessingStepSelector:
     registery: ClassVar[Registery] = Registery()
 
     def get_preprocessor(self):
-
         """
-        Retrieve and instantiate the preprocessing module.
+        Instantiate preprocessing module.
 
         Returns
         -------
         PreprocessModuleABC
-            Instantiated preprocessing module.
-            
-        Raises
-        ------
-        ValueError
-            If the specified preprocessing module is not registered.
+            Initialized preprocessing module.
         """
 
         return self.registery.get(self.name.lower(), self.args)
 
     @classmethod
     def register(cls, name: str) -> Callable[..., PreprocessModuleABC]:
-
         """
-        Register a preprocessing module.
+        Register preprocessing module.
 
         Parameters
         ----------
         name : str
-            Name used to register the preprocessing class.
+            Name used for registration.
 
         Returns
         -------
         Callable
-            Decorator that registers the preprocessing class.
+            Decorator for registering preprocessing modules.
         """
 
         return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
-
         """
-        Return available preprocessing modules.
+        List available preprocessing modules.
 
         Returns
         -------
         list of str
-            Names of registered preprocessing modules.
         """
 
         return cls.registery.available()
@@ -83,16 +74,16 @@ class PreprocessingStepSelector:
 
 @dataclasses.dataclass
 class PreprocessingPipeline:
-
     """
-    Sequential pipeline for fitting and applying preprocessing steps.
+    Sequential preprocessing pipeline, supports fitting,
+    transformation, inverse transformation, and persistence.
 
     Parameters
     ----------
     preprocessors_list : list of PreprocessingStepSelector, optional
-        List of preprocessing step definitions.
+        List of preprocessing steps.
     load_dir : str or pathlib.Path or None, optional
-        Path to a saved preprocessing pipeline.
+        Path to load a previously fitted pipeline.
     """
 
     preprocessors_list: list[PreprocessingStepSelector] = dataclasses.field(
@@ -102,9 +93,10 @@ class PreprocessingPipeline:
     num_instances: ClassVar[int] = 0
 
     def __post_init__(self):
-
         """
-        Initialize pipeline structure or prepare for loading from disk.
+        Initialize preprocessing pipeline.
+
+        Constructs pipeline steps or prepares for loading from disk.
 
         Returns
         -------
@@ -120,14 +112,12 @@ class PreprocessingPipeline:
                 self.pipeline.append((step.name.lower(), step.get_preprocessor()))
 
     def set_name(self, name: str):
-
         """
-        Set a custom name for the preprocessing pipeline.
+        Set pipeline name.
 
         Parameters
         ----------
         name : str
-            Name assigned to the pipeline.
 
         Returns
         -------
@@ -144,29 +134,26 @@ class PreprocessingPipeline:
         save_name: str | None = None,
         save_path: Path | str | None = None,
     ):
-
         """
-        Fit all preprocessing steps sequentially.
+        Fit preprocessing pipeline.
 
         Parameters
         ----------
         base_data : xr.DataArray, optional
             Input data used for fitting.
-        mask : xr.DataArray, optional
-            Mask used to exclude values during fitting.
+        mask : xr.DataArray or None, optional
+            Optional mask applied during fitting.
         save : bool, optional
-            Whether to save the fitted pipeline.
+            Whether to save fitted pipeline.
         save_name : str or None, optional
-            Filename for saving the pipeline.
+            Filename for saving pipeline.
         save_path : pathlib.Path or str or None, optional
-            Directory to store the pipeline.
+            Directory for saving pipeline.
 
         Returns
         -------
         PreprocessingPipeline
-            Fitted pipeline instance.
-
-
+            Fitted pipeline.
         """
 
         if self.load_dir is None:
@@ -200,29 +187,28 @@ class PreprocessingPipeline:
 
         return self
 
-    def transform(self, data: xr.DataArray , step_arguments=None):
-
+    def transform(self, data: xr.DataArray, step_arguments=None):
         """
         Apply preprocessing pipeline.
 
         Parameters
         ----------
-        data : xr.DataArray object
-            Input data to transform.
-        step_arguments : dict, optional
-            Mapping from step names to argument dictionaries.
+        data : xarray.DataArray
+            Input data.
+        step_arguments : dict or None, optional
+            Per-step arguments for transformation.
 
         Returns
         -------
-        xr.DataArray object
-            Transformed data.
+        xarray.DataArray
+            Processed data.
 
         Raises
         ------
         ValueError
-            If step_arguments contain unknown preprocessing steps.
+            If step arguments refer to unknown steps.
         """
-    
+
         if step_arguments is None:
             step_arguments = dict()
         for a in step_arguments.keys():
@@ -236,27 +222,26 @@ class PreprocessingPipeline:
 
         return data_processed
 
-    def inverse_transform(self, data: xr.DataArray , step_arguments=None):
-
+    def inverse_transform(self, data: xr.DataArray, step_arguments=None):
         """
-        Apply inverse preprocessing in reverse order.
+        Reverse preprocessing pipeline.
 
         Parameters
         ----------
-        data : xr.DataArray object
-            Transformed xr.DataArray data.
-        step_arguments : dict, optional
-            Mapping from step names to argument dictionaries.
+        data : xarray.DataArray
+            Transformed data.
+        step_arguments : dict or None, optional
+            Per-step arguments for inverse transformation.
 
         Returns
         -------
-        xr.DataArray object
-            xr.DataArray data mapped back to original space.
+        xarray.DataArray
+            Original representation.
 
         Raises
         ------
         ValueError
-            If step_arguments contain unknown preprocessing steps.
+            If step arguments refer to unknown steps.
         """
 
         if step_arguments is None:
@@ -274,26 +259,25 @@ class PreprocessingPipeline:
         return data_processed
 
     def get_preprocessors(self, name=None):
-
         """
         Retrieve fitted preprocessors.
 
         Parameters
         ----------
         name : str or None, optional
-            Specific preprocessing step name.
+            Specific step name.
 
         Returns
         -------
         list or PreprocessModuleABC
-            All fitted preprocessors or a specific one.
+            All preprocessors or a specific one.
 
         Raises
         ------
         RuntimeError
             If pipeline is not fitted.
         ValueError
-            If requested step does not exist.
+            If step is not found.
         """
 
         if not self.fitted:
@@ -308,18 +292,17 @@ class PreprocessingPipeline:
             return self.fitted_preprocessors[int(idx)]
 
     def add_fitted_preprocessor(self, preprocessor, name, index=None):
-
         """
-        Add a fitted preprocessor to the pipeline.
+        Add fitted preprocessor to pipeline.
 
         Parameters
         ----------
         preprocessor : PreprocessModuleABC
-            Fitted preprocessing module.
+            Fitted preprocessor instance.
         name : str
-            Name of the preprocessing step.
+            Name of the step.
         index : int or None, optional
-            Position to insert the step.
+            Position to insert step.
 
         Returns
         -------
@@ -340,17 +323,18 @@ class PreprocessingPipeline:
             self.steps.insert(index, name)
 
     def _load_from_memory(self, load_dir: str | Path):
-
         """
-        Load a fitted preprocessing pipeline from disk.
+        Load fitted pipeline from disk.
 
         Parameters
         ----------
         load_dir : str or pathlib.Path
-            Path to saved pipeline file.
+            Path to saved pipeline.
+
         Returns
         -------
-        None            
+        None
+
         Raises
         ------
         ValueError

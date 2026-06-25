@@ -1,3 +1,4 @@
+from __future__ import annotations
 import torch
 import numpy as np
 from pathlib import Path
@@ -18,9 +19,25 @@ from cccma_ppp.train import BatchData
 from cccma_ppp.generic import RuntimeContext
 
 
-
 @dataclasses.dataclass
 class cVAEOutput:
+    """
+    Container for cVAE outputs.
+
+    Parameters
+    ----------
+    output : torch.Tensor
+        Generated samples.
+    mu : torch.Tensor or None
+        Posterior mean.
+    log_var : torch.Tensor or None
+        Posterior log-variance.
+    cond_mu : torch.Tensor or None, optional
+        Conditional prior mean.
+    cond_log_var : torch.Tensor or None, optional
+        Conditional prior log-variance.
+    """
+
     output: torch.Tensor
     mu: torch.Tensor | None
     log_var: torch.Tensor | None
@@ -31,6 +48,23 @@ class cVAEOutput:
 @ModuleSelector.register("cvae")
 @dataclasses.dataclass
 class cVAEConfig(moduleConfigABC):
+    """
+    Configuration for conditional variational autoencoder (cVAE).
+
+    Parameters
+    ----------
+    ModelConfig : cVAEModelSelector or None
+        Model configuration selector.
+    min_posterior_variance : float or None
+        Minimum allowed posterior variance.
+    prior_flow_config : NormalizedFlowConfig or None
+        Configuration for optional prior flow.
+    combined_CGCN_weight : float or None
+        Weight for auxiliary CGCN loss.
+    load_dir : str or None
+        Path to checkpoint for loading configuration.
+    """
+
     ModelConfig: cVAEModelSelector | None = None
     min_posterior_variance: float | None = None
     prior_flow_config: NormalizedFlowConfig | None = None
@@ -38,11 +72,20 @@ class cVAEConfig(moduleConfigABC):
     load_dir: str | None = None
 
     def __post_init__(self):
+        """
+        Validate and initialize configuration.
+
+        Raises
+        ------
+        ValueError
+            If neither `ModelConfig` nor `load_dir` is provided.
+        AssertionError
+            If `combined_CGCN_weight` is not in [0, 1].
+        """
+
         if self.load_dir is None:
-            if self.ModelConfig is None: 
-                raise ValueError(
-                "provide loading dir or model configurations"
-            )
+            if self.ModelConfig is None:
+                raise ValueError("provide loading dir or model configurations")
 
         else:
             self._load_from_checkpoint(self.load_dir)
@@ -73,6 +116,23 @@ class cVAEConfig(moduleConfigABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
+        """
+        Construct cVAE module instance.
+
+        Parameters
+        ----------
+        input_shape : np.ndarray
+            Input tensor shape.
+        output_shape : np.ndarray or None, optional
+            Output tensor shape.
+        added_features_dim : int, optional
+            Additional feature dimension.
+
+        Returns
+        -------
+        cVAE
+            Initialized cVAE module.
+        """
 
         return cVAE(
             config=self,
@@ -82,10 +142,19 @@ class cVAEConfig(moduleConfigABC):
         )
 
     def _load_from_checkpoint(self, load_path: Path | str):
-        
-        '''
-        Loads model and prior flow config but allows control over the rest.
-        '''
+        """
+        Load configuration from checkpoint.
+
+        Parameters
+        ----------
+        load_path : pathlib.Path or str
+            Path to checkpoint.
+
+        Returns
+        -------
+        cVAEConfig
+            Updated configuration.
+        """
 
         checkpoint_module, checkpoint_config = _load_config_from_checkpoint(
             Path(load_path)
@@ -117,6 +186,21 @@ class cVAEConfig(moduleConfigABC):
 
 
 class cVAE(moduleABC):
+    """
+    Conditional variational autoencoder module.
+
+    Parameters
+    ----------
+    config : cVAEConfig
+        Configuration object.
+    input_shape : np.ndarray
+        Shape of input data.
+    output_shape : np.ndarray or None
+        Shape of output data.
+    added_features_dim : int or None
+        Additional feature dimension.
+    """
+
     def __init__(
         self,
         config: cVAEConfig,
@@ -124,6 +208,27 @@ class cVAE(moduleABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
+        """
+        Initialize cVAE module and underlying model.
+
+        Parameters
+        ----------
+        config : cVAEConfig
+            Configuration instance.
+        input_shape : np.ndarray
+            Input shape.
+        output_shape : np.ndarray or None
+            Output shape.
+        added_features_dim : int or None
+            Additional feature dimension.
+
+        Raises
+        ------
+        AssertionError
+            If `min_posterior_variance` is non-positive.
+        RuntimeError
+            If checkpoint metadata or shapes are inconsistent.
+        """
 
         super().__init__()
         self.config = config
@@ -193,6 +298,23 @@ class cVAE(moduleABC):
             self._load_state_dict(self.config.load_dir)
 
     def init_loss_function(self, reconstruction_loss: Losspipeline):
+        """
+        Initialize reconstruction and KL divergence losses.
+
+        Parameters
+        ----------
+        reconstruction_loss : Losspipeline
+            Loss pipeline instance.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RuntimeError
+            If flow is used and reduction is not 'sum'.
+        """
 
         if self.prior_flow_config is not None:
             if reconstruction_loss.reduction.lower() != "sum":
@@ -204,6 +326,26 @@ class cVAE(moduleABC):
         self.KLD = KLD(reduction=self.criterion.reduction)
 
     def _compute_loss(self, beta: float, data: BatchData):
+        """
+        Compute total training loss.
+
+        Parameters
+        ----------
+        beta : float
+            Weight applied to KL divergence term.
+        data : BatchData
+            Input batch.
+
+        Returns
+        -------
+        tuple
+            Total loss tensor and dictionary of loss terms.
+
+        Raises
+        ------
+        RuntimeError
+            If loss function is not initialized.
+        """
 
         if self.criterion is None:
             raise RuntimeError(
@@ -221,9 +363,8 @@ class cVAE(moduleABC):
             target_mask = target_mask.unsqueeze(0).expand_as(output.output)
         target = target.unsqueeze(0).expand_as(output.output)
 
-
         generator = self.model_config.GENERATOR
-        step_arguments = {"generative_modeling": True, "generator" : generator}
+        step_arguments = {"generative_modeling": True, "generator": generator}
 
         reconstruction_loss, indiv_losses = self.criterion(
             output.output,
@@ -267,6 +408,21 @@ class cVAE(moduleABC):
         return total_loss, losses_dict
 
     def forward(self, data: BatchData, sample_size=1) -> cVAEOutput:
+        """
+        Perform forward pass.
+
+        Parameters
+        ----------
+        data : BatchData
+            Input batch.
+        sample_size : int, optional
+            Number of latent samples.
+
+        Returns
+        -------
+        cVAEOutput
+            Model outputs.
+        """
 
         return self.model(
             x=data.target,
@@ -277,6 +433,21 @@ class cVAE(moduleABC):
         )
 
     def predict(self, data: BatchData, sample_size=1) -> cVAEOutput:
+        """
+        Generate predictions using the learned prior.
+
+        Parameters
+        ----------
+        data : BatchData
+            Input batch.
+        sample_size : int, optional
+            Number of samples to generate.
+
+        Returns
+        -------
+        cVAEOutput
+            Generated outputs.
+        """
 
         return self.model.predict(
             condition=data.input,

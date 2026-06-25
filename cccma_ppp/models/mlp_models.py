@@ -1,3 +1,4 @@
+from __future__ import annotations
 import torch
 import torch.nn as nn
 import numpy as np
@@ -10,7 +11,7 @@ from cccma_ppp.models.models_abc import (
     deterministicmodelsABC,
     modelConfigABC,
     cVAEmodelConfigABC,
-    InitMethod
+    InitMethod,
 )
 from cccma_ppp.core.selectors import deterministicModelSelector, cVAEModelSelector
 from cccma_ppp.models.normalized_flows import NormalizedFlowModel
@@ -20,9 +21,37 @@ from cccma_ppp.generic import RuntimeContext
 
 AppendMode = Literal[1, 2, 3]
 
+
 @cVAEModelSelector.register("mlp")
 @dataclasses.dataclass
 class cVAE_MLPConfig(cVAEmodelConfigABC):
+    """
+    Configuration for MLP-based conditional variational autoencoder (cVAE).
+
+    Parameters
+    ----------
+    encoder_hidden_dims : list of int
+        Hidden layer sizes for encoder network.
+    latent_size : int
+        Dimensionality of latent space.
+    decoder_hidden_dims : list of int or None, optional
+        Hidden layer sizes for decoder network.
+    condition_embedding_dims : list of int or None, optional
+        Hidden layer sizes for condition embedding network.
+    condition_embedding_size : int or None, optional
+        Output size of condition embedding.
+    condition_dependant_latent : bool, optional
+        Whether latent distribution depends on condition.
+    condemb_to_decoder : bool, optional
+        Whether to pass condition embedding to decoder.
+    batch_normalization : bool, optional
+        Whether to use batch normalization.
+    dropout_rate : float or None, optional
+        Dropout probability.
+    init_method : InitMethod, optional
+        Weight initialization method.
+    """
+
     encoder_hidden_dims: list
     latent_size: int
     decoder_hidden_dims: list = None
@@ -38,6 +67,23 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     GENERATOR: ClassVar[int] = False
 
     def __post_init__(self):
+        """
+        Validate and finalize cVAE configuration.
+
+        Initializes parent configuration, sets default decoder and
+        conditioning behavior, and validates parameter consistency.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If dropout rate is outside [0, 1].
+        ValueError
+            If conditioning configuration is inconsistent with latent setup.
+        """
 
         if self.condition_embedding_dims is None:
             self.condemb_to_decoder = False
@@ -65,6 +111,23 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
+        """
+        Build cVAE MLP model instance.
+
+        Parameters
+        ----------
+        input_shape : np.ndarray
+            Input tensor shape.
+        output_shape : np.ndarray or None, optional
+            Output tensor shape.
+        added_features_dim : int or None, optional
+            Number of additional features.
+
+        Returns
+        -------
+        cVAE_MLP
+            Instantiated model.
+        """
 
         return cVAE_MLP(
             config=self,
@@ -75,6 +138,21 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
 
 
 class cVAE_MLP(cVAEmodelsABC):
+    """
+    MLP-based conditional variational autoencoder (cVAE).
+
+    Parameters
+    ----------
+    config : cVAE_MLPConfig
+        Model configuration.
+    input_shape : np.ndarray
+        Input tensor shape.
+    output_shape : np.ndarray or None
+        Output tensor shape.
+    added_features_dim : int or None
+        Number of additional input features.
+    """
+
     def __init__(
         self,
         config: cVAE_MLPConfig,
@@ -82,6 +160,26 @@ class cVAE_MLP(cVAEmodelsABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
+        """
+        Initialize cVAE MLP model.
+
+        Parameters
+        ----------
+        config : cVAE_MLPConfig
+            Model configuration.
+        input_shape : np.ndarray
+            Input shape.
+        output_shape : np.ndarray or None
+            Output shape.
+        added_features_dim : int or None
+            Number of additional features.
+
+        Raises
+        ------
+        RuntimeError
+            If shapes do not match expected dimensions or checkpoint.
+        """
+
         super().__init__()
 
         self.config = config
@@ -103,7 +201,9 @@ class cVAE_MLP(cVAEmodelsABC):
         )
 
         if not len(output_shape) == self.config.NUM_OUTPUT_DIMS:
-            raise RuntimeError(f"MLP models should create {self.config.NUM_OUTPUT_DIMS}D outputs")
+            raise RuntimeError(
+                f"MLP models should create {self.config.NUM_OUTPUT_DIMS}D outputs"
+            )
         if output_shape is None:
             output_shape = input_shape.copy()
 
@@ -229,9 +329,31 @@ class cVAE_MLP(cVAEmodelsABC):
         sample_size=1,
         min_posterior_variance=None,
     ) -> cVAEOutput:
+        """
+        Perform forward pass through cVAE.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor.
+        added_features : torch.Tensor or None, optional
+            Additional conditioning features.
+        condition : torch.Tensor or None, optional
+            Conditioning input.
+        sample_size : int, optional
+            Number of latent samples.
+        min_posterior_variance : torch.Tensor or None, optional
+            Minimum variance constraint.
+
+        Returns
+        -------
+        cVAEOutput
+            Output containing predictions, latent parameters,
+            and optional conditioning statistics.
+        """
 
         x_in = x[0] if isinstance(x, (tuple, list)) else x
-        self._shape_model_output = x_in.shape ##cVAE autoencodes the input
+        self._shape_model_output = x_in.shape
 
         del x_in
 
@@ -275,6 +397,25 @@ class cVAE_MLP(cVAEmodelsABC):
         prior_flow: NormalizedFlowModel | None = None,
         sample_size=1,
     ) -> cVAEOutput:
+        """
+        Generate samples from learned prior.
+
+        Parameters
+        ----------
+        condition : torch.Tensor or None
+            Conditioning input.
+        added_features : torch.Tensor or None
+            Additional features.
+        prior_flow : NormalizedFlowModel or None
+            Optional flow-based prior.
+        sample_size : int, optional
+            Number of samples.
+
+        Returns
+        -------
+        cVAEOutput
+            Generated samples and conditioning outputs.
+        """
 
         cond_in = condition[0] if isinstance(condition, (tuple, list)) else condition
         B, C = cond_in.shape[:2]
@@ -324,6 +465,22 @@ class cVAE_MLP(cVAEmodelsABC):
         condition: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
+        """
+        Encode input into latent distribution parameters.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor.
+        condition : torch.Tensor or None
+            Conditioning embedding.
+        added_features : torch.Tensor or None
+
+        Returns
+        -------
+        tuple of torch.Tensor
+            (mu, log_var)
+        """
 
         if isinstance(x, (tuple, list)):
             x_in, x_mask = x
@@ -357,6 +514,19 @@ class cVAE_MLP(cVAEmodelsABC):
         condition: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
+        """
+        Compute condition embedding.
+
+        Parameters
+        ----------
+        condition : torch.Tensor or None
+        added_features : torch.Tensor or None
+
+        Returns
+        -------
+        tuple
+            (cond_mu, cond_log_var)
+        """
 
         if self.condition_embedding_dims is not None:
             if added_features is not None:
@@ -396,6 +566,20 @@ class cVAE_MLP(cVAEmodelsABC):
         condition: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> torch.Tensor:
+        """
+        Decode latent samples into output space.
+
+        Parameters
+        ----------
+        latent_samples : torch.Tensor
+        condition : torch.Tensor or None
+        added_features : torch.Tensor or None
+
+        Returns
+        -------
+        torch.Tensor
+            Decoded outputs.
+        """
 
         sample_size, batch_size = latent_samples.shape[:-1]
 
@@ -430,6 +614,21 @@ class cVAE_MLP(cVAEmodelsABC):
         return out.reshape(sample_size, batch_size, -1)
 
     def _sample(self, mu, log_var, sample_size=1, std=1):
+        """
+        Sample latent variables from Gaussian distribution.
+
+        Parameters
+        ----------
+        mu : torch.Tensor
+        log_var : torch.Tensor
+        sample_size : int, optional
+        std : float, optional
+
+        Returns
+        -------
+        torch.Tensor
+            Sampled latent variables.
+        """
 
         var = torch.exp(log_var) + 1e-4
         out = mu + torch.sqrt(var) * self._get_normal(var, std).sample((sample_size,))
@@ -437,6 +636,19 @@ class cVAE_MLP(cVAEmodelsABC):
         return out
 
     def _get_normal(self, ref_tensor, std=1):
+        """
+        Create standard normal distribution.
+
+        Parameters
+        ----------
+        ref_tensor : torch.Tensor
+        std : float, optional
+
+        Returns
+        -------
+        torch.distributions.Normal
+        """
+
         return torch.distributions.Normal(
             torch.zeros_like(ref_tensor), torch.ones_like(ref_tensor) * std
         )
@@ -445,6 +657,28 @@ class cVAE_MLP(cVAEmodelsABC):
 @deterministicModelSelector.register("mlp")
 @dataclasses.dataclass
 class AutoencoderConfig(modelConfigABC):
+    """
+    Configuration for MLP-based deterministic autoencoder.
+
+    Parameters
+    ----------
+    encoder_hidden_dims : list of int
+        Hidden layer sizes for encoder.
+    decoder_hidden_dims : list of int or None, optional
+        Hidden layer sizes for decoder.
+    batch_normalization : bool, optional
+        Whether to use batch normalization.
+    dropout_rate : float or None, optional
+        Dropout probability.
+    append_mode : {1, 2, 3}, optional
+        Determines where additional features are appended:
+        1 = encoder input,
+        2 = decoder input,
+        3 = both encoder and decoder.
+    init_method : InitMethod, optional
+        Weight initialization method.
+    """
+
     encoder_hidden_dims: list
     decoder_hidden_dims: list = None
     batch_normalization: bool = False
@@ -456,6 +690,15 @@ class AutoencoderConfig(modelConfigABC):
     GENERATOR: ClassVar[int] = False
 
     def __post_init__(self):
+        """
+        Initialize decoder dimensions.
+
+        Automatically mirrors encoder dimensions if not provided.
+
+        Returns
+        -------
+        None
+        """
 
         if self.decoder_hidden_dims is None:
             if len(self.encoder_hidden_dims) == 1:
@@ -469,6 +712,23 @@ class AutoencoderConfig(modelConfigABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
+        """
+        Build autoencoder model instance.
+
+        Parameters
+        ----------
+        input_shape : np.ndarray
+            Input tensor shape.
+        output_shape : np.ndarray or None, optional
+            Output tensor shape.
+        added_features_dim : int or None, optional
+            Number of additional features.
+
+        Returns
+        -------
+        Autoencoder
+            Instantiated model.
+        """
 
         return Autoencoder(
             config=self,
@@ -479,6 +739,24 @@ class AutoencoderConfig(modelConfigABC):
 
 
 class Autoencoder(deterministicmodelsABC):
+    """
+    Deterministic MLP-based autoencoder.
+
+    Implements encoder-decoder architecture with optional feature
+    concatenation and regularization.
+
+    Parameters
+    ----------
+    config : AutoencoderConfig
+        Model configuration.
+    input_shape : np.ndarray
+        Input tensor shape.
+    output_shape : np.ndarray or None
+        Output tensor shape.
+    added_features_dim : int or None
+        Number of additional features.
+    """
+
     def __init__(
         self,
         config: AutoencoderConfig,
@@ -486,6 +764,26 @@ class Autoencoder(deterministicmodelsABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
+        """
+        Initialize autoencoder model.
+
+        Parameters
+        ----------
+        config : AutoencoderConfig
+            Model configuration.
+        input_shape : np.ndarray
+            Input shape.
+        output_shape : np.ndarray or None
+            Output shape.
+        added_features_dim : int or None
+            Number of additional features.
+
+        Raises
+        ------
+        RuntimeError
+            If shape or metadata mismatches occur.
+        """
+
         super().__init__()
 
         self.config = config
@@ -498,7 +796,9 @@ class Autoencoder(deterministicmodelsABC):
         self.decoder_hidden_dims = config.decoder_hidden_dims
 
         if not len(output_shape) == self.config.NUM_OUTPUT_DIMS:
-            raise RuntimeError(f"MLP models should create {self.config.NUM_OUTPUT_DIMS}D outputs")
+            raise RuntimeError(
+                f"MLP models should create {self.config.NUM_OUTPUT_DIMS}D outputs"
+            )
 
         if output_shape is None:
             output_shape = input_shape.copy()
@@ -585,6 +885,21 @@ class Autoencoder(deterministicmodelsABC):
             self._initialize_weights(self.init_method)
 
     def forward(self, x: torch.Tensor, added_features=None) -> deterministicOutput:
+        """
+        Forward pass through the encoder/decoder.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor.
+        added_features : torch.Tensor or None, optional
+            Additional features appended depending on append mode.
+
+        Returns
+        -------
+        deterministicOutput
+            Reconstructed output tensor.
+        """
 
         if isinstance(x, (tuple, list)):
             x_in, x_mask = x

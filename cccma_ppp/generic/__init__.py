@@ -1,3 +1,4 @@
+from __future__ import annotations
 from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.logger import logging, setup_logger

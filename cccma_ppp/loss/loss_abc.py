@@ -1,25 +1,28 @@
+from __future__ import annotations
 import abc
 import torch
 import torch.nn as nn
 from typing import Literal
 
 
-Reduction = Literal['mean', 'sum']
+Reduction = Literal["mean", "sum"]
 
 
 class lossABC(nn.Module, abc.ABC):
-
     """
-    Abstract base class defining the interface for loss functions.
+    Abstract base class for loss functions.
+
+    Defines the interface for computing loss, applying reductions,
+    and optionally printing loss values.
 
     Methods
     -------
-    forward(data, target, generative_modeling=False, generator=False, print_loss=False)
-        Compute loss between predictions and targets.
-    _print_loss(loss)
-        Print formatted loss values.
+    forward(data, target, generative_modeling, generator, print_loss)
+        Compute loss.
     _aggregate(loss)
-        Reduce raw loss values into a final scalar.
+        Apply reduction to loss values.
+    _print_loss(loss)
+        Print formatted loss value.
     """
 
     @abc.abstractmethod
@@ -32,21 +35,20 @@ class lossABC(nn.Module, abc.ABC):
         print_loss=False,
     ) -> torch.Tensor:
         """
-        Compute loss between model outputs and targets.
+        Compute loss between predictions and targets.
 
         Parameters
         ----------
         data : torch.Tensor
-            Model predictions or outputs.
+            Model predictions.
         target : torch.Tensor
             Ground truth targets.
         generative_modeling : bool, optional
-            Whether the loss is computed in a generative modeling setting
-            (e.g., multiple samples/ensembles).
+            Whether loss is used in a generative modeling context.
         generator : bool, optional
-            Whether the loss is computed for a generator component.
+            Indicates if generator-specific behavior is applied.
         print_loss : bool, optional
-            Whether to print loss values.
+            Whether to print the loss value.
 
         Returns
         -------
@@ -58,36 +60,29 @@ class lossABC(nn.Module, abc.ABC):
 
     @abc.abstractmethod
     def _print_loss(self, loss):
-
         """
-        Print formatted loss value.
+        Print loss value.
 
         Parameters
         ----------
         loss : torch.Tensor
-            Loss value to display.
-
-        Returns
-        -------
-        None
         """
+
         pass
 
     @abc.abstractmethod
     def _aggregate(self, loss) -> torch.Tensor:
-
         """
-        Aggregate raw loss values.
+        Apply reduction to loss values.
 
         Parameters
         ----------
         loss : torch.Tensor
-            Element-wise loss values.
 
         Returns
         -------
         torch.Tensor
-            Aggregated loss according to reduction method.
+            Reduced loss.
         """
-        
+
         pass

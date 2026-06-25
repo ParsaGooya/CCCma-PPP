@@ -1,0 +1,565 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cccma_ppp.generic.aggregator &mdash; CCCma PPP  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=18aa9b61" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            CCCma PPP
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CCCma PPP</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">cccma_ppp.generic.aggregator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cccma_ppp.generic.aggregator</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Distributed</span><span class="p">,</span> <span class="n">RuntimeContext</span>
+
+
+<div class="viewcode-block" id="MetricsAggregator">
+<a class="viewcode-back" href="../../../cccma_ppp.generic.html#cccma_ppp.generic.aggregator.MetricsAggregator">[docs]</a>
+<span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MetricsAggregator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Aggregate training and validation metrics across batches and epochs.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    distributed : Distributed</span>
+<span class="sd">        Distributed training context.</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Name of the aggregator (e.g., &quot;Train&quot;, &quot;Validation&quot;).</span>
+<span class="sd">    epoch_loss_terms : dict of str to list of float, optional</span>
+<span class="sd">        Stored loss values per epoch.</span>
+<span class="sd">    epoch_times : list of float, optional</span>
+<span class="sd">        Time per epoch.</span>
+<span class="sd">    num_epochs_seen : int, optional</span>
+<span class="sd">        Number of processed epochs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">distributed</span><span class="p">:</span> <span class="n">Distributed</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="n">epoch_loss_terms</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">epoch_times</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">num_epochs_seen</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize internal state for batch and epoch aggregation.</span>
+
+<span class="sd">        Validates consistency of stored epoch history and initializes</span>
+<span class="sd">        batch-level accumulators.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AssertionError</span>
+<span class="sd">            If epoch loss lists have inconsistent lengths.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_terms</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_batches_seen</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">epochs_submitted</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_aggregated_across_ranks</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">lengths</span> <span class="o">=</span> <span class="p">{</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span><span class="o">.</span><span class="n">values</span><span class="p">()}</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Not all loss lists have the same length: </span><span class="si">{</span><span class="n">lengths</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs_seen</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs_seen</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">lengths</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_times</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="p">(</span>
+                <span class="s2">&quot;must specify corresponding loss terms.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">epoch_times</span><span class="p">)</span> <span class="o">==</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">lengths</span><span class="p">),</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span>
+                <span class="s2">&quot;length of epoch_times is inconsistent with epoch_loss_terms.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">epoch_times</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="MetricsAggregator.record">
+<a class="viewcode-back" href="../../../cccma_ppp.generic.html#cccma_ppp.generic.aggregator.MetricsAggregator.record">[docs]</a>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Accumulate batch-level loss values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        loss_dict : dict of str to Tensor or float</span>
+<span class="sd">            Loss components for a batch.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">loss_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">loss_terms</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_batches_seen</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_dist_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute distributed average of accumulated loss terms.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict of str to float</span>
+<span class="sd">            Dictionary mapping each loss term name to its</span>
+<span class="sd">            globally averaged value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logs</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_terms</span><span class="p">):</span>
+            <span class="n">local</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_terms</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_batches_seen</span><span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">all_reduce_sum</span><span class="p">(</span><span class="n">local</span><span class="p">)</span>
+
+            <span class="n">global_sum</span> <span class="o">=</span> <span class="n">local</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="n">global_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">local</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+
+            <span class="k">if</span> <span class="n">global_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">logs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;nan&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">global_sum</span> <span class="o">/</span> <span class="n">global_count</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_aggregated_across_ranks</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">logs</span>
+
+<div class="viewcode-block" id="MetricsAggregator.record_epoch">
+<a class="viewcode-back" href="../../../cccma_ppp.generic.html#cccma_ppp.generic.aggregator.MetricsAggregator.record_epoch">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">record_epoch</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">logs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">replace_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">time_elapsed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Record aggregated metrics for an epoch.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        logs : dict of str to float</span>
+<span class="sd">            Aggregated loss values.</span>
+<span class="sd">        replace_index : int or None, optional</span>
+<span class="sd">            Index to overwrite existing epoch values.</span>
+<span class="sd">        time_elapsed : float or None, optional</span>
+<span class="sd">            Time taken for the epoch.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Recorded logs.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        RuntimeError</span>
+<span class="sd">            If distributed aggregation has not been performed.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If attempting to replace a non-existing metric.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregated_across_ranks</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Call _dist_compute() before record_epoch(), so losses are &quot;</span>
+                <span class="s2">&quot;synchronized across all ranks.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">replace_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">logs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">epoch_times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">time_elapsed</span> <span class="k">if</span> <span class="n">time_elapsed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs_seen</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">logs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Cannot replace metric </span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2">; it was not previously recorded.&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">replace_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">epoch_times</span><span class="p">[</span><span class="n">replace_index</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">time_elapsed</span> <span class="k">if</span> <span class="n">time_elapsed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">epochs_submitted</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_batch_losses</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">logs</span></div>
+
+
+<div class="viewcode-block" id="MetricsAggregator.reset_batch_losses">
+<a class="viewcode-back" href="../../../cccma_ppp.generic.html#cccma_ppp.generic.aggregator.MetricsAggregator.reset_batch_losses">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_batch_losses</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reset batch-level accumulators.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Warns</span>
+<span class="sd">        -----</span>
+<span class="sd">        If called before any epoch has been recorded.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">epochs_submitted</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loss_terms</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_batches_seen</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_aggregated_across_ranks</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> you are resetting batch losses before submitting any epochs. </span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MetricsAggregator.plot">
+<a class="viewcode-back" href="../../../cccma_ppp.generic.html#cccma_ppp.generic.aggregator.MetricsAggregator.plot">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">aggregator_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">&quot;MetricsAggregator&quot;</span><span class="p">],</span>
+        <span class="n">color_styles_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">plot_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot loss curves and epoch times.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        aggregator_list : list of MetricsAggregator</span>
+<span class="sd">            Aggregators to plot.</span>
+<span class="sd">        color_styles_list : list of (str, str), optional</span>
+<span class="sd">            Custom color and linestyle pairs.</span>
+<span class="sd">        plot_dir : Path or str or None, optional</span>
+<span class="sd">            Directory for saving plots.</span>
+<span class="sd">        figsize : tuple, optional</span>
+<span class="sd">            Figure size.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If aggregators are inconsistent or contain no data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">plot_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plot_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">RuntimeContext</span><span class="o">.</span><span class="n">GLOBAL_FIGURES_DIR</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plot_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">plot_dir</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">aggregator_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Specify at least one aggregator.&quot;</span><span class="p">)</span>
+
+        <span class="n">num_epochs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">aggregator</span><span class="o">.</span><span class="n">num_epochs_seen</span>
+            <span class="k">for</span> <span class="n">aggregator</span> <span class="ow">in</span> <span class="n">aggregator_list</span>
+            <span class="k">if</span> <span class="n">aggregator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;All aggregators must have recorded the same number of epochs.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">num_epochs</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">num_epochs</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No epochs have been recorded yet.&quot;</span><span class="p">)</span>
+
+        <span class="n">loss_lengths</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">aggregator</span><span class="o">.</span><span class="n">epoch_loss_terms</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">aggregator</span> <span class="ow">in</span> <span class="n">aggregator_list</span>
+            <span class="k">if</span> <span class="n">aggregator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">loss_lengths</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;All aggregators must have the same number of epoch items.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">loss_lengths</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">loss_lengths</span><span class="p">))</span>
+
+        <span class="n">loss_kinds</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">epochs_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_epochs</span> <span class="o">-</span> <span class="n">loss_lengths</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">num_epochs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">()</span>
+        <span class="n">random_colors</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;tab:green&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tab:blue&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tab:orange&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tab:red&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tab:purple&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tab:brown&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tab:gray&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tab:olive&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tab:cyan&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">random_linestyles</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;solid&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;dashed&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;dashdot&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;dotted&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="n">style_by_name</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">aggregator</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">aggregator_list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">aggregator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">loss_kinds</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">aggregator</span><span class="o">.</span><span class="n">epoch_loss_terms</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+
+                <span class="k">if</span> <span class="n">color_styles_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s2">&quot;train&quot;</span> <span class="ow">in</span> <span class="n">aggregator</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                        <span class="n">style_by_name</span><span class="p">[</span><span class="n">aggregator</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;tab:blue&quot;</span><span class="p">,</span> <span class="s2">&quot;solid&quot;</span><span class="p">)</span>
+                        <span class="n">random_linestyles</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;solid&quot;</span><span class="p">)</span>
+                        <span class="n">random_colors</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;tab:blue&quot;</span><span class="p">)</span>
+
+                    <span class="k">elif</span> <span class="s2">&quot;val&quot;</span> <span class="ow">in</span> <span class="n">aggregator</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                        <span class="n">style_by_name</span><span class="p">[</span><span class="n">aggregator</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;tab:orange&quot;</span><span class="p">,</span> <span class="s2">&quot;dashed&quot;</span><span class="p">)</span>
+                        <span class="n">random_linestyles</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;dashed&quot;</span><span class="p">)</span>
+                        <span class="n">random_colors</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;tab:orange&quot;</span><span class="p">)</span>
+
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">random_color</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">random_colors</span><span class="p">)</span>
+                        <span class="n">random_style</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">random_linestyles</span><span class="p">)</span>
+                        <span class="n">style_by_name</span><span class="p">[</span><span class="n">aggregator</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">random_color</span><span class="p">,</span> <span class="n">random_style</span><span class="p">)</span>
+                        <span class="n">random_linestyles</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">random_style</span><span class="p">)</span>
+                        <span class="n">random_colors</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">random_color</span><span class="p">)</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">style_by_name</span><span class="p">[</span><span class="n">aggregator</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">color_styles_list</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">loss_name</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">loss_kinds</span><span class="p">):</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">aggregator</span> <span class="ow">in</span> <span class="n">aggregator_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">aggregator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">epoch_losses</span> <span class="o">=</span> <span class="n">aggregator</span><span class="o">.</span><span class="n">epoch_loss_terms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">loss_name</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">epoch_losses</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">continue</span>
+
+                    <span class="n">color</span><span class="p">,</span> <span class="n">style</span> <span class="o">=</span> <span class="n">style_by_name</span><span class="p">[</span><span class="n">aggregator</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+
+                    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                        <span class="n">epochs_range</span><span class="p">,</span>
+                        <span class="n">epoch_losses</span><span class="p">,</span>
+                        <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                        <span class="n">linestyle</span><span class="o">=</span><span class="n">style</span><span class="p">,</span>
+                        <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">aggregator</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Epochs&quot;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">loss_name</span><span class="p">)</span>
+
+            <span class="n">safe_loss_name</span> <span class="o">=</span> <span class="n">loss_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">old_plot</span> <span class="ow">in</span> <span class="n">plot_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;epoch_*_</span><span class="si">{</span><span class="n">safe_loss_name</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">):</span>
+                <span class="n">old_plot</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">plot_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;epoch_</span><span class="si">{</span><span class="n">num_epochs</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">safe_loss_name</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">aggregator</span> <span class="ow">in</span> <span class="n">aggregator_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">aggregator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">epoch_times</span> <span class="o">=</span> <span class="n">aggregator</span><span class="o">.</span><span class="n">epoch_times</span>
+                <span class="n">color</span><span class="p">,</span> <span class="n">style</span> <span class="o">=</span> <span class="n">style_by_name</span><span class="p">[</span><span class="n">aggregator</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">epoch_times</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                    <span class="n">epochs_range</span><span class="p">,</span>
+                    <span class="n">epoch_times</span><span class="p">,</span>
+                    <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                    <span class="n">linestyle</span><span class="o">=</span><span class="n">style</span><span class="p">,</span>
+                    <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">aggregator</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Epochs&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;epoch training times&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">old_plot</span> <span class="ow">in</span> <span class="n">plot_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;epoch_*_times.png&quot;</span><span class="p">):</span>
+            <span class="n">old_plot</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">plot_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;epoch_</span><span class="si">{</span><span class="n">num_epochs</span><span class="si">}</span><span class="s2">_times.png&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="MetricsAggregator.state_dict">
+<a class="viewcode-back" href="../../../cccma_ppp.generic.html#cccma_ppp.generic.aggregator.MetricsAggregator.state_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return serialized aggregator state.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            State dictionary containing history and metadata.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s2">&quot;epoch_loss_terms&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span><span class="p">,</span>
+            <span class="s2">&quot;epoch_times&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_times</span><span class="p">,</span>
+            <span class="s2">&quot;num_epochs_seen&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs_seen</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="MetricsAggregator.load_state_dict">
+<a class="viewcode-back" href="../../../cccma_ppp.generic.html#cccma_ppp.generic.aggregator.MetricsAggregator.load_state_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load aggregator state from dictionary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        state_dict : dict</span>
+<span class="sd">            Stored state.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span> <span class="o">=</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;epoch_loss_terms&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epoch_times</span> <span class="o">=</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;epoch_times&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs_seen</span> <span class="o">=</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;num_epochs_seen&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_batch_losses</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

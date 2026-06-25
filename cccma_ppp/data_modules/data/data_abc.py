@@ -1,3 +1,4 @@
+from __future__ import annotations
 import abc
 from typing import final
 from pathlib import Path
@@ -12,11 +13,28 @@ from cccma_ppp.data_modules.utils import (
     _load_xarray_data,
     _create_train_mask,
 )
-from cccma_ppp.generic import RuntimeContext
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 @dataclasses.dataclass
 class infoclass:
+    """
+    Container for dataset metadata.
+
+    Parameters
+    ----------
+    sizes : dict or None
+        Sizes of non-spatial dataset dimensions.
+    start_year : xr.DataArray or np.ndarray or str or int or None
+        Earliest available year.
+    final_year : xr.DataArray or np.ndarray or str or int or None
+        Latest available year.
+    coords : dict
+        Spatial and ensemble coordinates.
+    spatial_mask : xr.Dataset or None, optional
+        Optional spatial mask.
+    """
+
     sizes: dict | None
     start_year: xr.DataArray | np.ndarray | str | int | None
     final_year: xr.DataArray | np.ndarray | str | int | None
@@ -24,50 +42,121 @@ class infoclass:
     spatial_mask: xr.Dataset = None
 
 
-
 class DataConfigABC(abc.ABC):
+    """
+    Abstract base class for dataset configuration.
+    """
 
     def __init__(self):
+        """
+        Initialize data configuration.
+
+        Ensures preprocessing pipeline exists and assigns its name.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        AttributeError
+            If preprocessing_pipeline is not defined.
+        """
         if not hasattr(self, "preprocessing_pipeline"):
             raise AttributeError(
                 f"{type(self).__name__} must define preprocessing_pipeline"
             )
-        
+
         self.preprocessing_pipeline.set_name(self.TYPE)
 
     @property
     @abc.abstractmethod
     def TYPE(self) -> str:
+        """
+        Type identifier for dataset.
+
+        Returns
+        -------
+        str
+        """
+
         pass
-    
+
     @classmethod
     @abc.abstractmethod
     def _allowed_dims(cls) -> frozenset[str]:
+        """
+        Allowed dataset dimensions.
+
+        Returns
+        -------
+        frozenset of str
+            Set of allowed dataset dimension names.
+        """
         pass
-    
+
     @classmethod
     @abc.abstractmethod
     def _required_dims(cls) -> frozenset[str]:
+        """
+        Required dataset dimensions.
+
+        Returns
+        -------
+        frozenset of str
+        """
         pass
 
     @final
     def _resolve_data(self):
+        """
+        Validate dataset files and structure.
+
+        Returns
+        -------
+        None
+        """
         _resolve_data(self)
 
     @final
     def _get_ds_info(self):
-        return  _get_ds_info(self)
+        """
+        Extract dataset metadata.
+
+        Returns
+        -------
+        infoclass
+        """
+        return _get_ds_info(self)
 
     @final
     def _fit_preprocessor_pipeline(
         self,
         selection: dict,
         mask: bool = False,
-        save: bool =True,
+        save: bool = True,
         save_path: Path | str | None = None,
         save_name: str | None = None,
-        ):
-        
+    ):
+        """
+        Fit preprocessing pipeline on dataset.
+
+        Parameters
+        ----------
+        selection : dict
+            Subset selection for dataset.
+        mask : bool, optional
+            Whether to apply training mask.
+        save : bool, optional
+            Whether to save pipeline.
+        save_path : pathlib.Path or str or None, optional
+        save_name : str or None, optional
+
+        Returns
+        -------
+        None
+        """
+
         _base = _load_xarray_data(
             self.list_paths,
             names=self.names,
@@ -76,7 +165,7 @@ class DataConfigABC(abc.ABC):
             ensemble_mean=self.ensemble_mean,
             rename_dict=self.rename_dict,
         )
-        
+
         _mask = _create_train_mask(_base.year, _base.lead_time) if mask else None
 
         self.preprocessing_pipeline.fit(
@@ -92,17 +181,30 @@ class DataConfigABC(abc.ABC):
         gc.collect()
 
     @final
-    def _load_preprocessor_pipeline(
-        self,
-        load_dir: Path | str | None = None
-        ):
+    def _load_preprocessor_pipeline(self, load_dir: Path | str | None = None):
+        """
+        Load fitted preprocessing pipeline.
 
+        Parameters
+        ----------
+        load_dir : pathlib.Path or str or None
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RuntimeError
+            If loaded pipeline is not fitted.
+        """
         if load_dir is None:
             load_dir = Path(RuntimeContext.GLOBAL_EXP_DIR) / "preprocessing_pipeline"
 
-        load_dir = (Path(load_dir)
-                / f"{self.preprocessing_pipeline.name}_preprocessing_pipeline.joblib"
-            )
+        load_dir = (
+            Path(load_dir)
+            / f"{self.preprocessing_pipeline.name}_preprocessing_pipeline.joblib"
+        )
 
         self.preprocessing_pipeline._load_from_memory(
             Path(load_dir),
@@ -112,10 +214,27 @@ class DataConfigABC(abc.ABC):
             raise RuntimeError(
                 f"the loaded preprocessor for {self.preprocessing_pipeline.name} is not fitted!"
             )
-        
 
 
 def _resolve_data(dataconfig: DataConfigABC) -> None:
+    """
+    Validate dataset files and dimensions.
+
+    Parameters
+    ----------
+    dataconfig : DataConfigABC
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    FileNotFoundError
+        If data files do not exist.
+    ValueError
+        If dataset dimensions or variables are invalid.
+    """
     if not Path(dataconfig.paths).exists():
         raise FileNotFoundError(
             "The following file does not exist:\n" + str(dataconfig.paths)
@@ -143,31 +262,42 @@ def _resolve_data(dataconfig: DataConfigABC) -> None:
                 )
 
             if dataconfig._check_ensemble:
-                if not "ensembles" in ds.dims:
+                if "ensembles" not in ds.dims:
                     raise ValueError(
                         f"Cannot select ensemble_list as ensembles dim does not exist in {p}"
                     )
 
-            invalid = ds_dims - dataconfig._allowed_dims() 
+            invalid = ds_dims - dataconfig._allowed_dims()
             if invalid:
                 raise ValueError(
-                    f'invalid data dimensions {sorted(ds_dims)} for {dataconfig.TYPE} data. Must be a subset ot {sorted(dataconfig._allowed_dims())} for {p}'
+                    f"invalid data dimensions {sorted(ds_dims)} for {dataconfig.TYPE} data. Must be a subset ot {sorted(dataconfig._allowed_dims())} for {p}"
                 )
             invalid = ds_dims - set(ds.coords.keys())
             if invalid:
                 raise ValueError(
                     f'"coordinates for {sorted(ds_dims)} does not exist. Available coords: {sorted(set(ds.coords.keys()))} for {p}'
-                    )
+                )
 
             missing = [name for name in dataconfig.names if name not in ds.data_vars]
             if missing:
                 raise ValueError(f"{p} is missing variables: {missing}")
-            
+
     dataconfig.list_paths = list_paths
 
 
-
 def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
+    """
+    Extract dataset metadata information.
+
+    Parameters
+    ----------
+    dataconfig : DataConfigABC
+
+    Returns
+    -------
+    infoclass
+        Metadata describing dataset dimensions and coordinates.
+    """
     if getattr(dataconfig, "list_paths", None) is None:
         list_paths = glob.glob(
             str(Path(dataconfig.paths).joinpath(dataconfig.file_type))
@@ -208,4 +338,3 @@ def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
     return infoclass(
         start_year=start_year, final_year=final_year, sizes=sizes, coords=coords
     )
-

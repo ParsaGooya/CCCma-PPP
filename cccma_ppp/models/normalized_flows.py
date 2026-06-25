@@ -1,3 +1,4 @@
+from __future__ import annotations
 import torch
 import torch.nn as nn
 import torch.nn.init as init
@@ -11,16 +12,52 @@ from cccma_ppp.core.selectors import FlowSelector
 
 @dataclasses.dataclass
 class flowOutput:
+    """
+    Output container for flow transformations.
+
+    Parameters
+    ----------
+    e_samples : torch.Tensor
+        Transformed samples.
+    log_det : torch.Tensor
+        Log-determinant of the Jacobian.
+    """
+
     e_samples: torch.Tensor
     log_det: torch.Tensor
 
 
 @dataclasses.dataclass
 class NormalizedFlowConfig:
+    """
+    Configuration for a composed normalizing flow model.
+
+    Parameters
+    ----------
+    list_flows : list of FlowSelector
+        Sequence of flow components.
+    flow_sample_size : int, optional
+        Number of samples used for Monte Carlo estimates.
+    """
+
     list_flows: list[FlowSelector]
     flow_sample_size: int = 5000
 
     def build(self, latent_size: int, condition_size: int = None):
+        """
+        Construct normalized flow model.
+
+        Parameters
+        ----------
+        latent_size : int
+            Dimensionality of latent space.
+        condition_size : int or None, optional
+            Conditioning feature size.
+
+        Returns
+        -------
+        NormalizedFlowModel
+        """
 
         return NormalizedFlowModel(
             config=self, latent_size=latent_size, condition_size=condition_size
@@ -28,9 +65,22 @@ class NormalizedFlowConfig:
 
 
 class NormalizedFlowModel(flowABC):
+    """
+    Composed normalizing flow model.
+    """
+
     def __init__(
         self, config: NormalizedFlowConfig, latent_size, condition_size: int = None
     ):
+        """
+        Initialize normalized flow model.
+
+        Parameters
+        ----------
+        config : NormalizedFlowConfig
+        latent_size : int
+        condition_size : int or None, optional
+        """
 
         super().__init__()
 
@@ -51,6 +101,21 @@ class NormalizedFlowModel(flowABC):
         self.flows = nn.ModuleList(self.flows)
 
     def forward(self, x, condition=None):
+        """
+        Apply forward transformation through all flow steps.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input samples.
+        condition : torch.Tensor or None, optional
+            Conditioning input.
+
+        Returns
+        -------
+        flowOutput
+            Transformed samples and log-determinant.
+        """
 
         bsz, _ = x.shape
         log_det = torch.zeros(bsz, device=x.device)
@@ -61,6 +126,21 @@ class NormalizedFlowModel(flowABC):
         return flowOutput(e_samples=x, log_det=log_det)
 
     def inverse(self, z, condition=None):
+        """
+        Apply inverse transformation through all flow steps.
+
+        Parameters
+        ----------
+        z : torch.Tensor
+            Latent samples.
+        condition : torch.Tensor or None, optional
+
+        Returns
+        -------
+        flowOutput
+            Reconstructed samples and log-determinant.
+        """
+
         bsz, _ = z.shape
         log_det = torch.zeros(bsz, device=z.device)
         for flow in self.flows[::-1]:
@@ -72,7 +152,28 @@ class NormalizedFlowModel(flowABC):
 
 
 class FCNN(nn.Module):
+    """
+    Fully connected neural network used in flow components.
+
+    Parameters
+    ----------
+    in_dim : int
+        Input dimension.
+    out_dim : int
+        Output dimension.
+    hidden_dim : int
+        Hidden layer size.
+    """
+
     def __init__(self, in_dim, out_dim, hidden_dim):
+        """
+        Initialize feedforward network.
+
+        Returns
+        -------
+        None
+        """
+
         super().__init__()
         self.network = nn.Sequential(
             nn.Linear(in_dim, hidden_dim),
@@ -83,26 +184,60 @@ class FCNN(nn.Module):
         )
 
     def forward(self, x):
+        """
+        Compute forward pass.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+
+        Returns
+        -------
+        torch.Tensor
+        """
+
         return self.network(x)
 
 
 @FlowSelector.register("maf")
 class MAF(flowABC):
     """
-    Masked auto-regressive flow.
-
-    [Papamakarios et al. 2018]
+    Masked autoregressive flow (MAF).
     """
+
     def __init__(
         self,
         hidden_dim=16,
         base_network=FCNN,
     ):
+        """
+        Initialize MAF.
+
+        Parameters
+        ----------
+        hidden_dim : int, optional
+        base_network : callable, optional
+        """
+
         super().__init__()
         self.hidden_dim = hidden_dim
         self.base_network = base_network
 
     def build(self, dim, condition_size=None):
+        """
+        Build MAF layers.
+
+        Parameters
+        ----------
+        dim : int
+            Input dimensionality.
+        condition_size : int or None, optional
+
+        Returns
+        -------
+        self
+        """
+
         self.dim = dim
 
         layers = []
@@ -121,9 +256,33 @@ class MAF(flowABC):
         return self
 
     def reset_parameters(self):
+        """
+        Initialize learnable parameters.
+
+        Returns
+        -------
+        None
+        """
+
         init.uniform_(self.initial_param, -math.sqrt(0.5), math.sqrt(0.5))
 
     def forward(self, x, condition=None):
+        """
+        Progressive forward transformation.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor.
+        condition : torch.Tensor or None, optional
+            Conditioning input.
+
+        Returns
+        -------
+        tuple
+            (z, log_det)
+        """
+
         z = torch.zeros_like(x)
         log_det = torch.zeros(z.shape[0], device=x.device)
         for i in range(self.dim):
@@ -146,6 +305,20 @@ class MAF(flowABC):
         return z.flip(dims=(1,)), log_det
 
     def inverse(self, z, condition=None):
+        """
+        Apply autoregressive inverse transformation.
+
+        Parameters
+        ----------
+        z : torch.Tensor
+        condition : torch.Tensor or None, optional
+
+        Returns
+        -------
+        tuple
+            (x, log_det)
+        """
+
         x = torch.zeros_like(z)
         log_det = torch.zeros(z.shape[0], device=z.device)
         z = z.flip(dims=(1,))
@@ -172,16 +345,34 @@ class MAF(flowABC):
 @FlowSelector.register("realnvp")
 class RealNVP(flowABC):
     """
-    Non-volume preserving flow.
-
-    [Dinh et. al. 2017]
+    Real-valued non-volume preserving (RealNVP) flow.
     """
+
     def __init__(self, hidden_dim=16, base_network=FCNN):
+        """
+        Initialize RealNVP.
+
+        Parameters
+        ----------
+        hidden_dim : int, optional
+        base_network : callable, optional
+        """
+
         super().__init__()
         self.hidden_dim = hidden_dim
         self.base_network = base_network
 
     def build(self, dim, condition_size=None):
+        """
+        Build coupling layers.
+
+        Parameters
+        ----------
+        dim : int
+        condition_size : int or None, optional
+
+        Returns
+        """
 
         self.dim = dim
         added_features = condition_size if condition_size is not None else 0
@@ -201,6 +392,20 @@ class RealNVP(flowABC):
         return self
 
     def forward(self, x, condition=None):
+        """
+        Apply forward coupling transformations.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+        condition : torch.Tensor or None, optional
+
+        Returns
+        -------
+        tuple
+            (z, log_det)
+        """
+
         lower, upper = x[:, : self.dim // 2].clone(), x[:, self.dim // 2 :].clone()
         if condition is not None:
             t1_transformed = self.t1(torch.cat([lower, condition], dim=-1))
@@ -222,6 +427,20 @@ class RealNVP(flowABC):
         return z, log_det
 
     def inverse(self, z, condition=None):
+        """
+        Apply inverse coupling transformations.
+
+        Parameters
+        ----------
+        z : torch.Tensor
+        condition : torch.Tensor or None, optional
+
+        Returns
+        -------
+        tuple
+            (x, log_det)
+        """
+
         lower, upper = z[:, : self.dim // 2].clone(), z[:, self.dim // 2 :].clone()
         if condition is not None:
             t2_transformed = self.t2(torch.cat([upper, condition], dim=-1))
