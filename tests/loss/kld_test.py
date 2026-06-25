@@ -3,6 +3,7 @@ import torch
 
 
 from dataclasses import dataclass
+from cccma_ppp.loss.kld import BetaAnnealing, KLD
 
 
 @dataclass
@@ -12,9 +13,6 @@ class DummyCvaeOutput:
     log_var: object = None
     cond_mu: object = None
     cond_log_var: object = None
-
-
-from cccma_ppp.loss.kld import BetaAnnealing, KLD
 
 
 def test_beta_no_warmup():

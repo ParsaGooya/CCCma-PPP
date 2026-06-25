@@ -2,6 +2,12 @@ import pytest
 import torch
 import sys
 import types
+from cccma_ppp.data_modules.dataloader import (
+    BatchDataABC,
+    Dataloader,
+    DataloaderConfigABC,
+    Dataset,
+)
 
 fake_dataset_module = types.ModuleType("cccma_ppp.data_modules.dataset")
 
@@ -13,13 +19,6 @@ class DummyDatasetConfigABC:
 fake_dataset_module.DatasetConfigABC = DummyDatasetConfigABC
 
 sys.modules["cccma_ppp.data_modules.dataset"] = fake_dataset_module
-
-from cccma_ppp.data_modules.dataloader import (
-    BatchDataABC,
-    Dataloader,
-    DataloaderConfigABC,
-    Dataset,
-)
 
 
 class DummyBatch(BatchDataABC):

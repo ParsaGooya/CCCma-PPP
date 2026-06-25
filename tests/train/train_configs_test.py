@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import logging
 import numpy as np
+import torch
 from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 from cccma_ppp.train.train_configs import (
     TrainConfig,
@@ -700,9 +701,6 @@ def test_optimization_exists(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     assert cfg.optimization is not None
-
-
-import torch
 
 
 def test_deterministic_beta_finder_warning(tmp_path):
