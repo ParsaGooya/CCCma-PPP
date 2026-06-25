@@ -73,6 +73,13 @@ class TrainConfig:
         Random seed.
     resume_dir : str or None, optional
         Directory of a previous experiment to resume from.
+
+    Notes
+    -----
+    - If ``resume_dir`` is specified, the configuration is loaded from the previous experiment and merged with the requested values for ``experiment_dir`` and ``max_epochs``.
+    - ``experiment_dir`` currently refers to a local filesystem path.
+    - If ``seed`` is provided, it is used to make training reproducible by controlling model initialization and other randomized operations.
+    - Checkpoints are written only when ``save_checkpoint`` is ``True``.
     """
 
     experiment_dir: str

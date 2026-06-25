@@ -188,6 +188,17 @@ class WeightedMSE(lossABC):
         ------
         RuntimeError
             If shapes do not match.
+
+        Notes
+        -----
+        Expected tensor shapes are:
+
+        - Standard mode: ``(B, C, ...)``
+        - Generator mode: ``(E, B, C, ...)``
+        - Generative modeling mode: ``(Z, B, C, ...)``
+        - Generator + generative modeling: ``(E, Z, B, C, ...)``
+
+        where ``E`` is the ensemble/sample dimension, ``Z`` is the latent sample dimension, ``B`` is batch size, and ``C`` is the channel dimension.
         """
 
         if generator:
@@ -440,6 +451,17 @@ class WeightedCRPS(lossABC):
         ------
         RuntimeError
             If generator flag is False.
+
+        Notes
+        -----
+        CRPS requires an ensemble of predictions. The first dimension of ``data`` is interpreted as the ensemble/sample dimension.
+
+        Expected shapes are:
+
+        - ``data``: ``(E, B, C, ...)`` or ``(E, Z, B, C, ...)``
+        - ``target``: ``(B, C, ...)`` or ``(Z, B, C, ...)``
+
+        where ``E`` is the ensemble size.
         """
 
         if not generator:
@@ -621,6 +643,10 @@ class Frobenius_norm(lossABC):
         Returns
         -------
         torch.Tensor
+
+        Notes
+        -----
+        Spatial dimensions are flattened before covariance matrices are computed. Covariance is computed either across spatial locations (``covariance_dim="spatial"``) or across channels (``covariance_dim="channel"``).
         """
 
         if generator:
@@ -727,6 +753,10 @@ def _check_generator_structure(data: torch.Tensor, target: torch.Tensor):
     ------
     ValueError
         If structure is inconsistent.
+
+    Notes
+    -----
+    ``data`` must contain exactly one additional leading sample dimension relative to ``target``. Any intermediate dimensions between the sample dimension and the target shape must have size 1.
     """
 
     bool = data.shape[1:] == (1,) * (data.dim() - target.dim() - 1) + target.shape

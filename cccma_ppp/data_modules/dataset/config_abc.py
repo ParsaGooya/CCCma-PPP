@@ -296,11 +296,26 @@ class DatasetConfigABC(abc.ABC):
     @property
     def _using_model_data_as_condition(self) -> bool:
         """
-        Determine whether model data is reused as condition.
+        Determine whether the model data is reused as the condition.
 
         Returns
         -------
         bool
+            True if the condition data is derived from or identical to the
+            model data.
+
+        Notes
+        -----
+        When this returns ``True``, loading separate model and condition
+        datasets can be avoided when unnecessary.
+
+        This returns ``True`` in either of the following cases:
+
+        1. No condition dataset is provided, but a ``condition_method`` is
+        specified (except when ``condition_method == "static"``).
+
+        2. A condition dataset is provided, but it references the same files,
+        variables, and ensemble members as the model dataset.
         """
         if self.condition is None:
             return self.condition_method in {

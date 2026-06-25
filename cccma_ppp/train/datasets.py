@@ -382,11 +382,24 @@ class TrainDataset(Dataset):
     @property
     def _load_model(self):
         """
-        Determine whether to load model dataset.
+        Determine whether the model dataset should be loaded.
 
         Returns
         -------
         bool
+            True if the model dataset needs to be loaded.
+
+        Notes
+        -----
+        This returns ``True`` in either of the following cases:
+
+        - A condition dataset different from the model dataset is provided
+        (i.e., ``_using_model_data_as_condition`` is ``False``), regardless
+        of whether observations are provided.
+        - No observation dataset is provided, meaning the model data is being
+        autoencoded (the condition method is already validated in the
+        configuration), regardless of whether a standalone condition dataset
+        is provided.
         """
         return any(
             [
@@ -398,11 +411,20 @@ class TrainDataset(Dataset):
     @property
     def _write_condition_to_input(self):
         """
-        Determine whether condition replaces input.
+        Determine whether the condition data replaces the model input.
 
         Returns
         -------
         bool
+            True if the condition data should be used as the sole input to the
+            machine learning model.
+
+        Notes
+        -----
+        This returns ``True`` in either of the following cases:
+
+        - No standalone condition dataset is provided, but a condition method is specified. In this case, ``_using_model_data_as_condition`` is ``True`` and the condition is derived from the model data. The model dataset will only be loaded if required.
+        - A standalone condition dataset is provided, but no observation dataset is available. In this case, the model data is being autoencoded, so both the model and condition datasets must be loaded.
         """
         if self.config._using_model_data_as_condition:
             return True
@@ -415,11 +437,22 @@ class TrainDataset(Dataset):
     @property
     def _concat_condition_to_input(self):
         """
-        Determine whether to concatenate condition to input.
+        Determine whether the condition data should be concatenated to the input.
 
         Returns
         -------
         bool
+            True if the condition data should be concatenated to the model input.
+
+        Notes
+        -----
+        This returns ``True`` when all of the following datasets are available:
+
+        - A standalone condition dataset
+        - A model dataset
+        - An observation dataset
+
+        In this case, ``_write_condition_to_input`` is ``False`` and ``effective_condition`` is available separately from the model input.
         """
 
         return (
