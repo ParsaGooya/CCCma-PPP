@@ -10,25 +10,28 @@ train_loader:
               - name: anomalies
                 args:
                   dims: [year, lead_time]
-              - name: oceannanremover
+              - name: flattener
 
           ensemble_mean : True
           concat_dim : year
           
         observation :
-            paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations
+            paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5
             names: [tas]
             preprocessing_pipeline :
                     preprocessors_list :
                             - name : standardizer
-                            - name : oceannanremover
+                            - name : flattener
 
             concat_dim : year
             rename_dict :
                             lead_time : month
         time_features :
                         - year
-        num_lead_months : 120
+        condition_method : ensemble_mean
+        lead_months : 
+                      start: 1
+                      end: 120
 
     batch_size: 10
     train_years : [1980, 1982]

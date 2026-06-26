@@ -1,4 +1,3 @@
-from __future__ import annotations
 import torch
 from torch.cuda.amp import GradScaler
 from pathlib import Path
@@ -173,6 +172,7 @@ class Trainer:
             self.beta_finder = self.config.beta_finder
 
         self._setup = False
+        self._skip_training = False
 
     def setup_distributed(
         self,
@@ -257,6 +257,7 @@ class Trainer:
             )
             self._load_checkpoint(self.checkpoint_dir / "best.pt")
             if self._epochs_trained == self.max_epochs:
+                self._skip_training = True
                 self.log_root(
                     logging.INFO,
                     "maximum epochs already reached in the resumed model. No training will be done.",
@@ -392,6 +393,11 @@ class Trainer:
         time_elapsed = time.time() - self.start_time_train
 
         if self.is_on_root:
+            if not self._skip_training:
+                self._log_epoch(
+                    train_logs=train_logs,
+                    validation_logs=validation_logs,
+                )
             MetricsAggregator.plot(
                 [self.train_aggregator, self.validation_aggregator],
                 plot_dir=self.plot_dir,

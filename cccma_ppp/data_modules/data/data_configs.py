@@ -1,4 +1,3 @@
-from __future__ import annotations
 import numpy as np
 import dataclasses
 from typing import final, Literal
@@ -105,7 +104,6 @@ class ModelDataConfig(DataConfigABC):
 
 
 @dataclasses.dataclass
-@dataclasses.dataclass
 class ObsDataConfig(DataConfigABC):
     """
     Configuration for observation (target) dataset.
@@ -198,7 +196,6 @@ class ObsDataConfig(DataConfigABC):
         return frozenset({"month", "ensembles", "lat", "lon"})
 
 
-@dataclasses.dataclass
 @dataclasses.dataclass
 class ConditionDataConfig(DataConfigABC):
     """

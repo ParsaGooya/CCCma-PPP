@@ -1,4 +1,3 @@
-from __future__ import annotations
 import torch
 from torch.optim.lr_scheduler import SequentialLR, LinearLR, CosineAnnealingLR
 import dataclasses
