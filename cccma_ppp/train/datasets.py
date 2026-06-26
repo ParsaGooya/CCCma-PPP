@@ -122,7 +122,9 @@ class TrainDatasetConfig(DatasetConfigABC):
                 )
 
         else:
-            assert self.condition_method is not None, (
+            
+            if self.condition_method is None: 
+                raise ValueError(
                 "No target observation is specified. Specify condition_method!"
             )
 

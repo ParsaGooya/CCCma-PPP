@@ -137,8 +137,9 @@ class TrainConfig:
                 raise ValueError(
                     "with cVAE model TrainerConfig.beta_finder must be set up."
                 )
-            if self.train_loader.dataset_config.condition_method is None:
-                raise ValueError("with cVAE you must specify condition method!")
+            if (self.train_loader.dataset_config.condition_method is None and
+                self.train_loader.dataset_config.observation is None):
+                raise ValueError("with cVAE you must specify condition method when not bias correcting to a target!")
 
         if getattr(self.module._module_config.model_config, "GENERATOR", False):
             if "crps" not in self.losspipeline.loss_pipeline.loss_types:
