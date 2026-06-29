@@ -23,3 +23,5 @@ scripts/build_and_view_docs.py
 scripts/initialize_docs.py
 scripts/build_test_map_parallel.py
 scripts/cleanup.py
+cfg._using_model_data_as_condition
+cfg.ds_operator

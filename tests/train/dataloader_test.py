@@ -451,11 +451,6 @@ def test_build_train_loader_with_mask_flags():
     assert out is not None
 
 
-# ============================================================
-# Additional REAL TrainDataloaderConfig tests
-# ============================================================
-
-
 def test_train_years_property_uses_available_years():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),

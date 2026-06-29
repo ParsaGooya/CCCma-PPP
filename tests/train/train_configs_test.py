@@ -269,7 +269,6 @@ def test_resolve_resuming_different_path(tmp_path):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_prepare_config_reads_yaml(tmp_path):
     path = tmp_path / "cfg.yaml"
     path.write_text("x: 1")
@@ -455,7 +454,6 @@ def test_deterministic_with_observation_valid(tmp_path):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_prepare_config_invalid_yaml(tmp_path):
     path = tmp_path / "bad.yaml"
     path.write_text("::::")
@@ -846,7 +844,6 @@ def test_read_config_missing_resume_dir(tmp_path):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_prepare_config_roundtrip(tmp_path):
     yaml_path = tmp_path / "config.yaml"
 
@@ -993,7 +990,6 @@ def test_build_trainer_num_output_dims_fallback(tmp_path):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_set_seed_function():
     set_seed(123)
 
@@ -1197,7 +1193,6 @@ def test_prepare_directory_root_false(tmp_path):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_set_seed_repeatability():
     set_seed(999)
     a = np.random.randint(0, 100000)
@@ -1209,7 +1204,6 @@ def test_set_seed_repeatability():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_prepare_config_multikey(tmp_path):
     path = tmp_path / "cfg.yaml"
 
@@ -1266,7 +1260,6 @@ def test_build_trainer_added_features_none(tmp_path):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_module_selector_type_exists():
     module = DummyModuleSelector()
 
@@ -1274,7 +1267,6 @@ def test_module_selector_type_exists():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_dummy_optimizer_type():
     opt = DummyOptimization()
 
@@ -1282,7 +1274,6 @@ def test_dummy_optimizer_type():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_dummy_trainer_beta_finder_default():
     trainer = DummyTrainer()
 
@@ -1290,7 +1281,6 @@ def test_dummy_trainer_beta_finder_default():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_dummy_loss_pipeline_default():
     loss = DummyLossPipeline()
 
@@ -1298,7 +1288,6 @@ def test_dummy_loss_pipeline_default():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_dummy_distributed_defaults():
     d = DummyDistributed()
 
@@ -1476,7 +1465,6 @@ def test_prepare_runtime_variables_target_metadata(tmp_path):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_set_seed_changes_numpy_state():
     set_seed(111)
 
@@ -1508,7 +1496,6 @@ def test_set_random_seed_with_integer(tmp_path):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_prepare_config_nested_yaml(tmp_path):
     path = tmp_path / "cfg.yaml"
 
@@ -1526,7 +1513,6 @@ a:
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_prepare_config_list_yaml(tmp_path):
     path = tmp_path / "cfg.yaml"
 
@@ -1814,7 +1800,6 @@ def test_build_trainer_validation_loader_present(tmp_path):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_dummy_module_selector_type():
     module = DummyModuleSelector()
 
@@ -1822,7 +1807,6 @@ def test_dummy_module_selector_type():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_dummy_trainer_default_beta_finder():
     trainer = DummyTrainer()
 
@@ -1830,7 +1814,6 @@ def test_dummy_trainer_default_beta_finder():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_dummy_optimizer_default_type():
     opt = DummyOptimization()
 

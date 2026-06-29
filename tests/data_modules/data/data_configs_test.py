@@ -52,7 +52,6 @@ def test_model_data_config_type():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_model_data_config_allowed_dims():
     dims = ModelDataConfig._allowed_dims()
 
@@ -61,7 +60,6 @@ def test_model_data_config_allowed_dims():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_model_data_config_required_dims():
     dims = ModelDataConfig._required_dims()
 
@@ -189,7 +187,6 @@ def test_obs_data_config_type():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_obs_data_config_allowed_dims():
     dims = ObsDataConfig._allowed_dims()
 
@@ -197,7 +194,6 @@ def test_obs_data_config_allowed_dims():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_obs_data_config_required_dims():
     dims = ObsDataConfig._required_dims()
 
@@ -304,7 +300,6 @@ def test_condition_data_config_type():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_condition_data_config_allowed_dims():
     dims = ConditionDataConfig._allowed_dims()
 
@@ -312,7 +307,6 @@ def test_condition_data_config_allowed_dims():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_condition_data_config_required_dims():
     dims = ConditionDataConfig._required_dims()
 

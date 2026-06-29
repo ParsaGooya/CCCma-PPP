@@ -59,7 +59,7 @@ def test_overwrite_registration():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_available_returns_registered_names():
     reg = Registery()
 

@@ -3871,11 +3871,6 @@ def test_using_model_data_as_condition():
     assert cfg._using_model_data_as_condition
 
 
-# ============================================================
-# Additional REAL branch coverage tests
-# ============================================================
-
-
 def test_build_dataset_return_metadata_true_branch():
     cfg = make_valid_config_with()
 

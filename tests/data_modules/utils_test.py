@@ -300,7 +300,6 @@ def test_build_weights_loaded_lon_mismatch(tmp_path):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_unwrap_data_variables():
     ds = make_dataset()
 
@@ -310,7 +309,6 @@ def test_unwrap_data_variables():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_unwrap_data_variables_channel_size():
     ds = make_dataset()
 

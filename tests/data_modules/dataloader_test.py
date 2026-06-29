@@ -75,7 +75,6 @@ def dummy_collate(
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_batch_to_device():
     batch = DummyBatch()
 
@@ -336,7 +335,6 @@ def test_iter_multiple_batches():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_batch_target_exists():
     batch = DummyBatch()
 
@@ -344,7 +342,6 @@ def test_batch_target_exists():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_batch_added_features_exists():
     batch = DummyBatch()
 

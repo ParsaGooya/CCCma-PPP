@@ -44,7 +44,7 @@ class DummyCvaeConfig(cVAEmodelConfigABC):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_checkpoint_config_init():
     cfg = CheckpointConfig(
         load_path="a.pt",
@@ -192,7 +192,7 @@ def test_weights_init_invalid_method():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_model_config_requires_build():
     class BadConfig(modelConfigABC):
         NUM_OUTPUT_DIMS = 2
@@ -203,7 +203,7 @@ def test_model_config_requires_build():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_flow_abc_requires_methods():
     from cccma_ppp.models.models_abc import flowABC
 
@@ -215,7 +215,7 @@ def test_flow_abc_requires_methods():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_add_checkpoint_config():
     cfg = DummyConfig()
 
@@ -368,7 +368,7 @@ def test_weights_init_changes_weights():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_cvae_model_flag():
     class DummyCvae(cVAEmodelsABC):
         def forward(self, x):

@@ -107,7 +107,6 @@ class DummyDataConfig(DataConfigABC):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_infoclass_creation():
     info = infoclass(
         sizes={"x": 1},

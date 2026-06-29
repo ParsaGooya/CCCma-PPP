@@ -99,7 +99,6 @@ class DummyPreprocessor(PreprocessModuleABC):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_dataset_operator_init():
     cfg = DummyDatasetConfig()
 
