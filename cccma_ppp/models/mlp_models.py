@@ -1,4 +1,3 @@
-from __future__ import annotations
 import torch
 import torch.nn as nn
 import numpy as np
@@ -15,9 +14,8 @@ from cccma_ppp.models.models_abc import (
 )
 from cccma_ppp.core.selectors import deterministicModelSelector, cVAEModelSelector
 from cccma_ppp.models.normalized_flows import NormalizedFlowModel
-from cccma_ppp.core.cVAE_module import cVAEOutput
-from cccma_ppp.core.deterministic_module import deterministicOutput
-from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.core import cVAEOutput, deterministicOutput
+from cccma_ppp.generic import RuntimeContext
 
 
 AppendMode = Literal[1, 2, 3]

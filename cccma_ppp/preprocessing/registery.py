@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-
 class Registery:
     """
     Registry for mapping string names to classes.

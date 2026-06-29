@@ -1,4 +1,3 @@
-from __future__ import annotations
 import torch
 import numpy as np
 from pathlib import Path
@@ -7,17 +6,16 @@ import dataclasses
 import dacite
 import gc
 
-from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC
-from cccma_ppp.core.selectors import _load_config_from_checkpoint
+from cccma_ppp.loss import Losspipeline
 from cccma_ppp.loss.kld import KLD
+from cccma_ppp.core import moduleABC, moduleConfigABC, _load_config_from_checkpoint
 from cccma_ppp.core.selectors import (
     ModuleSelector,
     cVAEModelSelector,
 )
 from cccma_ppp.models.normalized_flows import NormalizedFlowConfig
-from cccma_ppp.train.dataloader import BatchData
-from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.loss.loss import Losspipeline
+from cccma_ppp.train import BatchData
+from cccma_ppp.generic import RuntimeContext
 
 
 @dataclasses.dataclass

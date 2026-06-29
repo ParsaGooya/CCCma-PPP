@@ -1,4 +1,3 @@
-from __future__ import annotations
 import dataclasses
 import os
 import numpy as np
@@ -10,19 +9,18 @@ import shutil
 import yaml
 import dacite
 
-from cccma_ppp.loss.loss import LosspipelineConfig
+from cccma_ppp.loss import LosspipelineConfig
 
-from cccma_ppp.train.dataloader import TrainDataloaderConfig
-from cccma_ppp.data_modules.utils import WeightsConfig
+from cccma_ppp.train import TrainDataloaderConfig
+from cccma_ppp.data_modules import WeightsConfig
 
-from cccma_ppp.generic.distributed import Distributed
-from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.generic import Distributed, RuntimeContext
 
 from cccma_ppp.core.selectors import ModuleSelector
 from cccma_ppp.core.trainer import TrainerConfig
 from cccma_ppp.core.optimization import OptimizerConfig
 
-from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
+from cccma_ppp.preprocessing import Flattennanremove
 
 
 def set_seed(seed):
@@ -128,20 +126,6 @@ class TrainConfig:
 
         self.experiment_dir = Path(self.experiment_dir)
 
-        if self.train_loader.dataset_config.observation is None:
-            if self.module.type.lower() in ["deterministic", "default"]:
-                raise ValueError(
-                    "with determisitic models target observation must be specified."
-                )
-
-        if self.module.type.lower() in ["cvae"]:
-            if self.trainer.beta_finder is None:
-                raise ValueError(
-                    "with cVAE model TrainerConfig.beta_finder must be set up."
-                )
-            if self.train_loader.dataset_config.condition_method is None:
-                raise ValueError("with cVAE you must specify condition method!")
-
         if getattr(self.module._module_config.model_config, "GENERATOR", False):
             if "crps" not in self.losspipeline.loss_pipeline.loss_types:
                 raise RuntimeError(
@@ -149,9 +133,23 @@ class TrainConfig:
                 )
 
         if self.module.type.lower() in ["deterministic", "default"]:
+            if self.train_loader.dataset_config.observation is None: 
+                raise ValueError(
+                    "with determisitic models target observation must be specified."
+                )
             if self.trainer.beta_finder is None:
                 warnings.warn(
                     "TrainerConfig.beta_finder setup will be ignored with deterministic models ..."
+                )
+        else:
+            if (self.train_loader.dataset_config.condition_method is None and
+                self.train_loader.dataset_config.observation is None):
+                raise ValueError("with generative models you must specify condition method if not bias correcting to a target!")
+            
+        if self.module.type.lower() in ["cvae"]:
+            if self.trainer.beta_finder is None:
+                raise ValueError(
+                    "with cVAE model TrainerConfig.beta_finder must be set up."
                 )
 
         if self.train_loader.dataset_config.observation is not None:

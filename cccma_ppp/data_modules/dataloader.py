@@ -1,4 +1,3 @@
-from __future__ import annotations
 import dataclasses
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -9,10 +8,8 @@ from typing import final
 from collections.abc import Callable, Iterator
 from itertools import islice
 
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from cccma_ppp.data_modules.dataset.config_abc import DatasetConfigABC
+from cccma_ppp.data_modules.dataset import DatasetConfigABC
 
 
 class BatchDataABC(abc.ABC):
@@ -64,7 +61,7 @@ class DataloaderConfigABC(abc.ABC):
         Dataset configuration.
     """
 
-    dataset_config: "DatasetConfigABC"
+    dataset_config: DatasetConfigABC
 
     @abc.abstractmethod
     def setup_distributed(self):

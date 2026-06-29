@@ -1,4 +1,3 @@
-from __future__ import annotations
 import numpy as np
 import dataclasses
 import warnings
@@ -7,16 +6,16 @@ from pathlib import Path
 
 
 from cccma_ppp.train.datasets import TrainDatasetConfig
-from cccma_ppp.data_modules.utils import _create_train_mask, WeightsConfig
+from cccma_ppp.data_modules import _create_train_mask, WeightsConfig
 from cccma_ppp.data_modules.dataloader import (
     Dataloader,
     DataloaderConfigABC,
     BatchDataABC,
 )
-from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic import Distributed
 
 
-@dataclasses.dataclass
+
 @dataclasses.dataclass
 class BatchData(BatchDataABC):
     """
@@ -39,6 +38,7 @@ class BatchData(BatchDataABC):
     input: torch.Tensor
     target: torch.Tensor
     added_features: torch.Tensor = None
+    metadata: list[dict] | None = None
     return_spatial_mask: bool = False
     reduce_spatial_mask: bool = False
 
@@ -392,6 +392,7 @@ def collate_batch(
         input=inputs,
         target=targets,
         added_features=added_features,
+        metadata=list(metadata) if metadata is not None else None,
         return_spatial_mask=return_spatial_mask,
         reduce_spatial_mask=reduce_spatial_mask,
     )

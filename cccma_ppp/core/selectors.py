@@ -1,4 +1,3 @@
-from __future__ import annotations
 import numpy as np
 import dataclasses
 import torch
@@ -9,7 +8,7 @@ import gc
 import warnings
 
 from cccma_ppp.core.registery import Registery
-from cccma_ppp.core.core_abc import moduleABC
+from cccma_ppp.core import moduleABC
 from cccma_ppp.models.models_abc import modelABC, flowABC, CheckpointConfig
 
 

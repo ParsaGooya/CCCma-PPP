@@ -1,10 +1,9 @@
-from __future__ import annotations
 import torch
 from torch.optim.lr_scheduler import SequentialLR, LinearLR, CosineAnnealingLR
 import dataclasses
 from typing import ClassVar
 
-from cccma_ppp.core.core_abc import moduleABC
+from cccma_ppp.core import moduleABC
 
 
 @dataclasses.dataclass

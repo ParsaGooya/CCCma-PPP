@@ -1,4 +1,3 @@
-from __future__ import annotations
 import numpy as np
 import dataclasses
 import torch
@@ -8,8 +7,7 @@ import matplotlib.pyplot as plt
 import random
 from pathlib import Path
 
-from cccma_ppp.generic.distributed import Distributed
-from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.generic import Distributed, RuntimeContext
 
 
 @dataclasses.dataclass
