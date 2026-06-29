@@ -51,6 +51,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.html">cccma_ppp.data_modules package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.generic.html">cccma_ppp.generic package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.inference.html">cccma_ppp.inference package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.loss.html">cccma_ppp.loss package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.models.html">cccma_ppp.models package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.preprocessing.html">cccma_ppp.preprocessing package</a></li>
@@ -91,7 +92,7 @@
 <h1>cccma_ppp.core.deterministic_module module<a class="headerlink" href="#cccma-ppp-core-deterministic-module-module" title="Link to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.deterministic_module.</span></span><span class="sig-name descname"><span class="pre">BatchData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/dataloader.html#BatchData"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.deterministic_module.</span></span><span class="sig-name descname"><span class="pre">BatchData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/train/dataloader.html#BatchData"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BatchDataABC</span></code></p>
 <p>Container for batched training data.</p>
 <dl class="field-list simple">
@@ -102,6 +103,7 @@
 <li><p><strong>added_features</strong> (<em>torch.Tensor</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Additional input features.</p></li>
 <li><p><strong>return_spatial_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to compute and include spatial masks.</p></li>
 <li><p><strong>reduce_spatial_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to reduce masks across batch dimension.</p></li>
+<li><p><strong>metadata</strong> (<em>list</em><em>[</em><em>dict</em><em>] </em><em>| </em><em>None</em>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -113,6 +115,11 @@
 <dl class="py attribute">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">input</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">metadata</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">

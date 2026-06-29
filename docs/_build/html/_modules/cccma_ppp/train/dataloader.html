@@ -77,18 +77,18 @@
 
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.train.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrainDatasetConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_create_train_mask</span><span class="p">,</span> <span class="n">WeightsConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules</span><span class="w"> </span><span class="kn">import</span> <span class="n">_create_train_mask</span><span class="p">,</span> <span class="n">WeightsConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.dataloader</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">Dataloader</span><span class="p">,</span>
     <span class="n">DataloaderConfigABC</span><span class="p">,</span>
     <span class="n">BatchDataABC</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic.distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">Distributed</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Distributed</span>
+
 
 
 <div class="viewcode-block" id="BatchData">
 <a class="viewcode-back" href="../../../cccma_ppp.train.dataloader.html#cccma_ppp.core.cVAE_module.BatchData">[docs]</a>
-<span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">BatchData</span><span class="p">(</span><span class="n">BatchDataABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -111,6 +111,7 @@
     <span class="nb">input</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
     <span class="n">target</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
     <span class="n">added_features</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">metadata</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">return_spatial_mask</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">reduce_spatial_mask</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -485,6 +486,7 @@
         <span class="nb">input</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
         <span class="n">target</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span>
         <span class="n">added_features</span><span class="o">=</span><span class="n">added_features</span><span class="p">,</span>
+        <span class="n">metadata</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span> <span class="k">if</span> <span class="n">metadata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">return_spatial_mask</span><span class="o">=</span><span class="n">return_spatial_mask</span><span class="p">,</span>
         <span class="n">reduce_spatial_mask</span><span class="o">=</span><span class="n">reduce_spatial_mask</span><span class="p">,</span>
     <span class="p">)</span></div>

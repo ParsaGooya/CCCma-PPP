@@ -48,6 +48,7 @@
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.core.html">cccma_ppp.core package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.html">cccma_ppp.data_modules package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.generic.html">cccma_ppp.generic package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.inference.html">cccma_ppp.inference package</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="cccma_ppp.loss.html">cccma_ppp.loss package</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="cccma_ppp.loss.html#submodules">Submodules</a></li>
 </ul>
@@ -123,7 +124,22 @@
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>Spatial dimensions are flattened before covariance matrices are computed. Covariance is computed either across spatial locations (<code class="docutils literal notranslate"><span class="pre">covariance_dim=&quot;spatial&quot;</span></code>) or across channels (<code class="docutils literal notranslate"><span class="pre">covariance_dim=&quot;channel&quot;</span></code>).</p>
+<p>Expected tensor layouts:</p>
+<p>Standard mode:
+- <code class="docutils literal notranslate"><span class="pre">data</span></code>: <code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">C,</span> <span class="pre">O1,</span> <span class="pre">...,</span> <span class="pre">On)</span></code>
+- <code class="docutils literal notranslate"><span class="pre">target</span></code>: <code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">C,</span> <span class="pre">O1,</span> <span class="pre">...,</span> <span class="pre">On)</span></code></p>
+<p>Generative modeling:
+- <code class="docutils literal notranslate"><span class="pre">data</span></code>: <code class="docutils literal notranslate"><span class="pre">(Z,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">O1,</span> <span class="pre">...,</span> <span class="pre">On)</span></code>
+- <code class="docutils literal notranslate"><span class="pre">target</span></code>: <code class="docutils literal notranslate"><span class="pre">(Z,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">O1,</span> <span class="pre">...,</span> <span class="pre">On)</span></code></p>
+<p>Processing steps:</p>
+<ol class="arabic simple">
+<li><p>Spatial dimensions <code class="docutils literal notranslate"><span class="pre">O1...On</span></code> are flattened into a single feature dimension.</p></li>
+<li><p>If generative modeling is enabled, the latent dimension <code class="docutils literal notranslate"><span class="pre">Z</span></code> is merged with the batch dimension.</p></li>
+</ol>
+<p>3. Covariance matrices are computed either:
+- across spatial features (<code class="docutils literal notranslate"><span class="pre">covariance_dim=&quot;spatial&quot;</span></code>)
+- across channels (<code class="docutils literal notranslate"><span class="pre">covariance_dim=&quot;channel&quot;</span></code>)
+4. The Frobenius norm of the covariance difference is returned.</p>
 </dd></dl>
 
 </dd></dl>
@@ -296,12 +312,19 @@ supports spatial weighting, and enforces dimensionality checks.</p>
 </dl>
 <p class="rubric">Notes</p>
 <p>CRPS requires an ensemble of predictions. The first dimension of <code class="docutils literal notranslate"><span class="pre">data</span></code> is interpreted as the ensemble/sample dimension.</p>
-<p>Expected shapes are:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: <code class="docutils literal notranslate"><span class="pre">(E,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">...)</span></code> or <code class="docutils literal notranslate"><span class="pre">(E,</span> <span class="pre">Z,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">...)</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">target</span></code>: <code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">C,</span> <span class="pre">...)</span></code> or <code class="docutils literal notranslate"><span class="pre">(Z,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">...)</span></code></p></li>
-</ul>
-<p>where <code class="docutils literal notranslate"><span class="pre">E</span></code> is the ensemble size.</p>
+<p>Expected tensor layouts:</p>
+<p>Standard ensemble prediction:
+- <code class="docutils literal notranslate"><span class="pre">data</span></code>: <code class="docutils literal notranslate"><span class="pre">(E,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">O1,</span> <span class="pre">...,</span> <span class="pre">On)</span></code>
+- <code class="docutils literal notranslate"><span class="pre">target</span></code>: <code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">C,</span> <span class="pre">O1,</span> <span class="pre">...,</span> <span class="pre">On)</span></code></p>
+<p>Generative modeling:
+- <code class="docutils literal notranslate"><span class="pre">data</span></code>: <code class="docutils literal notranslate"><span class="pre">(E,</span> <span class="pre">Z,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">O1,</span> <span class="pre">...,</span> <span class="pre">On)</span></code>
+- <code class="docutils literal notranslate"><span class="pre">target</span></code>: <code class="docutils literal notranslate"><span class="pre">(Z,</span> <span class="pre">B,</span> <span class="pre">C,</span> <span class="pre">O1,</span> <span class="pre">...,</span> <span class="pre">On)</span></code></p>
+<p>Where:
+- <code class="docutils literal notranslate"><span class="pre">E</span></code> = ensemble size
+- <code class="docutils literal notranslate"><span class="pre">Z</span></code> = latent realization dimension
+- <code class="docutils literal notranslate"><span class="pre">B</span></code> = batch dimension
+- <code class="docutils literal notranslate"><span class="pre">C</span></code> = channel dimension
+- <code class="docutils literal notranslate"><span class="pre">O1...On</span></code> = spatial/output dimensions</p>
 </dd></dl>
 
 </dd></dl>

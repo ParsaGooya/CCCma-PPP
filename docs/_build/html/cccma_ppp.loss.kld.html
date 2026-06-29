@@ -48,6 +48,7 @@
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.core.html">cccma_ppp.core package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.html">cccma_ppp.data_modules package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.generic.html">cccma_ppp.generic package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.inference.html">cccma_ppp.inference package</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="cccma_ppp.loss.html">cccma_ppp.loss package</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="cccma_ppp.loss.html#submodules">Submodules</a></li>
 </ul>
@@ -171,27 +172,127 @@
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.Tensor</p>
 </dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – If posterior and prior parameter shapes are inconsistent.</p>
+</dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Expected tensor layouts:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mu</span></code>:
+<code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">F)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">log_var</span></code>:
+<code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">F)</span></code></p></li>
+</ul>
+<p>Optional conditional prior parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cond_mu</span></code>:
+<code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">F)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cond_log_var</span></code>:
+<code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">F)</span></code></p></li>
+</ul>
+<p>where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">N</span></code> is the number of latent samples
+(typically batch size or flattened batch size)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">F</span></code> is the latent feature dimension</p></li>
+</ul>
+<p>When a flow prior is used, latent samples are drawn from the posterior and transformed through the flow before estimating the KL divergence.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/loss/kld.html#KLD.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Sample from Gaussian distribution.</p>
+<dd><p>Sample latent variables using the reparameterization trick.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mu</strong> (<em>torch.Tensor</em>) – Mean.</p></li>
-<li><p><strong>log_var</strong> (<em>torch.Tensor</em>) – Log variance.</p></li>
-<li><p><strong>sample_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of samples.</p></li>
-<li><p><strong>std</strong> (<em>float</em><em>, </em><em>optional</em>) – Scaling factor for standard deviation.</p></li>
+<li><p><strong>mu</strong> (<em>torch.Tensor</em>) – Mean of the latent distribution.</p></li>
+<li><p><strong>log_var</strong> (<em>torch.Tensor</em>) – Log-variance of the latent distribution.</p></li>
+<li><p><strong>sample_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of Monte-Carlo samples.</p></li>
+<li><p><strong>std</strong> (<em>float</em><em>, </em><em>optional</em>) – Scaling factor applied to the sampling noise.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Sampled values.</p>
+<dd class="field-even"><p>Sampled latent variables.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Expected input shapes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mu</span></code>:
+<code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">F)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">log_var</span></code>:
+<code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">F)</span></code></p></li>
+</ul>
+<p>Returned shape:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">(S,</span> <span class="pre">N,</span> <span class="pre">F)</span></code></p></li>
+</ul>
+<p>where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">S</span></code> is <code class="docutils literal notranslate"><span class="pre">sample_size</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">N</span></code> is the number of latent samples</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">F</span></code> is the latent dimensionality</p></li>
+</ul>
+<p>This corresponds to drawing <code class="docutils literal notranslate"><span class="pre">S</span></code> independent samples from
+each posterior distribution.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.loss.kld.</span></span><span class="sig-name descname"><span class="pre">NormalizedFlowModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/models/normalized_flows.html#NormalizedFlowModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">flowABC</span></code></p>
+<p>Composed normalizing flow model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<em>NormalizedFlowConfig</em>)</p></li>
+<li><p><strong>condition_size</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/models/normalized_flows.html#NormalizedFlowModel.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Apply forward transformation through all flow steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>torch.Tensor</em>) – Input samples.</p></li>
+<li><p><strong>condition</strong> (<em>torch.Tensor</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Conditioning input.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Transformed samples and log-determinant.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>flowOutput</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cccma_ppp/models/normalized_flows.html#NormalizedFlowModel.inverse"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Apply inverse transformation through all flow steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>z</strong> (<em>torch.Tensor</em>) – Latent samples.</p></li>
+<li><p><strong>condition</strong> (<em>torch.Tensor</em><em> or </em><em>None</em><em>, </em><em>optional</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Reconstructed samples and log-determinant.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>flowOutput</p>
 </dd>
 </dl>
 </dd></dl>

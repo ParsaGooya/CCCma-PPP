@@ -77,19 +77,18 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss.loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">Losspipeline</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.core_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">moduleABC</span><span class="p">,</span> <span class="n">moduleConfigABC</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.selectors</span><span class="w"> </span><span class="kn">import</span> <span class="n">_load_config_from_checkpoint</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">Losspipeline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">moduleABC</span><span class="p">,</span> <span class="n">moduleConfigABC</span><span class="p">,</span> <span class="n">_load_config_from_checkpoint</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.selectors</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ModuleSelector</span><span class="p">,</span>
     <span class="n">deterministicModelSelector</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.train.dataloader</span><span class="w"> </span><span class="kn">import</span> <span class="n">BatchData</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic.runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeContext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">BatchData</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeContext</span>
 
 
 <div class="viewcode-block" id="deterministicOutput">
-<a class="viewcode-back" href="../../../cccma_ppp.models.mlp_models.html#cccma_ppp.core.deterministic_module.deterministicOutput">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.models.mlp_models.html#cccma_ppp.core.deterministicOutput">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">deterministicOutput</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -106,7 +105,7 @@
 
 
 <div class="viewcode-block" id="deterministicConfig">
-<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic_module.deterministicConfig">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministicConfig">[docs]</a>
 <span class="nd">@ModuleSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;deterministic&quot;</span><span class="p">)</span>
 <span class="nd">@ModuleSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
@@ -147,7 +146,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">model_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ModelConfig</span><span class="o">.</span><span class="n">get_model_config</span><span class="p">()</span>
 
 <div class="viewcode-block" id="deterministicConfig.build">
-<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic_module.deterministicConfig.build">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministicConfig.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">input_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -212,7 +211,7 @@
 
 
 <div class="viewcode-block" id="deterministic">
-<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic_module.deterministic">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">deterministic</span><span class="p">(</span><span class="n">moduleABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Deterministic model module.</span>
@@ -300,7 +299,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">load_dir</span><span class="p">)</span>
 
 <div class="viewcode-block" id="deterministic.init_loss_function">
-<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic_module.deterministic.init_loss_function">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic.init_loss_function">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">init_loss_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reconstruction_loss</span><span class="p">:</span> <span class="n">Losspipeline</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize loss function.</span>
@@ -362,7 +361,7 @@
         <span class="k">return</span> <span class="n">total_loss</span><span class="p">,</span> <span class="n">losses_dict</span>
 
 <div class="viewcode-block" id="deterministic.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic_module.deterministic.forward">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">BatchData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">deterministicOutput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform forward pass.</span>
@@ -382,7 +381,7 @@
 
 
 <div class="viewcode-block" id="deterministic.predict">
-<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic_module.deterministic.predict">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic.predict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">BatchData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">deterministicOutput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform inference.</span>

@@ -78,13 +78,10 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.core_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">moduleABC</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizerWrapper</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">moduleABC</span><span class="p">,</span> <span class="n">OptimizerWrapper</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.cVAE_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">cVAE</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.dataloader</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataloader</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic.distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">Distributed</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic.aggregator</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricsAggregator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic.runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeContext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Distributed</span><span class="p">,</span> <span class="n">MetricsAggregator</span><span class="p">,</span> <span class="n">RuntimeContext</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss.kld</span><span class="w"> </span><span class="kn">import</span> <span class="n">BetaAnnealing</span>
 
@@ -254,6 +251,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">beta_finder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">beta_finder</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_setup</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_skip_training</span> <span class="o">=</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="Trainer.setup_distributed">
 <a class="viewcode-back" href="../../../cccma_ppp.core.trainer.html#cccma_ppp.core.trainer.Trainer.setup_distributed">[docs]</a>
@@ -340,6 +338,7 @@
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_load_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpoint_dir</span> <span class="o">/</span> <span class="s2">&quot;best.pt&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_epochs_trained</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_epochs</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_skip_training</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">log_root</span><span class="p">(</span>
                     <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
                     <span class="s2">&quot;maximum epochs already reached in the resumed model. No training will be done.&quot;</span><span class="p">,</span>
@@ -478,6 +477,11 @@
         <span class="n">time_elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time_train</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_on_root</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skip_training</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_log_epoch</span><span class="p">(</span>
+                    <span class="n">train_logs</span><span class="o">=</span><span class="n">train_logs</span><span class="p">,</span>
+                    <span class="n">validation_logs</span><span class="o">=</span><span class="n">validation_logs</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="n">MetricsAggregator</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
                 <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">train_aggregator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation_aggregator</span><span class="p">],</span>
                 <span class="n">plot_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plot_dir</span><span class="p">,</span>

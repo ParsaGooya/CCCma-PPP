@@ -76,16 +76,15 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.preprocessing.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreprocessingPipeline</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.preprocessing.utils_preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flattennanremove</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic.runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeContext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreprocessingPipeline</span><span class="p">,</span> <span class="n">Flattennanremove</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeContext</span>
 
 
 <span class="n">spatialmethod</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span> <span class="s2">&quot;cosine_lat&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="WeightsConfig">
-<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.data_modules.dataset.operator.WeightsConfig">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.data_modules.WeightsConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">WeightsConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -124,7 +123,7 @@
                 <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;weights file not found at </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">load_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="WeightsConfig.build_weights">
-<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.data_modules.dataset.operator.WeightsConfig.build_weights">[docs]</a>
+<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.data_modules.WeightsConfig.build_weights">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_weights</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">target_coords</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>

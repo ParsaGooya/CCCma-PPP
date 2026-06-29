@@ -16,6 +16,7 @@ Subpackages
    cccma_ppp.core
    cccma_ppp.data_modules
    cccma_ppp.generic
+   cccma_ppp.inference
    cccma_ppp.loss
    cccma_ppp.models
    cccma_ppp.preprocessing

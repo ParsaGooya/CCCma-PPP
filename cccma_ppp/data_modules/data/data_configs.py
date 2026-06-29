@@ -30,7 +30,7 @@ class ModelDataConfig(DataConfigABC):
     concat_dim : str, optional
         Dimension along which files are concatenated.
     file_type : str, optional
-        File pattern (e.g., "*.nc").
+        File pattern (e.g., ".nc").
     rename_dict : dict or None, optional
         Variable renaming mapping.
     """

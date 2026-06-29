@@ -504,28 +504,19 @@ class WeightedCRPS(lossABC):
         Expected tensor layouts:
 
         Standard ensemble prediction:
-
-        - ``data``:
-        ``(E, B, C, O1, ..., On)``
-        - ``target``:
-        ``(B, C, O1, ..., On)``
+        - ``data``: ``(E, B, C, O1, ..., On)``
+        - ``target``: ``(B, C, O1, ..., On)``
 
         Generative modeling:
+        - ``data``: ``(E, Z, B, C, O1, ..., On)``
+        - ``target``: ``(Z, B, C, O1, ..., On)``
 
-        - ``data``:
-        ``(E, Z, B, C, O1, ..., On)``
-        - ``target``:
-        ``(Z, B, C, O1, ..., On)``
-
-        where:
-
-        - ``E`` = ensemble/sample dimension
+        Where:
+        - ``E`` = ensemble size
         - ``Z`` = latent realization dimension
         - ``B`` = batch dimension
         - ``C`` = channel dimension
-        - ``O1...On`` = output dimensions
-
-        where ``E`` is the ensemble size.
+        - ``O1...On`` = spatial/output dimensions
         """
 
         if not generator:
@@ -713,30 +704,20 @@ class Frobenius_norm(lossABC):
         Expected tensor layouts:
 
         Standard mode:
-
-        - ``data``:
-        ``(B, C, O1, ..., On)``
-        - ``target``:
-        ``(B, C, O1, ..., On)``
+        - ``data``: ``(B, C, O1, ..., On)``
+        - ``target``: ``(B, C, O1, ..., On)``
 
         Generative modeling:
-
-        - ``data``:
-        ``(Z, B, C, O1, ..., On)``
-        - ``target``:
-        ``(Z, B, C, O1, ..., On)``
+        - ``data``: ``(Z, B, C, O1, ..., On)``
+        - ``target``: ``(Z, B, C, O1, ..., On)``
 
         Processing steps:
 
-        1. Spatial dimensions ``O1...On`` are flattened into a single
-        feature dimension.
-        2. If generative modeling is enabled, the latent dimension ``Z``
-        is merged with the batch dimension.
+        1. Spatial dimensions ``O1...On`` are flattened into a single feature dimension.
+        2. If generative modeling is enabled, the latent dimension ``Z`` is merged with the batch dimension.
         3. Covariance matrices are computed either:
-
         - across spatial features (``covariance_dim="spatial"``)
         - across channels (``covariance_dim="channel"``)
-
         4. The Frobenius norm of the covariance difference is returned.
         """
 
