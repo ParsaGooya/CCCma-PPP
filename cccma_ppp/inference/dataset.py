@@ -6,11 +6,11 @@ import xarray as xr
 from torch.utils.data import Dataset
 import torch
 
-from cccma_ppp.data_modules.dataset import (
-    DatasetConfigABC,
+
+from cccma_ppp.data_modules.dataset.operator import DatasetOperator, _get_time_features
+from cccma_ppp.data_modules.dataset.config_abc import (
     lead_months_config,
-    DatasetOperator,
-    _get_time_features,
+    DatasetConfigABC,
 )
 
 from cccma_ppp.data_modules.data import (

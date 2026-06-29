@@ -6,7 +6,7 @@ import torch
 from pathlib import Path
 
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
-from cccma_ppp.inference.datasets import InferenceDatasetConfig
+from cccma_ppp.inference.dataset import InferenceDatasetConfig
 from cccma_ppp.data_modules.dataloader import (
     Dataloader,
     DataloaderConfigABC,

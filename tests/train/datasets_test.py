@@ -3700,3 +3700,576 @@ def test_get_added_features_dim_zero():
     )
 
     assert ds.get_added_features_dim() == 0
+
+
+def test_missing_model_raises():
+    cond = DummyDataConfig()
+    cond.paths = ["different"]
+
+    with pytest.raises(AttributeError):
+        TrainDatasetConfig(
+            model=None,
+            condition=cond,
+            condition_method="static",
+        )
+
+
+def test_invalid_time_feature_real():
+    model = DummyDataConfig()
+
+    cond = DummyDataConfig()
+    cond.paths = ["different"]
+
+    with pytest.raises(ValueError):
+        TrainDatasetConfig(
+            model=model,
+            condition=cond,
+            condition_method="static",
+            time_features=["year", "bad_feature"],
+        )
+
+
+def test_empty_time_features_real():
+    model = DummyDataConfig()
+
+    cond = DummyDataConfig()
+    cond.paths = ["different"]
+
+    cfg = TrainDatasetConfig(
+        model=model,
+        condition=cond,
+        condition_method="static",
+        time_features=[],
+    )
+
+    assert cfg.time_features == []
+
+
+def test_condition_method_same_member_valid():
+    model = DummyDataConfig()
+
+    cond = DummyDataConfig()
+    cond.paths = ["different"]
+
+    cfg = TrainDatasetConfig(
+        model=model,
+        condition=cond,
+        condition_method="same_member",
+    )
+
+    assert cfg.condition_method == "same_member"
+
+
+def test_condition_method_cross_ensemble_valid():
+    model = DummyDataConfig()
+
+    cond = DummyDataConfig()
+    cond.paths = ["different"]
+
+    cfg = TrainDatasetConfig(
+        model=model,
+        condition=cond,
+        condition_method="cross_ensemble",
+    )
+
+    assert cfg.condition_method == "cross_ensemble"
+
+
+def test_condition_method_static_valid():
+    cfg = make_valid_config_with()
+
+    assert cfg.condition_method == "static"
+
+
+def test_effective_condition_property():
+    cfg = make_valid_config_with()
+
+    assert cfg.effective_condition is not None
+
+
+def test_build_dataset_metadata_true():
+    cfg = make_valid_config_with()
+
+    ds = cfg.build_dataset(
+        years=[2000],
+        return_metadata=True,
+    )
+
+    assert ds.return_metadata is True
+
+
+def test_build_dataset_metadata_false():
+    cfg = make_valid_config_with()
+
+    ds = cfg.build_dataset(
+        years=[2000],
+        return_metadata=False,
+    )
+
+    assert ds.return_metadata is False
+
+
+def test_added_feature_dimension_zero():
+    cfg = make_valid_config_with()
+    cfg.time_features = None
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+    )
+
+    assert ds.get_added_features_dim() == 0
+
+
+def test_added_feature_dimension_three():
+    cfg = make_valid_config_with()
+
+    cfg.time_features = [
+        "year",
+        "month",
+        "lead_time",
+    ]
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+    )
+
+    assert ds.get_added_features_dim() == 3
+
+
+def test_getitem_metadata_contains_keys():
+    cfg = make_valid_config_with()
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+        return_metadata=True,
+    )
+
+    _, meta = ds[0]
+
+    assert "year" in meta
+    assert "lead_time" in meta
+
+
+def test_using_model_data_as_condition():
+    model = DummyDataConfig()
+
+    cond = DummyDataConfig()
+    cond.paths = model.paths
+    cond.names = model.names
+    cond.ensemble_list = model.ensemble_list
+
+    cfg = TrainDatasetConfig(
+        model=model,
+        observation=DummyDataConfig(),
+        condition=cond,
+        condition_method="same_member",
+    )
+
+    assert cfg._using_model_data_as_condition
+
+
+# ============================================================
+# Additional REAL branch coverage tests
+# ============================================================
+
+
+def test_build_dataset_return_metadata_true_branch():
+    cfg = make_valid_config_with()
+
+    ds = cfg.build_dataset(
+        years=[2000],
+        return_metadata=True,
+    )
+
+    assert isinstance(ds, TrainDataset)
+    assert ds.return_metadata is True
+
+
+def test_build_dataset_return_metadata_false_branch():
+    cfg = make_valid_config_with()
+
+    ds = cfg.build_dataset(
+        years=[2000],
+        return_metadata=False,
+    )
+
+    assert isinstance(ds, TrainDataset)
+    assert ds.return_metadata is False
+
+
+def test_get_added_features_dim_multiple():
+    cfg = make_valid_config_with()
+
+    cfg.time_features = [
+        "year",
+        "month",
+        "lead_time",
+    ]
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+    )
+
+    assert ds.get_added_features_dim() == 3
+
+
+def test_getitem_metadata_contains_expected_keys():
+    cfg = make_valid_config_with()
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+        return_metadata=True,
+    )
+
+    _, meta = ds[0]
+
+    assert "year" in meta
+    assert "lead_time" in meta
+
+
+def test_getitem_time_features_multiple():
+    cfg = make_valid_config_with()
+
+    cfg.time_features = [
+        "year",
+        "lead_time",
+        "month_sin",
+    ]
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+    )
+
+    item = ds[0]
+
+    assert item["added_features"] is not None
+
+
+def test_model_as_condition_branch():
+    model = DummyDataConfig()
+
+    cond = DummyDataConfig()
+
+    cond.paths = model.paths
+    cond.names = model.names
+    cond.ensemble_list = model.ensemble_list
+
+    cfg = TrainDatasetConfig(
+        model=model,
+        condition=cond,
+        condition_method="same_member",
+    )
+
+    assert cfg._using_model_data_as_condition is True
+
+
+def test_load_model_false_branch():
+    model = DummyDataConfig()
+
+    cond = DummyDataConfig()
+
+    cond.paths = model.paths
+    cond.names = model.names
+    cond.ensemble_list = model.ensemble_list
+
+    obs = DummyDataConfig()
+
+    cfg = TrainDatasetConfig(
+        model=model,
+        observation=obs,
+        condition=cond,
+        condition_method="same_member",
+    )
+
+    cfg._fitted_preprocessors = True
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+    )
+
+    assert ds._load_model is False
+
+
+def test_cross_ensemble_indexes_contains_expected_keys():
+    model = DummyDataConfig()
+
+    cond = DummyDataConfig()
+    cond.paths = ["different"]
+
+    cfg = TrainDatasetConfig(
+        model=model,
+        condition=cond,
+        condition_method="cross_ensemble",
+    )
+
+    cfg._fitted_preprocessors = True
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+    )
+
+    indexes = ds.get_cond_indexes(ds.model_indexes)
+
+    assert "year" in indexes
+    assert "lead_time" in indexes
+    assert "ensembles" in indexes
+
+
+def test_same_member_indexes_match_model_indexes():
+    model = DummyDataConfig()
+
+    cond = DummyDataConfig()
+    cond.paths = ["different"]
+
+    cfg = TrainDatasetConfig(
+        model=model,
+        condition=cond,
+        condition_method="same_member",
+    )
+
+    cfg._fitted_preprocessors = True
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+    )
+
+    indexes = ds.get_cond_indexes(ds.model_indexes)
+
+    assert np.array_equal(
+        indexes["ensembles"],
+        ds.model_indexes["ensembles"],
+    )
+
+
+def test_prepare_mask_with_existing_mask_and_ensemble_expansion():
+    cfg = make_valid_config_with()
+
+    mask = xr.DataArray(
+        np.zeros((5, 12), dtype=bool),
+        dims=("year", "lead_time"),
+        coords={
+            "year": cfg.model.year_range,
+            "lead_time": np.arange(1, 13),
+        },
+    )
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+        mask=mask,
+    )
+
+    assert ds.mask is not None
+    assert "ensembles" in ds.mask.dims
+
+
+def test_prepare_mask_without_ensemble_expansion():
+    model = DummyDataConfig()
+    model.ensemble_mean = True
+
+    cond = DummyDataConfig()
+    cond.paths = ["different"]
+
+    cfg = TrainDatasetConfig(
+        model=model,
+        condition=cond,
+        condition_method="static",
+    )
+
+    cfg._fitted_preprocessors = True
+
+    mask = xr.DataArray(
+        np.zeros((5, 12), dtype=bool),
+        dims=("year", "lead_time"),
+        coords={
+            "year": cfg.model.year_range,
+            "lead_time": np.arange(1, 13),
+        },
+    )
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+        mask=mask,
+    )
+
+    assert "ensembles" not in ds.mask.dims
+
+
+def test_available_train_time_lead_adjustment():
+    cfg = make_valid_config_with()
+
+    cfg.model.year_range = np.array([2000, 2001, 2002, 2003])
+
+    cfg.lead_months = np.array([24])
+
+    result = cfg.available_train_time
+
+    assert np.array_equal(
+        result,
+        np.array([2000, 2001, 2002]),
+    )
+
+
+def test_ensemble_mean_condition_valid():
+    model = DummyDataConfig()
+
+    cond = DummyDataConfig(
+        ensemble_mean=True,
+    )
+
+    cond.paths = ["different"]
+
+    cfg = TrainDatasetConfig(
+        model=model,
+        condition=cond,
+        condition_method="ensemble_mean",
+    )
+
+    assert cfg.condition_method == "ensemble_mean"
+
+
+def test_get_target_shape_returns_input_shape_without_obs():
+    cfg = make_valid_config_with()
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+    )
+
+    ds.input_shape = (10, 20)
+
+    result = ds.get_target_shape()
+
+    assert result == (10, 20)
+
+
+def test_invalid_time_feature_month_branch():
+    model = DummyDataConfig()
+
+    cond = DummyDataConfig()
+    cond.paths = ["different"]
+
+    with pytest.raises(ValueError):
+        TrainDatasetConfig(
+            model=model,
+            condition=cond,
+            condition_method="static",
+            time_features=["month"],
+        )
+
+
+def test_time_feature_month_cos():
+    cfg = make_valid_config_with()
+
+    cfg.time_features = ["month_cos"]
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+    )
+
+    item = ds[0]
+
+    assert item["added_features"] is not None
+
+
+def test_time_feature_all_supported():
+    cfg = make_valid_config_with()
+
+    cfg.time_features = [
+        "year",
+        "lead_time",
+        "month_sin",
+        "month_cos",
+    ]
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+    )
+
+    item = ds[0]
+
+    assert len(item["added_features"]) == 4
+
+
+def test_dataset_empty_requested_years():
+    cfg = make_valid_config_with()
+
+    with pytest.raises(IndexError):
+        TrainDataset(
+            cfg,
+            requested_years=[],
+        )
+
+
+def test_observation_without_condition():
+    model = DummyDataConfig()
+    obs = DummyDataConfig()
+
+    cfg = TrainDatasetConfig(
+        model=model,
+        observation=obs,
+        condition=None,
+        condition_method=None,
+    )
+
+    cfg._fitted_preprocessors = True
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+    )
+
+    assert ds.observation_dataset is not None
+
+
+def test_added_feature_dimension_month_cos():
+    cfg = make_valid_config_with()
+
+    cfg.time_features = ["month_cos"]
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+    )
+
+    assert ds.get_added_features_dim() == 1
+
+
+def test_time_feature_month_cos_only():
+    cfg = make_valid_config_with()
+
+    cfg.time_features = ["month_cos"]
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+    )
+
+    item = ds[0]
+
+    assert item["added_features"] is not None
+
+
+def test_get_added_features_dim_month_cos():
+    cfg = make_valid_config_with()
+
+    cfg.time_features = ["month_cos"]
+
+    ds = TrainDataset(
+        cfg,
+        requested_years=[2000],
+    )
+
+    assert ds.get_added_features_dim() == 1

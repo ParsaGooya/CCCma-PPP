@@ -449,3 +449,230 @@ def test_build_train_loader_with_mask_flags():
     out = cfg.build_train_loader(return_spatial_mask=True)
 
     assert out is not None
+
+
+# ============================================================
+# Additional REAL TrainDataloaderConfig tests
+# ============================================================
+
+
+def test_train_years_property_uses_available_years():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+    )
+
+    assert np.array_equal(
+        cfg.train_years,
+        np.arange(2000, 2005),
+    )
+
+
+def test_validation_years_created_from_split():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+        num_validation_years=2,
+    )
+
+    assert len(cfg.validation_years) == 2
+
+
+def test_train_years_subset():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+        train_years=(2001, 2003),
+    )
+
+    assert np.array_equal(
+        cfg.train_years,
+        np.array([2001, 2002, 2003]),
+    )
+
+
+def test_setup_distributed_world_size():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+    )
+
+    dist = DummyDistributed()
+
+    cfg.setup_distributed(dist)
+
+    assert cfg.rank == 0
+    assert cfg.world_size == 1
+
+
+def test_setup_distributed_marks_config_ready():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+    )
+
+    cfg.setup_distributed(DummyDistributed())
+
+    assert cfg._setup is True
+
+
+def test_input_var_metadata_property_real():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+    )
+
+    assert cfg.input_var_metadata == "i"
+
+
+def test_target_var_metadata_property_real():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+    )
+
+    assert cfg.target_var_metadata == "t"
+
+
+def test_get_weights_default():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+    )
+
+    assert cfg.get_weights() == "w"
+
+
+def test_get_weights_with_argument():
+    class DummyWeights:
+        pass
+
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+    )
+
+    assert cfg.get_weights(DummyWeights()) == "w"
+
+
+def test_build_train_loader_sets_dataloader_length():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+    )
+
+    cfg.setup_distributed(DummyDistributed())
+
+    loader = cfg.build_train_loader()
+
+    assert loader is not None
+
+
+def test_build_validation_loader_returns_loader():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+        num_validation_years=1,
+    )
+
+    cfg.setup_distributed(DummyDistributed())
+
+    loader = cfg.build_validation_loader()
+
+    assert loader is not None
+
+
+def test_build_validation_loader_none_when_disabled():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+        num_validation_years=0,
+    )
+
+    cfg.setup_distributed(DummyDistributed())
+
+    with pytest.warns(UserWarning):
+        loader = cfg.build_validation_loader()
+
+    assert loader is None
+
+
+def test_build_train_loader_with_spatial_mask():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+    )
+
+    cfg.setup_distributed(DummyDistributed())
+
+    loader = cfg.build_train_loader(
+        return_spatial_mask=True,
+    )
+
+    assert loader is not None
+
+
+def test_build_validation_loader_with_spatial_mask():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+        num_validation_years=1,
+    )
+
+    cfg.setup_distributed(DummyDistributed())
+
+    loader = cfg.build_validation_loader(
+        return_spatial_mask=True,
+        reduce_spatial_mask=False,
+    )
+
+    assert loader is not None
+
+
+def test_setup_distributed_non_root_branch():
+    cfg = TrainDataloaderConfig(
+        dataset_config=DummyDatasetConfig(),
+        batch_size=2,
+    )
+
+    class Dist(DummyDistributed):
+        def is_root(self):
+            return False
+
+    cfg.setup_distributed(Dist())
+
+    assert cfg._setup
+
+
+def test_batchdata_added_features_none():
+    batch = BatchData(
+        torch.ones((2, 2)),
+        torch.ones((2, 2)),
+    )
+
+    assert batch.added_features is None
+
+
+def test_collate_metadata_tuple_branch():
+    batch = [
+        (
+            {
+                "input": torch.ones(2),
+                "target": torch.zeros(2),
+                "added_features": None,
+            },
+            {"year": 2000},
+        ),
+        (
+            {
+                "input": torch.ones(2),
+                "target": torch.zeros(2),
+                "added_features": None,
+            },
+            {"year": 2001},
+        ),
+    ]
+
+    result = collate_batch(batch)
+
+    assert isinstance(result, BatchData)
