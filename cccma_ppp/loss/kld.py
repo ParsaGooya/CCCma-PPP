@@ -1,10 +1,10 @@
+from __future__ import annotations
 import torch
 from torch.distributions import Normal, kl_divergence
 import dataclasses
 
 from cccma_ppp.loss.loss_abc import lossABC, Reduction
 
-from typing import TYPE_CHECKING
 
 
 from cccma_ppp.models.normalized_flows import NormalizedFlowModel

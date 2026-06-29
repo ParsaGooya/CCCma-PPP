@@ -1,8 +1,7 @@
+from __future__ import annotations
 import dataclasses
 import os
-import numpy as np
 import torch
-import warnings
 import logging
 from pathlib import Path
 import yaml
@@ -15,14 +14,13 @@ from cccma_ppp.generic.runtime import RuntimeContext
 
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
 
-import cccma_ppp.train.registry_imports
-
 
 @dataclasses.dataclass
 class InferenceConfig:
-
-    experiment_dir: str 
-    inference_loader: InferenceDataloaderConfig = dataclasses.field(default_factory=InferenceDataloaderConfig) 
+    experiment_dir: str
+    inference_loader: InferenceDataloaderConfig = dataclasses.field(
+        default_factory=InferenceDataloaderConfig
+    )
     output_path: str = None
     output_ensemble_size: int = 1
     output_sampler: OutputsamplerConfig | None = None
@@ -36,8 +34,12 @@ class InferenceConfig:
         self._resolve_inference_dataset_config()
 
     def _resolve_inference_dataset_config(self):
-        if self.inference_loader.dataset_config is None: ### method needs to be implemented!
-            self.inference_loader.dataset_config.read_from_train(self.train_loader.dataset_config)
+        if (
+            self.inference_loader.dataset_config is None
+        ):  ### method needs to be implemented!
+            self.inference_loader.dataset_config.read_from_train(
+                self.train_loader.dataset_config
+            )
         else:
             self._check_inference_dataset()
 
@@ -45,46 +47,50 @@ class InferenceConfig:
 
         if self.train_config.get("module").get("type").lower() in ["cVAE"]:
             if self.inference_loader.dataset_config.condition_method is None:
-                    raise ValueError(
-                    "with cVAE you must specify condition method!"
-                )
+                raise ValueError("with cVAE you must specify condition method!")
 
-        if (self.inference_loader.input_var_metadata !=
-                        self.train_loader.input_var_metadata):
-                raise RuntimeError(
-                    'Input variables or preprocessing steps are not consistent'
-                    f'with the trained model at : {self.experiment_dir}' 
-                )
+        if (
+            self.inference_loader.input_var_metadata
+            != self.train_loader.input_var_metadata
+        ):
+            raise RuntimeError(
+                "Input variables or preprocessing steps are not consistent"
+                f"with the trained model at : {self.experiment_dir}"
+            )
 
     def _check_esnsemble_generation(self):
         if self.output_ensemble_size > 1 and self.output_sampler is None:
-            
-            if self.train_config.get("module").get("type").lower() in ["deterministic", "default"]:
+            if self.train_config.get("module").get("type").lower() in [
+                "deterministic",
+                "default",
+            ]:
                 raise ValueError(
                     "with determisitic models output ensemble cannot be generated "
                     "unless output_sampler configuration is provided."
                 )
 
     def load_train_config(self):
-                
-        return prepare_config(self.experiment_dir / 'config.yaml')  
-    
+
+        return prepare_config(self.experiment_dir / "config.yaml")
+
     def load_train_dataloader_config(self):
         return dacite.from_dict(
             data_class=TrainDataloaderConfig,
-            data=self.train_config.get('train_loader'),
+            data=self.train_config.get("train_loader"),
             config=dacite.Config(strict=False),
         )
 
     @property
     def output_preprocessor_dir(self):
 
-        if 'observation' in self.train_config['train_loader']['dataset_config']:
-            output_data = self.train_config['train_loader']['dataset_config']['observation']
+        if "observation" in self.train_config["train_loader"]["dataset_config"]:
+            output_data = self.train_config["train_loader"]["dataset_config"][
+                "observation"
+            ]
         else:
-            output_data = self.train_config['train_loader']['dataset_config']['model']
+            output_data = self.train_config["train_loader"]["dataset_config"]["model"]
 
-        output_preprocessor =  output_data.get('preprocessing_pipeline')
+        output_preprocessor = output_data.get("preprocessing_pipeline")
 
         location = self.experiment_dir / "preprocessing_pipeline"
         return location / f"{output_preprocessor.name}_preprocessing_pipeline.joblib"
@@ -96,7 +102,6 @@ class InferenceConfig:
         """
         return self.output_path or os.path.join(self.experiment_dir, "inference")
 
-    
     def _prepare_runtime_variables(self):
 
         RuntimeContext.GLOBAL_EXP_DIR = str(self.experiment_dir)
@@ -104,9 +109,7 @@ class InferenceConfig:
         RuntimeContext.INPUT_VAR_METADATA = self.inference_loader.input_var_metadata
         RuntimeContext.TARGET_VAR_METADATA = self.inference_loader.target_var_metadata
 
-
-    def prepare_directory(self, distributed : Distributed):
-
+    def prepare_directory(self, distributed: Distributed):
         """
         Create output (sub)directories.
         """
@@ -114,11 +117,9 @@ class InferenceConfig:
         self._prepare_runtime_variables()
 
         if distributed.is_root():
-
             os.makedirs(self.output_dir, exist_ok=True)
 
         distributed.barrier()
-
 
 
 def prepare_config(path: Path | str) -> dict:
@@ -128,8 +129,11 @@ def prepare_config(path: Path | str) -> dict:
     return data
 
 
-
-def build_writer(config : InferenceConfig, distributed : Distributed, logger : logging.Logger | None = None):
+def build_writer(
+    config: InferenceConfig,
+    distributed: Distributed,
+    logger: logging.Logger | None = None,
+):
     def log(msg, **kwargs):
         if distributed.is_root():
             if logger is not None:
@@ -137,14 +141,12 @@ def build_writer(config : InferenceConfig, distributed : Distributed, logger : l
             else:
                 print(msg)
 
-
-    log(f"creating data loader ...")
-
+    log("creating data loader ...")
 
     config.train_loader.setup_distributed(distributed)
 
     train_loader = config.train_loader.build_train_loader()
-    validation_loader =  config.train_loader.build_validation_loader()
+    validation_loader = config.train_loader.build_validation_loader()
 
     num_train_batches = len(train_loader)
     input_shape = train_loader.input_shape
@@ -155,38 +157,44 @@ def build_writer(config : InferenceConfig, distributed : Distributed, logger : l
 
     log(f"Creating {config.module.type} module ...")
 
-    module = config.module.build_module(  input_shape = input_shape,
-                                        output_shape = output_shape,
-                                        added_features_dim = added_features_dim)
+    module = config.module.build_module(
+        input_shape=input_shape,
+        output_shape=output_shape,
+        added_features_dim=added_features_dim,
+    )
 
-
-    module  = module.to(distributed.device)
+    module = module.to(distributed.device)
 
     if distributed.distributed:
-        module = torch.nn.parallel.DistributedDataParallel(module, device_ids=[distributed.local_rank], output_device=distributed.local_rank, find_unused_parameters=False)
+        module = torch.nn.parallel.DistributedDataParallel(
+            module,
+            device_ids=[distributed.local_rank],
+            output_device=distributed.local_rank,
+            find_unused_parameters=False,
+        )
 
+    log("Creating loss function ...")
 
-    log(f"Creating loss function ...")
-
-    reconstruction_loss = config.losspipeline.build(weights=weights, num_output_dimensions= getattr(module.model, 'NUM_OUTPUT_DIMS', None ) or len(output_shape))
+    reconstruction_loss = config.losspipeline.build(
+        weights=weights,
+        num_output_dimensions=getattr(module.model, "NUM_OUTPUT_DIMS", None)
+        or len(output_shape),
+    )
 
     module.init_loss_function(reconstruction_loss)
-
 
     log(f"Creating {config.optimization.optimizer_type} optimizer ...")
 
     optimizer = config.optimization.build(module, num_train_batches, config.max_epochs)
 
-
-    log(f"Creating trainer ...")
+    log("Creating trainer ...")
 
     trainer = config.trainer.build(
-              train_data_loader  = train_loader ,
-              validation_data_loader = validation_loader,
-              module = module,
-              optimization = optimizer,
-              max_epochs = config.max_epochs)
+        train_data_loader=train_loader,
+        validation_data_loader=validation_loader,
+        module=module,
+        optimization=optimizer,
+        max_epochs=config.max_epochs,
+    )
 
     return trainer
-
-

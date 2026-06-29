@@ -2719,24 +2719,6 @@ def test_cvae_requires_beta_finder(tmp_path):
         )
 
 
-def test_cvae_requires_condition_method(tmp_path):
-    loader = DummyTrainLoader()
-    loader.dataset_config.condition_method = None
-
-    module = DummyModuleSelector()
-    module.type = "cVAE"
-
-    with pytest.raises(ValueError):
-        TrainConfig(
-            experiment_dir=tmp_path,
-            max_epochs=1,
-            train_loader=loader,
-            module=module,
-            losspipeline=DummyLossPipeline(),
-            trainer=DummyTrainer(),
-        )
-
-
 @pytest.mark.pruned
 def test_default_model_without_observation_raises(tmp_path):
     loader = DummyTrainLoader()

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import dataclasses
 import torch
 from torch.utils.data import DataLoader, Dataset

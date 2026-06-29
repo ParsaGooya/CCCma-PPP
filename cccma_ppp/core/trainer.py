@@ -1,3 +1,4 @@
+from __future__ import annotations
 import torch
 from torch.cuda.amp import GradScaler
 from pathlib import Path

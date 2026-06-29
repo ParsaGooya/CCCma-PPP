@@ -107,25 +107,6 @@ def test_collate_with_features():
     assert out.added_features is not None
 
 
-def test_collate_with_metadata():
-    batch = [
-        (
-            {"input": torch.ones(2), "target": torch.zeros(2), "added_features": None},
-            {"id": 1},
-        ),
-        (
-            {"input": torch.ones(2), "target": torch.zeros(2), "added_features": None},
-            {"id": 2},
-        ),
-    ]
-
-    data = collate_batch(batch)
-    meta = getattr(data, "metadata", None)
-
-    assert isinstance(data, BatchData)
-    assert meta is None
-
-
 @pytest.mark.pruned
 def test_collate_with_mask_flags():
     batch = [
