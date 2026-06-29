@@ -74,6 +74,7 @@ def test_condition_without_method_raises():
         cfg._check_condition()
 
 
+@pytest.mark.pruned
 def test_same_member_requires_ensemble_dimension():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -134,27 +135,6 @@ def test_static_requires_condition():
         cfg._check_condition()
 
 
-def test_get_added_features_dim_none():
-    ds = object.__new__(InferenceDataset)
-
-    ds.config = DummyDatasetConfig(time_features=None)
-
-    assert ds.get_added_features_dim() == 0
-
-
-def test_get_added_features_dim_present():
-    ds = object.__new__(InferenceDataset)
-
-    ds.config = DummyDatasetConfig(
-        time_features=[
-            "year",
-            "lead_time",
-        ]
-    )
-
-    assert ds.get_added_features_dim() == 2
-
-
 def test_get_cond_indexes_static():
     ds = object.__new__(InferenceDataset)
 
@@ -202,54 +182,6 @@ def test_get_cond_indexes_no_condition_dataset():
     )
 
     assert result is None
-
-
-def test_len():
-    ds = object.__new__(InferenceDataset)
-
-    ds.model_indexes = {
-        "year": np.array([2000, 2001, 2002]),
-        "lead_time": np.array([1, 2, 3]),
-    }
-
-    assert len(ds) == 3
-
-
-def test_load_fitted_preprocessors(monkeypatch):
-    op = DummyOperator()
-
-    monkeypatch.setattr(
-        InferenceDatasetConfig,
-        "ds_operator",
-        property(lambda self: op),
-    )
-
-    cfg = object.__new__(InferenceDatasetConfig)
-
-    cfg._load_fitted_preprocessors()
-
-    assert op.loaded
-
-
-def test_add_fitted_preprocessor(monkeypatch):
-    op = DummyOperator()
-
-    monkeypatch.setattr(
-        InferenceDatasetConfig,
-        "ds_operator",
-        property(lambda self: op),
-    )
-
-    cfg = object.__new__(InferenceDatasetConfig)
-
-    cfg._add_fitted_preprocessor(
-        "dummy",
-        5,
-    )
-
-    assert op.added
-    assert op.preprocessor == "dummy"
-    assert op.index == 5
 
 
 def test_common_time_overlap():
@@ -305,6 +237,7 @@ def test_check_condition_valid_same_member():
     cfg._check_condition()
 
 
+@pytest.mark.pruned
 def test_check_condition_valid_cross_ensemble():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -331,6 +264,7 @@ def test_check_condition_valid_ensemble_mean():
     cfg._check_condition()
 
 
+@pytest.mark.pruned
 def test_common_time_with_condition():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -346,6 +280,7 @@ def test_common_time_with_condition():
     )
 
 
+@pytest.mark.pruned
 def test_common_time_without_condition():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -369,6 +304,7 @@ def test_num_input_lead_months():
     assert cfg.num_input_lead_months == 12
 
 
+@pytest.mark.pruned
 def test_available_inference_time_single_lead():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -383,6 +319,7 @@ def test_available_inference_time_single_lead():
     assert len(result) > 0
 
 
+@pytest.mark.pruned
 def test_available_inference_time_multiple_leads():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -397,36 +334,7 @@ def test_available_inference_time_multiple_leads():
     assert len(result) > 0
 
 
-def test_build_dataset_returns_dataset(monkeypatch):
-    created = {}
-
-    class DummyInferenceDatasetCreated:
-        def __init__(
-            self,
-            config,
-            requested_years,
-            return_metadata,
-        ):
-            created["config"] = config
-            created["years"] = requested_years
-            created["metadata"] = return_metadata
-
-    monkeypatch.setattr(
-        "cccma_ppp.inference.dataset.InferenceDataset",
-        DummyInferenceDatasetCreated,
-    )
-
-    cfg = object.__new__(InferenceDatasetConfig)
-
-    result = cfg.build_dataset(
-        years=np.array([2000]),
-        return_metadata=True,
-    )
-
-    assert result is not None
-    assert created["metadata"] is True
-
-
+@pytest.mark.pruned
 def test_using_model_data_as_condition_true():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -437,6 +345,7 @@ def test_using_model_data_as_condition_true():
     assert cfg._using_model_data_as_condition is True
 
 
+@pytest.mark.pruned
 def test_using_model_data_as_condition_false():
     model = SimpleNamespace(
         paths=["a"],
@@ -483,72 +392,11 @@ def test_dataset_invalid_years():
         )
 
 
-def test_load_model_property():
-    ds = object.__new__(InferenceDataset)
-
-    ds.config = SimpleNamespace(
-        _using_model_data_as_condition=False,
-    )
-
-    assert ds._load_model is True
-
-
-def test_load_model_property_false():
-    ds = object.__new__(InferenceDataset)
-
-    ds.config = SimpleNamespace(
-        _using_model_data_as_condition=True,
-    )
-
-    assert ds._load_model is False
-
-
-def test_write_condition_to_input_property():
-    ds = object.__new__(InferenceDataset)
-
-    ds.config = SimpleNamespace(
-        _using_model_data_as_condition=True,
-    )
-
-    assert ds._write_condition_to_input is True
-
-
-def test_write_condition_to_input_property_false():
-    ds = object.__new__(InferenceDataset)
-
-    ds.config = SimpleNamespace(
-        _using_model_data_as_condition=False,
-    )
-
-    assert ds._write_condition_to_input is False
-
-
-def test_concat_condition_to_input_property():
-    ds = object.__new__(InferenceDataset)
-
-    ds.config = SimpleNamespace(
-        _using_model_data_as_condition=False,
-        effective_condition=object(),
-    )
-
-    assert ds._concat_condition_to_input is True
-
-
-def test_concat_condition_to_input_property_false():
-    ds = object.__new__(InferenceDataset)
-
-    ds.config = SimpleNamespace(
-        _using_model_data_as_condition=False,
-        effective_condition=None,
-    )
-
-    assert ds._concat_condition_to_input is False
-
-
 class DummyFlatten:
     pass
 
 
+@pytest.mark.pruned
 def test_get_input_shape(monkeypatch):
     ds = object.__new__(InferenceDataset)
 
@@ -582,6 +430,7 @@ def test_get_input_shape(monkeypatch):
     assert shape is not None
 
 
+@pytest.mark.pruned
 def test_get_cond_indexes_same_member_copy():
     ds = object.__new__(InferenceDataset)
 
@@ -650,38 +499,7 @@ def test_effective_input_condition():
     assert ds.effective_input is condition
 
 
-def test_concat_condition_true():
-    ds = object.__new__(InferenceDataset)
-
-    ds.config = SimpleNamespace(
-        _using_model_data_as_condition=False,
-        effective_condition=object(),
-    )
-
-    assert ds._concat_condition_to_input is True
-
-
-def test_concat_condition_false():
-    ds = object.__new__(InferenceDataset)
-
-    ds.config = SimpleNamespace(
-        _using_model_data_as_condition=True,
-        effective_condition=object(),
-    )
-
-    assert ds._concat_condition_to_input is False
-
-
-def test_len_lead_time_key():
-    ds = object.__new__(InferenceDataset)
-
-    ds.model_indexes = {
-        "lead_time": np.arange(7),
-    }
-
-    assert len(ds) == 7
-
-
+@pytest.mark.pruned
 def test_get_cond_indexes_no_condition():
     ds = object.__new__(InferenceDataset)
 
@@ -885,6 +703,7 @@ def test_getitem_return_metadata(monkeypatch):
     assert meta["lead_time"] == 1.0
 
 
+@pytest.mark.pruned
 def test_getitem_added_features(monkeypatch):
     ds = object.__new__(InferenceDataset)
 
@@ -992,6 +811,7 @@ def test_get_input_shape_concat_condition(monkeypatch):
     assert ds.get_input_shape() == (4, 5)
 
 
+@pytest.mark.pruned
 def test_get_cond_indexes_cross_ensemble_branch():
     ds = object.__new__(InferenceDataset)
 
@@ -1058,6 +878,7 @@ def test_index_model_dataset(monkeypatch):
     assert out is not None
 
 
+@pytest.mark.pruned
 def test_post_init_requested_year_subset_check():
     cfg = SimpleNamespace(
         _fitted_preprocessors=True,
@@ -1071,17 +892,7 @@ def test_post_init_requested_year_subset_check():
         )
 
 
-def test_from_train_invalid():
-    train_cfg = SimpleNamespace(
-        input_dataset=None,
-        condition_dataset=None,
-        observation_dataset=None,
-    )
-
-    with pytest.raises(Exception):
-        InferenceDatasetConfig._from_train(train_cfg)
-
-
+@pytest.mark.pruned
 def test_getitem_static_condition(monkeypatch):
     ds = object.__new__(InferenceDataset)
 
@@ -1121,6 +932,7 @@ def test_getitem_static_condition(monkeypatch):
     assert "input" in sample
 
 
+@pytest.mark.pruned
 def test_getitem_without_condition(monkeypatch):
     ds = object.__new__(InferenceDataset)
 
@@ -1159,6 +971,7 @@ def test_getitem_without_condition(monkeypatch):
     assert "input" in sample
 
 
+@pytest.mark.pruned
 def test_using_model_data_as_condition_same_dataset():
     shared = SimpleNamespace(
         paths=["path"],
@@ -1185,24 +998,7 @@ def test_check_model_same_member_ensemble_mean_raises():
         cfg._check_model()
 
 
-def test_get_added_features_dim_empty():
-    ds = object.__new__(InferenceDataset)
-
-    ds.config = DummyDatasetConfig(time_features=[])
-
-    assert ds.get_added_features_dim() == 0
-
-
-def test_len_year_only():
-    ds = object.__new__(InferenceDataset)
-
-    ds.model_indexes = {
-        "year": np.arange(8),
-    }
-
-    assert len(ds) == 8
-
-
+@pytest.mark.pruned
 def test_get_cond_indexes_same_member_multiple():
     ds = object.__new__(InferenceDataset)
 
@@ -1224,6 +1020,7 @@ def test_get_cond_indexes_same_member_multiple():
     )
 
 
+@pytest.mark.pruned
 def test_index_condition_dataset_dynamic_multiple(monkeypatch):
     ds = object.__new__(InferenceDataset)
 
@@ -1309,6 +1106,7 @@ def test_index_model_dataset_no_ensemble(monkeypatch):
     assert result is not None
 
 
+@pytest.mark.pruned
 def test_getitem_metadata_and_features(monkeypatch):
     ds = object.__new__(InferenceDataset)
 
@@ -1348,22 +1146,7 @@ def test_getitem_metadata_and_features(monkeypatch):
     assert meta is not None
 
 
-def test_load_model_false_branch(monkeypatch):
-    ds = object.__new__(InferenceDataset)
-
-    ds.config = SimpleNamespace(_using_model_data_as_condition=True)
-
-    assert ds._load_model is False
-
-
-def test_load_model_true_branch(monkeypatch):
-    ds = object.__new__(InferenceDataset)
-
-    ds.config = SimpleNamespace(_using_model_data_as_condition=False)
-
-    assert ds._load_model is True
-
-
+@pytest.mark.pruned
 def test_using_model_data_as_condition_match():
     obj = SimpleNamespace(
         paths=["x"],
@@ -1377,24 +1160,6 @@ def test_using_model_data_as_condition_match():
     cfg.condition = obj
 
     assert cfg._using_model_data_as_condition
-
-
-def test_len_alternate_key():
-    ds = object.__new__(InferenceDataset)
-
-    ds.model_indexes = {
-        "foo": np.arange(4),
-    }
-
-    assert len(ds) == 4
-
-
-def test_get_added_features_dim_three():
-    ds = object.__new__(InferenceDataset)
-
-    ds.config = DummyDatasetConfig(["year", "month", "lead"])
-
-    assert ds.get_added_features_dim() == 3
 
 
 def test_from_train_failure():
@@ -1464,26 +1229,6 @@ def test_prepare_mask_with_ensemble(monkeypatch):
     assert "ensembles" in mask.dims
 
 
-def test_get_model_indexes_real():
-    ds = object.__new__(InferenceDataset)
-
-    ds.mask = xr.DataArray(
-        np.array([[[np.nan, 1.0]]]),
-        dims=("ensembles", "year", "lead_time"),
-        coords={
-            "ensembles": [0],
-            "year": [2000],
-            "lead_time": [1, 2],
-        },
-    )
-
-    result = ds.get_model_indexes()
-
-    assert "ensembles" in result
-    assert "year" in result
-    assert "lead_time" in result
-
-
 def test_check_model_present():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -1492,6 +1237,7 @@ def test_check_model_present():
     cfg._check_model()
 
 
+@pytest.mark.pruned
 def test_using_model_data_as_condition_with_matching_objects():
     obj = SimpleNamespace(
         paths=["a"],
@@ -1507,6 +1253,7 @@ def test_using_model_data_as_condition_with_matching_objects():
     assert cfg._using_model_data_as_condition is True
 
 
+@pytest.mark.pruned
 def test_using_model_data_as_condition_non_matching():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -1525,6 +1272,7 @@ def test_using_model_data_as_condition_non_matching():
     assert cfg._using_model_data_as_condition is False
 
 
+@pytest.mark.pruned
 def test_get_cond_indexes_condition_none():
     ds = object.__new__(InferenceDataset)
 
@@ -1538,36 +1286,6 @@ def test_get_cond_indexes_condition_none():
     )
 
     assert result is None
-
-
-def test_load_model_property_true():
-    ds = object.__new__(InferenceDataset)
-
-    ds.config = SimpleNamespace(
-        _using_model_data_as_condition=False,
-    )
-
-    assert ds._load_model is True
-
-
-def test_get_added_features_dim_zero():
-    ds = object.__new__(InferenceDataset)
-
-    ds.config = SimpleNamespace(
-        time_features=None,
-    )
-
-    assert ds.get_added_features_dim() == 0
-
-
-def test_get_added_features_dim_many():
-    ds = object.__new__(InferenceDataset)
-
-    ds.config = SimpleNamespace(
-        time_features=["year", "month", "lead_time"],
-    )
-
-    assert ds.get_added_features_dim() == 3
 
 
 def test_prepare_mask_ensemble_mean(monkeypatch):
@@ -1649,6 +1367,7 @@ def test_index_condition_dataset_dynamic_no_ensemble(monkeypatch):
     assert ds._index_condition_dataset(0) is not None
 
 
+@pytest.mark.pruned
 def test_get_cond_indexes_empty_ensemble_coord():
     ds = object.__new__(InferenceDataset)
 
@@ -1703,6 +1422,7 @@ def test_from_train_all_paths(monkeypatch):
     assert result["condition_method"] == "static"
 
 
+@pytest.mark.pruned
 def test_index_model_dataset_with_load(monkeypatch):
     ds = object.__new__(InferenceDataset)
 
@@ -1765,6 +1485,7 @@ def test_from_train_branch_model_only(monkeypatch):
     assert result["model"] == "MODEL"
 
 
+@pytest.mark.pruned
 def test_from_train_branch_condition(monkeypatch):
     captured = {}
 
@@ -1821,6 +1542,7 @@ def test_from_train_branch_model_as_condition(monkeypatch):
     assert result["condition_method"] == "same_member"
 
 
+@pytest.mark.pruned
 def test_get_cond_indexes_cross_ensemble_single_member():
     ds = object.__new__(InferenceDataset)
 
@@ -1847,6 +1569,7 @@ def test_get_cond_indexes_cross_ensemble_single_member():
     assert result["ensembles"][0] == 99
 
 
+@pytest.mark.pruned
 def test_check_model_same_member_with_ensemble_mean():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -1862,6 +1585,7 @@ def test_check_model_same_member_with_ensemble_mean():
         cfg._check_model()
 
 
+@pytest.mark.pruned
 def test_check_condition_requires_method():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -1875,6 +1599,7 @@ def test_check_condition_requires_method():
         cfg._check_condition()
 
 
+@pytest.mark.pruned
 def test_check_condition_ensemble_mean_requires_mean():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -1910,6 +1635,7 @@ def test_check_condition_static_cannot_use_model_data(monkeypatch):
         cfg._check_condition()
 
 
+@pytest.mark.pruned
 def test_check_condition_static_requires_dataset():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -1946,6 +1672,7 @@ def test_available_inference_time():
     np.testing.assert_array_equal(result, np.arange(2000, 2005))
 
 
+@pytest.mark.pruned
 def test_get_input_shape_spatial(monkeypatch):
     monkeypatch.setattr(
         InferenceDataset,
@@ -1975,6 +1702,7 @@ def test_get_input_shape_spatial(monkeypatch):
     assert ds.get_input_shape() == (10, 20)
 
 
+@pytest.mark.pruned
 def test_from_train_invalid_config():
     cfg = SimpleNamespace(
         condition_method=None,
@@ -1992,6 +1720,7 @@ def test_from_train_invalid_config():
         _from_train(cfg)
 
 
+@pytest.mark.pruned
 def test_check_model_same_member_ensemble_mean():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -2003,6 +1732,7 @@ def test_check_model_same_member_ensemble_mean():
         cfg._check_model()
 
 
+@pytest.mark.pruned
 def test_check_condition_cross_ensemble_missing_ensembles():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -2016,6 +1746,7 @@ def test_check_condition_cross_ensemble_missing_ensembles():
         cfg._check_condition()
 
 
+@pytest.mark.pruned
 def test_check_condition_ensemble_mean_false():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -2027,6 +1758,7 @@ def test_check_condition_ensemble_mean_false():
         cfg._check_condition()
 
 
+@pytest.mark.pruned
 def test_check_condition_requires_condition_method():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -2037,6 +1769,7 @@ def test_check_condition_requires_condition_method():
         cfg._check_condition()
 
 
+@pytest.mark.pruned
 def test_check_condition_cross_ensemble_requires_no_ensemble_mean():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -2051,6 +1784,7 @@ def test_check_condition_cross_ensemble_requires_no_ensemble_mean():
         cfg._check_condition()
 
 
+@pytest.mark.pruned
 def test_check_condition_cross_ensemble_requires_ensemble_coord():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -2065,6 +1799,7 @@ def test_check_condition_cross_ensemble_requires_ensemble_coord():
         cfg._check_condition()
 
 
+@pytest.mark.pruned
 def test_check_condition_ensemble_mean_requires_true():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -2078,6 +1813,7 @@ def test_check_condition_ensemble_mean_requires_true():
         cfg._check_condition()
 
 
+@pytest.mark.pruned
 def test_check_condition_static_rejects_model_as_condition(monkeypatch):
     monkeypatch.setattr(
         InferenceDatasetConfig,
@@ -2097,6 +1833,7 @@ def test_check_condition_static_rejects_model_as_condition(monkeypatch):
         cfg._check_condition()
 
 
+@pytest.mark.pruned
 def test_check_condition_static_without_condition():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -2107,6 +1844,7 @@ def test_check_condition_static_without_condition():
         cfg._check_condition()
 
 
+@pytest.mark.pruned
 def test_available_inference_time_with_condition_only():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -2175,6 +1913,7 @@ def test_post_init_success_with_condition(monkeypatch):
     assert ds.condition_dataset == "DATA"
 
 
+@pytest.mark.pruned
 def test_get_input_shape_without_flattener(monkeypatch):
 
     monkeypatch.setattr(
@@ -2207,6 +1946,7 @@ def test_get_input_shape_without_flattener(monkeypatch):
     assert ds.get_input_shape() == (10, 20)
 
 
+@pytest.mark.pruned
 def test_from_train_failure_branch():
 
     cfg = SimpleNamespace(

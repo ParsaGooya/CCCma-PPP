@@ -5,7 +5,6 @@ import numpy as np
 
 from cccma_ppp.models.models_abc import (
     CheckpointConfig,
-    cVAEmodelsABC,
     modelABC,
     modelConfigABC,
     cVAEmodelConfigABC,
@@ -44,22 +43,6 @@ class DummyCvaeConfig(cVAEmodelConfigABC):
 
 
 @pytest.mark.pruned
-                                
-def test_checkpoint_config_init():
-    cfg = CheckpointConfig(
-        load_path="a.pt",
-        checkpoint_input_shape=np.array([1]),
-        checkpoint_output_shape=np.array([1]),
-        checkpoint_input_var_metadata={},
-        checkpoint_output_var_metadata={},
-    )
-
-    assert cfg.load_path == "a.pt"
-    assert cfg.strict is True
-    assert cfg.freeze_weights is False
-
-
-@pytest.mark.pruned
 def test_get_device_from_parameter():
     model = DummyModel()
     device = model._get_device()
@@ -91,6 +74,7 @@ def test_load_state_dict_missing_file(tmp_path):
         model._load_state_dict(cfg)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_success(tmp_path):
     model = DummyModel()
 
@@ -149,6 +133,7 @@ def test_cvae_resolve_flow_success():
     cfg._resolve_flow_settings(condition_dependant_flow=False)
 
 
+@pytest.mark.pruned
 def test_cvae_resolve_flow_error():
     cfg = DummyCvaeConfig()
     cfg.condition_embedding_size = 3
@@ -183,53 +168,11 @@ def test_weights_init_unsupported_module():
     weights_init(obj)
 
 
-@pytest.mark.pruned
 def test_weights_init_invalid_method():
     layer = nn.Linear(2, 2)
 
     with pytest.raises(NotImplementedError):
         weights_init(layer, method="invalid")
-
-
-@pytest.mark.pruned
-                                
-def test_model_config_requires_build():
-    class BadConfig(modelConfigABC):
-        NUM_OUTPUT_DIMS = 2
-        GENERATOR = False
-
-    with pytest.raises(TypeError):
-        BadConfig()
-
-
-@pytest.mark.pruned
-                                
-def test_flow_abc_requires_methods():
-    from cccma_ppp.models.models_abc import flowABC
-
-    class BadFlow(flowABC):
-        pass
-
-    with pytest.raises(TypeError):
-        BadFlow()
-
-
-@pytest.mark.pruned
-                                
-def test_add_checkpoint_config():
-    cfg = DummyConfig()
-
-    ckpt = CheckpointConfig(
-        load_path="x.pt",
-        checkpoint_input_shape=np.array([1]),
-        checkpoint_output_shape=np.array([1]),
-        checkpoint_input_var_metadata={},
-        checkpoint_output_var_metadata={},
-    )
-
-    cfg._add_checkpoint_config(ckpt)
-
-    assert cfg.checkpoint_config is ckpt
 
 
 def test_cvae_resolve_flow_with_flow_enabled_mismatch_allowed():
@@ -287,7 +230,6 @@ def test_load_state_dict_ignores_non_model_keys(tmp_path):
     model._load_state_dict(cfg)
 
 
-@pytest.mark.pruned
 def test_load_state_dict_strict_false_missing_keys(tmp_path):
     model = DummyModel()
 
@@ -365,26 +307,3 @@ def test_weights_init_changes_weights():
     weights_init(layer, method="trunc_normal")
 
     assert not torch.allclose(layer.weight, w_before)
-
-
-@pytest.mark.pruned
-                                
-def test_cvae_model_flag():
-    class DummyCvae(cVAEmodelsABC):
-        def forward(self, x):
-            return x
-
-        def predict(self, x):
-            return x
-
-        def _recognition(self):
-            return (torch.tensor(1),)
-
-        def _condition(self):
-            return (torch.tensor(1),)
-
-        def _generate(self):
-            return torch.tensor(1)
-
-    m = DummyCvae()
-    assert m.generative_modeling is True

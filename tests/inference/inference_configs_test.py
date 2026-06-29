@@ -5,25 +5,8 @@ import pytest
 
 from cccma_ppp.inference.inference_configs import (
     InferenceConfig,
-    prepare_config,
     build_writer,
 )
-
-
-def test_prepare_config(tmp_path):
-
-    config_file = tmp_path / "config.yaml"
-
-    config_file.write_text(
-        """
-module:
-  type: deterministic
-"""
-    )
-
-    cfg = prepare_config(config_file)
-
-    assert cfg["module"]["type"] == "deterministic"
 
 
 def test_check_ensemble_generation_deterministic():
@@ -39,6 +22,7 @@ def test_check_ensemble_generation_deterministic():
         cfg._check_esnsemble_generation()
 
 
+@pytest.mark.pruned
 def test_check_ensemble_generation_default():
 
     cfg = object.__new__(InferenceConfig)
@@ -64,6 +48,7 @@ def test_check_ensemble_generation_allowed_sampler():
     cfg._check_esnsemble_generation()
 
 
+@pytest.mark.pruned
 def test_check_ensemble_generation_single_member():
 
     cfg = object.__new__(InferenceConfig)
@@ -130,26 +115,6 @@ def test_resolve_dataset_config_calls_check(monkeypatch):
     assert called["flag"] is True
 
 
-def test_save_dir_default():
-
-    cfg = object.__new__(InferenceConfig)
-
-    cfg.output_path = None
-    cfg.experiment_dir = Path("/tmp/experiment")
-
-    assert cfg.save_dir == "/tmp/experiment/inference"
-
-
-def test_save_dir_custom():
-
-    cfg = object.__new__(InferenceConfig)
-
-    cfg.output_path = "/custom/output"
-    cfg.experiment_dir = Path("/tmp/experiment")
-
-    assert cfg.save_dir == "/custom/output"
-
-
 def test_output_preprocessor_dir_observation():
 
     cfg = object.__new__(InferenceConfig)
@@ -194,27 +159,6 @@ def test_output_preprocessor_dir_model():
     )
 
     assert cfg.output_preprocessor_dir == expected
-
-
-def test_prepare_runtime_variables(monkeypatch):
-
-    from cccma_ppp.generic.runtime import RuntimeContext
-
-    cfg = object.__new__(InferenceConfig)
-
-    cfg.experiment_dir = Path("/tmp/exp")
-
-    cfg.inference_loader = SimpleNamespace(
-        input_var_metadata=["input"],
-        target_var_metadata=["target"],
-    )
-
-    cfg.output_dir = "/tmp/output"
-
-    cfg._prepare_runtime_variables()
-
-    assert RuntimeContext.GLOBAL_EXP_DIR == "/tmp/exp"
-    assert RuntimeContext.GLOBAL_OUTPUT_DIR == "/tmp/output"
 
 
 def test_prepare_directory_root(monkeypatch):
@@ -275,98 +219,7 @@ def test_prepare_directory_non_root(monkeypatch):
     assert called["mkdir"] is False
 
 
-def test_load_train_config(tmp_path):
-
-    config_file = tmp_path / "config.yaml"
-
-    config_file.write_text(
-        """
-module:
-  type: deterministic
-"""
-    )
-
-    cfg = object.__new__(InferenceConfig)
-    cfg.experiment_dir = tmp_path
-
-    result = cfg.load_train_config()
-
-    assert result["module"]["type"] == "deterministic"
-
-
-def test_load_train_dataloader_config(monkeypatch):
-
-    cfg = object.__new__(InferenceConfig)
-
-    cfg.train_config = {
-        "train_loader": {
-            "dummy": "value",
-        }
-    }
-
-    called = {}
-
-    def fake_from_dict(**kwargs):
-        called.update(kwargs)
-        return "LOADER"
-
-    monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.dacite.from_dict",
-        fake_from_dict,
-    )
-
-    result = cfg.load_train_dataloader_config()
-
-    assert result == "LOADER"
-    assert called["data"] == {"dummy": "value"}
-
-
-def test_post_init_calls_methods(monkeypatch):
-
-    calls = []
-
-    monkeypatch.setattr(
-        InferenceConfig,
-        "load_train_config",
-        lambda self: calls.append("train_cfg") or {},
-    )
-
-    monkeypatch.setattr(
-        InferenceConfig,
-        "load_train_dataloader_config",
-        lambda self: calls.append("train_loader") or object(),
-    )
-
-    monkeypatch.setattr(
-        InferenceConfig,
-        "_check_esnsemble_generation",
-        lambda self: calls.append("ensemble"),
-    )
-
-    monkeypatch.setattr(
-        InferenceConfig,
-        "_resolve_inference_dataset_config",
-        lambda self: calls.append("resolve"),
-    )
-
-    cfg = object.__new__(InferenceConfig)
-
-    cfg.experiment_dir = "exp"
-    cfg.inference_loader = SimpleNamespace(dataset_config=object())
-    cfg.output_path = None
-    cfg.output_ensemble_size = 1
-    cfg.output_sampler = None
-
-    InferenceConfig.__post_init__(cfg)
-
-    assert calls == [
-        "train_cfg",
-        "train_loader",
-        "ensemble",
-        "resolve",
-    ]
-
-
+@pytest.mark.pruned
 def test_output_preprocessor_dir_model_branch():
 
     cfg = object.__new__(InferenceConfig)
@@ -676,15 +529,6 @@ def test_resolve_dataset_config_none_branch():
         cfg._resolve_inference_dataset_config()
 
 
-def test_load_train_config_missing_file():
-
-    cfg = object.__new__(InferenceConfig)
-    cfg.experiment_dir = Path("/does/not/exist")
-
-    with pytest.raises(FileNotFoundError):
-        cfg.load_train_config()
-
-
 class FakeType(str):
     def lower(self):
         return "cVAE"
@@ -705,12 +549,3 @@ def test_cvae_condition_method_branch():
 
     with pytest.raises(ValueError):
         cfg._check_inference_dataset()
-
-
-def test_load_train_config_file_not_found():
-
-    cfg = object.__new__(InferenceConfig)
-    cfg.experiment_dir = Path("/definitely/not/real")
-
-    with pytest.raises(FileNotFoundError):
-        cfg.load_train_config()

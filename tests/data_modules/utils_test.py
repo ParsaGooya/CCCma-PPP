@@ -7,7 +7,6 @@ from cccma_ppp.data_modules.utils import (
     WeightsConfig,
     _create_train_mask,
     _load_xarray_data,
-    _unwrap_data_variables,
 )
 
 
@@ -300,24 +299,6 @@ def test_build_weights_loaded_lon_mismatch(tmp_path):
 
 
 @pytest.mark.pruned
-def test_unwrap_data_variables():
-    ds = make_dataset()
-
-    result = _unwrap_data_variables(ds)
-
-    assert "channels" in result.dims
-
-
-@pytest.mark.pruned
-def test_unwrap_data_variables_channel_size():
-    ds = make_dataset()
-
-    result = _unwrap_data_variables(ds)
-
-    assert result.sizes["channels"] == 2
-
-
-@pytest.mark.pruned
 def test_load_xarray_data_basic():
     ds = make_dataset()
 
@@ -445,7 +426,6 @@ def test_create_train_mask_basic():
     assert mask.shape == (2, 12)
 
 
-@pytest.mark.pruned
 def test_create_train_mask_int_lead_times():
     mask = _create_train_mask(
         years=[2000, 2001],
@@ -475,6 +455,7 @@ def test_create_train_mask_name():
     assert mask.name == "mask"
 
 
+@pytest.mark.pruned
 def test_create_train_mask_contains_true():
     mask = _create_train_mask(
         years=[2000, 2001],

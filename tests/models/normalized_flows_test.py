@@ -103,6 +103,7 @@ def test_normalized_flow_config_build_with_condition_size():
     assert model.flows[0].built_with["condition_size"] == 3
 
 
+@pytest.mark.pruned
 def test_normalized_flow_forward_single_flow():
     cfg = NormalizedFlowConfig(
         list_flows=[DummySelector(IdentityFlow())],
@@ -120,6 +121,7 @@ def test_normalized_flow_forward_single_flow():
     assert torch.allclose(out.log_det, torch.ones(data.shape[0]))
 
 
+@pytest.mark.pruned
 def test_normalized_flow_inverse_single_flow():
     cfg = NormalizedFlowConfig(
         list_flows=[DummySelector(IdentityFlow())],
@@ -137,7 +139,6 @@ def test_normalized_flow_inverse_single_flow():
     assert torch.allclose(out.log_det, -torch.ones(data.shape[0]))
 
 
-@pytest.mark.pruned
 def test_normalized_flow_forward_multiple_flows_logdet_accumulates():
     cfg = NormalizedFlowConfig(
         list_flows=[
@@ -159,7 +160,6 @@ def test_normalized_flow_forward_multiple_flows_logdet_accumulates():
     )
 
 
-@pytest.mark.pruned
 def test_normalized_flow_inverse_multiple_flows_reverse_order():
     f1 = IdentityFlow()
     f2 = ScaleFlow(scale=2.0)

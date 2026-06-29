@@ -17,6 +17,23 @@ from cccma_ppp.generic import Distributed, RuntimeContext
 
 @dataclasses.dataclass
 class BatchData(BatchDataABC):
+    """
+    Container for batched inference data.
+
+    Parameters
+    ----------
+    input : torch.Tensor
+        Input tensor.
+    added_features : torch.Tensor or None, optional
+        Additional input features.
+    metadata : list of dict or None, optional
+        Per-sample metadata returned by the dataset.
+    return_spatial_mask : bool, optional
+        Whether to generate spatial masks.
+    reduce_spatial_mask : bool, optional
+        Whether to reduce masks across the batch dimension.
+    """
+
     input: torch.Tensor
     added_features: torch.Tensor = None
     metadata: list[dict] | None = None
@@ -24,6 +41,13 @@ class BatchData(BatchDataABC):
     reduce_spatial_mask: bool = False
 
     def __post_init__(self):
+        """
+        Prepare batch data for inference.
+
+        Returns
+        -------
+        None
+        """
         if self.return_spatial_mask:
             self.input_mask = (~torch.isnan(self.input)).to(torch.int)
             if self.reduce_spatial_mask:
@@ -36,6 +60,19 @@ class BatchData(BatchDataABC):
             self.input = (self.input, self.input_mask)
 
     def to_device(self, device: torch.device | str):
+        """
+        Move batch data to a device.
+
+        Parameters
+        ----------
+        device : torch.device or str
+            Target device.
+
+        Returns
+        -------
+        BatchData
+            Updated batch instance.
+        """
 
         if self.return_spatial_mask:
             self.input = (self.input[0].to(device), self.input[1].to(device))
@@ -50,6 +87,25 @@ class BatchData(BatchDataABC):
 
 @dataclasses.dataclass
 class InferenceDataloaderConfig(DataloaderConfigABC):
+    """
+    Configuration for inference dataloaders.
+
+    Parameters
+    ----------
+    dataset_config : InferenceDatasetConfig or None, optional
+        Inference dataset configuration.
+    batch_size : int, optional
+        Batch size.
+    inference_years : tuple or list or None, optional
+        Range of years to run inference for.
+    num_data_workers : int, optional
+        Number of worker processes.
+    prefetch_factor : int or None, optional
+        Number of batches prefetched by each worker.
+    drop_last : bool, optional
+        Whether to drop incomplete batches.
+    """
+
     dataset_config: InferenceDatasetConfig | None = None
     batch_size: int = 1
     inference_years: tuple | list = None
@@ -58,6 +114,18 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     drop_last: bool = False
 
     def __post_init__(self):
+        """
+        Initialize dataloader configuration.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RuntimeError
+            If dataset configuration has not been provided.
+        """
         self._setup = False
 
         if self.num_data_workers == 0:
@@ -73,6 +141,19 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
     @property
     def _inference_years(self):
+        """
+        Years selected for inference.
+
+        Returns
+        -------
+        np.ndarray
+            Array of inference years.
+
+        Raises
+        ------
+        ValueError
+            If requested inference years are unavailable.
+        """
         if self.inference_years is None:
             return self.available_inference_years
         else:
@@ -90,9 +171,30 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
     @property
     def available_inference_years(self):
+        """
+        Available years for inference.
+
+        Returns
+        -------
+        np.ndarray
+            Years available in the inference dataset.
+        """
         return self.dataset_config.available_inference_time
 
     def _input_preprocessor_exists(self, load_dir: Path | str = None):
+        """
+        Check whether required preprocessing pipelines exist.
+
+        Parameters
+        ----------
+        load_dir : pathlib.Path or str or None, optional
+            Directory containing saved preprocessing pipelines.
+
+        Returns
+        -------
+        bool
+            True if all required pipelines exist.
+        """
         preprocessor_to_check = []
         exists = []
 
@@ -126,6 +228,22 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         distributed: Distributed,
         save_path: Path | str | None = None,
     ):
+        """
+        Prepare inference dataloader for distributed execution.
+
+        Parameters
+        ----------
+        train_loader_config : TrainDataloaderConfig
+            Training dataloader configuration.
+        distributed : Distributed
+            Distributed execution context.
+        save_path : pathlib.Path or str or None, optional
+            Directory containing fitted preprocessors.
+
+        Returns
+        -------
+        None
+        """
 
         self.train_dataset_config = train_loader_config.dataset_config
         self.rank = distributed.rank
@@ -144,8 +262,29 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         self._setup = True
 
     def build_inference_loader(
-        self, return_spatial_mask=False, reduce_spatial_mask=False
+        self,
+        return_spatial_mask=False,
+        reduce_spatial_mask=False,
     ):
+        """
+        Construct inference dataloader.
+
+        Parameters
+        ----------
+        return_spatial_mask : bool, optional
+            Whether to return spatial masks.
+        reduce_spatial_mask : bool, optional
+            Whether to reduce masks across the batch dimension.
+
+        Returns
+        -------
+        Dataloader
+
+        Raises
+        ------
+        RuntimeError
+            If setup has not been completed.
+        """
         if not self._setup:
             raise RuntimeError(
                 "Dataloader has to be setup for distributed training first by calling .setup_distributed()"
@@ -167,10 +306,29 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
     @property
     def input_var_metadata(self):
+        """
+        Metadata describing model inputs.
+
+        Returns
+        -------
+        dict
+        """
         return self.dataset_config.ds_operator.get_input_var_metadata()
 
     @property
     def target_var_metadata(self):
+        """
+        Metadata describing model outputs.
+
+        Returns
+        -------
+        dict
+
+        Raises
+        ------
+        RuntimeError
+            If training dataset metadata is unavailable.
+        """
         if not hasattr(self, "train_dataset_config"):
             raise RuntimeError(
                 "output variables metadata cannot be read unless train dataloader"
@@ -184,6 +342,23 @@ def collate_batch(
     return_spatial_mask: bool = False,
     reduce_spatial_mask: bool = False,
 ):
+    """
+    Collate inference samples into a batch.
+
+    Parameters
+    ----------
+    batch : list
+        Dataset samples.
+    return_spatial_mask : bool, optional
+        Whether to return spatial masks.
+    reduce_spatial_mask : bool, optional
+        Whether to reduce masks across the batch dimension.
+
+    Returns
+    -------
+    BatchData
+        Batched inference data.
+    """
     metadata = None
 
     if isinstance(batch[0], tuple):

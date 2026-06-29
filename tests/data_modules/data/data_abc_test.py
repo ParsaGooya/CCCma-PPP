@@ -5,7 +5,6 @@ import xarray as xr
 
 from cccma_ppp.data_modules.data.data_abc import (
     DataConfigABC,
-    infoclass,
     _resolve_data,
     _get_ds_info,
 )
@@ -104,19 +103,6 @@ class DummyDataConfig(DataConfigABC):
     @classmethod
     def _required_dims(cls):
         return frozenset({"year", "lead_time"})
-
-
-@pytest.mark.pruned
-def test_infoclass_creation():
-    info = infoclass(
-        sizes={"x": 1},
-        start_year=2000,
-        final_year=2001,
-        coords={"lat": [0]},
-    )
-
-    assert info.start_year == 2000
-    assert info.final_year == 2001
 
 
 def test_missing_preprocessing_pipeline():

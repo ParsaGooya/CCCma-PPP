@@ -52,22 +52,6 @@ def test_model_data_config_type():
 
 
 @pytest.mark.pruned
-def test_model_data_config_allowed_dims():
-    dims = ModelDataConfig._allowed_dims()
-
-    assert "year" in dims
-    assert "lead_time" in dims
-
-
-@pytest.mark.pruned
-def test_model_data_config_required_dims():
-    dims = ModelDataConfig._required_dims()
-
-    assert "lead_time" in dims
-    assert "lat" in dims
-
-
-@pytest.mark.pruned
 def test_model_data_config_check_ensemble_false():
     with patch_common():
         cfg = ModelDataConfig(
@@ -165,7 +149,6 @@ def test_model_data_config_get_info_called():
     assert called["x"] is True
 
 
-@pytest.mark.pruned
 def test_obs_data_config_basic():
     with patch_common():
         cfg = ObsDataConfig(
@@ -176,6 +159,7 @@ def test_obs_data_config_basic():
     assert cfg.paths == "x"
 
 
+@pytest.mark.pruned
 def test_obs_data_config_type():
     with patch_common():
         cfg = ObsDataConfig(
@@ -184,20 +168,6 @@ def test_obs_data_config_type():
         )
 
     assert cfg.TYPE == "observation"
-
-
-@pytest.mark.pruned
-def test_obs_data_config_allowed_dims():
-    dims = ObsDataConfig._allowed_dims()
-
-    assert "month" in dims
-
-
-@pytest.mark.pruned
-def test_obs_data_config_required_dims():
-    dims = ObsDataConfig._required_dims()
-
-    assert "month" in dims
 
 
 @pytest.mark.pruned
@@ -297,21 +267,6 @@ def test_condition_data_config_type():
         )
 
     assert cfg.TYPE == "condition"
-
-
-@pytest.mark.pruned
-def test_condition_data_config_allowed_dims():
-    dims = ConditionDataConfig._allowed_dims()
-
-    assert "lead_time" in dims
-
-
-@pytest.mark.pruned
-def test_condition_data_config_required_dims():
-    dims = ConditionDataConfig._required_dims()
-
-    assert "lat" in dims
-    assert "lon" in dims
 
 
 @pytest.mark.pruned

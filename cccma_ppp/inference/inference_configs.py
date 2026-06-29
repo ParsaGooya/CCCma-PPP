@@ -17,6 +17,23 @@ from cccma_ppp.train.dataloader import TrainDataloaderConfig
 
 @dataclasses.dataclass
 class InferenceConfig:
+    """
+    Configuration for inference execution.
+
+    Parameters
+    ----------
+    experiment_dir : str
+        Path to trained experiment directory.
+    inference_loader : InferenceDataloaderConfig, optional
+        Inference dataloader configuration.
+    output_path : str or None, optional
+        Location where inference outputs are saved.
+    output_ensemble_size : int, optional
+        Number of output members to generate.
+    output_sampler : OutputsamplerConfig or None, optional
+        Sampler used to generate output ensembles.
+    """
+
     experiment_dir: str
     inference_loader: InferenceDataloaderConfig = dataclasses.field(
         default_factory=InferenceDataloaderConfig
@@ -26,6 +43,13 @@ class InferenceConfig:
     output_sampler: OutputsamplerConfig | None = None
 
     def __post_init__(self):
+        """
+        Initialize inference configuration.
+
+        Returns
+        -------
+        None
+        """
         self.experiment_dir = Path(self.experiment_dir)
         self.train_config = self.load_train_config()
         self.train_loader = self.load_train_dataloader_config()
@@ -34,6 +58,13 @@ class InferenceConfig:
         self._resolve_inference_dataset_config()
 
     def _resolve_inference_dataset_config(self):
+        """
+        Resolve inference dataset configuration.
+
+        Returns
+        -------
+        None
+        """
         if (
             self.inference_loader.dataset_config is None
         ):  ### method needs to be implemented!
@@ -44,6 +75,20 @@ class InferenceConfig:
             self._check_inference_dataset()
 
     def _check_inference_dataset(self):
+        """
+        Validate inference dataset compatibility.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If a conditioning method is required but not specified.
+        RuntimeError
+            If inference inputs are incompatible with the trained model.
+        """
 
         if self.train_config.get("module").get("type").lower() in ["cVAE"]:
             if self.inference_loader.dataset_config.condition_method is None:
@@ -59,6 +104,18 @@ class InferenceConfig:
             )
 
     def _check_esnsemble_generation(self):
+        """
+        Validate ensemble generation settings.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If ensemble generation settings are invalid.
+        """
         if self.output_ensemble_size > 1 and self.output_sampler is None:
             if self.train_config.get("module").get("type").lower() in [
                 "deterministic",
@@ -70,10 +127,25 @@ class InferenceConfig:
                 )
 
     def load_train_config(self):
+        """
+        Load training configuration from experiment directory.
+
+        Returns
+        -------
+        dict
+            Parsed training configuration.
+        """
 
         return prepare_config(self.experiment_dir / "config.yaml")
 
     def load_train_dataloader_config(self):
+        """
+        Reconstruct training dataloader configuration.
+
+        Returns
+        -------
+        TrainDataloaderConfig
+        """
         return dacite.from_dict(
             data_class=TrainDataloaderConfig,
             data=self.train_config.get("train_loader"),
@@ -82,6 +154,15 @@ class InferenceConfig:
 
     @property
     def output_preprocessor_dir(self):
+        """
+        Path to output preprocessing pipeline.
+
+        Returns
+        -------
+        pathlib.Path
+            Location of fitted preprocessing pipeline used to
+            reconstruct model outputs.
+        """
 
         if "observation" in self.train_config["train_loader"]["dataset_config"]:
             output_data = self.train_config["train_loader"]["dataset_config"][
@@ -98,11 +179,22 @@ class InferenceConfig:
     @property
     def save_dir(self) -> str:
         """
-        The directory where checkpoints are saved.
+        Directory used for inference outputs.
+
+        Returns
+        -------
+        str
         """
         return self.output_path or os.path.join(self.experiment_dir, "inference")
 
     def _prepare_runtime_variables(self):
+        """
+        Populate runtime context for inference.
+
+        Returns
+        -------
+        None
+        """
 
         RuntimeContext.GLOBAL_EXP_DIR = str(self.experiment_dir)
         RuntimeContext.GLOBAL_OUTPUT_DIR = str(self.output_dir)
@@ -111,7 +203,16 @@ class InferenceConfig:
 
     def prepare_directory(self, distributed: Distributed):
         """
-        Create output (sub)directories.
+        Create inference output directory structure.
+
+        Parameters
+        ----------
+        distributed : Distributed
+            Distributed execution context.
+
+        Returns
+        -------
+        None
         """
 
         self._prepare_runtime_variables()
@@ -123,7 +224,19 @@ class InferenceConfig:
 
 
 def prepare_config(path: Path | str) -> dict:
-    """Get config and update with possible dotlist override."""
+    """
+    Load configuration from YAML file.
+
+    Parameters
+    ----------
+    path : pathlib.Path or str
+        Configuration file path.
+
+    Returns
+    -------
+    dict
+        Parsed YAML configuration.
+    """
     with open(path) as f:
         data = yaml.safe_load(f)
     return data
@@ -134,6 +247,30 @@ def build_writer(
     distributed: Distributed,
     logger: logging.Logger | None = None,
 ):
+    """
+    Construct inference writer pipeline.
+
+    Parameters
+    ----------
+    config : InferenceConfig
+        Inference configuration.
+    distributed : Distributed
+        Distributed execution context.
+    logger : logging.Logger or None, optional
+        Logger instance.
+
+    Returns
+    -------
+    object
+        Initialized inference writer.
+
+    Notes
+    -----
+    Builds all components required for inference, including
+    dataloaders, model, optimization utilities, and execution
+    pipeline.
+    """
+
     def log(msg, **kwargs):
         if distributed.is_root():
             if logger is not None:

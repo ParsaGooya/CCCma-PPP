@@ -102,6 +102,7 @@ def dataset_config():
     return DummyDatasetConfig()
 
 
+@pytest.mark.pruned
 def test_batchdata_nan_replacement():
     batch = BatchData(input=torch.tensor([[1.0, float("nan")]]))
 
@@ -109,6 +110,7 @@ def test_batchdata_nan_replacement():
     assert batch.input[0, 1] == 0
 
 
+@pytest.mark.pruned
 def test_batchdata_spatial_mask_created():
     batch = BatchData(
         input=torch.tensor([[1.0, float("nan")]]),
@@ -122,6 +124,7 @@ def test_batchdata_spatial_mask_created():
     assert mask[0, 1] == 0
 
 
+@pytest.mark.pruned
 def test_batchdata_reduce_spatial_mask():
 
     with pytest.raises(RuntimeError):
@@ -137,6 +140,7 @@ def test_batchdata_reduce_spatial_mask():
         )
 
 
+@pytest.mark.pruned
 def test_batchdata_to_device():
     batch = BatchData(input=torch.ones(2, 2))
 
@@ -171,6 +175,7 @@ def test_batchdata_to_device_with_spatial_mask():
     assert mask.device.type == "cpu"
 
 
+@pytest.mark.pruned
 def test_collate_batch_basic():
     batch = [
         {
@@ -190,6 +195,7 @@ def test_collate_batch_basic():
     assert result.added_features is None
 
 
+@pytest.mark.pruned
 def test_collate_batch_with_metadata():
     batch = [
         (
@@ -213,6 +219,7 @@ def test_collate_batch_with_metadata():
     assert len(result.metadata) == 2
 
 
+@pytest.mark.pruned
 def test_collate_batch_with_added_features():
     batch = [
         {
@@ -230,6 +237,7 @@ def test_collate_batch_with_added_features():
     assert result.added_features.shape == (2, 1)
 
 
+@pytest.mark.pruned
 def test_collate_batch_metadata_and_added_features():
     batch = [
         (
@@ -254,6 +262,7 @@ def test_collate_batch_metadata_and_added_features():
     assert result.added_features.shape == (2, 1)
 
 
+@pytest.mark.pruned
 def test_collate_batch_spatial_mask():
     batch = [
         {
@@ -270,6 +279,7 @@ def test_collate_batch_spatial_mask():
     assert isinstance(result.input, tuple)
 
 
+@pytest.mark.pruned
 def test_prefetch_factor_removed_when_no_workers(
     dataset_config,
 ):
@@ -289,6 +299,7 @@ def test_dataset_config_required():
         )
 
 
+@pytest.mark.pruned
 def test_inference_years_default(
     dataset_config,
 ):
@@ -312,6 +323,7 @@ def test_inference_years_range_current_bug(
         )
 
 
+@pytest.mark.pruned
 def test_inference_years_invalid_current_bug(
     dataset_config,
 ):
@@ -322,6 +334,7 @@ def test_inference_years_invalid_current_bug(
         )
 
 
+@pytest.mark.pruned
 def test_available_inference_years(
     dataset_config,
 ):
@@ -335,6 +348,7 @@ def test_available_inference_years(
     )
 
 
+@pytest.mark.pruned
 def test_input_preprocessor_exists_model_only(
     dataset_config,
     tmp_path,
@@ -350,6 +364,7 @@ def test_input_preprocessor_exists_model_only(
     assert cfg._input_preprocessor_exists(tmp_path)
 
 
+@pytest.mark.pruned
 def test_input_preprocessor_exists_condition_only(
     dataset_config,
     tmp_path,
@@ -384,6 +399,7 @@ def test_input_preprocessor_exists_model_and_condition(
     assert cfg._input_preprocessor_exists(tmp_path)
 
 
+@pytest.mark.pruned
 def test_input_preprocessor_missing(
     dataset_config,
     tmp_path,
@@ -397,6 +413,7 @@ def test_input_preprocessor_missing(
     assert not cfg._input_preprocessor_exists(tmp_path)
 
 
+@pytest.mark.pruned
 def test_input_preprocessor_exists_with_no_sources(
     dataset_config,
     tmp_path,
@@ -434,6 +451,7 @@ def test_target_metadata_success(
     assert cfg.target_var_metadata == {"obs": {}}
 
 
+@pytest.mark.pruned
 def test_input_metadata_success(
     dataset_config,
 ):
@@ -492,6 +510,7 @@ def test_setup_distributed_skip_fit_when_present(
     assert cfg._setup is True
 
 
+@pytest.mark.pruned
 def test_setup_distributed_non_root_branch(
     dataset_config,
 ):
@@ -530,6 +549,7 @@ def test_build_loader_before_setup_raises(
         cfg.build_inference_loader()
 
 
+@pytest.mark.pruned
 def test_build_loader_after_setup(
     dataset_config,
 ):
@@ -547,6 +567,7 @@ def test_build_loader_after_setup(
     assert dataset_config.build_called
 
 
+@pytest.mark.pruned
 def test_build_loader_with_spatial_mask(
     dataset_config,
 ):
@@ -566,6 +587,7 @@ def test_build_loader_with_spatial_mask(
     assert loader is not None
 
 
+@pytest.mark.pruned
 def test_collate_batch_with_metadata_and_spatial_mask():
     batch = [
         (
@@ -601,6 +623,7 @@ def test_collate_batch_with_added_features_and_spatial_mask():
     assert result.added_features is not None
 
 
+@pytest.mark.pruned
 def test_input_preprocessor_exists_condition_missing(
     dataset_config,
     tmp_path,
@@ -614,6 +637,7 @@ def test_input_preprocessor_exists_condition_missing(
     assert not cfg._input_preprocessor_exists(tmp_path)
 
 
+@pytest.mark.pruned
 def test_input_preprocessor_exists_model_present_condition_missing(
     dataset_config,
     tmp_path,
@@ -672,6 +696,7 @@ def test_build_loader_world_size_two(
     assert loader is not None
 
 
+@pytest.mark.pruned
 def test_input_var_metadata_multiple_accesses(
     dataset_config,
 ):
@@ -684,6 +709,7 @@ def test_input_var_metadata_multiple_accesses(
     assert cfg.input_var_metadata == {"tas": {}}
 
 
+@pytest.mark.pruned
 def test_collate_batch_metadata_spatial_mask_added_features():
     batch = [
         (
@@ -723,6 +749,7 @@ def test_collate_batch_metadata_spatial_mask_reduce():
         )
 
 
+@pytest.mark.pruned
 def test_batchdata_to_device_metadata_only():
     batch = BatchData(
         input=torch.ones(2, 2),
@@ -734,6 +761,7 @@ def test_batchdata_to_device_metadata_only():
     assert batch.metadata == [{"year": 2000}]
 
 
+@pytest.mark.pruned
 def test_input_preprocessor_exists_condition_present_model_missing(
     dataset_config,
     tmp_path,
@@ -751,6 +779,7 @@ def test_input_preprocessor_exists_condition_present_model_missing(
     assert not cfg._input_preprocessor_exists(tmp_path)
 
 
+@pytest.mark.pruned
 def test_setup_distributed_root_world_size_two(
     dataset_config,
 ):
@@ -777,6 +806,7 @@ def test_setup_distributed_root_world_size_two(
     assert cfg.world_size == 2
 
 
+@pytest.mark.pruned
 def test_setup_distributed_non_root_world_size_one(
     dataset_config,
 ):
@@ -802,6 +832,7 @@ def test_setup_distributed_non_root_world_size_one(
     assert cfg._setup
 
 
+@pytest.mark.pruned
 def test_input_var_metadata_multiple_access():
     ds = DummyDatasetConfig()
 
@@ -813,6 +844,7 @@ def test_input_var_metadata_multiple_access():
     assert cfg.input_var_metadata == {"tas": {}}
 
 
+@pytest.mark.pruned
 def test_target_var_metadata_multiple_access():
     ds = DummyDatasetConfig()
 
@@ -829,6 +861,7 @@ def test_target_var_metadata_multiple_access():
     assert cfg.target_var_metadata == {"obs": {}}
 
 
+@pytest.mark.pruned
 def test_build_loader_rank_zero_world_size_two(
     dataset_config,
 ):
@@ -845,6 +878,7 @@ def test_build_loader_rank_zero_world_size_two(
     assert loader is not None
 
 
+@pytest.mark.pruned
 def test_build_loader_spatial_mask_only(
     dataset_config,
 ):
@@ -863,6 +897,7 @@ def test_build_loader_spatial_mask_only(
     assert loader is not None
 
 
+@pytest.mark.pruned
 def test_build_loader_reduce_spatial_mask_only(
     dataset_config,
 ):
@@ -881,6 +916,7 @@ def test_build_loader_reduce_spatial_mask_only(
     assert loader is not None
 
 
+@pytest.mark.pruned
 def test_available_inference_years_multiple_access(
     dataset_config,
 ):
@@ -894,6 +930,7 @@ def test_available_inference_years_multiple_access(
     assert np.array_equal(years1, years2)
 
 
+@pytest.mark.pruned
 def test_init_without_dataset_config_raises():
     with pytest.raises(
         RuntimeError,
@@ -904,6 +941,7 @@ def test_init_without_dataset_config_raises():
         )
 
 
+@pytest.mark.pruned
 def test_available_inference_years_property_direct(
     dataset_config,
 ):
@@ -960,6 +998,7 @@ def test_setup_distributed_branch_matrix(
     assert cfg._setup
 
 
+@pytest.mark.pruned
 def test_input_preprocessor_exists_empty_list_returns_true(
     dataset_config,
     tmp_path,

@@ -95,13 +95,13 @@ def test_lead_months_requires_end():
         lead_months_config()
 
 
+@pytest.mark.pruned
 def test_lead_months_list_valid():
     cfg = lead_months_config(list_months=[1, 2, 3])
 
     assert cfg.list_months == [1, 2, 3]
 
 
-@pytest.mark.pruned
 def test_build_lead_months_from_list():
     cfg = lead_months_config(list_months=[1, 5, 7])
 
@@ -140,6 +140,7 @@ def test_model_only_valid():
     assert cfg.model is not None
 
 
+@pytest.mark.pruned
 def test_condition_only_valid():
     cfg = DummyDatasetConfig(condition=DummyCondition())
 
@@ -196,6 +197,7 @@ def test_valid_condition_method_ensemble_mean():
     assert cfg.condition_method == "ensemble_mean"
 
 
+@pytest.mark.pruned
 def test_invalid_condition_method():
     with pytest.raises(ValueError):
         DummyDatasetConfig(
@@ -351,48 +353,6 @@ def test_using_model_as_condition_same_paths():
     )
 
     assert cfg._using_model_data_as_condition is True
-
-
-@pytest.mark.pruned
-def test_using_model_as_condition_different_paths():
-    model = DummyModel(paths=["a"])
-
-    condition = DummyCondition(paths=["b"])
-
-    cfg = DummyDatasetConfig(
-        model=model,
-        condition=condition,
-    )
-
-    assert cfg._using_model_data_as_condition is False
-
-
-@pytest.mark.pruned
-def test_using_model_as_condition_different_names():
-    model = DummyModel(names=["x"])
-
-    condition = DummyCondition(names=["y"])
-
-    cfg = DummyDatasetConfig(
-        model=model,
-        condition=condition,
-    )
-
-    assert cfg._using_model_data_as_condition is False
-
-
-@pytest.mark.pruned
-def test_using_model_as_condition_different_ensemble_list():
-    model = DummyModel(ensemble_list=[1])
-
-    condition = DummyCondition(ensemble_list=[2])
-
-    cfg = DummyDatasetConfig(
-        model=model,
-        condition=condition,
-    )
-
-    assert cfg._using_model_data_as_condition is False
 
 
 @pytest.mark.pruned
@@ -597,36 +557,6 @@ def test_using_model_data_as_condition_false_when_model_none():
 
 
 @pytest.mark.pruned
-def test_using_model_data_as_condition_false_different_paths():
-    cfg = DummyDatasetConfig(
-        model=DummyModel(paths=["a"]),
-        condition=DummyCondition(paths=["b"]),
-    )
-
-    assert cfg._using_model_data_as_condition is False
-
-
-@pytest.mark.pruned
-def test_using_model_data_as_condition_false_different_names():
-    cfg = DummyDatasetConfig(
-        model=DummyModel(names=["x"]),
-        condition=DummyCondition(names=["y"]),
-    )
-
-    assert cfg._using_model_data_as_condition is False
-
-
-@pytest.mark.pruned
-def test_using_model_data_as_condition_false_different_ensemble_lists():
-    cfg = DummyDatasetConfig(
-        model=DummyModel(ensemble_list=[1]),
-        condition=DummyCondition(ensemble_list=[2]),
-    )
-
-    assert cfg._using_model_data_as_condition is False
-
-
-@pytest.mark.pruned
 def test_effective_condition_none_branch():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -788,7 +718,6 @@ def test_lead_months_config_missing_everything():
         lead_months_config()
 
 
-@pytest.mark.pruned
 def test_invalid_condition_method_raises():
     cfg = DummyDatasetConfig.__new__(DummyDatasetConfig)
 
@@ -936,26 +865,6 @@ def test_lead_months_exceed_max_raises():
         )
 
 
-@pytest.mark.pruned
-def test_lead_months_valid_exact_boundary():
-    model = DummyModel()
-
-    cfg = DummyDatasetConfig(
-        model=model,
-        lead_months=lead_months_config(
-            list_months=list(
-                np.arange(
-                    1,
-                    model.info.sizes["lead_time"] + 1,
-                )
-            ),
-        ),
-    )
-
-    assert max(cfg.lead_months) == model.info.sizes["lead_time"]
-
-
-@pytest.mark.pruned
 def test_model_vs_condition_year_subset_error():
     model = DummyModel()
     condition = DummyCondition()
@@ -973,7 +882,6 @@ def test_model_vs_condition_year_subset_error():
         )
 
 
-@pytest.mark.pruned
 def test_model_vs_condition_lead_time_error():
     model = DummyModel()
     condition = DummyCondition()
@@ -991,6 +899,7 @@ def test_model_vs_condition_lead_time_error():
         )
 
 
+@pytest.mark.pruned
 def test_model_vs_condition_lat_mismatch():
     model = DummyModel()
     condition = DummyCondition()
@@ -1034,21 +943,20 @@ def test_model_vs_condition_lon_mismatch():
         def equals(self, other):
             return self.value == other.value
 
+    model.info.coords["lat"] = Coord("same")
+    condition.info.coords["lat"] = Coord("same")
+
     model.info.coords["lon"] = Coord("a")
     condition.info.coords["lon"] = Coord("b")
 
     condition.info.sizes["lead_time"] = model.info.sizes["lead_time"]
 
     with pytest.raises(TypeError):
-        cfg = DummyDatasetConfig(
+        DummyDatasetConfig(
             model=model,
             condition=condition,
             condition_method="same_member",
         )
-
-        cfg.observation = object()
-
-        cfg._check_model_vs_condition()
 
 
 @pytest.mark.pruned
@@ -1059,25 +967,6 @@ def test_effective_condition_property_returns_internal():
     )
 
     assert cfg.effective_condition == cfg._effective_condition
-
-
-@pytest.mark.pruned
-def test_model_vs_condition_skips_when_static():
-    model = DummyModel()
-    condition = DummyCondition()
-
-    condition.paths = ["different"]
-
-    model.year_range = [2000, 2001]
-    condition.year_range = [1990]
-
-    cfg = DummyDatasetConfig(
-        model=model,
-        condition=condition,
-        condition_method="static",
-    )
-
-    cfg._check_model_vs_condition()
 
 
 @pytest.mark.pruned

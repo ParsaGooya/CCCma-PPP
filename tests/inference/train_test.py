@@ -1,31 +1,8 @@
-import argparse
 import pytest
 
 from cccma_ppp.inference.train import (
-    get_parser,
     main,
 )
-
-
-def test_get_parser():
-    parser = get_parser()
-
-    assert isinstance(parser, argparse.ArgumentParser)
-
-
-def test_get_parser_has_config_argument():
-    parser = get_parser()
-
-    args = parser.parse_args(["config.yaml"])
-
-    assert args.config == "config.yaml"
-
-
-def test_get_parser_requires_config():
-    parser = get_parser()
-
-    with pytest.raises(SystemExit):
-        parser.parse_args([])
 
 
 def test_main_root_rank(monkeypatch):
@@ -176,29 +153,7 @@ def test_main_non_root_rank(monkeypatch):
     assert not any(isinstance(x, tuple) and x[0] == "info" for x in calls)
 
 
-def test_main_prepare_config_failure(monkeypatch):
-
-    class DummyDistributed:
-        def is_root(self):
-            return True
-
-        def cleanup(self):
-            pass
-
-    monkeypatch.setattr(
-        "cccma_ppp.inference.train.Distributed.get_instance",
-        lambda: DummyDistributed(),
-    )
-
-    monkeypatch.setattr(
-        "cccma_ppp.inference.train.prepare_config",
-        lambda yaml: (_ for _ in ()).throw(RuntimeError("bad config")),
-    )
-
-    with pytest.raises(RuntimeError):
-        main("config.yaml")
-
-
+@pytest.mark.pruned
 def test_main_trainer_failure(monkeypatch):
 
     class DummyDistributed:

@@ -189,6 +189,7 @@ def build_autoencoder(
     )
 
 
+@pytest.mark.pruned
 def test_cvae_mlp_registered():
     selector = cVAEModelSelector(
         type="mlp",
@@ -203,7 +204,6 @@ def test_cvae_mlp_registered():
     assert isinstance(cfg, cVAE_MLPConfig)
 
 
-@pytest.mark.pruned
 def test_autoencoder_registered():
     selector = deterministicModelSelector(
         type="mlp",
@@ -433,7 +433,6 @@ def test_cvae_build_condition_dependant_latent_layers():
     assert hasattr(model, "condition_log_var")
 
 
-@pytest.mark.pruned
 def test_cvae_build_checkpoint_input_shape_mismatch():
     cfg = make_cvae_config()
     cfg._add_checkpoint_config(
@@ -450,6 +449,7 @@ def test_cvae_build_checkpoint_input_shape_mismatch():
         )
 
 
+@pytest.mark.pruned
 def test_cvae_build_checkpoint_output_shape_mismatch():
     cfg = make_cvae_config()
     cfg._add_checkpoint_config(
@@ -570,6 +570,7 @@ def test_cvae_condition_plain():
     assert cond_log_var is None
 
 
+@pytest.mark.pruned
 def test_cvae_condition_with_mask():
     model = build_cvae(
         encoder_hidden_dims=[8],
@@ -778,7 +779,6 @@ def test_cvae_predict_basic():
     assert out.output.shape == (2, 2, 1, 6)
 
 
-@pytest.mark.pruned
 def test_cvae_predict_condition_as_tuple():
     model = build_cvae(
         encoder_hidden_dims=[8],
@@ -806,7 +806,6 @@ def test_cvae_predict_condition_dependant_latent():
     assert out.output.shape == (2, 2, 1, 6)
 
 
-@pytest.mark.pruned
 def test_cvae_predict_with_prior_flow_no_condition():
     model = build_cvae()
 
@@ -823,6 +822,7 @@ def test_cvae_predict_with_prior_flow_no_condition():
     assert out.output.shape == (2, 2, 1, 6)
 
 
+@pytest.mark.pruned
 def test_cvae_predict_with_prior_flow_conditioned():
     model = build_cvae(
         encoder_hidden_dims=[8],

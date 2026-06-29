@@ -329,11 +329,11 @@ def test_generator_structure_success_mse():
     assert WeightedMSE(w2d())(ens(), t(), generator=True) >= 0
 
 
+@pytest.mark.pruned
 def test_crps_single():
     assert WeightedCRPS(w2d())(d().unsqueeze(0), t()) >= 0
 
 
-@pytest.mark.pruned
 def test_crps_single_exact():
     assert WeightedCRPS(w2d())(torch.randn(1, 2, 1, 3, 4), t()) >= 0
 
@@ -441,7 +441,6 @@ def test_crps_lowres_mask_none_branch():
     )
 
 
-@pytest.mark.pruned
 def test_crps_mask_exact_shape_generative_lowres():
     target = torch.randn(2, 1, 3, 4)
     m = torch.ones_like(target)
@@ -457,6 +456,7 @@ def test_crps_mask_exact_shape_generative_lowres():
     )
 
 
+@pytest.mark.pruned
 def test_crps_mask_mismatch_lowres_generative():
     with pytest.raises(RuntimeError):
         WeightedCRPS(w2d(), low_ress_kernel_size=3)(
@@ -475,6 +475,7 @@ def test_crps_mask_mismatch_non_crash_name_but_expected_error():
         WeightedCRPS(w2d())(ens(), t(), target_mask=bad_mask)
 
 
+@pytest.mark.pruned
 def test_crps_sum_reduce():
     assert WeightedCRPS(w2d(), reduction="sum")(ens(), t()) >= 0
 
@@ -502,7 +503,6 @@ def test_crps_aggregate_mask_none_vs_present():
     assert out2 >= 0
 
 
-@pytest.mark.pruned
 def test_crps_print(capsys):
     WeightedCRPS(w2d())(ens(), t(), print_loss=True)
     assert "CRPS" in capsys.readouterr().out

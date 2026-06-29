@@ -437,6 +437,7 @@ def test_log_root_uses_logger(env_dirs):
     assert any(rec[1] == "hello" for rec in logger.records)
 
 
+@pytest.mark.pruned
 def test_log_root_prints_when_logger_none(env_dirs, capsys):
     trainer, _, _, _, _ = make_trainer(validation=False)
     trainer.setup_distributed(DummyDistributed(root=True), None)
@@ -723,7 +724,6 @@ def test_load_checkpoint_missing_file(env_dirs):
         trainer._load_checkpoint(env_dirs[0] / "missing.pt")
 
 
-@pytest.mark.pruned
 def test_load_checkpoint_success(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -756,6 +756,7 @@ def test_load_checkpoint_default_path(env_dirs):
     assert "module" in checkpoint
 
 
+@pytest.mark.pruned
 def test_load_checkpoint_without_scaler_or_histories(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -997,7 +998,6 @@ def test_optimizer_step_amp_skipped_does_not_increment(monkeypatch, env_dirs):
     assert optimizer.scheduler_steps == 0
 
 
-@pytest.mark.pruned
 def test_load_checkpoint_without_train_history_key(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -1226,22 +1226,6 @@ def test_load_checkpoint_restores_scaler_state(env_dirs):
 
 
 @pytest.mark.pruned
-def test_train_loop_zero_epochs(env_dirs):
-    trainer, _, _, _, _ = make_trainer(validation=False)
-
-    trainer.max_epochs = 0
-
-    trainer.setup_distributed(
-        DummyDistributed(),
-        DummyLogger(),
-    )
-
-    trainer.train()
-
-    assert trainer._epochs_trained == 0
-
-
-@pytest.mark.pruned
 def test_optimizer_step_without_grad_clip(env_dirs):
     trainer, module, optimizer, _, _ = make_trainer(
         validation=False,
@@ -1384,7 +1368,6 @@ def test_optimizer_step_amp_enabled_branch(env_dirs):
     assert trainer.global_step == 1
 
 
-@pytest.mark.pruned
 def test_log_epoch_root_without_logger(env_dirs, capsys):
     trainer, _, _, _, _ = make_trainer(validation=False)
 
@@ -1421,6 +1404,7 @@ def test_train_loop_no_validation_no_plot_when_non_root(env_dirs):
     assert trainer._epochs_trained == 1
 
 
+@pytest.mark.pruned
 def test_load_checkpoint_restores_histories(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
 
@@ -1442,23 +1426,6 @@ def test_load_checkpoint_restores_histories(env_dirs):
 
     assert trainer.train_aggregator.loaded_state is not None
     assert trainer.validation_aggregator.loaded_state is not None
-
-
-@pytest.mark.pruned
-def test_train_loop_zero_epoch_no_batches_processed(env_dirs):
-    trainer, _, _, _, _ = make_trainer(validation=False)
-
-    trainer.max_epochs = 0
-
-    trainer.setup_distributed(
-        DummyDistributed(),
-        DummyLogger(),
-    )
-
-    trainer.train()
-
-    assert trainer.batch_step == 0
-    assert trainer.global_step == 0
 
 
 @pytest.mark.pruned

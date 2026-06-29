@@ -282,7 +282,6 @@ def test_init_loss_function_basic():
     assert m.criterion is not None
 
 
-@pytest.mark.pruned
 def test_init_loss_with_flow_requires_sum():
     cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
     m = make_module(cfg)
@@ -485,7 +484,6 @@ def test_cgcn_weight_zero_branch():
     assert "total_loss_CGCN" not in losses
 
 
-@pytest.mark.pruned
 def test_cgcn_weight_active():
     cfg = cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=0.5)
     m = make_module(cfg)
@@ -512,6 +510,7 @@ def test_cgcn_with_flow():
     assert "total_loss_CGCN" in losses
 
 
+@pytest.mark.pruned
 def test_predict_called_in_cgcn():
     cfg = cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=0.8)
 
@@ -523,7 +522,6 @@ def test_predict_called_in_cgcn():
     assert total >= 0
 
 
-@pytest.mark.pruned
 def test_kld_with_condition():
     class CondModel(DummyModel):
         GENERATOR = False
@@ -620,7 +618,6 @@ def test_full_flow_logdet_branch():
     assert total >= 0
 
 
-@pytest.mark.pruned
 def test_kld_condition_expansion():
     class CondModel(DummyModel):
         GENERATOR = False
@@ -655,6 +652,7 @@ def test_load_checkpoint_missing():
         cfg._load_from_checkpoint("missing.pt")
 
 
+@pytest.mark.pruned
 def test_config_load_dir_branch_success(monkeypatch):
     def fake_load_from_checkpoint(self, load_path):
         self.ModelConfig = DummySelector()
@@ -678,7 +676,6 @@ def test_config_load_dir_branch_success(monkeypatch):
     assert cfg.model_config is not None
 
 
-@pytest.mark.pruned
 def test_config_load_dir_branch_with_none_combined_sets_default(monkeypatch):
     def fake_load_from_checkpoint(self, load_path):
         self.ModelConfig = DummySelector()
@@ -826,6 +823,7 @@ def test_build_load_dir_success_path(monkeypatch):
     assert called["loaded"] is True
 
 
+@pytest.mark.pruned
 def test_build_load_dir_output_shape_mismatch(monkeypatch):
     cfg = cVAEConfig(ModelConfig=DummySelector())
     cfg.load_dir = "fake_checkpoint.pt"
@@ -844,6 +842,7 @@ def test_build_load_dir_output_shape_mismatch(monkeypatch):
         )
 
 
+@pytest.mark.pruned
 def test_build_load_dir_input_shape_success_output_shape_success(monkeypatch):
     cfg = cVAEConfig(ModelConfig=DummySelector())
     cfg.load_dir = "fake_checkpoint.pt"
@@ -1062,7 +1061,6 @@ def test_model_build_receives_correct_shapes():
     )
 
 
-@pytest.mark.pruned
 def test_build_load_dir_calls_load_state_dict_once(monkeypatch):
     cfg = cVAEConfig(ModelConfig=DummySelector())
 

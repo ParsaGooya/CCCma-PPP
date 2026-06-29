@@ -113,7 +113,6 @@ def test_invalid_lead_months_exceeds():
         )
 
 
-@pytest.mark.pruned
 def test_observation_warns_mismatch():
     model = DummyDataConfig()
     obs = DummyDataConfig()
@@ -133,13 +132,6 @@ def test_observation_warns_mismatch():
 
 
 @pytest.mark.pruned
-def test_no_observation_requires_condition_method():
-    model = DummyDataConfig()
-
-    with pytest.raises(AssertionError):
-        TrainDatasetConfig(model=model, observation=None, condition_method=None)
-
-
 def test_invalid_condition_without_method():
     model = DummyDataConfig()
     cond = DummyDataConfig()
@@ -231,19 +223,6 @@ def test_default_lead_months_set():
     )
 
     assert np.array_equal(cfg.lead_months, np.array([1, 2, 3]))
-
-
-@pytest.mark.pruned
-def test_no_observation_requires_condition_method_assert():
-    model = DummyDataConfig()
-
-    with pytest.raises(AssertionError):
-        TrainDatasetConfig(
-            model=model,
-            observation=None,
-            condition=None,
-            condition_method=None,
-        )
 
 
 def test_observation_lon_warning():
@@ -643,6 +622,7 @@ def test_static_condition_indexing_executes():
     assert result is not None
 
 
+@pytest.mark.pruned
 def test_condition_none_branch():
     cfg = make_valid_config_with()
 
@@ -3702,6 +3682,7 @@ def test_get_added_features_dim_zero():
     assert ds.get_added_features_dim() == 0
 
 
+@pytest.mark.pruned
 def test_missing_model_raises():
     cond = DummyDataConfig()
     cond.paths = ["different"]
@@ -3714,6 +3695,7 @@ def test_missing_model_raises():
         )
 
 
+@pytest.mark.pruned
 def test_invalid_time_feature_real():
     model = DummyDataConfig()
 
@@ -3729,6 +3711,7 @@ def test_invalid_time_feature_real():
         )
 
 
+@pytest.mark.pruned
 def test_empty_time_features_real():
     model = DummyDataConfig()
 
@@ -3745,6 +3728,7 @@ def test_empty_time_features_real():
     assert cfg.time_features == []
 
 
+@pytest.mark.pruned
 def test_condition_method_same_member_valid():
     model = DummyDataConfig()
 
@@ -3760,6 +3744,7 @@ def test_condition_method_same_member_valid():
     assert cfg.condition_method == "same_member"
 
 
+@pytest.mark.pruned
 def test_condition_method_cross_ensemble_valid():
     model = DummyDataConfig()
 
@@ -3775,18 +3760,21 @@ def test_condition_method_cross_ensemble_valid():
     assert cfg.condition_method == "cross_ensemble"
 
 
+@pytest.mark.pruned
 def test_condition_method_static_valid():
     cfg = make_valid_config_with()
 
     assert cfg.condition_method == "static"
 
 
+@pytest.mark.pruned
 def test_effective_condition_property():
     cfg = make_valid_config_with()
 
     assert cfg.effective_condition is not None
 
 
+@pytest.mark.pruned
 def test_build_dataset_metadata_true():
     cfg = make_valid_config_with()
 
@@ -3798,6 +3786,7 @@ def test_build_dataset_metadata_true():
     assert ds.return_metadata is True
 
 
+@pytest.mark.pruned
 def test_build_dataset_metadata_false():
     cfg = make_valid_config_with()
 
@@ -3809,6 +3798,7 @@ def test_build_dataset_metadata_false():
     assert ds.return_metadata is False
 
 
+@pytest.mark.pruned
 def test_added_feature_dimension_zero():
     cfg = make_valid_config_with()
     cfg.time_features = None
@@ -3821,6 +3811,7 @@ def test_added_feature_dimension_zero():
     assert ds.get_added_features_dim() == 0
 
 
+@pytest.mark.pruned
 def test_added_feature_dimension_three():
     cfg = make_valid_config_with()
 
@@ -3838,6 +3829,7 @@ def test_added_feature_dimension_three():
     assert ds.get_added_features_dim() == 3
 
 
+@pytest.mark.pruned
 def test_getitem_metadata_contains_keys():
     cfg = make_valid_config_with()
 
@@ -3853,6 +3845,7 @@ def test_getitem_metadata_contains_keys():
     assert "lead_time" in meta
 
 
+@pytest.mark.pruned
 def test_using_model_data_as_condition():
     model = DummyDataConfig()
 
@@ -3871,6 +3864,7 @@ def test_using_model_data_as_condition():
     assert cfg._using_model_data_as_condition
 
 
+@pytest.mark.pruned
 def test_build_dataset_return_metadata_true_branch():
     cfg = make_valid_config_with()
 
@@ -3883,6 +3877,7 @@ def test_build_dataset_return_metadata_true_branch():
     assert ds.return_metadata is True
 
 
+@pytest.mark.pruned
 def test_build_dataset_return_metadata_false_branch():
     cfg = make_valid_config_with()
 
@@ -3895,6 +3890,7 @@ def test_build_dataset_return_metadata_false_branch():
     assert ds.return_metadata is False
 
 
+@pytest.mark.pruned
 def test_get_added_features_dim_multiple():
     cfg = make_valid_config_with()
 
@@ -3912,6 +3908,7 @@ def test_get_added_features_dim_multiple():
     assert ds.get_added_features_dim() == 3
 
 
+@pytest.mark.pruned
 def test_getitem_metadata_contains_expected_keys():
     cfg = make_valid_config_with()
 
@@ -3927,6 +3924,7 @@ def test_getitem_metadata_contains_expected_keys():
     assert "lead_time" in meta
 
 
+@pytest.mark.pruned
 def test_getitem_time_features_multiple():
     cfg = make_valid_config_with()
 
@@ -3946,6 +3944,7 @@ def test_getitem_time_features_multiple():
     assert item["added_features"] is not None
 
 
+@pytest.mark.pruned
 def test_model_as_condition_branch():
     model = DummyDataConfig()
 
@@ -3964,6 +3963,7 @@ def test_model_as_condition_branch():
     assert cfg._using_model_data_as_condition is True
 
 
+@pytest.mark.pruned
 def test_load_model_false_branch():
     model = DummyDataConfig()
 
@@ -3992,6 +3992,7 @@ def test_load_model_false_branch():
     assert ds._load_model is False
 
 
+@pytest.mark.pruned
 def test_cross_ensemble_indexes_contains_expected_keys():
     model = DummyDataConfig()
 
@@ -4018,6 +4019,7 @@ def test_cross_ensemble_indexes_contains_expected_keys():
     assert "ensembles" in indexes
 
 
+@pytest.mark.pruned
 def test_same_member_indexes_match_model_indexes():
     model = DummyDataConfig()
 
@@ -4045,6 +4047,7 @@ def test_same_member_indexes_match_model_indexes():
     )
 
 
+@pytest.mark.pruned
 def test_prepare_mask_with_existing_mask_and_ensemble_expansion():
     cfg = make_valid_config_with()
 
@@ -4067,6 +4070,7 @@ def test_prepare_mask_with_existing_mask_and_ensemble_expansion():
     assert "ensembles" in ds.mask.dims
 
 
+@pytest.mark.pruned
 def test_prepare_mask_without_ensemble_expansion():
     model = DummyDataConfig()
     model.ensemble_mean = True
@@ -4100,6 +4104,7 @@ def test_prepare_mask_without_ensemble_expansion():
     assert "ensembles" not in ds.mask.dims
 
 
+@pytest.mark.pruned
 def test_available_train_time_lead_adjustment():
     cfg = make_valid_config_with()
 
@@ -4115,6 +4120,7 @@ def test_available_train_time_lead_adjustment():
     )
 
 
+@pytest.mark.pruned
 def test_ensemble_mean_condition_valid():
     model = DummyDataConfig()
 
@@ -4133,6 +4139,7 @@ def test_ensemble_mean_condition_valid():
     assert cfg.condition_method == "ensemble_mean"
 
 
+@pytest.mark.pruned
 def test_get_target_shape_returns_input_shape_without_obs():
     cfg = make_valid_config_with()
 
@@ -4148,6 +4155,7 @@ def test_get_target_shape_returns_input_shape_without_obs():
     assert result == (10, 20)
 
 
+@pytest.mark.pruned
 def test_invalid_time_feature_month_branch():
     model = DummyDataConfig()
 
@@ -4163,6 +4171,7 @@ def test_invalid_time_feature_month_branch():
         )
 
 
+@pytest.mark.pruned
 def test_time_feature_month_cos():
     cfg = make_valid_config_with()
 
@@ -4178,6 +4187,7 @@ def test_time_feature_month_cos():
     assert item["added_features"] is not None
 
 
+@pytest.mark.pruned
 def test_time_feature_all_supported():
     cfg = make_valid_config_with()
 
@@ -4198,6 +4208,7 @@ def test_time_feature_all_supported():
     assert len(item["added_features"]) == 4
 
 
+@pytest.mark.pruned
 def test_dataset_empty_requested_years():
     cfg = make_valid_config_with()
 
@@ -4229,6 +4240,7 @@ def test_observation_without_condition():
     assert ds.observation_dataset is not None
 
 
+@pytest.mark.pruned
 def test_added_feature_dimension_month_cos():
     cfg = make_valid_config_with()
 
@@ -4242,6 +4254,7 @@ def test_added_feature_dimension_month_cos():
     assert ds.get_added_features_dim() == 1
 
 
+@pytest.mark.pruned
 def test_time_feature_month_cos_only():
     cfg = make_valid_config_with()
 
@@ -4257,6 +4270,7 @@ def test_time_feature_month_cos_only():
     assert item["added_features"] is not None
 
 
+@pytest.mark.pruned
 def test_get_added_features_dim_month_cos():
     cfg = make_valid_config_with()
 

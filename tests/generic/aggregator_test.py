@@ -24,7 +24,6 @@ def test_init_basic():
     assert agg.epoch_times == []
 
 
-@pytest.mark.pruned
 def test_init_with_existing_data():
     agg = MetricsAggregator(
         DummyDistributed(),
@@ -45,6 +44,7 @@ def test_init_invalid_lengths():
         )
 
 
+@pytest.mark.pruned
 def test_init_epoch_times_mismatch():
     with pytest.raises((AssertionError, ValueError, RuntimeError)):
         MetricsAggregator(
@@ -118,7 +118,6 @@ def test_record_epoch_replace():
     assert agg.epoch_loss_terms["loss"][0] == 10.0
 
 
-@pytest.mark.pruned
 def test_record_epoch_missing_key_replace():
     agg = MetricsAggregator(DummyDistributed(), "train")
 
@@ -200,6 +199,7 @@ def test_plot_inconsistent_epochs(tmp_path):
         MetricsAggregator.plot([agg1, agg2], plot_dir=tmp_path)
 
 
+@pytest.mark.pruned
 def test_plot_no_epochs_recorded(tmp_path):
     agg = MetricsAggregator(DummyDistributed(), "train")
 
@@ -258,7 +258,6 @@ def test_record_epoch_replace_with_nan_time():
     assert np.isnan(agg.epoch_times[0])
 
 
-@pytest.mark.pruned
 def test_plot_with_custom_styles(tmp_path):
     agg1 = make_agg("a", [1, 2])
     agg2 = make_agg("b", [2, 3])
@@ -292,6 +291,7 @@ def test_plot_missing_loss_key(tmp_path):
     assert len(list(tmp_path.glob("*.png"))) > 0
 
 
+@pytest.mark.pruned
 def test_plot_empty_epoch_times(tmp_path):
     agg = make_agg("train", [1, 2])
     agg.epoch_times = []

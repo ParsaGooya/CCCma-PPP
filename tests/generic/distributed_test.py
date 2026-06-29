@@ -57,7 +57,6 @@ def test_singleton(monkeypatch):
     assert d1 is d2
 
 
-@pytest.mark.pruned
 def test_cleanup(monkeypatch):
     monkeypatch.setattr(mod.dist, "is_available", lambda: True)
     monkeypatch.setattr(mod.dist, "is_initialized", lambda: True)
@@ -158,6 +157,7 @@ def test_broadcast_called(monkeypatch):
     assert called.get("hit", False)
 
 
+@pytest.mark.pruned
 def test_broadcast_not_called(monkeypatch):
     monkeypatch.setattr(mod.dist, "is_available", lambda: False)
     monkeypatch.setattr(mod.dist, "is_initialized", lambda: False)

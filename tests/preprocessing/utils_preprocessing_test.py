@@ -143,7 +143,6 @@ def test_normalizer_dims_contains_ensembles():
     assert proc.fitted
 
 
-@pytest.mark.pruned
 def test_normalizer_ensemble_branch():
     proc = PreprocessingStepSelector(
         "normalizer", {"dims": ["time"]}
@@ -236,6 +235,7 @@ def test_standardizer_mixed_std():
     assert proc.std is not None
 
 
+@pytest.mark.pruned
 def test_standardizer_ensemble_branch():
     proc = PreprocessingStepSelector(
         "standardizer", {"dims": ["time"]}

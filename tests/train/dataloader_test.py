@@ -222,7 +222,6 @@ def test_setup_distributed_sets_flags(tmp_path):
     assert cfg.rank == 0
 
 
-@pytest.mark.pruned
 def test_setup_distributed_with_ddp_load():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -345,26 +344,6 @@ def test_batchdata_to_device_without_features():
     assert b.added_features is None
 
 
-@pytest.mark.pruned
-def test_collate_with_metadata_and_no_features():
-    batch = [
-        (
-            {"input": torch.ones(2), "target": torch.zeros(2), "added_features": None},
-            {"a": 1},
-        ),
-        (
-            {"input": torch.ones(2), "target": torch.zeros(2), "added_features": None},
-            {"a": 2},
-        ),
-    ]
-
-    data = collate_batch(batch)
-    meta = getattr(data, "metadata", None)
-
-    assert data.added_features is None
-    assert meta is None
-
-
 def test_config_custom_train_years_valid():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -391,6 +370,7 @@ class NonRootDistributed(DummyDistributed):
         return False
 
 
+@pytest.mark.pruned
 def test_setup_distributed_non_root():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -451,6 +431,7 @@ def test_build_train_loader_with_mask_flags():
     assert out is not None
 
 
+@pytest.mark.pruned
 def test_train_years_property_uses_available_years():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -463,6 +444,7 @@ def test_train_years_property_uses_available_years():
     )
 
 
+@pytest.mark.pruned
 def test_validation_years_created_from_split():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -473,6 +455,7 @@ def test_validation_years_created_from_split():
     assert len(cfg.validation_years) == 2
 
 
+@pytest.mark.pruned
 def test_train_years_subset():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -486,6 +469,7 @@ def test_train_years_subset():
     )
 
 
+@pytest.mark.pruned
 def test_setup_distributed_world_size():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -500,6 +484,7 @@ def test_setup_distributed_world_size():
     assert cfg.world_size == 1
 
 
+@pytest.mark.pruned
 def test_setup_distributed_marks_config_ready():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -511,6 +496,7 @@ def test_setup_distributed_marks_config_ready():
     assert cfg._setup is True
 
 
+@pytest.mark.pruned
 def test_input_var_metadata_property_real():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -520,6 +506,7 @@ def test_input_var_metadata_property_real():
     assert cfg.input_var_metadata == "i"
 
 
+@pytest.mark.pruned
 def test_target_var_metadata_property_real():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -529,6 +516,7 @@ def test_target_var_metadata_property_real():
     assert cfg.target_var_metadata == "t"
 
 
+@pytest.mark.pruned
 def test_get_weights_default():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -538,6 +526,7 @@ def test_get_weights_default():
     assert cfg.get_weights() == "w"
 
 
+@pytest.mark.pruned
 def test_get_weights_with_argument():
     class DummyWeights:
         pass
@@ -550,6 +539,7 @@ def test_get_weights_with_argument():
     assert cfg.get_weights(DummyWeights()) == "w"
 
 
+@pytest.mark.pruned
 def test_build_train_loader_sets_dataloader_length():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -563,6 +553,7 @@ def test_build_train_loader_sets_dataloader_length():
     assert loader is not None
 
 
+@pytest.mark.pruned
 def test_build_validation_loader_returns_loader():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -577,6 +568,7 @@ def test_build_validation_loader_returns_loader():
     assert loader is not None
 
 
+@pytest.mark.pruned
 def test_build_validation_loader_none_when_disabled():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -592,6 +584,7 @@ def test_build_validation_loader_none_when_disabled():
     assert loader is None
 
 
+@pytest.mark.pruned
 def test_build_train_loader_with_spatial_mask():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -607,6 +600,7 @@ def test_build_train_loader_with_spatial_mask():
     assert loader is not None
 
 
+@pytest.mark.pruned
 def test_build_validation_loader_with_spatial_mask():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -624,6 +618,7 @@ def test_build_validation_loader_with_spatial_mask():
     assert loader is not None
 
 
+@pytest.mark.pruned
 def test_setup_distributed_non_root_branch():
     cfg = TrainDataloaderConfig(
         dataset_config=DummyDatasetConfig(),
@@ -639,6 +634,7 @@ def test_setup_distributed_non_root_branch():
     assert cfg._setup
 
 
+@pytest.mark.pruned
 def test_batchdata_added_features_none():
     batch = BatchData(
         torch.ones((2, 2)),

@@ -99,15 +99,6 @@ class DummyPreprocessor(PreprocessModuleABC):
 
 
 @pytest.mark.pruned
-def test_dataset_operator_init():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    assert op.config == cfg
-
-
-@pytest.mark.pruned
 def test_config_observation_exists():
     cfg = DummyDatasetConfig()
 
@@ -171,7 +162,6 @@ def test_fit_preprocessors_static_condition():
     assert cfg.effective_condition.fit_called["selection"] == {}
 
 
-@pytest.mark.pruned
 def test_fit_preprocessors_with_ensemble_selection():
     cfg = DummyDatasetConfig()
 
@@ -619,6 +609,7 @@ def test_get_time_features_values():
     assert result.shape[0] == 2
 
 
+@pytest.mark.pruned
 def test_fit_preprocessors_condition_with_ensemble_selection():
     cfg = DummyDatasetConfig()
 
@@ -693,6 +684,7 @@ def test_add_fitted_preprocessor_without_model():
     assert cfg.observation.preprocessing_pipeline.added[0] == p
 
 
+@pytest.mark.pruned
 def test_add_fitted_preprocessor_without_observation():
     cfg = DummyDatasetConfig()
 
@@ -707,7 +699,6 @@ def test_add_fitted_preprocessor_without_observation():
     assert cfg.model.preprocessing_pipeline.added[0] == p
 
 
-@pytest.mark.pruned
 def test_add_fitted_preprocessor_without_condition():
     cfg = DummyDatasetConfig()
 

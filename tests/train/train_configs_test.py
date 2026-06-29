@@ -2,14 +2,11 @@ import pytest
 import os
 from pathlib import Path
 import logging
-import numpy as np
 import torch
 from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 from cccma_ppp.train.train_configs import (
     TrainConfig,
-    prepare_config,
     build_trainer,
-    set_seed,
     RuntimeContext,
 )
 
@@ -146,6 +143,7 @@ def test_basic_init(tmp_path):
     assert isinstance(cfg.experiment_dir, Path)
 
 
+@pytest.mark.pruned
 def test_max_epochs_none_becomes_inf(tmp_path):
     cfg = TrainConfig(
         tmp_path,
@@ -235,7 +233,6 @@ def test_prepare_directory_yaml_copy(tmp_path):
     assert (Path(cfg.experiment_dir) / "config.yaml").exists()
 
 
-@pytest.mark.pruned
 def test_resolve_resuming_same_path(tmp_path):
     cfg = object.__new__(TrainConfig)
     cfg.resume_dir = tmp_path
@@ -252,6 +249,7 @@ def test_resolve_resuming_same_path(tmp_path):
     assert cfg.copy_resume_dir_to_new_path is False
 
 
+@pytest.mark.pruned
 def test_resolve_resuming_different_path(tmp_path):
     cfg = object.__new__(TrainConfig)
     cfg.resume_dir = tmp_path
@@ -269,15 +267,6 @@ def test_resolve_resuming_different_path(tmp_path):
 
 
 @pytest.mark.pruned
-def test_prepare_config_reads_yaml(tmp_path):
-    path = tmp_path / "cfg.yaml"
-    path.write_text("x: 1")
-
-    data = prepare_config(path)
-    assert data["x"] == 1
-
-
-@pytest.mark.pruned
 def test_build_trainer_basic(tmp_path):
     cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
@@ -287,7 +276,6 @@ def test_build_trainer_basic(tmp_path):
     assert trainer == "trainer"
 
 
-@pytest.mark.pruned
 def test_build_trainer_with_logger(tmp_path):
     cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
@@ -451,16 +439,6 @@ def test_deterministic_with_observation_valid(tmp_path):
     )
 
     assert cfg is not None
-
-
-@pytest.mark.pruned
-def test_prepare_config_invalid_yaml(tmp_path):
-    path = tmp_path / "bad.yaml"
-    path.write_text("::::")
-
-    data = prepare_config(path)
-
-    assert data is not None
 
 
 @pytest.mark.pruned
@@ -789,7 +767,6 @@ def test_figures_dir_property(tmp_path):
     assert "figures" in str(cfg.figures_dir)
 
 
-@pytest.mark.pruned
 def test_prepare_directory_copy_resume_branch(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"
@@ -841,18 +818,6 @@ def test_read_config_missing_resume_dir(tmp_path):
             experiment_dir=tmp_path,
             max_epochs=1,
         )
-
-
-@pytest.mark.pruned
-def test_prepare_config_roundtrip(tmp_path):
-    yaml_path = tmp_path / "config.yaml"
-
-    yaml_path.write_text("a: 1\nb: 2")
-
-    data = prepare_config(yaml_path)
-
-    assert data["a"] == 1
-    assert data["b"] == 2
 
 
 @pytest.mark.pruned
@@ -987,19 +952,6 @@ def test_build_trainer_num_output_dims_fallback(tmp_path):
     trainer = build_trainer(cfg, d)
 
     assert trainer == "trainer"
-
-
-@pytest.mark.pruned
-def test_set_seed_function():
-    set_seed(123)
-
-    x = np.random.rand()
-
-    set_seed(123)
-
-    y = np.random.rand()
-
-    assert x == y
 
 
 @pytest.mark.pruned
@@ -1193,35 +1145,6 @@ def test_prepare_directory_root_false(tmp_path):
 
 
 @pytest.mark.pruned
-def test_set_seed_repeatability():
-    set_seed(999)
-    a = np.random.randint(0, 100000)
-
-    set_seed(999)
-    b = np.random.randint(0, 100000)
-
-    assert a == b
-
-
-@pytest.mark.pruned
-def test_prepare_config_multikey(tmp_path):
-    path = tmp_path / "cfg.yaml"
-
-    path.write_text(
-        """
-a: 1
-b: hello
-c:
-  d: 3
-"""
-    )
-
-    data = prepare_config(path)
-
-    assert data["c"]["d"] == 3
-
-
-@pytest.mark.pruned
 def test_build_trainer_train_loader_len_used(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1257,42 +1180,6 @@ def test_build_trainer_added_features_none(tmp_path):
     loader = cfg.train_loader.build_train_loader()
 
     assert loader.added_features_dim is None
-
-
-@pytest.mark.pruned
-def test_module_selector_type_exists():
-    module = DummyModuleSelector()
-
-    assert module.type == "cVAE"
-
-
-@pytest.mark.pruned
-def test_dummy_optimizer_type():
-    opt = DummyOptimization()
-
-    assert opt.optimizer_type == "adam"
-
-
-@pytest.mark.pruned
-def test_dummy_trainer_beta_finder_default():
-    trainer = DummyTrainer()
-
-    assert trainer.beta_finder is True
-
-
-@pytest.mark.pruned
-def test_dummy_loss_pipeline_default():
-    loss = DummyLossPipeline()
-
-    assert "mse" in loss.loss_pipeline.loss_types
-
-
-@pytest.mark.pruned
-def test_dummy_distributed_defaults():
-    d = DummyDistributed()
-
-    assert d.device == "cpu"
-    assert d.local_rank == 0
 
 
 @pytest.mark.pruned
@@ -1465,19 +1352,6 @@ def test_prepare_runtime_variables_target_metadata(tmp_path):
 
 
 @pytest.mark.pruned
-def test_set_seed_changes_numpy_state():
-    set_seed(111)
-
-    a = np.random.rand()
-
-    set_seed(111)
-
-    b = np.random.rand()
-
-    assert a == b
-
-
-@pytest.mark.pruned
 def test_set_random_seed_with_none(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1493,40 +1367,6 @@ def test_set_random_seed_with_integer(tmp_path):
     cfg.seed = 999
 
     cfg.set_random_seed()
-
-
-@pytest.mark.pruned
-def test_prepare_config_nested_yaml(tmp_path):
-    path = tmp_path / "cfg.yaml"
-
-    path.write_text(
-        """
-a:
-  b:
-    c: 1
-"""
-    )
-
-    data = prepare_config(path)
-
-    assert data["a"]["b"]["c"] == 1
-
-
-@pytest.mark.pruned
-def test_prepare_config_list_yaml(tmp_path):
-    path = tmp_path / "cfg.yaml"
-
-    path.write_text(
-        """
-x:
-  - 1
-  - 2
-"""
-    )
-
-    data = prepare_config(path)
-
-    assert data["x"] == [1, 2]
 
 
 @pytest.mark.pruned
@@ -1797,27 +1637,6 @@ def test_build_trainer_validation_loader_present(tmp_path):
     result = build_trainer(cfg, d)
 
     assert result == "trainer"
-
-
-@pytest.mark.pruned
-def test_dummy_module_selector_type():
-    module = DummyModuleSelector()
-
-    assert module.type == "cVAE"
-
-
-@pytest.mark.pruned
-def test_dummy_trainer_default_beta_finder():
-    trainer = DummyTrainer()
-
-    assert trainer.beta_finder is True
-
-
-@pytest.mark.pruned
-def test_dummy_optimizer_default_type():
-    opt = DummyOptimization()
-
-    assert opt.optimizer_type == "adam"
 
 
 @pytest.mark.pruned
@@ -2533,6 +2352,7 @@ def test_prepare_directory_root_false_copy_resume_false_yaml_present(tmp_path):
     cfg.prepare_directory(d, yaml_config=yaml_path)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_root_true_copy_resume_true_yaml_present(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"

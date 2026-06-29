@@ -8,6 +8,19 @@ import dacite
 
 
 def get_parser() -> argparse.ArgumentParser:
+    """
+    Create command-line argument parser.
+
+    Returns
+    -------
+    argparse.ArgumentParser
+        Parser configured for training execution.
+
+    Notes
+    -----
+    Currently accepts a single positional argument specifying
+    the path to a YAML configuration file.
+    """
     parser = argparse.ArgumentParser(description="Train model from config file")
 
     parser.add_argument(
@@ -29,6 +42,18 @@ def get_parser() -> argparse.ArgumentParser:
 
 
 def main(yaml_config: str):
+    """
+    Run training from a configuration file.
+
+    Parameters
+    ----------
+    yaml_config : str
+        Path to the YAML configuration file.
+
+    Returns
+    -------
+    None
+    """
 
     distributed = Distributed.get_instance()
 

@@ -25,3 +25,4 @@ scripts/build_test_map_parallel.py
 scripts/cleanup.py
 cfg._using_model_data_as_condition
 cfg.ds_operator
+scripts/parallel_cleanup.py

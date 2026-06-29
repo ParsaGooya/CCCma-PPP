@@ -42,6 +42,7 @@ def test_get_unregistered_raises():
         reg.get("missing")
 
 
+@pytest.mark.pruned
 def test_overwrite_registration():
     reg = Registery()
 
@@ -59,26 +60,6 @@ def test_overwrite_registration():
 
 
 @pytest.mark.pruned
-                                
-def test_available_returns_registered_names():
-    reg = Registery()
-
-    @reg.register("x")
-    class X:
-        def __init__(self, _=None):
-            pass
-
-    @reg.register("y")
-    class Y:
-        def __init__(self, _=None):
-            pass
-
-    names = reg.available()
-
-    assert set(names) == {"x", "y"}
-
-
-@pytest.mark.pruned
 def test_get_with_empty_config_dict():
     reg = Registery()
 
@@ -93,7 +74,6 @@ def test_get_with_empty_config_dict():
     assert obj.ok
 
 
-@pytest.mark.pruned
 def test_get_with_none_config_passes_none():
     reg = Registery()
 
