@@ -90,7 +90,7 @@ class InferenceConfig:
             If inference inputs are incompatible with the trained model.
         """
 
-        if self.train_config.get("module").get("type").lower() in ["cVAE"]:
+        if self.train_config.get("module").get("type").lower() in ["cvae"]:
             if self.inference_loader.dataset_config.condition_method is None:
                 raise ValueError("with cVAE you must specify condition method!")
 
