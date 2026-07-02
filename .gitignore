@@ -14,5 +14,6 @@ build/
 dummy.nc
 .coverage
 cccma_ppp/train/registry_imports.py
+cccma_ppp/inference/registry_imports.py
 cfg._using_model_data_as_condition
 cfg.ds_operator

@@ -6,7 +6,6 @@ import dataclasses
 from cccma_ppp.loss.loss_abc import lossABC, Reduction
 
 
-
 from cccma_ppp.models.normalized_flows import NormalizedFlowModel
 
 

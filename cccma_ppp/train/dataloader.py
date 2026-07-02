@@ -16,7 +16,6 @@ from cccma_ppp.data_modules.dataloader import (
 from cccma_ppp.generic import Distributed
 
 
-
 @dataclasses.dataclass
 class BatchData(BatchDataABC):
     """
