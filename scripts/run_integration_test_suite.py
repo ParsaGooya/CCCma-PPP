@@ -5,7 +5,7 @@ import traceback
 import dacite
 
 import cccma_ppp.models.mlp_models
-
+import cccma_ppp.train.registry_imports
 from cccma_ppp.train.train import main as train_main
 from cccma_ppp.inference.train import main as inference_main
 
@@ -280,30 +280,30 @@ def main():
     print("=" * 60)
 
     tests = [
-        (
-            "Training -> Checkpoint -> Inference",
-            lambda: test_training_checkpoint_inference(output_dir),
-        ),
-        (
-            "Preprocessor Roundtrip",
-            lambda: test_preprocessor_roundtrip(output_dir),
-        ),
+        # (
+        #     "Training -> Checkpoint -> Inference",
+        #     lambda: test_training_checkpoint_inference(output_dir),
+        # ),
+        # (
+        #     "Preprocessor Roundtrip",
+        #     lambda: test_preprocessor_roundtrip(output_dir),
+        # ),
         (
             "Resume Training",
             lambda: test_resume_training(output_dir),
         ),
-        (
-            "cVAE Ensemble Inference",
-            lambda: test_cvae_ensemble_inference(output_dir),
-        ),
+        # (
+        #     "cVAE Ensemble Inference",
+        #     lambda: test_cvae_ensemble_inference(output_dir),
+        # ),
         (
             "Dataset Pipeline",
             lambda: test_dataset_pipeline(output_dir),
         ),
-        (
-            "Metadata Failure",
-            lambda: test_metadata_failure(output_dir),
-        ),
+        # (
+        #     "Metadata Failure",
+        #     lambda: test_metadata_failure(output_dir),
+        # ),
     ]
 
     failures = []

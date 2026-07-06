@@ -91,7 +91,7 @@ optimization:
   optimizer_type: adam
   lr_scheduler_config:
     min_lr: 0
-    warmup_epochs: 2
+    warmup_epochs: 0
 
 weights:
   spatial_method: cosine_lat

@@ -289,7 +289,7 @@ class PreprocessingPipeline:
             idx = np.argwhere(np.array(self.steps) == name).flatten()
             if idx.size == 0:
                 raise ValueError(f"{name} not in preprocessing steps!")
-            return self.fitted_preprocessors[int(idx)]
+            return self.fitted_preprocessors[idx.item()]
 
     def add_fitted_preprocessor(self, preprocessor, name, index=None):
         """

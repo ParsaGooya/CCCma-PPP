@@ -112,9 +112,6 @@ def span(name: str):
     """
     Create a monitored execution span.
 
-    Records start and end events for a named execution block,
-    allowing hierarchical profiling of application stages.
-
     Parameters
     ----------
     name : str
@@ -173,9 +170,6 @@ def observe(fn):
     """
     Decorator for automatic stage monitoring.
 
-    Wraps a function inside a monitoring span using the
-    function name as the stage identifier.
-
     Parameters
     ----------
     fn : callable
@@ -232,9 +226,6 @@ def _sampler(interval: float):
     """
     Background resource monitoring loop.
 
-    Periodically samples CPU, RAM, GPU utilization, and VRAM
-    usage while monitoring is active.
-
     Parameters
     ----------
     interval : float
@@ -270,9 +261,6 @@ def _sampler(interval: float):
 def start_monitoring(interval: float = 0.1):
     """
     Start resource monitoring.
-
-    Launches a background thread that continuously samples
-    system resource usage.
 
     Parameters
     ----------
@@ -487,7 +475,7 @@ def _plot_metric(
             label=f"{label} ({smooth})",
         )
 
-    ax.legend(loc="upper right", fontsize=8)
+    # ax.legend(loc="upper right", fontsize=8)
 
 
 def plot(
