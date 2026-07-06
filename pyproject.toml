@@ -21,6 +21,8 @@ dependencies = [
     "pulp>=3.3.2",
     "psutil>=7.2.2",
     "pynvml>=13.0.1",
+    "netcdf4>=1.7.4",
+    "dask>=2026.6.0",
 ]
 name = "cccma-ppp"
 dynamic = ["version"]

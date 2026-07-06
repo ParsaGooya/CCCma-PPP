@@ -3,9 +3,11 @@ from types import SimpleNamespace
 import torch
 import pytest
 
+from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.inference.inference_configs import (
     InferenceConfig,
     build_writer,
+    prepare_config,
 )
 
 
@@ -531,21 +533,88 @@ def test_resolve_dataset_config_none_branch():
 
 class FakeType(str):
     def lower(self):
-        return "cVAE"
+        return "cvae"
 
 
-def test_cvae_condition_method_branch():
+def test_cvae_requires_condition_method():
 
     cfg = object.__new__(InferenceConfig)
+
+    cfg.experiment_dir = Path("/tmp/exp")
 
     cfg.train_config = {"module": {"type": FakeType("ignored")}}
 
     cfg.train_loader = SimpleNamespace(input_var_metadata=["same"])
 
     cfg.inference_loader = SimpleNamespace(
-        dataset_config=SimpleNamespace(condition_method=None),
+        dataset_config=SimpleNamespace(
+            condition_method=None,
+        ),
         input_var_metadata=["same"],
     )
 
     with pytest.raises(ValueError):
         cfg._check_inference_dataset()
+
+
+def test_save_dir_default():
+
+    cfg = object.__new__(InferenceConfig)
+
+    cfg.experiment_dir = "/tmp/exp"
+    cfg.output_path = None
+
+    assert cfg.save_dir == "/tmp/exp/inference"
+
+
+def test_save_dir_explicit():
+
+    cfg = object.__new__(InferenceConfig)
+
+    cfg.output_path = "/custom/out"
+
+    assert cfg.save_dir == "/custom/out"
+
+
+def test_prepare_runtime_variables():
+
+    cfg = object.__new__(InferenceConfig)
+
+    cfg.experiment_dir = Path("/tmp/exp")
+    cfg.output_dir = "/tmp/out"
+
+    cfg.inference_loader = SimpleNamespace(
+        input_var_metadata=["a"],
+        target_var_metadata=["b"],
+    )
+
+    cfg._prepare_runtime_variables()
+
+    assert RuntimeContext.GLOBAL_EXP_DIR == "/tmp/exp"
+    assert RuntimeContext.GLOBAL_OUTPUT_DIR == "/tmp/out"
+    assert RuntimeContext.INPUT_VAR_METADATA == ["a"]
+    assert RuntimeContext.TARGET_VAR_METADATA == ["b"]
+
+
+def test_prepare_config(tmp_path):
+
+    path = tmp_path / "cfg.yaml"
+
+    path.write_text("a: 1\nb: test\n")
+
+    result = prepare_config(path)
+
+    assert result["a"] == 1
+    assert result["b"] == "test"
+
+
+def test_resolve_dataset_config_none_branch_current_behavior():
+
+    cfg = object.__new__(InferenceConfig)
+
+    cfg.train_loader = SimpleNamespace(dataset_config=object())
+
+    cfg.inference_loader = SimpleNamespace(dataset_config=None)
+
+    with pytest.raises(AttributeError):
+        cfg._resolve_inference_dataset_config()
