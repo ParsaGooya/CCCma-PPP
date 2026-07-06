@@ -234,12 +234,12 @@ def test_mse_1d_lowres():
     )
 
 
-@pytest.mark.pruned
 def test_mse_invalid_reduction():
     with pytest.raises(NotImplementedError):
         WeightedMSE(w2d(), reduction="invalid")(d(), t())
 
 
+@pytest.mark.pruned
 def test_mse_uppercase_reduction_invalid():
     with pytest.raises(NotImplementedError):
         WeightedMSE(w2d(), reduction="SUM")(d(), t())
@@ -405,7 +405,6 @@ def test_crps_invalid_output_dimensions():
         WeightedCRPS(w, num_output_dimensions=3, low_ress_kernel_size=3)
 
 
-@pytest.mark.pruned
 def test_crps_lowres_generative():
     assert (
         WeightedCRPS(w2d(), low_ress_kernel_size=3)(
@@ -508,6 +507,7 @@ def test_crps_print(capsys):
     assert "CRPS" in capsys.readouterr().out
 
 
+@pytest.mark.pruned
 def test_crps_lowres_print(capsys):
     WeightedCRPS(w2d(), low_ress_kernel_size=3)(ens(), t(), print_loss=True)
     assert "CRPS_lowress" in capsys.readouterr().out

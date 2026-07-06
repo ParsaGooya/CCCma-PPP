@@ -435,7 +435,6 @@ def test_compute_loss_plain_target():
     assert losses["mse"] == 1.0
 
 
-@pytest.mark.pruned
 def test_compute_loss_tuple_target_with_mask():
     module = make_module(input_shape=np.array([1]))
     module.init_loss_function(DummyLoss())
@@ -465,6 +464,7 @@ def test_compute_loss_list_target_with_mask():
     assert losses["total_loss"] == 1.0
 
 
+@pytest.mark.pruned
 def test_compute_loss_merges_multiple_individual_losses():
     module = make_module(input_shape=np.array([1]))
     module.init_loss_function(MultiLoss())
@@ -477,7 +477,6 @@ def test_compute_loss_merges_multiple_individual_losses():
     assert losses["mae"] == 1.0
 
 
-@pytest.mark.pruned
 def test_compute_loss_empty_individual_losses():
     module = make_module(input_shape=np.array([1]))
     module.init_loss_function(EmptyLoss())
@@ -488,6 +487,7 @@ def test_compute_loss_empty_individual_losses():
     assert losses == {"total_loss": 1.0}
 
 
+@pytest.mark.pruned
 def test_compute_loss_passes_mask_to_criterion():
     class InspectLoss:
         def __init__(self):

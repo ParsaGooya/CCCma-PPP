@@ -801,7 +801,6 @@ def test_load_from_checkpoint_missing_module_config(monkeypatch, tmp_path):
         cfg._load_from_checkpoint(path)
 
 
-@pytest.mark.pruned
 def test_build_load_dir_success_path(monkeypatch):
     cfg = cVAEConfig(ModelConfig=DummySelector())
     cfg.load_dir = "fake_checkpoint.pt"
@@ -1061,6 +1060,7 @@ def test_model_build_receives_correct_shapes():
     )
 
 
+@pytest.mark.pruned
 def test_build_load_dir_calls_load_state_dict_once(monkeypatch):
     cfg = cVAEConfig(ModelConfig=DummySelector())
 

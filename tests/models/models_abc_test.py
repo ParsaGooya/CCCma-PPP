@@ -74,7 +74,6 @@ def test_load_state_dict_missing_file(tmp_path):
         model._load_state_dict(cfg)
 
 
-@pytest.mark.pruned
 def test_load_state_dict_success(tmp_path):
     model = DummyModel()
 
@@ -128,12 +127,12 @@ def test_freeze_weights(tmp_path):
         assert p.requires_grad is False
 
 
+@pytest.mark.pruned
 def test_cvae_resolve_flow_success():
     cfg = DummyCvaeConfig()
     cfg._resolve_flow_settings(condition_dependant_flow=False)
 
 
-@pytest.mark.pruned
 def test_cvae_resolve_flow_error():
     cfg = DummyCvaeConfig()
     cfg.condition_embedding_size = 3
@@ -230,6 +229,7 @@ def test_load_state_dict_ignores_non_model_keys(tmp_path):
     model._load_state_dict(cfg)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strict_false_missing_keys(tmp_path):
     model = DummyModel()
 

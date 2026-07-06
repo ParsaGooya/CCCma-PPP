@@ -27,6 +27,7 @@
   "cccma_ppp/models/mlp_models.py": 0.9041,
   "cccma_ppp/models/models_abc.py": 0.9,
   "cccma_ppp/models/normalized_flows.py": 0.9444,
+  "cccma_ppp/monitoring.py": 0.9211,
   "cccma_ppp/preprocessing/preprocessing.py": 0.9211,
   "cccma_ppp/preprocessing/registery.py": 1.0,
   "cccma_ppp/preprocessing/utils_preprocessing.py": 0.9167,

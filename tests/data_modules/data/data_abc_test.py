@@ -254,6 +254,7 @@ def test_resolve_data_ensemble_required_missing(tmp_path):
             _resolve_data(cfg)
 
 
+@pytest.mark.pruned
 def test_resolve_data_ensemble_present(tmp_path):
     cfg = DummyDataConfig(
         tmp_path,
@@ -269,7 +270,6 @@ def test_resolve_data_ensemble_present(tmp_path):
     assert len(cfg.list_paths) == 1
 
 
-@pytest.mark.pruned
 def test_resolve_data_with_rename_dict(tmp_path):
     ds = xr.Dataset(
         {

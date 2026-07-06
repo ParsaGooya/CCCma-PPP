@@ -209,6 +209,7 @@ def test_fit_preprocessors_without_observation():
     assert cfg._fitted_preprocessors is True
 
 
+@pytest.mark.pruned
 def test_fit_preprocessors_without_condition():
     cfg = DummyDatasetConfig()
 
@@ -609,7 +610,6 @@ def test_get_time_features_values():
     assert result.shape[0] == 2
 
 
-@pytest.mark.pruned
 def test_fit_preprocessors_condition_with_ensemble_selection():
     cfg = DummyDatasetConfig()
 

@@ -557,6 +557,8 @@ def test_cvae_requires_condition_method():
         cfg._check_inference_dataset()
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_save_dir_default():
 
     cfg = object.__new__(InferenceConfig)
@@ -567,6 +569,8 @@ def test_save_dir_default():
     assert cfg.save_dir == "/tmp/exp/inference"
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_save_dir_explicit():
 
     cfg = object.__new__(InferenceConfig)
@@ -576,6 +580,8 @@ def test_save_dir_explicit():
     assert cfg.save_dir == "/custom/out"
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_prepare_runtime_variables():
 
     cfg = object.__new__(InferenceConfig)
@@ -596,6 +602,8 @@ def test_prepare_runtime_variables():
     assert RuntimeContext.TARGET_VAR_METADATA == ["b"]
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_prepare_config(tmp_path):
 
     path = tmp_path / "cfg.yaml"
@@ -608,6 +616,7 @@ def test_prepare_config(tmp_path):
     assert result["b"] == "test"
 
 
+@pytest.mark.pruned
 def test_resolve_dataset_config_none_branch_current_behavior():
 
     cfg = object.__new__(InferenceConfig)

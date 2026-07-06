@@ -257,6 +257,7 @@ def test_cvae_invalid_dropout_high():
         )
 
 
+@pytest.mark.pruned
 def test_cvae_decoder_hidden_default_empty_when_encoder_empty():
     cfg = make_cvae_config(encoder_hidden_dims=[])
 
@@ -449,7 +450,6 @@ def test_cvae_build_checkpoint_input_shape_mismatch():
         )
 
 
-@pytest.mark.pruned
 def test_cvae_build_checkpoint_output_shape_mismatch():
     cfg = make_cvae_config()
     cfg._add_checkpoint_config(

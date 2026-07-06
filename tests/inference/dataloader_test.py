@@ -219,7 +219,6 @@ def test_collate_batch_with_metadata():
     assert len(result.metadata) == 2
 
 
-@pytest.mark.pruned
 def test_collate_batch_with_added_features():
     batch = [
         {
@@ -607,6 +606,7 @@ def test_collate_batch_with_metadata_and_spatial_mask():
     assert result.metadata == [{"year": 2000}]
 
 
+@pytest.mark.pruned
 def test_collate_batch_with_added_features_and_spatial_mask():
     batch = [
         {

@@ -118,6 +118,7 @@ def test_record_epoch_replace():
     assert agg.epoch_loss_terms["loss"][0] == 10.0
 
 
+@pytest.mark.pruned
 def test_record_epoch_missing_key_replace():
     agg = MetricsAggregator(DummyDistributed(), "train")
 
@@ -291,7 +292,6 @@ def test_plot_missing_loss_key(tmp_path):
     assert len(list(tmp_path.glob("*.png"))) > 0
 
 
-@pytest.mark.pruned
 def test_plot_empty_epoch_times(tmp_path):
     agg = make_agg("train", [1, 2])
     agg.epoch_times = []

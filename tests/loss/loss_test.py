@@ -66,7 +66,6 @@ def test_config_weights_valid_branch():
     assert cfg.loss_weights == [0.5, 0.5]
 
 
-@pytest.mark.pruned
 def test_config_invalid_weight_length():
     with pytest.raises((AssertionError, ValueError, RuntimeError)):
         LosspipelineConfig(
@@ -170,6 +169,7 @@ def test_forward_print_loss_flag():
     assert loss is not None
 
 
+@pytest.mark.pruned
 def test_forward_step_arguments_passthrough():
     cfg = LosspipelineConfig(loss_pipeline=[LossStepConfig(name="a")])
     pipe = cfg.build(make_weights())

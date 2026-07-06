@@ -371,6 +371,7 @@ def test_flow_selector_register_available_and_get_model():
     assert name in FlowSelector.available()
 
 
+@pytest.mark.pruned
 def test_flow_selector_unregistered_raises():
     selector = FlowSelector(type=unique_name("missing_flow"), args={})
 

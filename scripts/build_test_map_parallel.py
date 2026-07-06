@@ -113,7 +113,7 @@ def run_test(test):
     return {"test": test, "status": "ok", "data": test_data}
 
 
-NUM_WORKERS = 64
+NUM_WORKERS = 16
 
 print(f"Using {NUM_WORKERS} workers")
 completed = 0
@@ -128,6 +128,10 @@ with Pool(NUM_WORKERS) as pool:
 
         if result["status"] != "ok":
             print(f"❌ Failed: {result['status']}", flush=True)
+
+            print(result["stdout"])
+            print(result["stderr"])
+
             continue
 
         test_map[test] = result["data"]

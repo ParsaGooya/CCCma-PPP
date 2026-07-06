@@ -95,13 +95,13 @@ def test_lead_months_requires_end():
         lead_months_config()
 
 
-@pytest.mark.pruned
 def test_lead_months_list_valid():
     cfg = lead_months_config(list_months=[1, 2, 3])
 
     assert cfg.list_months == [1, 2, 3]
 
 
+@pytest.mark.pruned
 def test_build_lead_months_from_list():
     cfg = lead_months_config(list_months=[1, 5, 7])
 
@@ -882,6 +882,7 @@ def test_model_vs_condition_year_subset_error():
         )
 
 
+@pytest.mark.pruned
 def test_model_vs_condition_lead_time_error():
     model = DummyModel()
     condition = DummyCondition()
@@ -930,6 +931,7 @@ def test_model_vs_condition_lat_mismatch():
         cfg._check_model_vs_condition()
 
 
+@pytest.mark.pruned
 def test_model_vs_condition_lon_mismatch():
     model = DummyModel()
     condition = DummyCondition()

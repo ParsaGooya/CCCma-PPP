@@ -143,7 +143,6 @@ def test_basic_init(tmp_path):
     assert isinstance(cfg.experiment_dir, Path)
 
 
-@pytest.mark.pruned
 def test_max_epochs_none_becomes_inf(tmp_path):
     cfg = TrainConfig(
         tmp_path,
@@ -249,7 +248,6 @@ def test_resolve_resuming_same_path(tmp_path):
     assert cfg.copy_resume_dir_to_new_path is False
 
 
-@pytest.mark.pruned
 def test_resolve_resuming_different_path(tmp_path):
     cfg = object.__new__(TrainConfig)
     cfg.resume_dir = tmp_path
@@ -1003,6 +1001,7 @@ def test_resolve_resuming_sets_experiment_dir_path(tmp_path):
     assert isinstance(cfg.experiment_dir, Path)
 
 
+@pytest.mark.pruned
 def test_missing_flattener_for_mlp(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1132,6 +1131,7 @@ def test_figures_dir_exists_after_prepare(tmp_path):
     assert os.path.isdir(cfg.figures_dir)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_root_false(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 

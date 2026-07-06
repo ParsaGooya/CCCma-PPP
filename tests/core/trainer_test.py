@@ -381,7 +381,6 @@ def test_setup_distributed_without_validation(env_dirs):
     assert trainer.validation_aggregator is None
 
 
-@pytest.mark.pruned
 def test_setup_distributed_logger_none_prints(env_dirs, capsys):
     trainer, _, _, _, _ = make_trainer(validation=False)
 
@@ -490,7 +489,6 @@ def test_should_stop_early_no_validation():
     assert trainer._should_stop_early() is False
 
 
-@pytest.mark.pruned
 def test_should_stop_early_none_buffer():
     trainer, _, _, _, _ = make_trainer(validation=True)
     trainer.config.earlystoppingbuffer = None
@@ -540,6 +538,7 @@ def test_train_on_batch_basic(env_dirs):
     assert optimizer.scheduler_steps == 1
 
 
+@pytest.mark.pruned
 def test_train_on_batch_with_beta(env_dirs):
     beta = DummyBetaFinder()
     module = DummyCVAE(built=True)
@@ -756,7 +755,6 @@ def test_load_checkpoint_default_path(env_dirs):
     assert "module" in checkpoint
 
 
-@pytest.mark.pruned
 def test_load_checkpoint_without_scaler_or_histories(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -998,6 +996,7 @@ def test_optimizer_step_amp_skipped_does_not_increment(monkeypatch, env_dirs):
     assert optimizer.scheduler_steps == 0
 
 
+@pytest.mark.pruned
 def test_load_checkpoint_without_train_history_key(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -1368,6 +1367,7 @@ def test_optimizer_step_amp_enabled_branch(env_dirs):
     assert trainer.global_step == 1
 
 
+@pytest.mark.pruned
 def test_log_epoch_root_without_logger(env_dirs, capsys):
     trainer, _, _, _, _ = make_trainer(validation=False)
 

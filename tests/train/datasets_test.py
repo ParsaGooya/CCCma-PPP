@@ -131,7 +131,6 @@ def test_observation_warns_mismatch():
         )
 
 
-@pytest.mark.pruned
 def test_invalid_condition_without_method():
     model = DummyDataConfig()
     cond = DummyDataConfig()
@@ -356,7 +355,6 @@ def test_concat_condition_flag():
     assert isinstance(ds._concat_condition_to_input, bool)
 
 
-@pytest.mark.pruned
 def test_prepare_mask_with_existing_mask():
     cfg = make_valid_config_with()
     years = cfg.get_common_time[:1]
@@ -803,6 +801,7 @@ def test_obs_indexes_without_ensemble_sampling():
     assert "ensembles" not in indexes
 
 
+@pytest.mark.pruned
 def test_condition_dataset_none_branch():
     cfg = make_valid_config_with()
 
@@ -3332,6 +3331,7 @@ def test_load_xarray_without_ensemble_selection():
     assert ds.model_dataset is not None
 
 
+@pytest.mark.pruned
 def test_prepare_mask_existing_without_expand():
     model = DummyDataConfig()
 
@@ -3682,7 +3682,6 @@ def test_get_added_features_dim_zero():
     assert ds.get_added_features_dim() == 0
 
 
-@pytest.mark.pruned
 def test_missing_model_raises():
     cond = DummyDataConfig()
     cond.paths = ["different"]

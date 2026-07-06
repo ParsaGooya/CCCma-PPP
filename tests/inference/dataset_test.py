@@ -74,7 +74,6 @@ def test_condition_without_method_raises():
         cfg._check_condition()
 
 
-@pytest.mark.pruned
 def test_same_member_requires_ensemble_dimension():
     cfg = object.__new__(InferenceDatasetConfig)
 
@@ -86,6 +85,7 @@ def test_same_member_requires_ensemble_dimension():
         cfg._check_condition()
 
 
+@pytest.mark.pruned
 def test_cross_ensemble_requires_ensemble_dimension():
     cfg = object.__new__(InferenceDatasetConfig)
 
