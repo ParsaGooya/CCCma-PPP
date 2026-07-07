@@ -43,6 +43,7 @@ class Registery:
         """
 
         def decorator(cls):
+            setattr(cls, "_type", name)
             self._modules[name] = cls
             return cls
 

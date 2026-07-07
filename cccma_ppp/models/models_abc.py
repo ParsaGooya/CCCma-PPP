@@ -8,6 +8,8 @@ import gc
 from pathlib import Path
 import dataclasses
 
+from cccma_ppp.models.normalized_flows import NormalizedFlowModel
+from cccma_ppp.core import cVAEOutput
 
 InitMethod = Literal["trunc_normal", "xavier"]
 
@@ -298,6 +300,32 @@ class deterministicmodelsABC(modelABC):
         self.generative_modeling = False
 
 
+@dataclasses.dataclass
+class cVAEPredictRequest:
+    """
+    cVAE predict method arguments.
+
+    Parameters
+    ----------
+    condition : torch.Tensor 
+        Conditioning input.
+    added_features : torch.Tensor or None
+        Additional features.
+    prior_flow : NormalizedFlowModel or None
+        Optional flow-based prior.
+    latent_samples: torch.Tensor or None
+        latent_samples pre-specified by user
+    sample_size : int, optional
+        Number of samples.
+    """
+    condition: torch.Tensor
+    added_features: torch.Tensor | None = None
+    prior_flow: NormalizedFlowModel | None = None
+    latent_samples: torch.Tensor | None = None
+    sample_size: int = 1
+
+
+
 class cVAEmodelsABC(modelABC):
     """
     Base class for conditional variational autoencoders.
@@ -316,7 +344,10 @@ class cVAEmodelsABC(modelABC):
         self.generative_modeling = True
 
     @abc.abstractmethod
-    def predict(self, x):
+    def predict(
+        self,
+        request: cVAEPredictRequest,
+    ) -> cVAEOutput:
         """
         Generate samples.
 
@@ -326,6 +357,7 @@ class cVAEmodelsABC(modelABC):
         """
 
         pass
+
 
     @abc.abstractmethod
     def _recognition(self) -> tuple[torch.Tensor, ...]:

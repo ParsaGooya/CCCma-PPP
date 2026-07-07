@@ -102,6 +102,75 @@ class ModuleSelector:
         )
 
 
+
+
+@dataclasses.dataclass
+class PredictorSelector:
+    """
+    Selector for constructing Predictor objects from a registry.
+
+    Parameters
+    ----------
+    config : Mapping[str, Any]
+        Configuration dictionary used to instantiate the Predictor config.
+    """
+
+    config: Mapping[str, Any]
+    registery: ClassVar[Registery] = Registery()
+
+    @classmethod
+    def register(cls, name: str) -> Callable[..., moduleABC]:
+        """
+        Register a module configuration class.
+
+        Parameters
+        ----------
+        name : str
+            Name used for registration.
+
+        Returns
+        -------
+        Callable
+            Decorator for registering module configuration classes.
+        """
+
+        return cls.registery.register(name.lower())
+
+    @classmethod
+    def available(cls):
+        """
+        Return available module types.
+
+        Returns
+        -------
+        list of str
+            Registered module names.
+        """
+
+        return cls.registery.available()
+
+    def build_predictor(
+        self,
+        module: moduleABC
+    ):
+        """
+        Build predictor instance.
+
+        Parameters
+        ----------
+        module : moduleABC
+            Trained module 
+
+        Returns
+        -------
+        PreictorABC
+            Built predictor instance.
+        """
+        Predictor_Config = self.registery.get(module.config._type.lower(), self.config)
+        return Predictor_Config.build(module)
+
+
+
 @dataclasses.dataclass
 class ModelSelector:
     """

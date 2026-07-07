@@ -244,7 +244,7 @@ class Trainer:
         if not self.save_checkpoint:
             self.log_root(
                 logging.warning,
-                "Configured value of save_checkpoint is false, no checkpoints whatsoever will be saved! ",
+                "Configured value of save_checkpoint is false, no checkpoints whatsoever will be saved!" 
             )
 
         self.checkpoint_dir = Path(RuntimeContext.GLOBAL_CHECKPOINT_DIR)
@@ -253,7 +253,8 @@ class Trainer:
         if resuming:
             self.log_root(
                 logging.INFO,
-                f"Resuming training from {self.checkpoint_dir / 'best.pt'}. \n Warning: If all configurations don't match you will get RuntimeError!",
+                f"Resuming training from \n {self.checkpoint_dir / 'best.pt'}.\n" \
+                 "Warning: If all configurations don't match you will get RuntimeError!",
             )
             self._load_checkpoint(self.checkpoint_dir / "best.pt")
             if self._epochs_trained == self.max_epochs:

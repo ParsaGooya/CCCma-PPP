@@ -5,7 +5,7 @@ import torch
 from pathlib import Path
 
 
-from cccma_ppp.train.datasets import TrainDatasetConfig
+from cccma_ppp.train.dataset import TrainDatasetConfig
 from cccma_ppp.data_modules import _create_train_mask, WeightsConfig
 from cccma_ppp.data_modules.dataloader import (
     Dataloader,
@@ -181,7 +181,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         return self.dataset_config.available_train_time
 
     def setup_distributed(
-        self, distributed: Distributed, save_path: Path | str | None = None
+        self, distributed: Distributed, load_path: Path | str | None = None
     ):
         """
         Prepare dataloader for distributed training.
@@ -201,14 +201,15 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         self.world_size = distributed.world_size
 
         if distributed.is_root():
-            self.dataset_config._fit_preprocessors(
-                self.train_years, save=True, save_path=save_path
-            )
+            if load_path is None:
+                self.dataset_config._fit_preprocessors(
+                    self.train_years, save=True
+                )
 
         distributed.barrier()
 
         if distributed.distributed:
-            self.dataset_config._load_fitted_preprocessors(load_dir=save_path)
+            self.dataset_config._load_fitted_preprocessors(load_dir=load_path)
 
         self._setup = True
 

@@ -5,6 +5,7 @@ import torch.nn as nn
 from typing import final
 import gc
 from pathlib import Path
+from typing import ClassVar
 
 from cccma_ppp.loss import Losspipeline
 
@@ -161,17 +162,18 @@ class moduleConfigABC(abc.ABC):
     _load_from_checkpoint()
         Load configuration from checkpoint.
     """
+    _type: ClassVar[str | None] = None
 
-    def __init__(self):
-        """
-        Initialize module configuration object.
 
-        Returns
-        -------
-        None
-        """
-
-        super().__init__()
+    @classmethod
+    def check_registered(cls):
+        '''
+        Class attribute _type will only be set if the class is registered.
+        '''
+        if cls._type is None:
+            raise RuntimeError(
+                f"{cls.__name__} has not been registered."
+            )
 
     @abc.abstractmethod
     def build(

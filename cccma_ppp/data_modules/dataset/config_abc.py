@@ -241,7 +241,8 @@ class DatasetConfigABC(abc.ABC):
         -------
         None
         """
-        if self.lead_months is not None:
+        if (self.lead_months is not None and
+            isinstance(self.lead_months, lead_months_config)):
             self.lead_months = self.lead_months.build_lead_months()
 
     @abc.abstractmethod

@@ -4,8 +4,9 @@ import dataclasses
 import torch
 from pathlib import Path
 
+from cccma_ppp.train.dataset import TrainDatasetConfig
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
-from cccma_ppp.inference.datasets import InferenceDatasetConfig
+from cccma_ppp.inference.dataset import InferenceDatasetConfig, _from_train
 from cccma_ppp.data_modules.dataloader import Dataloader, DataloaderConfigABC, BatchDataABC
 from cccma_ppp.generic import Distributed, RuntimeContext
 
@@ -53,17 +54,26 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
     def __post_init__(self):
         self._setup = False
+        self.train_dataset_config = None
 
         if self.num_data_workers == 0:
             self.prefetch_factor = None
         
         if self.dataset_config is not None:
             _ = self._inference_years
-            
-        else:
+
+    def _check_dataset_config(self):
+        if self.dataset_config is None:
             raise RuntimeError(
-            "Inference dataset_config must be resolved before setup."
+                "dataset_config must be provided or read froim train configs" \
+                "via  read_datasetconfig_from_train method."
             )
+
+    def read_datasetConfig_from_train(self, train_dataset_config: TrainDatasetConfig):
+        if self.dataset_config is None:
+            self.dataset_config = _from_train(train_dataset_config)
+            _ = self._inference_years
+            self.train_dataset_config = train_dataset_config
 
     @property
     def _inference_years(self):
@@ -82,9 +92,12 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         
     @property
     def available_inference_years(self):
+        self._check_dataset_config()
         return self.dataset_config.available_inference_time
+    
 
     def _input_preprocessor_exists(self, load_dir: Path | str = None):
+        self._check_dataset_config()
         preprocessor_to_check = []
         exists = []
 
@@ -111,22 +124,22 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         self, 
         train_loader_config : TrainDataloaderConfig,
         distributed: Distributed, 
-        save_path: Path | str | None = None
+        load_path: Path | str | None = None
     ):
 
-        self.train_dataset_config = train_loader_config.dataset_config
+        self._check_dataset_config()
         self.rank = distributed.rank
         self.world_size = distributed.world_size
         
-        if not self._input_preprocessor_exists(save_path):
+        if not self._input_preprocessor_exists(load_path):
             if distributed.is_root():
-                self.train_dataset_config._fit_preprocessors(
-                    train_loader_config.train_years, save=True, save_path=save_path
+                train_loader_config.dataset_config._fit_preprocessors(
+                    train_loader_config.dataset_config.train_years, save=True
                 )
 
         distributed.barrier()
 
-        self.dataset_config._load_fitted_preprocessors(load_dir=save_path)
+        self.dataset_config._load_fitted_preprocessors(load_dir=load_path)
 
         self._setup = True
 
@@ -136,7 +149,6 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
             raise RuntimeError(
                 "Dataloader has to be setup for distributed training first by calling .setup_distributed()"
             )
-
 
         inference_dataset = self.dataset_config.build_dataset(
             years=self._inference_years, return_metadata=True
@@ -152,14 +164,14 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
             reduce_spatial_mask=reduce_spatial_mask,
         )
 
-
     @property
     def input_var_metadata(self):
+        self._check_dataset_config()
         return self.dataset_config.ds_operator.get_input_var_metadata()
 
     @property
     def target_var_metadata(self):
-        if not hasattr(self, "train_dataset_config"):
+        if self.train_dataset_config is None:
             raise RuntimeError(
                 "output variables metadata cannot be read unless train dataloader" \
                 "is available. Hint: run setup_distributed(TrainDatasetConfig, ...)."

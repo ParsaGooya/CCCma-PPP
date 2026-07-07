@@ -3,7 +3,7 @@ import numpy as np
 import xarray as xr
 import warnings
 
-from cccma_ppp.train.datasets import (
+from cccma_ppp.train.dataset import (
     TrainDatasetConfig,
     TrainDataset,
 )

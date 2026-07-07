@@ -24,7 +24,7 @@ from cccma_ppp.data_modules import (
     _create_train_mask,
 )
 
-from cccma_ppp.train.datasets import TrainDatasetConfig
+from cccma_ppp.train.dataset import TrainDatasetConfig
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 @dataclasses.dataclass
@@ -86,7 +86,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
                     "'static' conditioning method cannot point to the same model data!"
                 )
 
-        else: ##comeback
+        else: 
             if self.condition_method == "static":
 
                 raise ValueError(
@@ -94,6 +94,13 @@ class InferenceDatasetConfig(DatasetConfigABC):
             )
             
         return self
+    
+    @property
+    def effective_input(self):
+        if self.model is not None:
+            return self.model
+        else:
+            return self.condition
 
     @property
     def ds_operator(self):
@@ -137,9 +144,6 @@ class InferenceDatasetConfig(DatasetConfigABC):
 
         self.ds_operator._add_fitted_preprocessor(preprocessor, index)
 
-    @classmethod
-    def read_from_train(cls, train_dataset_config: TrainDatasetConfig):
-        return _from_train(train_dataset_config)
 
     def build_dataset(
         self,
@@ -167,7 +171,7 @@ class InferenceDataset(Dataset):
             raise RuntimeError(
                 "Make sure to fit preprocessors first!. Hint:  TrainDatasetConfig._fit_preprocessors()"
             )
-        if not set(self.requested_years).issubset(set(self.config.available_train_time)):
+        if not set(self.requested_years).issubset(set(self.config.available_inference_time)):
             raise ValueError(
                 "the requested years are not common to model and condition data."
             )
@@ -184,35 +188,30 @@ class InferenceDataset(Dataset):
         self.model_indexes = self.get_model_indexes()
         self.cond_indexes = self.get_cond_indexes(self.model_indexes)
 
-    @property
-    def effective_input(self):
-        if self.config.model is not None:
-            return self.config.model
-        else:
-            return self.config.condition
 
     @property
     def _load_model(self):
 
-        return not self.config._using_model_data_as_condition
+        return all([not self.config._using_model_data_as_condition,
+                    self.config.model is not None])
     
     @property
     def _write_condition_to_input(self):
 
-        return self.config._using_model_data_as_condition
-
+        return any([self.config._using_model_data_as_condition, 
+                        self.config.model is None])
     
     @property
     def _concat_condition_to_input(self):
 
         return (self._write_condition_to_input is False and
-                self.config.effective_condition is not None)
+                self.config.condition is not None)
 
 
     def _prepare_mask(self):
         mask = _create_train_mask(
-            years=self.effective_input.year_range,
-            lead_times=np.arange(1, self.effective_input.info.sizes["lead_time"] + 1),
+            years=self.config.effective_input.year_range,
+            lead_times=np.arange(1, self.config.effective_input.info.sizes["lead_time"] + 1),
         )
         mask = xr.full_like(mask, fill_value=False)
 
@@ -221,15 +220,15 @@ class InferenceDataset(Dataset):
         )
         if all(
             [
-                not self.effective_input.ensemble_mean,
-                self.effective_input.info.coords["ensembles"] is not None,
+                not self.config.effective_input.ensemble_mean,
+                self.config.effective_input.info.coords["ensembles"] is not None,
             ]
         ):
             mask = mask.expand_dims(
-                ensembles=len(self.effective_input.info.coords["ensembles"]), axis=0
+                ensembles=len(self.config.effective_input.info.coords["ensembles"]), axis=0
             )
             mask = mask.assign_coords(
-                ensembles=self.effective_input.info.coords["ensembles"]
+                ensembles=self.config.effective_input.info.coords["ensembles"]
             )
 
         mask = mask.where(~mask)
@@ -292,21 +291,21 @@ class InferenceDataset(Dataset):
 
         checklist = [
             isinstance(item, Flattennanremove)
-            for item in self.effective_input.preprocessing_pipeline.fitted_preprocessors
+            for item in self.config.effective_input.preprocessing_pipeline.fitted_preprocessors
         ]
 
-        len_names = len(self.effective_input.names)
+        len_names = len(self.config.effective_input.names)
         if self._concat_condition_to_input:
             len_names += len(self.config.effective_condition.names)
 
         if any(checklist):
-            return  (self.effective_input.preprocessing_pipeline
+            return  (self.config.effective_input.preprocessing_pipeline
                         .get_preprocessors("flattener")
                         .final_locations.size * len_names,)
         else:
             return (
-                self.effective_input.info.coords["lat"].size,
-                self.effective_input.info.coords["lon"].size,
+                self.config.effective_input.info.coords["lat"].size,
+                self.config.effective_input.info.coords["lon"].size,
             )
 
 
@@ -355,6 +354,9 @@ class InferenceDataset(Dataset):
         year = float(self.model_indexes["year"][ind])
         lead_time = float(self.model_indexes["lead_time"][ind])
         selection = dict(year=year, lead_time=lead_time)
+
+        if self.model_indexes.get("ensembles") is not None:
+            selection['ensemble_id'] = self.model_indexes["ensembles"][ind]
         
         condition = self._index_condition_dataset(ind)
         input = self._index_model_dataset(ind)

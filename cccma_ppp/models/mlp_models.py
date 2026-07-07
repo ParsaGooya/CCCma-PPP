@@ -10,10 +10,10 @@ from cccma_ppp.models.models_abc import (
     deterministicmodelsABC,
     modelConfigABC,
     cVAEmodelConfigABC,
+    cVAEPredictRequest,
     InitMethod,
 )
 from cccma_ppp.core.selectors import deterministicModelSelector, cVAEModelSelector
-from cccma_ppp.models.normalized_flows import NormalizedFlowModel
 from cccma_ppp.core import cVAEOutput, deterministicOutput
 from cccma_ppp.generic import RuntimeContext
 
@@ -323,10 +323,10 @@ class cVAE_MLP(cVAEmodelsABC):
     def forward(
         self,
         x: torch.Tensor,
-        added_features: torch.Tensor = None,
-        condition: torch.Tensor = None,
-        sample_size=1,
-        min_posterior_variance=None,
+        added_features: torch.Tensor | None = None,
+        condition: torch.Tensor | None = None,
+        sample_size: int =1,
+        min_posterior_variance: torch.Tensor | None = None,
     ) -> cVAEOutput:
         """
         Perform forward pass through cVAE.
@@ -391,30 +391,28 @@ class cVAE_MLP(cVAEmodelsABC):
 
     def predict(
         self,
-        condition: torch.Tensor = None,
-        added_features: torch.Tensor = None,
-        prior_flow: NormalizedFlowModel | None = None,
-        sample_size=1,
+        request: cVAEPredictRequest,
     ) -> cVAEOutput:
         """
         Generate samples from learned prior.
 
         Parameters
         ----------
-        condition : torch.Tensor or None
-            Conditioning input.
-        added_features : torch.Tensor or None
-            Additional features.
-        prior_flow : NormalizedFlowModel or None
-            Optional flow-based prior.
-        sample_size : int, optional
-            Number of samples.
+        request
+            cVAE predict arguments specified 
+            by cVAEPredictRequest.
 
         Returns
         -------
         cVAEOutput
             Generated samples and conditioning outputs.
         """
+
+        condition = request.condition
+        added_features = request.added_features
+        prior_flow = request.prior_flow
+        latent_samples = request.latent_samples
+        sample_size = request.sample_size
 
         cond_in = condition[0] if isinstance(condition, (tuple, list)) else condition
         B, C = cond_in.shape[:2]
@@ -425,26 +423,34 @@ class cVAE_MLP(cVAEmodelsABC):
         del cond_in
 
         cond_mu, cond_log_var = self._condition(
-            condition=condition, added_features=added_features
-        )
-
-        if self.condition_dependant_latent and not self.condition_dependant_flow:
-            latent_samples = self._sample(cond_mu, cond_log_var, sample_size)
-
-        else:
-            latent_samples = self._get_normal(latent_ref_tensor).sample((sample_size,))
-
-        if prior_flow is not None:
-            cond = cond_mu if prior_flow.condition_size is not None else None
-
-            batch_size, feature_size = latent_samples.shape[1:]
-            latent_samples = latent_samples.reshape(
-                sample_size * batch_size, feature_size
+                condition=condition, added_features=added_features
             )
 
-            flow_output = prior_flow.inverse(latent_samples, cond)
-            latent_samples = flow_output.e_samples
-            latent_samples = latent_samples.reshape(sample_size, batch_size, -1)
+        if latent_samples is None:
+
+            if self.condition_dependant_latent and not self.condition_dependant_flow:
+                latent_samples = self._sample(cond_mu, cond_log_var, sample_size)
+
+            else:
+                latent_samples = self._get_normal(latent_ref_tensor).sample((sample_size,))
+
+            if prior_flow is not None:
+                cond = cond_mu if prior_flow.condition_size is not None else None
+
+                batch_size, feature_size = latent_samples.shape[1:]
+                latent_samples = latent_samples.reshape(
+                    sample_size * batch_size, feature_size
+                )
+
+                flow_output = prior_flow.inverse(latent_samples, cond)
+                latent_samples = flow_output.e_samples
+                latent_samples = latent_samples.reshape(sample_size, batch_size, -1)
+        else:
+            if not latent_samples.shape == latent_ref_tensor.shape:
+                raise ValueError(
+                    f'got user specified latent_samples of shape ({latent_samples.shape})' \
+                    'but expected shape {(latent_ref_tensor.shape)}'
+                )
 
         output = self._generate(
             latent_samples, condition=cond_mu, added_features=added_features

@@ -1,5 +1,5 @@
 
-from cccma_ppp.train.train_configs import TrainConfig, build_trainer, prepare_config
+from cccma_ppp.inference.inference_configs import InferenceConfig, build_writer, prepare_config
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.logger import setup_logger
 import argparse
@@ -14,20 +14,7 @@ def get_parser() -> argparse.ArgumentParser:
         type=str,
         help="Path to the YAML config file.",)
 
-
-    # to-do
-    # parser.add_argument(
-    #     "--override",
-    #     nargs="*",
-    #     default=[],
-    #     help=(
-    #         "Optional config overrides, e.g. "
-    #         "--override trainer.epochs=20 optimizer.lr=1e-4"))
-
-
-
     return parser
-
 
 
 
@@ -41,10 +28,10 @@ def main(yaml_config: str):
     # to-do
     # config.apply_overrides(args.override)
 
-    config = dacite.from_dict(data_class=TrainConfig, data=config_data, config=dacite.Config(strict=True))
+    config = dacite.from_dict(data_class=InferenceConfig, data=config_data, config=dacite.Config(strict=True))
     config.set_random_seed()
 
-    logger = setup_logger(name = 'training',
+    logger = setup_logger(name = 'inference',
                           log_dir = config.log_dir )
 
     if distributed.is_root():
@@ -56,14 +43,12 @@ def main(yaml_config: str):
     if distributed.is_root():
         logger.info('Building objects:')
 
-    trainer = build_trainer(config, distributed, logger)
+    writer = build_writer(config, distributed, logger)
 
-    trainer.setup_distributed(  distributed = distributed ,
-                    logger = logger,
-                    log_every_n_epochs = config.log_every_n_epochs,
-                    save_checkpoint =  config.save_checkpoint )
+    writer.setup_distributed(  distributed = distributed ,
+                    logger = logger)
 
-    trainer.train()
+    writer.infer()
 
     distributed.cleanup()
 
