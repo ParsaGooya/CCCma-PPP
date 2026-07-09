@@ -1,4 +1,3 @@
-from __future__ import annotations
 from cccma_ppp.train.train_configs import TrainConfig, build_trainer, prepare_config
 from cccma_ppp.generic import Distributed, setup_logger
 

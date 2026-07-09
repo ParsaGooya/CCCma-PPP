@@ -1,4 +1,3 @@
-from __future__ import annotations
 import torch.nn as nn
 import xarray as xr
 from typing import ClassVar

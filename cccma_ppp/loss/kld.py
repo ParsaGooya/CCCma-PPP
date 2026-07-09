@@ -1,4 +1,3 @@
-from __future__ import annotations
 import torch
 from torch.distributions import Normal, kl_divergence
 import dataclasses

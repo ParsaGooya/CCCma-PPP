@@ -1,3 +1,6 @@
-from __future__ import annotations
-from cccma_ppp.data_modules.data.data_abc import DataConfigABC 
-from cccma_ppp.data_modules.data.data_configs import ModelDataConfig, ConditionDataConfig, ObsDataConfig
+from cccma_ppp.data_modules.data.data_abc import DataConfigABC
+from cccma_ppp.data_modules.data.data_configs import (
+    ModelDataConfig,
+    ConditionDataConfig,
+    ObsDataConfig,
+)
