@@ -1,0 +1,496 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cccma_ppp.core.optimization module &mdash; CCCma PPP  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="cccma_ppp.core.registery module" href="cccma_ppp.core.registery.html" />
+    <link rel="prev" title="cccma_ppp.core.deterministic_module module" href="cccma_ppp.core.deterministic_module.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CCCma PPP
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="cccma_ppp.html">cccma_ppp package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="cccma_ppp.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="cccma_ppp.core.html">cccma_ppp.core package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="cccma_ppp.core.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.html">cccma_ppp.data_modules package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.generic.html">cccma_ppp.generic package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.inference.html">cccma_ppp.inference package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.loss.html">cccma_ppp.loss package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.models.html">cccma_ppp.models package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.preprocessing.html">cccma_ppp.preprocessing package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.train.html">cccma_ppp.train package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CCCma PPP</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="cccma_ppp.html">cccma_ppp package</a></li>
+          <li class="breadcrumb-item"><a href="cccma_ppp.core.html">cccma_ppp.core package</a></li>
+      <li class="breadcrumb-item active">cccma_ppp.core.optimization module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/cccma_ppp.core.optimization.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cccma-ppp-core-optimization-module">
+<h1>cccma_ppp.core.optimization module<a class="headerlink" href="#cccma-ppp-core-optimization-module" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.optimization.</span></span><span class="sig-name descname"><span class="pre">CosineAnnealingLRScheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#CosineAnnealingLRScheduler"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Learning rate scheduler with optional warmup and cosine annealing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<em>LRSchedulerConfig</em>) – Scheduler configuration.</p></li>
+<li><p><strong>optimizer</strong> (<em>torch.optim.Optimizer</em>) – Optimizer instance.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">load_state_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#CosineAnnealingLRScheduler.load_state_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Load scheduler state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state_dict</strong> (<em>dict</em>) – Scheduler state dictionary.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – If scheduler has not been initialized.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">state_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#CosineAnnealingLRScheduler.state_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Return scheduler state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Scheduler state dictionary.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – If scheduler has not been initialized.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#CosineAnnealingLRScheduler.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Advance scheduler by one step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If scheduler has not been initialized.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.optimization.</span></span><span class="sig-name descname"><span class="pre">LRSchedulerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#LRSchedulerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configuration for learning rate scheduler.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_lr</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum learning rate for cosine annealing.</p></li>
+<li><p><strong>warmup_epochs</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of warmup epochs with linearly increasing learning rate.</p></li>
+<li><p><strong>total_epochs</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Total number of training epochs.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_batches</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#LRSchedulerConfig.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Construct learning rate scheduler.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>optimizer</strong> (<em>torch.optim.Optimizer</em>) – Optimizer instance.</p></li>
+<li><p><strong>num_batches</strong> (<em>int</em>) – Number of batches per epoch.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Configured scheduler.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>CosineAnnealingLRScheduler</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>AssertionError</strong> – If required configuration values are invalid.</p></li>
+<li><p><strong>ValueError</strong> – If warmup exceeds total epochs.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">min_lr</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">total_epochs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">warmup_epochs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.optimization.</span></span><span class="sig-name descname"><span class="pre">OptimizerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_decay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'adam'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_scheduler_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#OptimizerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configuration for optimizer and optional learning rate scheduler.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lr</strong> (<em>float</em><em>, </em><em>optional</em>) – Learning rate.</p></li>
+<li><p><strong>weight_decay</strong> (<em>float</em><em>, </em><em>optional</em>) – Weight decay coefficient.</p></li>
+<li><p><strong>optimizer_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Optimizer type (“adam”, “adamw”).</p></li>
+<li><p><strong>lr_scheduler_config</strong> (<em>LRSchedulerConfig</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Learning rate scheduler configuration.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">OPTIMIZER_REGISTERY</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'adam':</span> <span class="pre">&lt;class</span> <span class="pre">'torch.optim.adam.Adam'&gt;,</span> <span class="pre">'adamw':</span> <span class="pre">&lt;class</span> <span class="pre">'torch.optim.adamw.AdamW'&gt;}</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_batches</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#OptimizerConfig.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Construct optimizer wrapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>module</strong> (<em>ModuleABC</em>) – Model whose parameters are optimized.</p></li>
+<li><p><strong>num_batches</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of batches per epoch.</p></li>
+<li><p><strong>max_epochs</strong> (<em>int</em><em>, </em><em>optional</em>) – Total number of training epochs.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Wrapped optimizer and scheduler.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>OptimizerWrapper</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If scheduler configuration is incomplete.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">lr</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0001</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">lr_scheduler_config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">LRSchedulerConfig</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">optimizer_type</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'adam'</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">weight_decay</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.optimization.</span></span><span class="sig-name descname"><span class="pre">OptimizerWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_batches</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#OptimizerWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Wrapper around optimizer and optional learning rate scheduler.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<em>OptimizerConfig</em>) – Optimizer configuration.</p></li>
+<li><p><strong>module</strong> (<em>moduleABC</em>) – Model instance.</p></li>
+<li><p><strong>num_batches</strong> (<em>int</em><em> or </em><em>None</em>) – Number of batches per epoch.</p></li>
+<li><p><strong>max_epochs</strong> (<em>int</em><em> or </em><em>None</em>) – Total number of training epochs.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">load_state_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#OptimizerWrapper.load_state_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Load optimizer and scheduler state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state_dict</strong> (<em>dict</em>) – State dictionary.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – If optimizer is not initialized.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">scheduler_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#OptimizerWrapper.scheduler_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Perform scheduler step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">state_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#OptimizerWrapper.state_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Return optimizer and scheduler state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>State dictionary containing optimizer and scheduler states.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – If optimizer has not been initialized.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#OptimizerWrapper.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Perform optimizer step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If optimizer has not been initialized.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">set_to_none</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#OptimizerWrapper.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Reset gradients of model parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>set_to_none</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to set gradients to None instead of zero.</p></li>
+<li><p><strong>**kwargs</strong> – Additional arguments passed to optimizer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – If optimizer has not been initialized.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.optimization.</span></span><span class="sig-name descname"><span class="pre">moduleABC</span></span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for trainable modules.</p>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">init_loss_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reconstruction_loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">\*\*kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.init_loss_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Initialize loss function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reconstruction_loss</strong> (<em>Losspipeline</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_compute_loss</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC._compute_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Compute training loss.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Perform forward pass.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Perform inference.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Perform forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model output (implementation-dependent).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">init_loss_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reconstruction_loss</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.init_loss_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Initialize loss function for training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reconstruction_loss</strong> (<em>Losspipeline</em>) – Loss pipeline used for computing reconstruction loss.</p></li>
+<li><p><strong>**kwargs</strong> – Additional arguments for loss initialization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Perform inference using the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Model predictions.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cccma_ppp.core.deterministic_module.html" class="btn btn-neutral float-left" title="cccma_ppp.core.deterministic_module module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cccma_ppp.core.registery.html" class="btn btn-neutral float-right" title="cccma_ppp.core.registery module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

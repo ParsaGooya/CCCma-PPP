@@ -39,8 +39,14 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -97,7 +103,7 @@
 
 
 <div class="viewcode-block" id="TrainDatasetConfig">
-<a class="viewcode-back" href="../../../cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDatasetConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDatasetConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TrainDatasetConfig</span><span class="p">(</span><span class="n">DatasetConfigABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -360,7 +366,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">ds_operator</span><span class="o">.</span><span class="n">_add_fitted_preprocessor</span><span class="p">(</span><span class="n">preprocessor</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TrainDatasetConfig.build_dataset">
-<a class="viewcode-back" href="../../../cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDatasetConfig.build_dataset">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDatasetConfig.build_dataset">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_dataset</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">years</span><span class="p">,</span>
@@ -385,7 +391,7 @@
 
 
 <div class="viewcode-block" id="TrainDataset">
-<a class="viewcode-back" href="../../../cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDataset">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDataset">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TrainDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -596,7 +602,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="TrainDataset.get_model_indexes">
-<a class="viewcode-back" href="../../../cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDataset.get_model_indexes">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDataset.get_model_indexes">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_model_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute indexes for model dataset.</span>
@@ -622,7 +628,7 @@
 
 
 <div class="viewcode-block" id="TrainDataset.get_obs_indexes">
-<a class="viewcode-back" href="../../../cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDataset.get_obs_indexes">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDataset.get_obs_indexes">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_obs_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_indexes</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute indexes for observation dataset.</span>
@@ -653,7 +659,7 @@
 
 
 <div class="viewcode-block" id="TrainDataset.get_cond_indexes">
-<a class="viewcode-back" href="../../../cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDataset.get_cond_indexes">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDataset.get_cond_indexes">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_cond_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_indexes</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute indexes for conditioning dataset.</span>
@@ -687,7 +693,7 @@
 
 
 <div class="viewcode-block" id="TrainDataset.get_input_shape">
-<a class="viewcode-back" href="../../../cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDataset.get_input_shape">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDataset.get_input_shape">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_input_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Determine input shape.</span>
@@ -724,7 +730,7 @@
 
 
 <div class="viewcode-block" id="TrainDataset.get_target_shape">
-<a class="viewcode-back" href="../../../cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDataset.get_target_shape">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDataset.get_target_shape">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_target_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Determine target shape.</span>
@@ -756,7 +762,7 @@
 
 
 <div class="viewcode-block" id="TrainDataset.get_added_features_dim">
-<a class="viewcode-back" href="../../../cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDataset.get_added_features_dim">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.datasets.html#cccma_ppp.inference.dataset.TrainDataset.get_added_features_dim">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_added_features_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Number of additional features.</span>

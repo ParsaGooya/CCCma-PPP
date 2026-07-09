@@ -39,8 +39,14 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -82,7 +88,7 @@
 
 
 <div class="viewcode-block" id="MetricsAggregator">
-<a class="viewcode-back" href="../../../cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">MetricsAggregator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -155,7 +161,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">epoch_times</span> <span class="o">=</span> <span class="p">[]</span>
 
 <div class="viewcode-block" id="MetricsAggregator.record">
-<a class="viewcode-back" href="../../../cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator.record">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator.record">[docs]</a>
     <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -219,7 +225,7 @@
         <span class="k">return</span> <span class="n">logs</span>
 
 <div class="viewcode-block" id="MetricsAggregator.record_epoch">
-<a class="viewcode-back" href="../../../cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator.record_epoch">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator.record_epoch">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">record_epoch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">logs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
@@ -286,7 +292,7 @@
 
 
 <div class="viewcode-block" id="MetricsAggregator.reset_batch_losses">
-<a class="viewcode-back" href="../../../cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator.reset_batch_losses">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator.reset_batch_losses">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">reset_batch_losses</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reset batch-level accumulators.</span>
@@ -311,7 +317,7 @@
 
 
 <div class="viewcode-block" id="MetricsAggregator.plot">
-<a class="viewcode-back" href="../../../cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator.plot">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator.plot">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
@@ -488,7 +494,7 @@
 
 
 <div class="viewcode-block" id="MetricsAggregator.state_dict">
-<a class="viewcode-back" href="../../../cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator.state_dict">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator.state_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return serialized aggregator state.</span>
@@ -508,7 +514,7 @@
 
 
 <div class="viewcode-block" id="MetricsAggregator.load_state_dict">
-<a class="viewcode-back" href="../../../cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator.load_state_dict">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator.load_state_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load aggregator state from dictionary.</span>

@@ -39,8 +39,14 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -84,7 +90,7 @@
 
 
 <div class="viewcode-block" id="ModuleSelector">
-<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.core.cVAE_module.ModuleSelector">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.cVAE_module.ModuleSelector">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ModuleSelector</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -114,7 +120,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_module_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">registery</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ModuleSelector.register">
-<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.core.cVAE_module.ModuleSelector.register">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.cVAE_module.ModuleSelector.register">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">moduleABC</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -135,7 +141,7 @@
 
 
 <div class="viewcode-block" id="ModuleSelector.available">
-<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.core.cVAE_module.ModuleSelector.available">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.cVAE_module.ModuleSelector.available">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">available</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -151,7 +157,7 @@
 
 
 <div class="viewcode-block" id="ModuleSelector.build_module">
-<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.core.cVAE_module.ModuleSelector.build_module">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.cVAE_module.ModuleSelector.build_module">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_module</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">input_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -186,7 +192,7 @@
 
 
 <div class="viewcode-block" id="ModelSelector">
-<a class="viewcode-back" href="../../../cccma_ppp.core.selectors.html#cccma_ppp.core.cVAE_module.ModelSelector">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.selectors.html#cccma_ppp.core.cVAE_module.ModelSelector">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ModelSelector</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -258,7 +264,7 @@
                 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Model weights will be frozen.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ModelSelector.register">
-<a class="viewcode-back" href="../../../cccma_ppp.core.selectors.html#cccma_ppp.core.cVAE_module.ModelSelector.register">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.selectors.html#cccma_ppp.core.cVAE_module.ModelSelector.register">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">modelABC</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -279,7 +285,7 @@
 
 
 <div class="viewcode-block" id="ModelSelector.available">
-<a class="viewcode-back" href="../../../cccma_ppp.core.selectors.html#cccma_ppp.core.cVAE_module.ModelSelector.available">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.selectors.html#cccma_ppp.core.cVAE_module.ModelSelector.available">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">available</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -295,7 +301,7 @@
 
 
 <div class="viewcode-block" id="ModelSelector.get_model_config">
-<a class="viewcode-back" href="../../../cccma_ppp.core.selectors.html#cccma_ppp.core.cVAE_module.ModelSelector.get_model_config">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.selectors.html#cccma_ppp.core.cVAE_module.ModelSelector.get_model_config">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_model_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get instantiated model configuration.</span>
@@ -316,7 +322,7 @@
 
 
 <div class="viewcode-block" id="cVAEModelSelector">
-<a class="viewcode-back" href="../../../cccma_ppp.models.mlp_models.html#cccma_ppp.core.cVAE_module.cVAEModelSelector">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.mlp_models.html#cccma_ppp.core.cVAE_module.cVAEModelSelector">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">cVAEModelSelector</span><span class="p">(</span><span class="n">ModelSelector</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Model selector for cVAE models.</span>
@@ -327,7 +333,7 @@
 
 
 <div class="viewcode-block" id="deterministicModelSelector">
-<a class="viewcode-back" href="../../../cccma_ppp.models.mlp_models.html#cccma_ppp.core.cVAE_module.deterministicModelSelector">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.mlp_models.html#cccma_ppp.core.cVAE_module.deterministicModelSelector">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">deterministicModelSelector</span><span class="p">(</span><span class="n">ModelSelector</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Model selector for deterministic models.</span>
@@ -338,7 +344,7 @@
 
 
 <div class="viewcode-block" id="FlowSelector">
-<a class="viewcode-back" href="../../../cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.FlowSelector">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.FlowSelector">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">FlowSelector</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -368,7 +374,7 @@
         <span class="k">pass</span>
 
 <div class="viewcode-block" id="FlowSelector.register">
-<a class="viewcode-back" href="../../../cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.FlowSelector.register">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.FlowSelector.register">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">flowABC</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -389,7 +395,7 @@
 
 
 <div class="viewcode-block" id="FlowSelector.available">
-<a class="viewcode-back" href="../../../cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.FlowSelector.available">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.FlowSelector.available">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">available</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -405,7 +411,7 @@
 
 
 <div class="viewcode-block" id="FlowSelector.get_model">
-<a class="viewcode-back" href="../../../cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.FlowSelector.get_model">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.FlowSelector.get_model">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Instantiate flow model.</span>

@@ -2,6 +2,14 @@ CCCma PPP
 =========
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
+   :caption: Getting Started
 
-   cccma_ppp
+   guides/getting_started
+   guides/tutorial
+
+.. toctree::
+   :maxdepth: 3
+   :caption: API Reference
+
+   api/cccma_ppp

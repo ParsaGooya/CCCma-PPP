@@ -39,8 +39,14 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -90,7 +96,7 @@
 
 
 <div class="viewcode-block" id="cVAEOutput">
-<a class="viewcode-back" href="../../../cccma_ppp.models.mlp_models.html#cccma_ppp.core.cVAEOutput">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.mlp_models.html#cccma_ppp.core.cVAEOutput">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">cVAEOutput</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -119,7 +125,7 @@
 
 
 <div class="viewcode-block" id="cVAEConfig">
-<a class="viewcode-back" href="../../../cccma_ppp.core.cVAE_module.html#cccma_ppp.core.cVAEConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.cVAE_module.html#cccma_ppp.core.cVAEConfig">[docs]</a>
 <span class="nd">@ModuleSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;cvae&quot;</span><span class="p">)</span>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">cVAEConfig</span><span class="p">(</span><span class="n">moduleConfigABC</span><span class="p">):</span>
@@ -186,7 +192,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="cVAEConfig.build">
-<a class="viewcode-back" href="../../../cccma_ppp.core.cVAE_module.html#cccma_ppp.core.cVAEConfig.build">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.cVAE_module.html#cccma_ppp.core.cVAEConfig.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">input_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -265,7 +271,7 @@
 
 
 <div class="viewcode-block" id="cVAE">
-<a class="viewcode-back" href="../../../cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">cVAE</span><span class="p">(</span><span class="n">moduleABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Conditional variational autoencoder module.</span>
@@ -379,7 +385,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">load_dir</span><span class="p">)</span>
 
 <div class="viewcode-block" id="cVAE.init_loss_function">
-<a class="viewcode-back" href="../../../cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE.init_loss_function">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE.init_loss_function">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">init_loss_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reconstruction_loss</span><span class="p">:</span> <span class="n">Losspipeline</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize reconstruction and KL divergence losses.</span>
@@ -492,7 +498,7 @@
         <span class="k">return</span> <span class="n">total_loss</span><span class="p">,</span> <span class="n">losses_dict</span>
 
 <div class="viewcode-block" id="cVAE.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">BatchData</span><span class="p">,</span> <span class="n">sample_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cVAEOutput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform forward pass.</span>
@@ -520,7 +526,7 @@
 
 
 <div class="viewcode-block" id="cVAE.predict">
-<a class="viewcode-back" href="../../../cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE.predict">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE.predict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">BatchData</span><span class="p">,</span> <span class="n">sample_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cVAEOutput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate predictions using the learned prior.</span>

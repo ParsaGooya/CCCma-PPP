@@ -39,8 +39,14 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -100,7 +106,7 @@
 
 
 <div class="viewcode-block" id="InferenceDatasetConfig">
-<a class="viewcode-back" href="../../../cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDatasetConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDatasetConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">InferenceDatasetConfig</span><span class="p">(</span><span class="n">DatasetConfigABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -322,7 +328,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">ds_operator</span><span class="o">.</span><span class="n">_add_fitted_preprocessor</span><span class="p">(</span><span class="n">preprocessor</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
 
 <div class="viewcode-block" id="InferenceDatasetConfig.read_from_train">
-<a class="viewcode-back" href="../../../cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDatasetConfig.read_from_train">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDatasetConfig.read_from_train">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">read_from_train</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
@@ -344,7 +350,7 @@
 
 
 <div class="viewcode-block" id="InferenceDatasetConfig.build_dataset">
-<a class="viewcode-back" href="../../../cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDatasetConfig.build_dataset">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDatasetConfig.build_dataset">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_dataset</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">years</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -374,7 +380,7 @@
 
 
 <div class="viewcode-block" id="InferenceDataset">
-<a class="viewcode-back" href="../../../cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDataset">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDataset">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">InferenceDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -548,7 +554,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="InferenceDataset.get_model_indexes">
-<a class="viewcode-back" href="../../../cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDataset.get_model_indexes">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDataset.get_model_indexes">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_model_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate sample indexes.</span>
@@ -575,7 +581,7 @@
 
 
 <div class="viewcode-block" id="InferenceDataset.get_cond_indexes">
-<a class="viewcode-back" href="../../../cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDataset.get_cond_indexes">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDataset.get_cond_indexes">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_cond_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_indexes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate condition dataset indexes.</span>
@@ -610,7 +616,7 @@
 
 
 <div class="viewcode-block" id="InferenceDataset.get_input_shape">
-<a class="viewcode-back" href="../../../cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDataset.get_input_shape">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDataset.get_input_shape">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_input_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Determine model input shape.</span>
@@ -647,7 +653,7 @@
 
 
 <div class="viewcode-block" id="InferenceDataset.get_added_features_dim">
-<a class="viewcode-back" href="../../../cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDataset.get_added_features_dim">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDataset.get_added_features_dim">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_added_features_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Number of additional temporal features.</span>

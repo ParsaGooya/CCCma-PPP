@@ -49,6 +49,7 @@ exclude_external_modules = {
     "torch",
     "numpy",
     "timm",
+    "contextlib"
 }
 
 def skip_member(app, what, name, obj, skip, options):

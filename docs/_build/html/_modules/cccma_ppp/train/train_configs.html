@@ -39,8 +39,14 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -95,7 +101,7 @@
 
 
 <div class="viewcode-block" id="set_seed">
-<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.inference.train.set_seed">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.inference.train.set_seed">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">set_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Set random seeds for reproducibility.</span>
@@ -116,7 +122,7 @@
 
 
 <div class="viewcode-block" id="TrainConfig">
-<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.inference.train.TrainConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.inference.train.TrainConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TrainConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -251,7 +257,7 @@
                 <span class="p">)</span>
 
 <div class="viewcode-block" id="TrainConfig.set_random_seed">
-<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.inference.train.TrainConfig.set_random_seed">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.inference.train.TrainConfig.set_random_seed">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_random_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Apply configured random seed.</span>
@@ -318,7 +324,7 @@
         <span class="n">RuntimeContext</span><span class="o">.</span><span class="n">TARGET_VAR_METADATA</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_loader</span><span class="o">.</span><span class="n">target_var_metadata</span>
 
 <div class="viewcode-block" id="TrainConfig.prepare_directory">
-<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.inference.train.TrainConfig.prepare_directory">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.inference.train.TrainConfig.prepare_directory">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">prepare_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distributed</span><span class="p">:</span> <span class="n">Distributed</span><span class="p">,</span> <span class="n">yaml_config</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Prepare experiment directory structure.</span>
@@ -411,7 +417,7 @@
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be specified for a new experiment.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TrainConfig.read_config_from_halted_experiment">
-<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.inference.train.TrainConfig.read_config_from_halted_experiment">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.inference.train.TrainConfig.read_config_from_halted_experiment">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">read_config_from_halted_experiment</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">resume_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">experiment_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">max_epochs</span><span class="p">:</span> <span class="nb">int</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TrainConfig&quot;</span><span class="p">:</span>
@@ -455,7 +461,7 @@
 
 
 <div class="viewcode-block" id="prepare_config">
-<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.inference.train.prepare_config">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.inference.train.prepare_config">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">prepare_config</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Load configuration from YAML file.</span>
@@ -477,7 +483,7 @@
 
 
 <div class="viewcode-block" id="build_trainer">
-<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.inference.train.build_trainer">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.inference.train.build_trainer">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">build_trainer</span><span class="p">(</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">TrainConfig</span><span class="p">,</span> <span class="n">distributed</span><span class="p">:</span> <span class="n">Distributed</span><span class="p">,</span> <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">):</span>

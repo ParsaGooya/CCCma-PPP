@@ -39,8 +39,14 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -88,7 +94,7 @@
 
 
 <div class="viewcode-block" id="deterministicOutput">
-<a class="viewcode-back" href="../../../cccma_ppp.models.mlp_models.html#cccma_ppp.core.deterministicOutput">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.mlp_models.html#cccma_ppp.core.deterministicOutput">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">deterministicOutput</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -105,7 +111,7 @@
 
 
 <div class="viewcode-block" id="deterministicConfig">
-<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministicConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministicConfig">[docs]</a>
 <span class="nd">@ModuleSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;deterministic&quot;</span><span class="p">)</span>
 <span class="nd">@ModuleSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
@@ -146,7 +152,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">model_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ModelConfig</span><span class="o">.</span><span class="n">get_model_config</span><span class="p">()</span>
 
 <div class="viewcode-block" id="deterministicConfig.build">
-<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministicConfig.build">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministicConfig.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">input_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -211,7 +217,7 @@
 
 
 <div class="viewcode-block" id="deterministic">
-<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">deterministic</span><span class="p">(</span><span class="n">moduleABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Deterministic model module.</span>
@@ -299,7 +305,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">load_dir</span><span class="p">)</span>
 
 <div class="viewcode-block" id="deterministic.init_loss_function">
-<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic.init_loss_function">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic.init_loss_function">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">init_loss_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reconstruction_loss</span><span class="p">:</span> <span class="n">Losspipeline</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize loss function.</span>
@@ -361,7 +367,7 @@
         <span class="k">return</span> <span class="n">total_loss</span><span class="p">,</span> <span class="n">losses_dict</span>
 
 <div class="viewcode-block" id="deterministic.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">BatchData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">deterministicOutput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform forward pass.</span>
@@ -381,7 +387,7 @@
 
 
 <div class="viewcode-block" id="deterministic.predict">
-<a class="viewcode-back" href="../../../cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic.predict">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic.predict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">BatchData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">deterministicOutput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform inference.</span>

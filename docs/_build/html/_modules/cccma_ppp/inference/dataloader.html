@@ -39,8 +39,14 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -86,7 +92,7 @@
 
 
 <div class="viewcode-block" id="BatchData">
-<a class="viewcode-back" href="../../../cccma_ppp.inference.dataloader.html#cccma_ppp.inference.dataloader.BatchData">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataloader.html#cccma_ppp.inference.dataloader.BatchData">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">BatchData</span><span class="p">(</span><span class="n">BatchDataABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -132,7 +138,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">input</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_mask</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BatchData.to_device">
-<a class="viewcode-back" href="../../../cccma_ppp.inference.dataloader.html#cccma_ppp.inference.dataloader.BatchData.to_device">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataloader.html#cccma_ppp.inference.dataloader.BatchData.to_device">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_device</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Move batch data to a device.</span>
@@ -162,7 +168,7 @@
 
 
 <div class="viewcode-block" id="InferenceDataloaderConfig">
-<a class="viewcode-back" href="../../../cccma_ppp.inference.inference_configs.html#cccma_ppp.inference.dataloader.InferenceDataloaderConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.inference_configs.html#cccma_ppp.inference.dataloader.InferenceDataloaderConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">InferenceDataloaderConfig</span><span class="p">(</span><span class="n">DataloaderConfigABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -301,7 +307,7 @@
         <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">exists</span><span class="p">)</span>
 
 <div class="viewcode-block" id="InferenceDataloaderConfig.setup_distributed">
-<a class="viewcode-back" href="../../../cccma_ppp.inference.inference_configs.html#cccma_ppp.inference.dataloader.InferenceDataloaderConfig.setup_distributed">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.inference_configs.html#cccma_ppp.inference.dataloader.InferenceDataloaderConfig.setup_distributed">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">setup_distributed</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">train_loader_config</span><span class="p">:</span> <span class="n">TrainDataloaderConfig</span><span class="p">,</span>
@@ -343,7 +349,7 @@
 
 
 <div class="viewcode-block" id="InferenceDataloaderConfig.build_inference_loader">
-<a class="viewcode-back" href="../../../cccma_ppp.inference.inference_configs.html#cccma_ppp.inference.dataloader.InferenceDataloaderConfig.build_inference_loader">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.inference_configs.html#cccma_ppp.inference.dataloader.InferenceDataloaderConfig.build_inference_loader">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_inference_loader</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">return_spatial_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -423,7 +429,7 @@
 
 
 <div class="viewcode-block" id="collate_batch">
-<a class="viewcode-back" href="../../../cccma_ppp.inference.dataloader.html#cccma_ppp.inference.dataloader.collate_batch">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataloader.html#cccma_ppp.inference.dataloader.collate_batch">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">collate_batch</span><span class="p">(</span>
     <span class="n">batch</span><span class="p">,</span>
     <span class="n">return_spatial_mask</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>

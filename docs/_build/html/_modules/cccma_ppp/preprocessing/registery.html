@@ -39,8 +39,14 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -69,7 +75,7 @@
              
   <h1>Source code for cccma_ppp.preprocessing.registery</h1><div class="highlight"><pre>
 <div class="viewcode-block" id="Registery">
-<a class="viewcode-back" href="../../../cccma_ppp.preprocessing.registery.html#cccma_ppp.preprocessing.preprocessing.Registery">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.registery.html#cccma_ppp.preprocessing.preprocessing.Registery">[docs]</a>
 <span></span><span class="k">class</span><span class="w"> </span><span class="nc">Registery</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Registry for mapping string names to classes.</span>
@@ -87,7 +93,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="Registery.register">
-<a class="viewcode-back" href="../../../cccma_ppp.preprocessing.registery.html#cccma_ppp.preprocessing.preprocessing.Registery.register">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.registery.html#cccma_ppp.preprocessing.preprocessing.Registery.register">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Register a class under a given name.</span>
@@ -111,7 +117,7 @@
 
 
 <div class="viewcode-block" id="Registery.get">
-<a class="viewcode-back" href="../../../cccma_ppp.preprocessing.registery.html#cccma_ppp.preprocessing.preprocessing.Registery.get">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.registery.html#cccma_ppp.preprocessing.preprocessing.Registery.get">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve and optionally instantiate a registered class.</span>
@@ -146,7 +152,7 @@
 
 
 <div class="viewcode-block" id="Registery.available">
-<a class="viewcode-back" href="../../../cccma_ppp.preprocessing.registery.html#cccma_ppp.preprocessing.preprocessing.Registery.available">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.registery.html#cccma_ppp.preprocessing.preprocessing.Registery.available">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">available</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Available registered names.</span>

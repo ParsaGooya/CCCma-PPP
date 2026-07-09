@@ -39,8 +39,14 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -84,7 +90,7 @@
 
 
 <div class="viewcode-block" id="BatchDataABC">
-<a class="viewcode-back" href="../../../cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.BatchDataABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.BatchDataABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">BatchDataABC</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Abstract base class for batched data containers.</span>
@@ -107,7 +113,7 @@
     <span class="n">metadata</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="BatchDataABC.to_device">
-<a class="viewcode-back" href="../../../cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.BatchDataABC.to_device">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.BatchDataABC.to_device">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_device</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -129,7 +135,7 @@
 
 
 <div class="viewcode-block" id="DataloaderConfigABC">
-<a class="viewcode-back" href="../../../cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.DataloaderConfigABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.DataloaderConfigABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DataloaderConfigABC</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Abstract base class for dataloader configuration.</span>
@@ -143,7 +149,7 @@
     <span class="n">dataset_config</span><span class="p">:</span> <span class="n">DatasetConfigABC</span>
 
 <div class="viewcode-block" id="DataloaderConfigABC.setup_distributed">
-<a class="viewcode-back" href="../../../cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.DataloaderConfigABC.setup_distributed">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.DataloaderConfigABC.setup_distributed">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">setup_distributed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -159,7 +165,7 @@
 
 
 <div class="viewcode-block" id="Dataloader">
-<a class="viewcode-back" href="../../../cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.Dataloader">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.Dataloader">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Dataloader</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -297,7 +303,7 @@
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_torch_loader</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Dataloader.set_epoch">
-<a class="viewcode-back" href="../../../cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.Dataloader.set_epoch">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.Dataloader.set_epoch">[docs]</a>
     <span class="nd">@final</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -317,7 +323,7 @@
 
 
 <div class="viewcode-block" id="Dataloader.subset_loader">
-<a class="viewcode-back" href="../../../cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.Dataloader.subset_loader">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.Dataloader.subset_loader">[docs]</a>
     <span class="nd">@final</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">subset_loader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_batch</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

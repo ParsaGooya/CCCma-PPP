@@ -6,7 +6,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 DOCS_DIR = PROJECT_ROOT / "docs"
-SOURCE_DIR = DOCS_DIR / "source"
+SOURCE_DIR = DOCS_DIR / "source" / "api"
 BUILD_DIR = DOCS_DIR / "_build"
 
 PACKAGE_NAME = "cccma_ppp"
@@ -43,7 +43,7 @@ def clean():
 
 
 def write_conf():
-    conf = SOURCE_DIR / "conf.py"
+    conf = DOCS_DIR / "source" / "conf.py"
 
     conf.write_text(
         f"""
@@ -98,6 +98,7 @@ exclude_external_modules = {{
     "torch",
     "numpy",
     "timm",
+    "contextlib"
 }}
 
 def skip_member(app, what, name, obj, skip, options):
@@ -161,7 +162,7 @@ def patch_rst():
 
 
 def write_index():
-    (SOURCE_DIR / "index.rst").write_text(
+    (DOCS_DIR / "source" / "index.rst").write_text(
         f"""
 {PROJECT_NAME}
 {"=" * len(PROJECT_NAME)}

@@ -39,8 +39,14 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -80,7 +86,7 @@
 
 
 <div class="viewcode-block" id="Normalizer">
-<a class="viewcode-back" href="../../../cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.Normalizer">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.Normalizer">[docs]</a>
 <span class="nd">@PreprocessingStepSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;normalizer&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Normalizer</span><span class="p">(</span><span class="n">PreprocessModuleABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -115,7 +121,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">dims</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Normalizer.fit">
-<a class="viewcode-back" href="../../../cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.Normalizer.fit">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.Normalizer.fit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fit normalization parameters.</span>
@@ -152,7 +158,7 @@
 
 
 <div class="viewcode-block" id="Normalizer.transform">
-<a class="viewcode-back" href="../../../cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.Normalizer.transform">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.Normalizer.transform">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Apply min-max normalization.</span>
@@ -172,7 +178,7 @@
 
 
 <div class="viewcode-block" id="Normalizer.inverse_transform">
-<a class="viewcode-back" href="../../../cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.Normalizer.inverse_transform">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.Normalizer.inverse_transform">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reverse normalization.</span>
@@ -195,7 +201,7 @@
 
 
 <div class="viewcode-block" id="Standardizer">
-<a class="viewcode-back" href="../../../cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.Standardizer">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.Standardizer">[docs]</a>
 <span class="nd">@PreprocessingStepSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;standardizer&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Standardizer</span><span class="p">(</span><span class="n">PreprocessModuleABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -229,7 +235,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">dims</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Standardizer.fit">
-<a class="viewcode-back" href="../../../cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.Standardizer.fit">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.Standardizer.fit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fit standardization parameters.</span>
@@ -265,7 +271,7 @@
 
 
 <div class="viewcode-block" id="Standardizer.transform">
-<a class="viewcode-back" href="../../../cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.Standardizer.transform">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.Standardizer.transform">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Apply standardization.</span>
@@ -286,7 +292,7 @@
 
 
 <div class="viewcode-block" id="Standardizer.inverse_transform">
-<a class="viewcode-back" href="../../../cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.Standardizer.inverse_transform">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.Standardizer.inverse_transform">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reverse standardization.</span>
@@ -309,7 +315,7 @@
 
 
 <div class="viewcode-block" id="AnomaliesScaler">
-<a class="viewcode-back" href="../../../cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.AnomaliesScaler">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.AnomaliesScaler">[docs]</a>
 <span class="nd">@PreprocessingStepSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;anomalies&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">AnomaliesScaler</span><span class="p">(</span><span class="n">PreprocessModuleABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -344,7 +350,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">dims</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dims</span><span class="p">)</span>
 
 <div class="viewcode-block" id="AnomaliesScaler.fit">
-<a class="viewcode-back" href="../../../cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.AnomaliesScaler.fit">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.AnomaliesScaler.fit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fit anomaly baseline.</span>
@@ -378,7 +384,7 @@
 
 
 <div class="viewcode-block" id="AnomaliesScaler.transform">
-<a class="viewcode-back" href="../../../cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.AnomaliesScaler.transform">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.AnomaliesScaler.transform">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute anomalies.</span>
@@ -398,7 +404,7 @@
 
 
 <div class="viewcode-block" id="AnomaliesScaler.inverse_transform">
-<a class="viewcode-back" href="../../../cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.AnomaliesScaler.inverse_transform">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.utils.AnomaliesScaler.inverse_transform">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reconstruct original values from anomalies.</span>
@@ -427,7 +433,7 @@
 
 
 <div class="viewcode-block" id="Flattennanremove">
-<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.data_modules.utils.Flattennanremove">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.data_modules.utils.Flattennanremove">[docs]</a>
 <span class="nd">@PreprocessingStepSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;flattener&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Flattennanremove</span><span class="p">(</span><span class="n">PreprocessModuleABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -457,7 +463,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">fitted</span> <span class="o">=</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="Flattennanremove.fit">
-<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.data_modules.utils.Flattennanremove.fit">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.data_modules.utils.Flattennanremove.fit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span>
@@ -527,7 +533,7 @@
 
 
 <div class="viewcode-block" id="Flattennanremove.transform">
-<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.data_modules.utils.Flattennanremove.transform">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.data_modules.utils.Flattennanremove.transform">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Apply flattening and spatial filtering.</span>
@@ -553,7 +559,7 @@
 
 
 <div class="viewcode-block" id="Flattennanremove.inverse_transform">
-<a class="viewcode-back" href="../../../cccma_ppp.train.train_configs.html#cccma_ppp.data_modules.utils.Flattennanremove.inverse_transform">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.data_modules.utils.Flattennanremove.inverse_transform">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Restore original spatial layout.</span>
