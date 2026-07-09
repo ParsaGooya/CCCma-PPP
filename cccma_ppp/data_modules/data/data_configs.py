@@ -2,8 +2,8 @@ import numpy as np
 import dataclasses
 from typing import final, Literal
 
-from cccma_ppp.data_modules.data import DataConfigABC
-from cccma_ppp.preprocessing import PreprocessingPipeline
+from cccma_ppp.data_modules.data.data_abc import DataConfigABC
+from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 
 
 spatialmethod = Literal["uniform", "cosine_lat"]

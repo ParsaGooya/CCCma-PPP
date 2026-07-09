@@ -2,9 +2,9 @@ import numpy as np
 from pathlib import Path
 import xarray as xr
 
-from cccma_ppp.data_modules.data import DataConfigABC
-from cccma_ppp.data_modules.dataset import DatasetConfigABC
-from cccma_ppp.data_modules import WeightsConfig
+from cccma_ppp.data_modules.data.data_configs import DataConfigABC
+from cccma_ppp.data_modules.dataset.config_abc import DatasetConfigABC
+from cccma_ppp.data_modules.utils import WeightsConfig
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 

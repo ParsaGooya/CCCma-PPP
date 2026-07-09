@@ -1017,7 +1017,7 @@ def test_input_preprocessor_exists_default_runtime_dir(
     dataset_config,
     tmp_path,
 ):
-    from cccma_ppp.generic import RuntimeContext
+    from cccma_ppp.generic.runtime import RuntimeContext
 
     RuntimeContext.GLOBAL_EXP_DIR = str(tmp_path)
 
