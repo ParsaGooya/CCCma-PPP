@@ -8,7 +8,6 @@ from cccma_ppp.preprocessing import PreprocessingPipeline
 
 spatialmethod = Literal["uniform", "cosine_lat"]
 
-
 @dataclasses.dataclass
 class ModelDataConfig(DataConfigABC):
     """

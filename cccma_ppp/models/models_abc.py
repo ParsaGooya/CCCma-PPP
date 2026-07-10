@@ -8,8 +8,7 @@ import gc
 from pathlib import Path
 import dataclasses
 
-from cccma_ppp.models.normalized_flows import NormalizedFlowModel
-from cccma_ppp.core import cVAEOutput
+from cccma_ppp.core.core_abc import OutputABC
 
 InitMethod = Literal["trunc_normal", "xavier"]
 
@@ -320,11 +319,10 @@ class cVAEPredictRequest:
     """
     condition: torch.Tensor
     added_features: torch.Tensor | None = None
-    prior_flow: NormalizedFlowModel | None = None
+    prior_flow: flowABC | None = None
     latent_samples: torch.Tensor | None = None
+    nstds: int = 1
     sample_size: int = 1
-
-
 
 class cVAEmodelsABC(modelABC):
     """
@@ -347,7 +345,7 @@ class cVAEmodelsABC(modelABC):
     def predict(
         self,
         request: cVAEPredictRequest,
-    ) -> cVAEOutput:
+    ) -> OutputABC:
         """
         Generate samples.
 

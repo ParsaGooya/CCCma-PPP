@@ -4,7 +4,7 @@ from pathlib import Path
 import joblib
 import os
 
-from cccma_ppp.preprocessing import PreprocessingStepSelector
+from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 
@@ -41,7 +41,7 @@ class Normalizer(PreprocessModuleABC):
         if self.dims is not None:
             self.dims = tuple(self.dims)
 
-    def fit(self, data: xr.DataArray, mask: xr.DataArray = None):
+    def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
         """
         Fit normalization parameters.
 
@@ -143,7 +143,7 @@ class Standardizer(PreprocessModuleABC):
         if self.dims is not None:
             self.dims = tuple(self.dims)
 
-    def fit(self, data: xr.DataArray, mask: xr.DataArray = None):
+    def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
         """
         Fit standardization parameters.
 
@@ -246,7 +246,7 @@ class AnomaliesScaler(PreprocessModuleABC):
         if self.dims is not None:
             self.dims = tuple(self.dims)
 
-    def fit(self, data: xr.DataArray, mask: xr.DataArray = None):
+    def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
         """
         Fit anomaly baseline.
 
@@ -346,10 +346,11 @@ class Flattennanremove(PreprocessModuleABC):
 
         self.load_dir = load_dir
         self.fitted = False
+        self.common_to_input_and_target = False
 
     def fit(
         self,
-        data: xr.DataArray,
+        data: xr.Dataset | xr.DataArray,
         target: xr.DataArray | None = None,
         mask=None,
         save: bool = False,

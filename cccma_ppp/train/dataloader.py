@@ -208,7 +208,8 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
         distributed.barrier()
 
-        if distributed.distributed:
+        if (distributed.distributed or 
+            self.load_path is not None):
             self.dataset_config._load_fitted_preprocessors(load_dir=load_path)
 
         self._setup = True
@@ -266,6 +267,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         self,
         return_spatial_mask: bool = False,
         reduce_spatial_mask: bool = False,
+        supress_error: bool = True,
     ):
         """
         Construct validation dataloader.
@@ -311,10 +313,14 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             )
 
         else:
-            warnings.warn(
-                f"Validation dataoader could not be built for num_validation_years = {self.num_validation_years} "
-            )
-            return None
+            msg = f"Validation dataoader could not be built for num_validation_years = {self.num_validation_years} "
+
+            if  supress_error:
+                warnings.warn(msg)
+                return None  
+            else:
+                raise RuntimeError(msg)
+  
 
     def get_weights(self, config: WeightsConfig | None = None):
         """

@@ -14,7 +14,8 @@ from cccma_ppp.models.models_abc import (
     InitMethod,
 )
 from cccma_ppp.core.selectors import deterministicModelSelector, cVAEModelSelector
-from cccma_ppp.core import cVAEOutput, deterministicOutput
+from cccma_ppp.core.cVAE_module import cVAEOutput
+from cccma_ppp.core.deterministic_module import deterministicOutput
 from cccma_ppp.generic import RuntimeContext
 
 
@@ -135,7 +136,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
             added_features_dim=added_features_dim,
         )
 
-
+    
 class cVAE_MLP(cVAEmodelsABC):
     """
     MLP-based conditional variational autoencoder (cVAE).
@@ -385,6 +386,7 @@ class cVAE_MLP(cVAEmodelsABC):
             output=out,
             mu=mu,
             log_var=log_var,
+            samples=latent_samples,
             cond_mu=cond_mu,
             cond_log_var=cond_log_var,
         )
@@ -412,6 +414,7 @@ class cVAE_MLP(cVAEmodelsABC):
         added_features = request.added_features
         prior_flow = request.prior_flow
         latent_samples = request.latent_samples
+        nstds = request.nstds
         sample_size = request.sample_size
 
         cond_in = condition[0] if isinstance(condition, (tuple, list)) else condition
@@ -429,10 +432,10 @@ class cVAE_MLP(cVAEmodelsABC):
         if latent_samples is None:
 
             if self.condition_dependant_latent and not self.condition_dependant_flow:
-                latent_samples = self._sample(cond_mu, cond_log_var, sample_size)
+                latent_samples = self._sample(cond_mu, cond_log_var, sample_size, std=nstds)
 
             else:
-                latent_samples = self._get_normal(latent_ref_tensor).sample((sample_size,))
+                latent_samples = self._get_normal(latent_ref_tensor, std=nstds).sample((sample_size,))
 
             if prior_flow is not None:
                 cond = cond_mu if prior_flow.condition_size is not None else None
@@ -460,6 +463,7 @@ class cVAE_MLP(cVAEmodelsABC):
             output=output.view(_shape_model_output),
             mu=None,
             log_var=None,
+            samples=None,
             cond_mu=cond_mu,
             cond_log_var=cond_log_var,
         )

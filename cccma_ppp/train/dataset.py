@@ -112,16 +112,16 @@ class TrainDatasetConfig(DatasetConfigABC):
                 self.model.info.coords["lat"]
             ):
                 warnings.warn(
-                    "=====================================================================\n"
-                    "model and observation data do not have the same latitudes cooridnates\n."
+                    "\n=====================================================================\n"
+                    "model and observation data do not have the same latitudes cooridnates.\n"
                     "=====================================================================\n"
                 )
             if not self.observation.info.coords["lon"].equals(
                 self.model.info.coords["lon"]
             ):
                 warnings.warn(
-                    "======================================================================\n"
-                    "model and observation data do not have the same longitudes cooridnates."
+                    "\n======================================================================\n"
+                    "model and observation data do not have the same longitudes cooridnates.\n"
                     "======================================================================\n"
                 )
 

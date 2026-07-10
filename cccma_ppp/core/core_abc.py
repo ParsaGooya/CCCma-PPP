@@ -6,6 +6,7 @@ from typing import final
 import gc
 from pathlib import Path
 from typing import ClassVar
+import dataclasses
 
 from cccma_ppp.loss import Losspipeline
 
@@ -215,3 +216,11 @@ class moduleConfigABC(abc.ABC):
         """
 
         pass
+
+
+@dataclasses.dataclass
+class OutputABC:
+    """
+    Base container for model outputs.
+    """
+    output: torch.Tensor
