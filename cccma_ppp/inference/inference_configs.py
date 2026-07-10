@@ -10,7 +10,8 @@ import dacite
 
 
 from cccma_ppp.inference.dataloader import InferenceDataloaderConfig
-from cccma_ppp.core.writer import WriterConfig
+
+from cccma_ppp.core.writer import WriterConfig, Writer
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext
 
@@ -35,6 +36,8 @@ class InferenceConfig:
         # self._resolve_esnsemble_generation()
         self._resolve_inference_dataset_config()
 
+        self.writer
+
     def _resolve_inference_dataset_config(self):
         if self.inference_loader.dataset_config is None: ### method needs to be implemented!
             self.inference_loader.read_datasetConfig_from_train(self.train_loader.dataset_config)
@@ -49,35 +52,6 @@ class InferenceConfig:
                     'Input variables or preprocessing steps are not consistent'
                     f'with the trained model at : {self.experiment_dir}' 
                 )
-
-    # def _resolve_esnsemble_generation(self):
-    #     if self.writer.output_ensemble_size > 1:
-            
-    #         if self._input_ensemble_exist:
-    #             warnings.warn(
-    #                 "========================================================================\n"
-    #                 "Number of output ensemble will be overwritten by the input ensemble size\n"
-    #                 "========================================================================"
-    #             )
-    #             self.writer.output_ensemble_size = 1
-            
-    #         if self.train_config.get("module").get("type").lower() in ["deterministic", "default"]:
-    #             if (self.writer.output_sampler is None and 
-    #                  not self._input_ensemble_exist):
-    #                 raise RuntimeError(
-    #                     "with determisitic models output ensemble cannot be generated "
-    #                     "unless input has multiple ensemble members or"
-    #                     "output_sampler configuration is provided."
-    #                 )
-    #             elif self.writer.output_sampler is not None:
-    #                 self.writer.output_sampler.num_samples_per_output = self.writer.output_ensemble_size
-                
-    @property
-    def _input_ensemble_exist(self):
-        if (self.inference_loader.dataset_config.effective_input.info.coords.get('ensembles') is not None and
-            self.inference_loader.dataset_config.condition_method not in ['ensemble_mean']):
-            return len(self.inference_loader.dataset_config.effective_input.info.coords['ensembles']) > 1
-        return False
 
     @property
     def output_preprocessor_dir(self):
@@ -187,8 +161,6 @@ def build_writer(config : InferenceConfig, distributed : Distributed, logger : l
     output_shape = train_loader.target_shape
     added_features_dim = train_loader.added_features_dim
 
-    weights = train_loader.get_weights(config.weights)
-
     log(f"Creating {config.module.type} module ...")
 
     module = config.module.build_module(  input_shape = input_shape,
@@ -201,28 +173,15 @@ def build_writer(config : InferenceConfig, distributed : Distributed, logger : l
     if distributed.distributed:
         module = torch.nn.parallel.DistributedDataParallel(module, device_ids=[distributed.local_rank], output_device=distributed.local_rank, find_unused_parameters=False)
 
+    log(f"Creating writer ...")
 
-    log(f"Creating loss function ...")
+    writer = config.writer.build(
+            inference_data_loader=inference_data_loader,
+            train_dataloader_config=train_dataloader_config,
+            module=module,
+            output_dir = config.output_dir
+        )
 
-    reconstruction_loss = config.losspipeline.build(weights=weights, num_output_dimensions= getattr(module.model, 'NUM_OUTPUT_DIMS', None ) or len(output_shape))
-
-    module.init_loss_function(reconstruction_loss)
-
-
-    log(f"Creating {config.optimization.optimizer_type} optimizer ...")
-
-    optimizer = config.optimization.build(module, num_train_batches, config.max_epochs)
-
-
-    log(f"Creating trainer ...")
-
-    trainer = config.trainer.build(
-              train_data_loader  = train_loader ,
-              validation_data_loader = validation_loader,
-              module = module,
-              optimization = optimizer,
-              max_epochs = config.max_epochs)
-
-    return trainer
+    return writer
 
 

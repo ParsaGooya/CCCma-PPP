@@ -1,100 +1,289 @@
-from cccma_ppp.core.selectors import PredictorSelector
+import torch
+from pathlib import Path
 import dataclasses
+import torch.nn.functional as F
 
-
-
+from cccma_ppp.generic import Distributed, RunningCovariance
+from cccma_ppp.core.selectors import PredictorSelector
+from cccma_ppp.core.core_abc import moduleABC
+from cccma_ppp.core.cVAE_module import cVAEOutput
+from cccma_ppp.inference.predictor_abc import PredictorABC, _batch_to_netcdf
+from cccma_ppp.data_modules.dataloader import BatchDataABC
 
 
 @PredictorSelector.register("cvae")
 @dataclasses.dataclass
 class cVAEPredictorConfig:
-    """
-    Configuration for conditional variational autoencoder (cVAE) predictor.
-
-    Parameters
-    ----------
-    nu : cVAEModelSelector or None
-        Model configuration selector.
-    min_posterior_variance : float or None
-        Minimum allowed posterior variance.
-    prior_flow_config : NormalizedFlowConfig or None
-        Configuration for optional prior flow.
-    combined_CGCN_weight : float or None
-        Weight for auxiliary CGCN loss.
-    load_dir : str or None
-        Path to checkpoint for loading configuration.
-    """
 
     num_latent_samples: int = 1
-    infer_prior_from_training: bool = False
-
-
-    def __post_init__(self):
-        """
-        Validate and initialize configuration.
-
-        Raises
-        ------
-        ValueError
-            If neither `ModelConfig` nor `load_dir` is provided.
-        AssertionError
-            If `combined_CGCN_weight` is not in [0, 1].
-        """
-
-        if self.load_dir is None:
-            if self.ModelConfig is None:
-                raise ValueError("provide loading dir or model configurations")
-
-        else:
-            self._load_from_checkpoint(self.load_dir)
-            warnings.warn(
-                f"Model and prior flow config overwritten by the saved module: \n {self.load_dir}"
-            )
-
-        if self.combined_CGCN_weight is None:
-            self.combined_CGCN_weight = 0
-
-        self.model_config = self.ModelConfig.get_model_config()
-
-        self.latent_size = self.model_config.latent_size
-
-        if self.prior_flow_config is not None:
-            self.condition_dependant_flow = self.model_config.condition_dependant_latent
-
-            if self.condition_dependant_flow:
-                self.model_config._resolve_flow_settings(self.condition_dependant_flow)
-
-        assert 0 <= self.combined_CGCN_weight <= 1, (
-            "CGCN weight should be between [0,1]"
-        )
+    nstds: int = 1
+    infer_latent_samples_from_training: bool = False
+    save_latent: bool = False
 
     def build(
         self,
-        input_shape: np.ndarray,
-        output_shape: np.ndarray | None = None,
-        added_features_dim: int = None,
+        module: moduleABC,
+        distributed: Distributed,
+        output_dir: Path | str,
+        num_output_covariance_sampling: int = 0,
     ):
-        """
-        Construct cVAE module instance.
 
-        Parameters
-        ----------
-        input_shape : np.ndarray
-            Input tensor shape.
-        output_shape : np.ndarray or None, optional
-            Output tensor shape.
-        added_features_dim : int, optional
-            Additional feature dimension.
+        return cVAEPredictor(self, 
+                             module, 
+                             distributed,
+                             output_dir,
+                             num_output_covariance_sampling)
 
-        Returns
-        -------
-        cVAE
-            Initialized cVAE module.
-        """
 
-        return cVAE(
-            config=self,
-            input_shape=input_shape,
-            output_shape=output_shape,
-            added_features_dim=added_features_dim,
+
+class cVAEPredictor(PredictorABC):
+
+    def __init__(self,
+                config: cVAEPredictorConfig,
+                module: moduleABC,
+                distributed: Distributed,
+                output_dir: Path | str,
+                num_output_covariance_sampling: int = 0):
+        
+        self.config = config
+        self.module = module
+        self.num_output_covariance_sampling = num_output_covariance_sampling
+        self.output_dir = Path(output_dir)
+
+        self.num_latent_samples = config.num_latent_samples
+        self.infer_latent_samples_from_training = config.infer_latent_samples_from_training
+        self.nstds = config.nstds
+        self.save_latent = config.save_latent
+
+        self.distributed = distributed
+        self.device = distributed.device
+
+        if self.extract_training_vars:
+            self._stats = {
+                "samples": RunningCovariance(self.distributed),
+                "residual": RunningCovariance(self.distributed),
+            }
+
+        self.latent_sampler = None
+        self.output_sampler = None
+        self._batch_counter = 0
+
+    @property
+    def temp_save_dir(self):
+        return Path(self.output_dir) / "_temp"
+    
+    @property
+    def extract_training_vars(self):
+        return any([self.infer_latent_samples_from_training, self.num_output_covariance_sampling > 0])
+
+    @torch.no_grad()
+    def _infer_on_batch(
+        self,
+        batch: BatchDataABC,
+        _getting_train_stats: bool = False,
+    ) -> cVAEOutput | dict[str, RunningCovariance]:
+                        
+        self._clear_memory()
+        self.raw_module.eval()
+        latent_samples = None
+
+        with torch.autocast(
+            device_type=self.device.type, 
+            enabled=self.device.type == "cuda"
+        ):
+            if _getting_train_stats or self.save_latent:
+                if batch.target is None:
+                    raise RuntimeError(
+                        'to save the posterior variables the dataset must contain the target prediction.'
+                    )
+                output = self.raw_module.forward(data=batch, sample_size=1)
+
+            if _getting_train_stats:
+                stats = self._update_train_stats(output, batch)
+                return stats
+
+            if self.save_latent:
+                self._batch_to_netcdf(output, batch.metadata)
+                return output
+             
+            if self.infer_latent_samples_from_training:
+                latent_samples = self._get_latent_samples_based_on_train(data=batch).to(self.device)
+
+            output = self.raw_module.predict(data=batch,
+                                                sample_size = self.num_latent_samples,
+                                                nstds = self.nstds,
+                                                latent_samples = latent_samples)
+            
+            if self.num_output_covariance_sampling > 0:
+                output = self.add_decoder_noise(output, self.num_output_covariance_sampling)
+
+            self._batch_to_netcdf(output, batch.metadata)
+            return output
+            
+        
+    def _update_train_stats(
+        self,
+        output: cVAEOutput,
+        data: BatchDataABC,
+    ) -> dict[str, RunningCovariance]:
+
+        if output.samples is None:
+            raise RuntimeError("cVAEOutput.samples is required for training latent stats.")
+        
+        samples = output.samples.reshape(-1, output.samples.shape[-1])
+        self.stats["samples"].update(samples)
+
+        prediction = output.output
+        target = data.target[0] if isinstance(data.target, tuple) else data.target
+        residual = target - prediction.squeeze(0)
+        residual = residual.reshape(residual.shape[0], -1)
+
+        self.stats["residual"].update(residual)
+
+        return self.stats
+
+
+    def _get_latent_samples_based_on_train(self, data: BatchDataABC):
+        if self.infer_latent_samples_from_training and self.latent_sampler is None:
+            self.latent_sampler = self.build_latent_sampler()
+
+        x = data.input[0] if isinstance(data.input, tuple) else data.input
+        batch_size = x.shape[0]
+
+        sample_size = (self.num_latent_samples, batch_size)
+
+        latent_samples =  self.latent_sampler(sample_size,
+                                                self.nstds)
+        
+        return latent_samples.to(self.device)
+
+
+    def add_decoder_noise(self, 
+                          output: cVAEOutput, 
+                          num_output_samples: int ):
+        
+        if self.output_sampler is None:
+            self.output_sampler = self.build_output_sampler()   
+
+        prediction = output.output # N x B x C x ...
+
+        sample_size = prediction.shape[:2] # N x B 
+        reshape_size = prediction.shape[2:] # C x ...
+
+        noise =  self.output_sampler(sample_size)
+        noise = noise.reshape(num_output_samples, *sample_size, *reshape_size).to(
+            device=prediction.device,
+            dtype=prediction.dtype,
         )
+
+        prediction = prediction.unsqueeze(0) + noise
+        output.output = prediction
+        return output
+
+    def build_latent_sampler(self):
+        stats_path = self.output_dir / "training_variable_stats.pt"
+
+        if not stats_path.exists():
+            raise ValueError(
+                "Training statistics based on the trained model must be saved "
+                "to disk first."
+            )
+
+        stats = torch.load(stats_path, map_location=self.device)
+
+        if not all([stats.get('samples_mean', None) is not None,
+                    stats.get('samples_cov', None) is not None]):
+            raise ValueError(
+                'The loaded training stats is not for a cVAE model.'
+            )
+
+        def _sampler(sample_size: int | tuple[int, ...], std: float):
+            return self._sample(
+                stats["samples_mean"],
+                stats["samples_cov"],
+                sample_size,
+                std,
+            )
+
+        return _sampler
+
+
+    def _batch_to_netcdf(
+        self,
+        output: cVAEOutput,
+        metadata: list[dict],
+    ):
+        
+        if self.save_latent:
+            
+            latent_vars = {
+                "mu": output.mu,
+                "log_var": output.log_var,
+                "samples": output.samples,
+                "cond_mu": output.cond_mu,
+                "cond_log_var": output.cond_log_var,
+            }
+
+            latent_vars = {
+                name: value
+                for name, value in latent_vars.items()
+                if value is not None
+            }
+
+            if not latent_vars:
+                raise RuntimeError("No latent variables are available to save.")
+
+            max_latent_dim = max(value.shape[-1] for value in latent_vars.values())
+
+            prepared = []
+
+            for name, value in latent_vars.items():
+                value = value.detach().cpu()
+
+                pad_size = max_latent_dim - value.shape[-1]
+
+                if pad_size > 0:
+                    value = F.pad(
+                        value,
+                        pad=(0, pad_size),
+                        mode="constant",
+                        value=float("-inf"),
+                    )
+
+                prepared.append(value.unsqueeze(-2))
+
+            prediction = torch.cat(prepared, dim=-2)
+
+            assign_coords = {
+                "channels": list(latent_vars),
+            }
+
+            num_output_dims = 1
+            extra_dims_sorted = []
+            save_name = f"latent_rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
+
+        else:
+            prediction = output.output.detach().cpu()
+            
+            if self.num_output_covariance_sampling == 0:
+                prediction = prediction.unsqueeze(0)
+
+            num_output_dims = self.raw_module.config.NUM_OUTPUT_DIMS
+            extra_dims_sorted = ["output_samples", "latent_samples"]
+            assign_coords = None
+            save_name = f"prediction_rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
+
+        _batch_to_netcdf(prediction,
+                        metadata,
+                        num_output_dims,
+                        save_name,
+                        self.temp_save_dir,
+                        extra_dims_sorted,
+                        assign_coords)
+
+        
+        self._batch_counter += 1
+
+
+
+

@@ -10,7 +10,7 @@ import warnings
 from cccma_ppp.core.registery import Registery
 from cccma_ppp.core import moduleABC
 from cccma_ppp.models.models_abc import modelABC, flowABC, CheckpointConfig
-
+from cccma_ppp.generic import Distributed
 
 @dataclasses.dataclass
 class ModuleSelector:
@@ -151,7 +151,10 @@ class PredictorSelector:
 
     def build_predictor(
         self,
-        module: moduleABC
+        module: moduleABC,
+        distributed: Distributed,
+        output_dir: Path | str,
+        num_output_covariance_sampling: int,
     ):
         """
         Build predictor instance.
@@ -167,7 +170,10 @@ class PredictorSelector:
             Built predictor instance.
         """
         Predictor_Config = self.registery.get(module.config._type.lower(), self.config)
-        return Predictor_Config.build(module)
+        return Predictor_Config.build(module, 
+                                      num_output_covariance_sampling,
+                                      distributed,
+                                      output_dir)
 
 
 
