@@ -39,10 +39,12 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Start Here</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../guides/getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../guides/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/contributing.html">Contributing</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -74,8 +76,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for cccma_ppp.core.core_abc</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">abc</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">abc</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
@@ -83,11 +84,11 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">Losspipeline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss.loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">Losspipeline</span>
 
 
 <div class="viewcode-block" id="moduleABC">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.moduleABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE_module.moduleABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">moduleABC</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Abstract base class for trainable modules.</span>
@@ -116,7 +117,7 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
 <div class="viewcode-block" id="moduleABC.init_loss_function">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.moduleABC.init_loss_function">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE_module.moduleABC.init_loss_function">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">init_loss_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reconstruction_loss</span><span class="p">:</span> <span class="n">Losspipeline</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -138,7 +139,7 @@
 
 
 <div class="viewcode-block" id="moduleABC._compute_loss">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.moduleABC._compute_loss">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE_module.moduleABC._compute_loss">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -154,7 +155,7 @@
 
 
 <div class="viewcode-block" id="moduleABC.forward">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.moduleABC.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE_module.moduleABC.forward">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -170,7 +171,7 @@
 
 
 <div class="viewcode-block" id="moduleABC.predict">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.moduleABC.predict">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE_module.moduleABC.predict">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -243,7 +244,7 @@
 
 
 <div class="viewcode-block" id="moduleConfigABC">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.moduleConfigABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.cVAE_module.moduleConfigABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">moduleConfigABC</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Abstract base class for module configuration objects.</span>
@@ -268,7 +269,7 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
 <div class="viewcode-block" id="moduleConfigABC.build">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.moduleConfigABC.build">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.cVAE_module.moduleConfigABC.build">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -300,7 +301,7 @@
 
 
 <div class="viewcode-block" id="moduleConfigABC._load_from_checkpoint">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.moduleConfigABC._load_from_checkpoint">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.cVAE_module.moduleConfigABC._load_from_checkpoint">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_load_from_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

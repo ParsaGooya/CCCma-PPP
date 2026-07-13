@@ -3,10 +3,12 @@ CCCma PPP
 
 .. toctree::
    :maxdepth: 2
-   :caption: Getting Started
+   :caption: Start Here
 
-   guides/getting_started
-   guides/tutorial
+   start_here/readme
+   start_here/installation
+   start_here/usage
+   start_here/contributing
 
 .. toctree::
    :maxdepth: 3

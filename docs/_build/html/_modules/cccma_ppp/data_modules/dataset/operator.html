@@ -39,10 +39,12 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Start Here</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../guides/getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../guides/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../start_here/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../start_here/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../start_here/contributing.html">Contributing</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -74,19 +76,18 @@
            <div itemprop="articleBody">
              
   <h1>Source code for cccma_ppp.data_modules.dataset.operator</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataConfigABC</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">DatasetConfigABC</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules</span><span class="w"> </span><span class="kn">import</span> <span class="n">WeightsConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.data.data_configs</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataConfigABC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.dataset.config_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">DatasetConfigABC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">WeightsConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.preprocessing.preprocessing_ABC</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreprocessModuleABC</span>
 
 
 <div class="viewcode-block" id="DatasetOperator">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.train.datasets.html#cccma_ppp.data_modules.dataset.DatasetOperator">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.train.datasets.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DatasetOperator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class for managing dataset-level operations.</span>
@@ -268,7 +269,7 @@
             <span class="p">)</span>
 
 <div class="viewcode-block" id="DatasetOperator.get_weights">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.train.datasets.html#cccma_ppp.data_modules.dataset.DatasetOperator.get_weights">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.train.datasets.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_weights">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_weights</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">config</span><span class="p">:</span> <span class="n">WeightsConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -353,7 +354,7 @@
 
 
 <div class="viewcode-block" id="DatasetOperator.get_input_var_metadata">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.train.datasets.html#cccma_ppp.data_modules.dataset.DatasetOperator.get_input_var_metadata">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.train.datasets.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_input_var_metadata">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_input_var_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve metadata for input variables.</span>
@@ -388,7 +389,7 @@
 
 
 <div class="viewcode-block" id="DatasetOperator.get_target_var_metadata">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.train.datasets.html#cccma_ppp.data_modules.dataset.DatasetOperator.get_target_var_metadata">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.train.datasets.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_target_var_metadata">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_target_var_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve metadata for target variables.</span>

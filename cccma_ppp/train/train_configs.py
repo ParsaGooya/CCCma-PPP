@@ -11,7 +11,7 @@ import dacite
 
 from cccma_ppp.loss.loss import LosspipelineConfig
 
-from cccma_ppp.train.train_configs import TrainDataloaderConfig
+from cccma_ppp.train.dataloader import TrainDataloaderConfig
 from cccma_ppp.data_modules.utils import WeightsConfig
 
 from cccma_ppp.generic.distributed import Distributed

@@ -39,10 +39,12 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Start Here</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../guides/getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../guides/tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/contributing.html">Contributing</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -74,17 +76,16 @@
            <div itemprop="articleBody">
              
   <h1>Source code for cccma_ppp.core.optimization</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch.optim.lr_scheduler</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequentialLR</span><span class="p">,</span> <span class="n">LinearLR</span><span class="p">,</span> <span class="n">CosineAnnealingLR</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">moduleABC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.core_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">moduleABC</span>
 
 
 <div class="viewcode-block" id="LRSchedulerConfig">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.optimization.html#cccma_ppp.core.LRSchedulerConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.optimization.html#cccma_ppp.core.optimization.LRSchedulerConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">LRSchedulerConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -118,7 +119,7 @@
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">warmup_epochs</span> <span class="o">&gt;=</span> <span class="mi">0</span>
 
 <div class="viewcode-block" id="LRSchedulerConfig.build">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.optimization.html#cccma_ppp.core.LRSchedulerConfig.build">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.optimization.html#cccma_ppp.core.optimization.LRSchedulerConfig.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">num_batches</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct learning rate scheduler.</span>
@@ -160,7 +161,7 @@
 
 
 <div class="viewcode-block" id="OptimizerConfig">
-<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.OptimizerConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.optimization.OptimizerConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">OptimizerConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -203,7 +204,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="OptimizerConfig.build">
-<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.OptimizerConfig.build">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.optimization.OptimizerConfig.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">moduleABC</span><span class="p">,</span> <span class="n">num_batches</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_epochs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct optimizer wrapper.</span>
@@ -247,7 +248,7 @@
 
 
 <div class="viewcode-block" id="OptimizerWrapper">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.OptimizerWrapper">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.optimization.OptimizerWrapper">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OptimizerWrapper</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wrapper around optimizer and optional learning rate scheduler.</span>
@@ -312,7 +313,7 @@
             <span class="p">)</span>
 
 <div class="viewcode-block" id="OptimizerWrapper.step">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.OptimizerWrapper.step">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.optimization.OptimizerWrapper.step">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform optimizer step.</span>
@@ -334,7 +335,7 @@
 
 
 <div class="viewcode-block" id="OptimizerWrapper.scheduler_step">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.OptimizerWrapper.scheduler_step">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.optimization.OptimizerWrapper.scheduler_step">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">scheduler_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform scheduler step.</span>
@@ -349,7 +350,7 @@
 
 
 <div class="viewcode-block" id="OptimizerWrapper.zero_grad">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.OptimizerWrapper.zero_grad">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.optimization.OptimizerWrapper.zero_grad">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">zero_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">set_to_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reset gradients of model parameters.</span>
@@ -377,7 +378,7 @@
 
 
 <div class="viewcode-block" id="OptimizerWrapper.state_dict">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.OptimizerWrapper.state_dict">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.optimization.OptimizerWrapper.state_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return optimizer and scheduler state.</span>
@@ -407,7 +408,7 @@
 
 
 <div class="viewcode-block" id="OptimizerWrapper.load_state_dict">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.OptimizerWrapper.load_state_dict">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.optimization.OptimizerWrapper.load_state_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load optimizer and scheduler state.</span>
@@ -439,7 +440,7 @@
 
 
 <div class="viewcode-block" id="CosineAnnealingLRScheduler">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.optimization.html#cccma_ppp.core.CosineAnnealingLRScheduler">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.optimization.html#cccma_ppp.core.optimization.CosineAnnealingLRScheduler">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CosineAnnealingLRScheduler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Learning rate scheduler with optional warmup and cosine annealing.</span>
@@ -493,7 +494,7 @@
             <span class="p">)</span>
 
 <div class="viewcode-block" id="CosineAnnealingLRScheduler.step">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.optimization.html#cccma_ppp.core.CosineAnnealingLRScheduler.step">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.optimization.html#cccma_ppp.core.optimization.CosineAnnealingLRScheduler.step">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Advance scheduler by one step.</span>
@@ -514,7 +515,7 @@
 
 
 <div class="viewcode-block" id="CosineAnnealingLRScheduler.state_dict">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.optimization.html#cccma_ppp.core.CosineAnnealingLRScheduler.state_dict">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.optimization.html#cccma_ppp.core.optimization.CosineAnnealingLRScheduler.state_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return scheduler state.</span>
@@ -537,7 +538,7 @@
 
 
 <div class="viewcode-block" id="CosineAnnealingLRScheduler.load_state_dict">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.optimization.html#cccma_ppp.core.CosineAnnealingLRScheduler.load_state_dict">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.optimization.html#cccma_ppp.core.optimization.CosineAnnealingLRScheduler.load_state_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load scheduler state.</span>
