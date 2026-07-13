@@ -3,11 +3,9 @@ from types import SimpleNamespace
 import torch
 import pytest
 
-from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.inference.inference_configs import (
     InferenceConfig,
     build_writer,
-    prepare_config,
 )
 
 
