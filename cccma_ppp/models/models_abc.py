@@ -89,7 +89,7 @@ class modelConfigABC(abc.ABC):
     """
     Abstract base class for model configuration.
     """
-
+    NUM_INPUT_DIMS: ClassVar[int | None]
     NUM_OUTPUT_DIMS: ClassVar[int | None]
     GENERATOR: ClassVar[bool]
 

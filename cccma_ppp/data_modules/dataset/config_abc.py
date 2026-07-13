@@ -4,7 +4,7 @@ import dataclasses
 import numpy as np
 
 from cccma_ppp.data_modules.data import ModelDataConfig, ConditionDataConfig
-
+from cccma_ppp.configs import supported_NN_dimensions_sorted
 
 @dataclasses.dataclass
 class lead_months_config:
@@ -138,9 +138,11 @@ class DatasetConfigABC(abc.ABC):
         Raises
         ------
         ValueError
-            If condition data does not span the same time range as model data.
+            If condition data does not span the same time range as model data for non static condition methods.
         ValueError
-            If condition data does not provide sufficient lead-time coverage.
+            If condition data does not provide sufficient lead-time coverage for non static condition methods.
+        ValueError
+            If condition data and model data do not have similar ensembles for same_member condition methods.            
         ValueError
             If spatial coordinates (lat/lon) between model and condition differ
             when observation-based correction is applied.
@@ -162,30 +164,52 @@ class DatasetConfigABC(abc.ABC):
                     )
 
                 if not (
-                    self.model.info.sizes["lead_time"]
-                    <= self.condition.info.sizes["lead_time"]
+                    set(self.model.info.coords["lead_time"].values).issubset(
+                    set(self.condition.info.coords["lead_time"].values) )
                 ):
                     raise ValueError(
                         "Condition data should be available"
                         " on the same lead_times as model data."
                     )
             
-            if getattr(self, "observation", False) is not None:
-                    
-                if not self.condition.info.coords["lat"].equals(
-                    self.model.info.coords["lat"]
-                ):
+            if self.condition_method == "same_member":
+
+                if any([self.model.info.coords.get("ensembles") is None, 
+                        self.effective_condition.info.coords.get("ensembles") is None]):
+
                     raise ValueError(
-                        "model and condition data do not have the same latitudes cooridnates."
-                        / "when bias correcting to observations"
-                    )
-                if not self.condition.info.coords["lon"].equals(
-                    self.model.info.coords["lon"]
-                ):
+                                "Condition data and model data must have the same ensembles "
+                                "dims and coords."
+                            )                   
+
+                if not self.model.info.coords["ensembles"].equals(
+                    self.condition.info.coords["ensembles"]):
+                
                     raise ValueError(
-                        "model and condition data do not have the same longitudes cooridnates."
-                        / "when bias correcting to observations"
+                        "Condition data should have the same ensemble members"
+                        "as model data for same_member conditioning."
                     )
+                            
+            if getattr(self, "observation", None) is not None:
+
+                for dim in [dim for dim in self.model.info.coords 
+                    if dim in supported_NN_dimensions_sorted]:
+                
+
+                    if self.condition.info.coords.get(dim, None) is None:
+                        raise ValueError(
+                            f"model and condition data must have the same NN cooridnates."
+                            / "when bias correcting to observations"
+                        )
+
+                    if not self.condition.info.coords.get(dim).equals(
+                        self.model.info.coords.get(dim)
+                    ):
+                        raise ValueError(
+                            f"model and condition data do not have the same {dim} cooridnates."
+                            / "when bias correcting to observations"
+                        )
+
 
     @final
     def _check_condition_method(self):

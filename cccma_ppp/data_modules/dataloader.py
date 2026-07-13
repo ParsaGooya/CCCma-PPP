@@ -71,6 +71,11 @@ class DataloaderConfigABC(abc.ABC):
         Returns
         -------
         None
+
+        Note
+        -------
+        preprocessors must be fit at this stage.
+        
         """
         pass
 

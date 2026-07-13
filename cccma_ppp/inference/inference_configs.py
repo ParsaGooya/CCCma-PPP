@@ -7,10 +7,10 @@ import logging
 from pathlib import Path
 import yaml
 import dacite
-
+import gc
 
 from cccma_ppp.inference.dataloader import InferenceDataloaderConfig
-
+from cccma_ppp.preprocessing import PreprocessingPipeline
 from cccma_ppp.core.writer import WriterConfig, Writer
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext
@@ -25,18 +25,20 @@ class InferenceConfig:
     experiment_dir: str 
     writer: WriterConfig
     inference_loader: InferenceDataloaderConfig = dataclasses.field(default_factory=InferenceDataloaderConfig) 
-    save_path: str = None
+    save_path: str | None = None
     seed: int | None = None
+    checkpoint_name: str | None = None
 
     def __post_init__(self):
         self.experiment_dir = Path(self.experiment_dir)
+
+        if self.save_path is not None:
+            self.save_path = Path(self.save_path)
+
         self.train_config = self.load_train_config()
         self.train_loader = self.load_train_dataloader_config()
 
-        # self._resolve_esnsemble_generation()
         self._resolve_inference_dataset_config()
-
-        self.writer
 
     def _resolve_inference_dataset_config(self):
         if self.inference_loader.dataset_config is None: ### method needs to be implemented!
@@ -67,23 +69,17 @@ class InferenceConfig:
         return location / f"{output_preprocessor.name}_preprocessing_pipeline.joblib"
 
     @property
-    def output_dir(self) -> str:
-        """
-        The directory where checkpoints are saved.
-        """
-        return self.save_path or os.path.join(self.experiment_dir, "inference")
+    def output_dir(self) -> Path:
+        return (
+            self.save_path
+            if self.save_path is not None
+            else self.experiment_dir / "inference"
+        )
+
 
     @property
-    def log_dir(self) -> str:
-        """
-        Path to logging directory.
-
-        Returns
-        -------
-        str
-        """
-
-        return os.path.join(self.experiment_dir, "logs")   
+    def log_dir(self) -> Path:
+        return self.experiment_dir / "logs" 
     
     def _prepare_runtime_variables(self):
 
@@ -107,7 +103,7 @@ class InferenceConfig:
 
         distributed.barrier()
 
-    def set_random_seed(self):
+    def set_random_seed(self, rank: int):
         """
         Apply configured random seed.
 
@@ -117,7 +113,7 @@ class InferenceConfig:
         """
 
         if self.seed is not None:
-            set_seed(self.seed)
+            set_seed(self.seed + rank)
 
     def load_train_config(self):
                 
@@ -130,6 +126,50 @@ class InferenceConfig:
             config=dacite.Config(strict=False),
         )
 
+    def load_module(self, strict: bool = True):
+
+        path = Path(self.experiment_dir) / "checkpoints"
+
+        if self.checkpoint_name is not None:
+            path = path / self.checkpoint_name
+        else:
+            path = path / "best.pt"
+
+        if not path.exists():
+            raise FileNotFoundError(f"Checkpoint not found: {path}")
+            
+        checkpoint = torch.load(path, map_location=self.device, weights_only=False) ### ERROR
+
+        required_keys = {
+            "input_shape",
+            "output_shape",
+            "added_features_dim",
+            "module",
+        }
+
+        missing = required_keys - checkpoint.keys()
+
+        if missing:
+            raise KeyError(
+                f"Checkpoint {path} is missing keys: {sorted(missing)}"
+            )
+
+
+        input_shape = checkpoint["input_shape"]
+        output_shape = checkpoint["output_shape"]
+        added_features_dim = checkpoint["added_features_dim"]
+
+        module = self.train_config.module.build_module(  input_shape = input_shape,
+                                                        output_shape = output_shape,
+                                                        added_features_dim = added_features_dim)
+
+        module.load_state_dict(checkpoint["module"], strict=strict)
+
+        del checkpoint
+        gc.collect()
+
+        return module
+        
 
 def prepare_config(path: Path | str) -> dict:
     """Get config and update with possible dotlist override."""
@@ -150,35 +190,31 @@ def build_writer(config : InferenceConfig, distributed : Distributed, logger : l
 
     log(f"creating data loader ...")
 
+    config.inference_loader.setup_distributed(config.train_loader,
+                                              distributed)
+    
+    inference_loader = config.inference_loader.build_inference_loader()
 
-    config.train_loader.setup_distributed(distributed)
+    log(f"Loading saved module ...")
 
-    train_loader = config.train_loader.build_train_loader()
-    validation_loader =  config.train_loader.build_validation_loader()
-
-    num_train_batches = len(train_loader)
-    input_shape = train_loader.input_shape
-    output_shape = train_loader.target_shape
-    added_features_dim = train_loader.added_features_dim
-
-    log(f"Creating {config.module.type} module ...")
-
-    module = config.module.build_module(  input_shape = input_shape,
-                                        output_shape = output_shape,
-                                        added_features_dim = added_features_dim)
-
-
+    module = config.load_module()
     module  = module.to(distributed.device)
 
     if distributed.distributed:
         module = torch.nn.parallel.DistributedDataParallel(module, device_ids=[distributed.local_rank], output_device=distributed.local_rank, find_unused_parameters=False)
 
+    log(f"Loading postprocessor ...")
+    post_processor = PreprocessingPipeline().load_from_memory(
+        config.output_preprocessor_dir
+    )
+    
     log(f"Creating writer ...")
 
     writer = config.writer.build(
-            inference_data_loader=inference_data_loader,
-            train_dataloader_config=train_dataloader_config,
+            inference_data_loader=inference_loader,
+            train_dataloader_config=config.train_loader,
             module=module,
+            post_processor=post_processor,
             output_dir = config.output_dir
         )
 

@@ -670,6 +670,7 @@ class Trainer:
             "module_config": dataclasses.asdict(self.raw_module.config),
             "input_shape": self.TrainLoader.input_shape,
             "output_shape": self.TrainLoader.target_shape,
+            "added_features_dim": self.TrainLoader.added_features_dim,
             "input_var_metadata": RuntimeContext.INPUT_VAR_METADATA,
             "output_var_metadata": RuntimeContext.TARGET_VAR_METADATA,
             "optimizer": self.optimizer.state_dict(),

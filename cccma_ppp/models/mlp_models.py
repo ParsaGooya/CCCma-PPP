@@ -63,6 +63,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     dropout_rate: float = None
     init_method: InitMethod = "trunc_normal"
 
+    NUM_INPUT_DIMS: ClassVar[int] = 1
     NUM_OUTPUT_DIMS: ClassVar[int] = 1
     GENERATOR: ClassVar[int] = False
 
@@ -695,6 +696,7 @@ class AutoencoderConfig(modelConfigABC):
     append_mode: AppendMode = 1
     init_method: InitMethod = "trunc_normal"
 
+    NUM_INPUT_DIMS: ClassVar[int] = 1
     NUM_OUTPUT_DIMS: ClassVar[int] = 1
     GENERATOR: ClassVar[int] = False
 

@@ -7,6 +7,9 @@ import xarray as xr
 import numpy as np
 import dataclasses
 
+from cccma_ppp.configs import (required_sample_dimensions,
+                               optional_sample_dimensions,
+                               supported_NN_dimensions_sorted)
 
 from cccma_ppp.data_modules.utils import (
     _load_xarray_data,
@@ -205,7 +208,7 @@ class DataConfigABC(abc.ABC):
             / f"{self.preprocessing_pipeline.name}_preprocessing_pipeline.joblib"
         )
 
-        self.preprocessing_pipeline._load_from_memory(
+        self.preprocessing_pipeline.load_from_memory(
             Path(load_dir),
         )
 
@@ -257,7 +260,7 @@ def _resolve_data(dataconfig: DataConfigABC) -> None:
             invalid = dataconfig._required_dims() - ds_dims
             if invalid:
                 raise ValueError(
-                    f"{dataconfig.TYPE} data must have {sorted(dataconfig._required_dims())} dimensions. Current dims : {sorted(ds_dims)} for {p}"
+                    f"{dataconfig.TYPE} data must have {sorted(dataconfig._required_dims())} dimensions. Current dims : {list(ds.dims)} for {p}"
                 )
 
             if dataconfig._check_ensemble:
@@ -269,13 +272,18 @@ def _resolve_data(dataconfig: DataConfigABC) -> None:
             invalid = ds_dims - dataconfig._allowed_dims()
             if invalid:
                 raise ValueError(
-                    f"invalid data dimensions {sorted(ds_dims)} for {dataconfig.TYPE} data. Must be a subset ot {sorted(dataconfig._allowed_dims())} for {p}"
+                    f"invalid data dimensions {list(ds.dims)} for {dataconfig.TYPE} data. Must be a subset ot {sorted(dataconfig._allowed_dims())} for {p}"
                 )
             invalid = ds_dims - set(ds.coords.keys())
             if invalid:
                 raise ValueError(
-                    f'"coordinates for {sorted(ds_dims)} does not exist. Available coords: {sorted(set(ds.coords.keys()))} for {p}'
+                    f'"coordinates for {list(ds.dims)} does not exist. Available coords: {list(ds.coords.keys())} for {p}'
                 )
+            
+            if not set(supported_NN_dimensions_sorted).intersection(ds_dims):
+                raise ValueError(
+                    f'"None of the supported NN dimensions exist in {p}'
+                )                
 
             missing = [name for name in dataconfig.names if name not in ds.data_vars]
             if missing:
@@ -322,14 +330,17 @@ def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
     sizes = {
         dim: dict(ds.sizes).get(dim)
         for dim in dict(ds.sizes).keys()
-        if dim not in ["ensembles", "lat", "lon"]
+        if (dim in required_sample_dimensions or
+            dim in optional_sample_dimensions)
     }
     if not sizes:
         sizes = None
 
     coords = {
-        dim: dict(ds.coords).get(dim, None) for dim in ["ensembles", "lat", "lon"]
+        dim: dict(ds.coords).get(dim) 
+        for dim in ds.coords
     }
+
 
     ds.close()
     del ds

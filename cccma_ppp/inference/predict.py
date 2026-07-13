@@ -7,7 +7,7 @@ import dacite
 
 
 def get_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Train model from config file")
+    parser = argparse.ArgumentParser(description="Run inference from a configuration file")
 
     parser.add_argument(
         "config",
@@ -23,34 +23,37 @@ def main(yaml_config: str):
 
     distributed  = Distributed.get_instance()
 
-    config_data = prepare_config(yaml_config)
+    try:
 
-    # to-do
-    # config.apply_overrides(args.override)
+        config_data = prepare_config(yaml_config)
 
-    config = dacite.from_dict(data_class=InferenceConfig, data=config_data, config=dacite.Config(strict=True))
-    config.set_random_seed()
+        # to-do
+        # config.apply_overrides(args.override)
 
-    logger = setup_logger(name = 'inference',
-                          log_dir = config.log_dir )
+        config = dacite.from_dict(data_class=InferenceConfig, data=config_data, config=dacite.Config(strict=True))
+        config.set_random_seed(distributed.rank)
 
-    if distributed.is_root():
-        logger.info('Setting up directories ...')
+        logger = setup_logger(name = 'inference',
+                            log_dir = config.log_dir )
 
-    config.prepare_directory(distributed, yaml_config )
+        if distributed.is_root():
+            logger.info('Setting up directories ...')
 
+        config.prepare_directory(distributed)
 
-    if distributed.is_root():
-        logger.info('Building objects:')
+        if distributed.is_root():
+            logger.info('Building objects:')
 
-    writer = build_writer(config, distributed, logger)
+        writer = build_writer(config, distributed, logger)
 
-    writer.setup_distributed(  distributed = distributed ,
-                    logger = logger)
+        writer.setup_distributed(  distributed = distributed ,
+                        logger = logger)
 
-    writer.infer()
+        writer.predict()
+    
+    finally:
 
-    distributed.cleanup()
+        distributed.cleanup()
 
 
 # if __name__ == "__main__":

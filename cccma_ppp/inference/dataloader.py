@@ -134,7 +134,9 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         if not self._input_preprocessor_exists(load_path):
             if distributed.is_root():
                 train_loader_config.dataset_config._fit_preprocessors(
-                    train_loader_config.dataset_config.train_years, save=True
+                    train_loader_config.dataset_config.train_years, 
+                    save=True, 
+                    save_path=load_path
                 )
 
         distributed.barrier()

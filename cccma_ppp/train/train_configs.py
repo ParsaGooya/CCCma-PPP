@@ -170,7 +170,7 @@ class TrainConfig:
                     "for non-MLP models, do add Flattennanremove as a preprocessing step because it flattens the maps."
                 )
 
-    def set_random_seed(self):
+    def set_random_seed(self, rank: int):
         """
         Apply configured random seed.
 
@@ -180,7 +180,7 @@ class TrainConfig:
         """
 
         if self.seed is not None:
-            set_seed(self.seed)
+            set_seed(self.seed + rank)
 
     @property
     def checkpoint_dir(self) -> str:

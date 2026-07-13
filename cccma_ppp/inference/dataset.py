@@ -26,6 +26,7 @@ from cccma_ppp.data_modules import (
 
 from cccma_ppp.train.dataset import TrainDatasetConfig
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
+from cccma_ppp.configs import supported_NN_dimensions_sorted
 
 @dataclasses.dataclass
 class InferenceDatasetConfig(DatasetConfigABC):
@@ -67,7 +68,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
                     raise ValueError(
                     "condition ensemble_mean cannot be True for cross_ensemble or same_member conditioning."
                 )
-                if self.effective_condition.info.coords["ensembles"] is None:
+                if self.effective_condition.info.coords.get("ensembles") is None:
                     raise ValueError(
                     "For cross_ensemble or same_member conditioning an ensembles dim must exist in the condition."
                 )
@@ -221,7 +222,7 @@ class InferenceDataset(Dataset):
         if all(
             [
                 not self.config.effective_input.ensemble_mean,
-                self.config.effective_input.info.coords["ensembles"] is not None,
+                self.config.effective_input.info.coords.get("ensembles") is not None,
             ]
         ):
             mask = mask.expand_dims(
@@ -242,7 +243,7 @@ class InferenceDataset(Dataset):
             names=config.names,
             ensemble_mean=config.ensemble_mean,
             selection={"ensembles": config.info.coords["ensembles"]}
-            if config.info.coords["ensembles"] is not None
+            if config.info.coords.get("ensembles") is not None
             else None,
             concat_dim=config.concat_dim,
             rename_dict=config.rename_dict,
@@ -303,11 +304,12 @@ class InferenceDataset(Dataset):
                         .get_preprocessors("flattener")
                         .final_locations.size * len_names,)
         else:
-            return (
-                self.config.effective_input.info.coords["lat"].size,
-                self.config.effective_input.info.coords["lon"].size,
-            )
 
+            return tuple(
+                self.config.effective_input.info.coords[dim].size 
+                for dim in supported_NN_dimensions_sorted  
+                if dim in self.config.effective_input.info.coords)
+        
 
     def get_added_features_dim(self):
 

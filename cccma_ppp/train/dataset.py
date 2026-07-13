@@ -24,6 +24,7 @@ from cccma_ppp.data_modules import (
     _create_train_mask,
 )
 
+from cccma_ppp.configs import supported_NN_dimensions_sorted
 
 @dataclasses.dataclass
 class TrainDatasetConfig(DatasetConfigABC):
@@ -91,7 +92,7 @@ class TrainDatasetConfig(DatasetConfigABC):
                 raise ValueError(
                     "for same member coniditioning the model data should not be ensemble mean."
                 )
-
+            
         return self
 
     def _check_observation(self):
@@ -108,22 +109,29 @@ class TrainDatasetConfig(DatasetConfigABC):
             If required observation data is missing.
         """
         if self.observation is not None:
-            if not self.observation.info.coords["lat"].equals(
-                self.model.info.coords["lat"]
-            ):
-                warnings.warn(
-                    "\n=====================================================================\n"
-                    "model and observation data do not have the same latitudes cooridnates.\n"
-                    "=====================================================================\n"
-                )
-            if not self.observation.info.coords["lon"].equals(
-                self.model.info.coords["lon"]
-            ):
-                warnings.warn(
-                    "\n======================================================================\n"
-                    "model and observation data do not have the same longitudes cooridnates.\n"
-                    "======================================================================\n"
-                )
+
+            for dim in [
+            dim
+            for dim in supported_NN_dimensions_sorted  
+            if dim in self.observation.info.coords]:
+        
+                if dim in self.model.info.coords:
+
+                    if not self.observation.info.coords[dim].equals(
+                        self.model.info.coords[dim]
+                    ):
+                        warnings.warn(
+                            "\n=====================================================================\n"
+                            f"model and observation data do not have the same {dim} cooridnates.\n"
+                            "=====================================================================\n"
+                        )
+
+                else:
+                    warnings.warn(
+                        "\n======================================================================\n"
+                        f"observation data has NN dim {dim} which is not present in model data.\n"
+                        "======================================================================\n"
+                    )
 
         else:
             
@@ -159,10 +167,11 @@ class TrainDatasetConfig(DatasetConfigABC):
                     raise ValueError(
                         "condition ensemble_mean cannot be True for cross_ensemble or same_member conditioning."
                     )
-                if self.effective_condition.info.coords["ensembles"] is None:
+                if self.effective_condition.info.coords.get("ensembles") is None:
                     raise ValueError(
-                        "For cross_ensemble or same_member conditioning an ensembles dim must exist in the condition."
+                        "For cross_ensemble or same_member conditioning an ensembles dim and coords must exist in the condition."
                     )
+
             elif self.condition_method == "ensemble_mean":
                 if self.effective_condition.ensemble_mean is not True:
                     raise ValueError(
@@ -487,7 +496,7 @@ class TrainDataset(Dataset):
         if all(
             [
                 not self.config.model.ensemble_mean,
-                self.config.model.info.coords["ensembles"] is not None,
+                self.config.model.info.coords.get("ensembles") is not None,
             ]
         ):
             mask = mask.expand_dims(
@@ -515,7 +524,7 @@ class TrainDataset(Dataset):
             names=config.names,
             ensemble_mean=config.ensemble_mean,
             selection={"ensembles": config.info.coords["ensembles"]}
-            if config.info.coords["ensembles"] is not None
+            if config.info.coords.get("ensembles") is not None
             else None,
             concat_dim=config.concat_dim,
             rename_dict=config.rename_dict,
@@ -561,7 +570,7 @@ class TrainDataset(Dataset):
             if all(
                 [
                     not self.config.observation.ensemble_mean,
-                    self.config.observation.info.coords["ensembles"] is not None,
+                    self.config.observation.info.coords.get("ensembles") is not None,
                 ]
             ):
                 ens_inds = [
@@ -632,11 +641,12 @@ class TrainDataset(Dataset):
             )
 
         else:
-            return (
-                self.config.model.info.coords["lat"].size,
-                self.config.model.info.coords["lon"].size,
-            )
-
+            return tuple(
+                self.config.model.info.coords[dim].size 
+                for dim in supported_NN_dimensions_sorted  
+                if dim in self.config.model.info.coords)
+                
+            
     def get_target_shape(self):
         """
         Determine target shape.
@@ -659,10 +669,12 @@ class TrainDataset(Dataset):
                     "flattener"
                 ).final_locations.shape * len(self.config.observation.names)
             else:
-                return (
-                    self.config.observation.info.coords["lat"].size,
-                    self.config.observation.info.coords["lon"].size,
-                )
+                return tuple(
+                self.config.observation.info.coords[dim].size 
+                for dim in supported_NN_dimensions_sorted  
+                if dim in self.config.observation.info.coords)
+            
+
         else:
             return self.input_shape
 
@@ -771,6 +783,9 @@ class TrainDataset(Dataset):
         year = float(self.model_indexes["year"][ind])
         lead_time = float(self.model_indexes["lead_time"][ind])
         selection = dict(year=year, lead_time=lead_time)
+
+        if self.model_indexes.get("ensembles") is not None:
+            selection['ensemble_id'] = self.model_indexes["ensembles"][ind]
 
         condition = self._index_condition_dataset(ind)
         target = self._index_observation_dataset(ind)

@@ -8,7 +8,7 @@ import xarray as xr
 
 from cccma_ppp.generic import RuntimeContext
 from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
-
+from cccma_ppp.configs import supported_NN_dimensions_sorted
 
 
 @dataclasses.dataclass
@@ -96,10 +96,12 @@ class PreprocessingPipeline:
         """
 
         if self.load_dir is None:
+            
             data_processed = base_data
             self.fitted_based_year = base_data["year"].values
             self.steps = []
             self.fitted_preprocessors = []
+            
             for step_name, preprocessor in self.pipeline:
                 preprocessor.fit(data_processed, mask=mask)
                 data_processed = preprocessor.transform(data_processed)
@@ -315,7 +317,7 @@ class PreprocessingPipeline:
 
     def extract_output_coords_vars(self, base_data: xr.Dataset | xr.DataArray = None):
         """
-        Save the reference coordinates of the data
+        Save the reference coordinates and variable names 
         for the writer to use.
 
         Parameters
@@ -332,19 +334,15 @@ class PreprocessingPipeline:
                 'Spatial coords can only be extracted for a fitted pipeline.'
             )
         
-        coord_names = [
-            name for name, coord in base_data.coords.items()
-            if set(coord.dims) and set(coord.dims).issubset(set(['lat', 'lon']))
-        ]
 
-        self.reference_coords = base_data.drop_vars(
-            [name for name in base_data.coords if name not in coord_names]
-        ).coords
+        self.reference_coords = {dim: base_data[dim]
+                                 for dim in supported_NN_dimensions_sorted 
+                                 if dim in base_data.dims }
                         
         self.reference_var = list(base_data.data_vars)
 
 
-    def _load_from_memory(self, load_dir: str | Path):
+    def load_from_memory(self, load_dir: str | Path):
         """
         Load fitted pipeline from disk.
 

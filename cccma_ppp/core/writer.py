@@ -129,27 +129,29 @@ class Writer:
         self.start_time = time.time()
         self._clear_memory()
 
-        self._infer()
+        self._predict()
  
         time_elapsed = time.time() - self.start_time
 
         self.log_root(logging.INFO, f"Inference finished in {time_elapsed:.2f}s")
 
-    def _infer(self):
+    def _predict(self):
 
         self.module.eval()
 
-        for batch in tqdm(
-            self.InferenceLoader,
-            disable=not self.is_on_root,
-            desc="Inference",
-        ):
+        with torch.inference_mode():
+            
+            for batch in tqdm(
+                self.InferenceLoader,
+                disable=not self.is_on_root,
+                desc="Inference",
+            ):
 
-            batch = batch.to_device(self.device)
+                batch = batch.to_device(self.device)
 
-            self.predictor._infer_on_batch(batch)
-      
-        self.aggregate_predictions_to_netcdf()
+                self.predictor._infer_on_batch(batch)
+        
+            self.aggregate_predictions_to_netcdf()
 
     def _save_train_stats(self):
 
