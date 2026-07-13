@@ -45,7 +45,13 @@
               <p class="caption" role="heading"><span class="caption-text">Start Here</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="readme.html">README</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#install-uv">Install <code class="docutils literal notranslate"><span class="pre">uv</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#create-a-new-virtual-environment">Create a new virtual environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activate-the-virtual-environment">Activate the virtual environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-the-package">Install the package</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
 </ul>
@@ -80,7 +86,43 @@
              
   <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
-<p>Installable with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">.</span></code>. For development mode, use <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code>.</p>
+<section id="install-uv">
+<h2>Install <code class="docutils literal notranslate"><span class="pre">uv</span></code><a class="headerlink" href="#install-uv" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>uv
+</pre></div>
+</div>
+</section>
+<section id="create-a-new-virtual-environment">
+<h2>Create a new virtual environment<a class="headerlink" href="#create-a-new-virtual-environment" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>venv
+</pre></div>
+</div>
+</section>
+<section id="activate-the-virtual-environment">
+<h2>Activate the virtual environment<a class="headerlink" href="#activate-the-virtual-environment" title="Link to this heading"></a></h2>
+<ul>
+<li><p><strong>Linux/macOS</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
+</pre></div>
+</div>
+</li>
+<li><p><strong>Windows (PowerShell)</strong></p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">Activate</span><span class="p">.</span><span class="n">ps1</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="install-the-package">
+<h2>Install the package<a class="headerlink" href="#install-the-package" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.
+</pre></div>
+</div>
+<p>For development mode</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</pre></div>
+</div>
+</section>
 </section>
 
 

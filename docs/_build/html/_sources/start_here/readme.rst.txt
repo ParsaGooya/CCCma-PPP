@@ -10,7 +10,7 @@ The training framework supports a suite of deterministic and probabilistic model
 The package is currently under active development and is undergoing quality assurance (QA).
 
 Ownership and Use
-~~~~~~~~~~~~~~~~~
+-----------------
 Developed by Parsa Gooya at the Canadian Centre for Climate Modelling and Analysis (CCCma), Environment and Climate Change Canada (ECCC).
 Contact: parsa.gooya@ec.gc.ca
 
