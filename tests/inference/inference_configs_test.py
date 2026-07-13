@@ -558,65 +558,6 @@ def test_cvae_requires_condition_method():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
-def test_save_dir_default():
-
-    cfg = object.__new__(InferenceConfig)
-
-    cfg.experiment_dir = "/tmp/exp"
-    cfg.output_path = None
-
-    assert cfg.save_dir == "/tmp/exp/inference"
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_save_dir_explicit():
-
-    cfg = object.__new__(InferenceConfig)
-
-    cfg.output_path = "/custom/out"
-
-    assert cfg.save_dir == "/custom/out"
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_prepare_runtime_variables():
-
-    cfg = object.__new__(InferenceConfig)
-
-    cfg.experiment_dir = Path("/tmp/exp")
-    cfg.output_dir = "/tmp/out"
-
-    cfg.inference_loader = SimpleNamespace(
-        input_var_metadata=["a"],
-        target_var_metadata=["b"],
-    )
-
-    cfg._prepare_runtime_variables()
-
-    assert RuntimeContext.GLOBAL_EXP_DIR == "/tmp/exp"
-    assert RuntimeContext.GLOBAL_OUTPUT_DIR == "/tmp/out"
-    assert RuntimeContext.INPUT_VAR_METADATA == ["a"]
-    assert RuntimeContext.TARGET_VAR_METADATA == ["b"]
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_prepare_config(tmp_path):
-
-    path = tmp_path / "cfg.yaml"
-
-    path.write_text("a: 1\nb: test\n")
-
-    result = prepare_config(path)
-
-    assert result["a"] == 1
-    assert result["b"] == "test"
-
-
-@pytest.mark.pruned
 def test_resolve_dataset_config_none_branch_current_behavior():
 
     cfg = object.__new__(InferenceConfig)

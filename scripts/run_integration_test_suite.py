@@ -13,13 +13,9 @@ import yaml
 
 from tqdm import tqdm
 
-warnings.filterwarnings("ignore")
-logging.raiseExceptions = False
 
 import dacite
 
-import cccma_ppp.models.mlp_models
-import cccma_ppp.train.registry_imports
 
 from cccma_ppp.train.train import main as train_main
 
@@ -30,6 +26,8 @@ from cccma_ppp.train.train_configs import (
 
 from cccma_ppp.generic.distributed import Distributed
 
+warnings.filterwarnings("ignore")
+logging.raiseExceptions = False
 
 BASE_TRAIN_CONFIG = Path(
     "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/scripts/integration_suite_config.yaml"
@@ -87,9 +85,6 @@ CVAE_MODULE_GRID = {
     "use_prior_flow": [False, True],
     "combined_CGCN_weight": [0.0, 0.1],
     "latent_size": [4, 10],
-    # Keep this True unless/until the shape issue is fixed.
-    # False can trigger:
-    # mat1 and mat2 shapes cannot be multiplied.
     "condition_dependant_latent": [True, False],
     "batch_normalization": [False, True],
     "dropout_rate": [None, 0.5],
