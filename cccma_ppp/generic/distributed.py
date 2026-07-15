@@ -67,7 +67,7 @@ class Distributed:
             cls._instance = cls()
         return cls._instance
 
-    def cleanup(cls):
+    def cleanup(self):
         """
         Destroy distributed process group.
 
@@ -120,7 +120,7 @@ class Distributed:
         if dist.is_available() and dist.is_initialized():
             dist.all_reduce(local, op=dist.ReduceOp.SUM)
 
-    def broadcast(self, lcoal: torch.Tensor, src=0):
+    def broadcast(self, local: torch.Tensor, src=0):
         """
         Broadcast tensor from source process to all processes.
 
@@ -137,4 +137,4 @@ class Distributed:
         """
 
         if dist.is_available() and dist.is_initialized():
-            dist.broadcast(lcoal, src=src)
+            dist.broadcast(local, src=src)

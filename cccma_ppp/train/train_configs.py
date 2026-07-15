@@ -449,29 +449,23 @@ def build_trainer(
 
     module = module.to(distributed.device)
 
-    if distributed.distributed:
-        module = torch.nn.parallel.DistributedDataParallel(
-            module,
-            device_ids=[distributed.local_rank],
-            output_device=distributed.local_rank,
-            find_unused_parameters=False,
-        )
-
     log("Creating loss function ...")
 
     reconstruction_loss = config.losspipeline.build(
         weights=weights,
-        num_output_dimensions=getattr(module.model.config, "NUM_OUTPUT_DIMS", None)
+        num_output_dimensions=config.module.NUM_OUTPUT_DIMS
         or len(output_shape),
     )
 
     module.init_loss_function(reconstruction_loss)
+
 
     log(f"Creating {config.optimization.optimizer_type} optimizer ...")
 
     optimizer = config.optimization.build(module, num_train_batches, config.max_epochs)
 
     log("Creating trainer ...")
+
 
     trainer = config.trainer.build(
         train_data_loader=train_loader,

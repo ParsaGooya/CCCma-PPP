@@ -220,6 +220,14 @@ class Trainer:
         self.is_distributed = distributed.distributed
         self.is_on_root = distributed.is_root()
 
+        if distributed.distributed:
+            self.module = torch.nn.parallel.DistributedDataParallel(
+                self.module,
+                device_ids=[distributed.local_rank],
+                output_device=distributed.local_rank,
+                find_unused_parameters=False,
+            )
+
         self.log_root(logging.INFO, "Setting up trainer.")
 
         self.log_root(
