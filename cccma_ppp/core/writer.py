@@ -151,10 +151,12 @@ class Writer:
 
         self.module.eval()
         loader = self.InferenceLoader
+        do_post_process = True
 
         if getattr(self.predictor, "save_latent", False):
-            loader = self.build_train_loader(return_metadata = True)
-
+            loader = self.build_train_loader(return_metadata = True,
+                                             shuffle = False)
+            do_post_process = False
         with torch.inference_mode():
             
             for batch in tqdm(
@@ -167,7 +169,7 @@ class Writer:
 
                 self.predictor._infer_on_batch(batch)
         
-            self.aggregate_predictions_to_netcdf()
+            self.aggregate_predictions_to_netcdf(do_post_process)
 
     def _save_train_stats(self):
 
@@ -195,15 +197,21 @@ class Writer:
         if self.is_distributed:
             self.distributed.barrier()
 
-    def build_train_loader(self, from_validation:bool = False, return_metadata: bool = False):
+    def build_train_loader(self, 
+                           from_validation:bool = False, 
+                           return_metadata: bool = False,
+                           shuffle: bool | None = None):
 
         self.TrainLoaderConfig.setup_distributed(self.distributed,
                 load_path= Path(RuntimeContext.GLOBAL_EXP_DIR) / "preprocessing_pipeline")
         
         if from_validation: 
-            return self.TrainLoaderConfig.build_validation_loader(supress_error = False, return_metadata = return_metadata) 
+            return self.TrainLoaderConfig.build_validation_loader(supress_error=False, 
+                                                                  return_metadata=return_metadata,
+                                                                  shuffle=shuffle) 
         else:
-            return self.TrainLoaderConfig.build_train_loader(return_metadata = return_metadata)  
+            return self.TrainLoaderConfig.build_train_loader(return_metadata=return_metadata,
+                                                             shuffle=shuffle)  
 
     def aggregate_train_stats(self, stats: dict[str, RunningCovariance]):
 
@@ -262,17 +270,21 @@ class Writer:
             return self.module.module
         return self.module
     
-    def aggregate_predictions_to_netcdf(self):
+    def aggregate_predictions_to_netcdf(self, do_post_process: bool = True):
         if self.is_distributed:
             self.distributed.barrier()
+        
 
+        post_processor = self.post_processor
+        if not do_post_process:
+            post_processor = None
 
         naming_convention = "prediction"
         if getattr(self.predictor, "save_latent", False):
             naming_convention = "latent"
 
         if self.is_on_root:
-            aggregate_predictions(self.post_processor, 
+            aggregate_predictions(post_processor, 
                                 self.output_dir, 
                                 naming_convention,
                                 self.log_root)
@@ -283,7 +295,7 @@ class Writer:
             
 
 
-def aggregate_predictions(post_processor: PreprocessingPipeline,
+def aggregate_predictions(post_processor: PreprocessingPipeline | None,
                           output_dir: Path, 
                           naming_convention: str = "prediction",
                           logger_function: callable = None,
@@ -322,6 +334,21 @@ def aggregate_predictions(post_processor: PreprocessingPipeline,
             f"Aggregating temporary prediction files year-by-year: ",
         )
 
+    sample_coords = required_sample_dimensions.union(
+                        optional_sample_dimensions
+                    )
+    def _sort_sample_coords(ds):
+        sort_coords = [
+            coord
+            for coord in sample_coords
+            if coord in ds.coords
+        ]
+
+        for coord in sort_coords:
+            ds = ds.sortby(coord)
+        
+        return ds
+
     for year in tqdm(years,
                     desc="Saving years ..."):
         year_datasets = []
@@ -350,7 +377,17 @@ def aggregate_predictions(post_processor: PreprocessingPipeline,
                         drop=True,
                     )
 
+                for dim in [dim for dim in sample_coords if dim != "year"]:
+                    if dim in ds_year_part.dims:
+                        ds_year_part = ds_year_part.dropna(
+                            dim=dim,
+                            how="all",
+                        )
+
+
                 ds_year_part = ds_year_part.load()
+                ds_year_part = _sort_sample_coords(ds_year_part)
+
                 year_datasets.append(ds_year_part)
 
         if not year_datasets:
@@ -362,20 +399,13 @@ def aggregate_predictions(post_processor: PreprocessingPipeline,
         )
 
         ds_year = next(iter(ds_year.data_vars.values()))
+        ds_year = _sort_sample_coords(ds_year)
 
-        sort_coords = [
-            coord
-            for coord in required_sample_dimensions.union(
-                optional_sample_dimensions
-            )
-            if coord in ds_year.coords
-        ]
-
-        for coord in sort_coords:
-            ds_year = ds_year.sortby(coord)
-
-        ds_year = post_processor.to_dataset(ds_year)
-        ds_year = post_processor.inverse_transform(ds_year)
+        if post_processor is not None:
+            ds_year = post_processor.to_dataset(ds_year)
+            ds_year = post_processor.inverse_transform(ds_year)
+        else:
+            ds_year = ds_year.to_dataset(dim="channels")
 
         output_path = output_dir / f"{naming_convention}_{year}.nc"
         ds_year.to_netcdf(output_path)

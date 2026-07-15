@@ -40,7 +40,7 @@ class BatchData(BatchDataABC):
     added_features: torch.Tensor = None
     metadata: list[dict] | None = None
     return_spatial_mask: bool = False
-    reduce_spatial_mask: bool = False
+    reduce_spatial_mask: bool = True
 
     def __post_init__(self):
         """
@@ -217,8 +217,9 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     def build_train_loader(
         self,
         return_metadata: bool = False,
+        shuffle: bool | None = None,
         return_spatial_mask: bool = False,
-        reduce_spatial_mask: bool = False,
+        reduce_spatial_mask: bool = True,
     ):
         """
         Construct training dataloader.
@@ -259,6 +260,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             config=self,
             collate_fn=collate_batch,
             rank=self.rank,
+            shuffle=shuffle,
             world_size=self.world_size,
             return_spatial_mask=return_spatial_mask,
             reduce_spatial_mask=reduce_spatial_mask,
@@ -267,6 +269,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     def build_validation_loader(
         self,
         return_metadata: bool = False,
+        shuffle: bool | None = None,
         return_spatial_mask: bool = False,
         reduce_spatial_mask: bool = False,
         supress_error: bool = True,
@@ -309,6 +312,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
                 config=self,
                 collate_fn=collate_batch,
                 rank=self.rank,
+                shuffle=shuffle,
                 world_size=self.world_size,
                 return_spatial_mask=return_spatial_mask,
                 reduce_spatial_mask=reduce_spatial_mask,
