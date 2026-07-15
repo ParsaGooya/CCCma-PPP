@@ -129,7 +129,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
         return common
     
     @property
-    def available_inference_time(self):
+    def available_inference_years(self):
         num_lead_years = max(self.lead_months) // 12
         return np.arange(
                 np.min(self.get_common_time),
@@ -172,7 +172,7 @@ class InferenceDataset(Dataset):
             raise RuntimeError(
                 "Make sure to fit preprocessors first!. Hint:  TrainDatasetConfig._fit_preprocessors()"
             )
-        if not set(self.requested_years).issubset(set(self.config.available_inference_time)):
+        if not set(self.requested_years).issubset(set(self.config.available_inference_years)):
             raise ValueError(
                 "the requested years are not common to model and condition data."
             )

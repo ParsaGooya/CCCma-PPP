@@ -43,6 +43,8 @@ class PreprocessingPipeline:
         """
 
         self.fitted = False
+        self.reference_coords = None
+        self.reference_var = None
         self.num_instances += 1
         if self.load_dir is None:
             self.name = f"instance_{self.num_instances}"

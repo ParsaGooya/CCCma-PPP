@@ -276,11 +276,16 @@ class DatasetOperator:
         """
 
         metadata = dict(variables=list(), preprocessors=list())
+        NN_dims = []
 
         if self.config.effective_condition is None:
             metadata = self._update_metadata_with_dataconfig_metadata(
                 metadata, self.config.model
             )
+
+            for dim in [dim for dim in supported_NN_dimensions_sorted 
+                     if dim in self.config.model.info.coords]:
+                NN_dims.append(dim)
 
         else:
             if not self.config._using_model_data_as_condition:
@@ -294,6 +299,12 @@ class DatasetOperator:
                 metadata = self._update_metadata_with_dataconfig_metadata(
                     metadata, self.config.effective_condition
                 )
+
+            for dim in [dim for dim in supported_NN_dimensions_sorted 
+                     if dim in self.config.effective_condition.info.coords]:
+                NN_dims.append(dim)           
+
+        metadata['NN_dims'] = NN_dims
 
         return metadata
 
@@ -312,6 +323,7 @@ class DatasetOperator:
         """
 
         metadata = dict(variables=list(), preprocessors=list())
+        NN_dims = []
 
         if self.config_observation is None:
             if self.config.model is None:
@@ -323,10 +335,21 @@ class DatasetOperator:
             metadata = self._update_metadata_with_dataconfig_metadata(
                 metadata, self.config.model
             )
+
+            for dim in [dim for dim in supported_NN_dimensions_sorted 
+                     if dim in self.config.model.info.coords]:
+                NN_dims.append(dim)
+
         else:
             metadata = self._update_metadata_with_dataconfig_metadata(
                 metadata, self.config_observation
             )
+
+            for dim in [dim for dim in supported_NN_dimensions_sorted 
+                     if dim in self.config_observation.info.coords]:
+                NN_dims.append(dim)
+
+        metadata['NN_dims'] = NN_dims
 
         return metadata
 
@@ -346,7 +369,7 @@ class DatasetOperator:
         dict
         """
         preprocessor_names = [
-            processor[0] for processor in dataconfig.preprocessing_pipeline.pipeline
+            processor[0].lower() for processor in dataconfig.preprocessing_pipeline.pipeline
         ]
         for var in dataconfig.names:
             metadata["variables"].append(var)

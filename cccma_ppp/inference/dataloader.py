@@ -82,10 +82,10 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         else:
             inference_years = np.arange(self.inference_years[0], self.inference_years[1] + 1)
 
-            if not set(inference_years).issubset(set(self.available_inference_time)):
+            if not set(inference_years).issubset(set(self.available_inference_years)):
                 raise ValueError(
                     f"the requested inference years are not available:"
-                    f"available years: [{self.available_inference_time.min()},{self.available_inference_time.max()}]"
+                    f"available years: [{self.available_inference_years.min()},{self.available_inference_years.max()}]"
                 )
             
             return inference_years
@@ -93,7 +93,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     @property
     def available_inference_years(self):
         self._check_dataset_config()
-        return self.dataset_config.available_inference_time
+        return self.dataset_config.available_inference_years
     
 
     def _input_preprocessor_exists(self, load_dir: Path | str = None):
@@ -162,6 +162,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
             collate_fn=collate_batch,
             rank=self.rank,
             world_size=self.world_size,
+            shuffle=False,
             return_spatial_mask=return_spatial_mask,
             reduce_spatial_mask=reduce_spatial_mask,
         )
@@ -175,7 +176,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     def target_var_metadata(self):
         if self.train_dataset_config is None:
             raise RuntimeError(
-                "output variables metadata cannot be read unless train dataloader" \
+                "output variables metadata cannot be read unless train dataloader " \
                 "is available. Hint: run setup_distributed(TrainDatasetConfig, ...)."
             )
         return self.train_dataset_config.ds_operator.get_target_var_metadata()

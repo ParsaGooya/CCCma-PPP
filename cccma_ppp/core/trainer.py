@@ -291,7 +291,11 @@ class Trainer:
             If trainer is not properly initialized.
         """
 
-        assert self._setup, "make sure to setup the trainer first."
+        if not self._setup:
+            raise RuntimeError(
+                "Call setup_distributed() before predict()."
+            )
+        
         self.log_root(logging.INFO, "Starting Training Loop...")
         self.start_time_train = time.time()
         self._clear_memory()
@@ -562,6 +566,8 @@ class Trainer:
 
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+        
+        torch.cuda.ipc_collect()
 
     def _is_improved(self, validation_loss: float | torch.Tensor) -> bool:
         """

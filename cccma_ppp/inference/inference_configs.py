@@ -9,14 +9,15 @@ import yaml
 import dacite
 import gc
 
+from cccma_ppp.core.selectors import ModuleSelector
 from cccma_ppp.inference.dataloader import InferenceDataloaderConfig
 from cccma_ppp.preprocessing import PreprocessingPipeline
-from cccma_ppp.core.writer import WriterConfig, Writer
+from cccma_ppp.core.writer import WriterConfig
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext
 
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
-from cccma_ppp.train.train_configs import set_seed
+from cccma_ppp.train.train_configs import set_seed, _check_IO
 
 
 @dataclasses.dataclass
@@ -46,6 +47,7 @@ class InferenceConfig:
         else:
             self._check_inference_dataset()
 
+
     def _check_inference_dataset(self):
 
         if (self.inference_loader.input_var_metadata !=
@@ -54,6 +56,7 @@ class InferenceConfig:
                     'Input variables or preprocessing steps are not consistent'
                     f'with the trained model at : {self.experiment_dir}' 
                 )
+        
 
     @property
     def output_preprocessor_dir(self):
@@ -66,7 +69,7 @@ class InferenceConfig:
         output_preprocessor =  output_data.get('preprocessing_pipeline')
 
         location = self.experiment_dir / "preprocessing_pipeline"
-        return location / f"{output_preprocessor.name}_preprocessing_pipeline.joblib"
+        return location / f"{output_preprocessor.get("name")}_preprocessing_pipeline.joblib"
 
     @property
     def output_dir(self) -> Path:
@@ -138,7 +141,7 @@ class InferenceConfig:
         if not path.exists():
             raise FileNotFoundError(f"Checkpoint not found: {path}")
             
-        checkpoint = torch.load(path, map_location=self.device, weights_only=False) ### ERROR
+        checkpoint = torch.load(path, map_location="cpu", weights_only=False) ### ERROR
 
         required_keys = {
             "input_shape",
@@ -159,7 +162,13 @@ class InferenceConfig:
         output_shape = checkpoint["output_shape"]
         added_features_dim = checkpoint["added_features_dim"]
 
-        module = self.train_config.module.build_module(  input_shape = input_shape,
+        selector = dacite.from_dict(
+            data_class=ModuleSelector,
+            data=self.train_config.get('module'),
+            config=dacite.Config(strict=False),
+        )
+
+        module = selector.build_module(  input_shape = input_shape,
                                                         output_shape = output_shape,
                                                         added_features_dim = added_features_dim)
 
@@ -200,8 +209,8 @@ def build_writer(config : InferenceConfig, distributed : Distributed, logger : l
     module = config.load_module()
     module  = module.to(distributed.device)
 
-    if distributed.distributed:
-        module = torch.nn.parallel.DistributedDataParallel(module, device_ids=[distributed.local_rank], output_device=distributed.local_rank, find_unused_parameters=False)
+    # if distributed.distributed:
+    #     module = torch.nn.parallel.DistributedDataParallel(module, device_ids=[distributed.local_rank], output_device=distributed.local_rank, find_unused_parameters=False)
 
     log(f"Loading postprocessor ...")
     post_processor = PreprocessingPipeline().load_from_memory(

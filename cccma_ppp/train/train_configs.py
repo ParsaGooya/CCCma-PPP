@@ -118,6 +118,8 @@ class TrainConfig:
         """
 
         self._resolve_resuming()
+        self._check_module_pipeline_compatability()
+        self._check_IO_consistency()
 
         if self.max_epochs is None:
             self.max_epochs = float("inf")
@@ -126,7 +128,17 @@ class TrainConfig:
 
         self.experiment_dir = Path(self.experiment_dir)
 
-        if getattr(self.module._module_config.model_config, "GENERATOR", False):
+
+    def _check_module_pipeline_compatability(self):
+        """
+        Check whether selected pipeline config can support the chosen module
+        
+        Returns
+        --------
+        None
+        """
+
+        if self.module.GENERATOR:
             if "crps" not in self.losspipeline.loss_pipeline.loss_types:
                 raise RuntimeError(
                     "For models with generators crps has to be in the loss function."
@@ -152,23 +164,23 @@ class TrainConfig:
                     "with cVAE model TrainerConfig.beta_finder must be set up."
                 )
 
-        if self.train_loader.dataset_config.observation is not None:
-            pipeline = self.train_loader.dataset_config.observation.preprocessing_pipeline.pipeline
-        else:
-            pipeline = (
-                self.train_loader.dataset_config.model.preprocessing_pipeline.pipeline
-            )
 
-        if self.module._module_config.model_config.NUM_OUTPUT_DIMS == 1:
-            if not any([isinstance(step[1], Flattennanremove) for step in pipeline]):
-                raise RuntimeError(
-                    "for MLP models, add Flattennanremove as a preprocessing step to flatten the maps."
-                )
-        else:
-            if any([isinstance(step[1], Flattennanremove) for step in pipeline]):
-                raise RuntimeError(
-                    "for non-MLP models, do add Flattennanremove as a preprocessing step because it flattens the maps."
-                )
+    def _check_IO_consistency(self):
+        """"
+        Check if the provided data configuration
+        has consistent shapes with the selected module and 
+        architecture for IO.
+
+        Returns
+        ---------
+        None
+        """
+
+        input_metadata = self.train_loader.input_var_metadata
+        output_metadata = self.train_loader.target_var_metadata
+        _check_IO(input_metadata, self.module.NUM_INPUT_DIMS, "input")
+        _check_IO(output_metadata, self.module.NUM_OUTPUT_DIMS, "output")
+        
 
     def set_random_seed(self, rank: int):
         """
@@ -470,3 +482,41 @@ def build_trainer(
     )
 
     return trainer
+
+
+
+
+
+def _check_IO(metadata: dict,  
+                model_dims: int, 
+                which: str = "input"):
+    
+    if which not in ["input", "output"]:
+
+        raise ValueError(
+            "only checks IO in data vs module."
+        )
+    
+    if model_dims == 1:
+
+        if len(metadata.get("NN_dims")) != 1:
+
+            if not any(["flattener" not in pipeline for pipeline in metadata.get("preprocessors")]):
+                
+                raise RuntimeError(
+                    f"The selected model supports 1D {which} but the data has {metadata.get('NN_dims')} "\
+                    f"{which} NN dims. add Flattennanremove as a preprocessing step to flatten the data."
+                )
+    else:
+
+        if not any(["flattener" not in pipeline for pipeline in metadata.get("preprocessors")]):
+            raise RuntimeError(
+                f"For {model_dims}D {which} models, do not add Flattennanremove " \
+                "as a preprocessing step as it flattens the data."
+            )
+
+        if model_dims != len(metadata.get('NN_dims')):
+            raise RuntimeError(
+                    f"The selected model supports {model_dims}D {which} but the data "\
+                    f"has {metadata.get('NN_dims')} {which} NN dims."
+                )  

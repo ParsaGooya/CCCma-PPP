@@ -25,14 +25,18 @@ class WriterConfig:
     saved_model_training_vars_from_validation: bool = False
 
     def __post_init__(self):
-
-        pass
+        
+        if self.num_output_covariance_sampling < 0:
+            raise ValueError(
+                "num_output_covariance_sampling cannot be negative."
+            )
 
     def build(
         self,
         inference_data_loader: Dataloader,
         train_dataloader_config: TrainDataloaderConfig,
         module: moduleABC,
+        post_processor: PreprocessingPipeline,
         output_dir: Path | str,
     ):
 
@@ -42,6 +46,7 @@ class WriterConfig:
             inference_data_loader=inference_data_loader,
             train_dataloader_config=train_dataloader_config,
             module=module,
+            post_processor=post_processor,
             output_dir = output_dir
         )
 
@@ -124,7 +129,10 @@ class Writer:
 
     def predict(self):
   
-        assert self._setup, "make sure to setup the trainer first."
+        if not self._setup:
+            raise RuntimeError(
+                "Call setup_distributed() before predict()."
+            )
         self.log_root(logging.INFO, "Starting Inference Loop...")
         self.start_time = time.time()
         self._clear_memory()
@@ -178,6 +186,8 @@ class Writer:
                 )
             
             self.aggregate_train_stats(stats)
+            del TrainLoader
+            gc.collect()
 
         if self.is_distributed:
             self.distributed.barrier()
@@ -223,6 +233,7 @@ class Writer:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
+        torch.cuda.ipc_collect()
 
     def log_root(self, level: int, msg: str, *args):
         """
@@ -259,17 +270,16 @@ class Writer:
         if self.is_distributed:
             self.distributed.barrier()
 
-        if not self.is_on_root:
-            return
-        
+
         naming_convention = "prediction"
         if self.predictor.save_latent:
             naming_convention = "latent"
 
-        aggregate_predictions(self.post_processor, 
-                              self.output_dir, 
-                              naming_convention,
-                              self.log_root)
+        if self.is_on_root:
+            aggregate_predictions(self.post_processor, 
+                                self.output_dir, 
+                                naming_convention,
+                                self.log_root)
         
         if self.is_distributed:
             self.distributed.barrier()
@@ -280,7 +290,8 @@ class Writer:
 def aggregate_predictions(post_processor: PreprocessingPipeline,
                           output_dir: Path, 
                           naming_convention: str = "prediction",
-                          logger_function: callable = None):
+                          logger_function: callable = None,
+                          cleanup_temp: bool = True):
 
     temp_save_dir = Path(output_dir) / "_temp"
     temp_files = sorted(temp_save_dir.glob(f"{naming_convention}_rank*_*.nc"))
@@ -387,3 +398,7 @@ def aggregate_predictions(post_processor: PreprocessingPipeline,
                 logging.INFO,
                 f"Saved aggregated predictions for year {year}: {output_path}",
             )
+
+    if cleanup_temp:
+        for path in temp_files:
+            path.unlink()          

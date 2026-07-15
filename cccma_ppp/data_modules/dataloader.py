@@ -106,6 +106,7 @@ class Dataloader:
     collate_fn: Callable
     rank: int = 0
     world_size: int = 1
+    shuffle: bool | None = None
     return_spatial_mask: bool = False
     reduce_spatial_mask: bool = False
 
@@ -121,7 +122,7 @@ class Dataloader:
         """
 
         self.sampler = self._get_dataloader_sampler()
-        shuffle = self.world_size == 1
+        shuffle = self.world_size == 1 if self.shuffle is None else self.shuffle
         self._torch_loader = DataLoader(
             self.dataset,
             batch_size=self.config.batch_size,

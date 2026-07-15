@@ -48,7 +48,6 @@ class DataConfigABC(abc.ABC):
     """
     Abstract base class for dataset configuration.
     """
-
     def __init__(self):
         """
         Initialize data configuration.
@@ -218,7 +217,7 @@ class DataConfigABC(abc.ABC):
             )
 
 
-def _resolve_data(dataconfig: DataConfigABC) -> None:
+def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool =  True) -> None:
     """
     Validate dataset files and dimensions.
 
@@ -250,44 +249,48 @@ def _resolve_data(dataconfig: DataConfigABC) -> None:
             + str(dataconfig.paths)
         )
 
-    for p in list_paths:
-        with xr.open_dataset(Path(p)) as ds:
-            if dataconfig.rename_dict is not None:
-                ds = ds.rename(dataconfig.rename_dict)
+    if _do_checks:
+        for p in list_paths:
+            with xr.open_dataset(Path(p)) as ds:
+                if dataconfig.rename_dict is not None:
+                    ds = ds.rename(dataconfig.rename_dict)
 
-            ds_dims = set(ds.dims)
+                ds_dims = set(ds.dims)
 
-            invalid = dataconfig._required_dims() - ds_dims
-            if invalid:
-                raise ValueError(
-                    f"{dataconfig.TYPE} data must have {sorted(dataconfig._required_dims())} dimensions. Current dims : {list(ds.dims)} for {p}"
-                )
-
-            if dataconfig._check_ensemble:
-                if "ensembles" not in ds.dims:
+                invalid = dataconfig._required_dims() - ds_dims
+                if invalid:
                     raise ValueError(
-                        f"Cannot select ensemble_list as ensembles dim does not exist in {p}"
+                        f"{dataconfig.TYPE} data must have {sorted(dataconfig._required_dims())} dimensions. Current dims : {list(ds.dims)} for {p}"
                     )
 
-            invalid = ds_dims - dataconfig._allowed_dims()
-            if invalid:
-                raise ValueError(
-                    f"invalid data dimensions {list(ds.dims)} for {dataconfig.TYPE} data. Must be a subset ot {sorted(dataconfig._allowed_dims())} for {p}"
-                )
-            invalid = ds_dims - set(ds.coords.keys())
-            if invalid:
-                raise ValueError(
-                    f'"coordinates for {list(ds.dims)} does not exist. Available coords: {list(ds.coords.keys())} for {p}'
-                )
-            
-            if not set(supported_NN_dimensions_sorted).intersection(ds_dims):
-                raise ValueError(
-                    f'"None of the supported NN dimensions exist in {p}'
-                )                
+                if dataconfig._check_ensemble:
+                    if "ensembles" not in ds.dims:
+                        raise ValueError(
+                            f"Cannot select ensemble_list as ensembles dim does not exist in {p}"
+                        )
 
-            missing = [name for name in dataconfig.names if name not in ds.data_vars]
-            if missing:
-                raise ValueError(f"{p} is missing variables: {missing}")
+                invalid = ds_dims - dataconfig._allowed_dims()
+                if invalid:
+                    raise ValueError(
+                        f"invalid data dimensions {list(ds.dims)} for {dataconfig.TYPE} data. Must be a subset ot {sorted(dataconfig._allowed_dims())} for {p}"
+                    )
+                invalid = ds_dims - set(ds.coords.keys())
+                if invalid:
+                    raise ValueError(
+                        f'"coordinates for {list(ds.dims)} does not exist. Available coords: {list(ds.coords.keys())} for {p}'
+                    )
+                
+                if not set(supported_NN_dimensions_sorted).intersection(ds_dims):
+                    raise ValueError(
+                        f'"None of the supported NN dimensions exist in {p}'
+                    )                
+
+                missing = [name for name in dataconfig.names if name not in ds.data_vars]
+                if missing:
+                    raise ValueError(f"{p} is missing variables: {missing}")
+            
+                ds.close()
+                gc.collect()
 
     dataconfig.list_paths = list_paths
 
