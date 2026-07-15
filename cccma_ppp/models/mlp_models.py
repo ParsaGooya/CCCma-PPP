@@ -439,12 +439,21 @@ class cVAE_MLP(cVAEmodelsABC):
                 latent_samples = self._get_normal(latent_ref_tensor, std=nstds).sample((sample_size,))
 
             if prior_flow is not None:
-                cond = cond_mu if prior_flow.condition_size is not None else None
-
+                cond = None
                 batch_size, feature_size = latent_samples.shape[1:]
+                
+                if prior_flow.condition_size is not None:
+                    cond = (
+                        cond_mu
+                        .unsqueeze(0)                     # [1, B, C]
+                        .expand(sample_size, -1, -1)      # [S, B, C]
+                        .reshape(sample_size * batch_size, -1)
+                    )
+
                 latent_samples = latent_samples.reshape(
                     sample_size * batch_size, feature_size
                 )
+                cond = cond.unsqueeze(0).expand_as(latent_samples)
 
                 flow_output = prior_flow.inverse(latent_samples, cond)
                 latent_samples = flow_output.e_samples
