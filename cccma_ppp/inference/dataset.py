@@ -22,6 +22,7 @@ from cccma_ppp.data_modules import (
     _unwrap_data_variables,
     _load_xarray_data,
     _create_train_mask,
+    suppress_stderr
 )
 
 from cccma_ppp.train.dataset import TrainDatasetConfig
@@ -319,11 +320,11 @@ class InferenceDataset(Dataset):
 
         if self.condition_dataset is not None:
             if self.config.condition_method != "static":
-                year = float(self.cond_indexes["year"][ind])
-                lead_time = float(self.cond_indexes["lead_time"][ind])
+                year = [float(self.cond_indexes["year"][ind])]
+                lead_time = [float(self.cond_indexes["lead_time"][ind])]
                 selection = dict(year=year, lead_time=lead_time)
                 if "ensembles" in self.cond_indexes:
-                    selection["ensembles"] = self.cond_indexes["ensembles"][ind]
+                    selection["ensembles"] = [self.cond_indexes["ensembles"][ind]]
 
             else:
                 selection = {}
@@ -338,12 +339,12 @@ class InferenceDataset(Dataset):
     def _index_model_dataset(self, ind):
 
         if self._load_model:
-            year = float(self.model_indexes["year"][ind])
-            lead_time = float(self.model_indexes["lead_time"][ind])
+            year = [float(self.model_indexes["year"][ind])]
+            lead_time = [float(self.model_indexes["lead_time"][ind])]
             selection = dict(year=year, lead_time=lead_time)
 
             if "ensembles" in self.model_indexes:
-                selection["ensembles"] = self.model_indexes["ensembles"][ind]
+                selection["ensembles"] = [self.model_indexes["ensembles"][ind]]
 
             model = self.config.model.preprocessing_pipeline.transform(
                 self.model_dataset.sel(**selection)
@@ -370,13 +371,14 @@ class InferenceDataset(Dataset):
             input = xr.concat([input, condition], dim="channels")
 
         time_features = _get_time_features(self.config, year, lead_time, input)
- 
-        datadict = dict(
-            input=torch.as_tensor(input.to_numpy(), dtype=torch.float32),
-            added_features=torch.as_tensor(time_features, dtype=torch.float32)
-            if time_features is not None
-            else None,
-        )
+
+        with suppress_stderr():
+            datadict = dict(
+                input=torch.as_tensor(input.to_numpy(), dtype=torch.float32),
+                added_features=torch.as_tensor(time_features, dtype=torch.float32)
+                if time_features is not None
+                else None,
+            )
 
         if self.return_metadata:
             return datadict, selection

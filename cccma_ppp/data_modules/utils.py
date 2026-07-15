@@ -4,6 +4,8 @@ import dataclasses
 from pathlib import Path
 import os
 from typing import Literal
+import contextlib
+from collections.abc import Iterator
 
 from cccma_ppp.preprocessing import PreprocessingPipeline, Flattennanremove
 from cccma_ppp.generic import RuntimeContext
@@ -158,7 +160,7 @@ def _unwrap_data_variables(dataset: xr.Dataset) -> xr.DataArray:
     """
 
     return xr.concat(
-        [dataset[v].expand_dims("channels", axis=0) for v in list(dataset.data_vars)],
+        [dataset[v].squeeze().expand_dims("channels", axis=0) for v in list(dataset.data_vars)],
         dim="channels",
     )
 
@@ -197,7 +199,7 @@ def _load_xarray_data(
     xr.Dataset or xr.DataArray
         Loaded (and optionally preprocessed) data.
     """
-
+    
     ds = xr.open_mfdataset(paths, combine="nested", concat_dim=concat_dim)
 
     if rename_dict is not None:
@@ -267,3 +269,21 @@ def _create_train_mask(
         coords={"year": years, "lead_time": lead_times},
         name="mask",
     )
+
+
+
+
+
+@contextlib.contextmanager
+def suppress_stderr() -> Iterator[None]:
+    """Temporarily suppress Python and C-library stderr output."""
+    stderr_fd = 2
+    saved_stderr_fd = os.dup(stderr_fd)
+
+    try:
+        with open(os.devnull, "w") as devnull:
+            os.dup2(devnull.fileno(), stderr_fd)
+            yield
+    finally:
+        os.dup2(saved_stderr_fd, stderr_fd)
+        os.close(saved_stderr_fd)

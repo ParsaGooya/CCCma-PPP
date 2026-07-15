@@ -22,6 +22,7 @@ from cccma_ppp.data_modules import (
     _unwrap_data_variables,
     _load_xarray_data,
     _create_train_mask,
+    suppress_stderr
 )
 
 from cccma_ppp.configs import supported_NN_dimensions_sorted
@@ -702,11 +703,11 @@ class TrainDataset(Dataset):
 
         if self.condition_dataset is not None:
             if self.config.condition_method != "static":
-                year = float(self.cond_indexes["year"][ind])
-                lead_time = float(self.cond_indexes["lead_time"][ind])
+                year = [float(self.cond_indexes["year"][ind])]
+                lead_time = [float(self.cond_indexes["lead_time"][ind])]
                 selection = dict(year=year, lead_time=lead_time)
                 if "ensembles" in self.cond_indexes:
-                    selection["ensembles"] = self.cond_indexes["ensembles"][ind]
+                    selection["ensembles"] = [self.cond_indexes["ensembles"][ind]]
 
             else:
                 selection = {}
@@ -730,12 +731,12 @@ class TrainDataset(Dataset):
         """
 
         if self.observation_dataset is not None:
-            year = float(self.obs_indexes["year"][ind])
-            month = float(self.obs_indexes["month"][ind])
+            year = [float(self.obs_indexes["year"][ind])]
+            month = [float(self.obs_indexes["month"][ind])]
             selection = dict(year=year, month=month)
 
             if "ensembles" in self.obs_indexes:
-                selection["ensembles"] = self.obs_indexes["ensembles"][ind]
+                selection["ensembles"] = [self.obs_indexes["ensembles"][ind]]
 
             obs = self.config.observation.preprocessing_pipeline.transform(
                 self.observation_dataset.sel(**selection)
@@ -753,12 +754,12 @@ class TrainDataset(Dataset):
         """
 
         if self._load_model:
-            year = float(self.model_indexes["year"][ind])
-            lead_time = float(self.model_indexes["lead_time"][ind])
+            year = [float(self.model_indexes["year"][ind])]
+            lead_time = [float(self.model_indexes["lead_time"][ind])]
             selection = dict(year=year, lead_time=lead_time)
 
             if "ensembles" in self.model_indexes:
-                selection["ensembles"] = self.model_indexes["ensembles"][ind]
+                selection["ensembles"] = [self.model_indexes["ensembles"][ind]]
 
             model = self.config.model.preprocessing_pipeline.transform(
                 self.model_dataset.sel(**selection)
@@ -802,13 +803,14 @@ class TrainDataset(Dataset):
 
         time_features = _get_time_features(self.config, year, lead_time, input)
 
-        datadict = dict(
-            input=torch.as_tensor(input.to_numpy(), dtype=torch.float32),
-            target=torch.as_tensor(target.to_numpy(), dtype=torch.float32),
-            added_features=torch.as_tensor(time_features, dtype=torch.float32)
-            if time_features is not None
-            else None,
-        )
+        with suppress_stderr():
+            datadict = dict(
+                input=torch.as_tensor(input.to_numpy(), dtype=torch.float32),
+                target=torch.as_tensor(target.to_numpy(), dtype=torch.float32),
+                added_features=torch.as_tensor(time_features, dtype=torch.float32)
+                if time_features is not None
+                else None,
+            )
 
         if self.return_metadata:
             return datadict, selection
