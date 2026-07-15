@@ -3,6 +3,7 @@ from pathlib import Path
 import dataclasses
 import torch.nn.functional as F
 from typing import Callable
+import warnings
 
 from cccma_ppp.core.trainer import clear_memory
 from cccma_ppp.generic import Distributed, RunningCovariance
@@ -29,6 +30,13 @@ class cVAEPredictorConfig:
 
         if self.nstds <= 0:
             raise ValueError("nstds must be positive.")
+
+        if self.save_latent:
+            warnings.warn(
+                "\n===================================================\n" +
+                "save_latent is True. No predictions will be saved! \n" + 
+                "===================================================\n" 
+            )
 
     def build(
         self,
@@ -231,7 +239,7 @@ class cVAEPredictor(PredictorABC):
             prepared = []
 
             for name, value in latent_vars.items():
-                value = value.detach().cpu()
+                value = value.detach().cpu().squeeze()
 
                 pad_size = max_latent_dim - value.shape[-1]
 

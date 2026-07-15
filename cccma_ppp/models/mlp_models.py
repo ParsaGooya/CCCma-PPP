@@ -458,10 +458,11 @@ class cVAE_MLP(cVAEmodelsABC):
                 latent_samples = flow_output.e_samples
                 latent_samples = latent_samples.reshape(sample_size, batch_size, -1)
         else:
-            if not latent_samples.shape == latent_ref_tensor.shape:
+            expected_shape = (sample_size, *latent_ref_tensor.shape)
+            if not latent_samples.shape == expected_shape:
                 raise ValueError(
-                    f'got user specified latent_samples of shape ({latent_samples.shape})' \
-                    'but expected shape {(latent_ref_tensor.shape)}'
+                    f"Got user specified latent_samples of shape ({latent_samples.shape}) " \
+                    f"but expected shape {(expected_shape)}"
                 )
 
         output = self._generate(

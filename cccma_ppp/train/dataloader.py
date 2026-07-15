@@ -216,6 +216,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
     def build_train_loader(
         self,
+        return_metadata: bool = False,
         return_spatial_mask: bool = False,
         reduce_spatial_mask: bool = False,
     ):
@@ -250,7 +251,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         )
 
         train_dataset = self.dataset_config.build_dataset(
-            years=self.train_years, mask=train_mask, return_metadata=False
+            years=self.train_years, mask=train_mask, return_metadata=return_metadata
         )
 
         return Dataloader(
@@ -265,6 +266,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
     def build_validation_loader(
         self,
+        return_metadata: bool = False,
         return_spatial_mask: bool = False,
         reduce_spatial_mask: bool = False,
         supress_error: bool = True,
@@ -300,7 +302,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
                 lead_times=self.dataset_config.lead_months,
             )
             validation_dataset = self.dataset_config.build_dataset(
-                years=self.validation_years, mask=validation_mask, return_metadata=False
+                years=self.validation_years, mask=validation_mask, return_metadata=return_metadata
             )
             return Dataloader(
                 dataset=validation_dataset,

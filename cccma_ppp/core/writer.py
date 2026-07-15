@@ -150,11 +150,15 @@ class Writer:
     def _predict(self):
 
         self.module.eval()
+        loader = self.InferenceLoader
+
+        if getattr(self.predictor, "save_latent", False):
+            loader = self.build_train_loader(return_metadata = True)
 
         with torch.inference_mode():
             
             for batch in tqdm(
-                self.InferenceLoader,
+                loader,
                 disable=not self.is_on_root,
                 desc="Inference",
             ):
@@ -169,16 +173,11 @@ class Writer:
 
         if not self.train_stats_save_dir.exists():
 
-            self.TrainLoaderConfig.setup_distributed(self.distributed,
-                    load_path= Path(RuntimeContext.GLOBAL_EXP_DIR) / "preprocessing_pipeline")
-            
-            if self.config.saved_model_training_vars_from_validation:
-                TrainLoader =  self.TrainLoaderConfig.build_validation_loader(supress_error = False) 
-            else:
-                TrainLoader =  self.TrainLoaderConfig.build_train_loader()  
+            loader =  self.build_train_loader(from_validation = 
+                                self.config.saved_model_training_vars_from_validation) 
 
             stats = self.predictor.stats    
-            for batch in tqdm(TrainLoader,
+            for batch in tqdm(loader,
                             disable=not self.is_on_root,
                             desc="Extracting training statistics"):
 
@@ -190,12 +189,21 @@ class Writer:
                 )
             
             self.aggregate_train_stats(stats)
-            del TrainLoader
+            del loader
             gc.collect()
 
         if self.is_distributed:
             self.distributed.barrier()
 
+    def build_train_loader(self, from_validation:bool = False, return_metadata: bool = False):
+
+        self.TrainLoaderConfig.setup_distributed(self.distributed,
+                load_path= Path(RuntimeContext.GLOBAL_EXP_DIR) / "preprocessing_pipeline")
+        
+        if from_validation: 
+            return self.TrainLoaderConfig.build_validation_loader(supress_error = False, return_metadata = return_metadata) 
+        else:
+            return self.TrainLoaderConfig.build_train_loader(return_metadata = return_metadata)  
 
     def aggregate_train_stats(self, stats: dict[str, RunningCovariance]):
 
@@ -260,7 +268,7 @@ class Writer:
 
 
         naming_convention = "prediction"
-        if self.predictor.save_latent:
+        if getattr(self.predictor, "save_latent", False):
             naming_convention = "latent"
 
         if self.is_on_root:
