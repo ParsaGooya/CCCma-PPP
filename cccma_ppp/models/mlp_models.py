@@ -441,7 +441,7 @@ class cVAE_MLP(cVAEmodelsABC):
             if prior_flow is not None:
                 cond = None
                 batch_size, feature_size = latent_samples.shape[1:]
-                
+
                 if prior_flow.condition_size is not None:
                     cond = (
                         cond_mu
@@ -453,7 +453,6 @@ class cVAE_MLP(cVAEmodelsABC):
                 latent_samples = latent_samples.reshape(
                     sample_size * batch_size, feature_size
                 )
-                cond = cond.unsqueeze(0).expand_as(latent_samples)
 
                 flow_output = prior_flow.inverse(latent_samples, cond)
                 latent_samples = flow_output.e_samples
