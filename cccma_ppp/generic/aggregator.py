@@ -477,9 +477,9 @@ class RunningCovariance:
 
     def distributed_reduce(self):
 
-        self.distributed.all_reduce(self.sum_x)
-        self.distributed.all_reduce(self.sum_xxT)
-        self.distributed.all_reduce(self.count)
+        self.distributed.all_reduce_sum(self.sum_x)
+        self.distributed.all_reduce_sum(self.sum_xxT)
+        self.distributed.all_reduce_sum(self.count)
 
     def finalize(self):
         mean = self.sum_x / self.count

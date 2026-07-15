@@ -210,9 +210,9 @@ class PredictorSelector:
         """
         Predictor_Config = self.registery.get(module.config._type.lower(), self.config)
         return Predictor_Config.build(module, 
-                                      num_output_covariance_sampling,
                                       distributed,
-                                      output_dir)
+                                      output_dir,
+                                      num_output_covariance_sampling)
 
 
 

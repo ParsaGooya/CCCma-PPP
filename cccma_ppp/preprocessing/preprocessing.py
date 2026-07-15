@@ -378,3 +378,4 @@ class PreprocessingPipeline:
         self.reference_var = loaded.reference_var
         self.name = loaded.name
         del loaded
+        return self

@@ -62,14 +62,12 @@ class InferenceConfig:
     def output_preprocessor_dir(self):
 
         if 'observation' in self.train_config['train_loader']['dataset_config']:
-            output_data = self.train_config['train_loader']['dataset_config']['observation']
+            preprocessor_name = 'observation'
         else:
-            output_data = self.train_config['train_loader']['dataset_config']['model']
-
-        output_preprocessor =  output_data.get('preprocessing_pipeline')
+            preprocessor_name = 'model'
 
         location = self.experiment_dir / "preprocessing_pipeline"
-        return location / f"{output_preprocessor.get("name")}_preprocessing_pipeline.joblib"
+        return location / f"{preprocessor_name}_preprocessing_pipeline.joblib"
 
     @property
     def output_dir(self) -> Path:

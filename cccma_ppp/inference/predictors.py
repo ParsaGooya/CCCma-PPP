@@ -4,6 +4,7 @@ import dataclasses
 import torch.nn.functional as F
 from typing import Callable
 
+from cccma_ppp.core.trainer import clear_memory
 from cccma_ppp.generic import Distributed, RunningCovariance
 from cccma_ppp.core.selectors import PredictorSelector
 from cccma_ppp.core.core_abc import moduleABC
@@ -88,7 +89,7 @@ class cVAEPredictor(PredictorABC):
         _getting_train_stats: bool = False,
     ) -> cVAEOutput | dict[str, RunningCovariance]:
                         
-        self._clear_memory()
+        clear_memory()
         self.raw_module.eval()
         latent_samples = None
 
@@ -339,9 +340,8 @@ class DetermninisticPredictor(PredictorABC):
         _getting_train_stats: bool = False,
     ) -> deterministicOutput | dict[str, RunningCovariance]:
                         
-        self._clear_memory()
+        clear_memory()
         self.raw_module.eval()
-        latent_samples = None
 
         with torch.autocast(
             device_type=self.device.type, 
