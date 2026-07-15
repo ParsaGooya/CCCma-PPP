@@ -2,12 +2,14 @@ import torch
 from pathlib import Path
 import dataclasses
 import torch.nn.functional as F
+from typing import Callable
 
 from cccma_ppp.generic import Distributed, RunningCovariance
 from cccma_ppp.core.selectors import PredictorSelector
 from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.core.cVAE_module import cVAEOutput
-from cccma_ppp.inference.predictor_abc import PredictorABC, _batch_to_netcdf
+from cccma_ppp.core.deterministic_module import deterministicOutput
+from cccma_ppp.inference.predictor_abc import PredictorABC, save_batch_to_netcdf
 from cccma_ppp.data_modules.dataloader import BatchDataABC
 
 
@@ -16,9 +18,16 @@ from cccma_ppp.data_modules.dataloader import BatchDataABC
 class cVAEPredictorConfig:
 
     num_latent_samples: int = 1
-    nstds: int = 1
+    nstds: float = 1.0
     infer_latent_samples_from_training: bool = False
     save_latent: bool = False
+
+    def __post_init__(self) -> None:
+        if self.num_latent_samples < 1:
+            raise ValueError("num_latent_samples must be at least 1.")
+
+        if self.nstds <= 0:
+            raise ValueError("nstds must be positive.")
 
     def build(
         self,
@@ -69,10 +78,6 @@ class cVAEPredictor(PredictorABC):
         self._batch_counter = 0
 
     @property
-    def temp_save_dir(self):
-        return Path(self.output_dir) / "_temp"
-    
-    @property
     def extract_training_vars(self):
         return any([self.infer_latent_samples_from_training, self.num_output_covariance_sampling > 0])
 
@@ -107,7 +112,7 @@ class cVAEPredictor(PredictorABC):
                 return output
              
             if self.infer_latent_samples_from_training:
-                latent_samples = self._get_latent_samples_based_on_train(data=batch).to(self.device)
+                latent_samples = self._get_latent_samples_based_on_train(data=batch)
 
             output = self.raw_module.predict(data=batch,
                                                 sample_size = self.num_latent_samples,
@@ -115,7 +120,12 @@ class cVAEPredictor(PredictorABC):
                                                 latent_samples = latent_samples)
             
             if self.num_output_covariance_sampling > 0:
-                output = self.add_decoder_noise(output, self.num_output_covariance_sampling)
+                sample_size = output.output.shape[:2] # N x B 
+                reshape_size = output.output.shape[2:] # C x ...
+                output = self.add_decoder_noise(output, 
+                                                self.num_output_covariance_sampling,
+                                                sample_size,
+                                                reshape_size)
 
             self._batch_to_netcdf(output, batch.metadata)
             return output
@@ -135,7 +145,7 @@ class cVAEPredictor(PredictorABC):
 
         prediction = output.output
         target = data.target[0] if isinstance(data.target, tuple) else data.target
-        residual = target - prediction.squeeze(0)
+        residual = target - prediction[0]
         residual = residual.reshape(residual.shape[0], -1)
 
         self.stats["residual"].update(residual)
@@ -158,29 +168,7 @@ class cVAEPredictor(PredictorABC):
         return latent_samples.to(self.device)
 
 
-    def add_decoder_noise(self, 
-                          output: cVAEOutput, 
-                          num_output_samples: int ):
-        
-        if self.output_sampler is None:
-            self.output_sampler = self.build_output_sampler()   
-
-        prediction = output.output # N x B x C x ...
-
-        sample_size = prediction.shape[:2] # N x B 
-        reshape_size = prediction.shape[2:] # C x ...
-
-        noise =  self.output_sampler(sample_size)
-        noise = noise.reshape(num_output_samples, *sample_size, *reshape_size).to(
-            device=prediction.device,
-            dtype=prediction.dtype,
-        )
-
-        prediction = prediction.unsqueeze(0) + noise
-        output.output = prediction
-        return output
-
-    def build_latent_sampler(self):
+    def build_latent_sampler(self) -> Callable[..., torch.Tensor]:
         stats_path = self.output_dir / "training_variable_stats.pt"
 
         if not stats_path.exists():
@@ -189,7 +177,11 @@ class cVAEPredictor(PredictorABC):
                 "to disk first."
             )
 
-        stats = torch.load(stats_path, map_location=self.device)
+        stats = torch.load(
+            stats_path,
+            map_location="cpu",
+            weights_only=True,
+        )
 
         if not all([stats.get('samples_mean', None) is not None,
                     stats.get('samples_cov', None) is not None]):
@@ -273,7 +265,7 @@ class cVAEPredictor(PredictorABC):
             assign_coords = None
             save_name = f"prediction_rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
 
-        _batch_to_netcdf(prediction,
+        save_batch_to_netcdf(prediction,
                         metadata,
                         num_output_dims,
                         save_name,
@@ -284,6 +276,147 @@ class cVAEPredictor(PredictorABC):
         
         self._batch_counter += 1
 
+
+
+
+
+
+@PredictorSelector.register("default")
+@PredictorSelector.register("deterministic")
+@dataclasses.dataclass
+class DeterministicPredictorConfig:
+
+    def build(
+        self,
+        module: moduleABC,
+        distributed: Distributed,
+        output_dir: Path | str,
+        num_output_covariance_sampling: int = 0,
+    ):
+
+        return DetermninisticPredictor(self, 
+                             module, 
+                             distributed,
+                             output_dir,
+                             num_output_covariance_sampling)
+
+
+
+class DetermninisticPredictor(PredictorABC):
+
+    def __init__(self,
+                config: cVAEPredictorConfig,
+                module: moduleABC,
+                distributed: Distributed,
+                output_dir: Path | str,
+                num_output_covariance_sampling: int = 0):
+        
+        self.config = config
+        self.module = module
+        self.num_output_covariance_sampling = num_output_covariance_sampling
+        self.output_dir = Path(output_dir)
+
+        self.distributed = distributed
+        self.device = distributed.device
+
+        if self.extract_training_vars:
+            self._stats = {
+                "residual": RunningCovariance(self.distributed),
+            }
+
+        self.output_sampler = None
+        self._batch_counter = 0
+
+
+    @property
+    def extract_training_vars(self):
+        return self.num_output_covariance_sampling > 0
+
+    @torch.no_grad()
+    def _infer_on_batch(
+        self,
+        batch: BatchDataABC,
+        _getting_train_stats: bool = False,
+    ) -> deterministicOutput | dict[str, RunningCovariance]:
+                        
+        self._clear_memory()
+        self.raw_module.eval()
+        latent_samples = None
+
+        with torch.autocast(
+            device_type=self.device.type, 
+            enabled=self.device.type == "cuda"
+        ):
+            if _getting_train_stats:
+                if batch.target is None:
+                    raise RuntimeError(
+                        'to save the posterior variables the dataset must contain the target prediction.'
+                    )
+                output = self.raw_module.forward(data=batch)
+
+            if _getting_train_stats:
+                stats = self._update_train_stats(output, batch)
+                return stats
+
+
+            output = self.raw_module.predict(data=batch)
+            
+            if self.num_output_covariance_sampling > 0:
+                sample_size = (output.output.shape[0],)
+                reshape_size = output.output.shape[1:]
+                output = self.add_decoder_noise(output, 
+                                                self.num_output_covariance_sampling,
+                                                sample_size,
+                                                reshape_size)
+
+            self._batch_to_netcdf(output, batch.metadata)
+            return output
+            
+        
+    def _update_train_stats(
+        self,
+        output: deterministicOutput,
+        data: BatchDataABC,
+    ) -> dict[str, RunningCovariance]:
+
+
+        prediction = output.output
+        target = data.target[0] if isinstance(data.target, tuple) else data.target
+        residual = target - prediction
+        residual = residual.reshape(residual.shape[0], -1)
+
+        self.stats["residual"].update(residual)
+
+        return self.stats
+
+
+    def _batch_to_netcdf(
+        self,
+        output: cVAEOutput,
+        metadata: list[dict],
+    ):
+        
+ 
+        prediction = output.output.detach().cpu()
+        
+        if self.num_output_covariance_sampling == 0:
+            prediction = prediction.unsqueeze(0)
+
+        num_output_dims = self.raw_module.config.NUM_OUTPUT_DIMS
+        extra_dims_sorted = ["output_samples", "latent_samples"]
+        assign_coords = None
+        save_name = f"prediction_rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
+
+        save_batch_to_netcdf(prediction,
+                        metadata,
+                        num_output_dims,
+                        save_name,
+                        self.temp_save_dir,
+                        extra_dims_sorted,
+                        assign_coords)
+
+        
+        self._batch_counter += 1
 
 
 

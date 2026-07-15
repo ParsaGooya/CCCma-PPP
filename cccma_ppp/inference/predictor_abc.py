@@ -5,12 +5,22 @@ import pandas as pd
 import numpy as np
 import xarray as xr
 from pathlib import Path
+from typing import Callable
 
 from cccma_ppp.data_modules.dataloader import BatchDataABC
 from cccma_ppp.core import OutputABC
-from cccma_ppp.generic import RunningCovariance
+from cccma_ppp.generic import Distributed, RunningCovariance
+from cccma_ppp.core.core_abc import moduleABC
+
+
 
 class PredictorABC(abc.ABC):
+    output_dir: str | Path
+    output_sampler: Callable[..., torch.Tensor] | None
+
+    @property
+    def temp_save_dir(self):
+        return Path(self.output_dir) / "_temp"
     
     @property
     @abc.abstractmethod
@@ -57,7 +67,31 @@ class PredictorABC(abc.ABC):
         return self.module
     
     @final
-    def build_output_sampler(self):
+    def add_decoder_noise(self, 
+                          output: OutputABC, 
+                          num_output_samples: int,
+                          sample_size: tuple,
+                          reshape_size: tuple) -> OutputABC:
+        
+        if self.output_sampler is None:
+            self.output_sampler = self.build_output_sampler()   
+
+        prediction = output.output 
+
+        noise =  self.output_sampler(
+            (num_output_samples, *sample_size)
+        )
+        noise = noise.reshape(num_output_samples, *sample_size, *reshape_size).to(
+            device=prediction.device,
+            dtype=prediction.dtype,
+        )
+
+        prediction = prediction.unsqueeze(0) + noise
+        output.output = prediction
+        return output
+    
+    @final
+    def build_output_sampler(self) -> Callable[..., torch.Tensor]:
         stats_path = self.output_dir / "training_variable_stats.pt"
 
         if not stats_path.exists():
@@ -132,7 +166,7 @@ class PredictorABC(abc.ABC):
 
 
 
-def _batch_to_netcdf(
+def save_batch_to_netcdf(
     prediction: torch.Tensor,
     metadata: list[dict],
     num_output_dims: int,
