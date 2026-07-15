@@ -22,3 +22,7 @@ tests/conftest.py
 scripts/build_and_view_docs.py
 scripts/initialize_docs.py
 scripts/build_test_map_parallel.py
+
+
+train_config.yaml
+inference_config.yaml
