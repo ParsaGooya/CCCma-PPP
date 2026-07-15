@@ -206,7 +206,7 @@ class cVAEPredictor(PredictorABC):
         output: cVAEOutput,
         metadata: list[dict],
     ):
-        
+        attrs = None
         if self.save_latent:
             
             latent_vars = {
@@ -255,13 +255,16 @@ class cVAEPredictor(PredictorABC):
             extra_dims_sorted = []
             save_name = f"latent_rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
 
+            if self.infer_latent_samples_from_training:
+                attrs = {'infer_latent_samples_from_training' : True}
+
         else:
             prediction = output.output.detach().cpu()
             
             if self.num_output_covariance_sampling == 0:
                 prediction = prediction.unsqueeze(0)
 
-            num_output_dims = self.raw_module.config.NUM_OUTPUT_DIMS
+            num_output_dims = self.raw_module.model_config.NUM_OUTPUT_DIMS
             extra_dims_sorted = ["output_samples", "latent_samples"]
             assign_coords = None
             save_name = f"prediction_rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
@@ -272,7 +275,8 @@ class cVAEPredictor(PredictorABC):
                         save_name,
                         self.temp_save_dir,
                         extra_dims_sorted,
-                        assign_coords)
+                        assign_coords,
+                        attrs)
 
         
         self._batch_counter += 1

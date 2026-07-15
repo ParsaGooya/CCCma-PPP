@@ -137,7 +137,7 @@ class PredictorABC(abc.ABC):
                     loc=mu,
                     covariance_matrix=cov + jitter * eye,
                 )
-            except RuntimeError:
+            except ValueError:
                 jitter *= 10
 
         raise RuntimeError(
@@ -173,7 +173,8 @@ def save_batch_to_netcdf(
     save_name: str,
     save_dir: str | Path,
     extra_dims_sorted: list[str] | None = None,
-    assign_coords: dict = None
+    assign_coords: dict = None,
+    attrs: dict = None
 ):
 
     if extra_dims_sorted is None:
@@ -181,7 +182,7 @@ def save_batch_to_netcdf(
 
     coords = {}
     for i, dim in enumerate(extra_dims_sorted):
-        coords[dim] = np.arange(prediction.shape[i])
+        coords[dim] = np.arange(1, prediction.shape[i] + 1)
     
     batch_size = prediction.shape[len(extra_dims_sorted)]
     channel_size = prediction.shape[len(extra_dims_sorted) + 1]
@@ -214,10 +215,13 @@ def save_batch_to_netcdf(
     )
 
     coords["batch"] = batch_index
-    coords["channels"] =  np.arange(channel_size)
+    coords["channels"] =  np.arange(1, channel_size + 1)
+
+    output_keys = list()
 
     for i, size in enumerate(spatial_shape):
         coords[f"output_dim_{i}"] = np.arange(size)
+        output_keys.append(f"output_dim_{i}")
 
     da = xr.DataArray(
         prediction.numpy(),
@@ -230,5 +234,13 @@ def save_batch_to_netcdf(
         da = da.assign_coords(assign_coords)
 
     save_path = (Path(save_dir) / save_name)
+    
+    if attrs is not None:
+        da.attrs = attrs
+
+    da = da.unstack("batch").transpose(*extra_dims_sorted, 
+                                       *index_keys, 
+                                       ..., 
+                                       *output_keys)
 
     da.to_netcdf(save_path)

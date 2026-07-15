@@ -6,7 +6,6 @@ import gc
 import os
 import time
 from tqdm import tqdm
-import pandas as pd
 import numpy as np
 import xarray as xr
 
@@ -18,6 +17,9 @@ from cccma_ppp.train import TrainDataloaderConfig
 from cccma_ppp.core import moduleABC
 from cccma_ppp.core.selectors import PredictorSelector
 from cccma_ppp.preprocessing import PreprocessingPipeline
+
+from cccma_ppp.configs import (required_sample_dimensions,
+                               optional_sample_dimensions)
 
 @dataclasses.dataclass
 class WriterConfig:
@@ -119,7 +121,7 @@ class Writer:
 
         if self.predictor.extract_training_vars:
             self.log_root(logging.INFO, "Running the model to extract training statistics. \n" \
-                            "This will take a few minutes...")
+                            "This might take a few minutes...")
             self._save_train_stats()
 
         self._setup = True
@@ -280,74 +282,68 @@ def aggregate_predictions(post_processor: PreprocessingPipeline,
                           cleanup_temp: bool = True):
 
     temp_save_dir = Path(output_dir) / "_temp"
-    temp_files = sorted(temp_save_dir.glob(f"{naming_convention}_rank*_*.nc"))
-
-    if not temp_files:
-        raise RuntimeError(f"No temporary prediction files found in {temp_save_dir}")
-
     output_dir = Path(output_dir)
 
-    # Read only coordinates first to discover years.
+    temp_files = sorted(
+        temp_save_dir.glob(f"{naming_convention}_rank*_*.nc")
+    )
+
+    if not temp_files:
+        raise RuntimeError(
+            f"No temporary prediction files found in {temp_save_dir}"
+        )
+
     years = set()
+
     for path in temp_files:
-        ds = xr.open_dataset(path)
-        try:
+        with xr.open_dataset(path) as ds:
             if "year" not in ds.coords:
-                ds = ds.set_index(batch=[name for name in ds["batch"].to_index().names])
-                ds = ds.unstack("batch")
+                raise RuntimeError(
+                    f"{path} does not contain a 'year' coordinate."
+                )
 
-            if "year" in ds.coords:
-                years.update(np.asarray(ds["year"].values).ravel().tolist())
-            elif "year" in ds.dims:
-                years.update(np.asarray(ds["year"].values).ravel().tolist())
-            else:
-                batch_index = ds.indexes["batch"]
-                years.update(batch_index.get_level_values("year").unique().tolist())
-        finally:
-            ds.close()
+            years.update(
+                np.asarray(ds["year"].values).reshape(-1).tolist()
+            )
 
-    years = sorted(int(y) for y in years)
+    years = sorted(years)
 
     if logger_function is not None:
         logger_function(
-        logging.INFO,
-        f"Aggregating temporary prediction files year-by-year: {years}",
-    )
+            logging.INFO,
+            f"Aggregating temporary prediction files year-by-year: ",
+        )
 
-    for year in years:
+    for year in tqdm(years,
+                    desc="Saving years ..."):
         year_datasets = []
 
+
         for path in temp_files:
-            ds = xr.open_dataset(path)
+            with xr.open_dataarray(path) as ds:
+                if "year" not in ds.coords:
+                    raise RuntimeError(
+                        f"{path} does not contain a 'year' coordinate."
+                    )
 
-            batch_index = ds.indexes.get("batch", None)
+                available_years = np.asarray(
+                    ds["year"].values
+                ).reshape(-1)
 
-            if batch_index is None or not isinstance(batch_index, pd.MultiIndex):
-                ds.close()
-                raise RuntimeError(
-                    f"{path} does not contain a MultiIndex batch dimension."
-                )
+                if year not in available_years:
+                    continue
 
-            if "year" not in batch_index.names:
-                ds.close()
-                raise RuntimeError(
-                    f"{path} batch MultiIndex does not contain a 'year' level."
-                )
+                if "year" in ds.dims:
+                    ds_year_part = ds.sel(year=slice(year, year))
+                else:
+                    # Handles cases where year is an auxiliary coordinate.
+                    ds_year_part = ds.where(
+                        ds["year"] == year,
+                        drop=True,
+                    )
 
-            mask = batch_index.get_level_values("year") == year
-
-            if not np.any(mask):
-                ds.close()
-                continue
-
-            ds_year = ds.isel(batch=np.where(mask)[0])
-
-            # Load the selected subset, then close the file handle.
-            ds_year = ds_year.load()
-            ds.close()
-
-            ds_year = ds_year.unstack("batch")
-            year_datasets.append(ds_year)
+                ds_year_part = ds_year_part.load()
+                year_datasets.append(ds_year_part)
 
         if not year_datasets:
             continue
@@ -357,27 +353,28 @@ def aggregate_predictions(post_processor: PreprocessingPipeline,
             combine_attrs="override",
         )
 
-        # Sort dimensions if present.
-        sort_dims = [
-            dim
-            for dim in ("year", "lead_time", "ensembles")
-            if dim in ds_year.dims or dim in ds_year.coords
+        ds_year = next(iter(ds_year.data_vars.values()))
+
+        sort_coords = [
+            coord
+            for coord in required_sample_dimensions.union(
+                optional_sample_dimensions
+            )
+            if coord in ds_year.coords
         ]
 
-        if sort_dims:
-            ds_year = ds_year.sortby(sort_dims)
-
-        output_path = output_dir / f"{naming_convention}_{year}.nc"
+        for coord in sort_coords:
+            ds_year = ds_year.sortby(coord)
 
         ds_year = post_processor.to_dataset(ds_year)
         ds_year = post_processor.inverse_transform(ds_year)
 
+        output_path = output_dir / f"{naming_convention}_{year}.nc"
         ds_year.to_netcdf(output_path)
+        ds_year.close()
 
         for ds in year_datasets:
             ds.close()
-
-        ds_year.close()
 
         if logger_function is not None:
             logger_function(
@@ -387,4 +384,4 @@ def aggregate_predictions(post_processor: PreprocessingPipeline,
 
     if cleanup_temp:
         for path in temp_files:
-            path.unlink()          
+            path.unlink()

@@ -15,7 +15,7 @@ from cccma_ppp.preprocessing import PreprocessingPipeline
 from cccma_ppp.core.writer import WriterConfig
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext
-
+from cccma_ppp.data_modules.dataloader import Dataloader
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
 from cccma_ppp.train.train_configs import set_seed, _check_IO
 
@@ -127,7 +127,9 @@ class InferenceConfig:
             config=dacite.Config(strict=False),
         )
 
-    def load_module(self, strict: bool = True):
+    def load_module(self, 
+                    inference_loader: Dataloader | None = None,
+                    strict: bool = True):
 
         path = Path(self.experiment_dir) / "checkpoints"
 
@@ -159,6 +161,15 @@ class InferenceConfig:
         input_shape = checkpoint["input_shape"]
         output_shape = checkpoint["output_shape"]
         added_features_dim = checkpoint["added_features_dim"]
+
+        if inference_loader is not None:
+            if not all([input_shape == inference_loader.input_shape,
+                        output_shape == inference_loader.output_shape,
+                        added_features_dim == inference_loader.added_features_dim]):
+                raise RuntimeError(
+                    "Data and model IO dimensions do not match!"
+                )
+
 
         selector = dacite.from_dict(
             data_class=ModuleSelector,
@@ -204,7 +215,7 @@ def build_writer(config : InferenceConfig, distributed : Distributed, logger : l
 
     log(f"Loading saved module ...")
 
-    module = config.load_module()
+    module = config.load_module(inference_loader)
     module  = module.to(distributed.device)
 
     # if distributed.distributed:
