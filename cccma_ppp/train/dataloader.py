@@ -209,7 +209,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         distributed.barrier()
 
         if (distributed.distributed or 
-            self.load_path is not None):
+            load_path is not None):
             self.dataset_config._load_fitted_preprocessors(load_dir=load_path)
 
         self._setup = True

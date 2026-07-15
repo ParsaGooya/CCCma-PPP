@@ -500,8 +500,8 @@ def _check_IO(metadata: dict,
     if model_dims == 1:
 
         if len(metadata.get("NN_dims")) != 1:
-
-            if not any(["flattener" not in pipeline for pipeline in metadata.get("preprocessors")]):
+  
+            if not any(["flattener" in pipeline for pipeline in metadata.get("preprocessors")]):
                 
                 raise RuntimeError(
                     f"The selected model supports 1D {which} but the data has {metadata.get('NN_dims')} "\
@@ -509,7 +509,7 @@ def _check_IO(metadata: dict,
                 )
     else:
 
-        if not any(["flattener" not in pipeline for pipeline in metadata.get("preprocessors")]):
+        if not any(["flattener" in pipeline for pipeline in metadata.get("preprocessors")]):
             raise RuntimeError(
                 f"For {model_dims}D {which} models, do not add Flattennanremove " \
                 "as a preprocessing step as it flattens the data."

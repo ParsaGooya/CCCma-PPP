@@ -298,7 +298,7 @@ class Trainer:
         
         self.log_root(logging.INFO, "Starting Training Loop...")
         self.start_time_train = time.time()
-        self._clear_memory()
+        clear_memory()
         self.optimizer.zero_grad(set_to_none=True)
 
         while self._epochs_trained < self.max_epochs:
@@ -553,22 +553,6 @@ class Trainer:
 
         self.optimizer.zero_grad(set_to_none=True)
 
-    def _clear_memory(self):
-        """
-        Clear CPU and GPU memory.
-
-        Returns
-        -------
-        None
-        """
-
-        gc.collect()
-
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-        
-        torch.cuda.ipc_collect()
-
     def _is_improved(self, validation_loss: float | torch.Tensor) -> bool:
         """
         Determine if validation loss improved.
@@ -795,3 +779,21 @@ class Trainer:
                 self.logger.log(level, msg, *args)
             else:
                 print(msg)
+
+
+
+
+def clear_memory():
+    """
+    Clear CPU and GPU memory.
+
+    Returns
+    -------
+    None
+    """
+
+    gc.collect()
+
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()

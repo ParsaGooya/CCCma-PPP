@@ -1,5 +1,5 @@
 experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/cccma_PPP_test
-max_epochs: 10
+max_epochs: 12
 train_loader:
     dataset_config:
         model:

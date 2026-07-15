@@ -10,6 +10,8 @@ import pandas as pd
 import numpy as np
 import xarray as xr
 
+from cccma_ppp.core.trainer import clear_memory
+
 from cccma_ppp.data_modules.dataloader import Dataloader
 from cccma_ppp.generic import Distributed, RuntimeContext, RunningCovariance
 from cccma_ppp.train import TrainDataloaderConfig
@@ -25,7 +27,7 @@ class WriterConfig:
     saved_model_training_vars_from_validation: bool = False
 
     def __post_init__(self):
-        
+
         if self.num_output_covariance_sampling < 0:
             raise ValueError(
                 "num_output_covariance_sampling cannot be negative."
@@ -135,7 +137,7 @@ class Writer:
             )
         self.log_root(logging.INFO, "Starting Inference Loop...")
         self.start_time = time.time()
-        self._clear_memory()
+        clear_memory()
 
         self._predict()
  
@@ -218,22 +220,6 @@ class Writer:
         if self.is_distributed:
             self.distributed.barrier()
 
-
-    def _clear_memory(self):
-        """
-        Clear CPU and GPU memory.
-
-        Returns
-        -------
-        None
-        """
-
-        gc.collect()
-
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-
-        torch.cuda.ipc_collect()
 
     def log_root(self, level: int, msg: str, *args):
         """
