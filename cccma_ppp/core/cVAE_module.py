@@ -324,8 +324,8 @@ class cVAE(moduleABC):
                     "with normalized flow all loss reduction has to be sum."
                 )
 
-        self.criterion = reconstruction_loss
-        self.KLD = KLD(reduction=self.criterion.reduction)
+        self.criterion = reconstruction_loss.to(self._get_device())
+        self.KLD = KLD(reduction=self.criterion.reduction).to(self._get_device())
 
     def _compute_loss(self, beta: float, data: BatchData):
         """

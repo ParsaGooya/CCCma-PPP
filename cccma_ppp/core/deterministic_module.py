@@ -231,7 +231,7 @@ class deterministic(moduleABC):
         None
         """
 
-        self.criterion = reconstruction_loss
+        self.criterion = reconstruction_loss.to(self._get_device())
 
     def _compute_loss(self, data: BatchData):
         """
