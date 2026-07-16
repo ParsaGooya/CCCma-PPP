@@ -4,7 +4,9 @@ import dataclasses
 import numpy as np
 
 from cccma_ppp.data_modules.data import ModelDataConfig, ConditionDataConfig
-from cccma_ppp.configs import supported_NN_dimensions_sorted
+from cccma_ppp.configs import (supported_NN_dimensions_sorted,
+                               required_sample_dimensions,
+                               optional_sample_dimensions)
 
 @dataclasses.dataclass
 class lead_months_config:
@@ -155,22 +157,26 @@ class DatasetConfigABC(abc.ABC):
             ]
         ):
             if self.condition_method != "static":
-                if not set(self.model.year_range).issubset(
-                    set(self.condition.year_range)
-                ):
-                    raise ValueError(
-                        "Condition data should be available"
-                        " on the same time period as model data."
-                    )
 
-                if not (
-                    set(self.model.info.coords["lead_time"].values).issubset(
-                    set(self.condition.info.coords["lead_time"].values) )
-                ):
-                    raise ValueError(
-                        "Condition data should be available"
-                        " on the same lead_times as model data."
-                    )
+                for dim in [dim for dim in self.model.info.coords 
+                    if dim in required_sample_dimensions
+                    ]:
+                    
+                    if self.condition.info.coords.get(dim) is None:
+                    
+                        raise ValueError(
+                            "Condition data should be available"
+                            f" on the same dimestions as model data."
+                        )
+                
+                    if not set(self.model.info.coords[dim].values).issubset(
+                        set(self.condition.info.coords[dim].values)
+                    ):
+                        raise ValueError(
+                            "Condition data should be available"
+                            f" on the same {dim} coordinates as model data."
+                        )
+
             
             if self.condition_method == "same_member":
 
@@ -178,7 +184,7 @@ class DatasetConfigABC(abc.ABC):
                         self.effective_condition.info.coords.get("ensembles") is None]):
 
                     raise ValueError(
-                                "Condition data and model data must have the same ensembles "
+                                "Condition data and model data must have ensembles "
                                 "dims and coords."
                             )                   
 
@@ -198,7 +204,7 @@ class DatasetConfigABC(abc.ABC):
 
                     if self.condition.info.coords.get(dim, None) is None:
                         raise ValueError(
-                            f"model and condition data must have the same NN cooridnates."
+                            f"model and condition data must have the same NN dims."
                             / "when bias correcting to observations"
                         )
 
