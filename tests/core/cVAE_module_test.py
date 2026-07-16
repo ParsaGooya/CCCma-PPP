@@ -98,7 +98,7 @@ class DummyModel:
             log_var=torch.zeros(1, 4),
         )
 
-    def predict(self, **kwargs):
+    def predict(self, *args, **kwargs):
         return cVAEOutput(
             output=torch.ones(1, 2, 1, 3, 4),
             mu=None,
@@ -121,12 +121,20 @@ class DummyBatch:
 class DummyLoss:
     reduction = "mean"
 
+    def to(self, device):
+        self.device = device
+        return self
+
     def __call__(self, output, target, **kwargs):
         return torch.tensor(1.0), {"recon": 1.0}
 
 
 class SumLoss:
     reduction = "sum"
+
+    def to(self, device):
+        self.device = device
+        return self
 
     def __call__(self, *args, **kwargs):
         return torch.tensor(1.0), {}
@@ -137,33 +145,28 @@ def test_config_requires_model_or_load():
         cVAEConfig(ModelConfig=None, load_dir=None)
 
 
-@pytest.mark.pruned
 def test_config_default_weight():
     cfg = cVAEConfig(ModelConfig=DummySelector())
 
     assert cfg.combined_CGCN_weight == 0
 
 
-@pytest.mark.pruned
 def test_config_weight_bounds():
     with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=2)
 
 
-@pytest.mark.pruned
 def test_config_negative_cgcn_weight():
     with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=-0.1)
 
 
-@pytest.mark.pruned
 def test_config_build():
     cfg = cVAEConfig(ModelConfig=DummySelector())
 
     assert isinstance(cfg.build(np.array([1])), cVAE)
 
 
-@pytest.mark.pruned
 def test_module_build_basic():
     m = make_module()
 
@@ -171,7 +174,6 @@ def test_module_build_basic():
     assert m.model is not None
 
 
-@pytest.mark.pruned
 def test_build_without_output_shape():
     m = make_module(input_shape=np.array([1]))
 
@@ -179,7 +181,6 @@ def test_build_without_output_shape():
     assert np.array_equal(m.model.build_kwargs["output_shape"], np.array([1]))
 
 
-@pytest.mark.pruned
 def test_build_with_explicit_output_shape():
     cfg = cVAEConfig(ModelConfig=DummySelector())
 
@@ -193,7 +194,6 @@ def test_build_with_explicit_output_shape():
     assert np.array_equal(m.model.build_kwargs["output_shape"], np.array([2]))
 
 
-@pytest.mark.pruned
 def test_build_shape_mismatch(monkeypatch):
     cfg = cVAEConfig(ModelConfig=DummySelector())
     cfg.load_dir = "fake_checkpoint.pt"
@@ -222,7 +222,6 @@ class ConditionalSelector:
         return ConditionalModel()
 
 
-@pytest.mark.pruned
 def test_conditional_flow_branch():
     cfg = cVAEConfig(ModelConfig=ConditionalSelector(), prior_flow_config=DummyFlow())
 
@@ -233,7 +232,6 @@ def test_conditional_flow_branch():
     assert m.prior_flow.condition_size == 5
 
 
-@pytest.mark.pruned
 def test_prior_flow_build():
     cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
 
@@ -244,7 +242,6 @@ def test_prior_flow_build():
     assert m.prior_flow.condition_size is None
 
 
-@pytest.mark.pruned
 def test_flow_without_condition():
     cfg = cVAEConfig(ModelConfig=NoCondSelector(), prior_flow_config=DummyFlow())
 
@@ -273,7 +270,6 @@ def test_build_with_prior_flow_and_min_variance_and_added_features():
     assert m.model.build_kwargs["added_features_dim"] == 3
 
 
-@pytest.mark.pruned
 def test_init_loss_function_basic():
     m = make_module()
 
@@ -290,7 +286,6 @@ def test_init_loss_with_flow_requires_sum():
         m.init_loss_function(DummyLoss())
 
 
-@pytest.mark.pruned
 def test_flow_loss_valid_sum():
     cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
     m = make_module(cfg)
@@ -300,21 +295,18 @@ def test_flow_loss_valid_sum():
     assert m.criterion is not None
 
 
-@pytest.mark.pruned
 def test_forward_pass():
     m = make_module()
 
     assert isinstance(m.forward(DummyBatch()), cVAEOutput)
 
 
-@pytest.mark.pruned
 def test_predict_pass():
     m = make_module()
 
     assert isinstance(m.predict(DummyBatch()), cVAEOutput)
 
 
-@pytest.mark.pruned
 def test_forward_with_added_features():
     m = make_module()
 
@@ -324,7 +316,6 @@ def test_forward_with_added_features():
     assert isinstance(m.forward(batch), cVAEOutput)
 
 
-@pytest.mark.pruned
 def test_predict_with_sample_size_and_prior_flow():
     cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
     m = make_module(cfg)
@@ -334,7 +325,6 @@ def test_predict_with_sample_size_and_prior_flow():
     assert isinstance(out, cVAEOutput)
 
 
-@pytest.mark.pruned
 def test_forward_with_sample_size_explicit():
     cfg = cVAEConfig(ModelConfig=DummySelector())
     m = make_module(cfg)
@@ -344,7 +334,6 @@ def test_forward_with_sample_size_explicit():
     assert isinstance(out, cVAEOutput)
 
 
-@pytest.mark.pruned
 def test_compute_loss_requires_init():
     m = make_module()
 
@@ -352,7 +341,6 @@ def test_compute_loss_requires_init():
         m._compute_loss(1.0, DummyBatch())
 
 
-@pytest.mark.pruned
 def test_compute_loss_basic():
     m = make_module()
     m.init_loss_function(DummyLoss())
@@ -363,7 +351,6 @@ def test_compute_loss_basic():
     assert "total_loss" in losses
 
 
-@pytest.mark.pruned
 def test_compute_loss_plain_target():
     m = make_module()
     m.init_loss_function(DummyLoss())
@@ -376,7 +363,6 @@ def test_compute_loss_plain_target():
     assert total >= 0
 
 
-@pytest.mark.pruned
 def test_compute_loss_with_mask():
     m = make_module()
     m.init_loss_function(DummyLoss())
@@ -389,7 +375,6 @@ def test_compute_loss_with_mask():
     assert total >= 0
 
 
-@pytest.mark.pruned
 def test_mask_not_expanded_branch():
     m = make_module()
     m.init_loss_function(DummyLoss())
@@ -402,7 +387,6 @@ def test_mask_not_expanded_branch():
     assert total >= 0
 
 
-@pytest.mark.pruned
 def test_compute_loss_mask_none_explicit():
     m = make_module()
     m.init_loss_function(DummyLoss())
@@ -415,7 +399,6 @@ def test_compute_loss_mask_none_explicit():
     assert total >= 0
 
 
-@pytest.mark.pruned
 def test_compute_loss_target_as_list():
     cfg = cVAEConfig(ModelConfig=DummySelector())
     m = make_module(cfg)
@@ -430,10 +413,13 @@ def test_compute_loss_target_as_list():
     assert "total_loss" in losses
 
 
-@pytest.mark.pruned
 def test_compute_loss_individual_losses_merge_multiple_keys():
     class MultiLoss:
         reduction = "mean"
+
+        def to(self, device):
+            self.device = device
+            return self
 
         def __call__(self, output, target, **kwargs):
             return torch.tensor(1.0), {"a": 1.0, "b": 2.0}
@@ -449,7 +435,6 @@ def test_compute_loss_individual_losses_merge_multiple_keys():
     assert losses["b"] == 2.0
 
 
-@pytest.mark.pruned
 def test_compute_loss_beta_zero():
     cfg = cVAEConfig(ModelConfig=DummySelector())
     m = make_module(cfg)
@@ -461,7 +446,6 @@ def test_compute_loss_beta_zero():
     assert "kld" in losses
 
 
-@pytest.mark.pruned
 def test_compute_loss_negative_beta():
     cfg = cVAEConfig(ModelConfig=DummySelector())
     m = make_module(cfg)
@@ -473,7 +457,6 @@ def test_compute_loss_negative_beta():
     assert "kld" in losses
 
 
-@pytest.mark.pruned
 def test_cgcn_weight_zero_branch():
     cfg = cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=0)
     m = make_module(cfg)
@@ -494,7 +477,6 @@ def test_cgcn_weight_active():
     assert "total_loss_CGCN" in losses
 
 
-@pytest.mark.pruned
 def test_cgcn_with_flow():
     cfg = cVAEConfig(
         ModelConfig=DummySelector(),
@@ -510,7 +492,6 @@ def test_cgcn_with_flow():
     assert "total_loss_CGCN" in losses
 
 
-@pytest.mark.pruned
 def test_predict_called_in_cgcn():
     cfg = cVAEConfig(ModelConfig=DummySelector(), combined_CGCN_weight=0.8)
 
@@ -547,7 +528,6 @@ def test_kld_with_condition():
     assert total >= 0
 
 
-@pytest.mark.pruned
 def test_kld_base_distribution_path():
     class NoCondModel(DummyModel):
         def __call__(self, **kwargs):
@@ -571,7 +551,6 @@ def test_kld_base_distribution_path():
     assert total >= 0
 
 
-@pytest.mark.pruned
 def test_kld_cond_shape_mismatch():
     class WeirdModel(DummyModel):
         GENERATOR = False
@@ -596,7 +575,6 @@ def test_kld_cond_shape_mismatch():
         m._compute_loss(1.0, DummyBatch())
 
 
-@pytest.mark.pruned
 def test_kld_with_prior_flow():
     cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
     m = make_module(cfg)
@@ -607,7 +585,6 @@ def test_kld_with_prior_flow():
     assert total >= 0
 
 
-@pytest.mark.pruned
 def test_full_flow_logdet_branch():
     cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=FullFlow())
     m = make_module(cfg)
@@ -644,7 +621,6 @@ def test_kld_condition_expansion():
     assert total >= 0
 
 
-@pytest.mark.pruned
 def test_load_checkpoint_missing():
     cfg = cVAEConfig(ModelConfig=DummySelector())
 
@@ -652,7 +628,6 @@ def test_load_checkpoint_missing():
         cfg._load_from_checkpoint("missing.pt")
 
 
-@pytest.mark.pruned
 def test_config_load_dir_branch_success(monkeypatch):
     def fake_load_from_checkpoint(self, load_path):
         self.ModelConfig = DummySelector()
@@ -782,7 +757,6 @@ def test_load_from_checkpoint_does_not_override_existing_values(monkeypatch, tmp
     assert cfg.combined_CGCN_weight == 0.1
 
 
-@pytest.mark.pruned
 def test_load_from_checkpoint_missing_module_config(monkeypatch, tmp_path):
     path = tmp_path / "checkpoint.pt"
     path.write_bytes(b"placeholder")
@@ -822,7 +796,6 @@ def test_build_load_dir_success_path(monkeypatch):
     assert called["loaded"] is True
 
 
-@pytest.mark.pruned
 def test_build_load_dir_output_shape_mismatch(monkeypatch):
     cfg = cVAEConfig(ModelConfig=DummySelector())
     cfg.load_dir = "fake_checkpoint.pt"
@@ -841,7 +814,6 @@ def test_build_load_dir_output_shape_mismatch(monkeypatch):
         )
 
 
-@pytest.mark.pruned
 def test_build_load_dir_input_shape_success_output_shape_success(monkeypatch):
     cfg = cVAEConfig(ModelConfig=DummySelector())
     cfg.load_dir = "fake_checkpoint.pt"
@@ -872,7 +844,6 @@ class NoCondSelector:
         return NoCondFlowModel()
 
 
-@pytest.mark.pruned
 def test_forward_uses_default_sample_size():
     m = make_module()
 
@@ -882,7 +853,6 @@ def test_forward_uses_default_sample_size():
     assert out.output.shape[0] == 1
 
 
-@pytest.mark.pruned
 def test_predict_uses_default_sample_size():
     m = make_module()
 
@@ -893,7 +863,6 @@ def test_predict_uses_default_sample_size():
     assert out.log_var is None
 
 
-@pytest.mark.pruned
 def test_prior_flow_receives_condition_when_enabled():
     cfg = cVAEConfig(
         ModelConfig=ConditionalSelector(),
@@ -906,7 +875,6 @@ def test_prior_flow_receives_condition_when_enabled():
     assert m.flow_condition_size == 5
 
 
-@pytest.mark.pruned
 def test_prior_flow_without_condition_path():
     cfg = cVAEConfig(
         ModelConfig=NoCondSelector(),
@@ -918,7 +886,6 @@ def test_prior_flow_without_condition_path():
     assert m.prior_flow.condition_size is None
 
 
-@pytest.mark.pruned
 def test_compute_loss_returns_tensor_total():
     m = make_module()
 
@@ -929,7 +896,6 @@ def test_compute_loss_returns_tensor_total():
     assert torch.is_tensor(total)
 
 
-@pytest.mark.pruned
 def test_compute_loss_contains_reconstruction_key():
     m = make_module()
 
@@ -940,7 +906,6 @@ def test_compute_loss_contains_reconstruction_key():
     assert "recon" in losses
 
 
-@pytest.mark.pruned
 def test_compute_loss_with_zero_mask():
     m = make_module()
 
@@ -959,7 +924,6 @@ def test_compute_loss_with_zero_mask():
     assert "total_loss" in losses
 
 
-@pytest.mark.pruned
 def test_compute_loss_with_singleton_mask_dimension():
     m = make_module()
 
@@ -977,7 +941,6 @@ def test_compute_loss_with_singleton_mask_dimension():
     assert total >= 0
 
 
-@pytest.mark.pruned
 def test_compute_loss_with_large_beta():
     m = make_module()
 
@@ -989,7 +952,6 @@ def test_compute_loss_with_large_beta():
     assert "kld" in losses
 
 
-@pytest.mark.pruned
 def test_compute_loss_with_prior_flow_and_zero_beta():
     cfg = cVAEConfig(
         ModelConfig=DummySelector(),
@@ -1006,7 +968,6 @@ def test_compute_loss_with_prior_flow_and_zero_beta():
     assert "kld" in losses
 
 
-@pytest.mark.pruned
 def test_compute_loss_with_full_flow_and_negative_beta():
     cfg = cVAEConfig(
         ModelConfig=DummySelector(),
@@ -1022,7 +983,6 @@ def test_compute_loss_with_full_flow_and_negative_beta():
     assert torch.is_tensor(total)
 
 
-@pytest.mark.pruned
 def test_build_preserves_added_features_dim():
     cfg = cVAEConfig(ModelConfig=DummySelector())
 
@@ -1036,7 +996,6 @@ def test_build_preserves_added_features_dim():
     assert m.model.build_kwargs["added_features_dim"] == 7
 
 
-@pytest.mark.pruned
 def test_model_build_receives_correct_shapes():
     cfg = cVAEConfig(ModelConfig=DummySelector())
 
@@ -1060,7 +1019,6 @@ def test_model_build_receives_correct_shapes():
     )
 
 
-@pytest.mark.pruned
 def test_build_load_dir_calls_load_state_dict_once(monkeypatch):
     cfg = cVAEConfig(ModelConfig=DummySelector())
 
@@ -1091,7 +1049,6 @@ def test_build_load_dir_calls_load_state_dict_once(monkeypatch):
     assert calls["count"] == 1
 
 
-@pytest.mark.pruned
 def test_compute_loss_with_flow_and_cgcn_and_negative_beta():
     cfg = cVAEConfig(
         ModelConfig=DummySelector(),

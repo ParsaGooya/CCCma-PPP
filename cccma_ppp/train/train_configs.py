@@ -9,18 +9,18 @@ import shutil
 import yaml
 import dacite
 
-from cccma_ppp.loss import LosspipelineConfig
+from cccma_ppp.loss.loss import LosspipelineConfig
 
-from cccma_ppp.train import TrainDataloaderConfig
-from cccma_ppp.data_modules import WeightsConfig
+from cccma_ppp.train.dataloader import TrainDataloaderConfig
+from cccma_ppp.data_modules.utils import WeightsConfig
 
-from cccma_ppp.generic import Distributed, RuntimeContext
+from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic.runtime import RuntimeContext
 
 from cccma_ppp.core.selectors import ModuleSelector
 from cccma_ppp.core.trainer import TrainerConfig
 from cccma_ppp.core.optimization import OptimizerConfig
 
-from cccma_ppp.preprocessing import Flattennanremove
 
 
 def set_seed(seed):
@@ -128,11 +128,10 @@ class TrainConfig:
 
         self.experiment_dir = Path(self.experiment_dir)
 
-
     def _check_module_pipeline_compatability(self):
         """
         Check whether selected pipeline config can support the chosen module
-        
+
         Returns
         --------
         None
@@ -145,7 +144,7 @@ class TrainConfig:
                 )
 
         if self.module.type.lower() in ["deterministic", "default"]:
-            if self.train_loader.dataset_config.observation is None: 
+            if self.train_loader.dataset_config.observation is None:
                 raise ValueError(
                     "with determisitic models target observation must be specified."
                 )
@@ -154,21 +153,24 @@ class TrainConfig:
                     "TrainerConfig.beta_finder setup will be ignored with deterministic models ..."
                 )
         else:
-            if (self.train_loader.dataset_config.condition_method is None and
-                self.train_loader.dataset_config.observation is None):
-                raise ValueError("with generative models you must specify condition method if not bias correcting to a target!")
-            
+            if (
+                self.train_loader.dataset_config.condition_method is None
+                and self.train_loader.dataset_config.observation is None
+            ):
+                raise ValueError(
+                    "with generative models you must specify condition method if not bias correcting to a target!"
+                )
+
         if self.module.type.lower() in ["cvae"]:
             if self.trainer.beta_finder is None:
                 raise ValueError(
                     "with cVAE model TrainerConfig.beta_finder must be set up."
                 )
 
-
     def _check_IO_consistency(self):
-        """"
+        """ "
         Check if the provided data configuration
-        has consistent shapes with the selected module and 
+        has consistent shapes with the selected module and
         architecture for IO.
 
         Returns
@@ -180,7 +182,6 @@ class TrainConfig:
         output_metadata = self.train_loader.target_var_metadata
         _check_IO(input_metadata, self.module.NUM_INPUT_DIMS, "input")
         _check_IO(output_metadata, self.module.NUM_OUTPUT_DIMS, "output")
-        
 
     def set_random_seed(self, rank: int):
         """
@@ -451,19 +452,17 @@ def build_trainer(
 
     reconstruction_loss = config.losspipeline.build(
         weights=weights,
-        num_output_dimensions=config.module.NUM_OUTPUT_DIMS
-        or len(output_shape),
+        num_output_dimensions=config.module.NUM_OUTPUT_DIMS or len(output_shape),
     )
 
     module.init_loss_function(reconstruction_loss)
     module = module.to(distributed.device)
-    
+
     log(f"Creating {config.optimization.optimizer_type} optimizer ...")
 
     optimizer = config.optimization.build(module, num_train_batches, config.max_epochs)
 
     log("Creating trainer ...")
-
 
     trainer = config.trainer.build(
         train_data_loader=train_loader,
@@ -476,39 +475,31 @@ def build_trainer(
     return trainer
 
 
+def _check_IO(metadata: dict, model_dims: int, which: str = "input"):
 
-
-
-def _check_IO(metadata: dict,  
-                model_dims: int, 
-                which: str = "input"):
-    
     if which not in ["input", "output"]:
+        raise ValueError("only checks IO in data vs module.")
 
-        raise ValueError(
-            "only checks IO in data vs module."
-        )
-    
     if model_dims == 1:
-
         if len(metadata.get("NN_dims")) != 1:
-  
-            if not any(["flattener" in pipeline for pipeline in metadata.get("preprocessors")]):
-                
+            if not any(
+                ["flattener" in pipeline for pipeline in metadata.get("preprocessors")]
+            ):
                 raise RuntimeError(
-                    f"The selected model supports 1D {which} but the data has {metadata.get('NN_dims')} "\
+                    f"The selected model supports 1D {which} but the data has {metadata.get('NN_dims')} "
                     f"{which} NN dims. add Flattennanremove as a preprocessing step to flatten the data."
                 )
     else:
-
-        if not any(["flattener" in pipeline for pipeline in metadata.get("preprocessors")]):
+        if not any(
+            ["flattener" in pipeline for pipeline in metadata.get("preprocessors")]
+        ):
             raise RuntimeError(
-                f"For {model_dims}D {which} models, do not add Flattennanremove " \
+                f"For {model_dims}D {which} models, do not add Flattennanremove "
                 "as a preprocessing step as it flattens the data."
             )
 
-        if model_dims != len(metadata.get('NN_dims')):
+        if model_dims != len(metadata.get("NN_dims")):
             raise RuntimeError(
-                    f"The selected model supports {model_dims}D {which} but the data "\
-                    f"has {metadata.get('NN_dims')} {which} NN dims."
-                )  
+                f"The selected model supports {model_dims}D {which} but the data "
+                f"has {metadata.get('NN_dims')} {which} NN dims."
+            )

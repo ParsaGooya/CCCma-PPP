@@ -3,7 +3,7 @@ import pytest
 import torch
 import torch.nn as nn
 
-from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC
+from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC, OutputABC
 
 
 class ConcreteModule(moduleABC):
@@ -81,7 +81,6 @@ class ConcreteModuleConfig(moduleConfigABC):
         return "loaded"
 
 
-@pytest.mark.pruned
 def test_get_device_returns_parameter_device():
     module = ConcreteModule()
 
@@ -127,7 +126,6 @@ def test_load_state_dict_loads_checkpoint_strict_true(tmp_path):
         assert torch.allclose(value, source.state_dict()[key])
 
 
-@pytest.mark.pruned
 def test_load_state_dict_accepts_string_path(tmp_path):
     source = ConcreteModule()
     target = ConcreteModule()
@@ -144,7 +142,6 @@ def test_load_state_dict_accepts_string_path(tmp_path):
         assert torch.allclose(value, source.state_dict()[key])
 
 
-@pytest.mark.pruned
 def test_load_state_dict_strict_false_allows_missing_keys(tmp_path):
     module = ConcreteModule()
 
@@ -163,7 +160,6 @@ def test_load_state_dict_strict_false_allows_missing_keys(tmp_path):
     assert torch.allclose(module.linear.bias, torch.zeros_like(module.linear.bias))
 
 
-@pytest.mark.pruned
 def test_load_state_dict_strict_true_raises_on_missing_keys(tmp_path):
     module = ConcreteModule()
 
@@ -181,7 +177,6 @@ def test_load_state_dict_strict_true_raises_on_missing_keys(tmp_path):
         module._load_state_dict(checkpoint_path, strict=True)
 
 
-@pytest.mark.pruned
 def test_load_state_dict_strict_true_raises_on_unexpected_keys(tmp_path):
     module = ConcreteModule()
 
@@ -200,7 +195,6 @@ def test_load_state_dict_strict_true_raises_on_unexpected_keys(tmp_path):
         module._load_state_dict(checkpoint_path, strict=True)
 
 
-@pytest.mark.pruned
 def test_load_state_dict_strict_false_allows_unexpected_keys(tmp_path):
     module = ConcreteModule()
 
@@ -218,7 +212,6 @@ def test_load_state_dict_strict_false_allows_unexpected_keys(tmp_path):
     module._load_state_dict(checkpoint_path, strict=False)
 
 
-@pytest.mark.pruned
 def test_load_state_dict_uses_module_key(tmp_path):
     module = ConcreteModule()
 
@@ -229,7 +222,6 @@ def test_load_state_dict_uses_module_key(tmp_path):
         module._load_state_dict(checkpoint_path)
 
 
-@pytest.mark.pruned
 def test_load_state_dict_preserves_loaded_values(tmp_path):
     module = ConcreteModule()
 
@@ -247,3 +239,93 @@ def test_load_state_dict_preserves_loaded_values(tmp_path):
         module.linear.weight, torch.full_like(module.linear.weight, 2.0)
     )
     assert torch.allclose(module.linear.bias, torch.full_like(module.linear.bias, -1.0))
+
+
+def test_check_registered_raises_when_unregistered():
+    class NotRegistered(moduleConfigABC):
+        _type = None
+
+        def build(self, *args, **kwargs):
+            pass
+
+        def _load_from_checkpoint(self):
+            pass
+
+    with pytest.raises(RuntimeError, match="has not been registered"):
+        NotRegistered.check_registered()
+
+
+def test_config_load_from_checkpoint_sets_flag():
+    cfg = ConcreteModuleConfig()
+
+    result = cfg._load_from_checkpoint()
+
+    assert result == "loaded"
+    assert cfg.loaded_from_checkpoint is True
+
+
+def test_build_with_default_arguments():
+    cfg = ConcreteModuleConfig()
+
+    module = cfg.build(input_shape=np.array([1]))
+
+    assert isinstance(module, ConcreteModule)
+    assert np.array_equal(cfg.input_shape, np.array([1]))
+    assert cfg.output_shape is None
+    assert cfg.added_features_dim is None
+
+
+def test_build_with_added_features():
+    cfg = ConcreteModuleConfig()
+
+    cfg.build(
+        input_shape=np.array([1]),
+        output_shape=np.array([2]),
+        added_features_dim=10,
+    )
+
+    assert cfg.added_features_dim == 10
+
+
+def test_moduleabc_cannot_be_instantiated():
+    with pytest.raises(TypeError):
+        moduleABC()
+
+
+def test_moduleconfigabc_cannot_be_instantiated():
+    with pytest.raises(TypeError):
+        moduleConfigABC()
+
+
+def test_check_registered_success():
+    class Registered(moduleConfigABC):
+        _type = "registered"
+
+        def build(self, *args, **kwargs):
+            pass
+
+        def _load_from_checkpoint(self):
+            pass
+
+    Registered.check_registered()
+
+
+def test_outputabc_creation():
+    tensor = torch.tensor([1.0])
+
+    output = OutputABC(output=tensor)
+
+    assert torch.equal(output.output, tensor)
+
+
+def test_check_registered_inherited_type():
+    class Registered(moduleConfigABC):
+        _type = "registered"
+
+        def build(self, *args, **kwargs):
+            pass
+
+        def _load_from_checkpoint(self):
+            pass
+
+    Registered.check_registered()

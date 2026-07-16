@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import ClassVar
 import dataclasses
 
-from cccma_ppp.loss import Losspipeline
+from cccma_ppp.loss.loss import Losspipeline
 
 
 class moduleABC(nn.Module, abc.ABC):
@@ -163,18 +163,16 @@ class moduleConfigABC(abc.ABC):
     _load_from_checkpoint()
         Load configuration from checkpoint.
     """
-    _type: ClassVar[str | None] = None
 
+    _type: ClassVar[str | None] = None
 
     @classmethod
     def check_registered(cls):
-        '''
+        """
         Class attribute _type will only be set if the class is registered.
-        '''
+        """
         if cls._type is None:
-            raise RuntimeError(
-                f"{cls.__name__} has not been registered."
-            )
+            raise RuntimeError(f"{cls.__name__} has not been registered.")
 
     @abc.abstractmethod
     def build(
@@ -223,4 +221,5 @@ class OutputABC:
     """
     Base container for model outputs.
     """
+
     output: torch.Tensor

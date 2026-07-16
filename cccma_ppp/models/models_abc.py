@@ -89,6 +89,7 @@ class modelConfigABC(abc.ABC):
     """
     Abstract base class for model configuration.
     """
+
     NUM_INPUT_DIMS: ClassVar[int | None]
     NUM_OUTPUT_DIMS: ClassVar[int | None]
     GENERATOR: ClassVar[bool]
@@ -306,7 +307,7 @@ class cVAEPredictRequest:
 
     Parameters
     ----------
-    condition : torch.Tensor 
+    condition : torch.Tensor
         Conditioning input.
     added_features : torch.Tensor or None
         Additional features.
@@ -317,12 +318,14 @@ class cVAEPredictRequest:
     sample_size : int, optional
         Number of samples.
     """
+
     condition: torch.Tensor
     added_features: torch.Tensor | None = None
     prior_flow: flowABC | None = None
     latent_samples: torch.Tensor | None = None
     nstds: int = 1
     sample_size: int = 1
+
 
 class cVAEmodelsABC(modelABC):
     """
@@ -355,7 +358,6 @@ class cVAEmodelsABC(modelABC):
         """
 
         pass
-
 
     @abc.abstractmethod
     def _recognition(self) -> tuple[torch.Tensor, ...]:

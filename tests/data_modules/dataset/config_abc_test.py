@@ -101,7 +101,6 @@ def test_lead_months_list_valid():
     assert cfg.list_months == [1, 2, 3]
 
 
-@pytest.mark.pruned
 def test_build_lead_months_from_list():
     cfg = lead_months_config(list_months=[1, 5, 7])
 
@@ -110,7 +109,6 @@ def test_build_lead_months_from_list():
     assert result == [1, 5, 7]
 
 
-@pytest.mark.pruned
 def test_build_lead_months_from_range():
     cfg = lead_months_config(start=1, end=4)
 
@@ -119,7 +117,6 @@ def test_build_lead_months_from_range():
     assert np.array_equal(result, np.array([1, 2, 3, 4]))
 
 
-@pytest.mark.pruned
 def test_build_lead_months_single():
     cfg = lead_months_config(start=3, end=3)
 
@@ -133,21 +130,18 @@ def test_requires_model_or_condition():
         DummyDatasetConfig()
 
 
-@pytest.mark.pruned
 def test_model_only_valid():
     cfg = DummyDatasetConfig(model=DummyModel())
 
     assert cfg.model is not None
 
 
-@pytest.mark.pruned
 def test_condition_only_valid():
     cfg = DummyDatasetConfig(condition=DummyCondition())
 
     assert cfg.condition is not None
 
 
-@pytest.mark.pruned
 def test_model_and_condition_valid():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -157,7 +151,6 @@ def test_model_and_condition_valid():
     assert cfg is not None
 
 
-@pytest.mark.pruned
 def test_valid_condition_method_static():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -167,7 +160,6 @@ def test_valid_condition_method_static():
     assert cfg.condition_method == "static"
 
 
-@pytest.mark.pruned
 def test_valid_condition_method_same_member():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -177,7 +169,6 @@ def test_valid_condition_method_same_member():
     assert cfg.condition_method == "same_member"
 
 
-@pytest.mark.pruned
 def test_valid_condition_method_cross_ensemble():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -187,7 +178,6 @@ def test_valid_condition_method_cross_ensemble():
     assert cfg.condition_method == "cross_ensemble"
 
 
-@pytest.mark.pruned
 def test_valid_condition_method_ensemble_mean():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -197,7 +187,6 @@ def test_valid_condition_method_ensemble_mean():
     assert cfg.condition_method == "ensemble_mean"
 
 
-@pytest.mark.pruned
 def test_invalid_condition_method():
     with pytest.raises(ValueError):
         DummyDatasetConfig(
@@ -206,7 +195,6 @@ def test_invalid_condition_method():
         )
 
 
-@pytest.mark.pruned
 def test_none_condition_method_valid():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -216,7 +204,6 @@ def test_none_condition_method_valid():
     assert cfg.condition_method is None
 
 
-@pytest.mark.pruned
 def test_valid_time_features():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -226,7 +213,6 @@ def test_valid_time_features():
     assert cfg.time_features == ["year", "lead_time"]
 
 
-@pytest.mark.pruned
 def test_valid_all_time_features():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -241,7 +227,6 @@ def test_valid_all_time_features():
     assert len(cfg.time_features) == 4
 
 
-@pytest.mark.pruned
 def test_invalid_time_feature():
     with pytest.raises(ValueError):
         DummyDatasetConfig(
@@ -250,7 +235,6 @@ def test_invalid_time_feature():
         )
 
 
-@pytest.mark.pruned
 def test_mixed_valid_invalid_time_features():
     with pytest.raises(ValueError):
         DummyDatasetConfig(
@@ -259,7 +243,6 @@ def test_mixed_valid_invalid_time_features():
         )
 
 
-@pytest.mark.pruned
 def test_none_time_features():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -269,7 +252,6 @@ def test_none_time_features():
     assert cfg.time_features is None
 
 
-@pytest.mark.pruned
 def test_resolve_lead_months_none():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -279,7 +261,6 @@ def test_resolve_lead_months_none():
     assert np.array_equal(cfg.lead_months, np.arange(1, cfg.num_input_lead_months + 1))
 
 
-@pytest.mark.pruned
 def test_resolve_lead_months_object():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -289,7 +270,6 @@ def test_resolve_lead_months_object():
     assert np.array_equal(cfg.lead_months, np.array([1, 2, 3]))
 
 
-@pytest.mark.pruned
 def test_using_model_as_condition_false_no_condition():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -300,7 +280,6 @@ def test_using_model_as_condition_false_no_condition():
     assert cfg._using_model_data_as_condition is False
 
 
-@pytest.mark.pruned
 def test_using_model_as_condition_true_ensemble_mean():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -311,7 +290,6 @@ def test_using_model_as_condition_true_ensemble_mean():
     assert cfg._using_model_data_as_condition is True
 
 
-@pytest.mark.pruned
 def test_using_model_as_condition_true_cross_ensemble():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -322,7 +300,6 @@ def test_using_model_as_condition_true_cross_ensemble():
     assert cfg._using_model_data_as_condition is True
 
 
-@pytest.mark.pruned
 def test_using_model_as_condition_true_same_member():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -333,7 +310,6 @@ def test_using_model_as_condition_true_same_member():
     assert cfg._using_model_data_as_condition is True
 
 
-@pytest.mark.pruned
 def test_using_model_as_condition_same_paths():
     model = DummyModel(
         paths=["a"],
@@ -355,14 +331,12 @@ def test_using_model_as_condition_same_paths():
     assert cfg._using_model_data_as_condition is True
 
 
-@pytest.mark.pruned
 def test_effective_condition_property_none():
     cfg = DummyDatasetConfig(model=DummyModel())
 
     assert cfg.effective_condition is None
 
 
-@pytest.mark.pruned
 def test_resolve_condition_with_condition():
     condition = DummyCondition()
 
@@ -376,7 +350,6 @@ def test_resolve_condition_with_condition():
     assert cfg.effective_condition == condition
 
 
-@pytest.mark.pruned
 def test_resolve_condition_none():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -389,7 +362,6 @@ def test_resolve_condition_none():
     assert cfg.effective_condition is None
 
 
-@pytest.mark.pruned
 def test_ds_operator_property():
     cfg = DummyDatasetConfig(model=DummyModel())
 
@@ -404,7 +376,6 @@ def test_invalid_lead_months_exceeds_available():
         )
 
 
-@pytest.mark.pruned
 def test_time_features_empty_list():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -414,7 +385,6 @@ def test_time_features_empty_list():
     assert cfg.time_features == []
 
 
-@pytest.mark.pruned
 def test_condition_method_none_with_condition():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -425,7 +395,6 @@ def test_condition_method_none_with_condition():
     assert cfg.condition is not None
 
 
-@pytest.mark.pruned
 def test_model_vs_condition_same_year_range():
     model = DummyModel()
     condition = DummyCondition()
@@ -441,7 +410,6 @@ def test_model_vs_condition_same_year_range():
     assert cfg.condition is condition
 
 
-@pytest.mark.pruned
 def test_model_vs_condition_invalid_year_range():
     model = DummyModel()
     condition = DummyCondition()
@@ -457,7 +425,6 @@ def test_model_vs_condition_invalid_year_range():
     assert cfg.condition is condition
 
 
-@pytest.mark.pruned
 def test_condition_method_ensemble_mean_sets_flag():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -467,7 +434,6 @@ def test_condition_method_ensemble_mean_sets_flag():
     assert cfg.effective_condition.ensemble_mean is True
 
 
-@pytest.mark.pruned
 def test_condition_method_same_member_sets_flag():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -477,14 +443,12 @@ def test_condition_method_same_member_sets_flag():
     assert cfg.effective_condition.ensemble_mean is False
 
 
-@pytest.mark.pruned
 def test_num_input_lead_months_property():
     cfg = DummyDatasetConfig(model=DummyModel())
 
     assert cfg.num_input_lead_months == 12
 
 
-@pytest.mark.pruned
 def test_default_lead_months_matches_num_input():
     cfg = DummyDatasetConfig(model=DummyModel())
 
@@ -494,7 +458,6 @@ def test_default_lead_months_matches_num_input():
     )
 
 
-@pytest.mark.pruned
 def test_condition_method_cross_ensemble_with_condition():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -505,7 +468,6 @@ def test_condition_method_cross_ensemble_with_condition():
     assert cfg.condition_method == "cross_ensemble"
 
 
-@pytest.mark.pruned
 def test_effective_condition_returns_condition():
     condition = DummyCondition()
 
@@ -517,7 +479,6 @@ def test_effective_condition_returns_condition():
     assert cfg.effective_condition is condition
 
 
-@pytest.mark.pruned
 def test_effective_condition_model_generated():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -529,7 +490,6 @@ def test_effective_condition_model_generated():
     assert cfg.effective_condition.names == cfg.model.names
 
 
-@pytest.mark.pruned
 def test_lead_months_numpy_array():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -537,7 +497,6 @@ def test_lead_months_numpy_array():
     )
 
 
-@pytest.mark.pruned
 def test_lead_months_config_returns_explicit_list():
     cfg = lead_months_config(list_months=[1, 3, 5])
 
@@ -546,7 +505,6 @@ def test_lead_months_config_returns_explicit_list():
     assert result == [1, 3, 5]
 
 
-@pytest.mark.pruned
 def test_using_model_data_as_condition_false_when_model_none():
     cfg = DummyDatasetConfig(
         model=None,
@@ -556,7 +514,6 @@ def test_using_model_data_as_condition_false_when_model_none():
     assert cfg._using_model_data_as_condition is False
 
 
-@pytest.mark.pruned
 def test_effective_condition_none_branch():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -567,7 +524,6 @@ def test_effective_condition_none_branch():
     assert cfg.effective_condition is None
 
 
-@pytest.mark.pruned
 def test_model_as_condition_returns_modeldataconfig():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -579,7 +535,6 @@ def test_model_as_condition_returns_modeldataconfig():
     assert isinstance(result, DummyCondition)
 
 
-@pytest.mark.pruned
 def test_model_as_condition_ensemble_mean_false():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -591,7 +546,6 @@ def test_model_as_condition_ensemble_mean_false():
     assert result.ensemble_mean is False
 
 
-@pytest.mark.pruned
 def test_model_as_condition_ensemble_mean_true():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -603,7 +557,6 @@ def test_model_as_condition_ensemble_mean_true():
     assert result.ensemble_mean is True
 
 
-@pytest.mark.pruned
 def test_model_vs_condition_static_skips_year_validation():
     model = DummyModel()
     condition = DummyCondition()
@@ -620,7 +573,6 @@ def test_model_vs_condition_static_skips_year_validation():
     assert cfg.condition_method == "static"
 
 
-@pytest.mark.pruned
 def test_check_condition_method_none_valid():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -630,7 +582,6 @@ def test_check_condition_method_none_valid():
     assert cfg.condition_method is None
 
 
-@pytest.mark.pruned
 def test_check_time_features_none_valid():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -640,7 +591,6 @@ def test_check_time_features_none_valid():
     assert cfg.time_features is None
 
 
-@pytest.mark.pruned
 def test_check_time_features_all_valid():
     features = [
         "year",
@@ -657,7 +607,6 @@ def test_check_time_features_all_valid():
     assert cfg.time_features == features
 
 
-@pytest.mark.pruned
 def test_resolve_condition_with_explicit_condition():
     condition = DummyCondition()
 
@@ -670,7 +619,6 @@ def test_resolve_condition_with_explicit_condition():
     assert cfg.effective_condition is condition
 
 
-@pytest.mark.pruned
 def test_required_input_source_condition_only():
     cfg = DummyDatasetConfig(
         model=None,
@@ -680,7 +628,6 @@ def test_required_input_source_condition_only():
     assert cfg.condition is not None
 
 
-@pytest.mark.pruned
 def test_required_input_source_model_only():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -690,7 +637,6 @@ def test_required_input_source_model_only():
     assert cfg.model is not None
 
 
-@pytest.mark.pruned
 def test_lead_months_config_range_build():
     cfg = lead_months_config(start=2, end=5)
 
@@ -699,7 +645,6 @@ def test_lead_months_config_range_build():
     assert np.array_equal(result, np.array([2, 3, 4, 5]))
 
 
-@pytest.mark.pruned
 def test_lead_months_config_list_priority():
     cfg = lead_months_config(
         list_months=[1, 4, 7],
@@ -712,7 +657,6 @@ def test_lead_months_config_list_priority():
     assert result == [1, 4, 7]
 
 
-@pytest.mark.pruned
 def test_lead_months_config_missing_everything():
     with pytest.raises(ValueError):
         lead_months_config()
@@ -727,7 +671,6 @@ def test_invalid_condition_method_raises():
         cfg._check_condition_method()
 
 
-@pytest.mark.pruned
 def test_valid_condition_methods():
     for method in [
         "ensemble_mean",
@@ -764,7 +707,6 @@ def test_valid_time_features_all():
     cfg._check_time_features()
 
 
-@pytest.mark.pruned
 def test_time_features_none_valid():
     cfg = DummyDatasetConfig.__new__(DummyDatasetConfig)
 
@@ -773,7 +715,6 @@ def test_time_features_none_valid():
     cfg._check_time_features()
 
 
-@pytest.mark.pruned
 def test_required_input_source_missing():
     cfg = DummyDatasetConfig.__new__(DummyDatasetConfig)
 
@@ -784,7 +725,6 @@ def test_required_input_source_missing():
         cfg._check_required_input_source()
 
 
-@pytest.mark.pruned
 def test_using_model_data_as_condition_same_paths():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -798,7 +738,6 @@ def test_using_model_data_as_condition_same_paths():
     assert cfg._using_model_data_as_condition is True
 
 
-@pytest.mark.pruned
 def test_using_model_data_as_condition_false():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -810,7 +749,6 @@ def test_using_model_data_as_condition_false():
     assert cfg._using_model_data_as_condition is False
 
 
-@pytest.mark.pruned
 def test_using_model_data_as_condition_condition_none_same_member():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -821,7 +759,6 @@ def test_using_model_data_as_condition_condition_none_same_member():
     assert cfg._using_model_data_as_condition is True
 
 
-@pytest.mark.pruned
 def test_using_model_data_as_condition_condition_none_static():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -832,7 +769,6 @@ def test_using_model_data_as_condition_condition_none_static():
     assert cfg._using_model_data_as_condition is False
 
 
-@pytest.mark.pruned
 def test_resolve_condition_real_condition():
     cond = DummyCondition()
 
@@ -844,7 +780,6 @@ def test_resolve_condition_real_condition():
     assert cfg.effective_condition is cond
 
 
-@pytest.mark.pruned
 def test_resolve_condition_model_as_condition():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -855,7 +790,6 @@ def test_resolve_condition_model_as_condition():
     assert cfg.effective_condition is not None
 
 
-@pytest.mark.pruned
 def test_lead_months_exceed_max_raises():
     with pytest.raises(ValueError):
         DummyDatasetConfig(
@@ -882,7 +816,6 @@ def test_model_vs_condition_year_subset_error():
         )
 
 
-@pytest.mark.pruned
 def test_model_vs_condition_lead_time_error():
     model = DummyModel()
     condition = DummyCondition()
@@ -900,7 +833,6 @@ def test_model_vs_condition_lead_time_error():
         )
 
 
-@pytest.mark.pruned
 def test_model_vs_condition_lat_mismatch():
     model = DummyModel()
     condition = DummyCondition()
@@ -931,7 +863,6 @@ def test_model_vs_condition_lat_mismatch():
         cfg._check_model_vs_condition()
 
 
-@pytest.mark.pruned
 def test_model_vs_condition_lon_mismatch():
     model = DummyModel()
     condition = DummyCondition()
@@ -961,7 +892,6 @@ def test_model_vs_condition_lon_mismatch():
         )
 
 
-@pytest.mark.pruned
 def test_effective_condition_property_returns_internal():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -971,7 +901,6 @@ def test_effective_condition_property_returns_internal():
     assert cfg.effective_condition == cfg._effective_condition
 
 
-@pytest.mark.pruned
 def test_model_vs_condition_skips_when_using_model_condition():
     model = DummyModel()
     condition = DummyCondition()
@@ -989,7 +918,6 @@ def test_model_vs_condition_skips_when_using_model_condition():
     cfg._check_model_vs_condition()
 
 
-@pytest.mark.pruned
 def test_resolve_condition_sets_none():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -1000,7 +928,6 @@ def test_resolve_condition_sets_none():
     assert cfg.effective_condition is None
 
 
-@pytest.mark.pruned
 def test_using_model_data_as_condition_false_static():
     cfg = DummyDatasetConfig(
         model=DummyModel(),
@@ -1011,7 +938,6 @@ def test_using_model_data_as_condition_false_static():
     assert cfg._using_model_data_as_condition is False
 
 
-@pytest.mark.pruned
 def test_using_model_data_as_condition_true_cross_ensemble():
     cfg = DummyDatasetConfig(
         model=DummyModel(),

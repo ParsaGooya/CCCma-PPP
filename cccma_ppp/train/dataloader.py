@@ -6,14 +6,13 @@ from pathlib import Path
 
 
 from cccma_ppp.train.dataset import TrainDatasetConfig
-from cccma_ppp.data_modules import _create_train_mask, WeightsConfig
+from cccma_ppp.data_modules.utils import _create_train_mask, WeightsConfig
 from cccma_ppp.data_modules.dataloader import (
     Dataloader,
     DataloaderConfigABC,
     BatchDataABC,
 )
-from cccma_ppp.generic import Distributed
-
+from cccma_ppp.generic.distributed import Distributed
 
 
 @dataclasses.dataclass
@@ -52,13 +51,12 @@ class BatchData(BatchDataABC):
         """
 
         if self.return_spatial_mask:
-            self.input_mask = (~torch.isnan(self.input)).to(torch.int)
-            self.target_mask = (~torch.isnan(self.target)).to(torch.int)
+            self.input_mask = (~torch.isnan(self.input)).float()
+            self.target_mask = (~torch.isnan(self.target)).float()
+
             if self.reduce_spatial_mask:
                 self.input_mask = self.input_mask.mean(0)
-                self.input_mask = (self.input_mask == 1).float()
                 self.target_mask = self.target_mask.mean(0)
-                self.target_mask = (self.target_mask == 1).float()
 
         self.input = torch.nan_to_num(self.input, nan=0.0)
         self.target = torch.nan_to_num(self.target, nan=0.0)
@@ -202,14 +200,11 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
         if distributed.is_root():
             if load_path is None:
-                self.dataset_config._fit_preprocessors(
-                    self.train_years, save=True
-                )
+                self.dataset_config._fit_preprocessors(self.train_years, save=True)
 
         distributed.barrier()
 
-        if (distributed.distributed or 
-            load_path is not None):
+        if distributed.distributed or load_path is not None:
             self.dataset_config._load_fitted_preprocessors(load_dir=load_path)
 
         self._setup = True
@@ -305,7 +300,9 @@ class TrainDataloaderConfig(DataloaderConfigABC):
                 lead_times=self.dataset_config.lead_months,
             )
             validation_dataset = self.dataset_config.build_dataset(
-                years=self.validation_years, mask=validation_mask, return_metadata=return_metadata
+                years=self.validation_years,
+                mask=validation_mask,
+                return_metadata=return_metadata,
             )
             return Dataloader(
                 dataset=validation_dataset,
@@ -321,12 +318,11 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         else:
             msg = f"Validation dataoader could not be built for num_validation_years = {self.num_validation_years} "
 
-            if  supress_error:
+            if supress_error:
                 warnings.warn(msg)
-                return None  
+                return None
             else:
                 raise RuntimeError(msg)
-  
 
     def get_weights(self, config: WeightsConfig | None = None):
         """

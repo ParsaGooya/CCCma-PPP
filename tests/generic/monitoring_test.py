@@ -5,9 +5,9 @@ import pandas as pd
 import pytest
 import pynvml
 
-import cccma_ppp.monitoring as monitoring
+import cccma_ppp.generic.monitoring as monitoring
 
-from cccma_ppp.monitoring import (
+from cccma_ppp.generic.monitoring import (
     _PROCESS,
     _data,
     _get_stack,
@@ -47,7 +47,6 @@ def reset_monitoring_state():
     monitoring._running = False
 
 
-@pytest.mark.pruned
 def test_get_stack_creates_stack():
 
     if hasattr(_thread_state, "stack"):
@@ -59,7 +58,6 @@ def test_get_stack_creates_stack():
     assert hasattr(_thread_state, "stack")
 
 
-@pytest.mark.pruned
 def test_get_stack_reuses_stack():
 
     _thread_state.stack = ["abc"]
@@ -69,7 +67,6 @@ def test_get_stack_reuses_stack():
     assert stack is _thread_state.stack
 
 
-@pytest.mark.pruned
 def test_current_stage_root():
 
     _thread_state.stack = []
@@ -77,7 +74,6 @@ def test_current_stage_root():
     assert current_stage() == "root"
 
 
-@pytest.mark.pruned
 def test_current_stage_non_root():
 
     _thread_state.stack = ["main.train"]
@@ -135,7 +131,6 @@ def test_gpu_available(monkeypatch):
     assert vram == 50.0
 
 
-@pytest.mark.pruned
 def test_gpu_available_zero_total_memory(monkeypatch):
 
     monkeypatch.setattr(
@@ -175,7 +170,6 @@ def test_gpu_available_zero_total_memory(monkeypatch):
     assert vram == 0.0
 
 
-@pytest.mark.pruned
 def test_span_records_events():
 
     with span("load"):
@@ -187,7 +181,6 @@ def test_span_records_events():
     assert _data[0]["stage"] == "main.load"
 
 
-@pytest.mark.pruned
 def test_nested_spans():
 
     with span("outer"):
@@ -202,7 +195,6 @@ def test_nested_spans():
     assert any("inner" in s for s in stages)
 
 
-@pytest.mark.pruned
 def test_span_records_end_on_exception():
 
     with pytest.raises(RuntimeError):
@@ -213,7 +205,6 @@ def test_span_records_end_on_exception():
     assert _data[-1]["event"] == "end"
 
 
-@pytest.mark.pruned
 def test_observe_decorator():
 
     @observe
@@ -227,7 +218,6 @@ def test_observe_decorator():
     assert _data[-1]["event"] == "end"
 
 
-@pytest.mark.pruned
 def test_checkpoint_root():
 
     checkpoint("save")
@@ -236,7 +226,6 @@ def test_checkpoint_root():
     assert _data[-1]["stage"] == "main.save"
 
 
-@pytest.mark.pruned
 def test_checkpoint_nested():
 
     with span("training"):
@@ -293,7 +282,6 @@ def test_sampler_single_iteration(monkeypatch):
     assert sample["vram"] == 20.0
 
 
-@pytest.mark.pruned
 def test_start_and_stop_monitoring():
 
     start_monitoring(interval=0.01)
@@ -305,7 +293,6 @@ def test_start_and_stop_monitoring():
     assert monitoring._running is False
 
 
-@pytest.mark.pruned
 def test_get_dataframe():
 
     checkpoint("x")
@@ -323,7 +310,6 @@ def test_kalman_filter_empty():
     assert len(result) == 0
 
 
-@pytest.mark.pruned
 def test_kalman_filter_constant():
 
     result = _kalman_filter([5, 5, 5, 5])
@@ -341,7 +327,6 @@ def test_smooth_none():
     assert result is series
 
 
-@pytest.mark.pruned
 def test_smooth_ema():
 
     series = pd.Series([1, 2, 3])
@@ -355,7 +340,6 @@ def test_smooth_ema():
     assert len(result) == 3
 
 
-@pytest.mark.pruned
 def test_smooth_kalman():
 
     series = pd.Series([1, 2, 3, 4])
@@ -368,7 +352,6 @@ def test_smooth_kalman():
     assert len(result) == 4
 
 
-@pytest.mark.pruned
 def test_smooth_invalid():
 
     series = pd.Series([1, 2, 3])
@@ -380,7 +363,6 @@ def test_smooth_invalid():
         )
 
 
-@pytest.mark.pruned
 def test_plot_metric_no_smoothing():
 
     import matplotlib.pyplot as plt
@@ -400,7 +382,6 @@ def test_plot_metric_no_smoothing():
     plt.close(fig)
 
 
-@pytest.mark.pruned
 def test_plot_metric_with_smoothing():
 
     import matplotlib.pyplot as plt
@@ -540,7 +521,6 @@ def test_plot_kalman_smoothing(tmp_path):
     assert output.exists()
 
 
-@pytest.mark.pruned
 def test_current_stage_after_nested_span_cleanup():
 
     with span("outer"):
@@ -549,7 +529,6 @@ def test_current_stage_after_nested_span_cleanup():
     assert current_stage() == "root"
 
 
-@pytest.mark.pruned
 def test_kalman_filter_single_value():
 
     result = _kalman_filter([42])
@@ -558,7 +537,6 @@ def test_kalman_filter_single_value():
     assert result[0] == 42
 
 
-@pytest.mark.pruned
 def test_kalman_filter_custom_variances():
 
     result = _kalman_filter(
@@ -570,7 +548,6 @@ def test_kalman_filter_custom_variances():
     assert len(result) == 3
 
 
-@pytest.mark.pruned
 def test_plot_metric_with_kalman():
 
     import matplotlib.pyplot as plt
@@ -622,7 +599,6 @@ def test_plot_show_branch(monkeypatch):
     assert called["show"]
 
 
-@pytest.mark.pruned
 def test_plot_stage_without_matching_end(tmp_path):
 
     df = pd.DataFrame(
@@ -655,7 +631,6 @@ def test_plot_stage_without_matching_end(tmp_path):
     assert output.exists()
 
 
-@pytest.mark.pruned
 def test_plot_without_checkpoints(tmp_path):
 
     df = pd.DataFrame(
@@ -717,7 +692,6 @@ def test_sampler_with_active_stage(monkeypatch):
     assert _data[-1]["stage"] == "main.training"
 
 
-@pytest.mark.pruned
 def test_multiple_checkpoints():
 
     checkpoint("a")

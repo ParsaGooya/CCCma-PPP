@@ -3,8 +3,12 @@ from typing import ClassVar, final
 import dataclasses
 import numpy as np
 
-from cccma_ppp.data_modules.data import ModelDataConfig, ConditionDataConfig
+from cccma_ppp.data_modules.data.data_configs import (
+    ModelDataConfig,
+    ConditionDataConfig,
+)
 from cccma_ppp.configs import supported_NN_dimensions_sorted
+
 
 @dataclasses.dataclass
 class lead_months_config:
@@ -142,7 +146,7 @@ class DatasetConfigABC(abc.ABC):
         ValueError
             If condition data does not provide sufficient lead-time coverage for non static condition methods.
         ValueError
-            If condition data and model data do not have similar ensembles for same_member condition methods.            
+            If condition data and model data do not have similar ensembles for same_member condition methods.
         ValueError
             If spatial coordinates (lat/lon) between model and condition differ
             when observation-based correction is applied.
@@ -165,40 +169,43 @@ class DatasetConfigABC(abc.ABC):
 
                 if not (
                     set(self.model.info.coords["lead_time"].values).issubset(
-                    set(self.condition.info.coords["lead_time"].values) )
+                        set(self.condition.info.coords["lead_time"].values)
+                    )
                 ):
                     raise ValueError(
                         "Condition data should be available"
                         " on the same lead_times as model data."
                     )
-            
+
             if self.condition_method == "same_member":
-
-                if any([self.model.info.coords.get("ensembles") is None, 
-                        self.effective_condition.info.coords.get("ensembles") is None]):
-
+                if any(
+                    [
+                        self.model.info.coords.get("ensembles") is None,
+                        self.condition.info.coords.get("ensembles") is None,
+                    ]
+                ):
                     raise ValueError(
-                                "Condition data and model data must have the same ensembles "
-                                "dims and coords."
-                            )                   
+                        "Condition data and model data must have the same ensembles "
+                        "dims and coords."
+                    )
 
                 if not self.model.info.coords["ensembles"].equals(
-                    self.condition.info.coords["ensembles"]):
-                
+                    self.condition.info.coords["ensembles"]
+                ):
                     raise ValueError(
                         "Condition data should have the same ensemble members"
                         "as model data for same_member conditioning."
                     )
-                            
+
             if getattr(self, "observation", None) is not None:
-
-                for dim in [dim for dim in self.model.info.coords 
-                    if dim in supported_NN_dimensions_sorted]:
-                
-
+                for dim in [
+                    dim
+                    for dim in self.model.info.coords
+                    if dim in supported_NN_dimensions_sorted
+                ]:
                     if self.condition.info.coords.get(dim, None) is None:
                         raise ValueError(
-                            f"model and condition data must have the same NN cooridnates."
+                            "model and condition data must have the same NN cooridnates."
                             / "when bias correcting to observations"
                         )
 
@@ -209,7 +216,6 @@ class DatasetConfigABC(abc.ABC):
                             f"model and condition data do not have the same {dim} cooridnates."
                             / "when bias correcting to observations"
                         )
-
 
     @final
     def _check_condition_method(self):
@@ -265,8 +271,7 @@ class DatasetConfigABC(abc.ABC):
         -------
         None
         """
-        if (self.lead_months is not None and
-            isinstance(self.lead_months, lead_months_config)):
+        if self.lead_months is not None and hasattr(self.lead_months, "build_lead_months"):
             self.lead_months = self.lead_months.build_lead_months()
 
     @abc.abstractmethod

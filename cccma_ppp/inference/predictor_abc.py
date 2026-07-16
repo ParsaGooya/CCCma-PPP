@@ -8,10 +8,8 @@ from pathlib import Path
 from typing import Callable
 
 from cccma_ppp.data_modules.dataloader import BatchDataABC
-from cccma_ppp.core import OutputABC
-from cccma_ppp.generic import Distributed, RunningCovariance
-from cccma_ppp.core.core_abc import moduleABC
-
+from cccma_ppp.core.core_abc import OutputABC
+from cccma_ppp.generic.aggregator import RunningCovariance
 
 
 class PredictorABC(abc.ABC):
@@ -21,7 +19,7 @@ class PredictorABC(abc.ABC):
     @property
     def temp_save_dir(self):
         return Path(self.output_dir) / "_temp"
-    
+
     @property
     @abc.abstractmethod
     def extract_training_vars(self) -> bool:
@@ -31,23 +29,17 @@ class PredictorABC(abc.ABC):
     def stats(self) -> dict[str, RunningCovariance]:
         if self.extract_training_vars:
             return self._stats
-    
+
     @abc.abstractmethod
-    def _infer_on_batch(self, 
-                        batch: BatchDataABC, 
-                        _getting_train_stats: bool = False):
+    def _infer_on_batch(self, batch: BatchDataABC, _getting_train_stats: bool = False):
         pass
 
     @abc.abstractmethod
-    def _batch_to_netcdf(self, 
-                         output: OutputABC,
-                         metadata: list[dict]):
+    def _batch_to_netcdf(self, output: OutputABC, metadata: list[dict]):
         pass
 
     @abc.abstractmethod
-    def _update_train_stats(self, 
-                            output: OutputABC, 
-                            batch: BatchDataABC):
+    def _update_train_stats(self, output: OutputABC, batch: BatchDataABC):
         pass
 
     @final
@@ -65,22 +57,22 @@ class PredictorABC(abc.ABC):
         if isinstance(self.module, torch.nn.parallel.DistributedDataParallel):
             return self.module.module
         return self.module
-    
+
     @final
-    def add_decoder_noise(self, 
-                          output: OutputABC, 
-                          num_output_samples: int,
-                          sample_size: tuple,
-                          reshape_size: tuple) -> OutputABC:
-        
+    def add_decoder_noise(
+        self,
+        output: OutputABC,
+        num_output_samples: int,
+        sample_size: tuple,
+        reshape_size: tuple,
+    ) -> OutputABC:
+
         if self.output_sampler is None:
-            self.output_sampler = self.build_output_sampler()   
+            self.output_sampler = self.build_output_sampler()
 
-        prediction = output.output 
+        prediction = output.output
 
-        noise =  self.output_sampler(
-            (num_output_samples, *sample_size)
-        )
+        noise = self.output_sampler((num_output_samples, *sample_size))
         noise = noise.reshape(num_output_samples, *sample_size, *reshape_size).to(
             device=prediction.device,
             dtype=prediction.dtype,
@@ -89,7 +81,7 @@ class PredictorABC(abc.ABC):
         prediction = prediction.unsqueeze(0) + noise
         output.output = prediction
         return output
-    
+
     @final
     def build_output_sampler(self) -> Callable[..., torch.Tensor]:
         stats_path = self.output_dir / "training_variable_stats.pt"
@@ -106,7 +98,7 @@ class PredictorABC(abc.ABC):
             return self._sample(
                 torch.zeros_like(stats["residual_mean"]),
                 stats["residual_cov"],
-                sample_size
+                sample_size,
             )
 
         return _sampler
@@ -125,7 +117,7 @@ class PredictorABC(abc.ABC):
             raise ValueError(f"std must be positive, got {std}.")
 
         # Widen/narrow spread. Scaling std by k means covariance scales by k**2.
-        cov = cov * (std ** 2)
+        cov = cov * (std**2)
 
         # Numerical stability for nearly-singular covariance matrices.
         jitter = 1e-6
@@ -162,10 +154,6 @@ class PredictorABC(abc.ABC):
         return samples.to(self.device)
 
 
-
-
-
-
 def save_batch_to_netcdf(
     prediction: torch.Tensor,
     metadata: list[dict],
@@ -174,7 +162,7 @@ def save_batch_to_netcdf(
     save_dir: str | Path,
     extra_dims_sorted: list[str] | None = None,
     assign_coords: dict = None,
-    attrs: dict = None
+    attrs: dict = None,
 ):
 
     if extra_dims_sorted is None:
@@ -183,16 +171,16 @@ def save_batch_to_netcdf(
     coords = {}
     for i, dim in enumerate(extra_dims_sorted):
         coords[dim] = np.arange(1, prediction.shape[i] + 1)
-    
+
     batch_size = prediction.shape[len(extra_dims_sorted)]
     channel_size = prediction.shape[len(extra_dims_sorted) + 1]
-    spatial_shape = prediction.shape[len(extra_dims_sorted) + 2:]
+    spatial_shape = prediction.shape[len(extra_dims_sorted) + 2 :]
 
     expected_dims = num_output_dims + 2 + len(extra_dims_sorted)
 
     if prediction.ndim != expected_dims:
         raise ValueError(
-            f"Expected prediction with {expected_dims} dimensions, got {prediction.shape}." 
+            f"Expected prediction with {expected_dims} dimensions, got {prediction.shape}."
         )
 
     if len(metadata) != batch_size:
@@ -206,7 +194,6 @@ def save_batch_to_netcdf(
         + [f"output_dim_{i}" for i in range(num_output_dims)]
     )
 
-
     index_keys = list(metadata[0].keys())
 
     batch_index = pd.MultiIndex.from_tuples(
@@ -215,7 +202,7 @@ def save_batch_to_netcdf(
     )
 
     coords["batch"] = batch_index
-    coords["channels"] =  np.arange(1, channel_size + 1)
+    coords["channels"] = np.arange(1, channel_size + 1)
 
     output_keys = list()
 
@@ -233,14 +220,13 @@ def save_batch_to_netcdf(
     if assign_coords is not None:
         da = da.assign_coords(assign_coords)
 
-    save_path = (Path(save_dir) / save_name)
-    
+    save_path = Path(save_dir) / save_name
+
     if attrs is not None:
         da.attrs = attrs
 
-    da = da.unstack("batch").transpose(*extra_dims_sorted, 
-                                       *index_keys, 
-                                       ..., 
-                                       *output_keys)
+    da = da.unstack("batch").transpose(
+        *extra_dims_sorted, *index_keys, ..., *output_keys
+    )
 
     da.to_netcdf(save_path)

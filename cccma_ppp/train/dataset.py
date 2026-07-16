@@ -6,26 +6,30 @@ import dataclasses
 import warnings
 from pathlib import Path
 
-from cccma_ppp.data_modules.dataset import (
+from cccma_ppp.data_modules.dataset.config_abc import (
     DatasetConfigABC,
-    DatasetOperator,
     lead_months_config,
+)
+
+from cccma_ppp.data_modules.dataset.operator import (
+    DatasetOperator,
     _get_time_features,
 )
-from cccma_ppp.data_modules.data import (
+from cccma_ppp.data_modules.data.data_configs import (
     ModelDataConfig,
     ObsDataConfig,
     ConditionDataConfig,
 )
 
-from cccma_ppp.data_modules import (
+from cccma_ppp.data_modules.utils import (
     _unwrap_data_variables,
     _load_xarray_data,
     _create_train_mask,
-    suppress_stderr
+    suppress_stderr,
 )
 
 from cccma_ppp.configs import supported_NN_dimensions_sorted
+
 
 @dataclasses.dataclass
 class TrainDatasetConfig(DatasetConfigABC):
@@ -93,7 +97,7 @@ class TrainDatasetConfig(DatasetConfigABC):
                 raise ValueError(
                     "for same member coniditioning the model data should not be ensemble mean."
                 )
-            
+
         return self
 
     def _check_observation(self):
@@ -110,14 +114,12 @@ class TrainDatasetConfig(DatasetConfigABC):
             If required observation data is missing.
         """
         if self.observation is not None:
-
             for dim in [
-            dim
-            for dim in supported_NN_dimensions_sorted  
-            if dim in self.observation.info.coords]:
-        
+                dim
+                for dim in supported_NN_dimensions_sorted
+                if dim in self.observation.info.coords
+            ]:
                 if dim in self.model.info.coords:
-
                     if not self.observation.info.coords[dim].equals(
                         self.model.info.coords[dim]
                     ):
@@ -135,11 +137,10 @@ class TrainDatasetConfig(DatasetConfigABC):
                     )
 
         else:
-            
-            if self.condition_method is None: 
+            if self.condition_method is None:
                 raise ValueError(
-                "No target observation is specified. Specify condition_method!"
-            )
+                    "No target observation is specified. Specify condition_method!"
+                )
 
         return self
 
@@ -643,11 +644,11 @@ class TrainDataset(Dataset):
 
         else:
             return tuple(
-                self.config.model.info.coords[dim].size 
-                for dim in supported_NN_dimensions_sorted  
-                if dim in self.config.model.info.coords)
-                
-            
+                self.config.model.info.coords[dim].size
+                for dim in supported_NN_dimensions_sorted
+                if dim in self.config.model.info.coords
+            )
+
     def get_target_shape(self):
         """
         Determine target shape.
@@ -671,10 +672,10 @@ class TrainDataset(Dataset):
                 ).final_locations.shape * len(self.config.observation.names)
             else:
                 return tuple(
-                self.config.observation.info.coords[dim].size 
-                for dim in supported_NN_dimensions_sorted  
-                if dim in self.config.observation.info.coords)
-            
+                    self.config.observation.info.coords[dim].size
+                    for dim in supported_NN_dimensions_sorted
+                    if dim in self.config.observation.info.coords
+                )
 
         else:
             return self.input_shape
@@ -786,7 +787,7 @@ class TrainDataset(Dataset):
         selection = dict(year=year, lead_time=lead_time)
 
         if self.model_indexes.get("ensembles") is not None:
-            selection['ensemble_id'] = self.model_indexes["ensembles"][ind]
+            selection["ensemble_id"] = self.model_indexes["ensembles"][ind]
 
         condition = self._index_condition_dataset(ind)
         target = self._index_observation_dataset(ind)

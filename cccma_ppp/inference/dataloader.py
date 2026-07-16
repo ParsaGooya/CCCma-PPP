@@ -1,4 +1,3 @@
-
 import numpy as np
 import dataclasses
 import torch
@@ -7,8 +6,14 @@ from pathlib import Path
 from cccma_ppp.train.dataset import TrainDatasetConfig
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
 from cccma_ppp.inference.dataset import InferenceDatasetConfig, _from_train
-from cccma_ppp.data_modules.dataloader import Dataloader, DataloaderConfigABC, BatchDataABC
-from cccma_ppp.generic import Distributed, RuntimeContext
+from cccma_ppp.data_modules.dataloader import (
+    Dataloader,
+    DataloaderConfigABC,
+    BatchDataABC,
+)
+from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic.runtime import RuntimeContext
+
 
 @dataclasses.dataclass
 class BatchData(BatchDataABC):
@@ -58,14 +63,14 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
         if self.num_data_workers == 0:
             self.prefetch_factor = None
-        
+
         if self.dataset_config is not None:
             _ = self._inference_years
 
     def _check_dataset_config(self):
         if self.dataset_config is None:
             raise RuntimeError(
-                "dataset_config must be provided or read froim train configs" \
+                "dataset_config must be provided or read froim train configs"
                 "via  read_datasetconfig_from_train method."
             )
 
@@ -80,21 +85,22 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         if self.inference_years is None:
             return self.available_inference_years
         else:
-            inference_years = np.arange(self.inference_years[0], self.inference_years[1] + 1)
+            inference_years = np.arange(
+                self.inference_years[0], self.inference_years[1] + 1
+            )
 
             if not set(inference_years).issubset(set(self.available_inference_years)):
                 raise ValueError(
                     f"the requested inference years are not available:"
                     f"available years: [{self.available_inference_years.min()},{self.available_inference_years.max()}]"
                 )
-            
+
             return inference_years
-        
+
     @property
     def available_inference_years(self):
         self._check_dataset_config()
         return self.dataset_config.available_inference_years
-    
 
     def _input_preprocessor_exists(self, load_dir: Path | str = None):
         self._check_dataset_config()
@@ -108,35 +114,40 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
         if self.dataset_config.model is not None:
             preprocessor_name = self.dataset_config.model.preprocessing_pipeline.name
-            preprocessor_to_check.append(load_dir / f"{preprocessor_name}_preprocessing_pipeline.joblib" )
+            preprocessor_to_check.append(
+                load_dir / f"{preprocessor_name}_preprocessing_pipeline.joblib"
+            )
 
         if self.dataset_config.condition is not None:
-            preprocessor_name = self.dataset_config.condition.preprocessing_pipeline.name
-            preprocessor_to_check.append(load_dir / f"{preprocessor_name}_preprocessing_pipeline.joblib" )
+            preprocessor_name = (
+                self.dataset_config.condition.preprocessing_pipeline.name
+            )
+            preprocessor_to_check.append(
+                load_dir / f"{preprocessor_name}_preprocessing_pipeline.joblib"
+            )
 
         for path in preprocessor_to_check:
             exists.append(path.exists())
 
-        return all(exists)   
-
+        return all(exists)
 
     def setup_distributed(
-        self, 
-        train_loader_config : TrainDataloaderConfig,
-        distributed: Distributed, 
-        load_path: Path | str | None = None
+        self,
+        train_loader_config: TrainDataloaderConfig,
+        distributed: Distributed,
+        load_path: Path | str | None = None,
     ):
 
         self._check_dataset_config()
         self.rank = distributed.rank
         self.world_size = distributed.world_size
-        
+
         if not self._input_preprocessor_exists(load_path):
             if distributed.is_root():
                 train_loader_config.dataset_config._fit_preprocessors(
-                    train_loader_config.dataset_config.train_years, 
-                    save=True, 
-                    save_path=load_path
+                    train_loader_config.dataset_config.train_years,
+                    save=True,
+                    save_path=load_path,
                 )
 
         distributed.barrier()
@@ -145,8 +156,9 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
         self._setup = True
 
-
-    def build_inference_loader(self, return_spatial_mask=False, reduce_spatial_mask=False):
+    def build_inference_loader(
+        self, return_spatial_mask=False, reduce_spatial_mask=False
+    ):
         if not self._setup:
             raise RuntimeError(
                 "Dataloader has to be setup for distributed training first by calling .setup_distributed()"
@@ -176,12 +188,10 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     def target_var_metadata(self):
         if self.train_dataset_config is None:
             raise RuntimeError(
-                "output variables metadata cannot be read unless train dataloader " \
+                "output variables metadata cannot be read unless train dataloader "
                 "is available. Hint: run setup_distributed(TrainDatasetConfig, ...)."
             )
         return self.train_dataset_config.ds_operator.get_target_var_metadata()
-
-
 
 
 def collate_batch(

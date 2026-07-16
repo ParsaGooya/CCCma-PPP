@@ -1,568 +1,1134 @@
 from pathlib import Path
 from types import SimpleNamespace
-import torch
-import pytest
 
+import numpy as np
+import pytest
+import torch
+import yaml
+
+from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.inference.inference_configs import (
     InferenceConfig,
     build_writer,
+    prepare_config,
 )
 
 
-def test_check_ensemble_generation_deterministic():
+class DummyDistributed:
+    def __init__(
+        self,
+        rank=0,
+        world_size=1,
+        root=True,
+        device="cpu",
+    ):
+        self.rank = rank
+        self.world_size = world_size
+        self.device = torch.device(device)
+        self._root = root
+        self.barrier_called = False
+        self.barrier_calls = 0
 
-    cfg = object.__new__(InferenceConfig)
+    def is_root(self):
+        return self._root
 
-    cfg.output_ensemble_size = 5
-    cfg.output_sampler = None
-
-    cfg.train_config = {"module": {"type": "deterministic"}}
-
-    with pytest.raises(ValueError):
-        cfg._check_esnsemble_generation()
-
-
-@pytest.mark.pruned
-def test_check_ensemble_generation_default():
-
-    cfg = object.__new__(InferenceConfig)
-
-    cfg.output_ensemble_size = 5
-    cfg.output_sampler = None
-
-    cfg.train_config = {"module": {"type": "default"}}
-
-    with pytest.raises(ValueError):
-        cfg._check_esnsemble_generation()
+    def barrier(self):
+        self.barrier_called = True
+        self.barrier_calls += 1
 
 
-def test_check_ensemble_generation_allowed_sampler():
+class DummyInferenceLoaderConfig:
+    def __init__(
+        self,
+        dataset_config=None,
+        input_metadata=None,
+    ):
+        self.dataset_config = dataset_config
+        self._input_metadata = {"tas": {}} if input_metadata is None else input_metadata
+        self.read_called = False
+        self.read_arg = None
+        self.setup_called = False
+        self.setup_args = None
+        self.build_called = False
+        self.loader = DummyInferenceLoader()
 
-    cfg = object.__new__(InferenceConfig)
+    @property
+    def input_var_metadata(self):
+        return self._input_metadata
 
-    cfg.output_ensemble_size = 5
-    cfg.output_sampler = object()
+    def read_datasetConfig_from_train(self, train_dataset_config):
+        self.read_called = True
+        self.read_arg = train_dataset_config
+        self.dataset_config = object()
 
-    cfg.train_config = {"module": {"type": "deterministic"}}
+    def setup_distributed(self, train_loader, distributed):
+        self.setup_called = True
+        self.setup_args = (train_loader, distributed)
 
-    cfg._check_esnsemble_generation()
-
-
-@pytest.mark.pruned
-def test_check_ensemble_generation_single_member():
-
-    cfg = object.__new__(InferenceConfig)
-
-    cfg.output_ensemble_size = 1
-    cfg.output_sampler = None
-
-    cfg.train_config = {"module": {"type": "deterministic"}}
-
-    cfg._check_esnsemble_generation()
+    def build_inference_loader(self):
+        self.build_called = True
+        return self.loader
 
 
-def test_check_inference_dataset_metadata_mismatch():
+class DummyInferenceLoader:
+    def __init__(
+        self,
+        input_shape=(2, 3),
+        output_shape=(2, 3),
+        added_features_dim=0,
+    ):
+        self.input_shape = input_shape
+        self.output_shape = output_shape
+        self.added_features_dim = added_features_dim
 
-    cfg = object.__new__(InferenceConfig)
 
-    cfg.experiment_dir = Path("/tmp/exp")
+class DummyTrainDatasetConfig:
+    pass
 
-    cfg.train_config = {"module": {"type": "deterministic"}}
 
-    cfg.train_loader = SimpleNamespace(input_var_metadata=["train"])
+class DummyTrainLoaderConfig:
+    def __init__(
+        self,
+        input_metadata=None,
+    ):
+        self.dataset_config = DummyTrainDatasetConfig()
+        self._input_metadata = {"tas": {}} if input_metadata is None else input_metadata
 
-    cfg.inference_loader = SimpleNamespace(
-        dataset_config=SimpleNamespace(condition_method="static"),
-        input_var_metadata=["infer"],
+    @property
+    def input_var_metadata(self):
+        return self._input_metadata
+
+
+class DummyModule:
+    def __init__(self):
+        self.loaded_state = None
+        self.loaded_strict = None
+        self.device = None
+
+    def load_state_dict(self, state, strict=True):
+        self.loaded_state = state
+        self.loaded_strict = strict
+        return SimpleNamespace(
+            missing_keys=[],
+            unexpected_keys=[],
+        )
+
+    def to(self, device):
+        self.device = device
+        return self
+
+
+class DummySelector:
+    def __init__(self):
+        self.build_kwargs = None
+        self.module = DummyModule()
+
+    def build_module(self, **kwargs):
+        self.build_kwargs = kwargs
+        return self.module
+
+
+class DummyWriter:
+    pass
+
+
+class DummyWriterConfig:
+    def __init__(self):
+        self.build_called = False
+        self.build_kwargs = None
+        self.writer = DummyWriter()
+
+    def build(self, **kwargs):
+        self.build_called = True
+        self.build_kwargs = kwargs
+        return self.writer
+
+
+def make_bare_config(
+    tmp_path,
+    save_path=None,
+    seed=None,
+    checkpoint_name=None,
+    inference_dataset_config=None,
+    inference_metadata=None,
+    train_metadata=None,
+):
+    config = object.__new__(InferenceConfig)
+    config.experiment_dir = Path(tmp_path)
+    config.save_path = Path(save_path) if save_path is not None else None
+    config.seed = seed
+    config.checkpoint_name = checkpoint_name
+    config.writer = DummyWriterConfig()
+    config.inference_loader = DummyInferenceLoaderConfig(
+        dataset_config=inference_dataset_config,
+        input_metadata=inference_metadata,
     )
-
-    with pytest.raises(RuntimeError):
-        cfg._check_inference_dataset()
-
-
-def test_check_inference_dataset_success():
-
-    cfg = object.__new__(InferenceConfig)
-
-    cfg.train_config = {"module": {"type": "deterministic"}}
-
-    cfg.train_loader = SimpleNamespace(input_var_metadata=["same"])
-
-    cfg.inference_loader = SimpleNamespace(
-        dataset_config=SimpleNamespace(condition_method="static"),
-        input_var_metadata=["same"],
+    config.train_loader = DummyTrainLoaderConfig(
+        input_metadata=train_metadata,
     )
+    config.train_config = {
+        "train_loader": {
+            "dataset_config": {},
+        },
+        "module": {
+            "type": "deterministic",
+        },
+    }
+    return config
 
-    cfg._check_inference_dataset()
+
+@pytest.fixture
+def config_file(tmp_path):
+    path = tmp_path / "config.yaml"
+    path.write_text(
+        yaml.safe_dump(
+            {
+                "train_loader": {
+                    "dataset_config": {
+                        "model": {
+                            "names": ["tas"],
+                        }
+                    }
+                },
+                "module": {
+                    "type": "deterministic",
+                },
+            }
+        )
+    )
+    return path
 
 
-def test_resolve_dataset_config_calls_check(monkeypatch):
+def test_prepare_config_reads_yaml(config_file):
+    result = prepare_config(config_file)
 
-    called = {"flag": False}
+    assert result["module"]["type"] == "deterministic"
+    assert result["train_loader"]["dataset_config"]["model"]["names"] == ["tas"]
 
-    cfg = object.__new__(InferenceConfig)
 
-    cfg.inference_loader = SimpleNamespace(dataset_config=object())
+def test_prepare_config_accepts_string_path(config_file):
+    result = prepare_config(str(config_file))
+
+    assert isinstance(result, dict)
+
+
+def test_prepare_config_empty_yaml(tmp_path):
+    path = tmp_path / "empty.yaml"
+    path.write_text("")
+
+    assert prepare_config(path) is None
+
+
+def test_post_init_converts_paths_and_loads_dependencies(
+    monkeypatch,
+    tmp_path,
+):
+    writer = DummyWriterConfig()
+    inference_loader = DummyInferenceLoaderConfig(
+        dataset_config=object(),
+    )
+    train_loader = DummyTrainLoaderConfig()
 
     monkeypatch.setattr(
         InferenceConfig,
+        "load_train_config",
+        lambda self: {
+            "train_loader": {
+                "dataset_config": {},
+            }
+        },
+    )
+    monkeypatch.setattr(
+        InferenceConfig,
+        "load_train_dataloader_config",
+        lambda self: train_loader,
+    )
+    monkeypatch.setattr(
+        InferenceConfig,
+        "_resolve_inference_dataset_config",
+        lambda self: setattr(self, "resolved", True),
+    )
+
+    save_path = tmp_path / "predictions"
+
+    config = InferenceConfig(
+        experiment_dir=str(tmp_path),
+        writer=writer,
+        inference_loader=inference_loader,
+        save_path=str(save_path),
+    )
+
+    assert config.experiment_dir == tmp_path
+    assert config.save_path == save_path
+    assert config.train_loader is train_loader
+    assert config.resolved is True
+
+
+def test_post_init_leaves_save_path_none(
+    monkeypatch,
+    tmp_path,
+):
+    monkeypatch.setattr(
+        InferenceConfig,
+        "load_train_config",
+        lambda self: {
+            "train_loader": {
+                "dataset_config": {},
+            }
+        },
+    )
+    monkeypatch.setattr(
+        InferenceConfig,
+        "load_train_dataloader_config",
+        lambda self: DummyTrainLoaderConfig(),
+    )
+    monkeypatch.setattr(
+        InferenceConfig,
+        "_resolve_inference_dataset_config",
+        lambda self: None,
+    )
+
+    config = InferenceConfig(
+        experiment_dir=str(tmp_path),
+        writer=DummyWriterConfig(),
+        save_path=None,
+    )
+
+    assert config.save_path is None
+
+
+def test_resolve_inference_dataset_from_training(tmp_path):
+    config = make_bare_config(
+        tmp_path,
+        inference_dataset_config=None,
+    )
+
+    config._resolve_inference_dataset_config()
+
+    assert config.inference_loader.read_called
+    assert config.inference_loader.read_arg is config.train_loader.dataset_config
+
+
+def test_resolve_existing_inference_dataset_checks_metadata(
+    monkeypatch,
+    tmp_path,
+):
+    config = make_bare_config(
+        tmp_path,
+        inference_dataset_config=object(),
+    )
+    called = {"value": False}
+
+    def fake_check():
+        called["value"] = True
+
+    monkeypatch.setattr(
+        config,
         "_check_inference_dataset",
-        lambda self: called.__setitem__("flag", True),
+        fake_check,
     )
 
-    cfg._resolve_inference_dataset_config()
+    config._resolve_inference_dataset_config()
 
-    assert called["flag"] is True
+    assert called["value"] is True
+    assert config.inference_loader.read_called is False
 
 
-def test_output_preprocessor_dir_observation():
+def test_check_inference_dataset_matching_metadata(tmp_path):
+    config = make_bare_config(
+        tmp_path,
+        inference_dataset_config=object(),
+        inference_metadata={"tas": {"units": "K"}},
+        train_metadata={"tas": {"units": "K"}},
+    )
 
-    cfg = object.__new__(InferenceConfig)
+    assert config._check_inference_dataset() is None
 
-    cfg.experiment_dir = Path("/tmp/exp")
 
-    pipeline = SimpleNamespace(name="obs")
+def test_check_inference_dataset_mismatch_raises(tmp_path):
+    config = make_bare_config(
+        tmp_path,
+        inference_dataset_config=object(),
+        inference_metadata={"tas": {}},
+        train_metadata={"pr": {}},
+    )
 
-    cfg.train_config = {
+    with pytest.raises(
+        RuntimeError,
+        match="Input variables or preprocessing steps",
+    ):
+        config._check_inference_dataset()
+
+
+def test_output_preprocessor_dir_observation_branch(tmp_path):
+    config = make_bare_config(tmp_path)
+    config.train_config = {
         "train_loader": {
-            "dataset_config": {"observation": {"preprocessing_pipeline": pipeline}}
+            "dataset_config": {
+                "observation": {
+                    "names": ["tas"],
+                }
+            }
         }
     }
 
-    expected = (
-        Path("/tmp/exp")
+    assert config.output_preprocessor_dir == (
+        tmp_path
         / "preprocessing_pipeline"
-        / "obs_preprocessing_pipeline.joblib"
+        / "observation_preprocessing_pipeline.joblib"
     )
 
-    assert cfg.output_preprocessor_dir == expected
 
-
-def test_output_preprocessor_dir_model():
-
-    cfg = object.__new__(InferenceConfig)
-
-    cfg.experiment_dir = Path("/tmp/exp")
-
-    pipeline = SimpleNamespace(name="model")
-
-    cfg.train_config = {
+def test_output_preprocessor_dir_model_branch(tmp_path):
+    config = make_bare_config(tmp_path)
+    config.train_config = {
         "train_loader": {
-            "dataset_config": {"model": {"preprocessing_pipeline": pipeline}}
+            "dataset_config": {
+                "model": {
+                    "names": ["tas"],
+                }
+            }
         }
     }
 
-    expected = (
-        Path("/tmp/exp")
-        / "preprocessing_pipeline"
-        / "model_preprocessing_pipeline.joblib"
+    assert config.output_preprocessor_dir == (
+        tmp_path / "preprocessing_pipeline" / "model_preprocessing_pipeline.joblib"
     )
 
-    assert cfg.output_preprocessor_dir == expected
 
-
-def test_prepare_directory_root(monkeypatch):
-
-    cfg = object.__new__(InferenceConfig)
-
-    cfg.output_dir = "/tmp/out"
-
-    monkeypatch.setattr(
-        InferenceConfig,
-        "_prepare_runtime_variables",
-        lambda self: None,
+def test_output_dir_uses_custom_save_path(tmp_path):
+    save_path = tmp_path / "custom-output"
+    config = make_bare_config(
+        tmp_path,
+        save_path=save_path,
     )
 
-    calls = {}
+    assert config.output_dir == save_path
 
-    monkeypatch.setattr(
-        "os.makedirs",
-        lambda path, exist_ok: calls.setdefault("mkdir", path),
+
+def test_output_dir_defaults_to_inference_directory(tmp_path):
+    config = make_bare_config(
+        tmp_path,
+        save_path=None,
     )
 
-    distributed = SimpleNamespace(
-        is_root=lambda: True,
-        barrier=lambda: None,
+    assert config.output_dir == tmp_path / "inference"
+
+
+def test_log_dir(tmp_path):
+    config = make_bare_config(tmp_path)
+
+    assert config.log_dir == tmp_path / "logs"
+
+
+def test_prepare_runtime_variables_default_output(tmp_path):
+    config = make_bare_config(
+        tmp_path,
+        inference_metadata={"tas": {"units": "K"}},
     )
 
-    cfg.prepare_directory(distributed)
+    config._prepare_runtime_variables()
 
-    assert calls["mkdir"] == "/tmp/out"
-
-
-def test_prepare_directory_non_root(monkeypatch):
-
-    cfg = object.__new__(InferenceConfig)
-
-    cfg.output_dir = "/tmp/out"
-
-    monkeypatch.setattr(
-        InferenceConfig,
-        "_prepare_runtime_variables",
-        lambda self: None,
-    )
-
-    called = {"mkdir": False}
-
-    monkeypatch.setattr(
-        "os.makedirs",
-        lambda *args, **kwargs: called.__setitem__("mkdir", True),
-    )
-
-    distributed = SimpleNamespace(
-        is_root=lambda: False,
-        barrier=lambda: None,
-    )
-
-    cfg.prepare_directory(distributed)
-
-    assert called["mkdir"] is False
-
-
-@pytest.mark.pruned
-def test_output_preprocessor_dir_model_branch():
-
-    cfg = object.__new__(InferenceConfig)
-
-    cfg.experiment_dir = Path("/tmp/exp")
-
-    pipeline = SimpleNamespace(name="modelpipe")
-
-    cfg.train_config = {
-        "train_loader": {
-            "dataset_config": {"model": {"preprocessing_pipeline": pipeline}}
+    assert RuntimeContext.GLOBAL_EXP_DIR == str(tmp_path)
+    assert RuntimeContext.GLOBAL_OUTPUT_DIR == str(tmp_path / "inference")
+    assert RuntimeContext.GLOBAL_LOG_DIR == str(tmp_path / "logs")
+    assert RuntimeContext.INPUT_VAR_METADATA == {
+        "tas": {
+            "units": "K",
         }
     }
 
-    result = cfg.output_preprocessor_dir
 
-    assert result.name == "modelpipe_preprocessing_pipeline.joblib"
-
-
-def test_build_writer(monkeypatch):
-
-    class FakeLoader:
-        input_shape = (10,)
-        target_shape = (5,)
-        added_features_dim = 2
-
-        def __len__(self):
-            return 4
-
-        def get_weights(self, _):
-            return None
-
-    class FakeTrainLoaderConfig:
-        def setup_distributed(self, distributed):
-            pass
-
-        def build_train_loader(self):
-            return FakeLoader()
-
-        def build_validation_loader(self):
-            return FakeLoader()
-
-        def get_weights(self, weights):
-            return None
-
-    class FakeModule:
-        model = SimpleNamespace()
-
-        def to(self, device):
-            return self
-
-        def init_loss_function(self, loss):
-            self.loss = loss
-
-    class FakeModuleSelector:
-        type = "deterministic"
-
-        def build_module(self, **kwargs):
-            return FakeModule()
-
-    class FakeLoss:
-        pass
-
-    class FakeLossPipeline:
-        def build(self, **kwargs):
-            return FakeLoss()
-
-    class FakeOptimizer:
-        pass
-
-    class FakeOptimization:
-        optimizer_type = "adam"
-
-        def build(self, module, batches, epochs):
-            return FakeOptimizer()
-
-    class FakeTrainer:
-        pass
-
-    class FakeTrainerConfig:
-        def build(self, **kwargs):
-            return FakeTrainer()
-
-    distributed = SimpleNamespace(
-        device=torch.device("cpu"),
-        distributed=False,
-        local_rank=0,
-        is_root=lambda: True,
+def test_prepare_runtime_variables_custom_output(tmp_path):
+    output = tmp_path / "results"
+    config = make_bare_config(
+        tmp_path,
+        save_path=output,
     )
 
-    cfg = SimpleNamespace(
-        train_loader=FakeTrainLoaderConfig(),
-        weights=None,
-        module=FakeModuleSelector(),
-        losspipeline=FakeLossPipeline(),
-        optimization=FakeOptimization(),
-        trainer=FakeTrainerConfig(),
-        max_epochs=10,
+    config._prepare_runtime_variables()
+
+    assert RuntimeContext.GLOBAL_OUTPUT_DIR == str(output)
+
+
+@pytest.mark.parametrize(
+    "root",
+    [
+        True,
+        False,
+    ],
+)
+def test_prepare_directory_branch_matrix(
+    tmp_path,
+    root,
+):
+    output = tmp_path / "output"
+    config = make_bare_config(
+        tmp_path,
+        save_path=output,
     )
+    distributed = DummyDistributed(root=root)
 
-    trainer = build_writer(
-        cfg,
-        distributed,
-        logger=None,
+    config.prepare_directory(distributed)
+
+    assert output.exists() is root
+    assert distributed.barrier_called
+
+
+def test_prepare_directory_existing_output(tmp_path):
+    output = tmp_path / "output"
+    output.mkdir()
+
+    config = make_bare_config(
+        tmp_path,
+        save_path=output,
     )
+    distributed = DummyDistributed(root=True)
 
-    assert isinstance(trainer, FakeTrainer)
+    config.prepare_directory(distributed)
+
+    assert output.is_dir()
+    assert distributed.barrier_calls == 1
 
 
-def test_build_writer_logger_path(monkeypatch):
-
-    logger_calls = []
-
-    class FakeLogger:
-        def info(self, msg, **kwargs):
-            logger_calls.append(msg)
-
-    class FakeLoader:
-        input_shape = (1,)
-        target_shape = (1,)
-        added_features_dim = 0
-
-        def __len__(self):
-            return 2
-
-        def get_weights(self, weights):
-            return None
-
-    class FakeTrainLoader:
-        def setup_distributed(self, distributed):
-            pass
-
-        def build_train_loader(self):
-            return FakeLoader()
-
-        def build_validation_loader(self):
-            return FakeLoader()
-
-        def get_weights(self, weights):
-            return None
-
-    class FakeModule:
-        model = type("M", (), {})()
-
-        def to(self, device):
-            return self
-
-        def init_loss_function(self, loss):
-            pass
-
-    class FakeModuleCfg:
-        type = "deterministic"
-
-        def build_module(self, **kwargs):
-            return FakeModule()
-
-    class FakeLossPipeline:
-        def build(self, **kwargs):
-            return object()
-
-    class FakeOptimization:
-        optimizer_type = "adam"
-
-        def build(self, *args):
-            return object()
-
-    class FakeTrainer:
-        pass
-
-    class FakeTrainerConfig:
-        def build(self, **kwargs):
-            return FakeTrainer()
-
-    distributed = SimpleNamespace(
-        device=torch.device("cpu"),
-        distributed=False,
-        local_rank=0,
-        is_root=lambda: True,
+def test_set_random_seed_none_does_not_call_set_seed(
+    monkeypatch,
+    tmp_path,
+):
+    config = make_bare_config(
+        tmp_path,
+        seed=None,
     )
-
-    cfg = SimpleNamespace(
-        train_loader=FakeTrainLoader(),
-        weights=None,
-        module=FakeModuleCfg(),
-        losspipeline=FakeLossPipeline(),
-        optimization=FakeOptimization(),
-        trainer=FakeTrainerConfig(),
-        max_epochs=5,
-    )
-
-    build_writer(cfg, distributed, FakeLogger())
-
-    assert logger_calls
-
-
-def test_build_writer_distributed(monkeypatch):
-
-    wrapped = {}
-
-    class FakeDDP:
-        def __init__(
-            self,
-            module,
-            device_ids=None,
-            output_device=None,
-            find_unused_parameters=None,
-        ):
-            self._module = module
-            wrapped["module"] = module
-
-        def __getattr__(self, name):
-            return getattr(self._module, name)
+    called = []
 
     monkeypatch.setattr(
-        torch.nn.parallel,
-        "DistributedDataParallel",
-        FakeDDP,
+        "cccma_ppp.inference.inference_configs.set_seed",
+        lambda seed: called.append(seed),
     )
 
-    class FakeLoader:
-        input_shape = (1,)
-        target_shape = (1,)
-        added_features_dim = 0
+    config.set_random_seed(rank=3)
 
-        def __len__(self):
-            return 1
+    assert called == []
 
-        def get_weights(self, weights):
-            return None
 
-    class FakeTrainLoader:
-        def setup_distributed(self, distributed):
-            pass
+@pytest.mark.parametrize(
+    "seed,rank,expected",
+    [
+        (0, 0, 0),
+        (10, 0, 10),
+        (10, 4, 14),
+        (100, 2, 102),
+    ],
+)
+def test_set_random_seed_uses_rank_offset(
+    monkeypatch,
+    tmp_path,
+    seed,
+    rank,
+    expected,
+):
+    config = make_bare_config(
+        tmp_path,
+        seed=seed,
+    )
+    called = []
 
-        def build_train_loader(self):
-            return FakeLoader()
-
-        def build_validation_loader(self):
-            return FakeLoader()
-
-        def get_weights(self, weights):
-            return None
-
-    class FakeModule:
-        model = type("M", (), {})()
-
-        def to(self, device):
-            return self
-
-        def init_loss_function(self, loss):
-            pass
-
-    class FakeModuleCfg:
-        type = "deterministic"
-
-        def build_module(self, **kwargs):
-            return FakeModule()
-
-    class FakeLossPipeline:
-        def build(self, **kwargs):
-            return object()
-
-    class FakeOptimization:
-        optimizer_type = "adam"
-
-        def build(self, *args):
-            return object()
-
-    class FakeTrainer:
-        pass
-
-    class FakeTrainerConfig:
-        def build(self, **kwargs):
-            return FakeTrainer()
-
-    distributed = SimpleNamespace(
-        device=torch.device("cpu"),
-        distributed=True,
-        local_rank=0,
-        is_root=lambda: False,
+    monkeypatch.setattr(
+        "cccma_ppp.inference.inference_configs.set_seed",
+        lambda value: called.append(value),
     )
 
-    cfg = SimpleNamespace(
-        train_loader=FakeTrainLoader(),
-        weights=None,
-        module=FakeModuleCfg(),
-        losspipeline=FakeLossPipeline(),
-        optimization=FakeOptimization(),
-        trainer=FakeTrainerConfig(),
-        max_epochs=1,
+    config.set_random_seed(rank)
+
+    assert called == [expected]
+
+
+def test_load_train_config_calls_prepare_config(
+    monkeypatch,
+    tmp_path,
+):
+    config = make_bare_config(tmp_path)
+    captured = {}
+
+    def fake_prepare(path):
+        captured["path"] = path
+        return {"loaded": True}
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.inference_configs.prepare_config",
+        fake_prepare,
     )
 
-    build_writer(cfg, distributed)
+    result = config.load_train_config()
 
-    assert "module" in wrapped
-
-
-def test_resolve_dataset_config_none_branch():
-
-    cfg = object.__new__(InferenceConfig)
-
-    cfg.train_loader = SimpleNamespace(dataset_config=object())
-
-    cfg.inference_loader = SimpleNamespace(dataset_config=None)
-
-    with pytest.raises(AttributeError):
-        cfg._resolve_inference_dataset_config()
+    assert result == {"loaded": True}
+    assert captured["path"] == tmp_path / "config.yaml"
 
 
-class FakeType(str):
-    def lower(self):
-        return "cvae"
+def test_load_train_dataloader_config_calls_dacite(
+    monkeypatch,
+    tmp_path,
+):
+    config = make_bare_config(tmp_path)
+    config.train_config = {
+        "train_loader": {
+            "batch_size": 8,
+        }
+    }
+    expected = object()
+    captured = {}
+
+    def fake_from_dict(**kwargs):
+        captured.update(kwargs)
+        return expected
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.inference_configs.dacite.from_dict",
+        fake_from_dict,
+    )
+
+    result = config.load_train_dataloader_config()
+
+    assert result is expected
+    assert captured["data"] == {"batch_size": 8}
+    assert captured["data_class"].__name__ == "TrainDataloaderConfig"
 
 
-def test_cvae_requires_condition_method():
-
-    cfg = object.__new__(InferenceConfig)
-
-    cfg.experiment_dir = Path("/tmp/exp")
-
-    cfg.train_config = {"module": {"type": FakeType("ignored")}}
-
-    cfg.train_loader = SimpleNamespace(input_var_metadata=["same"])
-
-    cfg.inference_loader = SimpleNamespace(
-        dataset_config=SimpleNamespace(
-            condition_method=None,
+def save_checkpoint(
+    path,
+    input_shape=(2, 3),
+    output_shape=(2, 3),
+    added_features_dim=0,
+    module_state=None,
+    extra=None,
+):
+    checkpoint = {
+        "input_shape": input_shape,
+        "output_shape": output_shape,
+        "added_features_dim": added_features_dim,
+        "module": (
+            {"weight": torch.tensor([1.0])} if module_state is None else module_state
         ),
-        input_var_metadata=["same"],
+    }
+
+    if extra is not None:
+        checkpoint.update(extra)
+
+    path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+    torch.save(checkpoint, path)
+
+    return checkpoint
+
+
+def patch_module_selector(monkeypatch):
+    selector = DummySelector()
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.inference_configs.dacite.from_dict",
+        lambda **kwargs: selector,
     )
 
-    with pytest.raises(ValueError):
-        cfg._check_inference_dataset()
+    return selector
 
 
-@pytest.mark.pruned
-def test_resolve_dataset_config_none_branch_current_behavior():
+def test_load_module_missing_default_checkpoint(tmp_path):
+    config = make_bare_config(tmp_path)
 
-    cfg = object.__new__(InferenceConfig)
+    with pytest.raises(
+        FileNotFoundError,
+        match="Checkpoint not found",
+    ):
+        config.load_module()
 
-    cfg.train_loader = SimpleNamespace(dataset_config=object())
 
-    cfg.inference_loader = SimpleNamespace(dataset_config=None)
+def test_load_module_missing_named_checkpoint(tmp_path):
+    config = make_bare_config(tmp_path)
+    config.checkpoint_name = "epoch_10.pt"
 
-    with pytest.raises(AttributeError):
-        cfg._resolve_inference_dataset_config()
+    with pytest.raises(FileNotFoundError) as error:
+        config.load_module()
+
+    assert "epoch_10.pt" in str(error.value)
+
+
+def test_load_module_missing_required_keys(tmp_path):
+    checkpoint_dir = tmp_path / "checkpoints"
+    checkpoint_dir.mkdir()
+
+    torch.save(
+        {
+            "input_shape": (2,),
+        },
+        checkpoint_dir / "best.pt",
+    )
+
+    config = make_bare_config(tmp_path)
+
+    with pytest.raises(KeyError) as error:
+        config.load_module()
+
+    message = str(error.value)
+
+    assert "added_features_dim" in message
+    assert "module" in message
+    assert "output_shape" in message
+
+
+@pytest.mark.parametrize(
+    "loader",
+    [
+        DummyInferenceLoader(
+            input_shape=(99,),
+            output_shape=(2, 3),
+            added_features_dim=0,
+        ),
+        DummyInferenceLoader(
+            input_shape=(2, 3),
+            output_shape=(99,),
+            added_features_dim=0,
+        ),
+        DummyInferenceLoader(
+            input_shape=(2, 3),
+            output_shape=(2, 3),
+            added_features_dim=99,
+        ),
+    ],
+)
+def test_load_module_loader_dimension_mismatch(
+    monkeypatch,
+    tmp_path,
+    loader,
+):
+    save_checkpoint(
+        tmp_path / "checkpoints" / "best.pt",
+    )
+    config = make_bare_config(tmp_path)
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.inference_configs.dacite.from_dict",
+        lambda **kwargs: pytest.fail("selector should not be built"),
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="Data and model IO dimensions do not match",
+    ):
+        config.load_module(loader)
+
+
+def test_load_module_without_loader(
+    monkeypatch,
+    tmp_path,
+):
+    checkpoint = save_checkpoint(
+        tmp_path / "checkpoints" / "best.pt",
+        input_shape=(4,),
+        output_shape=(2,),
+        added_features_dim=3,
+    )
+    selector = patch_module_selector(monkeypatch)
+    config = make_bare_config(tmp_path)
+
+    module = config.load_module()
+
+    assert module is selector.module
+    assert selector.build_kwargs == {
+        "input_shape": (4,),
+        "output_shape": (2,),
+        "added_features_dim": 3,
+    }
+    assert module.loaded_state == checkpoint["module"]
+    assert module.loaded_strict is True
+
+
+def test_load_module_with_matching_loader(
+    monkeypatch,
+    tmp_path,
+):
+    checkpoint = save_checkpoint(
+        tmp_path / "checkpoints" / "best.pt",
+        input_shape=(4,),
+        output_shape=(2,),
+        added_features_dim=3,
+    )
+    selector = patch_module_selector(monkeypatch)
+    config = make_bare_config(tmp_path)
+    loader = DummyInferenceLoader(
+        input_shape=(4,),
+        output_shape=(2,),
+        added_features_dim=3,
+    )
+
+    module = config.load_module(loader)
+
+    assert module is selector.module
+    assert module.loaded_state == checkpoint["module"]
+
+
+def test_load_module_strict_false(
+    monkeypatch,
+    tmp_path,
+):
+    save_checkpoint(
+        tmp_path / "checkpoints" / "best.pt",
+    )
+    selector = patch_module_selector(monkeypatch)
+    config = make_bare_config(tmp_path)
+
+    module = config.load_module(
+        strict=False,
+    )
+
+    assert module.loaded_strict is False
+
+
+def test_load_module_named_checkpoint(
+    monkeypatch,
+    tmp_path,
+):
+    save_checkpoint(
+        tmp_path / "checkpoints" / "custom.pt",
+        input_shape=(7,),
+        output_shape=(8,),
+        added_features_dim=9,
+    )
+    selector = patch_module_selector(monkeypatch)
+    config = make_bare_config(tmp_path)
+    config.checkpoint_name = "custom.pt"
+
+    module = config.load_module()
+
+    assert module is selector.module
+    assert selector.build_kwargs == {
+        "input_shape": (7,),
+        "output_shape": (8,),
+        "added_features_dim": 9,
+    }
+
+
+def test_load_module_dacite_receives_module_config(
+    monkeypatch,
+    tmp_path,
+):
+    save_checkpoint(
+        tmp_path / "checkpoints" / "best.pt",
+    )
+    config = make_bare_config(tmp_path)
+    config.train_config["module"] = {
+        "type": "custom",
+        "hidden_size": 32,
+    }
+
+    selector = DummySelector()
+    captured = {}
+
+    def fake_from_dict(**kwargs):
+        captured.update(kwargs)
+        return selector
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.inference_configs.dacite.from_dict",
+        fake_from_dict,
+    )
+
+    config.load_module()
+
+    assert captured["data"] == {
+        "type": "custom",
+        "hidden_size": 32,
+    }
+    assert captured["data_class"].__name__ == "ModuleSelector"
+
+
+def test_load_module_calls_gc_collect(
+    monkeypatch,
+    tmp_path,
+):
+    save_checkpoint(
+        tmp_path / "checkpoints" / "best.pt",
+    )
+    patch_module_selector(monkeypatch)
+    config = make_bare_config(tmp_path)
+    calls = []
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.inference_configs.gc.collect",
+        lambda: calls.append(True),
+    )
+
+    config.load_module()
+
+    assert calls == [True]
+
+
+def make_writer_config_fixture(tmp_path):
+    inference_loader_config = DummyInferenceLoaderConfig(
+        dataset_config=object(),
+    )
+    train_loader = DummyTrainLoaderConfig()
+    writer_config = DummyWriterConfig()
+    module = DummyModule()
+
+    config = SimpleNamespace(
+        inference_loader=inference_loader_config,
+        train_loader=train_loader,
+        writer=writer_config,
+        output_preprocessor_dir=(
+            tmp_path
+            / "preprocessing_pipeline"
+            / "observation_preprocessing_pipeline.joblib"
+        ),
+        output_dir=tmp_path / "inference",
+        load_module=lambda loader: module,
+    )
+
+    return (
+        config,
+        inference_loader_config,
+        train_loader,
+        writer_config,
+        module,
+    )
+
+
+@pytest.mark.parametrize(
+    "root,with_logger",
+    [
+        (True, True),
+        (True, False),
+        (False, True),
+        (False, False),
+    ],
+)
+def test_build_writer_logging_matrix(
+    monkeypatch,
+    tmp_path,
+    capsys,
+    root,
+    with_logger,
+):
+    (
+        config,
+        inference_config,
+        train_loader,
+        writer_config,
+        module,
+    ) = make_writer_config_fixture(tmp_path)
+
+    postprocessor = object()
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.inference_configs.PreprocessingPipeline.load_from_memory",
+        lambda self, path: postprocessor,
+    )
+
+    logger_messages = []
+
+    logger = (
+        SimpleNamespace(info=lambda message, **kwargs: logger_messages.append(message))
+        if with_logger
+        else None
+    )
+
+    distributed = DummyDistributed(
+        root=root,
+    )
+
+    writer = build_writer(
+        config,
+        distributed,
+        logger,
+    )
+
+    assert writer is writer_config.writer
+    assert inference_config.setup_called
+    assert inference_config.build_called
+    assert module.device == torch.device("cpu")
+    assert writer_config.build_called
+
+    if root and with_logger:
+        assert logger_messages == [
+            "creating data loader ...",
+            "Loading saved module ...",
+            "Loading postprocessor ...",
+            "Creating writer ...",
+        ]
+        assert capsys.readouterr().out == ""
+    elif root and not with_logger:
+        output = capsys.readouterr().out
+        assert "creating data loader ..." in output
+        assert "Loading saved module ..." in output
+        assert "Loading postprocessor ..." in output
+        assert "Creating writer ..." in output
+    else:
+        assert logger_messages == []
+        assert capsys.readouterr().out == ""
+
+
+def test_build_writer_passes_all_writer_arguments(
+    monkeypatch,
+    tmp_path,
+):
+    (
+        config,
+        inference_config,
+        train_loader,
+        writer_config,
+        module,
+    ) = make_writer_config_fixture(tmp_path)
+
+    postprocessor = object()
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.inference_configs.PreprocessingPipeline.load_from_memory",
+        lambda self, path: postprocessor,
+    )
+
+    distributed = DummyDistributed()
+
+    writer = build_writer(
+        config,
+        distributed,
+    )
+
+    assert writer is writer_config.writer
+    assert writer_config.build_kwargs == {
+        "inference_data_loader": inference_config.loader,
+        "train_dataloader_config": train_loader,
+        "module": module,
+        "post_processor": postprocessor,
+        "output_dir": tmp_path / "inference",
+    }
+
+
+def test_build_writer_loads_expected_preprocessor(
+    monkeypatch,
+    tmp_path,
+):
+    (
+        config,
+        _,
+        _,
+        _,
+        _,
+    ) = make_writer_config_fixture(tmp_path)
+    captured = {}
+
+    def fake_load(self, path):
+        captured["path"] = path
+        return object()
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.inference_configs.PreprocessingPipeline.load_from_memory",
+        fake_load,
+    )
+
+    build_writer(
+        config,
+        DummyDistributed(),
+    )
+
+    assert captured["path"] == config.output_preprocessor_dir
+
+
+def test_build_writer_propagates_loader_setup_error(
+    monkeypatch,
+    tmp_path,
+):
+    (
+        config,
+        inference_config,
+        _,
+        writer_config,
+        _,
+    ) = make_writer_config_fixture(tmp_path)
+
+    def fail_setup(*args, **kwargs):
+        raise RuntimeError("setup failed")
+
+    inference_config.setup_distributed = fail_setup
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.inference_configs.PreprocessingPipeline.load_from_memory",
+        lambda self, path: object(),
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="setup failed",
+    ):
+        build_writer(
+            config,
+            DummyDistributed(),
+        )
+
+    assert writer_config.build_called is False
+
+
+def test_build_writer_propagates_module_load_error(
+    monkeypatch,
+    tmp_path,
+):
+    (
+        config,
+        _,
+        _,
+        writer_config,
+        _,
+    ) = make_writer_config_fixture(tmp_path)
+
+    def fail_load(_):
+        raise FileNotFoundError("missing model")
+
+    config.load_module = fail_load
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.inference_configs.PreprocessingPipeline.load_from_memory",
+        lambda self, path: object(),
+    )
+
+    with pytest.raises(
+        FileNotFoundError,
+        match="missing model",
+    ):
+        build_writer(
+            config,
+            DummyDistributed(),
+        )
+
+    assert writer_config.build_called is False
+
+
+def test_build_writer_propagates_postprocessor_error(
+    monkeypatch,
+    tmp_path,
+):
+    (
+        config,
+        _,
+        _,
+        writer_config,
+        _,
+    ) = make_writer_config_fixture(tmp_path)
+
+    def fail_load(self, path):
+        raise FileNotFoundError("missing preprocessor")
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.inference_configs.PreprocessingPipeline.load_from_memory",
+        fail_load,
+    )
+
+    with pytest.raises(
+        FileNotFoundError,
+        match="missing preprocessor",
+    ):
+        build_writer(
+            config,
+            DummyDistributed(),
+        )
+
+    assert writer_config.build_called is False

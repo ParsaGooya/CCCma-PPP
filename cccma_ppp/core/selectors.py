@@ -8,9 +8,10 @@ import gc
 import warnings
 
 from cccma_ppp.core.registery import Registery
-from cccma_ppp.core import moduleABC
+from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.models.models_abc import modelABC, flowABC, CheckpointConfig
-from cccma_ppp.generic import Distributed
+from cccma_ppp.generic.distributed import Distributed
+
 
 @dataclasses.dataclass
 class ModuleSelector:
@@ -70,7 +71,7 @@ class ModuleSelector:
         """
 
         return cls.registery.available()
-    
+
     @property
     def NUM_INPUT_DIMS(self) -> int:
         """
@@ -81,7 +82,7 @@ class ModuleSelector:
         -------
         int
         """
-        
+
         return self._module_config.model_config.NUM_INPUT_DIMS
 
     @property
@@ -95,19 +96,19 @@ class ModuleSelector:
         int
         """
 
-        return self._module_config.model_config.NUM_OUTPUT_DIMS 
+        return self._module_config.model_config.NUM_OUTPUT_DIMS
 
     @property
     def GENERATOR(self) -> bool:
         """
-        Check if the selected architecture 
+        Check if the selected architecture
         has a GENERATOR.
 
         Return
         -------
         bool
         """
-        
+
         return getattr(self._module_config.model_config, "GENERATOR", False)
 
     def build_module(
@@ -139,8 +140,6 @@ class ModuleSelector:
             output_shape=output_shape,
             added_features_dim=added_features_dim,
         )
-
-
 
 
 @dataclasses.dataclass
@@ -201,7 +200,7 @@ class PredictorSelector:
         Parameters
         ----------
         module : moduleABC
-            Trained module 
+            Trained module
 
         Returns
         -------
@@ -209,11 +208,9 @@ class PredictorSelector:
             Built predictor instance.
         """
         Predictor_Config = self.registery.get(module.config._type.lower(), self.config)
-        return Predictor_Config.build(module, 
-                                      distributed,
-                                      output_dir,
-                                      num_output_covariance_sampling)
-
+        return Predictor_Config.build(
+            module, distributed, output_dir, num_output_covariance_sampling
+        )
 
 
 @dataclasses.dataclass

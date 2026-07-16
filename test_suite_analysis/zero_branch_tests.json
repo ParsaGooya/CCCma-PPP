@@ -1,6 +1,0 @@
-[
-  "tests/inference/inference_configs_test.py::test_prepare_config",
-  "tests/inference/inference_configs_test.py::test_prepare_runtime_variables",
-  "tests/inference/inference_configs_test.py::test_save_dir_default",
-  "tests/inference/inference_configs_test.py::test_save_dir_explicit"
-]

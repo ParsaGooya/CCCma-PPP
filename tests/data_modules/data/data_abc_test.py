@@ -121,7 +121,6 @@ def test_missing_preprocessing_pipeline():
         BadConfig()
 
 
-@pytest.mark.pruned
 def test_pipeline_name_set(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -142,7 +141,6 @@ def test_resolve_data_empty_directory(tmp_path):
         _resolve_data(cfg)
 
 
-@pytest.mark.pruned
 def test_resolve_data_valid(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -254,7 +252,6 @@ def test_resolve_data_ensemble_required_missing(tmp_path):
             _resolve_data(cfg)
 
 
-@pytest.mark.pruned
 def test_resolve_data_ensemble_present(tmp_path):
     cfg = DummyDataConfig(
         tmp_path,
@@ -299,7 +296,6 @@ def test_resolve_data_with_rename_dict(tmp_path):
     assert len(cfg.list_paths) == 1
 
 
-@pytest.mark.pruned
 def test_get_ds_info_basic(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -312,7 +308,6 @@ def test_get_ds_info_basic(tmp_path):
     assert info.start_year == 2000
 
 
-@pytest.mark.pruned
 def test_get_ds_info_final_year(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -325,7 +320,6 @@ def test_get_ds_info_final_year(tmp_path):
     assert info.final_year == 2001
 
 
-@pytest.mark.pruned
 def test_get_ds_info_sizes(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -338,7 +332,6 @@ def test_get_ds_info_sizes(tmp_path):
     assert info.sizes["year"] == 2
 
 
-@pytest.mark.pruned
 def test_get_ds_info_coords(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -391,7 +384,6 @@ def test_get_ds_info_with_ensemble_selection(tmp_path):
     assert info.coords["ensembles"] is not None
 
 
-@pytest.mark.pruned
 def test_get_ds_info_sizes_none(tmp_path):
     ds = xr.Dataset(
         {
@@ -432,3 +424,282 @@ def test_load_preprocessor_pipeline_not_fitted(tmp_path):
 
     with pytest.raises(RuntimeError):
         cfg._load_preprocessor_pipeline(tmp_path)
+
+
+
+from cccma_ppp.generic.runtime import RuntimeContext
+
+
+def test_method_wrapper_resolve_data(tmp_path):
+    cfg = DummyDataConfig(tmp_path)
+
+    with patch("cccma_ppp.data_modules.data.data_abc._resolve_data") as mock_resolve:
+        cfg._resolve_data()
+
+    mock_resolve.assert_called_once_with(cfg)
+
+
+def test_method_wrapper_get_ds_info(tmp_path):
+    cfg = DummyDataConfig(tmp_path)
+
+    with patch(
+        "cccma_ppp.data_modules.data.data_abc._get_ds_info",
+        return_value="info",
+    ) as mock_info:
+        result = cfg._get_ds_info()
+
+    assert result == "info"
+    mock_info.assert_called_once_with(cfg)
+
+
+def test_resolve_data_skip_checks_branch(tmp_path):
+    cfg = DummyDataConfig(tmp_path)
+
+    with (
+        patch("glob.glob", return_value=["file1.nc"]),
+    ):
+        _resolve_data(cfg, _do_checks=False)
+
+    assert cfg.list_paths == ["file1.nc"]
+
+
+def test_resolve_data_no_supported_nn_dimensions(
+    tmp_path,
+):
+    ds = xr.Dataset(
+        {
+            "var": (
+                ("foo", "bar"),
+                np.random.rand(2, 2),
+            )
+        },
+        coords={
+            "foo": [0, 1],
+            "bar": [0, 1],
+        },
+    )
+
+    cfg = DummyDataConfig(tmp_path)
+
+    with (
+        patch("glob.glob", return_value=["x.nc"]),
+        patch("xarray.open_dataset", return_value=ds),
+    ):
+        with pytest.raises(
+            ValueError,
+            match="supported NN dimensions",
+        ):
+            _resolve_data(cfg)
+
+
+def test_resolve_data_multiple_files(
+    tmp_path,
+):
+    cfg = DummyDataConfig(tmp_path)
+
+    with (
+        patch(
+            "glob.glob",
+            return_value=["a.nc", "b.nc"],
+        ),
+        patch(
+            "xarray.open_dataset",
+            return_value=make_valid_ds(),
+        ),
+    ):
+        _resolve_data(cfg)
+
+    assert len(cfg.list_paths) == 2
+
+
+def test_get_ds_info_uses_existing_list_paths(
+    tmp_path,
+):
+    cfg = DummyDataConfig(tmp_path)
+
+    cfg.list_paths = ["already_set.nc"]
+
+    with (
+        patch("glob.glob") as mock_glob,
+        patch(
+            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            return_value=make_valid_ds(),
+        ),
+    ):
+        _get_ds_info(cfg)
+
+    mock_glob.assert_not_called()
+
+
+def test_get_ds_info_without_ensemble_selection(
+    tmp_path,
+):
+    cfg = DummyDataConfig(tmp_path)
+
+    with patch(
+        "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+        return_value=make_valid_ds(),
+    ):
+        info = _get_ds_info(cfg)
+
+    assert "year" in info.coords
+
+
+def test_get_ds_info_coord_contents(
+    tmp_path,
+):
+    cfg = DummyDataConfig(tmp_path)
+
+    with patch(
+        "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+        return_value=make_valid_ds(),
+    ):
+        info = _get_ds_info(cfg)
+
+    assert set(info.coords.keys()) >= {
+        "year",
+        "lead_time",
+    }
+
+
+def test_fit_preprocessor_pipeline_no_mask(
+    tmp_path,
+):
+    cfg = DummyDataConfig(tmp_path)
+
+    class DummyDS:
+        year = np.array([2000, 2001])
+        lead_time = np.array([1, 2])
+
+        def load(self):
+            return self
+
+        def close(self):
+            pass
+
+    with patch(
+        "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+        return_value=DummyDS(),
+    ):
+        cfg._fit_preprocessor_pipeline(selection={})
+
+    assert cfg.preprocessing_pipeline.fit_called
+
+
+def test_fit_preprocessor_pipeline_with_mask(
+    tmp_path,
+):
+    cfg = DummyDataConfig(tmp_path)
+
+    class DummyDS:
+        year = np.array([2000, 2001])
+        lead_time = np.array([1, 2])
+
+        def load(self):
+            return self
+
+        def close(self):
+            pass
+
+    with (
+        patch(
+            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            return_value=DummyDS(),
+        ),
+        patch(
+            "cccma_ppp.data_modules.data.data_abc._create_train_mask",
+            return_value="MASK",
+        ) as mask_mock,
+    ):
+        cfg._fit_preprocessor_pipeline(
+            selection={},
+            mask=True,
+        )
+
+    mask_mock.assert_called_once()
+
+
+def test_fit_preprocessor_pipeline_save_args(
+    tmp_path,
+):
+    cfg = DummyDataConfig(tmp_path)
+
+    captured = {}
+
+    class DS:
+        year = np.array([1, 2])
+        lead_time = np.array([1, 2])
+
+        def load(self):
+            return self
+
+        def close(self):
+            pass
+
+    def fake_fit(**kwargs):
+        captured.update(kwargs)
+
+    cfg.preprocessing_pipeline.fit = fake_fit
+
+    with patch(
+        "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+        return_value=DS(),
+    ):
+        cfg._fit_preprocessor_pipeline(
+            selection={},
+            save=False,
+            save_path="abc",
+            save_name="xyz",
+        )
+
+    assert captured["save"] is False
+    assert captured["save_path"] == "abc"
+    assert captured["save_name"] == "xyz"
+
+
+def test_load_preprocessor_pipeline_default_path(
+    tmp_path,
+):
+    RuntimeContext.GLOBAL_EXP_DIR = str(tmp_path)
+
+    cfg = DummyDataConfig(tmp_path)
+
+    captured = {}
+
+    def fake_load(path):
+        captured["path"] = path
+
+    cfg.preprocessing_pipeline.load_from_memory = fake_load
+
+    cfg._load_preprocessor_pipeline()
+
+    assert "dummy_preprocessing_pipeline.joblib" in str(captured["path"])
+
+
+def test_load_preprocessor_pipeline_custom_path(
+    tmp_path,
+):
+    cfg = DummyDataConfig(tmp_path)
+
+    captured = {}
+
+    def fake_load(path):
+        captured["path"] = path
+
+    cfg.preprocessing_pipeline.load_from_memory = fake_load
+
+    cfg._load_preprocessor_pipeline(load_dir=tmp_path)
+
+    assert captured["path"].name == ("dummy_preprocessing_pipeline.joblib")
+
+
+def test_load_preprocessor_pipeline_fitted_success(
+    tmp_path,
+):
+    cfg = DummyDataConfig(tmp_path)
+
+    cfg.preprocessing_pipeline.fitted = True
+
+    cfg.preprocessing_pipeline.load_from_memory = lambda path: None
+
+    cfg._load_preprocessor_pipeline(tmp_path)
