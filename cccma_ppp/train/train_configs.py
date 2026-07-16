@@ -447,8 +447,6 @@ def build_trainer(
         added_features_dim=added_features_dim,
     )
 
-    module = module.to(distributed.device)
-
     log("Creating loss function ...")
 
     reconstruction_loss = config.losspipeline.build(
@@ -458,8 +456,8 @@ def build_trainer(
     )
 
     module.init_loss_function(reconstruction_loss)
-
-
+    module = module.to(distributed.device)
+    
     log(f"Creating {config.optimization.optimizer_type} optimizer ...")
 
     optimizer = config.optimization.build(module, num_train_batches, config.max_epochs)
