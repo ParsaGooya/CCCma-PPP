@@ -386,6 +386,9 @@ class Flattennanremove(PreprocessModuleABC):
 
         if self.load_dir is not None:
             self._load_from_memory(self.load_dir)
+            
+            self._check_nn_dims(data)
+            self._check_nn_dims(target)
             return self
         
         reference = target if target is not None else data
@@ -452,6 +455,18 @@ class Flattennanremove(PreprocessModuleABC):
             )
 
         return self
+    
+    def _check_nn_dims(self, data: xr.Dataset | xr.DataArray,):
+        if data is not None:
+            missing_dims = [
+                dim for dim in self.NN_dims if dim not in data.dims
+            ]
+
+            if missing_dims:
+                raise ValueError(
+                    "The saved preprocessor and data pipelines are not compatable. "
+                    f"Missing dimensions: {missing_dims}."
+                )
 
     def transform(self, data: xr.DataArray
         ) -> xr.Dataset | xr.DataArray:
@@ -476,16 +491,6 @@ class Flattennanremove(PreprocessModuleABC):
 
         if "ref" in data.dims:
             return data.sel(ref=self.final_locations)
-
-        missing_dims = [
-            dim for dim in self.NN_dims if dim not in data.dims
-        ]
-
-        if missing_dims:
-            raise ValueError(
-                "The data cannot be flattened using the fitted NN dimensions. "
-                f"Missing dimensions: {missing_dims}."
-            )
 
 
         return (
