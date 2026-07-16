@@ -11,11 +11,20 @@ import traceback
 import warnings
 import yaml
 
+warnings.filterwarnings("ignore")
+logging.raiseExceptions = False
+
 from tqdm import tqdm
-
-
 import dacite
 
+
+import cccma_ppp.models.mlp_models  # noqa: F401
+import cccma_ppp.core.cVAE_module  # noqa: F401
+import cccma_ppp.core.deterministic_module  # noqa: F401
+import cccma_ppp.loss.utils_loss  # noqa: F401
+import cccma_ppp.preprocessing.utils_preprocessing  # noqa: F401
+from cccma_ppp.models.normalized_flows import MAF  # noqa: F401
+from cccma_ppp.models.normalized_flows import RealNVP  # noqa: F401
 
 from cccma_ppp.train.train import main as train_main
 
@@ -26,8 +35,6 @@ from cccma_ppp.train.train_configs import (
 
 from cccma_ppp.generic.distributed import Distributed
 
-warnings.filterwarnings("ignore")
-logging.raiseExceptions = False
 
 BASE_TRAIN_CONFIG = Path(
     "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/scripts/integration_suite_config.yaml"
@@ -41,41 +48,211 @@ RESULTS_CSV = OUTPUT_DIR / "integration_results.csv"
 
 
 RUN_BASELINE_TESTS = True
-RUN_CVAE_DATASET_CASES = True
+RUN_TRAIN_DATASET_CONFIG_CASES = True
 RUN_CVAE_MODULE_GRID = True
 RUN_DETERMINISTIC_GRID = True
 
 
-MAX_CVAE_DATASET_CASES = None
+MAX_TRAIN_DATASET_CONFIG_CASES = None
 MAX_CVAE_MODULE_CASES = None
 MAX_DETERMINISTIC_CASES = None
 
+TEST_ENCODER_HIDDEN_DIMS = [16]
+TEST_DECODER_HIDDEN_DIMS = [16]
+TEST_CONDITION_EMBEDDING_DIMS = [16]
 
-TEST_ENCODER_HIDDEN_DIMS = [64]
-TEST_DECODER_HIDDEN_DIMS = [64]
-TEST_CONDITION_EMBEDDING_DIMS = [64]
 
-
-CVAE_DATASET_CASES = [
+TRAIN_DATASET_CONFIG_CASES = [
     {
-        "name": "cvae_dataset_condition_none",
+        "name": "tdc_condition_none_obs_present",
         "condition_method": None,
         "model_ensemble_mean": True,
+        "remove_observation": False,
+        "add_condition": False,
+        "time_features": ["year"],
+        "lead_months": {"start": 1, "end": 12},
+        "expected_result": "PASS",
+        "expected_failure_reason": "",
     },
     {
-        "name": "cvae_dataset_ensemble_mean",
+        "name": "tdc_ensemble_mean_obs_present",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
+        "remove_observation": False,
+        "add_condition": False,
+        "time_features": ["year"],
+        "lead_months": {"start": 1, "end": 12},
+        "expected_result": "PASS",
+        "expected_failure_reason": "",
     },
     {
-        "name": "cvae_dataset_same_member",
+        "name": "tdc_same_member_model_not_mean",
         "condition_method": "same_member",
         "model_ensemble_mean": False,
+        "remove_observation": False,
+        "add_condition": False,
+        "time_features": ["year"],
+        "lead_months": {"start": 1, "end": 12},
+        "expected_result": "PASS",
+        "expected_failure_reason": "",
     },
     {
-        "name": "cvae_dataset_cross_ensemble",
+        "name": "tdc_cross_ensemble_model_not_mean",
         "condition_method": "cross_ensemble",
         "model_ensemble_mean": False,
+        "remove_observation": False,
+        "add_condition": False,
+        "time_features": ["year"],
+        "lead_months": {"start": 1, "end": 12},
+        "expected_result": "PASS",
+        "expected_failure_reason": "",
+    },
+    {
+        "name": "tdc_same_member_invalid_model_mean",
+        "condition_method": "same_member",
+        "model_ensemble_mean": True,
+        "remove_observation": False,
+        "add_condition": False,
+        "time_features": ["year"],
+        "lead_months": {"start": 1, "end": 12},
+        "expected_result": "FAIL",
+        "expected_failure_reason": (
+            "same_member conditioning should fail when model.ensemble_mean=True."
+        ),
+    },
+    {
+        "name": "tdc_observation_missing_condition_none",
+        "condition_method": None,
+        "model_ensemble_mean": True,
+        "remove_observation": True,
+        "add_condition": False,
+        "time_features": ["year"],
+        "lead_months": {"start": 1, "end": 12},
+        "expected_result": "FAIL",
+        "expected_failure_reason": (
+            "observation=None and condition_method=None should fail."
+        ),
+    },
+    {
+        "name": "tdc_observation_missing_ensemble_mean",
+        "condition_method": "ensemble_mean",
+        "model_ensemble_mean": True,
+        "remove_observation": True,
+        "add_condition": False,
+        "time_features": ["year"],
+        "lead_months": {"start": 1, "end": 12},
+        "expected_result": "PASS",
+        "expected_failure_reason": "",
+    },
+    {
+        "name": "tdc_time_features_none",
+        "condition_method": "ensemble_mean",
+        "model_ensemble_mean": True,
+        "remove_observation": False,
+        "add_condition": False,
+        "time_features": None,
+        "lead_months": {"start": 1, "end": 12},
+        "expected_result": "PASS",
+        "expected_failure_reason": "",
+    },
+    {
+        "name": "tdc_time_features_year",
+        "condition_method": "ensemble_mean",
+        "model_ensemble_mean": True,
+        "remove_observation": False,
+        "add_condition": False,
+        "time_features": ["year"],
+        "lead_months": {"start": 1, "end": 12},
+        "expected_result": "PASS",
+        "expected_failure_reason": "",
+    },
+    {
+        "name": "tdc_lead_months_single",
+        "condition_method": "ensemble_mean",
+        "model_ensemble_mean": True,
+        "remove_observation": False,
+        "add_condition": False,
+        "time_features": ["year"],
+        "lead_months": {"start": 1, "end": 1},
+        "expected_result": "PASS",
+        "expected_failure_reason": "",
+    },
+    {
+        "name": "tdc_lead_months_full",
+        "condition_method": "ensemble_mean",
+        "model_ensemble_mean": True,
+        "remove_observation": False,
+        "add_condition": False,
+        "time_features": ["year"],
+        "lead_months": {"start": 1, "end": 12},
+        "expected_result": "PASS",
+        "expected_failure_reason": "",
+    },
+    {
+        "name": "tdc_lead_months_missing",
+        "condition_method": "ensemble_mean",
+        "model_ensemble_mean": True,
+        "remove_observation": False,
+        "add_condition": False,
+        "time_features": ["year"],
+        "lead_months": None,
+        "expected_result": "FAIL",
+        "expected_failure_reason": (
+            "lead_months=None may be invalid because training dataset logic "
+            "expects lead_months to be iterable/resolved."
+        ),
+    },
+    {
+        "name": "tdc_explicit_condition_ensemble_mean",
+        "condition_method": "ensemble_mean",
+        "model_ensemble_mean": True,
+        "condition_ensemble_mean": True,
+        "remove_observation": False,
+        "add_condition": True,
+        "time_features": ["year"],
+        "lead_months": {"start": 1, "end": 12},
+        "expected_result": "PASS",
+        "expected_failure_reason": "",
+    },
+    {
+        "name": "tdc_explicit_condition_cross_ensemble",
+        "condition_method": "cross_ensemble",
+        "model_ensemble_mean": False,
+        "condition_ensemble_mean": False,
+        "remove_observation": False,
+        "add_condition": True,
+        "time_features": ["year"],
+        "lead_months": {"start": 1, "end": 12},
+        "expected_result": "PASS",
+        "expected_failure_reason": "",
+    },
+    {
+        "name": "tdc_static_without_condition",
+        "condition_method": "static",
+        "model_ensemble_mean": True,
+        "remove_observation": False,
+        "add_condition": False,
+        "time_features": ["year"],
+        "lead_months": {"start": 1, "end": 12},
+        "expected_result": "FAIL",
+        "expected_failure_reason": (
+            "static conditioning requires an explicit condition dataset."
+        ),
+    },
+    {
+        "name": "tdc_static_with_model_copied_condition",
+        "condition_method": "static",
+        "model_ensemble_mean": True,
+        "condition_ensemble_mean": True,
+        "remove_observation": False,
+        "add_condition": True,
+        "time_features": ["year"],
+        "lead_months": {"start": 1, "end": 12},
+        "expected_result": "FAIL",
+        "expected_failure_reason": (
+            "static conditioning cannot point to the same model data. "
+            "This case intentionally copies model config into condition."
+        ),
     },
 ]
 
@@ -107,7 +284,11 @@ CSV_COLUMNS = [
     "model_type",
     "condition_method",
     "model_ensemble_mean",
+    "condition_ensemble_mean",
+    "remove_observation",
+    "add_condition",
     "time_features",
+    "lead_months",
     "min_posterior_variance",
     "use_prior_flow",
     "combined_CGCN_weight",
@@ -117,6 +298,8 @@ CSV_COLUMNS = [
     "dropout_rate",
     "init_method",
     "append_mode",
+    "expected_result",
+    "expected_failure_reason",
     "config_path",
     "experiment_dir",
     "log_path",
@@ -133,7 +316,7 @@ def cleanup_logging_handlers():
 
     logger_dict = logging.Logger.manager.loggerDict
 
-    for logger_name in logger_dict:
+    for logger_name in list(logger_dict):
         if logger_name.startswith("cccma_ppp"):
             logger_names.append(logger_name)
 
@@ -200,7 +383,11 @@ def log_result(
         "model_type": model_type,
         "condition_method": params.get("condition_method"),
         "model_ensemble_mean": params.get("model_ensemble_mean"),
+        "condition_ensemble_mean": params.get("condition_ensemble_mean"),
+        "remove_observation": params.get("remove_observation"),
+        "add_condition": params.get("add_condition"),
         "time_features": json.dumps(params.get("time_features")),
+        "lead_months": json.dumps(params.get("lead_months")),
         "min_posterior_variance": params.get("min_posterior_variance"),
         "use_prior_flow": params.get("use_prior_flow"),
         "combined_CGCN_weight": params.get("combined_CGCN_weight"),
@@ -210,6 +397,8 @@ def log_result(
         "dropout_rate": params.get("dropout_rate"),
         "init_method": params.get("init_method"),
         "append_mode": params.get("append_mode"),
+        "expected_result": params.get("expected_result", "PASS"),
+        "expected_failure_reason": params.get("expected_failure_reason", ""),
         "config_path": str(config_path),
         "experiment_dir": str(experiment_dir),
         "log_path": str(log_path),
@@ -293,6 +482,18 @@ def normalize_nullable_fields(cfg):
     if ds_cfg.get("condition_method") is None:
         ds_cfg.pop(
             "condition_method",
+            None,
+        )
+
+    if ds_cfg.get("time_features") is None:
+        ds_cfg.pop(
+            "time_features",
+            None,
+        )
+
+    if ds_cfg.get("lead_months") is None:
+        ds_cfg.pop(
+            "lead_months",
             None,
         )
 
@@ -467,6 +668,33 @@ def get_original_flow_config(cfg):
     return deepcopy(cfg["module"]["config"].get("prior_flow_config"))
 
 
+def ensure_cvae_beta_finder(cfg):
+    cfg.setdefault(
+        "trainer",
+        {},
+    )
+
+    cfg["trainer"].setdefault(
+        "beta_finder",
+        {
+            "beta": 10,
+            "num_epoch_to_warmup": 10,
+        },
+    )
+
+    return cfg
+
+
+def remove_deterministic_beta_finder(cfg):
+    if "trainer" in cfg:
+        cfg["trainer"].pop(
+            "beta_finder",
+            None,
+        )
+
+    return cfg
+
+
 def set_fast_cvae_mlp_config(
     cfg,
     *,
@@ -501,11 +729,32 @@ def set_fast_cvae_mlp_config(
     model_cfg["init_method"] = init_method
 
 
-def apply_cvae_dataset_params(
+def apply_train_dataset_config_params(
     cfg,
     params,
 ):
     ds_cfg = cfg["train_loader"]["dataset_config"]
+
+    if "model_ensemble_mean" in params:
+        ds_cfg["model"]["ensemble_mean"] = params["model_ensemble_mean"]
+
+    if params.get("remove_observation") is True:
+        ds_cfg.pop(
+            "observation",
+            None,
+        )
+
+    if params.get("add_condition") is True:
+        ds_cfg["condition"] = deepcopy(ds_cfg["model"])
+
+        if "condition_ensemble_mean" in params:
+            ds_cfg["condition"]["ensemble_mean"] = params["condition_ensemble_mean"]
+
+    else:
+        ds_cfg.pop(
+            "condition",
+            None,
+        )
 
     if "condition_method" in params:
         if params["condition_method"] is None:
@@ -516,8 +765,25 @@ def apply_cvae_dataset_params(
         else:
             ds_cfg["condition_method"] = params["condition_method"]
 
-    if "model_ensemble_mean" in params:
-        ds_cfg["model"]["ensemble_mean"] = params["model_ensemble_mean"]
+    if "time_features" in params:
+        if params["time_features"] is None:
+            ds_cfg.pop(
+                "time_features",
+                None,
+            )
+        else:
+            ds_cfg["time_features"] = params["time_features"]
+
+    if "lead_months" in params:
+        if params["lead_months"] is None:
+            ds_cfg.pop(
+                "lead_months",
+                None,
+            )
+        else:
+            ds_cfg["lead_months"] = params["lead_months"]
+
+    return cfg
 
 
 def build_cvae_config_from_params(
@@ -527,7 +793,7 @@ def build_cvae_config_from_params(
 
     cfg["module"]["type"] = "cVAE"
 
-    apply_cvae_dataset_params(
+    apply_train_dataset_config_params(
         cfg,
         params,
     )
@@ -580,6 +846,8 @@ def build_cvae_config_from_params(
         ),
     )
 
+    ensure_cvae_beta_finder(cfg)
+
     normalize_nullable_fields(cfg)
 
     return cfg
@@ -590,18 +858,10 @@ def build_deterministic_config_from_params(
 ):
     cfg = base_config()
 
-    ds_cfg = cfg["train_loader"]["dataset_config"]
-
-    ds_cfg["time_features"] = params.get(
-        "time_features",
-        None,
+    apply_train_dataset_config_params(
+        cfg,
+        params,
     )
-
-    if ds_cfg.get("time_features") is None:
-        ds_cfg.pop(
-            "time_features",
-            None,
-        )
 
     model_cfg = {
         "encoder_hidden_dims": deepcopy(TEST_ENCODER_HIDDEN_DIMS),
@@ -624,16 +884,37 @@ def build_deterministic_config_from_params(
         },
     }
 
+    remove_deterministic_beta_finder(cfg)
+
     normalize_nullable_fields(cfg)
 
     return cfg
 
 
-def generate_cvae_dataset_cases():
-    cases = deepcopy(CVAE_DATASET_CASES)
+def mark_cvae_module_expected_result(params):
+    if (
+        params.get("use_prior_flow") is True
+        and params.get("condition_dependant_latent") is False
+    ):
+        params["expected_result"] = "FAIL"
+        params["expected_failure_reason"] = (
+            "Known invalid cVAE combo: use_prior_flow=True with "
+            "condition_dependant_latent=False causes normalized-flow "
+            "condition/input shape mismatch."
+        )
 
-    if MAX_CVAE_DATASET_CASES is not None:
-        cases = cases[:MAX_CVAE_DATASET_CASES]
+    else:
+        params["expected_result"] = "PASS"
+        params["expected_failure_reason"] = ""
+
+    return params
+
+
+def generate_train_dataset_config_cases():
+    cases = deepcopy(TRAIN_DATASET_CONFIG_CASES)
+
+    if MAX_TRAIN_DATASET_CONFIG_CASES is not None:
+        cases = cases[:MAX_TRAIN_DATASET_CONFIG_CASES]
 
     return cases
 
@@ -654,6 +935,12 @@ def generate_cvae_module_cases():
 
         params["condition_method"] = "ensemble_mean"
         params["model_ensemble_mean"] = True
+        params["remove_observation"] = False
+        params["add_condition"] = False
+        params["time_features"] = ["year"]
+        params["lead_months"] = {"start": 1, "end": 12}
+
+        params = mark_cvae_module_expected_result(params)
 
         name = (
             "cvae"
@@ -691,6 +978,15 @@ def generate_deterministic_cases():
             )
         )
 
+        params["condition_method"] = "ensemble_mean"
+        params["model_ensemble_mean"] = True
+        params["remove_observation"] = False
+        params["add_condition"] = False
+        params["time_features"] = None
+        params["lead_months"] = {"start": 1, "end": 12}
+        params["expected_result"] = "PASS"
+        params["expected_failure_reason"] = ""
+
         params["name"] = clean_name(
             "det"
             f"_append_{params['append_mode']}"
@@ -714,6 +1010,8 @@ def make_train_config(
     cfg = base_config()
 
     cfg["experiment_dir"] = str(experiment_dir)
+
+    ensure_cvae_beta_finder(cfg)
 
     normalize_nullable_fields(cfg)
 
@@ -764,6 +1062,8 @@ def test_resume_training(root_dir):
 
     resumed_cfg["resume_dir"] = str(exp_dir)
     resumed_cfg["max_epochs"] = 2
+
+    ensure_cvae_beta_finder(resumed_cfg)
 
     normalize_nullable_fields(resumed_cfg)
 
@@ -834,7 +1134,10 @@ def add_baseline_tasks(tasks):
             "suite": "baseline",
             "case_name": "resume_training",
             "model_type": "cVAE",
-            "params": {},
+            "params": {
+                "expected_result": "PASS",
+                "expected_failure_reason": "",
+            },
             "runner": lambda: test_resume_training(OUTPUT_DIR),
             "config_path": GENERATED_CONFIG_DIR / "resume_second.yaml",
             "experiment_dir": OUTPUT_DIR / "resume",
@@ -847,7 +1150,10 @@ def add_baseline_tasks(tasks):
             "suite": "baseline",
             "case_name": "dataset_pipeline",
             "model_type": "cVAE",
-            "params": {},
+            "params": {
+                "expected_result": "PASS",
+                "expected_failure_reason": "",
+            },
             "runner": lambda: test_dataset_pipeline(OUTPUT_DIR),
             "config_path": GENERATED_CONFIG_DIR / "dataset_pipeline.yaml",
             "experiment_dir": OUTPUT_DIR / "dataset_pipeline",
@@ -856,16 +1162,16 @@ def add_baseline_tasks(tasks):
     )
 
 
-def add_cvae_dataset_tasks(tasks):
-    if not RUN_CVAE_DATASET_CASES:
+def add_train_dataset_config_tasks(tasks):
+    if not RUN_TRAIN_DATASET_CONFIG_CASES:
         return
 
-    for case in generate_cvae_dataset_cases():
+    for case in generate_train_dataset_config_cases():
         cfg = build_cvae_config_from_params(case)
 
         tasks.append(
             {
-                "suite": "cvae_dataset",
+                "suite": "train_dataset_config",
                 "case_name": case["name"],
                 "model_type": "cVAE",
                 "params": case,
@@ -952,11 +1258,13 @@ def main():
     tasks = []
 
     add_baseline_tasks(tasks)
-    add_cvae_dataset_tasks(tasks)
+    add_train_dataset_config_tasks(tasks)
     add_cvae_module_tasks(tasks)
     add_deterministic_tasks(tasks)
 
-    failures = []
+    unexpected_failures = []
+    expected_failures = []
+    unexpected_passes = []
 
     with tqdm(
         total=len(tasks),
@@ -975,13 +1283,11 @@ def main():
             if "runner" in task:
                 try:
                     task
-
-                    log_baseline_result(
-                        task=task,
-                        passed=True,
-                    )
+                    passed = True
+                    error = ""
 
                 except Exception as exc:
+                    passed = False
                     error = str(exc)
 
                     task["log_path"].parent.mkdir(
@@ -999,13 +1305,11 @@ def main():
 
                     cleanup_logging_handlers()
 
-                    log_baseline_result(
-                        task=task,
-                        passed=False,
-                        error=error,
-                    )
-
-                    failures.append(case_name)
+                log_baseline_result(
+                    task=task,
+                    passed=passed,
+                    error=error,
+                )
 
             else:
                 passed = run_training_case(
@@ -1016,10 +1320,27 @@ def main():
                     params=task["params"],
                 )
 
-                if not passed:
-                    failures.append(case_name)
+            expected_result = task["params"].get(
+                "expected_result",
+                "PASS",
+            )
 
-            pbar.set_postfix_str(f"failures={len(failures)}")
+            if expected_result == "FAIL" and not passed:
+                expected_failures.append(case_name)
+
+            elif expected_result == "FAIL" and passed:
+                unexpected_passes.append(case_name)
+
+            elif expected_result == "PASS" and not passed:
+                unexpected_failures.append(case_name)
+
+            pbar.set_postfix_str(
+                (
+                    f"unexpected_failures={len(unexpected_failures)} "
+                    f"expected_failures={len(expected_failures)} "
+                    f"unexpected_passes={len(unexpected_passes)}"
+                )
+            )
 
             pbar.update(1)
 
@@ -1032,14 +1353,28 @@ def main():
         "w",
     ) as f:
         f.write(f"total_cases: {len(tasks)}\n")
-        f.write(f"failures: {len(failures)}\n")
+        f.write(f"unexpected_failures: {len(unexpected_failures)}\n")
+        f.write(f"expected_failures: {len(expected_failures)}\n")
+        f.write(f"unexpected_passes: {len(unexpected_passes)}\n")
         f.write(f"results_csv: {RESULTS_CSV}\n")
         f.write(f"log_dir: {LOG_DIR}\n")
 
-        if failures:
-            f.write("\nfailed_cases:\n")
+        if unexpected_failures:
+            f.write("\nunexpected_failures:\n")
 
-            for failure in failures:
+            for failure in unexpected_failures:
+                f.write(f"- {failure}\n")
+
+        if expected_failures:
+            f.write("\nexpected_failures:\n")
+
+            for failure in expected_failures:
+                f.write(f"- {failure}\n")
+
+        if unexpected_passes:
+            f.write("\nunexpected_passes:\n")
+
+            for failure in unexpected_passes:
                 f.write(f"- {failure}\n")
 
 

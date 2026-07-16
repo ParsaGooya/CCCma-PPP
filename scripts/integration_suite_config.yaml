@@ -1,5 +1,5 @@
 experiment_dir: output/integration_test_results
-max_epochs: 1
+max_epochs: 3
 train_loader:
   dataset_config:
     model:
