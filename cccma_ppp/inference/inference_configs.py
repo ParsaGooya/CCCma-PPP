@@ -1,8 +1,6 @@
 import dataclasses
 import os
-import numpy as np
 import torch
-import warnings
 import logging
 from pathlib import Path
 import yaml
@@ -15,7 +13,7 @@ from cccma_ppp.generic.runtime import RuntimeContext
 
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
 
-import cccma_ppp.train.registry_imports
+import cccma_ppp.train.registry_imports  # noqa: F401
 
 
 @dataclasses.dataclass
@@ -144,7 +142,7 @@ def build_writer(
             else:
                 print(msg)
 
-    log(f"creating data loader ...")
+    log("creating data loader ...")
 
     config.train_loader.setup_distributed(distributed)
 
@@ -176,7 +174,7 @@ def build_writer(
             find_unused_parameters=False,
         )
 
-    log(f"Creating loss function ...")
+    log("Creating loss function ...")
 
     reconstruction_loss = config.losspipeline.build(
         weights=weights,
@@ -190,7 +188,7 @@ def build_writer(
 
     optimizer = config.optimization.build(module, num_train_batches, config.max_epochs)
 
-    log(f"Creating trainer ...")
+    log("Creating trainer ...")
 
     trainer = config.trainer.build(
         train_data_loader=train_loader,

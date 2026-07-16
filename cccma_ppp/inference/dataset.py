@@ -74,7 +74,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
                         "For cross_ensemble or same_member conditioning an ensembles dim must exist in the condition."
                     )
             elif self.condition_method == "ensemble_mean":
-                if not self.effective_condition.ensemble_mean is True:
+                if self.effective_condition.ensemble_mean is not True:
                     raise ValueError(
                         "Ensemble mean must be True for ensemble_mean conditioning."
                     )
