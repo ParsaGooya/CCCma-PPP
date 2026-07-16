@@ -6,6 +6,7 @@ import dataclasses
 import gc
 import os
 import time
+from tqdm import tqdm
 
 from cccma_ppp.core import moduleABC, OptimizerWrapper
 from cccma_ppp.core.cVAE_module import cVAE
@@ -240,7 +241,7 @@ class Trainer:
                 f"Module is on {self.raw_module._get_device()}, but trainer device is {self.device}"
             )
 
-        self.scaler = GradScaler("cuda", enabled=self.config.mixed_precision)
+        self.scaler = GradScaler(enabled=self.config.mixed_precision)
 
         self.train_aggregator = MetricsAggregator(distributed, name="Train")
         self.validation_aggregator = (
@@ -429,7 +430,11 @@ class Trainer:
         self.module.train()
 
         start_time = time.time()
-        for batch_id, batch in enumerate(self.TrainLoader):
+        for batch_id, batch in tqdm(
+                enumerate(self.TrainLoader),
+                disable=not self.is_on_root,
+                desc="Train",
+            ):
             batch_loss_dict = self._train_on_batch(batch)
 
             self.train_aggregator.record(batch_loss_dict)
