@@ -462,7 +462,7 @@ def load_train_config(config_path):
 def base_config():
     cfg = prepare_config(BASE_TRAIN_CONFIG)
 
-    cfg["max_epochs"] = 1
+    cfg["max_epochs"] = 3
 
     cfg["train_loader"]["num_data_workers"] = 0
     cfg["train_loader"]["num_validation_years"] = 0
@@ -1061,7 +1061,7 @@ def test_resume_training(root_dir):
     resumed_cfg = prepare_config(train_cfg)
 
     resumed_cfg["resume_dir"] = str(exp_dir)
-    resumed_cfg["max_epochs"] = 2
+    resumed_cfg["max_epochs"] = 3
 
     ensure_cvae_beta_finder(resumed_cfg)
 
