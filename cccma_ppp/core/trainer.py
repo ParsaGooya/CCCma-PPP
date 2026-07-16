@@ -504,7 +504,11 @@ class Trainer:
 
         self.module.eval()
 
-        for batch_id, batch in enumerate(self.ValidationLoader):
+        for batch_id, batch in tqdm(
+                enumerate(self.ValidationLoader),
+                disable=not self.is_on_root,
+                desc="Validate",
+            ): 
             batch_loss_dict = self._validate_on_batch(batch)
 
             self.validation_aggregator.record(batch_loss_dict)
