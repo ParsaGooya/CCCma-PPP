@@ -3,10 +3,7 @@ from typing import ClassVar, final
 import dataclasses
 import numpy as np
 
-from cccma_ppp.data_modules.data.data_configs import (
-    ModelDataConfig,
-    ConditionDataConfig,
-)
+from cccma_ppp.data_modules.data import ModelDataConfig, ConditionDataConfig
 
 
 @dataclasses.dataclass
@@ -172,8 +169,9 @@ class DatasetConfigABC(abc.ABC):
                         "Condition data should be available"
                         " on the same lead_times as model data."
                     )
-
+            
             if getattr(self, "observation", False) is not None:
+                    
                 if not self.condition.info.coords["lat"].equals(
                     self.model.info.coords["lat"]
                 ):

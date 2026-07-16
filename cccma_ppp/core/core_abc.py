@@ -6,7 +6,7 @@ from typing import final
 import gc
 from pathlib import Path
 
-from cccma_ppp.loss.loss import Losspipeline
+from cccma_ppp.loss import Losspipeline
 
 
 class moduleABC(nn.Module, abc.ABC):

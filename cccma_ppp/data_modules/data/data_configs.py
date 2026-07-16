@@ -2,8 +2,8 @@ import numpy as np
 import dataclasses
 from typing import final, Literal
 
-from cccma_ppp.data_modules.data.data_abc import DataConfigABC
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
+from cccma_ppp.data_modules.data import DataConfigABC
+from cccma_ppp.preprocessing import PreprocessingPipeline
 
 
 spatialmethod = Literal["uniform", "cosine_lat"]
@@ -29,7 +29,7 @@ class ModelDataConfig(DataConfigABC):
     concat_dim : str, optional
         Dimension along which files are concatenated.
     file_type : str, optional
-        File pattern (e.g., ".nc").
+        File pattern (e.g., "*.nc").
     rename_dict : dict or None, optional
         Variable renaming mapping.
     """

@@ -6,7 +6,7 @@ from pathlib import Path
 import os
 import xarray as xr
 
-from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.generic import RuntimeContext
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 from cccma_ppp.preprocessing.registery import Registery
 
@@ -288,7 +288,7 @@ class PreprocessingPipeline:
             idx = np.argwhere(np.array(self.steps) == name).flatten()
             if idx.size == 0:
                 raise ValueError(f"{name} not in preprocessing steps!")
-            return self.fitted_preprocessors[idx.item()]
+            return self.fitted_preprocessors[int(idx)]
 
     def add_fitted_preprocessor(self, preprocessor, name, index=None):
         """

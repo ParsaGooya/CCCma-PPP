@@ -6,13 +6,14 @@ from pathlib import Path
 
 
 from cccma_ppp.train.datasets import TrainDatasetConfig
-from cccma_ppp.data_modules.utils import _create_train_mask, WeightsConfig
+from cccma_ppp.data_modules import _create_train_mask, WeightsConfig
 from cccma_ppp.data_modules.dataloader import (
     Dataloader,
     DataloaderConfigABC,
     BatchDataABC,
 )
-from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic import Distributed
+
 
 
 @dataclasses.dataclass
