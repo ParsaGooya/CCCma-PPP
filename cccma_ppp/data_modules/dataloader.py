@@ -62,6 +62,7 @@ class DataloaderConfigABC(abc.ABC):
     """
 
     dataset_config: DatasetConfigABC
+    pin_memory: bool
 
     @abc.abstractmethod
     def setup_distributed(self):
@@ -123,6 +124,8 @@ class Dataloader:
 
         self.sampler = self._get_dataloader_sampler()
         shuffle = self.world_size == 1 if self.shuffle is None else self.shuffle
+        num_workers = self.config.num_data_workers
+
         self._torch_loader = DataLoader(
             self.dataset,
             batch_size=self.config.batch_size,
@@ -133,8 +136,10 @@ class Dataloader:
                 return_spatial_mask=self.return_spatial_mask,
                 reduce_spatial_mask=self.reduce_spatial_mask,
             ),
-            num_workers=self.config.num_data_workers,
+            num_workers=num_workers,
             prefetch_factor=self.config.prefetch_factor,
+            persistent_workers=num_workers > 0,
+            pin_memory=self.config.pin_memory,
         )
 
     @property

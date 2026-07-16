@@ -50,7 +50,7 @@ class BatchData(BatchDataABC):
         -------
         None
         """
-
+        
         if self.return_spatial_mask:
             self.input_mask = (~torch.isnan(self.input)).to(torch.int)
             self.target_mask = (~torch.isnan(self.target)).to(torch.int)
@@ -124,6 +124,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     num_data_workers: int = 0
     prefetch_factor: int = 2
     drop_last: bool = False
+    load: bool = False
 
     def __post_init__(self):
         """
@@ -139,6 +140,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             If requested training years are invalid.
         """
         self._setup = False
+        self.pin_memory = False
 
         if self.num_data_workers == 0:
             self.prefetch_factor = None
@@ -212,6 +214,9 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             load_path is not None):
             self.dataset_config._load_fitted_preprocessors(load_dir=load_path)
 
+        if distributed.distributed:
+            self.pin_memory = True
+
         self._setup = True
 
     def build_train_loader(
@@ -252,7 +257,10 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         )
 
         train_dataset = self.dataset_config.build_dataset(
-            years=self.train_years, mask=train_mask, return_metadata=return_metadata
+            years=self.train_years, 
+            mask=train_mask, 
+            return_metadata=return_metadata,
+            load=self.load
         )
 
         return Dataloader(
@@ -305,8 +313,12 @@ class TrainDataloaderConfig(DataloaderConfigABC):
                 lead_times=self.dataset_config.lead_months,
             )
             validation_dataset = self.dataset_config.build_dataset(
-                years=self.validation_years, mask=validation_mask, return_metadata=return_metadata
+                years=self.validation_years, 
+                mask=validation_mask, 
+                return_metadata=return_metadata,
+                load=self.load
             )
+            
             return Dataloader(
                 dataset=validation_dataset,
                 config=self,

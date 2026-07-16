@@ -173,6 +173,7 @@ def _load_xarray_data(
     preprocessor: PreprocessingPipeline | None = None,
     concat_dim: str = "year",
     rename_dict: dict | None = None,
+    load: bool = False
 ):
     """
     Load and optionally preprocess xarray dataset.
@@ -221,13 +222,15 @@ def _load_xarray_data(
     ]
 
     ds = ds.transpose(..., *nn_dims)
+    if load:
+        ds = ds.load()
 
     return ds
 
 
 def _create_train_mask(
     years: list | xr.DataArray,
-    lead_times: list | xr.DataArray | int,
+    lead_times: list | xr.DataArray | np.ndarray | int,
     exclude_idx=0,
 ):
     """
@@ -253,8 +256,10 @@ def _create_train_mask(
     due to lead-time offsets.
     """
 
-    if isinstance(lead_times, int):
-        lead_times = np.arange(1, lead_times + 1)
+    if not isinstance(lead_times, int):
+        lead_times = max(lead_times)
+
+    lead_times = np.arange(1, lead_times + 1)
 
     mask = np.full((len(years), len(lead_times)), False, dtype=bool)
     x = np.arange(0, 12 * mask.shape[0], 12)

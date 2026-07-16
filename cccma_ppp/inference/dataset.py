@@ -119,9 +119,13 @@ class InferenceDatasetConfig(DatasetConfigABC):
     def get_common_time(self):
         year_ranges = list()
         if self.condition is not None:
-            year_ranges.append(self.condition.year_range)
+            year_ranges.append(
+                self.condition.info.coords["year"].values,
+                )
         if self.model is not None:
-            year_ranges.append(self.model.year_range)
+            year_ranges.append(
+                self.model.info.coords["year"].values,
+                )
 
         common = year_ranges[0]
         for yr in year_ranges[1:]:
@@ -131,11 +135,8 @@ class InferenceDatasetConfig(DatasetConfigABC):
     
     @property
     def available_inference_years(self):
-        num_lead_years = max(self.lead_months) // 12
-        return np.arange(
-                np.min(self.get_common_time),
-                np.max(self.get_common_time) + 1 - num_lead_years + 1,
-            )
+
+        return self.get_common_time
 
     def _load_fitted_preprocessors(
         self, load_dir: Path | str | None = None
@@ -151,12 +152,13 @@ class InferenceDatasetConfig(DatasetConfigABC):
         self,
         years: np.ndarray,
         return_metadata: bool = False,
+        load: bool = False
     ):
         return InferenceDataset(
             config=self,
             requested_years=years,
             return_metadata=return_metadata,
-
+            load=load
         )
 
 
@@ -167,6 +169,7 @@ class InferenceDataset(Dataset):
     config: InferenceDatasetConfig
     requested_years: list[int] | tuple[int] | np.ndarray
     return_metadata: bool = False
+    load: bool = False
 
     def __post_init__(self):
         if not self.config._fitted_preprocessors:
@@ -181,10 +184,12 @@ class InferenceDataset(Dataset):
         self.model_dataset = self.condition_dataset = None
 
         if self.config.model is not None:
-            self.model_dataset = self._load_xarray_data(self.config.model)
+            self.model_dataset = self._load_xarray_data(self.config.model,
+                                                        load = self.load)
 
         if self.config.effective_condition is not None:
-            self.condition_dataset = self._load_xarray_data(self.config.effective_condition)
+            self.condition_dataset = self._load_xarray_data(self.config.effective_condition,
+                                                            load = self.load)
 
         self.mask = self._prepare_mask()
         self.model_indexes = self.get_model_indexes()
@@ -212,7 +217,7 @@ class InferenceDataset(Dataset):
 
     def _prepare_mask(self):
         mask = _create_train_mask(
-            years=self.config.effective_input.year_range,
+            years=self.config.available_inference_years,
             lead_times=np.arange(1, self.config.effective_input.info.sizes["lead_time"] + 1),
         )
         mask = xr.full_like(mask, fill_value=False)
@@ -237,7 +242,9 @@ class InferenceDataset(Dataset):
 
         return mask
 
-    def _load_xarray_data(self, config: DataConfigABC):
+    def _load_xarray_data(self, 
+                          config: DataConfigABC, 
+                          load: bool = False):
 
         return _load_xarray_data(
             config.list_paths,
@@ -248,6 +255,7 @@ class InferenceDataset(Dataset):
             else None,
             concat_dim=config.concat_dim,
             rename_dict=config.rename_dict,
+            load=load
         )
 
     def get_model_indexes(self):

@@ -51,9 +51,11 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     num_data_workers: int = 0
     prefetch_factor: int | None = None
     drop_last: bool = False
+    load: bool = False
 
     def __post_init__(self):
         self._setup = False
+        self.pin_memory = False
         self.train_dataset_config = None
 
         if self.num_data_workers == 0:
@@ -143,6 +145,9 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
         self.dataset_config._load_fitted_preprocessors(load_dir=load_path)
 
+        if distributed.distributed:
+            self.pin_memory = True
+
         self._setup = True
 
 
@@ -153,7 +158,9 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
             )
 
         inference_dataset = self.dataset_config.build_dataset(
-            years=self._inference_years, return_metadata=True
+            years=self._inference_years, 
+            return_metadata=True,
+            load=self.load
         )
 
         return Dataloader(

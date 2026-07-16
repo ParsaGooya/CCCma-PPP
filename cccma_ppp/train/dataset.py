@@ -13,6 +13,7 @@ from cccma_ppp.data_modules.dataset import (
     _get_time_features,
 )
 from cccma_ppp.data_modules.data import (
+    DataConfigABC,
     ModelDataConfig,
     ObsDataConfig,
     ConditionDataConfig,
@@ -230,10 +231,11 @@ class TrainDatasetConfig(DatasetConfigABC):
         np.ndarray
         """
 
-        if self.observation is not None:
-            return np.intersect1d(self.model.year_range, self.observation.year_range)
+        if self.observation is None:
+            return self.model.info.coords["year"].values
+  
         else:
-            return self.model.year_range
+            return np.intersect1d(self.model.year_range, self.observation.year_range)
 
     @property
     def available_train_time(self):
@@ -245,14 +247,12 @@ class TrainDatasetConfig(DatasetConfigABC):
         np.ndarray
         """
 
-        num_lead_years = max(self.lead_months) // 12
         if self.observation is None:
-            return np.arange(
-                np.min(self.get_common_time),
-                np.max(self.get_common_time) + 1 - num_lead_years + 1,
-            )
-        else:
             return self.get_common_time
+        else:
+            return np.intersect1d(self.model.info.coords["year"].values,
+                                  self.get_common_time)
+                                  
 
     def _fit_preprocessors(
         self,
@@ -303,9 +303,10 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     def build_dataset(
         self,
-        years,
-        mask=None,
-        return_metadata=False,
+        years: np.ndarray,
+        mask: xr.DataArray | None = None,
+        return_metadata: bool = False,
+        load: bool = False,
     ):
         """
         Construct training dataset.
@@ -319,6 +320,7 @@ class TrainDatasetConfig(DatasetConfigABC):
             requested_years=years,
             mask=mask,
             return_metadata=return_metadata,
+            load=load
         )
 
 
@@ -339,6 +341,7 @@ class TrainDataset(Dataset):
     requested_years: list[int] | tuple[int] | np.ndarray
     mask: xr.DataArray = None
     return_metadata: bool = False
+    load: bool = False
 
     def __post_init__(self):
         """
@@ -366,16 +369,20 @@ class TrainDataset(Dataset):
                 "the requested years are not common to input and target data."
             )
 
-        self.observation_dataset = self.condition_dataset = None
+        self.model_dataset = self.observation_dataset = self.condition_dataset = None
 
-        self.model_dataset = self._load_xarray_data(self.config.model)
+        if self._load_model:
+            self.model_dataset = self._load_xarray_data(self.config.model, 
+                                                        load = self.load)
 
         if self.config.observation is not None:
-            self.observation_dataset = self._load_xarray_data(self.config.observation)
+            self.observation_dataset = self._load_xarray_data(self.config.observation,
+                                                                load = self.load)
 
         if self.config.effective_condition is not None:
             self.condition_dataset = self._load_xarray_data(
-                self.config.effective_condition
+                self.config.effective_condition,
+                load = self.load
             )
 
         self.mask = self._prepare_mask()
@@ -486,7 +493,7 @@ class TrainDataset(Dataset):
         mask = self.mask
         if mask is None:
             mask = _create_train_mask(
-                years=self.config.model.year_range,
+                years=self.config.available_train_time,
                 lead_times=np.arange(1, self.config.model.info.sizes["lead_time"] + 1),
             )
             mask = xr.full_like(mask, fill_value=False)
@@ -511,7 +518,9 @@ class TrainDataset(Dataset):
 
         return mask
 
-    def _load_xarray_data(self, config):
+    def _load_xarray_data(self, 
+                          config: DataConfigABC, 
+                          load: bool = False):
         """
         Load dataset from xarray sources.
 
@@ -529,6 +538,7 @@ class TrainDataset(Dataset):
             else None,
             concat_dim=config.concat_dim,
             rename_dict=config.rename_dict,
+            load=load
         )
 
     def get_model_indexes(self):
