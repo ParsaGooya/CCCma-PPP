@@ -4,10 +4,12 @@ import dataclasses
 from pathlib import Path
 import os
 from typing import Literal
+import contextlib
+from collections.abc import Iterator
 
 from cccma_ppp.preprocessing import PreprocessingPipeline, Flattennanremove
-from cccma_ppp.generic.runtime import RuntimeContext
-
+from cccma_ppp.generic import RuntimeContext
+from cccma_ppp.configs import supported_NN_dimensions_sorted
 
 spatialmethod = Literal["uniform", "cosine_lat"]
 
@@ -51,7 +53,7 @@ class WeightsConfig:
 
     def build_weights(
         self,
-        target_coords=None,
+        target_coords: dict,
         Flattennanremover: Flattennanremove | None = None,
         save=True,
         save_path: Path | str | None = None,
@@ -62,7 +64,7 @@ class WeightsConfig:
 
         Parameters
         ----------
-        target_coords : dict, optional
+        target_coords : dict
             Spatial coordinates of target data.
         Flattennanremover : Flattennanremove or None, optional
             Preprocessor for flattened spatial representation.
@@ -87,54 +89,58 @@ class WeightsConfig:
             if isinstance(weights, xr.Dataset):
                 weights = _unwrap_data_variables(weights)
 
-            if "ref" in weights.dims and {"lat", "lon"}.issubset(weights.coords):
-                weights = weights.set_index(ref=["lat", "lon"])
-
-            msg = f"the loaded weights from {self.load_dir} must have lat and lon coordinates that match the target coordinates"
-
-            if Flattennanremover is not None:
-                if not weights.coords["ref"].equals(Flattennanremover.final_locations):
+            msg = f"the loaded weights from {self.load_dir} must have coordinates that match the target coordinates"
+                
+            for coord in target_coords:
+                if coord not in weights.coords:
                     raise ValueError(msg)
-            elif target_coords is not None:
-                if not weights.coords["lat"].equals(target_coords["lat"]):
-                    raise ValueError(msg)
-                if not weights.coords["lon"].equals(target_coords["lon"]):
+                if not weights.coords[coord].equals(target_coords[coord]):
                     raise ValueError(msg)
 
         else:
-            weights = np.cos(
-                np.ones_like(target_coords["lon"])
-                * (np.deg2rad(target_coords["lat"].to_numpy()))[..., None]
-            )
-            weights = xr.DataArray(weights, coords=target_coords, name="weights")
+            coords = xr.DataArray(dims = tuple(target_coords),
+                                  coords=target_coords)
 
-            if self.spatial_method == "uniform":
-                weights = xr.ones_like(weights)
+            dims = tuple(coords.sizes)
+            shape = tuple(coords.sizes[dim] for dim in dims)
+
+            weights = xr.DataArray(
+                np.ones(shape, dtype=np.float32),
+                dims=dims,
+                coords=coords.coords,
+                name="weights",
+            )
+
+            if self.spatial_method == "cosine_lat" and "lat" in weights.coords:
+                latitude_weights = np.cos(np.deg2rad(weights.coords["lat"]))
+                weights = weights * latitude_weights
 
             if self.variable_weights is not None:
-                weights = (
-                    xr.DataArray(
-                        list(self.variable_weights.values()),
-                        coords={"channels": list(self.variable_weights.keys())},
-                    )
-                    * weights
+                variable_weights = xr.DataArray(
+                    list(self.variable_weights.values()),
+                    dims=("channels",),
+                    coords={"channels": list(self.variable_weights)},
+                    name="variable_weights",
                 )
 
-            if Flattennanremover is not None:
-                weights = Flattennanremover.transform(weights)
+                weights = variable_weights * weights
 
-            if save:
-                save_path = (
-                    Path(save_path)
-                    if save_path is not None
-                    else Path(RuntimeContext.GLOBAL_EXP_DIR)
-                )
-                save_name = save_name or "spatial_weights.nc"
 
-                if not os.path.isdir(save_path):
-                    os.makedirs(save_path)
+        if self.load_dir is None and save:
+            save_path = (
+                Path(save_path)
+                if save_path is not None
+                else Path(RuntimeContext.GLOBAL_EXP_DIR)
+            )
+            save_name = save_name or "spatial_weights.nc"
 
-                weights.reset_index("ref").to_netcdf(save_path / save_name)
+            if not os.path.isdir(save_path):
+                os.makedirs(save_path)
+
+            weights.to_netcdf(save_path / save_name)
+
+        if Flattennanremover is not None:
+            weights = Flattennanremover.transform(weights)
 
         return weights
 
@@ -154,7 +160,7 @@ def _unwrap_data_variables(dataset: xr.Dataset) -> xr.DataArray:
     """
 
     return xr.concat(
-        [dataset[v].expand_dims("channels", axis=0) for v in list(dataset.data_vars)],
+        [dataset[v].squeeze().expand_dims("channels", axis=0) for v in list(dataset.data_vars)],
         dim="channels",
     )
 
@@ -193,7 +199,7 @@ def _load_xarray_data(
     xr.Dataset or xr.DataArray
         Loaded (and optionally preprocessed) data.
     """
-
+    
     ds = xr.open_mfdataset(paths, combine="nested", concat_dim=concat_dim)
 
     if rename_dict is not None:
@@ -208,6 +214,13 @@ def _load_xarray_data(
         ds = ds[names]
     if preprocessor is not None:
         ds = preprocessor.transform(ds)
+
+    nn_dims = [
+        dim for dim in supported_NN_dimensions_sorted
+        if dim in ds.dims
+    ]
+
+    ds = ds.transpose(..., *nn_dims)
 
     return ds
 
@@ -256,3 +269,21 @@ def _create_train_mask(
         coords={"year": years, "lead_time": lead_times},
         name="mask",
     )
+
+
+
+
+
+@contextlib.contextmanager
+def suppress_stderr() -> Iterator[None]:
+    """Temporarily suppress Python and C-library stderr output."""
+    stderr_fd = 2
+    saved_stderr_fd = os.dup(stderr_fd)
+
+    try:
+        with open(os.devnull, "w") as devnull:
+            os.dup2(devnull.fileno(), stderr_fd)
+            yield
+    finally:
+        os.dup2(saved_stderr_fd, stderr_fd)
+        os.close(saved_stderr_fd)

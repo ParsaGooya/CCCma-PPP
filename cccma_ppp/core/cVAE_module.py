@@ -8,18 +8,20 @@ import gc
 
 from cccma_ppp.loss import Losspipeline
 from cccma_ppp.loss.kld import KLD
-from cccma_ppp.core import moduleABC, moduleConfigABC, _load_config_from_checkpoint
+from cccma_ppp.core import moduleABC, moduleConfigABC, OutputABC
 from cccma_ppp.core.selectors import (
     ModuleSelector,
     cVAEModelSelector,
+    _load_config_from_checkpoint
 )
 from cccma_ppp.models.normalized_flows import NormalizedFlowConfig
+from cccma_ppp.models.models_abc import cVAEPredictRequest
 from cccma_ppp.train import BatchData
-from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.generic import RuntimeContext
 
 
 @dataclasses.dataclass
-class cVAEOutput:
+class cVAEOutput(OutputABC):
     """
     Container for cVAE outputs.
 
@@ -40,6 +42,7 @@ class cVAEOutput:
     output: torch.Tensor
     mu: torch.Tensor | None
     log_var: torch.Tensor | None
+    samples: torch.Tensor | None = None
     cond_mu: torch.Tensor | None = None
     cond_log_var: torch.Tensor | None = None
 
@@ -321,8 +324,8 @@ class cVAE(moduleABC):
                     "with normalized flow all loss reduction has to be sum."
                 )
 
-        self.criterion = reconstruction_loss
-        self.KLD = KLD(reduction=self.criterion.reduction)
+        self.criterion = reconstruction_loss.to(self._get_device())
+        self.KLD = KLD(reduction=self.criterion.reduction).to(self._get_device())
 
     def _compute_loss(self, beta: float, data: BatchData):
         """
@@ -431,7 +434,11 @@ class cVAE(moduleABC):
             sample_size=sample_size,
         )
 
-    def predict(self, data: BatchData, sample_size=1) -> cVAEOutput:
+    def predict(self, 
+                data: BatchData, 
+                sample_size: int =1, 
+                nstds: int = 1,
+                latent_samples: torch.Tensor = None) -> cVAEOutput:
         """
         Generate predictions using the learned prior.
 
@@ -448,9 +455,11 @@ class cVAE(moduleABC):
             Generated outputs.
         """
 
-        return self.model.predict(
+        return self.model.predict( cVAEPredictRequest(
             condition=data.input,
             added_features=data.added_features,
             prior_flow=self.prior_flow,
             sample_size=sample_size,
+            nstds=nstds,
+            latent_samples = latent_samples)
         )

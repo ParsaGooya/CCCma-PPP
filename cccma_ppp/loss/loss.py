@@ -2,6 +2,7 @@ import torch.nn as nn
 import xarray as xr
 from typing import ClassVar
 import dataclasses
+import torch
 
 from cccma_ppp.loss.loss_abc import Reduction
 from cccma_ppp.loss.registery import Registery
@@ -172,6 +173,8 @@ class Losspipeline(nn.Module):
                 name = f"{name}_{self.steps.count(name) + 1}"
 
             self.steps.append(name)
+
+        self.pipeline = torch.nn.ModuleList(self.pipeline)
 
     @classmethod
     def register(cls, name: str):

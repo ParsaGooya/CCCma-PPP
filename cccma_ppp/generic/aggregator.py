@@ -438,3 +438,58 @@ class MetricsAggregator:
         self.epoch_times = state_dict.get("epoch_times", None)
         self.num_epochs_seen = state_dict.get("num_epochs_seen", 0)
         self.reset_batch_losses()
+
+
+
+
+
+
+@dataclasses.dataclass
+class RunningCovariance:
+    distributed: Distributed
+    sum_x: torch.Tensor | None = None
+    sum_xxT: torch.Tensor | None = None
+    count: torch.Tensor | None = None
+    
+
+    def update(self, x: torch.Tensor):
+        """
+        x shape: [N, D]
+        """
+        x = x.detach().float()
+
+        batch_sum = x.sum(dim=0)
+        batch_xxT = x.T @ x
+        batch_count = torch.tensor(
+            x.shape[0],
+            device=x.device,
+            dtype=torch.float32,
+        )
+
+        if self.sum_x is None:
+            self.sum_x = batch_sum
+            self.sum_xxT = batch_xxT
+            self.count = batch_count
+        else:
+            self.sum_x += batch_sum
+            self.sum_xxT += batch_xxT
+            self.count += batch_count
+
+    def distributed_reduce(self):
+
+        self.distributed.all_reduce_sum(self.sum_x)
+        self.distributed.all_reduce_sum(self.sum_xxT)
+        self.distributed.all_reduce_sum(self.count)
+
+    def finalize(self):
+        mean = self.sum_x / self.count
+
+        if self.count <= 1:
+            raise ValueError("Need at least two samples to compute covariance.")
+
+        cov = (
+            self.sum_xxT
+            - self.count * torch.outer(mean, mean)
+        ) / (self.count - 1)
+
+        return mean.cpu(), cov.cpu()

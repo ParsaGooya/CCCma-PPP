@@ -1,4 +1,4 @@
-from cccma_ppp.train.train import main, get_parser
+from cccma_ppp.inference.predict import main, get_parser
 
 if __name__ == "__main__":
     parser = get_parser()

@@ -1,116 +1,97 @@
 import dataclasses
 import os
+import numpy as np
 import torch
+import warnings
 import logging
 from pathlib import Path
 import yaml
 import dacite
+import gc
 
-
+from cccma_ppp.core.selectors import ModuleSelector
 from cccma_ppp.inference.dataloader import InferenceDataloaderConfig
+from cccma_ppp.preprocessing import PreprocessingPipeline
+from cccma_ppp.core.writer import WriterConfig
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext
-
+from cccma_ppp.data_modules.dataloader import Dataloader
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
-
-import cccma_ppp.train.registry_imports  # noqa: F401
+from cccma_ppp.train.train_configs import set_seed, _check_IO
 
 
 @dataclasses.dataclass
 class InferenceConfig:
-    experiment_dir: str
-    inference_loader: InferenceDataloaderConfig = dataclasses.field(
-        default_factory=InferenceDataloaderConfig
-    )
-    output_path: str = None
-    output_ensemble_size: int = 1
-    output_sampler: OutputsamplerConfig | None = None
+
+    experiment_dir: str 
+    writer: WriterConfig
+    inference_loader: InferenceDataloaderConfig = dataclasses.field(default_factory=InferenceDataloaderConfig) 
+    save_path: str | None = None
+    seed: int | None = None
+    checkpoint_name: str | None = None
 
     def __post_init__(self):
         self.experiment_dir = Path(self.experiment_dir)
+
+        if self.save_path is not None:
+            self.save_path = Path(self.save_path)
+
         self.train_config = self.load_train_config()
         self.train_loader = self.load_train_dataloader_config()
 
-        self._check_esnsemble_generation()
         self._resolve_inference_dataset_config()
 
     def _resolve_inference_dataset_config(self):
-        if (
-            self.inference_loader.dataset_config is None
-        ):  ### method needs to be implemented!
-            self.inference_loader.dataset_config.read_from_train(
-                self.train_loader.dataset_config
-            )
+        if self.inference_loader.dataset_config is None: ### method needs to be implemented!
+            self.inference_loader.read_datasetConfig_from_train(self.train_loader.dataset_config)
         else:
             self._check_inference_dataset()
 
+
     def _check_inference_dataset(self):
 
-        if self.train_config.get("module").get("type").lower() in ["cVAE"]:
-            if self.inference_loader.dataset_config.condition_method is None:
-                raise ValueError("with cVAE you must specify condition method!")
-
-        if (
-            self.inference_loader.input_var_metadata
-            != self.train_loader.input_var_metadata
-        ):
-            raise RuntimeError(
-                "Input variables or preprocessing steps are not consistent"
-                f"with the trained model at : {self.experiment_dir}"
-            )
-
-    def _check_esnsemble_generation(self):
-        if self.output_ensemble_size > 1 and self.output_sampler is None:
-            if self.train_config.get("module").get("type").lower() in [
-                "deterministic",
-                "default",
-            ]:
-                raise ValueError(
-                    "with determisitic models output ensemble cannot be generated "
-                    "unless output_sampler configuration is provided."
+        if (self.inference_loader.input_var_metadata !=
+                        self.train_loader.input_var_metadata):
+                raise RuntimeError(
+                    'Input variables or preprocessing steps are not consistent'
+                    f'with the trained model at : {self.experiment_dir}' 
                 )
-
-    def load_train_config(self):
-
-        return prepare_config(self.experiment_dir / "config.yaml")
-
-    def load_train_dataloader_config(self):
-        return dacite.from_dict(
-            data_class=TrainDataloaderConfig,
-            data=self.train_config.get("train_loader"),
-            config=dacite.Config(strict=False),
-        )
+        
 
     @property
     def output_preprocessor_dir(self):
 
-        if "observation" in self.train_config["train_loader"]["dataset_config"]:
-            output_data = self.train_config["train_loader"]["dataset_config"][
-                "observation"
-            ]
+        if 'observation' in self.train_config['train_loader']['dataset_config']:
+            preprocessor_name = 'observation'
         else:
-            output_data = self.train_config["train_loader"]["dataset_config"]["model"]
-
-        output_preprocessor = output_data.get("preprocessing_pipeline")
+            preprocessor_name = 'model'
 
         location = self.experiment_dir / "preprocessing_pipeline"
-        return location / f"{output_preprocessor.name}_preprocessing_pipeline.joblib"
+        return location / f"{preprocessor_name}_preprocessing_pipeline.joblib"
 
     @property
-    def save_dir(self) -> str:
-        """
-        The directory where checkpoints are saved.
-        """
-        return self.output_path or os.path.join(self.experiment_dir, "inference")
+    def output_dir(self) -> Path:
+        return (
+            self.save_path
+            if self.save_path is not None
+            else self.experiment_dir / "inference"
+        )
 
+
+    @property
+    def log_dir(self) -> Path:
+        return self.experiment_dir / "logs" 
+    
     def _prepare_runtime_variables(self):
 
         RuntimeContext.GLOBAL_EXP_DIR = str(self.experiment_dir)
         RuntimeContext.GLOBAL_OUTPUT_DIR = str(self.output_dir)
+        RuntimeContext.GLOBAL_LOG_DIR = str(self.log_dir)
         RuntimeContext.INPUT_VAR_METADATA = self.inference_loader.input_var_metadata
-        RuntimeContext.TARGET_VAR_METADATA = self.inference_loader.target_var_metadata
 
-    def prepare_directory(self, distributed: Distributed):
+
+    def prepare_directory(self, distributed : Distributed):
+
         """
         Create output (sub)directories.
         """
@@ -118,10 +99,95 @@ class InferenceConfig:
         self._prepare_runtime_variables()
 
         if distributed.is_root():
+
             os.makedirs(self.output_dir, exist_ok=True)
 
         distributed.barrier()
 
+    def set_random_seed(self, rank: int):
+        """
+        Apply configured random seed.
+
+        Returns
+        -------
+        None
+        """
+
+        if self.seed is not None:
+            set_seed(self.seed + rank)
+
+    def load_train_config(self):
+                
+        return prepare_config(self.experiment_dir / 'config.yaml')  
+    
+    def load_train_dataloader_config(self):
+        return dacite.from_dict(
+            data_class=TrainDataloaderConfig,
+            data=self.train_config.get('train_loader'),
+            config=dacite.Config(strict=False),
+        )
+
+    def load_module(self, 
+                    inference_loader: Dataloader | None = None,
+                    strict: bool = True):
+
+        path = Path(self.experiment_dir) / "checkpoints"
+
+        if self.checkpoint_name is not None:
+            path = path / self.checkpoint_name
+        else:
+            path = path / "best.pt"
+
+        if not path.exists():
+            raise FileNotFoundError(f"Checkpoint not found: {path}")
+            
+        checkpoint = torch.load(path, map_location="cpu", weights_only=False) ### ERROR
+
+        required_keys = {
+            "input_shape",
+            "output_shape",
+            "added_features_dim",
+            "module",
+        }
+
+        missing = required_keys - checkpoint.keys()
+
+        if missing:
+            raise KeyError(
+                f"Checkpoint {path} is missing keys: {sorted(missing)}"
+            )
+
+
+        input_shape = checkpoint["input_shape"]
+        output_shape = checkpoint["output_shape"]
+        added_features_dim = checkpoint["added_features_dim"]
+
+        if inference_loader is not None:
+            if not all([input_shape == inference_loader.input_shape,
+                        output_shape == inference_loader.output_shape,
+                        added_features_dim == inference_loader.added_features_dim]):
+                raise RuntimeError(
+                    "Data and model IO dimensions do not match!"
+                )
+
+
+        selector = dacite.from_dict(
+            data_class=ModuleSelector,
+            data=self.train_config.get('module'),
+            config=dacite.Config(strict=False),
+        )
+
+        module = selector.build_module(  input_shape = input_shape,
+                                                        output_shape = output_shape,
+                                                        added_features_dim = added_features_dim)
+
+        module.load_state_dict(checkpoint["module"], strict=strict)
+
+        del checkpoint
+        gc.collect()
+
+        return module
+        
 
 def prepare_config(path: Path | str) -> dict:
     """Get config and update with possible dotlist override."""
@@ -130,11 +196,8 @@ def prepare_config(path: Path | str) -> dict:
     return data
 
 
-def build_writer(
-    config: InferenceConfig,
-    distributed: Distributed,
-    logger: logging.Logger | None = None,
-):
+
+def build_writer(config : InferenceConfig, distributed : Distributed, logger : logging.Logger | None = None):
     def log(msg, **kwargs):
         if distributed.is_root():
             if logger is not None:
@@ -142,60 +205,37 @@ def build_writer(
             else:
                 print(msg)
 
-    log("creating data loader ...")
 
-    config.train_loader.setup_distributed(distributed)
+    log(f"creating data loader ...")
 
-    train_loader = config.train_loader.build_train_loader()
-    validation_loader = config.train_loader.build_validation_loader()
+    config.inference_loader.setup_distributed(config.train_loader,
+                                              distributed)
+    
+    inference_loader = config.inference_loader.build_inference_loader()
 
-    num_train_batches = len(train_loader)
-    input_shape = train_loader.input_shape
-    output_shape = train_loader.target_shape
-    added_features_dim = train_loader.added_features_dim
+    log(f"Loading saved module ...")
 
-    weights = train_loader.get_weights(config.weights)
+    module = config.load_module(inference_loader)
+    module  = module.to(distributed.device)
 
-    log(f"Creating {config.module.type} module ...")
+    # if distributed.distributed:
+    #     module = torch.nn.parallel.DistributedDataParallel(module, device_ids=[distributed.local_rank], output_device=distributed.local_rank, find_unused_parameters=False)
 
-    module = config.module.build_module(
-        input_shape=input_shape,
-        output_shape=output_shape,
-        added_features_dim=added_features_dim,
+    log(f"Loading postprocessor ...")
+    post_processor = PreprocessingPipeline().load_from_memory(
+        config.output_preprocessor_dir
     )
+    
+    log(f"Creating writer ...")
 
-    module = module.to(distributed.device)
-
-    if distributed.distributed:
-        module = torch.nn.parallel.DistributedDataParallel(
-            module,
-            device_ids=[distributed.local_rank],
-            output_device=distributed.local_rank,
-            find_unused_parameters=False,
+    writer = config.writer.build(
+            inference_data_loader=inference_loader,
+            train_dataloader_config=config.train_loader,
+            module=module,
+            post_processor=post_processor,
+            output_dir = config.output_dir
         )
 
-    log("Creating loss function ...")
+    return writer
 
-    reconstruction_loss = config.losspipeline.build(
-        weights=weights,
-        num_output_dimensions=getattr(module.model, "NUM_OUTPUT_DIMS", None)
-        or len(output_shape),
-    )
 
-    module.init_loss_function(reconstruction_loss)
-
-    log(f"Creating {config.optimization.optimizer_type} optimizer ...")
-
-    optimizer = config.optimization.build(module, num_train_batches, config.max_epochs)
-
-    log("Creating trainer ...")
-
-    trainer = config.trainer.build(
-        train_data_loader=train_loader,
-        validation_data_loader=validation_loader,
-        module=module,
-        optimization=optimizer,
-        max_epochs=config.max_epochs,
-    )
-
-    return trainer

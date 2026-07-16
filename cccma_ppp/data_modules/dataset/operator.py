@@ -6,7 +6,7 @@ from cccma_ppp.data_modules.data import DataConfigABC
 from cccma_ppp.data_modules.dataset import DatasetConfigABC
 from cccma_ppp.data_modules import WeightsConfig
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
-
+from cccma_ppp.configs import supported_NN_dimensions_sorted
 
 class DatasetOperator:
     """
@@ -78,7 +78,7 @@ class DatasetOperator:
                 "year": train_years,
                 "lead_time": self.config.lead_months,
             }
-            if self.config.model.info.coords["ensembles"] is not None:
+            if self.config.model.info.coords.get("ensembles") is not None:
                 selection["ensembles"] = self.config.model.info.coords["ensembles"]
 
             self.config.model._fit_preprocessor_pipeline(
@@ -91,7 +91,7 @@ class DatasetOperator:
 
         if self.config_observation is not None:
             selection = {"year": train_years}
-            if self.config_observation.info.coords["ensembles"] is not None:
+            if self.config_observation.info.coords.get("ensembles") is not None:
                 selection["ensembles"] = self.config_observation.info.coords[
                     "ensembles"
                 ]
@@ -108,7 +108,7 @@ class DatasetOperator:
                     "year": train_years,
                     "lead_time": self.config.lead_months,
                 }
-                if self.config.effective_condition.info.coords["ensembles"] is not None:
+                if self.config.effective_condition.info.coords.get("ensembles") is not None:
                     selection["ensembles"] = (
                         self.config.effective_condition.info.coords["ensembles"]
                     )
@@ -223,34 +223,34 @@ class DatasetOperator:
         """
         if config is None:
             config = WeightsConfig()
+        
 
         if self.config_observation is not None:
-            target_coords = self.config_observation.info.coords.copy()
+            ref = self.config_observation
         elif self.config.model is not None:
-            target_coords = self.config.model.info.coords.copy()
+            ref = self.config.model
         else:
             raise ValueError(
                 "No model or observation data is availablle. "
                 "Weights could not be generated"
             )
 
-        if "ensembles" in target_coords:
-            del target_coords["ensembles"]
+        target_coords = {}
+        for dim in [dim for dim in supported_NN_dimensions_sorted 
+                     if dim in ref.info.coords]:
+  
+                target_coords[dim] = ref.info.coords[dim]
+
 
         from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 
-        if self.config_observation is not None:
-            pipeline = self.config_observation.preprocessing_pipeline
-        else:
-            pipeline = self.config.model.preprocessing_pipeline
-
         checklist = [
-            isinstance(item, Flattennanremove) for item in pipeline.fitted_preprocessors
+            isinstance(item, Flattennanremove) for item in ref.preprocessing_pipeline.fitted_preprocessors
         ]
 
         weights = config.build_weights(
             target_coords,
-            Flattennanremover=pipeline.get_preprocessors("flattener")
+            Flattennanremover=ref.preprocessing_pipeline.get_preprocessors("flattener")
             if any(checklist)
             else None,
             save=save,
@@ -259,14 +259,9 @@ class DatasetOperator:
         )
 
         if "channels" in weights.dims:
-            if self.config_observation is not None:
-                error_msg = f"inconsistent variable weights {weights.channels.values} for taget variables {self.config_observation.names}"
-                if not weights.channels.values == self.config_observation.names:
-                    raise RuntimeError(error_msg)
-            else:
-                error_msg = f"inconsistent variable weights {weights.channels.values} for taget variables {self.config.model.names}"
-                if not weights.channels.values == self.config.model.names:
-                    raise RuntimeError(error_msg)
+            error_msg = f"inconsistent variable weights {weights.channels.values} for output variables {ref.names}"
+            if not np.array_equal(weights.channels.values, self.ref.names):
+                raise RuntimeError(error_msg)
 
         return weights
 
@@ -281,11 +276,16 @@ class DatasetOperator:
         """
 
         metadata = dict(variables=list(), preprocessors=list())
+        NN_dims = []
 
         if self.config.effective_condition is None:
             metadata = self._update_metadata_with_dataconfig_metadata(
                 metadata, self.config.model
             )
+
+            for dim in [dim for dim in supported_NN_dimensions_sorted 
+                     if dim in self.config.model.info.coords]:
+                NN_dims.append(dim)
 
         else:
             if not self.config._using_model_data_as_condition:
@@ -299,6 +299,12 @@ class DatasetOperator:
                 metadata = self._update_metadata_with_dataconfig_metadata(
                     metadata, self.config.effective_condition
                 )
+
+            for dim in [dim for dim in supported_NN_dimensions_sorted 
+                     if dim in self.config.effective_condition.info.coords]:
+                NN_dims.append(dim)           
+
+        metadata['NN_dims'] = NN_dims
 
         return metadata
 
@@ -317,6 +323,7 @@ class DatasetOperator:
         """
 
         metadata = dict(variables=list(), preprocessors=list())
+        NN_dims = []
 
         if self.config_observation is None:
             if self.config.model is None:
@@ -328,10 +335,21 @@ class DatasetOperator:
             metadata = self._update_metadata_with_dataconfig_metadata(
                 metadata, self.config.model
             )
+
+            for dim in [dim for dim in supported_NN_dimensions_sorted 
+                     if dim in self.config.model.info.coords]:
+                NN_dims.append(dim)
+
         else:
             metadata = self._update_metadata_with_dataconfig_metadata(
                 metadata, self.config_observation
             )
+
+            for dim in [dim for dim in supported_NN_dimensions_sorted 
+                     if dim in self.config_observation.info.coords]:
+                NN_dims.append(dim)
+
+        metadata['NN_dims'] = NN_dims
 
         return metadata
 
@@ -351,7 +369,7 @@ class DatasetOperator:
         dict
         """
         preprocessor_names = [
-            processor[0] for processor in dataconfig.preprocessing_pipeline.pipeline
+            processor[0].lower() for processor in dataconfig.preprocessing_pipeline.pipeline
         ]
         for var in dataconfig.names:
             metadata["variables"].append(var)

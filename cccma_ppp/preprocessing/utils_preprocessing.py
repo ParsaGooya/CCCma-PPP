@@ -4,9 +4,9 @@ from pathlib import Path
 import joblib
 import os
 
-from cccma_ppp.preprocessing import PreprocessingStepSelector
+from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
-
+from cccma_ppp.configs import supported_NN_dimensions_sorted
 
 @PreprocessingStepSelector.register("normalizer")
 class Normalizer(PreprocessModuleABC):
@@ -41,7 +41,7 @@ class Normalizer(PreprocessModuleABC):
         if self.dims is not None:
             self.dims = tuple(self.dims)
 
-    def fit(self, data: xr.DataArray, mask: xr.DataArray = None):
+    def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
         """
         Fit normalization parameters.
 
@@ -143,7 +143,7 @@ class Standardizer(PreprocessModuleABC):
         if self.dims is not None:
             self.dims = tuple(self.dims)
 
-    def fit(self, data: xr.DataArray, mask: xr.DataArray = None):
+    def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
         """
         Fit standardization parameters.
 
@@ -246,7 +246,7 @@ class AnomaliesScaler(PreprocessModuleABC):
         if self.dims is not None:
             self.dims = tuple(self.dims)
 
-    def fit(self, data: xr.DataArray, mask: xr.DataArray = None):
+    def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
         """
         Fit anomaly baseline.
 
@@ -272,7 +272,7 @@ class AnomaliesScaler(PreprocessModuleABC):
             data_masked = data.where(~np.isnan(mask))
         else:
             data_masked = data
-
+            
         self.mean = data_masked.mean(self.dims).load()
         self.fitted = True
         return self
@@ -290,7 +290,7 @@ class AnomaliesScaler(PreprocessModuleABC):
         xr.DataArray
             Anomaly values.
         """
-
+        
         data_anomalies = data - self.mean
         return data_anomalies
 
@@ -322,7 +322,7 @@ class AnomaliesScaler(PreprocessModuleABC):
 @PreprocessingStepSelector.register("flattener")
 class Flattennanremove(PreprocessModuleABC):
     """
-    Flatten spatial dimensions while removing NaN locations.
+    Flatten NN dimensions while removing NaN locations.
 
     Parameters
     ----------
@@ -346,10 +346,12 @@ class Flattennanremove(PreprocessModuleABC):
 
         self.load_dir = load_dir
         self.fitted = False
+        self.common_to_input_and_target = False
+        self.NN_dims: list[str] = []
 
     def fit(
         self,
-        data: xr.DataArray,
+        data: xr.Dataset | xr.DataArray,
         target: xr.DataArray | None = None,
         mask=None,
         save: bool = False,
@@ -382,39 +384,78 @@ class Flattennanremove(PreprocessModuleABC):
         self
         """
 
-        if self.load_dir is None:
-            if target is not None:
-                self.reference_shape = xr.Dataset(
-                    coords={"lat": target["lat"], "lon": target["lon"]}
-                )
-
-                temp = target.stack(ref=["lat", "lon"]).sel(
-                    ref=data.stack(ref=["lat", "lon"]).dropna(dim="ref").ref
-                )
-                self.final_locations = temp.dropna("ref").load().ref
-                self.common_to_input_and_target = True
-            else:
-                self.reference_shape = xr.Dataset(
-                    coords={"lat": data["lat"], "lon": data["lon"]}
-                )
-
-                self.final_locations = (
-                    data.stack(ref=["lat", "lon"]).dropna(dim="ref").ref.load()
-                )
-                self.common_to_input_and_target = False
-
-            self.fitted = True
-            if save:
-                save_name = save_name or "flattener"
-                save_path = Path(save_path) or Path(os.get["GLOBAL_EXP_DIR"])
-
-                joblib.dump(self, save_path.joinpath(f"{save_name}.joblib"))
-        else:
+        if self.load_dir is not None:
             self._load_from_memory(self.load_dir)
+            return self
+        
+        reference = target if target is not None else data
+        
+        self.NN_dims = [
+            dim
+            for dim in supported_NN_dimensions_sorted 
+            if dim in reference.dims 
+        ]
+
+        missing_from_data = [
+            dim for dim in self.NN_dims if dim not in data.dims
+        ]
+
+        if missing_from_data:
+            raise RuntimeError(
+                "The input and reference data do not share all required NN "
+                f"dimensions. Missing from input data: {missing_from_data}."
+            )
+        
+        self.reference_shape = xr.Dataset(
+            coords={dim: reference[dim] for dim in self.NN_dims}
+        )
+
+        data_stacked = data.stack(ref=self.NN_dims).dropna(
+            dim="ref",
+            how="any",
+        )
+
+        if target is not None:
+            target_stacked = target.stack(ref=self.NN_dims).dropna(
+                dim="ref",
+                how="any",
+            )
+
+            self.final_locations = (
+                target_stacked
+                .sel(ref=data_stacked["ref"])
+                .dropna(dim="ref", how="any")
+                .load()["ref"]
+            )
+
+            self.common_to_input_and_target = True
+
+        else:
+            self.final_locations = data_stacked["ref"].load()
+            self.common_to_input_and_target = False
+
+        self.fitted = True
+
+        if save:
+            save_name = save_name or "flattener"
+
+            resolved_save_path = (
+                Path(save_path)
+                if save_path is not None
+                else Path(RuntimeContext.GLOBAL_EXP_DIR)
+            )
+            resolved_save_path.mkdir(parents=True, exist_ok=True)
+
+            joblib.dump(
+                self,
+                resolved_save_path / f"{save_name}.joblib",
+            )
 
         return self
 
-    def transform(self, data: xr.DataArray):
+    def transform(self, data: xr.DataArray
+        ) -> xr.Dataset | xr.DataArray:
+    
         """
         Apply flattening and spatial filtering.
 
@@ -426,16 +467,32 @@ class Flattennanremove(PreprocessModuleABC):
         -------
         xr.DataArray
             Flattened data with only valid spatial locations.
+
+        Raises
+        ------
+        ValueError
+            The data to be transformed does not have the correct NN dims.
         """
 
-        conditions = ["lat" in data.dims, "lon" in data.dims]
+        if "ref" in data.dims:
+            return data.sel(ref=self.final_locations)
 
-        if all(conditions):
-            sampled = data.stack(ref=["lat", "lon"]).sel(ref=self.final_locations)
-        else:
-            sampled = data.sel(ref=self.final_locations)
+        missing_dims = [
+            dim for dim in self.NN_dims if dim not in data.dims
+        ]
 
-        return sampled
+        if missing_dims:
+            raise ValueError(
+                "The data cannot be flattened using the fitted NN dimensions. "
+                f"Missing dimensions: {missing_dims}."
+            )
+
+
+        return (
+            data
+            .stack(ref=self.NN_dims)
+            .sel(ref=self.final_locations)
+        ).transpose(..., 'ref')
 
     def inverse_transform(self, data: xr.DataArray) -> xr.DataArray:
         """
@@ -450,8 +507,18 @@ class Flattennanremove(PreprocessModuleABC):
         -------
         xr.DataArray
             Reconstructed data in the original spatial grid.
+
+        Raises
+        ------
+        ValueError
+            The data to be inverse transformed does not have the ref dims.
         """
 
+        if "ref" not in data.dims:
+            raise ValueError(
+                "The input must contain the flattened 'ref' dimension."
+            )
+        
         return data.unstack().combine_first(self.reference_shape)
 
     def _load_from_memory(self, load_dir: Path | str) -> None:
@@ -479,5 +546,11 @@ class Flattennanremove(PreprocessModuleABC):
 
         self.reference_shape = loaded.reference_shape
         self.final_locations = loaded.final_locations
+        self.common_to_input_and_target = (
+            loaded.common_to_input_and_target
+        )
         self.fitted = loaded.fitted
         del loaded
+
+
+

@@ -42,32 +42,36 @@ def main(yaml_config: str):
 
     distributed = Distributed.get_instance()
 
-    config_data = prepare_config(yaml_config)
+    try:
 
-    config = dacite.from_dict(
-        data_class=TrainConfig, data=config_data, config=dacite.Config(strict=True)
-    )
-    config.set_random_seed()
+        config_data = prepare_config(yaml_config)
 
-    logger = setup_logger(name="training", log_dir=config.log_dir)
+        config = dacite.from_dict(
+            data_class=TrainConfig, data=config_data, config=dacite.Config(strict=True)
+        )
+        config.set_random_seed(distributed.rank)
 
-    if distributed.is_root():
-        logger.info("Setting up directories ...")
+        logger = setup_logger(name="training", log_dir=config.log_dir)
 
-    config.prepare_directory(distributed, yaml_config)
+        if distributed.is_root():
+            logger.info("Setting up directories ...")
 
-    if distributed.is_root():
-        logger.info("Building objects:")
+        config.prepare_directory(distributed, yaml_config)
 
-    trainer = build_trainer(config, distributed, logger)
+        if distributed.is_root():
+            logger.info("Building objects:")
 
-    trainer.setup_distributed(
-        distributed=distributed,
-        logger=logger,
-        log_every_n_epochs=config.log_every_n_epochs,
-        save_checkpoint=config.save_checkpoint,
-    )
+        trainer = build_trainer(config, distributed, logger)
 
-    trainer.train()
+        trainer.setup_distributed(
+            distributed=distributed,
+            logger=logger,
+            log_every_n_epochs=config.log_every_n_epochs,
+            save_checkpoint=config.save_checkpoint,
+        )
 
-    distributed.cleanup()
+        trainer.train()
+    
+    finally:
+
+        distributed.cleanup()

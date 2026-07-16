@@ -6,6 +6,7 @@ import dataclasses
 import gc
 import os
 import time
+from tqdm import tqdm
 
 from cccma_ppp.core import moduleABC, OptimizerWrapper
 from cccma_ppp.core.cVAE_module import cVAE
@@ -220,6 +221,14 @@ class Trainer:
         self.is_distributed = distributed.distributed
         self.is_on_root = distributed.is_root()
 
+        if distributed.distributed:
+            self.module = torch.nn.parallel.DistributedDataParallel(
+                self.module,
+                device_ids=[distributed.local_rank],
+                output_device=distributed.local_rank,
+                find_unused_parameters=False,
+            )
+
         self.log_root(logging.INFO, "Setting up trainer.")
 
         self.log_root(
@@ -232,7 +241,7 @@ class Trainer:
                 f"Module is on {self.raw_module._get_device()}, but trainer device is {self.device}"
             )
 
-        self.scaler = GradScaler("cuda", enabled=self.config.mixed_precision)
+        self.scaler = GradScaler(enabled=self.config.mixed_precision)
 
         self.train_aggregator = MetricsAggregator(distributed, name="Train")
         self.validation_aggregator = (
@@ -244,7 +253,7 @@ class Trainer:
         if not self.save_checkpoint:
             self.log_root(
                 logging.warning,
-                "Configured value of save_checkpoint is false, no checkpoints whatsoever will be saved! ",
+                "Configured value of save_checkpoint is false, no checkpoints whatsoever will be saved!" 
             )
 
         self.checkpoint_dir = Path(RuntimeContext.GLOBAL_CHECKPOINT_DIR)
@@ -253,7 +262,8 @@ class Trainer:
         if resuming:
             self.log_root(
                 logging.INFO,
-                f"Resuming training from {self.checkpoint_dir / 'best.pt'}. \n Warning: If all configurations don't match you will get RuntimeError!",
+                f"Resuming training from \n {self.checkpoint_dir / 'best.pt'}.\n" \
+                 "Warning: If all configurations don't match you will get RuntimeError!",
             )
             self._load_checkpoint(self.checkpoint_dir / "best.pt")
             if self._epochs_trained == self.max_epochs:
@@ -290,10 +300,14 @@ class Trainer:
             If trainer is not properly initialized.
         """
 
-        assert self._setup, "make sure to setup the trainer first."
+        if not self._setup:
+            raise RuntimeError(
+                "Call setup_distributed() before predict()."
+            )
+        
         self.log_root(logging.INFO, "Starting Training Loop...")
         self.start_time_train = time.time()
-        self._clear_memory()
+        clear_memory()
         self.optimizer.zero_grad(set_to_none=True)
 
         while self._epochs_trained < self.max_epochs:
@@ -416,7 +430,11 @@ class Trainer:
         self.module.train()
 
         start_time = time.time()
-        for batch_id, batch in enumerate(self.TrainLoader):
+        for batch_id, batch in tqdm(
+                enumerate(self.TrainLoader),
+                disable=not self.is_on_root,
+                desc="Train",
+            ):
             batch_loss_dict = self._train_on_batch(batch)
 
             self.train_aggregator.record(batch_loss_dict)
@@ -548,20 +566,6 @@ class Trainer:
 
         self.optimizer.zero_grad(set_to_none=True)
 
-    def _clear_memory(self):
-        """
-        Clear CPU and GPU memory.
-
-        Returns
-        -------
-        None
-        """
-
-        gc.collect()
-
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-
     def _is_improved(self, validation_loss: float | torch.Tensor) -> bool:
         """
         Determine if validation loss improved.
@@ -669,6 +673,7 @@ class Trainer:
             "module_config": dataclasses.asdict(self.raw_module.config),
             "input_shape": self.TrainLoader.input_shape,
             "output_shape": self.TrainLoader.target_shape,
+            "added_features_dim": self.TrainLoader.added_features_dim,
             "input_var_metadata": RuntimeContext.INPUT_VAR_METADATA,
             "output_var_metadata": RuntimeContext.TARGET_VAR_METADATA,
             "optimizer": self.optimizer.state_dict(),
@@ -787,3 +792,21 @@ class Trainer:
                 self.logger.log(level, msg, *args)
             else:
                 print(msg)
+
+
+
+
+def clear_memory():
+    """
+    Clear CPU and GPU memory.
+
+    Returns
+    -------
+    None
+    """
+
+    gc.collect()
+
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()

@@ -5,7 +5,7 @@ import torch
 from pathlib import Path
 
 
-from cccma_ppp.train.datasets import TrainDatasetConfig
+from cccma_ppp.train.dataset import TrainDatasetConfig
 from cccma_ppp.data_modules import _create_train_mask, WeightsConfig
 from cccma_ppp.data_modules.dataloader import (
     Dataloader,
@@ -13,6 +13,7 @@ from cccma_ppp.data_modules.dataloader import (
     BatchDataABC,
 )
 from cccma_ppp.generic import Distributed
+
 
 
 @dataclasses.dataclass
@@ -39,7 +40,7 @@ class BatchData(BatchDataABC):
     added_features: torch.Tensor = None
     metadata: list[dict] | None = None
     return_spatial_mask: bool = False
-    reduce_spatial_mask: bool = False
+    reduce_spatial_mask: bool = True
 
     def __post_init__(self):
         """
@@ -180,7 +181,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         return self.dataset_config.available_train_time
 
     def setup_distributed(
-        self, distributed: Distributed, save_path: Path | str | None = None
+        self, distributed: Distributed, load_path: Path | str | None = None
     ):
         """
         Prepare dataloader for distributed training.
@@ -200,21 +201,25 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         self.world_size = distributed.world_size
 
         if distributed.is_root():
-            self.dataset_config._fit_preprocessors(
-                self.train_years, save=True, save_path=save_path
-            )
+            if load_path is None:
+                self.dataset_config._fit_preprocessors(
+                    self.train_years, save=True
+                )
 
         distributed.barrier()
 
-        if distributed.distributed:
-            self.dataset_config._load_fitted_preprocessors(load_dir=save_path)
+        if (distributed.distributed or 
+            load_path is not None):
+            self.dataset_config._load_fitted_preprocessors(load_dir=load_path)
 
         self._setup = True
 
     def build_train_loader(
         self,
+        return_metadata: bool = False,
+        shuffle: bool | None = None,
         return_spatial_mask: bool = False,
-        reduce_spatial_mask: bool = False,
+        reduce_spatial_mask: bool = True,
     ):
         """
         Construct training dataloader.
@@ -247,7 +252,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         )
 
         train_dataset = self.dataset_config.build_dataset(
-            years=self.train_years, mask=train_mask, return_metadata=False
+            years=self.train_years, mask=train_mask, return_metadata=return_metadata
         )
 
         return Dataloader(
@@ -255,6 +260,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             config=self,
             collate_fn=collate_batch,
             rank=self.rank,
+            shuffle=shuffle,
             world_size=self.world_size,
             return_spatial_mask=return_spatial_mask,
             reduce_spatial_mask=reduce_spatial_mask,
@@ -262,8 +268,11 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
     def build_validation_loader(
         self,
+        return_metadata: bool = False,
+        shuffle: bool | None = None,
         return_spatial_mask: bool = False,
         reduce_spatial_mask: bool = False,
+        supress_error: bool = True,
     ):
         """
         Construct validation dataloader.
@@ -296,23 +305,28 @@ class TrainDataloaderConfig(DataloaderConfigABC):
                 lead_times=self.dataset_config.lead_months,
             )
             validation_dataset = self.dataset_config.build_dataset(
-                years=self.validation_years, mask=validation_mask, return_metadata=False
+                years=self.validation_years, mask=validation_mask, return_metadata=return_metadata
             )
             return Dataloader(
                 dataset=validation_dataset,
                 config=self,
                 collate_fn=collate_batch,
                 rank=self.rank,
+                shuffle=shuffle,
                 world_size=self.world_size,
                 return_spatial_mask=return_spatial_mask,
                 reduce_spatial_mask=reduce_spatial_mask,
             )
 
         else:
-            warnings.warn(
-                f"Validation dataoader could not be built for num_validation_years = {self.num_validation_years} "
-            )
-            return None
+            msg = f"Validation dataoader could not be built for num_validation_years = {self.num_validation_years} "
+
+            if  supress_error:
+                warnings.warn(msg)
+                return None  
+            else:
+                raise RuntimeError(msg)
+  
 
     def get_weights(self, config: WeightsConfig | None = None):
         """
