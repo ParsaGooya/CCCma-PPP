@@ -6,7 +6,7 @@ import os
 from typing import Literal
 
 from cccma_ppp.preprocessing import PreprocessingPipeline, Flattennanremove
-from cccma_ppp.generic import RuntimeContext
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 spatialmethod = Literal["uniform", "cosine_lat"]

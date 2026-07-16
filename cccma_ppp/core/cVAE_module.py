@@ -15,7 +15,7 @@ from cccma_ppp.core.selectors import (
 )
 from cccma_ppp.models.normalized_flows import NormalizedFlowConfig
 from cccma_ppp.train import BatchData
-from cccma_ppp.generic import RuntimeContext
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 @dataclasses.dataclass

@@ -6,10 +6,12 @@ import dataclasses
 import warnings
 from pathlib import Path
 
-from cccma_ppp.data_modules.dataset import (
+from cccma_ppp.data_modules.dataset.config_abc import (
     DatasetConfigABC,
-    DatasetOperator,
     lead_months_config,
+)
+from cccma_ppp.data_modules.dataset.operator import (
+    DatasetOperator,
     _get_time_features,
 )
 from cccma_ppp.data_modules.data import (

@@ -12,8 +12,8 @@ from cccma_ppp.core.selectors import (
     ModuleSelector,
     deterministicModelSelector,
 )
-from cccma_ppp.train import BatchData
-from cccma_ppp.generic import RuntimeContext
+from cccma_ppp.train.dataloader import BatchData
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 @dataclasses.dataclass
