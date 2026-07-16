@@ -133,7 +133,7 @@ class TrainConfig:
                 )
 
         if self.module.type.lower() in ["deterministic", "default"]:
-            if self.train_loader.dataset_config.observation is None: 
+            if self.train_loader.dataset_config.observation is None:
                 raise ValueError(
                     "with determisitic models target observation must be specified."
                 )
@@ -142,10 +142,14 @@ class TrainConfig:
                     "TrainerConfig.beta_finder setup will be ignored with deterministic models ..."
                 )
         else:
-            if (self.train_loader.dataset_config.condition_method is None and
-                self.train_loader.dataset_config.observation is None):
-                raise ValueError("with generative models you must specify condition method if not bias correcting to a target!")
-            
+            if (
+                self.train_loader.dataset_config.condition_method is None
+                and self.train_loader.dataset_config.observation is None
+            ):
+                raise ValueError(
+                    "with generative models you must specify condition method if not bias correcting to a target!"
+                )
+
         if self.module.type.lower() in ["cvae"]:
             if self.trainer.beta_finder is None:
                 raise ValueError(

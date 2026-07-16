@@ -6,10 +6,10 @@ from torch.utils.data import Dataset
 import torch
 
 from cccma_ppp.data_modules.dataset import (
-    DatasetConfigABC, 
-    lead_months_config, 
+    DatasetConfigABC,
+    lead_months_config,
     DatasetOperator,
-    _get_time_features
+    _get_time_features,
 )
 
 from cccma_ppp.data_modules.data import (
@@ -26,6 +26,7 @@ from cccma_ppp.data_modules import (
 
 from cccma_ppp.train.datasets import TrainDatasetConfig
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
+
 
 @dataclasses.dataclass
 class InferenceDatasetConfig(DatasetConfigABC):
@@ -49,50 +50,48 @@ class InferenceDatasetConfig(DatasetConfigABC):
             if self.condition_method == "same_member":
                 if self.model.ensemble_mean:
                     raise ValueError(
-                    "for same member coniditioning the model data should not be ensemble mean."
-                )
-            
+                        "for same member coniditioning the model data should not be ensemble mean."
+                    )
+
         return self
-    
-    
+
     def _check_condition(self):
         if self.effective_condition is not None:
             if self.condition_method is None:
                 raise ValueError(
-                "You must specify condition_method for conditioning dataset!"
-            )
+                    "You must specify condition_method for conditioning dataset!"
+                )
 
             if self.condition_method in ["cross_ensemble", "same_member"]:
-                if self.effective_condition.ensemble_mean: 
+                if self.effective_condition.ensemble_mean:
                     raise ValueError(
-                    "condition ensemble_mean cannot be True for cross_ensemble or same_member conditioning."
-                )
+                        "condition ensemble_mean cannot be True for cross_ensemble or same_member conditioning."
+                    )
                 if self.effective_condition.info.coords["ensembles"] is None:
                     raise ValueError(
-                    "For cross_ensemble or same_member conditioning an ensembles dim must exist in the condition."
-                )
+                        "For cross_ensemble or same_member conditioning an ensembles dim must exist in the condition."
+                    )
             elif self.condition_method == "ensemble_mean":
                 if not self.effective_condition.ensemble_mean is True:
                     raise ValueError(
-                    "Ensemble mean must be True for ensemble_mean conditioning."
-                )
+                        "Ensemble mean must be True for ensemble_mean conditioning."
+                    )
             else:
                 if self.effective_condition.ensemble_list is not None:
                     raise ValueError(
-                    'For "static" conditioning fields cannot specify ensemble list.'
-                )
+                        'For "static" conditioning fields cannot specify ensemble list.'
+                    )
                 if self._using_model_data_as_condition:
                     raise ValueError(
-                    "'static' conditioning method cannot point to the same model data!"
+                        "'static' conditioning method cannot point to the same model data!"
+                    )
+
+        else:  ##comeback
+            if self.condition_method == "static":
+                raise ValueError(
+                    "For static conditioning method condition dataset must be specified!"
                 )
 
-        else: ##comeback
-            if self.condition_method == "static":
-
-                raise ValueError(
-                "For static conditioning method condition dataset must be specified!"
-            )
-            
         return self
 
     @property
@@ -103,7 +102,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
     def num_input_lead_months(self) -> int:
         if self.model is not None:
             return self.model.info.sizes["lead_time"]
-        
+
         return self.condition.info.sizes["lead_time"]
 
     @property
@@ -119,18 +118,16 @@ class InferenceDatasetConfig(DatasetConfigABC):
             common = np.intersect1d(common, yr)
 
         return common
-    
+
     @property
     def available_inference_time(self):
         num_lead_years = max(self.lead_months) // 12
         return np.arange(
-                np.min(self.get_common_time),
-                np.max(self.get_common_time) + 1 - num_lead_years + 1,
-            )
+            np.min(self.get_common_time),
+            np.max(self.get_common_time) + 1 - num_lead_years + 1,
+        )
 
-    def _load_fitted_preprocessors(
-        self, load_dir: Path | str | None = None
-    ):
+    def _load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         self.ds_operator._load_fitted_preprocessors(load_dir)
 
     def _add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
@@ -150,10 +147,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
             config=self,
             requested_years=years,
             return_metadata=return_metadata,
-
         )
-
-
 
 
 @dataclasses.dataclass
@@ -167,7 +161,9 @@ class InferenceDataset(Dataset):
             raise RuntimeError(
                 "Make sure to fit preprocessors first!. Hint:  TrainDatasetConfig._fit_preprocessors()"
             )
-        if not set(self.requested_years).issubset(set(self.config.available_train_time)):
+        if not set(self.requested_years).issubset(
+            set(self.config.available_train_time)
+        ):
             raise ValueError(
                 "the requested years are not common to model and condition data."
             )
@@ -178,7 +174,9 @@ class InferenceDataset(Dataset):
             self.model_dataset = self._load_xarray_data(self.config.model)
 
         if self.config.effective_condition is not None:
-            self.condition_dataset = self._load_xarray_data(self.config.effective_condition)
+            self.condition_dataset = self._load_xarray_data(
+                self.config.effective_condition
+            )
 
         self.mask = self._prepare_mask()
         self.model_indexes = self.get_model_indexes()
@@ -195,19 +193,19 @@ class InferenceDataset(Dataset):
     def _load_model(self):
 
         return not self.config._using_model_data_as_condition
-    
+
     @property
     def _write_condition_to_input(self):
 
         return self.config._using_model_data_as_condition
 
-    
     @property
     def _concat_condition_to_input(self):
 
-        return (self._write_condition_to_input is False and
-                self.config.effective_condition is not None)
-
+        return (
+            self._write_condition_to_input is False
+            and self.config.effective_condition is not None
+        )
 
     def _prepare_mask(self):
         mask = _create_train_mask(
@@ -217,7 +215,7 @@ class InferenceDataset(Dataset):
         mask = xr.full_like(mask, fill_value=False)
 
         mask = mask.sel(year=self.requested_years).sel(
-            lead_time= self.config.lead_months
+            lead_time=self.config.lead_months
         )
         if all(
             [
@@ -265,8 +263,6 @@ class InferenceDataset(Dataset):
 
         return indexes
 
-
-
     def get_cond_indexes(self, model_indexes: dict):
 
         if self.condition_dataset is not None:
@@ -276,7 +272,9 @@ class InferenceDataset(Dataset):
                 indexes["lead_time"] = model_indexes["lead_time"]
                 if self.config.condition_method == "cross_ensemble":
                     ens_inds = [
-                        np.random.choice(self.config.effective_condition.info.coords["ensembles"])
+                        np.random.choice(
+                            self.config.effective_condition.info.coords["ensembles"]
+                        )
                         for _ in range(len(model_indexes["year"]))
                     ]
                     indexes["ensembles"] = np.array(ens_inds)
@@ -286,7 +284,7 @@ class InferenceDataset(Dataset):
 
                 return indexes
 
-    def get_input_shape(self): ##need extra check for both model and condition
+    def get_input_shape(self):  ##need extra check for both model and condition
 
         from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 
@@ -300,19 +298,23 @@ class InferenceDataset(Dataset):
             len_names += len(self.config.effective_condition.names)
 
         if any(checklist):
-            return  (self.effective_input.preprocessing_pipeline
-                        .get_preprocessors("flattener")
-                        .final_locations.size * len_names,)
+            return (
+                self.effective_input.preprocessing_pipeline.get_preprocessors(
+                    "flattener"
+                ).final_locations.size
+                * len_names,
+            )
         else:
             return (
                 self.effective_input.info.coords["lat"].size,
                 self.effective_input.info.coords["lon"].size,
             )
 
-
     def get_added_features_dim(self):
 
-        return 0 if self.config.time_features is None else len(self.config.time_features)
+        return (
+            0 if self.config.time_features is None else len(self.config.time_features)
+        )
 
     def _index_condition_dataset(self, ind):
 
@@ -327,13 +329,15 @@ class InferenceDataset(Dataset):
             else:
                 selection = {}
 
-            condition = self.config.effective_condition.preprocessing_pipeline.transform(
-                self.condition_dataset.sel(**selection)
+            condition = (
+                self.config.effective_condition.preprocessing_pipeline.transform(
+                    self.condition_dataset.sel(**selection)
+                )
             )
-            condition = _unwrap_data_variables(condition)  
+            condition = _unwrap_data_variables(condition)
 
-            return condition    
-        
+            return condition
+
     def _index_model_dataset(self, ind):
 
         if self._load_model:
@@ -355,10 +359,10 @@ class InferenceDataset(Dataset):
         year = float(self.model_indexes["year"][ind])
         lead_time = float(self.model_indexes["lead_time"][ind])
         selection = dict(year=year, lead_time=lead_time)
-        
+
         condition = self._index_condition_dataset(ind)
         input = self._index_model_dataset(ind)
-        
+
         if self._write_condition_to_input:
             input = condition
 
@@ -366,7 +370,7 @@ class InferenceDataset(Dataset):
             input = xr.concat([input, condition], dim="channels")
 
         time_features = _get_time_features(self.config, year, lead_time, input)
- 
+
         datadict = dict(
             input=torch.as_tensor(input.to_numpy(), dtype=torch.float32),
             added_features=torch.as_tensor(time_features, dtype=torch.float32)
@@ -381,8 +385,6 @@ class InferenceDataset(Dataset):
 
     def __len__(self):
         return len(self.model_indexes.get(list(self.model_indexes.keys())[0]))
-
-
 
 
 def _from_train(
@@ -410,7 +412,7 @@ def _from_train(
         if train_has_observation:
             kwargs["model"] = copy.deepcopy(train_dataset_config.model)
         kwargs["condition"] = copy.deepcopy(train_dataset_config.condition)
-        
+
     else:
         raise ValueError(
             "Could not infer inference dataset config from training dataset config."
