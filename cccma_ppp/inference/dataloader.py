@@ -97,22 +97,22 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     @property
     def _inference_years(self):
         if self.inference_years is None:
-            return self.available_inference_years
+            return self.available_times
         else:
             inference_years = np.arange(self.inference_years[0], self.inference_years[1] + 1)
 
-            if not set(inference_years).issubset(set(self.available_inference_years)):
+            if not set(inference_years).issubset(set(self.available_times)):
                 raise ValueError(
                     f"the requested inference years are not available:"
-                    f"available years: [{self.available_inference_years.min()},{self.available_inference_years.max()}]"
+                    f"available years: [{self.available_times.min()},{self.available_times.max()}]"
                 )
             
             return inference_years
         
     @property
-    def available_inference_years(self):
+    def available_times(self):
         self._check_dataset_config()
-        return self.dataset_config.available_inference_years
+        return self.dataset_config.available_times
     
 
     def _input_preprocessor_exists(self, load_dir: Path | str = None):

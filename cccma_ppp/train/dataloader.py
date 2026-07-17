@@ -162,17 +162,17 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             self.prefetch_factor = None
 
         if self.train_years is None:
-            self.train_years = self.available_train_years
+            self.train_years = self.available_times
             if self.num_validation_years > 0:
-                self.validation_years = self.dataset_config.available_train_time[
+                self.validation_years = self.dataset_config.available_times[
                     -self.num_validation_years :
                 ]
         else:
             self.train_years = np.arange(self.train_years[0], self.train_years[1] + 1)
 
-            if not set(self.train_years).issubset(set(self.available_train_years)):
+            if not set(self.train_years).issubset(set(self.available_times)):
                 raise ValueError(
-                    f"the requested train years are not available: available years: [{self.available_train_years.min()},{self.available_train_years.max()}]"
+                    f"the requested train years are not available: available years: [{self.available_times.min()},{self.available_times.max()}]"
                 )
 
             if self.num_validation_years > 0:
@@ -182,7 +182,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
                 )
 
     @property
-    def available_train_years(self):
+    def available_times(self):
         """
         Training years excluding validation period.
 
@@ -193,10 +193,10 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         """
 
         if self.num_validation_years > 0:
-            return self.dataset_config.available_train_time[
+            return self.dataset_config.available_times[
                 : -self.num_validation_years
             ]
-        return self.dataset_config.available_train_time
+        return self.dataset_config.available_times
 
     def setup_distributed(
         self, distributed: Distributed, load_path: Path | str | None = None
@@ -268,7 +268,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             )
 
         train_mask = _create_train_mask(
-            years=self.train_years,
+            time=self.train_years,
             lead_times=self.dataset_config.lead_months,
         )
 
@@ -325,7 +325,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
         if self.num_validation_years > 0:
             validation_mask = _create_train_mask(
-                years=self.validation_years,
+                time=self.validation_years,
                 lead_times=self.dataset_config.lead_months,
             )
             validation_dataset = self.dataset_config.build_dataset(

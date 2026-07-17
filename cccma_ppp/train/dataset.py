@@ -1,6 +1,5 @@
 import numpy as np
 import xarray as xr
-from torch.utils.data import Dataset
 import torch
 import dataclasses
 import warnings
@@ -9,13 +8,12 @@ import dask
 
 from cccma_ppp.data_modules.dataset import (
     DatasetConfigABC,
+    DatasetABC,
     DatasetOperator,
     lead_months_config,
     _get_time_features,
-    _build_chunks
 )
 from cccma_ppp.data_modules.data import (
-    DataConfigABC,
     ModelDataConfig,
     ObsDataConfig,
     ConditionDataConfig,
@@ -23,8 +21,6 @@ from cccma_ppp.data_modules.data import (
 
 from cccma_ppp.data_modules import (
     _unwrap_data_variables,
-    _load_xarray_data,
-    _create_train_mask,
     suppress_stderr,
 )
 
@@ -198,6 +194,10 @@ class TrainDatasetConfig(DatasetConfigABC):
                 )
 
         return self
+    
+    @property
+    def effective_input(self):
+        return self.model
 
     @property
     def ds_operator(self):
@@ -240,7 +240,7 @@ class TrainDatasetConfig(DatasetConfigABC):
             return np.intersect1d(self.model.year_range, self.observation.year_range)
 
     @property
-    def available_train_time(self):
+    def available_times(self):
         """
         Available training years.
 
@@ -327,7 +327,7 @@ class TrainDatasetConfig(DatasetConfigABC):
 
 
 @dataclasses.dataclass
-class TrainDataset(Dataset):
+class TrainDataset(DatasetABC):
     """
     Training dataset for model learning.
 
@@ -340,8 +340,8 @@ class TrainDataset(Dataset):
     """
 
     config: TrainDatasetConfig
-    requested_years: list[int] | tuple[int] | np.ndarray
-    mask: xr.DataArray = None
+    requested_years: list[int] | tuple[int, ...] | np.ndarray
+    mask: xr.DataArray | None = None
     return_metadata: bool = False
     load: bool = False
 
@@ -360,38 +360,14 @@ class TrainDataset(Dataset):
         ValueError
             If requested years are invalid.
         """
-        if not self.config._fitted_preprocessors:
-            raise RuntimeError(
-                "Make sure to fit preprocessors first!. Hint:  TrainDatasetConfig._fit_preprocessors()"
-            )
-        if not set(self.requested_years).issubset(
-            set(self.config.available_train_time)
-        ):
-            raise ValueError(
-                "the requested years are not common to input and target data."
-            )
+        super().__init__()
 
-        self.model_dataset = self.observation_dataset = self.condition_dataset = None
-
-        if self._load_model:
-            self.model_dataset = self._load_xarray_data(self.config.model, 
-                                                        load = self.load)
 
         if self.config.observation is not None:
             self.observation_dataset = self._load_xarray_data(self.config.observation,
                                                                 load = self.load)
 
-        if self.config.effective_condition is not None:
-            self.condition_dataset = self._load_xarray_data(
-                self.config.effective_condition,
-                load = self.load
-            )
-
-        self.mask = self._prepare_mask()
-        self.sample_coords = self.get_sampling_coords()
-        self.model_indexes = self.get_model_indexes(self.sample_coords)
         self.obs_indexes = self.get_obs_indexes(self.sample_coords)
-        self.cond_indexes = self.get_cond_indexes(self.sample_coords)
 
     @property
     def _autoencoding_model_data(self):
@@ -485,126 +461,7 @@ class TrainDataset(Dataset):
             and self.config.effective_condition is not None
         )
 
-    def _prepare_mask(self):
-        """
-        Prepare dataset mask.
 
-        Returns
-        -------
-        xr.DataArray
-        """
-        mask = self.mask
-        if mask is None:
-            mask = _create_train_mask(
-                years=self.config.available_train_time,
-                lead_times=np.arange(1, self.config.model.info.sizes["lead_time"] + 1),
-            )
-            mask = xr.full_like(mask, fill_value=False)
-
-        mask = mask.sel(year=self.requested_years).sel(
-            lead_time=self.config.lead_months
-        )
-        if all(
-            [
-                not self.config.model.ensemble_mean,
-                self.config.model.info.coords.get("ensembles") is not None,
-            ]
-        ):
-            mask = mask.expand_dims(
-                ensembles=len(self.config.model.info.coords["ensembles"]), axis=0
-            )
-            mask = mask.assign_coords(
-                ensembles=self.config.model.info.coords["ensembles"]
-            )
-
-        mask = mask.where(~mask)
-
-        return mask
-
-    def _load_xarray_data(self, 
-                          config: DataConfigABC, 
-                          load: bool = False):
-        """
-        Load dataset from xarray sources.
-
-        Returns
-        -------
-        xr.DataArray
-        """
-
-        return _load_xarray_data(
-            config.list_paths,
-            names=config.names,
-            ensemble_mean=config.ensemble_mean,
-            selection={"ensembles": config.info.coords["ensembles"]}
-            if config.info.coords.get("ensembles") is not None
-            else None,
-            concat_dim=config.concat_dim,
-            rename_dict=config.rename_dict,
-            load=load
-        )
-
-    def get_sampling_coords(self):
-        """
-        Compute coordinates for sampling the datasets.
-
-        Returns
-        -------
-        dict
-        """
-
-        mask = (
-            self.mask.stack(batch=dict(self.mask.sizes).keys())
-            .transpose("batch", ...)
-            .dropna(dim="batch")
-            .batch.values
-        )
-        mask = tuple(map(np.array, zip(*mask)))
-        indexes = {
-            key: mask[ind]
-            for ind, key in enumerate(self.mask.sizes)
-        }
-
-        return indexes
-
-    def get_model_indexes(
-        self,
-        sample_coords: dict[str, np.ndarray],
-    ) -> dict[str, np.ndarray] | None:
-        """
-        Convert sampling coordinates to positional model-dataset indexes.
-
-        Parameters
-        ----------
-        sample_coords : dict[str, np.ndarray]
-            Mapping from dimension names to coordinate values for each sample.
-
-        Returns
-        -------
-        dict[str, np.ndarray] or None
-            Positional indexes for each dimension, or None if no model dataset
-            is loaded.
-        """
-        if not self._load_model:
-            return None
-
-        indexes = {
-            dim: self.model_dataset.indexes[dim].get_indexer(values)
-            for dim, values in sample_coords.items()
-        }
-
-        missing = {
-            dim: sample_coords[dim][positions == -1]
-            for dim, positions in indexes.items()
-            if np.any(positions == -1)
-        }
-
-        if missing:
-            raise ValueError(
-                f"Some sampling coordinates were not found in the model dataset: {missing}"
-            )
-
-        return indexes
 
     def get_obs_indexes(
         self,
@@ -661,109 +518,7 @@ class TrainDataset(Dataset):
             )
 
         return indexes    
-
-    def get_cond_indexes(
-        self,
-        sample_coords: dict[str, np.ndarray],
-    ) -> dict[str, np.ndarray] | None:
-        """
-        Compute positional indexes for the conditioning dataset.
-
-        Parameters
-        ----------
-        sample_coords : dict[str, np.ndarray]
-            Sampling coordinate values for the model dataset.
-
-        Returns
-        -------
-        dict[str, np.ndarray] or None
-            Positional conditioning indexes for each sample, or ``None`` when
-            no conditioning dataset is available or the condition is static.
-
-        Raises
-        ------
-        ValueError
-            If required sampling coordinates are missing, if ``same_member`` is
-            requested without ensemble coordinates, or if any conditioning
-            coordinates cannot be found.
-        """
-        if (
-            self.condition_dataset is None
-            or self.config.condition_method == "static"
-        ):
-            
-            return None
         
-        condition_coords = {
-            "year": np.asarray(sample_coords["year"]),
-            "lead_time": np.asarray(sample_coords["lead_time"]),
-        }
-
-        if self.config.condition_method == "same_member":
-            if "ensembles" not in sample_coords:
-                raise ValueError(
-                    "'same_member' conditioning requires ensemble coordinates "
-                    "in sample_coords."
-                )
-
-            condition_coords["ensembles"] = np.asarray(
-                sample_coords["ensembles"]
-            )
-
-
-        indexes = {
-            dim: self.condition_dataset.indexes[dim].get_indexer(values)
-            for dim, values in condition_coords.items()
-        }
-
-        missing_values = {
-            dim: condition_coords[dim][positions == -1]
-            for dim, positions in indexes.items()
-            if np.any(positions == -1)
-        }
-
-        if missing_values:
-            raise ValueError(
-                "Some conditioning coordinates were not found in the "
-                f"conditioning dataset: {missing_values}"
-            )
-
-        return indexes
-
-    def get_input_shape(self):
-        """
-        Determine input shape.
-
-        Returns
-        -------
-        tuple
-        """
-
-        from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
-
-        checklist = [
-            isinstance(item, Flattennanremove)
-            for item in self.config.model.preprocessing_pipeline.fitted_preprocessors
-        ]
-
-        len_names = len(self.config.model.names)
-        if self._concat_condition_to_input:
-            len_names += len(self.config.effective_condition.names)
-
-        if any(checklist):
-            return (
-                self.config.model.preprocessing_pipeline.get_preprocessors(
-                    "flattener"
-                ).final_locations.size
-                * len_names,
-            )
-
-        else:
-            return tuple(
-                self.config.model.info.coords[dim].size 
-                for dim in supported_NN_dimensions_sorted  
-                if dim in self.config.model.info.coords)
-                
             
     def get_target_shape(self):
         """
@@ -796,61 +551,6 @@ class TrainDataset(Dataset):
         else:
             return self.input_shape
 
-    def get_added_features_dim(self):
-        """
-        Number of additional features.
-
-        Returns
-        -------
-        int
-        """
-
-        return (
-            0 if self.config.time_features is None else len(self.config.time_features)
-        )
-
-    def _index_condition_dataset(self, ind: int) -> xr.DataArray | None:
-        """
-        Select and preprocess one conditioning sample.
-
-        Parameters
-        ----------
-        ind : int
-            Sample index.
-
-        Returns
-        -------
-        xr.DataArray or None
-            Preprocessed conditioning sample, or ``None`` when no conditioning
-            dataset is available.
-        """
-        if self.condition_dataset is None:
-            return None
-
-        if self.config.condition_method == "static":
-            selection = {}
-
-        else:
-            selection = {
-                dim: [int(indexes[ind])]
-                for dim, indexes in self.cond_indexes.items()
-            }
-
-            if self.config.condition_method == "cross_ensemble":
-                selection["ensembles"] = [
-                    np.random.randint(self.condition_dataset.sizes["ensembles"])
-                ]
-
-
-        condition = self.condition_dataset.isel(**selection)
-
-        condition = (
-            self.config.effective_condition.preprocessing_pipeline.transform(
-                condition
-            )
-        )
-
-        return _unwrap_data_variables(condition)
         
     def _index_observation_dataset(self, ind: int) -> xr.DataArray | None:
         """
@@ -886,33 +586,6 @@ class TrainDataset(Dataset):
 
         return _unwrap_data_variables(obs)
 
-    def _index_model_dataset(self, ind: int) -> xr.DataArray | None:
-        """
-        Select and preprocess one model sample.
-
-        Parameters
-        ----------
-        ind : int
-            Sample index.
-
-        Returns
-        -------
-        xr.DataArray or None
-            Preprocessed model sample, or ``None`` when model data are not loaded.
-        """
-        if not self._load_model:
-            return None
-
-        selection = {
-            dim: [int(indexes[ind])]
-            for dim, indexes in self.model_indexes.items()
-        }
-
-        model = self.model_dataset.isel(**selection)
-        model = self.config.model.preprocessing_pipeline.transform(model)
-
-        return _unwrap_data_variables(model)
-
     def __getitem__(self, ind):
         """
         Retrieve dataset sample.
@@ -926,12 +599,10 @@ class TrainDataset(Dataset):
         dict or tuple
             Sample dictionary, optionally with metadata.
         """
-        year = float(self.sample_coords["year"][ind])
-        lead_time = float(self.sample_coords["lead_time"][ind])
-        selection = dict(year=year, lead_time=lead_time)
 
-        if self.sample_coords.get("ensembles") is not None:
-            selection['ensemble_id'] = self.sample_coords["ensembles"][ind]
+        selection = {dim : value[ind]
+            for dim, value in self.sample_coords.items()
+        }
 
         condition = self._index_condition_dataset(ind)
         target = self._index_observation_dataset(ind)
@@ -946,7 +617,7 @@ class TrainDataset(Dataset):
         elif self._concat_condition_to_input:
             input = xr.concat([input, condition], dim="channels")
 
-        time_features = _get_time_features(self.config, year, lead_time, input)
+        time_features = _get_time_features(self.config, selection, input)
 
         with suppress_stderr():
             input, target = dask.compute(
@@ -966,13 +637,3 @@ class TrainDataset(Dataset):
             return datadict, selection
         else:
             return datadict
-
-    def __len__(self):
-        """
-        Dataset length.
-
-        Returns
-        -------
-        int
-        """
-        return len(self.sample_coords.get(list(self.sample_coords.keys())[0]))
