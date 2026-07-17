@@ -1,5 +1,5 @@
 
-required_sample_dimensions:
+required_sample_dimensions:  ##must be time dim and lead_tim dim
               ["year", "lead_time"]
 optional_sample_dimensions:
               ["ensembles"]

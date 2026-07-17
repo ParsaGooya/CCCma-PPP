@@ -83,6 +83,12 @@ class DataloaderConfigABC(abc.ABC):
         """
         pass
 
+    @property
+    @abc.abstractmethod
+    def available_times(self):
+
+        pass
+
 
 @dataclasses.dataclass
 class Dataloader:

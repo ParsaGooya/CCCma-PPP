@@ -519,7 +519,7 @@ class DatasetABC(Dataset, abc.ABC):
             self.mask = xr.full_like(mask, fill_value=False)               
 
 
-        missing = set(required_sample_dimensions) - self.mask.dims
+        missing = set(required_sample_dimensions) - set(self.mask.dims)
 
         if missing:
             raise ValueError(f"The mask must have {required_sample_dimensions} dims. Current dims: {missing}")    

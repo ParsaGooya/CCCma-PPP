@@ -382,8 +382,7 @@ class DatasetOperator:
 
 def _get_time_features(
     config: DatasetConfigABC,
-    year: int,
-    lead_time: int,
+    selection: dict,
     input: xr.DataArray,
 ) -> np.ndarray | None:
     """
@@ -393,10 +392,9 @@ def _get_time_features(
     ----------
     config : DatasetConfigABC
         Configuration containing feature definitions.
-    year : int
-        Base year of sample.
-    lead_time : int
-        Lead time in months.
+    selection : dict
+        Selection coords of the sample
+
     input : xr.DataArray
         Input data used for shape alignment.
 
@@ -407,6 +405,16 @@ def _get_time_features(
 
     Broadcasts features to match spatial input dimensions if needed.
     """
+    if any([
+        "year" not in selection,
+        "lead_time" not in selection
+    ]):
+        raise ValueError(
+            "The provided selection coords are not supported by _get_time_features."
+        )
+    
+    year = selection["year"]
+    lead_time = selection["lead_time"]
 
     if config.time_features is not None:
         time_features_list = np.array([config.time_features]).flatten()
@@ -447,9 +455,9 @@ def _build_chunks(config: DataConfigABC | None = None):
     if config is None:
         return
 
-    sample_dims = required_sample_dimensions.union(
-                        optional_sample_dimensions
-                    )
+    sample_dims = (*required_sample_dimensions,
+                    *optional_sample_dimensions)
+                    
 
     chunks = { dim : 1 for dim in
             sample_dims

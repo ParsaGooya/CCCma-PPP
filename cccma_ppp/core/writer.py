@@ -334,9 +334,9 @@ def aggregate_predictions(post_processor: PreprocessingPipeline | None,
             f"Aggregating temporary prediction files year-by-year: ",
         )
 
-    sample_coords = required_sample_dimensions.union(
-                        optional_sample_dimensions
-                    )
+    sample_coords = (*required_sample_dimensions,
+                     *optional_sample_dimensions)
+                    
     def _sort_sample_coords(ds):
         sort_coords = [
             coord
