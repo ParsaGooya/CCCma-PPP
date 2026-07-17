@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler
 from functools import partial
 import abc
-from typing import final
+from typing import final, ClassVar
 from collections.abc import Callable, Iterator
 from itertools import islice
 
@@ -32,6 +32,9 @@ class BatchDataABC(abc.ABC):
     target: torch.Tensor | None
     added_features: torch.Tensor | None
     metadata: list[dict] | None = None
+
+    _shared_input_mask: ClassVar[torch.Tensor | None] = None
+    _shared_target_mask: ClassVar[torch.Tensor | None] = None
 
     @abc.abstractmethod
     def to_device(self, device: torch.device | str):

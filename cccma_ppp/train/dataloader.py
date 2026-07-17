@@ -60,11 +60,23 @@ class BatchData(BatchDataABC):
         """
         
         if self.return_spatial_mask:
-            self.input_mask = ~torch.isnan(self.input)
-            self.target_mask = ~torch.isnan(self.target)
             if self.reduce_spatial_mask:
-                self.input_mask = self.input_mask.all(dim=0)
-                self.target_mask = self.target_mask.all(dim=0)
+                if type(self)._shared_input_mask is None:
+                    type(self)._shared_input_mask = (
+                        ~torch.isnan(self.input)
+                    ).all(dim=0)
+
+                if type(self)._shared_target_mask is None:
+                    type(self)._shared_target_mask = (
+                        ~torch.isnan(self.target)
+                    ).all(dim=0)
+
+                self.input_mask = type(self)._shared_input_mask
+                self.target_mask = type(self)._shared_target_mask
+
+            else:
+                self.input_mask = ~torch.isnan(self.input)
+                self.target_mask = ~torch.isnan(self.target)
 
         self.input.nan_to_num_(nan=0.0)
         self.target.nan_to_num_(nan=0.0)

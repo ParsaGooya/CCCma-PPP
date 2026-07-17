@@ -23,12 +23,29 @@ class BatchData(BatchDataABC):
     )
 
     def __post_init__(self):
-        if self.return_spatial_mask:
-            self.input_mask =  ~torch.isnan(self.input)
-            if self.reduce_spatial_mask:
-                self.input_mask = self.input_mask.all(dim=0)
+        """
+        Prepare batch data.
 
+        Returns
+        -------
+        None
+        """
+        
+        if self.return_spatial_mask:
+            if self.reduce_spatial_mask:
+                if type(self)._shared_input_mask is None:
+                    type(self)._shared_input_mask = (
+                        ~torch.isnan(self.input)
+                    ).all(dim=0)
+
+                self.input_mask = type(self)._shared_input_mask
+
+            else:
+
+                self.input_mask = ~torch.isnan(self.input)
+                
         self.input.nan_to_num_(nan=0.0)
+
 
     def to_device(self, device: torch.device | str) -> "BatchData":
         
