@@ -96,7 +96,7 @@ class BatchData(BatchDataABC):
             Updated instance on target device.
         """
         self.input = self.input.to(device)
-        self.target = self.input.to(device)
+        self.target = self.target.to(device)
 
         if self.input_mask is not None:
             self.input_mask = self.input_mask.to(device)
