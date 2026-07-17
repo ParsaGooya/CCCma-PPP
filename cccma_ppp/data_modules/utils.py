@@ -9,7 +9,8 @@ from collections.abc import Iterator
 
 from cccma_ppp.preprocessing import PreprocessingPipeline, Flattennanremove
 from cccma_ppp.generic import RuntimeContext
-from cccma_ppp.configs import supported_NN_dimensions_sorted
+from cccma_ppp.configs import (supported_NN_dimensions_sorted,
+                                required_sample_dimensions)
 
 spatialmethod = Literal["uniform", "cosine_lat"]
 
@@ -230,7 +231,7 @@ def _load_xarray_data(
 
 
 def _create_train_mask(
-    years: list | xr.DataArray,
+    time: list | xr.DataArray,
     lead_times: list | xr.DataArray | np.ndarray | int,
     exclude_idx=0,
 ):
@@ -239,8 +240,8 @@ def _create_train_mask(
 
     Parameters
     ----------
-    years : array-like
-        Years corresponding to dataset.
+    time : array-like
+        Times corresponding to dataset.
     lead_times : array-like or int
         Lead times in months.
     exclude_idx : int, optional
@@ -262,17 +263,19 @@ def _create_train_mask(
 
     lead_times = np.arange(1, lead_times + 1)
 
-    mask = np.full((len(years), len(lead_times)), False, dtype=bool)
+    mask = np.full((len(time), len(lead_times)), False, dtype=bool)
     x = np.arange(0, 12 * mask.shape[0], 12)
     y = np.arange(1, mask.shape[1] + 1)
     idx_array = x[..., None] + y
 
     mask[idx_array > idx_array[-1, exclude_idx + 11]] = True
 
+    time_dim, lead_time_dim = required_sample_dimensions
+
     return xr.DataArray(
         mask,
-        dims=("year", "lead_time"),
-        coords={"year": years, "lead_time": lead_times},
+        dims=required_sample_dimensions,
+        coords={time_dim: time, lead_time_dim: lead_times},
         name="mask",
     )
 
