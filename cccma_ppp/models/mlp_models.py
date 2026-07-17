@@ -410,7 +410,7 @@ class cVAE_MLP(cVAEmodelsABC):
             Generated samples and conditioning outputs.
         """
 
-        condition = request.condition,
+        condition = request.condition
         condition_mask = request.condition_mask
         added_features = request.added_features
         prior_flow = request.prior_flow
