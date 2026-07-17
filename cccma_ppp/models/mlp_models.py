@@ -355,17 +355,14 @@ class cVAE_MLP(cVAEmodelsABC):
             and optional conditioning statistics.
         """
 
-        x_in = x
-        self._shape_model_output = x_in.shape
-
-        del x_in
+        self._shape_model_output = x.shape
 
         cond_mu, cond_log_var = self._condition(
             condition=condition, condition_mask=condition_mask, added_features=added_features
         )
 
         mu, log_var = self._recognition(
-            x=x_in, x_mask=x_mask, condition=cond_mu, added_features=added_features
+            x=x, x_mask=x_mask, condition=cond_mu, added_features=added_features
         )
 
         if min_posterior_variance is not None:
@@ -421,16 +418,14 @@ class cVAE_MLP(cVAEmodelsABC):
         nstds = request.nstds
         sample_size = request.sample_size
 
-        cond_in = condition
-        B, C = cond_in.shape[:2]
+        B, C = condition.shape[:2]
         latent_ref_tensor = torch.zeros(
-            (B, self.latent_size), device=cond_in.device, dtype=cond_in.dtype
+            (B, self.latent_size), device=condition.device, dtype=condition.dtype
         )
         _shape_model_output = (sample_size, B, C, -1)
-        del cond_in
 
         cond_mu, cond_log_var = self._condition(
-                condition=cond_in, condition_mask=condition_mask, added_features=added_features
+                condition=condition, condition_mask=condition_mask, added_features=added_features
             )
 
         if latent_samples is None:
@@ -504,12 +499,11 @@ class cVAE_MLP(cVAEmodelsABC):
         tuple of torch.Tensor
             (mu, log_var)
         """
-        x_in = x
 
         if x_mask is not None:
-            x_in = x_in * x_mask
+            x = x * x_mask
 
-        x_in = x_in.flatten(start_dim=1)
+        x = x.flatten(start_dim=1)
 
         if added_features is not None:
             x_features = added_features.flatten(start_dim=1)
@@ -517,12 +511,12 @@ class cVAE_MLP(cVAEmodelsABC):
             x_features = None
 
         if condition is not None:
-            x_in = torch.cat([x_in, condition], dim=-1)
+            x = torch.cat([x, condition], dim=-1)
 
         if x_features is not None:
-            x_in = torch.cat([x_in, x_features], dim=-1)
+            x = torch.cat([x, x_features], dim=-1)
 
-        out = self.encoder(x_in)
+        out = self.encoder(x)
         mu = self.mu(out)
         log_var = self.log_var(out)
 
@@ -555,16 +549,14 @@ class cVAE_MLP(cVAEmodelsABC):
                 x_features = None
 
   
-            cond_in, cond_mask = condition,condition_mask
+            if condition_mask is not None:
+                condition = condition * condition_mask
 
-            if cond_mask is not None:
-                cond_in = cond_in * cond_mask
-
-            cond_in = cond_in.flatten(start_dim=1)
+            condition = condition.flatten(start_dim=1)
             if x_features is not None:
-                cond_in = torch.cat([cond_in, x_features], dim=-1)
+                condition = torch.cat([condition, x_features], dim=-1)
 
-            cond_in = self.embedding(cond_in)
+            cond_in = self.embedding(condition)
             if self.condition_dependant_latent and not self.condition_dependant_flow:
                 cond_mu = self.condition_mu(cond_in)
                 cond_log_var = self.condition_log_var(cond_in)
@@ -919,13 +911,12 @@ class Autoencoder(deterministicmodelsABC):
         deterministicOutput
             Reconstructed output tensor.
         """
-        x_in = x
 
         if x_mask is not None:
-            x_in = x_in * x_mask
+            x = x * x_mask
 
-        B, C = x_in.shape[:2]
-        x_in = x_in.flatten(start_dim=1)
+        B, C = x.shape[:2]
+        x = x.flatten(start_dim=1)
 
         if added_features is not None:
             x_features = added_features.flatten(start_dim=1)
@@ -934,19 +925,19 @@ class Autoencoder(deterministicmodelsABC):
 
         if x_features is not None:
             if self.append_mode == 1:
-                out = self.encoder(torch.cat([x_in, x_features], dim=-1))
+                out = self.encoder(torch.cat([x, x_features], dim=-1))
                 out = self.decoder(out)
 
             elif self.append_mode == 2:
-                out = self.encoder(x_in)
+                out = self.encoder(x)
                 out = self.decoder(torch.cat([out, x_features], dim=-1))
 
             elif self.append_mode == 3:
-                out = self.encoder(torch.cat([x_in, x_features], dim=-1))
+                out = self.encoder(torch.cat([x, x_features], dim=-1))
                 out = self.decoder(torch.cat([out, x_features], dim=-1))
 
         else:
-            out = self.encoder(x_in)
+            out = self.encoder(x)
             out = self.decoder(out)
 
         return deterministicOutput(output=out.view(B, C, -1))
