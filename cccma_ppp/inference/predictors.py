@@ -153,7 +153,7 @@ class cVAEPredictor(PredictorABC):
         self.stats["samples"].update(samples)
 
         prediction = output.output
-        target = data.target[0] if isinstance(data.target, tuple) else data.target
+        target = data.target
         residual = target - prediction[0]
         residual = residual.reshape(residual.shape[0], -1)
 
@@ -166,7 +166,7 @@ class cVAEPredictor(PredictorABC):
         if self.infer_latent_samples_from_training and self.latent_sampler is None:
             self.latent_sampler = self.build_latent_sampler()
 
-        x = data.input[0] if isinstance(data.input, tuple) else data.input
+        x = data.input
         batch_size = x.shape[0]
 
         sample_size = (self.num_latent_samples, batch_size)
@@ -393,7 +393,7 @@ class DetermninisticPredictor(PredictorABC):
 
 
         prediction = output.output
-        target = data.target[0] if isinstance(data.target, tuple) else data.target
+        target = data.target
         residual = target - prediction
         residual = residual.reshape(residual.shape[0], -1)
 

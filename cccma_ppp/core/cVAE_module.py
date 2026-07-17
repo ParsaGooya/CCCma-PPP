@@ -356,13 +356,12 @@ class cVAE(moduleABC):
 
         output = self.forward(data)
 
-        if isinstance(data.target, (tuple, list)):
-            target, target_mask = data.target
-        else:
-            target, target_mask = data.target, None
+        target = data.target
+        target_mask = data.target_mask
 
         if target_mask is not None and target_mask.shape == target.shape:
             target_mask = target_mask.unsqueeze(0).expand_as(output.output)
+
         target = target.unsqueeze(0).expand_as(output.output)
 
         generator = self.model_config.GENERATOR
@@ -428,8 +427,10 @@ class cVAE(moduleABC):
 
         return self.model(
             x=data.target,
+            x_mask=data.target_mask,
             added_features=data.added_features,
             condition=data.input,
+            condition_mask=data.input_mask,
             min_posterior_variance=self.min_posterior_variance,
             sample_size=sample_size,
         )
@@ -457,6 +458,7 @@ class cVAE(moduleABC):
 
         return self.model.predict( cVAEPredictRequest(
             condition=data.input,
+            condition_mask=data.input_mask,
             added_features=data.added_features,
             prior_flow=self.prior_flow,
             sample_size=sample_size,

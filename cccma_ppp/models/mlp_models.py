@@ -325,8 +325,10 @@ class cVAE_MLP(cVAEmodelsABC):
     def forward(
         self,
         x: torch.Tensor,
+        x_mask: torch.Tensor | None = None,
         added_features: torch.Tensor | None = None,
         condition: torch.Tensor | None = None,
+        condition_mask: torch.Tensor | None = None,
         sample_size: int =1,
         min_posterior_variance: torch.Tensor | None = None,
     ) -> cVAEOutput:
@@ -353,17 +355,17 @@ class cVAE_MLP(cVAEmodelsABC):
             and optional conditioning statistics.
         """
 
-        x_in = x[0] if isinstance(x, (tuple, list)) else x
+        x_in = x
         self._shape_model_output = x_in.shape
 
         del x_in
 
         cond_mu, cond_log_var = self._condition(
-            condition=condition, added_features=added_features
+            condition=condition, condition_mask=condition_mask, added_features=added_features
         )
 
         mu, log_var = self._recognition(
-            x=x, condition=cond_mu, added_features=added_features
+            x=x_in, x_mask=x_mask, condition=cond_mu, added_features=added_features
         )
 
         if min_posterior_variance is not None:
@@ -411,14 +413,15 @@ class cVAE_MLP(cVAEmodelsABC):
             Generated samples and conditioning outputs.
         """
 
-        condition = request.condition
+        condition = request.condition,
+        condition_mask = request.condition_mask
         added_features = request.added_features
         prior_flow = request.prior_flow
         latent_samples = request.latent_samples
         nstds = request.nstds
         sample_size = request.sample_size
 
-        cond_in = condition[0] if isinstance(condition, (tuple, list)) else condition
+        cond_in = condition
         B, C = cond_in.shape[:2]
         latent_ref_tensor = torch.zeros(
             (B, self.latent_size), device=cond_in.device, dtype=cond_in.dtype
@@ -427,7 +430,7 @@ class cVAE_MLP(cVAEmodelsABC):
         del cond_in
 
         cond_mu, cond_log_var = self._condition(
-                condition=condition, added_features=added_features
+                condition=cond_in, condition_mask=condition_mask, added_features=added_features
             )
 
         if latent_samples is None:
@@ -481,6 +484,7 @@ class cVAE_MLP(cVAEmodelsABC):
     def _recognition(
         self,
         x: torch.Tensor,
+        x_mask:  torch.Tensor,
         condition: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
@@ -500,11 +504,7 @@ class cVAE_MLP(cVAEmodelsABC):
         tuple of torch.Tensor
             (mu, log_var)
         """
-
-        if isinstance(x, (tuple, list)):
-            x_in, x_mask = x
-        else:
-            x_in, x_mask = x, None
+        x_in = x
 
         if x_mask is not None:
             x_in = x_in * x_mask
@@ -530,7 +530,8 @@ class cVAE_MLP(cVAEmodelsABC):
 
     def _condition(
         self,
-        condition: torch.Tensor = None,
+        condition: torch.Tensor,
+        condition_mask: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
         """
@@ -553,10 +554,8 @@ class cVAE_MLP(cVAEmodelsABC):
             else:
                 x_features = None
 
-            if isinstance(condition, (tuple, list)):
-                cond_in, cond_mask = condition
-            else:
-                cond_in, cond_mask = condition, None
+  
+            cond_in, cond_mask = condition,condition_mask
 
             if cond_mask is not None:
                 cond_in = cond_in * cond_mask
@@ -904,7 +903,7 @@ class Autoencoder(deterministicmodelsABC):
         else:
             self._initialize_weights(self.init_method)
 
-    def forward(self, x: torch.Tensor, added_features=None) -> deterministicOutput:
+    def forward(self, x: torch.Tensor, x_mask: torch.Tensor, added_features=None) -> deterministicOutput:
         """
         Forward pass through the encoder/decoder.
 
@@ -920,11 +919,7 @@ class Autoencoder(deterministicmodelsABC):
         deterministicOutput
             Reconstructed output tensor.
         """
-
-        if isinstance(x, (tuple, list)):
-            x_in, x_mask = x
-        else:
-            x_in, x_mask = x, None
+        x_in = x
 
         if x_mask is not None:
             x_in = x_in * x_mask
@@ -937,7 +932,7 @@ class Autoencoder(deterministicmodelsABC):
         else:
             x_features = None
 
-        if isinstance(x, list) or isinstance(x, tuple):
+        if x_features is not None:
             if self.append_mode == 1:
                 out = self.encoder(torch.cat([x_in, x_features], dim=-1))
                 out = self.decoder(out)

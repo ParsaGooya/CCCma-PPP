@@ -318,6 +318,7 @@ class cVAEPredictRequest:
         Number of samples.
     """
     condition: torch.Tensor
+    condition_mask: torch.Tensor | None = None
     added_features: torch.Tensor | None = None
     prior_flow: flowABC | None = None
     latent_samples: torch.Tensor | None = None

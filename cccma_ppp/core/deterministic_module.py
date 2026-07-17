@@ -260,10 +260,8 @@ class deterministic(moduleABC):
 
         output = self.forward(data)
 
-        if isinstance(data.target, (tuple, list)):
-            target, target_mask = data.target
-        else:
-            target, target_mask = data.target, None
+        target = data.target
+        target_mask = data.target_mask
 
         total_loss, indiv_losses = self.criterion(
             output.output, target, target_mask=target_mask, print_loss=False
@@ -291,7 +289,7 @@ class deterministic(moduleABC):
             Model predictions.
         """
 
-        return self.model(x=data.input, added_features=data.added_features)
+        return self.model(x=data.input, x_mask=data.input_mask, added_features=data.added_features)
 
     def predict(self, data: BatchData) -> deterministicOutput:
         """
