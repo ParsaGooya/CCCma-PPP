@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from cccma_ppp.data_modules.dataset.config_abc import (
+from cccma_ppp.data_modules.dataset.dataset_abc import (
     DatasetConfigABC,
     lead_months_config,
 )
