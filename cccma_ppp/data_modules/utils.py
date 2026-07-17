@@ -173,6 +173,7 @@ def _load_xarray_data(
     preprocessor: PreprocessingPipeline | None = None,
     concat_dim: str = "year",
     rename_dict: dict | None = None,
+    chunks: dict | None = None,
     load: bool = False
 ):
     """
@@ -201,7 +202,7 @@ def _load_xarray_data(
         Loaded (and optionally preprocessed) data.
     """
     
-    ds = xr.open_mfdataset(paths, combine="nested", concat_dim=concat_dim)
+    ds = xr.open_mfdataset(paths, combine="nested", concat_dim=concat_dim, chunks=chunks)
 
     if rename_dict is not None:
         ds = ds.rename(rename_dict)

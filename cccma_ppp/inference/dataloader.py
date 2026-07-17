@@ -17,26 +17,26 @@ class BatchData(BatchDataABC):
     metadata: list[dict] | None = None
     return_spatial_mask: bool = False
     reduce_spatial_mask: bool = False
+    input_mask: torch.Tensor | None = dataclasses.field(
+        init=False,
+        default=None,
+    )
 
     def __post_init__(self):
         if self.return_spatial_mask:
-            self.input_mask = (~torch.isnan(self.input)).to(torch.int)
+            self.input_mask =  ~torch.isnan(self.input)
             if self.reduce_spatial_mask:
-                self.input_mask = self.input_mask.mean(0)
-                self.input_mask = (self.input_mask == 1).float()
+                self.input_mask = self.input_mask.all(dim=0)
 
-        self.input = torch.nan_to_num(self.input, nan=0.0)
+        self.input.nan_to_num_(nan=0.0)
 
-        if self.return_spatial_mask:
-            self.input = (self.input, self.input_mask)
+    def to_device(self, device: torch.device | str) -> "BatchData":
+        
+        self.input = self.input.to(device)
 
-    def to_device(self, device: torch.device | str):
-
-        if self.return_spatial_mask:
-            self.input = (self.input[0].to(device), self.input[1].to(device))
-        else:
-            self.input = self.input.to(device)
-
+        if self.input_mask is not None:
+            self.input_mask = self.input_mask.to(device)
+            
         if self.added_features is not None:
             self.added_features = self.added_features.to(device)
 

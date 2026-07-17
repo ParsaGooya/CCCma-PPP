@@ -5,12 +5,14 @@ import torch
 import dataclasses
 import warnings
 from pathlib import Path
+import dask
 
 from cccma_ppp.data_modules.dataset import (
     DatasetConfigABC,
     DatasetOperator,
     lead_months_config,
     _get_time_features,
+    _build_chunks
 )
 from cccma_ppp.data_modules.data import (
     DataConfigABC,
@@ -23,7 +25,7 @@ from cccma_ppp.data_modules import (
     _unwrap_data_variables,
     _load_xarray_data,
     _create_train_mask,
-    suppress_stderr
+    suppress_stderr,
 )
 
 from cccma_ppp.configs import supported_NN_dimensions_sorted
@@ -386,9 +388,10 @@ class TrainDataset(Dataset):
             )
 
         self.mask = self._prepare_mask()
-        self.model_indexes = self.get_model_indexes()
-        self.obs_indexes = self.get_obs_indexes(self.model_indexes)
-        self.cond_indexes = self.get_cond_indexes(self.model_indexes)
+        self.sample_coords = self.get_sampling_coords()
+        self.model_indexes = self.get_model_indexes(self.sample_coords)
+        self.obs_indexes = self.get_obs_indexes(self.sample_coords)
+        self.cond_indexes = self.get_cond_indexes(self.sample_coords)
 
     @property
     def _autoencoding_model_data(self):
@@ -541,9 +544,9 @@ class TrainDataset(Dataset):
             load=load
         )
 
-    def get_model_indexes(self):
+    def get_sampling_coords(self):
         """
-        Compute indexes for model dataset.
+        Compute coordinates for sampling the datasets.
 
         Returns
         -------
@@ -559,69 +562,173 @@ class TrainDataset(Dataset):
         mask = tuple(map(np.array, zip(*mask)))
         indexes = {
             key: mask[ind]
-            for ind, key in enumerate(tuple(dict(self.mask.sizes).keys()))
+            for ind, key in enumerate(self.mask.sizes)
         }
 
         return indexes
 
-    def get_obs_indexes(self, model_indexes):
+    def get_model_indexes(
+        self,
+        sample_coords: dict[str, np.ndarray],
+    ) -> dict[str, np.ndarray] | None:
         """
-        Compute indexes for observation dataset.
+        Convert sampling coordinates to positional model-dataset indexes.
+
+        Parameters
+        ----------
+        sample_coords : dict[str, np.ndarray]
+            Mapping from dimension names to coordinate values for each sample.
 
         Returns
         -------
-        dict or None
+        dict[str, np.ndarray] or None
+            Positional indexes for each dimension, or None if no model dataset
+            is loaded.
         """
+        if not self._load_model:
+            return None
 
-        if self.observation_dataset is not None:
-            indexes = {}
-            offset_year, month = np.divmod(model_indexes["lead_time"] - 0.5, 12)
-            indexes["year"] = model_indexes["year"] + offset_year
-            indexes["month"] = month + 0.5
-            if all(
-                [
-                    not self.config.observation.ensemble_mean,
-                    self.config.observation.info.coords.get("ensembles") is not None,
-                ]
-            ):
-                ens_inds = [
-                    np.random.choice(self.config.observation.info.coords["ensembles"])
-                    for _ in range(len(model_indexes["year"]))
-                ]
-                indexes["ensembles"] = np.array(ens_inds)
+        indexes = {
+            dim: self.model_dataset.indexes[dim].get_indexer(values)
+            for dim, values in sample_coords.items()
+        }
 
-            return indexes
+        missing = {
+            dim: sample_coords[dim][positions == -1]
+            for dim, positions in indexes.items()
+            if np.any(positions == -1)
+        }
 
-    def get_cond_indexes(self, model_indexes):
+        if missing:
+            raise ValueError(
+                f"Some sampling coordinates were not found in the model dataset: {missing}"
+            )
+
+        return indexes
+
+    def get_obs_indexes(
+        self,
+        sample_coords: dict[str, np.ndarray],
+    ) -> dict[str, np.ndarray] | None:
         """
-        Compute indexes for conditioning dataset.
+        Compute positional indexes for the observation dataset.
+
+        Parameters
+        ----------
+        sample_coords : dict[str, np.ndarray]
+            Sampling coordinate values for the model dataset. Must contain
+            ``year`` and ``lead_time``.
 
         Returns
         -------
-        dict or None
+        dict[str, np.ndarray] or None
+            Positional observation indexes for each sample, or ``None`` when
+            no observation dataset is available.
+
+        Raises
+        ------
+        ValueError
+            if a corresponding observation coordinate cannot be found.
         """
+        if self.observation_dataset is None:
+            return None
+        
+        model_years = np.asarray(sample_coords["year"])
+        lead_times = np.asarray(sample_coords["lead_time"])
 
-        if self.condition_dataset is not None:
-            if self.config.condition_method != "static":
-                indexes = {}
-                indexes["year"] = model_indexes["year"]
-                indexes["lead_time"] = model_indexes["lead_time"]
+        offset_years, months = np.divmod(lead_times - 0.5, 12)
 
-                if self.config.condition_method == "cross_ensemble":
-                    ens_inds = [
-                        np.random.choice(
-                            self.config.effective_condition.info.coords["ensembles"]
-                        )
-                        for _ in range(len(model_indexes["year"]))
-                    ]
-                    indexes["ensembles"] = np.array(ens_inds)
+        observation_coords = {
+            "year": model_years + offset_years,
+            "month": months + 0.5,
+        }
 
-                elif self.config.condition_method == "same_member":
-                    indexes["ensembles"] = model_indexes["ensembles"]
+        indexes = {
+            dim: self.observation_dataset.indexes[dim].get_indexer(values)
+            for dim, values in observation_coords.items()
+        }
 
-                return indexes
+        missing_values = {
+            dim: observation_coords[dim][positions == -1]
+            for dim, positions in indexes.items()
+            if np.any(positions == -1)
+        }
 
-        return None
+        if missing_values:
+            raise ValueError(
+                "Some observation coordinates were not found in the observation "
+                f"dataset: {missing_values}"
+            )
+
+        return indexes    
+
+    def get_cond_indexes(
+        self,
+        sample_coords: dict[str, np.ndarray],
+    ) -> dict[str, np.ndarray] | None:
+        """
+        Compute positional indexes for the conditioning dataset.
+
+        Parameters
+        ----------
+        sample_coords : dict[str, np.ndarray]
+            Sampling coordinate values for the model dataset.
+
+        Returns
+        -------
+        dict[str, np.ndarray] or None
+            Positional conditioning indexes for each sample, or ``None`` when
+            no conditioning dataset is available or the condition is static.
+
+        Raises
+        ------
+        ValueError
+            If required sampling coordinates are missing, if ``same_member`` is
+            requested without ensemble coordinates, or if any conditioning
+            coordinates cannot be found.
+        """
+        if (
+            self.condition_dataset is None
+            or self.config.condition_method == "static"
+        ):
+            
+            return None
+        
+        condition_coords = {
+            "year": np.asarray(sample_coords["year"]),
+            "lead_time": np.asarray(sample_coords["lead_time"]),
+        }
+
+        if self.config.condition_method == "same_member":
+            if "ensembles" not in sample_coords:
+                raise ValueError(
+                    "'same_member' conditioning requires ensemble coordinates "
+                    "in sample_coords."
+                )
+
+            condition_coords["ensembles"] = np.asarray(
+                sample_coords["ensembles"]
+            )
+
+
+        indexes = {
+            dim: self.condition_dataset.indexes[dim].get_indexer(values)
+            for dim, values in condition_coords.items()
+        }
+
+        missing_values = {
+            dim: condition_coords[dim][positions == -1]
+            for dim, positions in indexes.items()
+            if np.any(positions == -1)
+        }
+
+        if missing_values:
+            raise ValueError(
+                "Some conditioning coordinates were not found in the "
+                f"conditioning dataset: {missing_values}"
+            )
+
+        return indexes
 
     def get_input_shape(self):
         """
@@ -702,81 +809,109 @@ class TrainDataset(Dataset):
             0 if self.config.time_features is None else len(self.config.time_features)
         )
 
-    def _index_condition_dataset(self, ind):
+    def _index_condition_dataset(self, ind: int) -> xr.DataArray | None:
         """
-        Index condition dataset.
+        Select and preprocess one conditioning sample.
+
+        Parameters
+        ----------
+        ind : int
+            Sample index.
 
         Returns
         -------
         xr.DataArray or None
+            Preprocessed conditioning sample, or ``None`` when no conditioning
+            dataset is available.
         """
+        if self.condition_dataset is None:
+            return None
 
-        if self.condition_dataset is not None:
-            if self.config.condition_method != "static":
-                year = [float(self.cond_indexes["year"][ind])]
-                lead_time = [float(self.cond_indexes["lead_time"][ind])]
-                selection = dict(year=year, lead_time=lead_time)
-                if "ensembles" in self.cond_indexes:
-                    selection["ensembles"] = [self.cond_indexes["ensembles"][ind]]
+        if self.config.condition_method == "static":
+            selection = {}
 
-            else:
-                selection = {}
+        else:
+            selection = {
+                dim: [int(indexes[ind])]
+                for dim, indexes in self.cond_indexes.items()
+            }
 
-            condition = (
-                self.config.effective_condition.preprocessing_pipeline.transform(
-                    self.condition_dataset.sel(**selection)
-                )
+            if self.config.condition_method == "cross_ensemble":
+                selection["ensembles"] = [
+                    np.random.randint(self.condition_dataset.sizes["ensembles"])
+                ]
+
+
+        condition = self.condition_dataset.isel(**selection)
+
+        condition = (
+            self.config.effective_condition.preprocessing_pipeline.transform(
+                condition
             )
-            condition = _unwrap_data_variables(condition)
+        )
 
-            return condition
-
-    def _index_observation_dataset(self, ind):
+        return _unwrap_data_variables(condition)
+        
+    def _index_observation_dataset(self, ind: int) -> xr.DataArray | None:
         """
-        Index observation dataset.
+        Select and preprocess one observation sample.
+
+        Parameters
+        ----------
+        ind : int
+            Sample index.
 
         Returns
         -------
         xr.DataArray or None
+            Preprocessed observation sample, or ``None`` when no observation
+            dataset is available.
         """
 
-        if self.observation_dataset is not None:
-            year = [float(self.obs_indexes["year"][ind])]
-            month = [float(self.obs_indexes["month"][ind])]
-            selection = dict(year=year, month=month)
+        if self.observation_dataset is None:
+            return None
 
-            if "ensembles" in self.obs_indexes:
-                selection["ensembles"] = [self.obs_indexes["ensembles"][ind]]
+        selection = {
+            dim: [int(indexes[ind])]
+            for dim, indexes in self.obs_indexes.items()
+        }
 
-            obs = self.config.observation.preprocessing_pipeline.transform(
-                self.observation_dataset.sel(**selection)
-            )
-            obs = _unwrap_data_variables(obs)
-            return obs
+        if "ensembles" in self.observation_dataset.dims:
+            selection["ensembles"] = [
+                np.random.randint(self.observation_dataset.sizes["ensembles"])
+            ]
 
-    def _index_model_dataset(self, ind):
+        obs = self.observation_dataset.isel(**selection)
+        obs = self.config.observation.preprocessing_pipeline.transform(obs)
+
+        return _unwrap_data_variables(obs)
+
+    def _index_model_dataset(self, ind: int) -> xr.DataArray | None:
         """
-        Index model dataset.
+        Select and preprocess one model sample.
+
+        Parameters
+        ----------
+        ind : int
+            Sample index.
 
         Returns
         -------
         xr.DataArray or None
+            Preprocessed model sample, or ``None`` when model data are not loaded.
         """
+        if not self._load_model:
+            return None
 
-        if self._load_model:
-            year = [float(self.model_indexes["year"][ind])]
-            lead_time = [float(self.model_indexes["lead_time"][ind])]
-            selection = dict(year=year, lead_time=lead_time)
+        selection = {
+            dim: [int(indexes[ind])]
+            for dim, indexes in self.model_indexes.items()
+        }
 
-            if "ensembles" in self.model_indexes:
-                selection["ensembles"] = [self.model_indexes["ensembles"][ind]]
+        model = self.model_dataset.isel(**selection)
+        model = self.config.model.preprocessing_pipeline.transform(model)
 
-            model = self.config.model.preprocessing_pipeline.transform(
-                self.model_dataset.sel(**selection)
-            )
-            model = _unwrap_data_variables(model)
-
-            return model
+        return _unwrap_data_variables(model)
 
     def __getitem__(self, ind):
         """
@@ -791,12 +926,12 @@ class TrainDataset(Dataset):
         dict or tuple
             Sample dictionary, optionally with metadata.
         """
-        year = float(self.model_indexes["year"][ind])
-        lead_time = float(self.model_indexes["lead_time"][ind])
+        year = float(self.sample_coords["year"][ind])
+        lead_time = float(self.sample_coords["lead_time"][ind])
         selection = dict(year=year, lead_time=lead_time)
 
-        if self.model_indexes.get("ensembles") is not None:
-            selection['ensemble_id'] = self.model_indexes["ensembles"][ind]
+        if self.sample_coords.get("ensembles") is not None:
+            selection['ensemble_id'] = self.sample_coords["ensembles"][ind]
 
         condition = self._index_condition_dataset(ind)
         target = self._index_observation_dataset(ind)
@@ -814,13 +949,18 @@ class TrainDataset(Dataset):
         time_features = _get_time_features(self.config, year, lead_time, input)
 
         with suppress_stderr():
-            datadict = dict(
-                input=torch.as_tensor(input.to_numpy(), dtype=torch.float32),
-                target=torch.as_tensor(target.to_numpy(), dtype=torch.float32),
-                added_features=torch.as_tensor(time_features, dtype=torch.float32)
-                if time_features is not None
-                else None,
+            input, target = dask.compute(
+                input.data,
+                target.data,
             )
+
+        datadict = dict(
+            input=torch.as_tensor(input, dtype=torch.float32),
+            target=torch.as_tensor(target, dtype=torch.float32),
+            added_features=torch.as_tensor(time_features, dtype=torch.float32)
+            if time_features is not None
+            else None,
+        )
 
         if self.return_metadata:
             return datadict, selection
@@ -835,4 +975,4 @@ class TrainDataset(Dataset):
         -------
         int
         """
-        return len(self.model_indexes.get(list(self.model_indexes.keys())[0]))
+        return len(self.sample_coords.get(list(self.sample_coords.keys())[0]))

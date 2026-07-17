@@ -6,7 +6,9 @@ from cccma_ppp.data_modules.data import DataConfigABC
 from cccma_ppp.data_modules.dataset import DatasetConfigABC
 from cccma_ppp.data_modules import WeightsConfig
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
-from cccma_ppp.configs import supported_NN_dimensions_sorted
+from cccma_ppp.configs import (supported_NN_dimensions_sorted,
+                                required_sample_dimensions,
+                                optional_sample_dimensions)
 
 class DatasetOperator:
     """
@@ -437,3 +439,21 @@ def _get_time_features(
             )
 
         return time_features
+
+
+
+def _build_chunks(config: DataConfigABC | None = None):
+
+    if config is None:
+        return
+
+    sample_dims = required_sample_dimensions.union(
+                        optional_sample_dimensions
+                    )
+
+    chunks = { dim : 1 for dim in
+            sample_dims
+            if dim in config.info.coords}
+
+    return chunks
+        
