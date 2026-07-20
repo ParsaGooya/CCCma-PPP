@@ -2,12 +2,13 @@ import numpy as np
 from pathlib import Path
 import xarray as xr
 
-from cccma_ppp.data_modules.data.data_configs import DataConfigABC
-from cccma_ppp.data_modules.dataset.config_abc import DatasetConfigABC
-from cccma_ppp.data_modules.utils import WeightsConfig
+from cccma_ppp.data_modules.data import DataConfigABC
+from cccma_ppp.data_modules.dataset import DatasetConfigABC
+from cccma_ppp.data_modules import WeightsConfig
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
-from cccma_ppp.configs import supported_NN_dimensions_sorted
-
+from cccma_ppp.configs import (supported_NN_dimensions_sorted,
+                                required_sample_dimensions,
+                                optional_sample_dimensions)
 
 class DatasetOperator:
     """
@@ -109,10 +110,7 @@ class DatasetOperator:
                     "year": train_years,
                     "lead_time": self.config.lead_months,
                 }
-                if (
-                    self.config.effective_condition.info.coords.get("ensembles")
-                    is not None
-                ):
+                if self.config.effective_condition.info.coords.get("ensembles") is not None:
                     selection["ensembles"] = (
                         self.config.effective_condition.info.coords["ensembles"]
                     )
@@ -227,6 +225,7 @@ class DatasetOperator:
         """
         if config is None:
             config = WeightsConfig()
+        
 
         if self.config_observation is not None:
             ref = self.config_observation
@@ -239,16 +238,16 @@ class DatasetOperator:
             )
 
         target_coords = {}
-        for dim in [
-            dim for dim in supported_NN_dimensions_sorted if dim in ref.info.coords
-        ]:
-            target_coords[dim] = ref.info.coords[dim]
+        for dim in [dim for dim in supported_NN_dimensions_sorted 
+                     if dim in ref.info.coords]:
+  
+                target_coords[dim] = ref.info.coords[dim]
+
 
         from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 
         checklist = [
-            isinstance(item, Flattennanremove)
-            for item in ref.preprocessing_pipeline.fitted_preprocessors
+            isinstance(item, Flattennanremove) for item in ref.preprocessing_pipeline.fitted_preprocessors
         ]
 
         weights = config.build_weights(
@@ -286,11 +285,8 @@ class DatasetOperator:
                 metadata, self.config.model
             )
 
-            for dim in [
-                dim
-                for dim in supported_NN_dimensions_sorted
-                if dim in self.config.model.info.coords
-            ]:
+            for dim in [dim for dim in supported_NN_dimensions_sorted 
+                     if dim in self.config.model.info.coords]:
                 NN_dims.append(dim)
 
         else:
@@ -306,14 +302,11 @@ class DatasetOperator:
                     metadata, self.config.effective_condition
                 )
 
-            for dim in [
-                dim
-                for dim in supported_NN_dimensions_sorted
-                if dim in self.config.effective_condition.info.coords
-            ]:
-                NN_dims.append(dim)
+            for dim in [dim for dim in supported_NN_dimensions_sorted 
+                     if dim in self.config.effective_condition.info.coords]:
+                NN_dims.append(dim)           
 
-        metadata["NN_dims"] = NN_dims
+        metadata['NN_dims'] = NN_dims
 
         return metadata
 
@@ -345,11 +338,8 @@ class DatasetOperator:
                 metadata, self.config.model
             )
 
-            for dim in [
-                dim
-                for dim in supported_NN_dimensions_sorted
-                if dim in self.config.model.info.coords
-            ]:
+            for dim in [dim for dim in supported_NN_dimensions_sorted 
+                     if dim in self.config.model.info.coords]:
                 NN_dims.append(dim)
 
         else:
@@ -357,14 +347,11 @@ class DatasetOperator:
                 metadata, self.config_observation
             )
 
-            for dim in [
-                dim
-                for dim in supported_NN_dimensions_sorted
-                if dim in self.config_observation.info.coords
-            ]:
+            for dim in [dim for dim in supported_NN_dimensions_sorted 
+                     if dim in self.config_observation.info.coords]:
                 NN_dims.append(dim)
 
-        metadata["NN_dims"] = NN_dims
+        metadata['NN_dims'] = NN_dims
 
         return metadata
 
@@ -384,8 +371,7 @@ class DatasetOperator:
         dict
         """
         preprocessor_names = [
-            processor[0].lower()
-            for processor in dataconfig.preprocessing_pipeline.pipeline
+            processor[0].lower() for processor in dataconfig.preprocessing_pipeline.pipeline
         ]
         for var in dataconfig.names:
             metadata["variables"].append(var)
@@ -396,8 +382,7 @@ class DatasetOperator:
 
 def _get_time_features(
     config: DatasetConfigABC,
-    year: int,
-    lead_time: int,
+    selection: dict,
     input: xr.DataArray,
 ) -> np.ndarray | None:
     """
@@ -407,10 +392,9 @@ def _get_time_features(
     ----------
     config : DatasetConfigABC
         Configuration containing feature definitions.
-    year : int
-        Base year of sample.
-    lead_time : int
-        Lead time in months.
+    selection : dict
+        Selection coords of the sample
+
     input : xr.DataArray
         Input data used for shape alignment.
 
@@ -421,6 +405,16 @@ def _get_time_features(
 
     Broadcasts features to match spatial input dimensions if needed.
     """
+    if any([
+        "year" not in selection,
+        "lead_time" not in selection
+    ]):
+        raise ValueError(
+            "The provided selection coords are not supported by _get_time_features."
+        )
+    
+    year = selection["year"]
+    lead_time = selection["lead_time"]
 
     if config.time_features is not None:
         time_features_list = np.array([config.time_features]).flatten()
@@ -453,3 +447,21 @@ def _get_time_features(
             )
 
         return time_features
+
+
+
+def _build_chunks(config: DataConfigABC | None = None):
+
+    if config is None:
+        return
+
+    sample_dims = (*required_sample_dimensions,
+                    *optional_sample_dimensions)
+                    
+
+    chunks = { dim : 1 for dim in
+            sample_dims
+            if dim in config.info.coords}
+
+    return chunks
+        

@@ -4,12 +4,12 @@ from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler
 from functools import partial
 import abc
-from typing import final
+from typing import final, ClassVar
 from collections.abc import Callable, Iterator
 from itertools import islice
 
 
-from cccma_ppp.data_modules.dataset.config_abc import DatasetConfigABC
+from cccma_ppp.data_modules.dataset import DatasetConfigABC
 
 
 class BatchDataABC(abc.ABC):
@@ -32,6 +32,9 @@ class BatchDataABC(abc.ABC):
     target: torch.Tensor | None
     added_features: torch.Tensor | None
     metadata: list[dict] | None = None
+
+    _shared_input_mask: ClassVar[torch.Tensor | None] = None
+    _shared_target_mask: ClassVar[torch.Tensor | None] = None
 
     @abc.abstractmethod
     def to_device(self, device: torch.device | str):
@@ -62,6 +65,7 @@ class DataloaderConfigABC(abc.ABC):
     """
 
     dataset_config: DatasetConfigABC
+    pin_memory: bool
 
     @abc.abstractmethod
     def setup_distributed(self):
@@ -75,8 +79,14 @@ class DataloaderConfigABC(abc.ABC):
         Note
         -------
         preprocessors must be fit at this stage.
-
+        
         """
+        pass
+
+    @property
+    @abc.abstractmethod
+    def available_times(self):
+
         pass
 
 
@@ -123,6 +133,8 @@ class Dataloader:
 
         self.sampler = self._get_dataloader_sampler()
         shuffle = self.world_size == 1 if self.shuffle is None else self.shuffle
+        num_workers = self.config.num_data_workers
+
         self._torch_loader = DataLoader(
             self.dataset,
             batch_size=self.config.batch_size,
@@ -133,8 +145,10 @@ class Dataloader:
                 return_spatial_mask=self.return_spatial_mask,
                 reduce_spatial_mask=self.reduce_spatial_mask,
             ),
-            num_workers=self.config.num_data_workers,
+            num_workers=num_workers,
             prefetch_factor=self.config.prefetch_factor,
+            persistent_workers=num_workers > 0,
+            pin_memory=self.config.pin_memory,
         )
 
     @property

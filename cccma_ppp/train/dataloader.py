@@ -6,13 +6,14 @@ from pathlib import Path
 
 
 from cccma_ppp.train.dataset import TrainDatasetConfig
-from cccma_ppp.data_modules.utils import _create_train_mask, WeightsConfig
+from cccma_ppp.data_modules import _create_train_mask, WeightsConfig
 from cccma_ppp.data_modules.dataloader import (
     Dataloader,
     DataloaderConfigABC,
     BatchDataABC,
 )
-from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic import Distributed
+
 
 
 @dataclasses.dataclass
@@ -40,6 +41,14 @@ class BatchData(BatchDataABC):
     metadata: list[dict] | None = None
     return_spatial_mask: bool = False
     reduce_spatial_mask: bool = True
+    input_mask: torch.Tensor | None = dataclasses.field(
+        init=False,
+        default=None,
+    )
+    target_mask: torch.Tensor | None = dataclasses.field(
+        init=False,
+        default=None,
+    )
 
     def __post_init__(self):
         """
@@ -49,21 +58,29 @@ class BatchData(BatchDataABC):
         -------
         None
         """
-
+        
         if self.return_spatial_mask:
-            self.input_mask = (~torch.isnan(self.input)).float()
-            self.target_mask = (~torch.isnan(self.target)).float()
-
             if self.reduce_spatial_mask:
-                self.input_mask = self.input_mask.mean(0)
-                self.target_mask = self.target_mask.mean(0)
+                if type(self)._shared_input_mask is None:
+                    type(self)._shared_input_mask = (
+                        ~torch.isnan(self.input)
+                    ).all(dim=0)
 
-        self.input = torch.nan_to_num(self.input, nan=0.0)
-        self.target = torch.nan_to_num(self.target, nan=0.0)
+                if type(self)._shared_target_mask is None:
+                    type(self)._shared_target_mask = (
+                        ~torch.isnan(self.target)
+                    ).all(dim=0)
 
-        if self.return_spatial_mask:
-            self.input = (self.input, self.input_mask)
-            self.target = (self.target, self.target_mask)
+                self.input_mask = type(self)._shared_input_mask
+                self.target_mask = type(self)._shared_target_mask
+
+            else:
+                self.input_mask = ~torch.isnan(self.input)
+                self.target_mask = ~torch.isnan(self.target)
+
+        self.input.nan_to_num_(nan=0.0)
+        self.target.nan_to_num_(nan=0.0)
+
 
     def to_device(self, device: torch.device | str):
         """
@@ -78,13 +95,14 @@ class BatchData(BatchDataABC):
         BatchData
             Updated instance on target device.
         """
+        self.input = self.input.to(device)
+        self.target = self.target.to(device)
 
-        if self.return_spatial_mask:
-            self.input = (self.input[0].to(device), self.input[1].to(device))
-            self.target = (self.target[0].to(device), self.target[1].to(device))
-        else:
-            self.input = self.input.to(device)
-            self.target = self.target.to(device)
+        if self.input_mask is not None:
+            self.input_mask = self.input_mask.to(device)
+
+        if self.target_mask is not None:
+            self.target_mask = self.target_mask.to(device)
 
         if self.added_features is not None:
             self.added_features = self.added_features.to(device)
@@ -122,6 +140,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     num_data_workers: int = 0
     prefetch_factor: int = 2
     drop_last: bool = False
+    load: bool = False
 
     def __post_init__(self):
         """
@@ -137,22 +156,23 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             If requested training years are invalid.
         """
         self._setup = False
+        self.pin_memory = False
 
         if self.num_data_workers == 0:
             self.prefetch_factor = None
 
         if self.train_years is None:
-            self.train_years = self.available_train_years
+            self.train_years = self.available_times
             if self.num_validation_years > 0:
-                self.validation_years = self.dataset_config.available_train_time[
+                self.validation_years = self.dataset_config.available_times[
                     -self.num_validation_years :
                 ]
         else:
             self.train_years = np.arange(self.train_years[0], self.train_years[1] + 1)
 
-            if not set(self.train_years).issubset(set(self.available_train_years)):
+            if not set(self.train_years).issubset(set(self.available_times)):
                 raise ValueError(
-                    f"the requested train years are not available: available years: [{self.available_train_years.min()},{self.available_train_years.max()}]"
+                    f"the requested train years are not available: available years: [{self.available_times.min()},{self.available_times.max()}]"
                 )
 
             if self.num_validation_years > 0:
@@ -162,7 +182,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
                 )
 
     @property
-    def available_train_years(self):
+    def available_times(self):
         """
         Training years excluding validation period.
 
@@ -173,10 +193,10 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         """
 
         if self.num_validation_years > 0:
-            return self.dataset_config.available_train_time[
+            return self.dataset_config.available_times[
                 : -self.num_validation_years
             ]
-        return self.dataset_config.available_train_time
+        return self.dataset_config.available_times
 
     def setup_distributed(
         self, distributed: Distributed, load_path: Path | str | None = None
@@ -200,12 +220,18 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
         if distributed.is_root():
             if load_path is None:
-                self.dataset_config._fit_preprocessors(self.train_years, save=True)
+                self.dataset_config._fit_preprocessors(
+                    self.train_years, save=True
+                )
 
         distributed.barrier()
 
-        if distributed.distributed or load_path is not None:
+        if (distributed.distributed or 
+            load_path is not None):
             self.dataset_config._load_fitted_preprocessors(load_dir=load_path)
+
+        if distributed.distributed:
+            self.pin_memory = True
 
         self._setup = True
 
@@ -242,12 +268,15 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             )
 
         train_mask = _create_train_mask(
-            years=self.train_years,
+            time=self.train_years,
             lead_times=self.dataset_config.lead_months,
         )
 
         train_dataset = self.dataset_config.build_dataset(
-            years=self.train_years, mask=train_mask, return_metadata=return_metadata
+            years=self.train_years, 
+            mask=train_mask, 
+            return_metadata=return_metadata,
+            load=self.load
         )
 
         return Dataloader(
@@ -296,14 +325,16 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
         if self.num_validation_years > 0:
             validation_mask = _create_train_mask(
-                years=self.validation_years,
+                time=self.validation_years,
                 lead_times=self.dataset_config.lead_months,
             )
             validation_dataset = self.dataset_config.build_dataset(
-                years=self.validation_years,
-                mask=validation_mask,
+                years=self.validation_years, 
+                mask=validation_mask, 
                 return_metadata=return_metadata,
+                load=self.load
             )
+            
             return Dataloader(
                 dataset=validation_dataset,
                 config=self,
@@ -318,11 +349,12 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         else:
             msg = f"Validation dataoader could not be built for num_validation_years = {self.num_validation_years} "
 
-            if supress_error:
+            if  supress_error:
                 warnings.warn(msg)
-                return None
+                return None  
             else:
                 raise RuntimeError(msg)
+  
 
     def get_weights(self, config: WeightsConfig | None = None):
         """

@@ -16,7 +16,7 @@ from cccma_ppp.models.models_abc import (
 from cccma_ppp.core.selectors import deterministicModelSelector, cVAEModelSelector
 from cccma_ppp.core.cVAE_module import cVAEOutput
 from cccma_ppp.core.deterministic_module import deterministicOutput
-from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.generic import RuntimeContext
 
 
 AppendMode = Literal[1, 2, 3]
@@ -137,7 +137,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
             added_features_dim=added_features_dim,
         )
 
-
+    
 class cVAE_MLP(cVAEmodelsABC):
     """
     MLP-based conditional variational autoencoder (cVAE).
@@ -325,9 +325,11 @@ class cVAE_MLP(cVAEmodelsABC):
     def forward(
         self,
         x: torch.Tensor,
+        x_mask: torch.Tensor | None = None,
         added_features: torch.Tensor | None = None,
         condition: torch.Tensor | None = None,
-        sample_size: int = 1,
+        condition_mask: torch.Tensor | None = None,
+        sample_size: int =1,
         min_posterior_variance: torch.Tensor | None = None,
     ) -> cVAEOutput:
         """
@@ -353,17 +355,14 @@ class cVAE_MLP(cVAEmodelsABC):
             and optional conditioning statistics.
         """
 
-        x_in = x[0] if isinstance(x, (tuple, list)) else x
-        self._shape_model_output = x_in.shape
-
-        del x_in
+        self._shape_model_output = x.shape
 
         cond_mu, cond_log_var = self._condition(
-            condition=condition, added_features=added_features
+            condition=condition, condition_mask=condition_mask, added_features=added_features
         )
 
         mu, log_var = self._recognition(
-            x=x, condition=cond_mu, added_features=added_features
+            x=x, x_mask=x_mask, condition=cond_mu, added_features=added_features
         )
 
         if min_posterior_variance is not None:
@@ -402,7 +401,7 @@ class cVAE_MLP(cVAEmodelsABC):
         Parameters
         ----------
         request
-            cVAE predict arguments specified
+            cVAE predict arguments specified 
             by cVAEPredictRequest.
 
         Returns
@@ -412,34 +411,30 @@ class cVAE_MLP(cVAEmodelsABC):
         """
 
         condition = request.condition
+        condition_mask = request.condition_mask
         added_features = request.added_features
         prior_flow = request.prior_flow
         latent_samples = request.latent_samples
         nstds = request.nstds
         sample_size = request.sample_size
 
-        cond_in = condition[0] if isinstance(condition, (tuple, list)) else condition
-        B, C = cond_in.shape[:2]
+        B, C = condition.shape[:2]
         latent_ref_tensor = torch.zeros(
-            (B, self.latent_size), device=cond_in.device, dtype=cond_in.dtype
+            (B, self.latent_size), device=condition.device, dtype=condition.dtype
         )
         _shape_model_output = (sample_size, B, C, -1)
-        del cond_in
 
         cond_mu, cond_log_var = self._condition(
-            condition=condition, added_features=added_features
-        )
+                condition=condition, condition_mask=condition_mask, added_features=added_features
+            )
 
         if latent_samples is None:
+
             if self.condition_dependant_latent and not self.condition_dependant_flow:
-                latent_samples = self._sample(
-                    cond_mu, cond_log_var, sample_size, std=nstds
-                )
+                latent_samples = self._sample(cond_mu, cond_log_var, sample_size, std=nstds)
 
             else:
-                latent_samples = self._get_normal(latent_ref_tensor, std=nstds).sample(
-                    (sample_size,)
-                )
+                latent_samples = self._get_normal(latent_ref_tensor, std=nstds).sample((sample_size,))
 
             if prior_flow is not None:
                 cond = None
@@ -447,8 +442,9 @@ class cVAE_MLP(cVAEmodelsABC):
 
                 if prior_flow.condition_size is not None:
                     cond = (
-                        cond_mu.unsqueeze(0)  # [1, B, C]
-                        .expand(sample_size, -1, -1)  # [S, B, C]
+                        cond_mu
+                        .unsqueeze(0)                     # [1, B, C]
+                        .expand(sample_size, -1, -1)      # [S, B, C]
                         .reshape(sample_size * batch_size, -1)
                     )
 
@@ -463,7 +459,7 @@ class cVAE_MLP(cVAEmodelsABC):
             expected_shape = (sample_size, *latent_ref_tensor.shape)
             if not latent_samples.shape == expected_shape:
                 raise ValueError(
-                    f"Got user specified latent_samples of shape ({latent_samples.shape}) "
+                    f"Got user specified latent_samples of shape ({latent_samples.shape}) " \
                     f"but expected shape {(expected_shape)}"
                 )
 
@@ -483,6 +479,7 @@ class cVAE_MLP(cVAEmodelsABC):
     def _recognition(
         self,
         x: torch.Tensor,
+        x_mask:  torch.Tensor,
         condition: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
@@ -503,15 +500,10 @@ class cVAE_MLP(cVAEmodelsABC):
             (mu, log_var)
         """
 
-        if isinstance(x, (tuple, list)):
-            x_in, x_mask = x
-        else:
-            x_in, x_mask = x, None
-
         if x_mask is not None:
-            x_in = x_in * x_mask
+            x = x * x_mask
 
-        x_in = x_in.flatten(start_dim=1)
+        x = x.flatten(start_dim=1)
 
         if added_features is not None:
             x_features = added_features.flatten(start_dim=1)
@@ -519,12 +511,12 @@ class cVAE_MLP(cVAEmodelsABC):
             x_features = None
 
         if condition is not None:
-            x_in = torch.cat([x_in, condition], dim=-1)
+            x = torch.cat([x, condition], dim=-1)
 
         if x_features is not None:
-            x_in = torch.cat([x_in, x_features], dim=-1)
+            x = torch.cat([x, x_features], dim=-1)
 
-        out = self.encoder(x_in)
+        out = self.encoder(x)
         mu = self.mu(out)
         log_var = self.log_var(out)
 
@@ -532,7 +524,8 @@ class cVAE_MLP(cVAEmodelsABC):
 
     def _condition(
         self,
-        condition: torch.Tensor = None,
+        condition: torch.Tensor,
+        condition_mask: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
         """
@@ -555,19 +548,15 @@ class cVAE_MLP(cVAEmodelsABC):
             else:
                 x_features = None
 
-            if isinstance(condition, (tuple, list)):
-                cond_in, cond_mask = condition
-            else:
-                cond_in, cond_mask = condition, None
+  
+            if condition_mask is not None:
+                condition = condition * condition_mask
 
-            if cond_mask is not None:
-                cond_in = cond_in * cond_mask
-
-            cond_in = cond_in.flatten(start_dim=1)
+            condition = condition.flatten(start_dim=1)
             if x_features is not None:
-                cond_in = torch.cat([cond_in, x_features], dim=-1)
+                condition = torch.cat([condition, x_features], dim=-1)
 
-            cond_in = self.embedding(cond_in)
+            cond_in = self.embedding(condition)
             if self.condition_dependant_latent and not self.condition_dependant_flow:
                 cond_mu = self.condition_mu(cond_in)
                 cond_log_var = self.condition_log_var(cond_in)
@@ -906,7 +895,7 @@ class Autoencoder(deterministicmodelsABC):
         else:
             self._initialize_weights(self.init_method)
 
-    def forward(self, x: torch.Tensor, added_features=None) -> deterministicOutput:
+    def forward(self, x: torch.Tensor, x_mask: torch.Tensor, added_features=None) -> deterministicOutput:
         """
         Forward pass through the encoder/decoder.
 
@@ -923,37 +912,32 @@ class Autoencoder(deterministicmodelsABC):
             Reconstructed output tensor.
         """
 
-        if isinstance(x, (tuple, list)):
-            x_in, x_mask = x
-        else:
-            x_in, x_mask = x, None
-
         if x_mask is not None:
-            x_in = x_in * x_mask
+            x = x * x_mask
 
-        B, C = x_in.shape[:2]
-        x_in = x_in.flatten(start_dim=1)
+        B, C = x.shape[:2]
+        x = x.flatten(start_dim=1)
 
         if added_features is not None:
             x_features = added_features.flatten(start_dim=1)
         else:
             x_features = None
 
-        if isinstance(x, list) or isinstance(x, tuple):
+        if x_features is not None:
             if self.append_mode == 1:
-                out = self.encoder(torch.cat([x_in, x_features], dim=-1))
+                out = self.encoder(torch.cat([x, x_features], dim=-1))
                 out = self.decoder(out)
 
             elif self.append_mode == 2:
-                out = self.encoder(x_in)
+                out = self.encoder(x)
                 out = self.decoder(torch.cat([out, x_features], dim=-1))
 
             elif self.append_mode == 3:
-                out = self.encoder(torch.cat([x_in, x_features], dim=-1))
+                out = self.encoder(torch.cat([x, x_features], dim=-1))
                 out = self.decoder(torch.cat([out, x_features], dim=-1))
 
         else:
-            out = self.encoder(x_in)
+            out = self.encoder(x)
             out = self.decoder(out)
 
         return deterministicOutput(output=out.view(B, C, -1))

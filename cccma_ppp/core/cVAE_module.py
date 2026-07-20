@@ -6,18 +6,18 @@ import dataclasses
 import dacite
 import gc
 
-from cccma_ppp.loss.loss import Losspipeline
+from cccma_ppp.loss import Losspipeline
 from cccma_ppp.loss.kld import KLD
-from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC, OutputABC
+from cccma_ppp.core import moduleABC, moduleConfigABC, OutputABC
 from cccma_ppp.core.selectors import (
     ModuleSelector,
     cVAEModelSelector,
-    _load_config_from_checkpoint,
+    _load_config_from_checkpoint
 )
 from cccma_ppp.models.normalized_flows import NormalizedFlowConfig
 from cccma_ppp.models.models_abc import cVAEPredictRequest
-from cccma_ppp.train.dataloader import BatchData
-from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.train import BatchData
+from cccma_ppp.generic import RuntimeContext
 
 
 @dataclasses.dataclass
@@ -356,13 +356,12 @@ class cVAE(moduleABC):
 
         output = self.forward(data)
 
-        if isinstance(data.target, (tuple, list)):
-            target, target_mask = data.target
-        else:
-            target, target_mask = data.target, None
+        target = data.target
+        target_mask = data.target_mask
 
         if target_mask is not None and target_mask.shape == target.shape:
             target_mask = target_mask.unsqueeze(0).expand_as(output.output)
+
         target = target.unsqueeze(0).expand_as(output.output)
 
         generator = self.model_config.GENERATOR
@@ -428,19 +427,19 @@ class cVAE(moduleABC):
 
         return self.model(
             x=data.target,
+            x_mask=data.target_mask,
             added_features=data.added_features,
             condition=data.input,
+            condition_mask=data.input_mask,
             min_posterior_variance=self.min_posterior_variance,
             sample_size=sample_size,
         )
 
-    def predict(
-        self,
-        data: BatchData,
-        sample_size: int = 1,
-        nstds: int = 1,
-        latent_samples: torch.Tensor = None,
-    ) -> cVAEOutput:
+    def predict(self, 
+                data: BatchData, 
+                sample_size: int =1, 
+                nstds: int = 1,
+                latent_samples: torch.Tensor = None) -> cVAEOutput:
         """
         Generate predictions using the learned prior.
 
@@ -457,13 +456,12 @@ class cVAE(moduleABC):
             Generated outputs.
         """
 
-        return self.model.predict(
-            cVAEPredictRequest(
-                condition=data.input,
-                added_features=data.added_features,
-                prior_flow=self.prior_flow,
-                sample_size=sample_size,
-                nstds=nstds,
-                latent_samples=latent_samples,
-            )
+        return self.model.predict( cVAEPredictRequest(
+            condition=data.input,
+            condition_mask=data.input_mask,
+            added_features=data.added_features,
+            prior_flow=self.prior_flow,
+            sample_size=sample_size,
+            nstds=nstds,
+            latent_samples = latent_samples)
         )

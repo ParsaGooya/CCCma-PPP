@@ -1,6 +1,5 @@
 from cccma_ppp.train.train_configs import TrainConfig, build_trainer, prepare_config
-from cccma_ppp.generic.distributed import Distributed
-from cccma_ppp.generic.logger import setup_logger
+from cccma_ppp.generic import Distributed, setup_logger
 
 import argparse
 import dacite
@@ -44,6 +43,7 @@ def main(yaml_config: str):
     distributed = Distributed.get_instance()
 
     try:
+
         config_data = prepare_config(yaml_config)
 
         config = dacite.from_dict(
@@ -71,6 +71,7 @@ def main(yaml_config: str):
         )
 
         trainer.train()
-
+    
     finally:
+
         distributed.cleanup()

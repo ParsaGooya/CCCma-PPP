@@ -7,10 +7,10 @@ from typing import Literal
 import contextlib
 from collections.abc import Iterator
 
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
-from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
-from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.configs import supported_NN_dimensions_sorted
+from cccma_ppp.preprocessing import PreprocessingPipeline, Flattennanremove
+from cccma_ppp.generic import RuntimeContext
+from cccma_ppp.configs import (supported_NN_dimensions_sorted,
+                                required_sample_dimensions)
 
 spatialmethod = Literal["uniform", "cosine_lat"]
 
@@ -91,7 +91,7 @@ class WeightsConfig:
                 weights = _unwrap_data_variables(weights)
 
             msg = f"the loaded weights from {self.load_dir} must have coordinates that match the target coordinates"
-
+                
             for coord in target_coords:
                 if coord not in weights.coords:
                     raise ValueError(msg)
@@ -99,7 +99,8 @@ class WeightsConfig:
                     raise ValueError(msg)
 
         else:
-            coords = xr.DataArray(dims=tuple(target_coords), coords=target_coords)
+            coords = xr.DataArray(dims = tuple(target_coords),
+                                  coords=target_coords)
 
             dims = tuple(coords.sizes)
             shape = tuple(coords.sizes[dim] for dim in dims)
@@ -124,6 +125,7 @@ class WeightsConfig:
                 )
 
                 weights = variable_weights * weights
+
 
         if self.load_dir is None and save:
             save_path = (
@@ -159,10 +161,7 @@ def _unwrap_data_variables(dataset: xr.Dataset) -> xr.DataArray:
     """
 
     return xr.concat(
-        [
-            dataset[v].squeeze().expand_dims("channels", axis=0)
-            for v in list(dataset.data_vars)
-        ],
+        [dataset[v].squeeze().expand_dims("channels", axis=0) for v in list(dataset.data_vars)],
         dim="channels",
     )
 
@@ -175,6 +174,8 @@ def _load_xarray_data(
     preprocessor: PreprocessingPipeline | None = None,
     concat_dim: str = "year",
     rename_dict: dict | None = None,
+    chunks: dict | None = None,
+    load: bool = False
 ):
     """
     Load and optionally preprocess xarray dataset.
@@ -201,8 +202,8 @@ def _load_xarray_data(
     xr.Dataset or xr.DataArray
         Loaded (and optionally preprocessed) data.
     """
-
-    ds = xr.open_mfdataset(paths, combine="nested", concat_dim=concat_dim)
+    
+    ds = xr.open_mfdataset(paths, combine="nested", concat_dim=concat_dim, chunks=chunks)
 
     if rename_dict is not None:
         ds = ds.rename(rename_dict)
@@ -217,16 +218,21 @@ def _load_xarray_data(
     if preprocessor is not None:
         ds = preprocessor.transform(ds)
 
-    nn_dims = [dim for dim in supported_NN_dimensions_sorted if dim in ds.dims]
+    nn_dims = [
+        dim for dim in supported_NN_dimensions_sorted
+        if dim in ds.dims
+    ]
 
     ds = ds.transpose(..., *nn_dims)
+    if load:
+        ds = ds.load()
 
     return ds
 
 
 def _create_train_mask(
-    years: list | xr.DataArray,
-    lead_times: list | xr.DataArray | int,
+    time: list | xr.DataArray,
+    lead_times: list | xr.DataArray | np.ndarray | int,
     exclude_idx=0,
 ):
     """
@@ -234,8 +240,8 @@ def _create_train_mask(
 
     Parameters
     ----------
-    years : array-like
-        Years corresponding to dataset.
+    time : array-like
+        Times corresponding to dataset.
     lead_times : array-like or int
         Lead times in months.
     exclude_idx : int, optional
@@ -252,22 +258,29 @@ def _create_train_mask(
     due to lead-time offsets.
     """
 
-    if isinstance(lead_times, int):
-        lead_times = np.arange(1, lead_times + 1)
+    if not isinstance(lead_times, int):
+        lead_times = max(lead_times)
 
-    mask = np.full((len(years), len(lead_times)), False, dtype=bool)
+    lead_times = np.arange(1, lead_times + 1)
+
+    mask = np.full((len(time), len(lead_times)), False, dtype=bool)
     x = np.arange(0, 12 * mask.shape[0], 12)
     y = np.arange(1, mask.shape[1] + 1)
     idx_array = x[..., None] + y
 
     mask[idx_array > idx_array[-1, exclude_idx + 11]] = True
 
+    time_dim, lead_time_dim = required_sample_dimensions
+
     return xr.DataArray(
         mask,
-        dims=("year", "lead_time"),
-        coords={"year": years, "lead_time": lead_times},
+        dims=required_sample_dimensions,
+        coords={time_dim: time, lead_time_dim: lead_times},
         name="mask",
     )
+
+
+
 
 
 @contextlib.contextmanager
