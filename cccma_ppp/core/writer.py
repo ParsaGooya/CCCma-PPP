@@ -423,4 +423,4 @@ def aggregate_predictions(post_processor: PreprocessingPipeline | None,
     if cleanup_temp:
         for path in temp_files:
             path.unlink()
-        os.remove(temp_save_dir)
+        os.rmdir(temp_save_dir)

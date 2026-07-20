@@ -134,7 +134,7 @@ class InferenceConfig:
 
     def load_module(self, 
                     inference_loader: Dataloader | None = None,
-                    strict: bool = True):
+                    strict: bool = False):
 
         path = Path(self.experiment_dir) / "checkpoints"
 
@@ -169,7 +169,6 @@ class InferenceConfig:
 
         if inference_loader is not None:
             if not all([input_shape == inference_loader.input_shape,
-                        output_shape == inference_loader.output_shape,
                         added_features_dim == inference_loader.added_features_dim]):
                 raise RuntimeError(
                     "Data and model IO dimensions do not match!"
