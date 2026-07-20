@@ -37,7 +37,7 @@ from cccma_ppp.generic.distributed import Distributed
 
 
 BASE_TRAIN_CONFIG = Path(
-    "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/scripts/integration_suite_config.yaml"
+    "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/scripts/integration_suite_train_config.yaml"
 )
 
 
