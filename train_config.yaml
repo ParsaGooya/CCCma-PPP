@@ -26,14 +26,14 @@ train_loader:
             concat_dim : year
             rename_dict :
                             lead_time : month
-        time_features :
-                        - year
         condition_method : ensemble_mean
         lead_months : 
                       start: 1
                       end: 120
 
     batch_size: 10
+    time_features :
+                    - year
     train_years : [1980, 1982]
     num_validation_years : 0
     num_data_workers: 0
