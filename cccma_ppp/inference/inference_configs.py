@@ -1,8 +1,6 @@
 import dataclasses
 import os
-import numpy as np
 import torch
-import warnings
 import logging
 from pathlib import Path
 import yaml
@@ -17,7 +15,7 @@ from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.data_modules.dataloader import Dataloader
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
-from cccma_ppp.train.train_configs import set_seed, _check_IO
+from cccma_ppp.train.train_configs import set_seed
 
 
 @dataclasses.dataclass
@@ -209,13 +207,13 @@ def build_writer(
             else:
                 print(msg)
 
-    log(f"creating data loader ...")
+    log("creating data loader ...")
 
     config.inference_loader.setup_distributed(config.train_loader, distributed)
 
     inference_loader = config.inference_loader.build_inference_loader()
 
-    log(f"Loading saved module ...")
+    log("Loading saved module ...")
 
     module = config.load_module(inference_loader)
     module = module.to(distributed.device)
@@ -223,12 +221,12 @@ def build_writer(
     # if distributed.distributed:
     #     module = torch.nn.parallel.DistributedDataParallel(module, device_ids=[distributed.local_rank], output_device=distributed.local_rank, find_unused_parameters=False)
 
-    log(f"Loading postprocessor ...")
+    log("Loading postprocessor ...")
     post_processor = PreprocessingPipeline().load_from_memory(
         config.output_preprocessor_dir
     )
 
-    log(f"Creating writer ...")
+    log("Creating writer ...")
 
     writer = config.writer.build(
         inference_data_loader=inference_loader,

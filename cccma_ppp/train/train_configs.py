@@ -21,7 +21,6 @@ from cccma_ppp.core.selectors import ModuleSelector
 from cccma_ppp.core.trainer import TrainerConfig
 from cccma_ppp.core.optimization import OptimizerConfig
 
-from cccma_ppp.preprocessing import Flattennanremove
 
 
 def set_seed(seed):
