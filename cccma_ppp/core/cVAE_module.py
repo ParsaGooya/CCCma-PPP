@@ -6,7 +6,7 @@ import dataclasses
 import dacite
 import gc
 
-from cccma_ppp.loss import Losspipeline
+from cccma_ppp.loss.loss import Losspipeline
 from cccma_ppp.loss.kld import KLD
 from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC, OutputABC
 from cccma_ppp.core.selectors import (

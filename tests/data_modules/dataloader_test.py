@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import sys
 import types
@@ -8,16 +9,9 @@ from cccma_ppp.data_modules.dataloader import (
     Dataset,
 )
 
-fake_dataset_module = types.ModuleType("cccma_ppp.data_modules.dataset")
-
 
 class DummyDatasetConfigABC:
     pass
-
-
-fake_dataset_module.DatasetConfigABC = DummyDatasetConfigABC
-
-sys.modules["cccma_ppp.data_modules.dataset"] = fake_dataset_module
 
 
 class DummyBatch(BatchDataABC):
@@ -49,15 +43,26 @@ class DummyDataset(Dataset):
 
 
 class DummyConfig(DataloaderConfigABC):
-    def __init__(self):
-        self.batch_size = 2
-        self.num_data_workers = 0
-        self.prefetch_factor = None
-        self.drop_last = False
+    def __init__(
+        self,
+        batch_size=2,
+        num_data_workers=0,
+        prefetch_factor=None,
+        drop_last=False,
+    ):
+        self.batch_size = batch_size
+        self.num_data_workers = num_data_workers
+        self.prefetch_factor = prefetch_factor
+        self.drop_last = drop_last
+        self.setup_called = False
+        self.pin_memory = False
 
-        self.dataset_config = object()
+    @property
+    def available_times(self):
+        return np.array([2000, 2001, 2002])
 
-    def setup_distributed(self):
+    def setup_distributed(self, *args, **kwargs):
+        self.setup_called = True
         return self
 
 

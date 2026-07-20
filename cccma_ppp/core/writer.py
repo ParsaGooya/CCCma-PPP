@@ -15,10 +15,10 @@ from cccma_ppp.data_modules.dataloader import Dataloader
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.generic.aggregator import RunningCovariance
-from cccma_ppp.train import TrainDataloaderConfig
+from cccma_ppp.train.dataloader import TrainDataloaderConfig
 from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.core.selectors import PredictorSelector
-from cccma_ppp.preprocessing import PreprocessingPipeline
+from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 
 from cccma_ppp.configs import required_sample_dimensions, optional_sample_dimensions
 

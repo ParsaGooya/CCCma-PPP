@@ -1,5 +1,6 @@
 import dataclasses
 from pathlib import Path
+from typing import ClassVar
 import numpy as np
 import xarray as xr
 import torch
@@ -157,10 +158,7 @@ class InferenceDataset(DatasetABC):
     return_metadata: bool = False
     load: bool = False
 
-    mask = dataclasses.field(
-        init=False,
-        default=None,
-    )
+    mask: ClassVar[xr.DataArray | None] = None
 
     def __post_init__(self):
         super().__init__()

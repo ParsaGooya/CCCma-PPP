@@ -85,7 +85,10 @@ def test_raw_module_returns_plain_module(predictor):
     assert predictor.raw_module is module
 
 
-def test_raw_module_unwraps_ddp(monkeypatch, predictor):
+def test_raw_module_unwraps_ddp(
+    monkeypatch,
+    predictor,
+):
     wrapped_module = object()
 
     class FakeDDP:
@@ -103,8 +106,16 @@ def test_raw_module_unwraps_ddp(monkeypatch, predictor):
     assert predictor.raw_module is wrapped_module
 
 
-def test_add_decoder_noise_uses_existing_sampler(predictor):
-    predictor.output_sampler = lambda size: torch.ones(size)
+def test_add_decoder_noise_uses_existing_sampler(
+    predictor,
+):
+    def sampler(size):
+        return torch.ones(
+            *size,
+            2,
+        )
+
+    predictor.output_sampler = sampler
 
     output = DummyOutput(
         torch.tensor(
@@ -124,7 +135,8 @@ def test_add_decoder_noise_uses_existing_sampler(predictor):
 
     assert result is output
     assert result.output.shape == (3, 2, 2)
-    assert torch.equal(
+
+    torch.testing.assert_close(
         result.output[0],
         torch.tensor(
             [
@@ -135,12 +147,19 @@ def test_add_decoder_noise_uses_existing_sampler(predictor):
     )
 
 
-def test_add_decoder_noise_builds_sampler(monkeypatch, predictor):
+def test_add_decoder_noise_builds_sampler(
+    monkeypatch,
+    predictor,
+):
     calls = []
 
     def fake_build():
         calls.append(True)
-        return lambda size: torch.zeros(size)
+
+        return lambda size: torch.zeros(
+            *size,
+            2,
+        )
 
     monkeypatch.setattr(
         predictor,
@@ -161,14 +180,28 @@ def test_add_decoder_noise_builds_sampler(monkeypatch, predictor):
     assert predictor.output_sampler is not None
     assert result.output.shape == (2, 1, 2)
 
+    torch.testing.assert_close(
+        result.output,
+        torch.tensor(
+            [
+                [[1.0, 2.0]],
+                [[1.0, 2.0]],
+            ]
+        ),
+    )
 
-def test_add_decoder_noise_preserves_dtype_and_device(predictor):
+
+def test_add_decoder_noise_preserves_dtype_and_device(
+    predictor,
+):
     recorded = {}
 
     def sampler(size):
         recorded["size"] = size
+
         return torch.ones(
-            size,
+            *size,
+            2,
             dtype=torch.float64,
         )
 
@@ -189,12 +222,21 @@ def test_add_decoder_noise_preserves_dtype_and_device(predictor):
     )
 
     assert recorded["size"] == (2, 1)
+    assert result.output.shape == (2, 1, 2)
     assert result.output.dtype == torch.float32
     assert result.output.device.type == "cpu"
 
 
-def test_add_decoder_noise_multiple_sample_dimensions(predictor):
-    predictor.output_sampler = lambda size: torch.zeros(size)
+def test_add_decoder_noise_multiple_sample_dimensions(
+    predictor,
+):
+    def sampler(size):
+        return torch.zeros(
+            *size,
+            4,
+        )
+
+    predictor.output_sampler = sampler
 
     output = DummyOutput(torch.ones(2, 3, 4))
 
@@ -205,10 +247,22 @@ def test_add_decoder_noise_multiple_sample_dimensions(predictor):
         reshape_size=(4,),
     )
 
-    assert result.output.shape == (5, 2, 3, 4)
+    assert result.output.shape == (
+        5,
+        2,
+        3,
+        4,
+    )
+
+    torch.testing.assert_close(
+        result.output,
+        torch.ones(5, 2, 3, 4),
+    )
 
 
-def test_build_output_sampler_missing_stats_raises(predictor):
+def test_build_output_sampler_missing_stats_raises(
+    predictor,
+):
     with pytest.raises(
         ValueError,
         match="Training statistics",
@@ -229,26 +283,36 @@ def test_build_output_sampler_loads_stats(
     }
     captured = {}
 
+    def fake_load(
+        path,
+        map_location=None,
+        **kwargs,
+    ):
+        captured["path"] = path
+        captured["map_location"] = map_location
+        return stats
+
     monkeypatch.setattr(
         torch,
         "load",
-        lambda path, map_location=None: (
-            captured.update(
-                {
-                    "path": path,
-                    "map_location": map_location,
-                }
-            )
-            or stats
-        ),
+        fake_load,
     )
 
-    def fake_sample(mu, cov, sample_size, std=1.0):
+    def fake_sample(
+        mu,
+        cov,
+        sample_size,
+        std=1.0,
+    ):
         captured["mu"] = mu
         captured["cov"] = cov
         captured["sample_size"] = sample_size
         captured["std"] = std
-        return torch.zeros((*sample_size, 2))
+
+        return torch.zeros(
+            *sample_size,
+            2,
+        )
 
     monkeypatch.setattr(
         predictor,
@@ -261,19 +325,24 @@ def test_build_output_sampler_loads_stats(
 
     assert captured["path"] == stats_path
     assert captured["map_location"] == predictor.device
-    assert torch.equal(
+
+    torch.testing.assert_close(
         captured["mu"],
         torch.zeros_like(stats["residual_mean"]),
     )
-    assert torch.equal(
+    torch.testing.assert_close(
         captured["cov"],
         stats["residual_cov"],
     )
+
     assert captured["sample_size"] == (3, 4)
+    assert captured["std"] == 1.0
     assert samples.shape == (3, 4, 2)
 
 
-def test_get_multinormal_valid_covariance(predictor):
+def test_get_multinormal_valid_covariance(
+    predictor,
+):
     distribution = predictor._get_multinormal(
         mu=torch.tensor([0.0, 0.0]),
         cov=torch.eye(2),
@@ -338,17 +407,19 @@ def test_get_multinormal_scales_covariance(
 
     expected = torch.eye(2) * 4.0 + torch.eye(2) * 1e-6
 
-    assert torch.equal(
+    torch.testing.assert_close(
         captured["loc"],
         torch.tensor([1.0, 2.0]),
     )
-    assert torch.allclose(
+    torch.testing.assert_close(
         captured["covariance_matrix"],
         expected,
     )
 
 
-def test_get_multinormal_converts_dtype(predictor):
+def test_get_multinormal_converts_dtype(
+    predictor,
+):
     distribution = predictor._get_multinormal(
         mu=torch.tensor(
             [0.0, 0.0],
@@ -377,6 +448,7 @@ def test_get_multinormal_retries_after_value_error(
             covariance_matrix,
         ):
             calls.append(covariance_matrix.clone())
+
             if len(calls) < 3:
                 raise ValueError("invalid covariance")
 
@@ -395,16 +467,20 @@ def test_get_multinormal_retries_after_value_error(
     )
 
     assert len(calls) == 3
-    assert isinstance(result, FakeDistribution)
-    assert torch.allclose(
+    assert isinstance(
+        result,
+        FakeDistribution,
+    )
+
+    torch.testing.assert_close(
         calls[0],
         torch.eye(2) + torch.eye(2) * 1e-6,
     )
-    assert torch.allclose(
+    torch.testing.assert_close(
         calls[1],
         torch.eye(2) + torch.eye(2) * 1e-5,
     )
-    assert torch.allclose(
+    torch.testing.assert_close(
         calls[2],
         torch.eye(2) + torch.eye(2) * 1e-4,
     )
@@ -433,7 +509,7 @@ def test_get_multinormal_all_retries_fail(
 
     with pytest.raises(
         RuntimeError,
-        match="Could not construct MultivariateNormal",
+        match=("Could not construct MultivariateNormal"),
     ):
         predictor._get_multinormal(
             mu=torch.zeros(2),
@@ -452,7 +528,11 @@ def test_sample_integer_size(
     class FakeDistribution:
         def sample(self, size):
             captured["size"] = size
-            return torch.ones((*size, 2))
+
+            return torch.ones(
+                *size,
+                2,
+            )
 
     monkeypatch.setattr(
         predictor,
@@ -480,7 +560,11 @@ def test_sample_tuple_size(
     class FakeDistribution:
         def sample(self, size):
             captured["size"] = size
-            return torch.ones((*size, 2))
+
+            return torch.ones(
+                *size,
+                2,
+            )
 
     monkeypatch.setattr(
         predictor,
@@ -507,7 +591,10 @@ def test_sample_passes_arguments_to_distribution(
 
     class FakeDistribution:
         def sample(self, size):
-            return torch.ones((*size, 2))
+            return torch.ones(
+                *size,
+                2,
+            )
 
     def fake_get_multinormal(
         mu,
@@ -517,6 +604,7 @@ def test_sample_passes_arguments_to_distribution(
         captured["mu"] = mu
         captured["cov"] = cov
         captured["std"] = std
+
         return FakeDistribution()
 
     monkeypatch.setattr(
@@ -540,20 +628,20 @@ def test_sample_passes_arguments_to_distribution(
     assert captured["std"] == 3.0
 
 
-def test_save_batch_to_netcdf_basic(tmp_path):
+def test_save_batch_to_netcdf_basic(
+    tmp_path,
+):
     prediction = torch.arange(
         2 * 1 * 3,
         dtype=torch.float32,
     ).reshape(2, 1, 3)
 
-    metadata = [
-        {"year": 2000},
-        {"year": 2001},
-    ]
-
     save_batch_to_netcdf(
         prediction=prediction,
-        metadata=metadata,
+        metadata=[
+            {"year": 2000},
+            {"year": 2001},
+        ],
         num_output_dims=1,
         save_name="basic.nc",
         save_dir=tmp_path,
@@ -568,10 +656,7 @@ def test_save_batch_to_netcdf_basic(tmp_path):
         assert "year" in data.dims
         assert "channels" in data.dims
         assert "output_dim_0" in data.dims
-        assert list(data.coords["year"].values) == [
-            2000,
-            2001,
-        ]
+        assert list(data.coords["year"].values) == [2000, 2001]
 
 
 def test_save_batch_to_netcdf_multiple_metadata_keys(
@@ -582,20 +667,18 @@ def test_save_batch_to_netcdf_multiple_metadata_keys(
         dtype=torch.float32,
     ).reshape(2, 1, 2)
 
-    metadata = [
-        {
-            "year": 2000,
-            "lead_time": 1,
-        },
-        {
-            "year": 2001,
-            "lead_time": 2,
-        },
-    ]
-
     save_batch_to_netcdf(
         prediction=prediction,
-        metadata=metadata,
+        metadata=[
+            {
+                "year": 2000,
+                "lead_time": 1,
+            },
+            {
+                "year": 2001,
+                "lead_time": 2,
+            },
+        ],
         num_output_dims=1,
         save_name="metadata.nc",
         save_dir=tmp_path,
@@ -615,15 +698,13 @@ def test_save_batch_to_netcdf_with_extra_dimension(
         dtype=torch.float32,
     ).reshape(2, 3, 1, 4)
 
-    metadata = [
-        {"year": 2000},
-        {"year": 2001},
-        {"year": 2002},
-    ]
-
     save_batch_to_netcdf(
         prediction=prediction,
-        metadata=metadata,
+        metadata=[
+            {"year": 2000},
+            {"year": 2001},
+            {"year": 2002},
+        ],
         num_output_dims=1,
         save_name="samples.nc",
         save_dir=tmp_path,
@@ -632,7 +713,8 @@ def test_save_batch_to_netcdf_with_extra_dimension(
 
     with xr.open_dataarray(tmp_path / "samples.nc") as data:
         assert "sample" in data.dims
-        assert np.array_equal(
+
+        np.testing.assert_array_equal(
             data.coords["sample"].values,
             np.array([1, 2]),
         )
@@ -646,13 +728,11 @@ def test_save_batch_to_netcdf_multiple_extra_dimensions(
         dtype=torch.float32,
     ).reshape(2, 3, 1, 1, 4)
 
-    metadata = [
-        {"year": 2000},
-    ]
-
     save_batch_to_netcdf(
         prediction=prediction,
-        metadata=metadata,
+        metadata=[
+            {"year": 2000},
+        ],
         num_output_dims=1,
         save_name="extra.nc",
         save_dir=tmp_path,
@@ -665,11 +745,12 @@ def test_save_batch_to_netcdf_multiple_extra_dimensions(
     with xr.open_dataarray(tmp_path / "extra.nc") as data:
         assert "sample" in data.dims
         assert "member" in data.dims
-        assert np.array_equal(
+
+        np.testing.assert_array_equal(
             data.coords["sample"].values,
             np.array([1, 2]),
         )
-        assert np.array_equal(
+        np.testing.assert_array_equal(
             data.coords["member"].values,
             np.array([1, 2, 3]),
         )
@@ -683,14 +764,12 @@ def test_save_batch_to_netcdf_two_output_dimensions(
         dtype=torch.float32,
     ).reshape(2, 1, 3, 4)
 
-    metadata = [
-        {"year": 2000},
-        {"year": 2001},
-    ]
-
     save_batch_to_netcdf(
         prediction=prediction,
-        metadata=metadata,
+        metadata=[
+            {"year": 2000},
+            {"year": 2001},
+        ],
         num_output_dims=2,
         save_name="spatial.nc",
         save_dir=tmp_path,
@@ -703,12 +782,14 @@ def test_save_batch_to_netcdf_two_output_dimensions(
         assert data.sizes["output_dim_1"] == 4
 
 
-def test_save_batch_to_netcdf_dimension_mismatch():
+def test_save_batch_to_netcdf_dimension_mismatch(
+    tmp_path,
+):
     prediction = torch.ones(2, 1, 3)
 
     with pytest.raises(
         ValueError,
-        match="Expected prediction with 4 dimensions",
+        match=("Expected prediction with 4 dimensions"),
     ):
         save_batch_to_netcdf(
             prediction=prediction,
@@ -718,11 +799,13 @@ def test_save_batch_to_netcdf_dimension_mismatch():
             ],
             num_output_dims=2,
             save_name="bad.nc",
-            save_dir=".",
+            save_dir=tmp_path,
         )
 
 
-def test_save_batch_to_netcdf_metadata_length_mismatch():
+def test_save_batch_to_netcdf_metadata_length_mismatch(
+    tmp_path,
+):
     prediction = torch.ones(2, 1, 3)
 
     with pytest.raises(
@@ -736,7 +819,7 @@ def test_save_batch_to_netcdf_metadata_length_mismatch():
             ],
             num_output_dims=1,
             save_name="bad.nc",
-            save_dir=".",
+            save_dir=tmp_path,
         )
 
 
@@ -764,7 +847,7 @@ def test_save_batch_to_netcdf_assign_coords(
     )
 
     with xr.open_dataarray(tmp_path / "coords.nc") as data:
-        assert np.array_equal(
+        np.testing.assert_array_equal(
             data.coords["output_dim_0"].values,
             np.array(
                 [
@@ -776,7 +859,9 @@ def test_save_batch_to_netcdf_assign_coords(
         )
 
 
-def test_save_batch_to_netcdf_attrs(tmp_path):
+def test_save_batch_to_netcdf_attrs(
+    tmp_path,
+):
     prediction = torch.ones(2, 1, 3)
 
     attrs = {
@@ -818,7 +903,7 @@ def test_save_batch_to_netcdf_channel_coordinates(
     )
 
     with xr.open_dataarray(tmp_path / "channels.nc") as data:
-        assert np.array_equal(
+        np.testing.assert_array_equal(
             data.coords["channels"].values,
             np.array([1, 2, 3]),
         )
@@ -868,18 +953,23 @@ def test_save_batch_to_netcdf_preserves_float_values(
         [
             [
                 [
-                    1.25,
-                    2.5,
+                    [1.25, 2.5],
                 ]
             ],
             [
                 [
-                    3.75,
-                    5.0,
+                    [3.75, 5.0],
                 ]
             ],
         ],
         dtype=torch.float32,
+    )
+
+    assert prediction.shape == (
+        2,
+        1,
+        1,
+        2,
     )
 
     save_batch_to_netcdf(
@@ -894,12 +984,18 @@ def test_save_batch_to_netcdf_preserves_float_values(
     )
 
     with xr.open_dataarray(tmp_path / "values.nc") as data:
+        selected = data.sel(
+            year=2000,
+            channels=1,
+        )
+
         assert np.isclose(
-            data.sel(
-                year=2000,
-                channels=1,
-            ).values[0, 0],
+            selected.values[0, 0],
             1.25,
+        )
+        assert np.isclose(
+            selected.values[0, 1],
+            2.5,
         )
 
 

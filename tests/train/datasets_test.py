@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+import cccma_ppp.train.datasets as module
 import xarray as xr
 import warnings
 
@@ -9,6 +10,61 @@ from cccma_ppp.train.datasets import (
     TrainDataset,
 )
 
+original_get_time_features = module._get_time_features
+
+
+@pytest.fixture(autouse=True)
+def patch_xarray_loader(monkeypatch):
+    def fake_loader(*args, **kwargs):
+        return xr.Dataset(
+            {
+                "var": (
+                    (
+                        "ensembles",
+                        "year",
+                        "lead_time",
+                        "month",
+                    ),
+                    np.ones((2, 3, 3, 3)),
+                )
+            },
+            coords={
+                "ensembles": [0, 1],
+                "year": [2000, 2001, 2002],
+                "lead_time": [1, 2, 3],
+                "month": [1, 2, 3],
+            },
+        )
+
+    def time_features_adapter(
+        config,
+        year,
+        lead_time,
+        data,
+    ):
+        selection = {
+            "year": year,
+            "lead_time": lead_time,
+        }
+
+        return original_get_time_features(
+            config,
+            selection,
+            data,
+        )
+
+    monkeypatch.setattr(
+        module,
+        "_load_xarray_data",
+        fake_loader,
+    )
+
+    monkeypatch.setattr(
+        module,
+        "_get_time_features",
+        time_features_adapter,
+    )
+
 
 def make_valid_config_with(**kwargs):
     cfg = make_valid_config()
@@ -17,30 +73,6 @@ def make_valid_config_with(**kwargs):
         setattr(cfg, key, value)
 
     return cfg
-
-
-@pytest.fixture(autouse=True)
-def mock_xarray_loader(monkeypatch):
-    def fake_loader(*args, **kwargs):
-        return xr.Dataset(
-            {
-                "var": (
-                    ("ensembles", "year", "lead_time", "month"),
-                    np.zeros((2, 3, 3, 3)),
-                )
-            },
-            coords={
-                "ensembles": np.array([0, 1]),
-                "year": np.array([2000, 2001, 2002]),
-                "lead_time": np.array([1, 2, 3]),
-                "month": np.array([1, 2, 3]),
-            },
-        )
-
-    monkeypatch.setattr(
-        "cccma_ppp.train.datasets._load_xarray_data",
-        fake_loader,
-    )
 
 
 class DummyInfo:
@@ -4184,10 +4216,9 @@ def test_index_condition_dataset_returns_none_when_no_condition_indexes():
         requested_years=[2000],
     )
 
-    ds.cond_indexes = None
+    ds.condition_dataset = None
 
-    with pytest.raises(TypeError):
-        ds._index_condition_dataset(0)
+    assert ds._index_condition_dataset(0) is None
 
 
 def test_get_model_indexes_without_ensemble_dimension():

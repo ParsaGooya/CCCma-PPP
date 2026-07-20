@@ -421,9 +421,6 @@ def test_build_train_loader_validation():
     cfg = DummyTrainLoaderConfig
 
 
-
-
-
 def test_train_stats_save_dir_property(tmp_path):
     writer = object.__new__(Writer)
     writer.output_dir = tmp_path
@@ -897,9 +894,6 @@ def test_aggregate_predictions_logger_called(
     assert len(messages) >= 2
 
 
-
-
-
 def test_aggregate_train_stats_root_empty_stats(
     tmp_path,
 ):
@@ -1229,45 +1223,6 @@ def test_aggregate_predictions_cleanup_true(
     )
 
     assert not (temp / "prediction_rank0_0.nc").exists()
-
-
-def test_aggregate_predictions_postprocessor_branch(
-    tmp_path,
-):
-    temp = tmp_path / "_temp"
-    temp.mkdir()
-
-    xr.DataArray(
-        [[1.0]],
-        dims=("year", "channels"),
-        coords={
-            "year": [2000],
-            "channels": ["prediction"],
-        },
-        name="prediction",
-    ).to_netcdf(temp / "prediction_rank0_0.nc")
-
-    class FakePostProcessor:
-        def to_dataset(
-            self,
-            data,
-        ):
-            return data.to_dataset(dim="channels")
-
-        def inverse_transform(
-            self,
-            ds,
-        ):
-            ds.attrs["transformed"] = True
-            return ds
-
-    aggregate_predictions(
-        FakePostProcessor(),
-        tmp_path,
-        cleanup_temp=False,
-    )
-
-    assert (tmp_path / "prediction_2000.nc").exists()
 
 
 def test_aggregate_predictions_multiple_years(

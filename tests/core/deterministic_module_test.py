@@ -419,8 +419,7 @@ def test_compute_loss_tuple_target_with_mask():
     module.init_loss_function(DummyLoss())
 
     batch = DummyBatch()
-    mask = torch.ones_like(batch.target)
-    batch.target = (batch.target, mask)
+    batch.target_mask = torch.ones_like(batch.target)
 
     total, losses = module._compute_loss(batch)
 
@@ -433,8 +432,7 @@ def test_compute_loss_list_target_with_mask():
     module.init_loss_function(DummyLoss())
 
     batch = DummyBatch()
-    mask = torch.ones_like(batch.target)
-    batch.target = [batch.target, mask]
+    batch.target_mask = torch.ones_like(batch.target)
 
     total, losses = module._compute_loss(batch)
 
@@ -523,7 +521,7 @@ def test_compute_loss_target_tuple_with_none_mask():
     module.init_loss_function(DummyLoss())
 
     batch = DummyBatch()
-    batch.target = (batch.target, None)
+    batch.target_mask = None
 
     total, losses = module._compute_loss(batch)
 
@@ -584,10 +582,21 @@ class DummyCheckpointConfig:
 
 
 class DummyBatch:
-    def __init__(self):
-        self.input = torch.ones(2, 1, 3, 4)
-        self.target = torch.zeros(2, 1, 3, 4)
-        self.added_features = None
+    def __init__(
+        self,
+        input=None,
+        target=None,
+        input_mask=None,
+        target_mask=None,
+        added_features=None,
+        metadata=None,
+    ):
+        self.input = torch.ones(2, 1) if input is None else input
+        self.target = torch.ones(2, 1) if target is None else target
+        self.input_mask = input_mask
+        self.target_mask = target_mask
+        self.added_features = added_features
+        self.metadata = metadata
 
 
 class DummyLoss:

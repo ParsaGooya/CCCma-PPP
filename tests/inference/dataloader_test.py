@@ -1,4 +1,3 @@
-
 import numpy as np
 import pytest
 import torch
@@ -37,7 +36,7 @@ class DummyDataSource:
 
 class DummyDatasetConfig:
     def __init__(self):
-        self.available_inference_years = np.array([2000, 2001, 2002, 2003])
+        self.available_times = np.array([2000, 2001, 2002, 2003, 2004])
         self.ds_operator = DummyDSOperator()
         self.model = None
         self.condition = None
@@ -51,7 +50,11 @@ class DummyDatasetConfig:
         self.load_called = True
         self.load_dir = load_dir
 
-    def build_dataset(self, years, return_metadata=False):
+    def build_dataset(
+        self,
+        years,
+        return_metadata=False,
+    ):
         self.build_called = True
         self.years = np.asarray(years)
         self.return_metadata = return_metadata
@@ -143,15 +146,20 @@ def test_batchdata_replaces_nan():
         )
     )
 
-    assert torch.isnan(batch.input).sum() == 0
+    assert not torch.isnan(batch.input).any()
     assert batch.input[0, 1] == 0
     assert batch.input[1, 0] == 0
 
 
 def test_batchdata_replaces_all_nan():
-    batch = BatchData(input=torch.full((2, 2), float("nan")))
+    batch = BatchData(
+        input=torch.full(
+            (2, 2),
+            float("nan"),
+        )
+    )
 
-    assert torch.equal(
+    torch.testing.assert_close(
         batch.input,
         torch.zeros_like(batch.input),
     )
@@ -164,33 +172,46 @@ def test_batchdata_without_mask_keeps_tensor():
     )
 
     assert isinstance(batch.input, torch.Tensor)
-    assert not hasattr(batch, "input_mask")
+    assert batch.input_mask is None
 
 
 def test_batchdata_creates_spatial_mask():
     batch = BatchData(
         input=torch.tensor([[1.0, float("nan")]]),
         return_spatial_mask=True,
+        reduce_spatial_mask=False,
     )
 
-    values, mask = batch.input
+    torch.testing.assert_close(
+        batch.input,
+        torch.tensor([[1.0, 0.0]]),
+    )
+    torch.testing.assert_close(
+        batch.input_mask,
+        torch.tensor([[True, False]]),
+    )
 
-    assert torch.equal(values, torch.tensor([[1.0, 0.0]]))
-    assert torch.equal(mask, torch.tensor([[1, 0]]))
 
+def test_batchdata_reduces_spatial_mask():
+    batch = BatchData(
+        input=torch.tensor(
+            [
+                [1.0, float("nan")],
+                [3.0, 4.0],
+            ]
+        ),
+        return_spatial_mask=True,
+        reduce_spatial_mask=True,
+    )
 
-def test_batchdata_reduce_spatial_mask_current_runtime_error():
-    with pytest.raises(RuntimeError):
-        BatchData(
-            input=torch.tensor(
-                [
-                    [1.0, 2.0],
-                    [3.0, 4.0],
-                ]
-            ),
-            return_spatial_mask=True,
-            reduce_spatial_mask=True,
-        )
+    assert isinstance(
+        batch.input_mask,
+        torch.Tensor,
+    )
+    torch.testing.assert_close(
+        batch.input_mask,
+        torch.tensor([True, False]),
+    )
 
 
 def test_batchdata_to_device_without_mask_or_features():
@@ -200,6 +221,7 @@ def test_batchdata_to_device_without_mask_or_features():
 
     assert result is batch
     assert batch.input.device.type == "cpu"
+    assert batch.input_mask is None
     assert batch.added_features is None
 
 
@@ -220,14 +242,14 @@ def test_batchdata_to_device_with_mask():
     batch = BatchData(
         input=torch.tensor([[1.0, float("nan")]]),
         return_spatial_mask=True,
+        reduce_spatial_mask=False,
     )
 
     result = batch.to_device("cpu")
-    values, mask = batch.input
 
     assert result is batch
-    assert values.device.type == "cpu"
-    assert mask.device.type == "cpu"
+    assert batch.input.device.type == "cpu"
+    assert batch.input_mask.device.type == "cpu"
 
 
 def test_batchdata_to_device_with_mask_and_features():
@@ -235,14 +257,14 @@ def test_batchdata_to_device_with_mask_and_features():
         input=torch.ones(2, 2),
         added_features=torch.ones(3),
         return_spatial_mask=True,
+        reduce_spatial_mask=False,
     )
 
     result = batch.to_device("cpu")
-    values, mask = batch.input
 
     assert result is batch
-    assert values.device.type == "cpu"
-    assert mask.device.type == "cpu"
+    assert batch.input.device.type == "cpu"
+    assert batch.input_mask.device.type == "cpu"
     assert batch.added_features.device.type == "cpu"
 
 
@@ -276,6 +298,7 @@ def test_collate_batch_plain_inputs():
     assert result.input.shape == (2, 2, 2)
     assert result.metadata is None
     assert result.added_features is None
+    assert result.input_mask is None
 
 
 def test_collate_batch_single_item():
@@ -333,8 +356,7 @@ def test_collate_batch_with_added_features():
 
     result = collate_batch(batch)
 
-    assert result.added_features.shape == (2, 2)
-    assert torch.equal(
+    torch.testing.assert_close(
         result.added_features,
         torch.tensor(
             [
@@ -381,12 +403,17 @@ def test_collate_batch_with_spatial_mask():
             }
         ],
         return_spatial_mask=True,
+        reduce_spatial_mask=False,
     )
 
-    values, mask = result.input
-
-    assert torch.equal(values, torch.tensor([[1.0, 0.0]]))
-    assert torch.equal(mask, torch.tensor([[1, 0]]))
+    torch.testing.assert_close(
+        result.input,
+        torch.tensor([[1.0, 0.0]]),
+    )
+    torch.testing.assert_close(
+        result.input_mask,
+        torch.tensor([[True, False]]),
+    )
 
 
 def test_collate_batch_with_metadata_features_and_mask():
@@ -401,33 +428,44 @@ def test_collate_batch_with_metadata_features_and_mask():
             )
         ],
         return_spatial_mask=True,
+        reduce_spatial_mask=False,
     )
-
-    values, mask = result.input
 
     assert result.metadata == [{"year": 2000}]
     assert result.added_features.shape == (1, 1)
-    assert torch.equal(values, torch.tensor([[1.0, 0.0]]))
-    assert torch.equal(mask, torch.tensor([[1, 0]]))
+
+    torch.testing.assert_close(
+        result.input,
+        torch.tensor([[1.0, 0.0]]),
+    )
+    torch.testing.assert_close(
+        result.input_mask,
+        torch.tensor([[True, False]]),
+    )
 
 
-def test_collate_batch_reduce_mask_current_runtime_error():
-    with pytest.raises(RuntimeError):
-        collate_batch(
-            [
-                {
-                    "input": torch.tensor(
-                        [
-                            [1.0, float("nan")],
-                            [1.0, float("nan")],
-                        ]
-                    ),
-                    "added_features": None,
-                }
-            ],
-            return_spatial_mask=True,
-            reduce_spatial_mask=True,
-        )
+def test_collate_batch_reduce_mask():
+    result = collate_batch(
+        [
+            {
+                "input": torch.tensor(
+                    [
+                        [1.0, float("nan")],
+                        [1.0, float("nan")],
+                    ]
+                ),
+                "added_features": None,
+            }
+        ],
+        return_spatial_mask=True,
+        reduce_spatial_mask=True,
+    )
+
+    assert isinstance(
+        result.input_mask,
+        torch.Tensor,
+    )
+    assert torch.all(result.input_mask == torch.tensor([True, False]))
 
 
 def test_init_without_dataset_config():
@@ -450,7 +488,9 @@ def test_init_workers_zero_removes_prefetch():
     assert cfg.prefetch_factor is None
 
 
-def test_init_workers_positive_preserves_prefetch(dataset_config):
+def test_init_workers_positive_preserves_prefetch(
+    dataset_config,
+):
     cfg = InferenceDataloaderConfig(
         dataset_config=dataset_config,
         num_data_workers=2,
@@ -460,7 +500,9 @@ def test_init_workers_positive_preserves_prefetch(dataset_config):
     assert cfg.prefetch_factor == 8
 
 
-def test_check_dataset_config_success(dataset_config):
+def test_check_dataset_config_success(
+    dataset_config,
+):
     cfg = InferenceDataloaderConfig(
         dataset_config=dataset_config,
     )
@@ -477,23 +519,23 @@ def test_check_dataset_config_raises():
         cfg._check_dataset_config()
 
 
-def test_available_inference_years_requires_config():
+def test_available_times_requires_config():
     cfg = InferenceDataloaderConfig(
         dataset_config=None,
     )
 
     with pytest.raises(RuntimeError):
-        _ = cfg.available_inference_years
+        _ = cfg.available_times
 
 
-def test_available_inference_years(dataset_config):
+def test_available_times(dataset_config):
     cfg = InferenceDataloaderConfig(
         dataset_config=dataset_config,
     )
 
-    assert np.array_equal(
-        cfg.available_inference_years,
-        np.array([2000, 2001, 2002, 2003]),
+    np.testing.assert_array_equal(
+        cfg.available_times,
+        np.array([2000, 2001, 2002, 2003, 2004]),
     )
 
 
@@ -502,9 +544,9 @@ def test_inference_years_default(dataset_config):
         dataset_config=dataset_config,
     )
 
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         cfg._inference_years,
-        dataset_config.available_inference_years,
+        dataset_config.available_times,
     )
 
 
@@ -512,8 +554,14 @@ def test_inference_years_default(dataset_config):
     "requested,expected",
     [
         ((2000, 2000), np.array([2000])),
-        ((2001, 2002), np.array([2001, 2002])),
-        ((2000, 2003), np.array([2000, 2001, 2002, 2003])),
+        (
+            (2001, 2002),
+            np.array([2001, 2002]),
+        ),
+        (
+            (2000, 2004),
+            np.array([2000, 2001, 2002, 2003, 2004]),
+        ),
     ],
 )
 def test_inference_years_valid_ranges(
@@ -526,7 +574,7 @@ def test_inference_years_valid_ranges(
         inference_years=requested,
     )
 
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         cfg._inference_years,
         expected,
     )
@@ -536,7 +584,7 @@ def test_inference_years_valid_ranges(
     "requested",
     [
         (1999, 2000),
-        (2003, 2004),
+        (2003, 2005),
         (1990, 1991),
     ],
 )
@@ -561,7 +609,7 @@ def test_read_dataset_config_from_train_when_already_set(
 
     called = {"value": False}
 
-    def fake_from_train(_):
+    def fake_from_train(value):
         called["value"] = True
         return DummyDatasetConfig()
 
@@ -570,22 +618,22 @@ def test_read_dataset_config_from_train_when_already_set(
         fake_from_train,
     )
 
-    train_config = DummyTrainDatasetConfig()
-
-    cfg.read_datasetConfig_from_train(train_config)
+    cfg.read_datasetConfig_from_train(DummyTrainDatasetConfig())
 
     assert called["value"] is False
     assert cfg.dataset_config is dataset_config
     assert cfg.train_dataset_config is None
 
 
-def test_read_dataset_config_from_train_when_missing(monkeypatch):
+def test_read_dataset_config_from_train_when_missing(
+    monkeypatch,
+):
     converted = DummyDatasetConfig()
     train_config = DummyTrainDatasetConfig()
 
     monkeypatch.setattr(
         "cccma_ppp.inference.dataloader._from_train",
-        lambda _: converted,
+        lambda value: converted,
     )
 
     cfg = InferenceDataloaderConfig(
@@ -616,7 +664,9 @@ def test_input_metadata(dataset_config):
     assert dataset_config.ds_operator.input_calls == 1
 
 
-def test_target_metadata_requires_train_config(dataset_config):
+def test_target_metadata_requires_train_config(
+    dataset_config,
+):
     cfg = InferenceDataloaderConfig(
         dataset_config=dataset_config,
     )
@@ -644,11 +694,36 @@ def test_target_metadata_success(dataset_config):
         ("model", None, (), False),
         ("model", None, ("model",), True),
         (None, "condition", (), False),
-        (None, "condition", ("condition",), True),
-        ("model", "condition", (), False),
-        ("model", "condition", ("model",), False),
-        ("model", "condition", ("condition",), False),
-        ("model", "condition", ("model", "condition"), True),
+        (
+            None,
+            "condition",
+            ("condition",),
+            True,
+        ),
+        (
+            "model",
+            "condition",
+            (),
+            False,
+        ),
+        (
+            "model",
+            "condition",
+            ("model",),
+            False,
+        ),
+        (
+            "model",
+            "condition",
+            ("condition",),
+            False,
+        ),
+        (
+            "model",
+            "condition",
+            ("model", "condition"),
+            True,
+        ),
     ],
 )
 def test_input_preprocessor_exists_matrix(
@@ -676,7 +751,9 @@ def test_input_preprocessor_exists_matrix(
     assert cfg._input_preprocessor_exists(tmp_path) is expected
 
 
-def test_input_preprocessor_exists_requires_config(tmp_path):
+def test_input_preprocessor_exists_requires_config(
+    tmp_path,
+):
     cfg = InferenceDataloaderConfig(
         dataset_config=None,
     )
@@ -762,8 +839,8 @@ def test_setup_distributed_branch_matrix(
     )
 
     assert train_loader.dataset_config.fit_called is fit_expected
-    assert dataset_config.load_called
-    assert distributed.barrier_called
+    assert dataset_config.load_called is True
+    assert distributed.barrier_called is True
     assert cfg.rank == distributed.rank
     assert cfg.world_size == distributed.world_size
     assert cfg._setup is True
@@ -827,7 +904,9 @@ def test_setup_distributed_existing_preprocessors_skips_fit(
     assert dataset_config.load_called is True
 
 
-def test_build_loader_requires_setup(dataset_config):
+def test_build_loader_requires_setup(
+    dataset_config,
+):
     cfg = InferenceDataloaderConfig(
         dataset_config=dataset_config,
     )
@@ -865,14 +944,17 @@ def test_build_loader_argument_matrix(
         reduce_spatial_mask=reduce_mask,
     )
 
-    assert isinstance(loader, FakeDataloader)
+    assert isinstance(
+        loader,
+        FakeDataloader,
+    )
     assert loader.rank == 2
     assert loader.world_size == 8
     assert loader.shuffle is False
     assert loader.return_spatial_mask is return_mask
     assert loader.reduce_spatial_mask is reduce_mask
     assert loader.collate_fn is collate_batch
-    assert dataset_config.build_called
+    assert dataset_config.build_called is True
     assert dataset_config.return_metadata is True
 
 
@@ -890,9 +972,9 @@ def test_build_loader_passes_default_years(
 
     cfg.build_inference_loader()
 
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         dataset_config.years,
-        dataset_config.available_inference_years,
+        dataset_config.available_times,
     )
 
 
@@ -911,7 +993,7 @@ def test_build_loader_passes_explicit_years(
 
     cfg.build_inference_loader()
 
-    assert np.array_equal(
+    np.testing.assert_array_equal(
         dataset_config.years,
         np.array([2001, 2002]),
     )

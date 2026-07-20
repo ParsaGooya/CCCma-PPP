@@ -267,7 +267,7 @@ class DatasetOperator:
 
         if "channels" in weights.dims:
             error_msg = f"inconsistent variable weights {weights.channels.values} for output variables {ref.names}"
-            if not np.array_equal(weights.channels.values, self.ref.names):
+            if not np.array_equal(weights.channels.values, ref.names):
                 raise RuntimeError(error_msg)
 
         return weights

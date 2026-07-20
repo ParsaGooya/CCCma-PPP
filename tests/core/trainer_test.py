@@ -642,26 +642,53 @@ def test_optimizer_step_with_grad_clip(env_dirs):
     assert optimizer.scheduler_steps == 1
 
 
-def test_clear_memory_cpu():
-    trainer, _, _, _, _ = make_trainer(validation=False)
-    trainer.clear_memory()
+def test_clear_memory_cpu(monkeypatch):
+    called = {"gc": False}
+
+    monkeypatch.setattr(
+        trainer_mod.gc,
+        "collect",
+        lambda: called.__setitem__("gc", True),
+    )
+    monkeypatch.setattr(
+        trainer_mod.torch.cuda,
+        "is_available",
+        lambda: False,
+    )
+
+    trainer_mod.clear_memory()
+
+    assert called["gc"] is True
 
 
 def test_clear_memory_cuda_available(monkeypatch):
-    trainer, _, _, _, _ = make_trainer(validation=False)
+    called = {
+        "gc": False,
+        "empty": False,
+    }
 
-    called = {"empty": False}
-
-    monkeypatch.setattr(trainer_mod.torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(
+        trainer_mod.gc,
+        "collect",
+        lambda: called.__setitem__("gc", True),
+    )
+    monkeypatch.setattr(
+        trainer_mod.torch.cuda,
+        "is_available",
+        lambda: True,
+    )
     monkeypatch.setattr(
         trainer_mod.torch.cuda,
         "empty_cache",
         lambda: called.__setitem__("empty", True),
     )
 
-    trainer.clear_memory()
+    trainer_mod.clear_memory()
 
-    assert called["empty"] is True
+    assert called == {
+        "gc": True,
+        "empty": True,
+    }
 
 
 def test_save_checkpoint_without_validation(env_dirs):

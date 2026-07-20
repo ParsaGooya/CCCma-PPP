@@ -1,8 +1,10 @@
 import dataclasses
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
 import torch
+from torch import nn
 
 from cccma_ppp.models.mlp_models import (
     AutoencoderConfig,
@@ -480,7 +482,7 @@ def test_cvae_build_checkpoint_success_calls_load(monkeypatch):
 def test_cvae_recognition_plain():
     model = build_cvae()
 
-    mu, log_var = model._recognition(x())
+    mu, log_var = model._recognition(x(), None)
 
     assert mu.shape == (2, 4)
     assert log_var.shape == (2, 4)
@@ -492,7 +494,7 @@ def test_cvae_recognition_with_mask():
     data = x()
     m = mask_like(data)
 
-    mu, log_var = model._recognition((data, m))
+    mu, log_var = model._recognition(data, m)
 
     assert mu.shape == (2, 4)
     assert log_var.shape == (2, 4)
@@ -506,6 +508,7 @@ def test_cvae_recognition_with_added_features():
 
     mu, log_var = model._recognition(
         x=x(),
+        x_mask=None,
         added_features=added_features(),
     )
 
@@ -522,6 +525,7 @@ def test_cvae_recognition_with_condition():
 
     mu, log_var = model._recognition(
         x=x(),
+        x_mask=None,
         condition=cond_mu,
     )
 
@@ -532,7 +536,7 @@ def test_cvae_recognition_with_condition():
 def test_cvae_condition_none():
     model = build_cvae()
 
-    cond_mu, cond_log_var = model._condition()
+    cond_mu, cond_log_var = model._condition(condition=None)
 
     assert cond_mu is None
     assert cond_log_var is None
@@ -559,7 +563,7 @@ def test_cvae_condition_with_mask():
     cond = condition()
     cond_mask = torch.ones_like(cond)
 
-    cond_mu, _ = model._condition(condition=(cond, cond_mask))
+    cond_mu, _ = model._condition(condition=cond, condition_mask=cond_mask)
 
     assert cond_mu.shape == (2, 4)
 
@@ -693,7 +697,8 @@ def test_cvae_forward_with_tuple_x_and_min_variance():
     m = mask_like(data)
 
     out = model(
-        x=(data, m),
+        x=data,
+        x_mask=m,
         sample_size=2,
         min_posterior_variance=torch.tensor(-0.1),
     )
@@ -984,7 +989,7 @@ def test_autoencoder_build_checkpoint_success_calls_load(monkeypatch):
 def test_autoencoder_forward_plain():
     model = build_autoencoder()
 
-    out = model(x())
+    out = model(x(), None)
 
     assert isinstance(out, deterministicOutput)
     assert out.output.shape == (2, 1, 6)
@@ -1001,7 +1006,7 @@ def test_autoencoder_forward_tuple_mask_append_mode_1():
     m = mask_like(data)
     feats = added_features()
 
-    out = model((data, m), added_features=feats)
+    out = model(data, m, added_features=feats)
 
     assert out.output.shape == (2, 1, 6)
 
@@ -1017,7 +1022,7 @@ def test_autoencoder_forward_tuple_mask_append_mode_2():
     m = mask_like(data)
     feats = added_features()
 
-    out = model((data, m), added_features=feats)
+    out = model(data, m, added_features=feats)
 
     assert out.output.shape == (2, 1, 6)
 
@@ -1033,7 +1038,7 @@ def test_autoencoder_forward_tuple_mask_append_mode_3():
     m = mask_like(data)
     feats = added_features()
 
-    out = model((data, m), added_features=feats)
+    out = model(data, m, added_features=feats)
 
     assert out.output.shape == (2, 1, 6)
 
@@ -1049,6 +1054,646 @@ def test_autoencoder_forward_list_mask_append_mode_1():
     m = mask_like(data)
     feats = added_features()
 
-    out = model([data, m], added_features=feats)
+    out = model(data, m, added_features=feats)
 
     assert out.output.shape == (2, 1, 6)
+
+
+def test_cvae_dropout_zero_builds_dropout_layers():
+    model = build_cvae(
+        encoder_hidden_dims=[8],
+        condition_embedding_dims=[6, 4],
+        condition_embedding_size=4,
+        dropout_rate=0.0,
+    )
+
+    assert any(isinstance(layer, nn.Dropout) for layer in model.encoder)
+    assert any(isinstance(layer, nn.Dropout) for layer in model.decoder)
+    assert any(isinstance(layer, nn.Dropout) for layer in model.embedding)
+
+
+def test_cvae_batch_normalization_builds_batchnorm_layers():
+    model = build_cvae(
+        encoder_hidden_dims=[8],
+        condition_embedding_dims=[6, 4],
+        condition_embedding_size=4,
+        batch_normalization=True,
+    )
+
+    assert any(isinstance(layer, nn.BatchNorm1d) for layer in model.encoder)
+    assert any(isinstance(layer, nn.BatchNorm1d) for layer in model.decoder)
+    assert any(isinstance(layer, nn.BatchNorm1d) for layer in model.embedding)
+
+
+def test_cvae_recognition_without_mask():
+    model = build_cvae()
+    data = x()
+
+    mu, log_var = model._recognition(
+        x=data,
+        x_mask=None,
+    )
+
+    assert mu.shape == (data.shape[0], model.latent_size)
+    assert log_var.shape == mu.shape
+
+
+def test_cvae_recognition_with_separate_mask():
+    model = build_cvae()
+    data = x()
+    data_mask = torch.zeros_like(data)
+
+    mu, log_var = model._recognition(
+        x=data,
+        x_mask=data_mask,
+    )
+
+    expected_input = torch.zeros_like(data).flatten(start_dim=1)
+    expected_encoded = model.encoder(expected_input)
+
+    torch.testing.assert_close(
+        mu,
+        model.mu(expected_encoded),
+    )
+    torch.testing.assert_close(
+        log_var,
+        model.log_var(expected_encoded),
+    )
+
+
+def test_cvae_recognition_with_condition_and_features():
+    model = build_cvae(
+        encoder_hidden_dims=[8],
+        condition_embedding_dims=[6, 4],
+        condition_embedding_size=4,
+        added_features_dim=3,
+    )
+
+    data = x()
+    features = added_features()
+    cond_mu, _ = model._condition(
+        condition=condition(),
+        added_features=features,
+    )
+
+    mu, log_var = model._recognition(
+        x=data,
+        x_mask=None,
+        condition=cond_mu,
+        added_features=features,
+    )
+
+    assert mu.shape == (data.shape[0], model.latent_size)
+    assert log_var.shape == mu.shape
+
+
+def test_cvae_condition_without_embedding():
+    model = build_cvae()
+
+    cond_mu, cond_log_var = model._condition(
+        condition=None,
+    )
+
+    assert cond_mu is None
+    assert cond_log_var is None
+
+
+def test_cvae_condition_with_separate_mask():
+    model = build_cvae(
+        encoder_hidden_dims=[8],
+        condition_embedding_dims=[5, 4],
+        condition_embedding_size=4,
+    )
+
+    cond = condition()
+    cond_mask = torch.zeros_like(cond)
+
+    cond_mu, cond_log_var = model._condition(
+        condition=cond,
+        condition_mask=cond_mask,
+    )
+
+    expected = model.embedding(torch.zeros_like(cond).flatten(start_dim=1))
+
+    torch.testing.assert_close(cond_mu, expected)
+    assert cond_log_var is None
+
+
+def test_cvae_condition_dependant_latent_outputs_statistics():
+    model = build_cvae(
+        encoder_hidden_dims=[8],
+        condition_embedding_dims=[5, 4],
+        condition_embedding_size=4,
+        condition_dependant_latent=True,
+    )
+
+    cond_mu, cond_log_var = model._condition(
+        condition=condition(),
+    )
+
+    assert cond_mu.shape == (
+        condition().shape[0],
+        model.condition_embedding_size,
+    )
+    assert cond_log_var.shape == cond_mu.shape
+
+
+def test_cvae_condition_dependant_flow_has_no_condition_heads():
+    model = build_cvae(
+        encoder_hidden_dims=[8],
+        condition_embedding_dims=[5, 4],
+        condition_embedding_size=4,
+        condition_dependant_latent=True,
+        condition_dependant_flow=True,
+    )
+
+    cond_mu, cond_log_var = model._condition(
+        condition=condition(),
+    )
+
+    assert not hasattr(model, "condition_mu")
+    assert not hasattr(model, "condition_log_var")
+    assert cond_mu.shape == (
+        condition().shape[0],
+        model.condition_embedding_size,
+    )
+    assert cond_log_var is None
+
+
+def test_cvae_generate_without_features_or_condition():
+    model = build_cvae()
+    latent_samples = torch.randn(
+        3,
+        2,
+        model.latent_size,
+    )
+
+    output = model._generate(
+        latent_samples=latent_samples,
+    )
+
+    assert output.shape == (
+        3,
+        2,
+        model.output_shape,
+    )
+
+
+def test_cvae_generate_with_decoder_condition():
+    model = build_cvae(
+        encoder_hidden_dims=[8],
+        condition_embedding_dims=[5, 4],
+        condition_embedding_size=4,
+    )
+
+    cond_mu, _ = model._condition(
+        condition=condition(),
+    )
+    latent_samples = torch.randn(
+        3,
+        2,
+        model.latent_size,
+    )
+
+    output = model._generate(
+        latent_samples=latent_samples,
+        condition=cond_mu,
+    )
+
+    assert output.shape == (
+        3,
+        2,
+        model.output_shape,
+    )
+
+
+def test_cvae_generate_ignores_condition_when_decoder_flag_false():
+    model = build_cvae(
+        condition_embedding_dims=None,
+    )
+
+    latent_samples = torch.randn(
+        3,
+        2,
+        model.latent_size,
+    )
+    unused_condition = torch.randn(2, 4)
+
+    output = model._generate(
+        latent_samples=latent_samples,
+        condition=unused_condition,
+    )
+
+    assert output.shape == (
+        3,
+        2,
+        model.output_shape,
+    )
+
+
+def test_cvae_forward_with_separate_mask():
+    model = build_cvae()
+    data = x()
+    data_mask = mask_like(data)
+
+    output = model(
+        x=data,
+        x_mask=data_mask,
+        sample_size=2,
+    )
+
+    assert output.output.shape == (
+        2,
+        *data.shape,
+    )
+    assert output.mu.shape == (
+        data.shape[0],
+        model.latent_size,
+    )
+    assert output.log_var.shape == output.mu.shape
+
+
+def test_cvae_forward_clamps_posterior_variance():
+    model = build_cvae()
+    minimum = torch.tensor(10.0)
+
+    output = model(
+        x=x(),
+        x_mask=None,
+        min_posterior_variance=minimum,
+    )
+
+    assert torch.all(output.log_var >= minimum)
+
+
+def test_cvae_sample_shape_with_custom_std():
+    model = build_cvae()
+    mu = torch.zeros(2, model.latent_size)
+    log_var = torch.zeros_like(mu)
+
+    samples = model._sample(
+        mu,
+        log_var,
+        sample_size=4,
+        std=2,
+    )
+
+    assert samples.shape == (
+        4,
+        2,
+        model.latent_size,
+    )
+
+
+def test_cvae_get_normal_uses_reference_dtype():
+    model = build_cvae()
+    reference = torch.zeros(
+        2,
+        model.latent_size,
+        dtype=torch.float64,
+    )
+
+    distribution = model._get_normal(
+        reference,
+        std=3,
+    )
+
+    assert distribution.loc.dtype == torch.float64
+    assert distribution.scale.dtype == torch.float64
+    torch.testing.assert_close(
+        distribution.scale,
+        torch.full_like(reference, 3),
+    )
+
+
+def test_cvae_predict_rejects_incorrect_latent_shape():
+    model = build_cvae(
+        encoder_hidden_dims=[8],
+        condition_embedding_dims=[5, 4],
+        condition_embedding_size=4,
+    )
+
+    request = cVAEPredictRequest(
+        condition=condition(),
+        condition_mask=None,
+        added_features=None,
+        prior_flow=None,
+        latent_samples=torch.zeros(
+            1,
+            2,
+            model.latent_size + 1,
+        ),
+        nstds=1,
+        sample_size=1,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="expected shape",
+    ):
+        model.predict(request)
+
+
+def test_cvae_predict_accepts_user_latent_samples():
+    model = build_cvae(
+        encoder_hidden_dims=[8],
+        condition_embedding_dims=[5, 4],
+        condition_embedding_size=4,
+    )
+
+    latent_samples = torch.zeros(
+        2,
+        2,
+        model.latent_size,
+    )
+
+    request = cVAEPredictRequest(
+        condition=condition(),
+        condition_mask=None,
+        added_features=None,
+        prior_flow=None,
+        latent_samples=latent_samples,
+        nstds=1,
+        sample_size=2,
+    )
+
+    output = model.predict(request)
+
+    assert output.output.shape == (
+        2,
+        2,
+        condition().shape[1],
+        model.output_shape,
+    )
+    assert output.mu is None
+    assert output.log_var is None
+    assert output.samples is None
+
+
+def test_autoencoder_forward_without_mask():
+    model = build_autoencoder()
+    data = x()
+
+    output = model(
+        x=data,
+        x_mask=None,
+    )
+
+    assert output.output.shape == data.shape
+
+
+def test_autoencoder_forward_with_mask():
+    model = build_autoencoder()
+    data = x()
+    data_mask = torch.zeros_like(data)
+
+    output = model(
+        x=data,
+        x_mask=data_mask,
+    )
+
+    expected = model.decoder(
+        model.encoder(torch.zeros_like(data).flatten(start_dim=1))
+    ).view(data.shape)
+
+    torch.testing.assert_close(
+        output.output,
+        expected,
+    )
+
+
+@pytest.mark.parametrize(
+    "append_mode",
+    [1, 2, 3],
+)
+def test_autoencoder_forward_append_modes(
+    append_mode,
+):
+    model = build_autoencoder(
+        encoder_hidden_dims=[4],
+        append_mode=append_mode,
+        added_features_dim=3,
+    )
+
+    data = x()
+    data_mask = mask_like(data)
+    features = added_features()
+
+    output = model(
+        x=data,
+        x_mask=data_mask,
+        added_features=features,
+    )
+
+    assert output.output.shape == data.shape
+
+
+def test_autoencoder_ignores_features_for_other_append_mode():
+    model = build_autoencoder(
+        encoder_hidden_dims=[4],
+        append_mode=4,
+        added_features_dim=3,
+    )
+
+    data = x()
+
+    output = model(
+        x=data,
+        x_mask=None,
+        added_features=None,
+    )
+
+    assert output.output.shape == data.shape
+
+
+def test_autoencoder_dropout_zero_builds_dropout_layers():
+    model = build_autoencoder(
+        encoder_hidden_dims=[8, 4],
+        decoder_hidden_dims=[8],
+        dropout_rate=0.0,
+    )
+
+    assert any(isinstance(layer, nn.Dropout) for layer in model.encoder)
+    assert any(isinstance(layer, nn.Dropout) for layer in model.decoder)
+
+
+def test_autoencoder_batch_normalization_builds_batchnorm_layers():
+    model = build_autoencoder(
+        encoder_hidden_dims=[8, 4],
+        decoder_hidden_dims=[8],
+        batch_normalization=True,
+    )
+
+    assert any(isinstance(layer, nn.BatchNorm1d) for layer in model.encoder)
+    assert any(isinstance(layer, nn.BatchNorm1d) for layer in model.decoder)
+
+
+def test_cvae_config_condition_dependant_latent_allows_no_decoder_condition():
+    config = cVAE_MLPConfig(
+        encoder_hidden_dims=[8],
+        latent_size=4,
+        condition_embedding_dims=[6, 4],
+        condition_embedding_size=4,
+        condition_dependant_latent=True,
+        condemb_to_decoder=False,
+    )
+
+    assert config.condition_dependant_latent is True
+    assert config.condemb_to_decoder is False
+
+
+def test_cvae_config_non_condition_dependant_latent_requires_decoder_condition():
+    with pytest.raises(
+        ValueError,
+        match="condition embedding has to be passed",
+    ):
+        cVAE_MLPConfig(
+            encoder_hidden_dims=[8],
+            latent_size=4,
+            condition_embedding_dims=[6, 4],
+            condition_embedding_size=4,
+            condition_dependant_latent=False,
+            condemb_to_decoder=False,
+        )
+
+
+@pytest.mark.parametrize(
+    "dropout_rate",
+    [-0.1, 1.1],
+)
+def test_cvae_config_current_dropout_validation_behavior(
+    dropout_rate,
+):
+    config = cVAE_MLPConfig(
+        encoder_hidden_dims=[8],
+        latent_size=4,
+        dropout_rate=dropout_rate,
+    )
+
+    assert config.dropout_rate == dropout_rate
+
+
+def test_cvae_checkpoint_input_metadata_mismatch(monkeypatch):
+    checkpoint = SimpleNamespace(
+        checkpoint_input_shape=np.asarray([6]),
+        checkpoint_output_shape=np.asarray([6]),
+        checkpoint_input_var_metadata={"input": "old"},
+        checkpoint_output_var_metadata=(RuntimeContext.TARGET_VAR_METADATA),
+    )
+
+    config = cVAE_MLPConfig(
+        encoder_hidden_dims=[8],
+        latent_size=4,
+    )
+    config.checkpoint_config = checkpoint
+
+    monkeypatch.setattr(
+        RuntimeContext,
+        "INPUT_VAR_METADATA",
+        {"input": "new"},
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="consistent input variables",
+    ):
+        cVAE_MLP(
+            config=config,
+            input_shape=np.asarray([6]),
+            output_shape=np.asarray([6]),
+        )
+
+
+def test_cvae_checkpoint_output_metadata_mismatch(monkeypatch):
+    checkpoint = SimpleNamespace(
+        checkpoint_input_shape=np.asarray([6]),
+        checkpoint_output_shape=np.asarray([6]),
+        checkpoint_input_var_metadata=(RuntimeContext.INPUT_VAR_METADATA),
+        checkpoint_output_var_metadata={"output": "old"},
+    )
+
+    config = cVAE_MLPConfig(
+        encoder_hidden_dims=[8],
+        latent_size=4,
+    )
+    config.checkpoint_config = checkpoint
+
+    monkeypatch.setattr(
+        RuntimeContext,
+        "TARGET_VAR_METADATA",
+        {"output": "new"},
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="consistent output variables",
+    ):
+        cVAE_MLP(
+            config=config,
+            input_shape=np.asarray([6]),
+            output_shape=np.asarray([6]),
+        )
+
+
+def test_autoencoder_checkpoint_input_metadata_mismatch(
+    monkeypatch,
+):
+    checkpoint = SimpleNamespace(
+        checkpoint_input_shape=np.asarray([6]),
+        checkpoint_output_shape=np.asarray([6]),
+        checkpoint_input_var_metadata={"input": "old"},
+        checkpoint_output_var_metadata=(RuntimeContext.TARGET_VAR_METADATA),
+    )
+
+    config = AutoencoderConfig(
+        encoder_hidden_dims=[4],
+    )
+    config.checkpoint_config = checkpoint
+
+    monkeypatch.setattr(
+        RuntimeContext,
+        "INPUT_VAR_METADATA",
+        {"input": "new"},
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="consistent input variables",
+    ):
+        Autoencoder(
+            config=config,
+            input_shape=np.asarray([6]),
+            output_shape=np.asarray([6]),
+        )
+
+
+def test_autoencoder_checkpoint_output_metadata_mismatch(
+    monkeypatch,
+):
+    checkpoint = SimpleNamespace(
+        checkpoint_input_shape=np.asarray([6]),
+        checkpoint_output_shape=np.asarray([6]),
+        checkpoint_input_var_metadata=(RuntimeContext.INPUT_VAR_METADATA),
+        checkpoint_output_var_metadata={"output": "old"},
+    )
+
+    config = AutoencoderConfig(
+        encoder_hidden_dims=[4],
+    )
+    config.checkpoint_config = checkpoint
+
+    monkeypatch.setattr(
+        RuntimeContext,
+        "TARGET_VAR_METADATA",
+        {"output": "new"},
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="consistent output variables",
+    ):
+        Autoencoder(
+            config=config,
+            input_shape=np.asarray([6]),
+            output_shape=np.asarray([6]),
+        )

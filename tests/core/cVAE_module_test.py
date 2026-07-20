@@ -112,10 +112,21 @@ class DummySelector:
 
 
 class DummyBatch:
-    def __init__(self):
-        self.target = torch.zeros(2, 1, 3, 4)
-        self.input = torch.zeros(2, 1, 3, 4)
-        self.added_features = None
+    def __init__(
+        self,
+        input=None,
+        target=None,
+        input_mask=None,
+        target_mask=None,
+        added_features=None,
+        metadata=None,
+    ):
+        self.input = torch.ones(2, 1) if input is None else input
+        self.target = torch.ones(2, 1) if target is None else target
+        self.input_mask = input_mask
+        self.target_mask = target_mask
+        self.added_features = added_features
+        self.metadata = metadata
 
 
 class DummyLoss:

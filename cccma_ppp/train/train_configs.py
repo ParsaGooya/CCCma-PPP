@@ -11,7 +11,7 @@ import dacite
 
 from cccma_ppp.loss.loss import LosspipelineConfig
 
-from cccma_ppp.train.train_configs import TrainDataloaderConfig
+from cccma_ppp.train.dataloader import TrainDataloaderConfig
 from cccma_ppp.data_modules.utils import WeightsConfig
 
 from cccma_ppp.generic.distributed import Distributed
@@ -20,7 +20,6 @@ from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.core.selectors import ModuleSelector
 from cccma_ppp.core.trainer import TrainerConfig
 from cccma_ppp.core.optimization import OptimizerConfig
-
 
 
 def set_seed(seed):

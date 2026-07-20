@@ -58,12 +58,23 @@ class DummyBatch:
         self,
         input=None,
         target=None,
+        input_mask=None,
+        target_mask=None,
+        added_features=None,
         metadata=None,
     ):
         self.input = torch.ones(2, 3) if input is None else input
         self.target = target
+        self.input_mask = input_mask
+        self.target_mask = target_mask
+        self.added_features = added_features
         self.metadata = (
-            [{"year": 2000}, {"year": 2001}] if metadata is None else metadata
+            [
+                {"year": 2000},
+                {"year": 2001},
+            ]
+            if metadata is None
+            else metadata
         )
 
 
@@ -608,7 +619,9 @@ def test_cvae_update_train_stats(
     )
 
 
-def test_cvae_update_train_stats_tuple_target(tmp_path):
+def test_cvae_update_train_stats_with_target_mask(
+    tmp_path,
+):
     predictor, _ = make_cvae_predictor(
         tmp_path,
         covariance_samples=1,
@@ -623,19 +636,26 @@ def test_cvae_update_train_stats_tuple_target(tmp_path):
         samples=torch.ones(1, 2, 4),
     )
     target = torch.ones(2, 1, 3)
+
     batch = DummyBatch(
-        target=(target, torch.ones_like(target)),
+        target=target,
+        target_mask=torch.ones_like(
+            target,
+            dtype=torch.bool,
+        ),
     )
 
-    predictor._update_train_stats(
+    result = predictor._update_train_stats(
         output,
         batch,
     )
 
     residual = predictor.stats["residual"].updates[0]
 
+    assert result is predictor.stats
     assert residual.shape == (2, 3)
-    assert torch.equal(
+
+    torch.testing.assert_close(
         residual,
         torch.ones(2, 3),
     )
@@ -724,26 +744,34 @@ def test_get_latent_samples_reuses_sampler(tmp_path):
     assert result.shape == (2, 4, 3)
 
 
-def test_get_latent_samples_tuple_input(tmp_path):
+def test_get_latent_samples_with_input_mask(
+    tmp_path,
+):
     predictor, _ = make_cvae_predictor(
         tmp_path,
         num_latent_samples=2,
         infer_latent_samples_from_training=True,
     )
+
     predictor.latent_sampler = lambda sample_size, std: torch.zeros(
         *sample_size,
         3,
     )
+
+    input_tensor = torch.ones(5, 3)
+
     batch = DummyBatch(
-        input=(
-            torch.ones(5, 3),
-            torch.ones(5, 3),
-        )
+        input=input_tensor,
+        input_mask=torch.ones_like(
+            input_tensor,
+            dtype=torch.bool,
+        ),
     )
 
     result = predictor._get_latent_samples_based_on_train(batch)
 
     assert result.shape == (2, 5, 3)
+    assert result.device.type == "cpu"
 
 
 def test_build_latent_sampler_missing_file(tmp_path):
@@ -1439,7 +1467,7 @@ def test_deterministic_update_train_stats(
     )
 
 
-def test_deterministic_update_train_stats_tuple_target(
+def test_deterministic_update_train_stats_with_target_mask(
     tmp_path,
 ):
     predictor, _ = make_deterministic_predictor(
@@ -1450,18 +1478,26 @@ def test_deterministic_update_train_stats_tuple_target(
     predictor._stats = {
         "residual": residual_stats,
     }
+
     output = make_deterministic_output(torch.zeros(2, 1, 3))
     target = torch.ones(2, 1, 3)
+
     batch = DummyBatch(
-        target=(target, torch.zeros_like(target)),
+        target=target,
+        target_mask=torch.zeros_like(
+            target,
+            dtype=torch.bool,
+        ),
     )
 
-    predictor._update_train_stats(
+    result = predictor._update_train_stats(
         output,
         batch,
     )
 
-    assert torch.equal(
+    assert result is predictor.stats
+
+    torch.testing.assert_close(
         residual_stats.updates[0],
         torch.ones(2, 3),
     )

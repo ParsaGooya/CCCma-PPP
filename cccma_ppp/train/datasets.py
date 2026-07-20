@@ -473,8 +473,11 @@ class TrainDataset(Dataset):
         mask = self.mask
         if mask is None:
             mask = _create_train_mask(
-                years=self.config.model.year_range,
-                lead_times=np.arange(1, self.config.model.info.sizes["lead_time"] + 1),
+                time=self.config.model.year_range,
+                lead_times=np.arange(
+                    1,
+                    self.config.model.info.sizes["lead_time"] + 1,
+                ),
             )
             mask = xr.full_like(mask, fill_value=False)
 
