@@ -271,7 +271,9 @@ class DatasetConfigABC(abc.ABC):
         -------
         None
         """
-        if self.lead_months is not None and hasattr(self.lead_months, "build_lead_months"):
+        if self.lead_months is not None and hasattr(
+            self.lead_months, "build_lead_months"
+        ):
             self.lead_months = self.lead_months.build_lead_months()
 
     @abc.abstractmethod

@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import random
 from pathlib import Path
 
-from cccma_ppp.generic import Distributed, RuntimeContext
+from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 @dataclasses.dataclass
@@ -440,17 +441,12 @@ class MetricsAggregator:
         self.reset_batch_losses()
 
 
-
-
-
-
 @dataclasses.dataclass
 class RunningCovariance:
     distributed: Distributed
     sum_x: torch.Tensor | None = None
     sum_xxT: torch.Tensor | None = None
     count: torch.Tensor | None = None
-    
 
     def update(self, x: torch.Tensor):
         """
@@ -487,9 +483,6 @@ class RunningCovariance:
         if self.count <= 1:
             raise ValueError("Need at least two samples to compute covariance.")
 
-        cov = (
-            self.sum_xxT
-            - self.count * torch.outer(mean, mean)
-        ) / (self.count - 1)
+        cov = (self.sum_xxT - self.count * torch.outer(mean, mean)) / (self.count - 1)
 
         return mean.cpu(), cov.cpu()

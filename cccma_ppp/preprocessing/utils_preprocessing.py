@@ -7,6 +7,8 @@ import os
 from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 from cccma_ppp.configs import supported_NN_dimensions_sorted
+from cccma_ppp.generic.runtime import RuntimeContext
+
 
 @PreprocessingStepSelector.register("normalizer")
 class Normalizer(PreprocessModuleABC):
@@ -272,7 +274,7 @@ class AnomaliesScaler(PreprocessModuleABC):
             data_masked = data.where(~np.isnan(mask))
         else:
             data_masked = data
-            
+
         self.mean = data_masked.mean(self.dims).load()
         self.fitted = True
         return self
@@ -290,7 +292,7 @@ class AnomaliesScaler(PreprocessModuleABC):
         xr.DataArray
             Anomaly values.
         """
-        
+
         data_anomalies = data - self.mean
         return data_anomalies
 
@@ -386,29 +388,25 @@ class Flattennanremove(PreprocessModuleABC):
 
         if self.load_dir is not None:
             self._load_from_memory(self.load_dir)
-            
+
             self._check_nn_dims(data)
             self._check_nn_dims(target)
             return self
-        
+
         reference = target if target is not None else data
-        
+
         self.NN_dims = [
-            dim
-            for dim in supported_NN_dimensions_sorted 
-            if dim in reference.dims 
+            dim for dim in supported_NN_dimensions_sorted if dim in reference.dims
         ]
 
-        missing_from_data = [
-            dim for dim in self.NN_dims if dim not in data.dims
-        ]
+        missing_from_data = [dim for dim in self.NN_dims if dim not in data.dims]
 
         if missing_from_data:
             raise RuntimeError(
                 "The input and reference data do not share all required NN "
                 f"dimensions. Missing from input data: {missing_from_data}."
             )
-        
+
         self.reference_shape = xr.Dataset(
             coords={dim: reference[dim] for dim in self.NN_dims}
         )
@@ -425,8 +423,7 @@ class Flattennanremove(PreprocessModuleABC):
             )
 
             self.final_locations = (
-                target_stacked
-                .sel(ref=data_stacked["ref"])
+                target_stacked.sel(ref=data_stacked["ref"])
                 .dropna(dim="ref", how="any")
                 .load()["ref"]
             )
@@ -455,12 +452,13 @@ class Flattennanremove(PreprocessModuleABC):
             )
 
         return self
-    
-    def _check_nn_dims(self, data: xr.Dataset | xr.DataArray,):
+
+    def _check_nn_dims(
+        self,
+        data: xr.Dataset | xr.DataArray,
+    ):
         if data is not None:
-            missing_dims = [
-                dim for dim in self.NN_dims if dim not in data.dims
-            ]
+            missing_dims = [dim for dim in self.NN_dims if dim not in data.dims]
 
             if missing_dims:
                 raise ValueError(
@@ -468,9 +466,7 @@ class Flattennanremove(PreprocessModuleABC):
                     f"Missing dimensions: {missing_dims}."
                 )
 
-    def transform(self, data: xr.DataArray
-        ) -> xr.Dataset | xr.DataArray:
-    
+    def transform(self, data: xr.DataArray) -> xr.Dataset | xr.DataArray:
         """
         Apply flattening and spatial filtering.
 
@@ -492,12 +488,9 @@ class Flattennanremove(PreprocessModuleABC):
         if "ref" in data.dims:
             return data.sel(ref=self.final_locations)
 
-
-        return (
-            data
-            .stack(ref=self.NN_dims)
-            .sel(ref=self.final_locations)
-        ).transpose(..., 'ref')
+        return (data.stack(ref=self.NN_dims).sel(ref=self.final_locations)).transpose(
+            ..., "ref"
+        )
 
     def inverse_transform(self, data: xr.DataArray) -> xr.DataArray:
         """
@@ -520,10 +513,8 @@ class Flattennanremove(PreprocessModuleABC):
         """
 
         if "ref" not in data.dims:
-            raise ValueError(
-                "The input must contain the flattened 'ref' dimension."
-            )
-        
+            raise ValueError("The input must contain the flattened 'ref' dimension.")
+
         return data.unstack().combine_first(self.reference_shape)
 
     def _load_from_memory(self, load_dir: Path | str) -> None:
@@ -551,11 +542,6 @@ class Flattennanremove(PreprocessModuleABC):
 
         self.reference_shape = loaded.reference_shape
         self.final_locations = loaded.final_locations
-        self.common_to_input_and_target = (
-            loaded.common_to_input_and_target
-        )
+        self.common_to_input_and_target = loaded.common_to_input_and_target
         self.fitted = loaded.fitted
         del loaded
-
-
-

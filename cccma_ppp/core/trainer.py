@@ -8,10 +8,13 @@ import os
 import time
 from tqdm import tqdm
 
-from cccma_ppp.core import moduleABC, OptimizerWrapper
+from cccma_ppp.core.core_abc import moduleABC
+from cccma_ppp.core.optimization import OptimizerWrapper
 from cccma_ppp.core.cVAE_module import cVAE
 from cccma_ppp.data_modules.dataloader import Dataloader
-from cccma_ppp.generic import Distributed, MetricsAggregator, RuntimeContext
+from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.generic.aggregator import MetricsAggregator
 
 from cccma_ppp.loss.kld import BetaAnnealing
 
@@ -253,7 +256,7 @@ class Trainer:
         if not self.save_checkpoint:
             self.log_root(
                 logging.warning,
-                "Configured value of save_checkpoint is false, no checkpoints whatsoever will be saved!" 
+                "Configured value of save_checkpoint is false, no checkpoints whatsoever will be saved!",
             )
 
         self.checkpoint_dir = Path(RuntimeContext.GLOBAL_CHECKPOINT_DIR)
@@ -262,8 +265,8 @@ class Trainer:
         if resuming:
             self.log_root(
                 logging.INFO,
-                f"Resuming training from \n {self.checkpoint_dir / 'best.pt'}.\n" \
-                 "Warning: If all configurations don't match you will get RuntimeError!",
+                f"Resuming training from \n {self.checkpoint_dir / 'best.pt'}.\n"
+                "Warning: If all configurations don't match you will get RuntimeError!",
             )
             self._load_checkpoint(self.checkpoint_dir / "best.pt")
             if self._epochs_trained == self.max_epochs:
@@ -301,10 +304,8 @@ class Trainer:
         """
 
         if not self._setup:
-            raise RuntimeError(
-                "Call setup_distributed() before predict()."
-            )
-        
+            raise RuntimeError("Call setup_distributed() before predict().")
+
         self.log_root(logging.INFO, "Starting Training Loop...")
         self.start_time_train = time.time()
         clear_memory()
@@ -431,10 +432,10 @@ class Trainer:
 
         start_time = time.time()
         for batch_id, batch in tqdm(
-                enumerate(self.TrainLoader),
-                disable=not self.is_on_root,
-                desc="Train",
-            ):
+            enumerate(self.TrainLoader),
+            disable=not self.is_on_root,
+            desc="Train",
+        ):
             batch_loss_dict = self._train_on_batch(batch)
 
             self.train_aggregator.record(batch_loss_dict)
@@ -505,10 +506,10 @@ class Trainer:
         self.module.eval()
 
         for batch_id, batch in tqdm(
-                enumerate(self.ValidationLoader),
-                disable=not self.is_on_root,
-                desc="Validate",
-            ): 
+            enumerate(self.ValidationLoader),
+            disable=not self.is_on_root,
+            desc="Validate",
+        ):
             batch_loss_dict = self._validate_on_batch(batch)
 
             self.validation_aggregator.record(batch_loss_dict)
@@ -796,8 +797,6 @@ class Trainer:
                 self.logger.log(level, msg, *args)
             else:
                 print(msg)
-
-
 
 
 def clear_memory():

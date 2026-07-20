@@ -6,25 +6,29 @@ import warnings
 from pathlib import Path
 import dask
 
-from cccma_ppp.data_modules.dataset import (
+from cccma_ppp.data_modules.dataset.config_abc import (
     DatasetConfigABC,
-    DatasetABC,
-    DatasetOperator,
     lead_months_config,
+)
+from cccma_ppp.data_modules.dataset.dataset_abc import DatasetABC
+from cccma_ppp.data_modules.dataset.operator import (
+    DatasetOperator,
     _get_time_features,
 )
-from cccma_ppp.data_modules.data import (
+
+from cccma_ppp.data_modules.data.data_configs import (
     ModelDataConfig,
     ObsDataConfig,
     ConditionDataConfig,
 )
 
-from cccma_ppp.data_modules import (
+from cccma_ppp.data_modules.utils import (
     _unwrap_data_variables,
     suppress_stderr,
 )
 
 from cccma_ppp.configs import supported_NN_dimensions_sorted
+
 
 @dataclasses.dataclass
 class TrainDatasetConfig(DatasetConfigABC):
@@ -92,7 +96,7 @@ class TrainDatasetConfig(DatasetConfigABC):
                 raise ValueError(
                     "for same member coniditioning the model data should not be ensemble mean."
                 )
-            
+
         return self
 
     def _check_observation(self):
@@ -109,14 +113,12 @@ class TrainDatasetConfig(DatasetConfigABC):
             If required observation data is missing.
         """
         if self.observation is not None:
-
             for dim in [
-            dim
-            for dim in supported_NN_dimensions_sorted  
-            if dim in self.observation.info.coords]:
-        
+                dim
+                for dim in supported_NN_dimensions_sorted
+                if dim in self.observation.info.coords
+            ]:
                 if dim in self.model.info.coords:
-
                     if not self.observation.info.coords[dim].equals(
                         self.model.info.coords[dim]
                     ):
@@ -134,11 +136,10 @@ class TrainDatasetConfig(DatasetConfigABC):
                     )
 
         else:
-            
-            if self.condition_method is None: 
+            if self.condition_method is None:
                 raise ValueError(
-                "No target observation is specified. Specify condition_method!"
-            )
+                    "No target observation is specified. Specify condition_method!"
+                )
 
         return self
 
@@ -194,7 +195,7 @@ class TrainDatasetConfig(DatasetConfigABC):
                 )
 
         return self
-    
+
     @property
     def effective_input(self):
         return self.model
@@ -235,7 +236,7 @@ class TrainDatasetConfig(DatasetConfigABC):
 
         if self.observation is None:
             return self.model.info.coords["year"].values
-  
+
         else:
             return np.intersect1d(self.model.year_range, self.observation.year_range)
 
@@ -252,9 +253,9 @@ class TrainDatasetConfig(DatasetConfigABC):
         if self.observation is None:
             return self.get_common_time
         else:
-            return np.intersect1d(self.model.info.coords["year"].values,
-                                  self.get_common_time)
-                                  
+            return np.intersect1d(
+                self.model.info.coords["year"].values, self.get_common_time
+            )
 
     def _fit_preprocessors(
         self,
@@ -322,7 +323,7 @@ class TrainDatasetConfig(DatasetConfigABC):
             requested_years=years,
             mask=mask,
             return_metadata=return_metadata,
-            load=load
+            load=load,
         )
 
 
@@ -362,10 +363,10 @@ class TrainDataset(DatasetABC):
         """
         super().__init__()
 
-
         if self.config.observation is not None:
-            self.observation_dataset = self._load_xarray_data(self.config.observation,
-                                                                load = self.load)
+            self.observation_dataset = self._load_xarray_data(
+                self.config.observation, load=self.load
+            )
 
         self.obs_indexes = self.get_obs_indexes(self.sample_coords)
 
@@ -461,8 +462,6 @@ class TrainDataset(DatasetABC):
             and self.config.effective_condition is not None
         )
 
-
-
     def get_obs_indexes(
         self,
         sample_coords: dict[str, np.ndarray],
@@ -489,7 +488,7 @@ class TrainDataset(DatasetABC):
         """
         if self.observation_dataset is None:
             return None
-        
+
         model_years = np.asarray(sample_coords["year"])
         lead_times = np.asarray(sample_coords["lead_time"])
 
@@ -517,9 +516,8 @@ class TrainDataset(DatasetABC):
                 f"dataset: {missing_values}"
             )
 
-        return indexes    
-        
-            
+        return indexes
+
     def get_target_shape(self):
         """
         Determine target shape.
@@ -543,15 +541,14 @@ class TrainDataset(DatasetABC):
                 ).final_locations.shape * len(self.config.observation.names)
             else:
                 return tuple(
-                self.config.observation.info.coords[dim].size 
-                for dim in supported_NN_dimensions_sorted  
-                if dim in self.config.observation.info.coords)
-            
+                    self.config.observation.info.coords[dim].size
+                    for dim in supported_NN_dimensions_sorted
+                    if dim in self.config.observation.info.coords
+                )
 
         else:
             return self.input_shape
 
-        
     def _index_observation_dataset(self, ind: int) -> xr.DataArray | None:
         """
         Select and preprocess one observation sample.
@@ -572,8 +569,7 @@ class TrainDataset(DatasetABC):
             return None
 
         selection = {
-            dim: [int(indexes[ind])]
-            for dim, indexes in self.obs_indexes.items()
+            dim: [int(indexes[ind])] for dim, indexes in self.obs_indexes.items()
         }
 
         if "ensembles" in self.observation_dataset.dims:
@@ -600,9 +596,7 @@ class TrainDataset(DatasetABC):
             Sample dictionary, optionally with metadata.
         """
 
-        selection = {dim : value[ind]
-            for dim, value in self.sample_coords.items()
-        }
+        selection = {dim: value[ind] for dim, value in self.sample_coords.items()}
 
         condition = self._index_condition_dataset(ind)
         target = self._index_observation_dataset(ind)

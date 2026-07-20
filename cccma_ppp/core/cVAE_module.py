@@ -8,16 +8,16 @@ import gc
 
 from cccma_ppp.loss import Losspipeline
 from cccma_ppp.loss.kld import KLD
-from cccma_ppp.core import moduleABC, moduleConfigABC, OutputABC
+from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC, OutputABC
 from cccma_ppp.core.selectors import (
     ModuleSelector,
     cVAEModelSelector,
-    _load_config_from_checkpoint
+    _load_config_from_checkpoint,
 )
 from cccma_ppp.models.normalized_flows import NormalizedFlowConfig
 from cccma_ppp.models.models_abc import cVAEPredictRequest
-from cccma_ppp.train import BatchData
-from cccma_ppp.generic import RuntimeContext
+from cccma_ppp.train.dataloader import BatchData
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 @dataclasses.dataclass
@@ -435,11 +435,13 @@ class cVAE(moduleABC):
             sample_size=sample_size,
         )
 
-    def predict(self, 
-                data: BatchData, 
-                sample_size: int =1, 
-                nstds: int = 1,
-                latent_samples: torch.Tensor = None) -> cVAEOutput:
+    def predict(
+        self,
+        data: BatchData,
+        sample_size: int = 1,
+        nstds: int = 1,
+        latent_samples: torch.Tensor = None,
+    ) -> cVAEOutput:
         """
         Generate predictions using the learned prior.
 
@@ -456,12 +458,14 @@ class cVAE(moduleABC):
             Generated outputs.
         """
 
-        return self.model.predict( cVAEPredictRequest(
-            condition=data.input,
-            condition_mask=data.input_mask,
-            added_features=data.added_features,
-            prior_flow=self.prior_flow,
-            sample_size=sample_size,
-            nstds=nstds,
-            latent_samples = latent_samples)
+        return self.model.predict(
+            cVAEPredictRequest(
+                condition=data.input,
+                condition_mask=data.input_mask,
+                added_features=data.added_features,
+                prior_flow=self.prior_flow,
+                sample_size=sample_size,
+                nstds=nstds,
+                latent_samples=latent_samples,
+            )
         )

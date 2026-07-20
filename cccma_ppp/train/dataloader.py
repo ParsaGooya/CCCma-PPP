@@ -6,14 +6,13 @@ from pathlib import Path
 
 
 from cccma_ppp.train.dataset import TrainDatasetConfig
-from cccma_ppp.data_modules import _create_train_mask, WeightsConfig
+from cccma_ppp.data_modules.utils import _create_train_mask, WeightsConfig
 from cccma_ppp.data_modules.dataloader import (
     Dataloader,
     DataloaderConfigABC,
     BatchDataABC,
 )
-from cccma_ppp.generic import Distributed
-
+from cccma_ppp.generic.distributed import Distributed
 
 
 @dataclasses.dataclass
@@ -58,18 +57,18 @@ class BatchData(BatchDataABC):
         -------
         None
         """
-        
+
         if self.return_spatial_mask:
             if self.reduce_spatial_mask:
                 if type(self)._shared_input_mask is None:
-                    type(self)._shared_input_mask = (
-                        ~torch.isnan(self.input)
-                    ).all(dim=0)
+                    type(self)._shared_input_mask = (~torch.isnan(self.input)).all(
+                        dim=0
+                    )
 
                 if type(self)._shared_target_mask is None:
-                    type(self)._shared_target_mask = (
-                        ~torch.isnan(self.target)
-                    ).all(dim=0)
+                    type(self)._shared_target_mask = (~torch.isnan(self.target)).all(
+                        dim=0
+                    )
 
                 self.input_mask = type(self)._shared_input_mask
                 self.target_mask = type(self)._shared_target_mask
@@ -80,7 +79,6 @@ class BatchData(BatchDataABC):
 
         self.input.nan_to_num_(nan=0.0)
         self.target.nan_to_num_(nan=0.0)
-
 
     def to_device(self, device: torch.device | str):
         """
@@ -193,9 +191,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         """
 
         if self.num_validation_years > 0:
-            return self.dataset_config.available_times[
-                : -self.num_validation_years
-            ]
+            return self.dataset_config.available_times[: -self.num_validation_years]
         return self.dataset_config.available_times
 
     def setup_distributed(
@@ -220,14 +216,11 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
         if distributed.is_root():
             if load_path is None:
-                self.dataset_config._fit_preprocessors(
-                    self.train_years, save=True
-                )
+                self.dataset_config._fit_preprocessors(self.train_years, save=True)
 
         distributed.barrier()
 
-        if (distributed.distributed or 
-            load_path is not None):
+        if distributed.distributed or load_path is not None:
             self.dataset_config._load_fitted_preprocessors(load_dir=load_path)
 
         if distributed.distributed:
@@ -273,10 +266,10 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         )
 
         train_dataset = self.dataset_config.build_dataset(
-            years=self.train_years, 
-            mask=train_mask, 
+            years=self.train_years,
+            mask=train_mask,
             return_metadata=return_metadata,
-            load=self.load
+            load=self.load,
         )
 
         return Dataloader(
@@ -329,12 +322,12 @@ class TrainDataloaderConfig(DataloaderConfigABC):
                 lead_times=self.dataset_config.lead_months,
             )
             validation_dataset = self.dataset_config.build_dataset(
-                years=self.validation_years, 
-                mask=validation_mask, 
+                years=self.validation_years,
+                mask=validation_mask,
                 return_metadata=return_metadata,
-                load=self.load
+                load=self.load,
             )
-            
+
             return Dataloader(
                 dataset=validation_dataset,
                 config=self,
@@ -349,12 +342,11 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         else:
             msg = f"Validation dataoader could not be built for num_validation_years = {self.num_validation_years} "
 
-            if  supress_error:
+            if supress_error:
                 warnings.warn(msg)
-                return None  
+                return None
             else:
                 raise RuntimeError(msg)
-  
 
     def get_weights(self, config: WeightsConfig | None = None):
         """

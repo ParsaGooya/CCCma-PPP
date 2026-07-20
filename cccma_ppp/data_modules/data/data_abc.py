@@ -7,9 +7,11 @@ import xarray as xr
 import numpy as np
 import dataclasses
 
-from cccma_ppp.configs import (required_sample_dimensions,
-                               optional_sample_dimensions,
-                               supported_NN_dimensions_sorted)
+from cccma_ppp.configs import (
+    required_sample_dimensions,
+    optional_sample_dimensions,
+    supported_NN_dimensions_sorted,
+)
 
 from cccma_ppp.data_modules.utils import (
     _load_xarray_data,
@@ -48,6 +50,7 @@ class DataConfigABC(abc.ABC):
     """
     Abstract base class for dataset configuration.
     """
+
     def __init__(self):
         """
         Initialize data configuration.
@@ -217,7 +220,7 @@ class DataConfigABC(abc.ABC):
             )
 
 
-def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool =  True) -> None:
+def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
     """
     Validate dataset files and dimensions.
 
@@ -279,16 +282,18 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool =  True) -> None:
                     raise ValueError(
                         f'"coordinates for {list(ds.dims)} does not exist. Available coords: {list(ds.coords.keys())} for {p}'
                     )
-                
+
                 if not set(supported_NN_dimensions_sorted).intersection(ds_dims):
                     raise ValueError(
                         f'"None of the supported NN dimensions exist in {p}'
-                    )                
+                    )
 
-                missing = [name for name in dataconfig.names if name not in ds.data_vars]
+                missing = [
+                    name for name in dataconfig.names if name not in ds.data_vars
+                ]
                 if missing:
                     raise ValueError(f"{p} is missing variables: {missing}")
-            
+
                 ds.close()
                 gc.collect()
 
@@ -333,17 +338,12 @@ def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
     sizes = {
         dim: dict(ds.sizes).get(dim)
         for dim in dict(ds.sizes).keys()
-        if (dim in required_sample_dimensions or
-            dim in optional_sample_dimensions)
+        if (dim in required_sample_dimensions or dim in optional_sample_dimensions)
     }
     if not sizes:
         sizes = None
 
-    coords = {
-        dim: dict(ds.coords).get(dim) 
-        for dim in ds.coords
-    }
-
+    coords = {dim: dict(ds.coords).get(dim) for dim in ds.coords}
 
     ds.close()
     del ds
