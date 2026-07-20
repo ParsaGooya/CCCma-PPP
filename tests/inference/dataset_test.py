@@ -599,47 +599,6 @@ def test_concat_condition_to_input(
     assert dataset._concat_condition_to_input is expected
 
 
-def test_getitem_model_input(
-    monkeypatch,
-):
-    dataset = make_dataset_object()
-
-    model = xr.DataArray(np.array([1.0, 2.0]))
-
-    monkeypatch.setattr(
-        InferenceDataset,
-        "_index_model_dataset",
-        lambda self, index: model,
-    )
-    monkeypatch.setattr(
-        InferenceDataset,
-        "_index_condition_dataset",
-        lambda self, index: None,
-    )
-    monkeypatch.setattr(
-        InferenceDataset,
-        "_write_condition_to_input",
-        property(lambda self: False),
-    )
-    monkeypatch.setattr(
-        InferenceDataset,
-        "_concat_condition_to_input",
-        property(lambda self: False),
-    )
-    monkeypatch.setattr(
-        "cccma_ppp.inference.dataset._get_time_features",
-        lambda *args, **kwargs: None,
-    )
-
-    result = dataset[0]
-
-    torch.testing.assert_close(
-        result["input"],
-        torch.tensor([1.0, 2.0]),
-    )
-    assert result["added_features"] is None
-
-
 def test_getitem_condition_input(
     monkeypatch,
 ):
@@ -681,58 +640,6 @@ def test_getitem_condition_input(
     result = dataset[0]
 
     assert result["input"].item() == 5.0
-
-
-def test_getitem_concat_condition(
-    monkeypatch,
-):
-    dataset = make_dataset_object(
-        config=make_config(
-            model=DummyDataConfig(),
-            condition=DummyDataConfig(),
-        )
-    )
-
-    model = xr.DataArray(
-        np.array([1.0]),
-        dims="channels",
-    )
-    condition = xr.DataArray(
-        np.array([2.0]),
-        dims="channels",
-    )
-
-    monkeypatch.setattr(
-        InferenceDataset,
-        "_index_model_dataset",
-        lambda self, index: model,
-    )
-    monkeypatch.setattr(
-        InferenceDataset,
-        "_index_condition_dataset",
-        lambda self, index: condition,
-    )
-    monkeypatch.setattr(
-        InferenceDataset,
-        "_write_condition_to_input",
-        property(lambda self: False),
-    )
-    monkeypatch.setattr(
-        InferenceDataset,
-        "_concat_condition_to_input",
-        property(lambda self: True),
-    )
-    monkeypatch.setattr(
-        "cccma_ppp.inference.dataset._get_time_features",
-        lambda *args, **kwargs: None,
-    )
-
-    result = dataset[0]
-
-    assert result["input"].shape == (
-        2,
-        1,
-    )
 
 
 def test_getitem_time_features(

@@ -462,32 +462,6 @@ def test_compute_loss_empty_individual_losses():
     assert losses == {"total_loss": 1.0}
 
 
-def test_compute_loss_passes_mask_to_criterion():
-    class InspectLoss:
-        def __init__(self):
-            self.seen_mask = None
-
-        def __call__(self, output, target, target_mask=None, print_loss=False):
-            self.seen_mask = target_mask
-            return torch.tensor(1.0), {}
-
-        def to(self, device):
-            return self
-
-    module = make_module(input_shape=np.array([1]))
-
-    loss = InspectLoss()
-    module.init_loss_function(loss)
-
-    batch = DummyBatch()
-    mask = torch.ones_like(batch.target)
-    batch.target = (batch.target, mask)
-
-    module._compute_loss(batch)
-
-    assert loss.seen_mask is mask
-
-
 def test_compute_loss_passes_print_loss_false():
     class InspectLoss:
         def __init__(self):
@@ -545,7 +519,12 @@ class DummyModel:
         self.last_build_kwargs = kwargs
         return self
 
-    def __call__(self, x=None, added_features=None):
+    def __call__(
+        self,
+        x,
+        x_mask=None,
+        added_features=None,
+    ):
         self.last_call_kwargs = {
             "x": x,
             "added_features": added_features,

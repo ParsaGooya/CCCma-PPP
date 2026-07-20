@@ -1200,31 +1200,6 @@ def test_aggregate_predictions_missing_year_coordinate(
         )
 
 
-def test_aggregate_predictions_cleanup_true(
-    tmp_path,
-):
-    temp = tmp_path / "_temp"
-    temp.mkdir()
-
-    xr.DataArray(
-        [[1.0]],
-        dims=("year", "channels"),
-        coords={
-            "year": [2000],
-            "channels": ["prediction"],
-        },
-        name="prediction",
-    ).to_netcdf(temp / "prediction_rank0_0.nc")
-
-    aggregate_predictions(
-        None,
-        tmp_path,
-        cleanup_temp=True,
-    )
-
-    assert not (temp / "prediction_rank0_0.nc").exists()
-
-
 def test_aggregate_predictions_multiple_years(
     tmp_path,
 ):

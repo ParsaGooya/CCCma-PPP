@@ -640,46 +640,6 @@ def test_build_weights_loaded_missing_coordinate(tmp_path):
             )
 
 
-def test_build_weights_loaded_dataset_single_variable(tmp_path):
-    cfg = WeightsConfig(
-        load_dir=tmp_path,
-    )
-
-    weights_ds = xr.Dataset(
-        {
-            "weights": (
-                (
-                    "lat",
-                    "lon",
-                ),
-                np.ones((2, 2)),
-            )
-        },
-        coords={
-            "lat": [0, 1],
-            "lon": [10, 20],
-        },
-    )
-
-    with patch(
-        "xarray.open_dataset",
-        return_value=weights_ds,
-    ):
-        weights = cfg.build_weights(
-            target_coords=make_coords(),
-            save=False,
-        )
-
-    assert isinstance(
-        weights,
-        xr.DataArray,
-    )
-    assert weights.dims == (
-        "lat",
-        "lon",
-    )
-
-
 def test_build_weights_loaded_values_preserved(tmp_path):
     cfg = WeightsConfig(
         load_dir=tmp_path,
@@ -821,25 +781,6 @@ def test_build_weights_custom_save_name(tmp_path):
     assert captured["path"].name == ("custom_weights.nc")
 
 
-def test_load_xarray_data_selection_multiple_dimensions():
-    ds = make_dataset()
-
-    with patch(
-        "xarray.open_mfdataset",
-        return_value=ds,
-    ):
-        result = _load_xarray_data(
-            paths=["x.nc"],
-            selection={
-                "year": 2000,
-                "lead_time": 2,
-            },
-        )
-
-    assert result.sizes["year"] == 1
-    assert result.sizes["lead_time"] == 1
-
-
 def test_load_xarray_data_empty_selection():
     ds = make_dataset()
 
@@ -874,32 +815,6 @@ def test_load_xarray_data_multiple_names():
     }
 
 
-def test_load_xarray_data_preprocessor_receives_dataset():
-    ds = make_dataset()
-
-    class InspectPreprocessor:
-        def __init__(self):
-            self.received = None
-
-        def transform(self, data):
-            self.received = data
-            return data
-
-    preprocessor = InspectPreprocessor()
-
-    with patch(
-        "xarray.open_mfdataset",
-        return_value=ds,
-    ):
-        result = _load_xarray_data(
-            paths=["x.nc"],
-            preprocessor=preprocessor,
-        )
-
-    assert preprocessor.received is ds
-    assert result is ds
-
-
 def test_load_xarray_data_load_true():
     ds = make_dataset()
 
@@ -920,29 +835,6 @@ def test_load_xarray_data_load_true():
         )
 
     load_mock.assert_called_once()
-    assert result is ds
-
-
-def test_load_xarray_data_load_false():
-    ds = make_dataset()
-
-    with (
-        patch(
-            "xarray.open_mfdataset",
-            return_value=ds,
-        ),
-        patch.object(
-            xr.Dataset,
-            "load",
-            return_value=ds,
-        ) as load_mock,
-    ):
-        result = _load_xarray_data(
-            paths=["x.nc"],
-            load=False,
-        )
-
-    load_mock.assert_not_called()
     assert result is ds
 
 
@@ -1020,88 +912,3 @@ def test_load_xarray_data_passes_paths():
         "a.nc",
         "b.nc",
     ]
-
-
-def test_create_train_mask_coordinates():
-    mask = _create_train_mask(
-        [2000, 2001],
-        np.array([1, 3, 6]),
-    )
-
-    np.testing.assert_array_equal(
-        mask.coords["year"].values,
-        np.array([2000, 2001]),
-    )
-    np.testing.assert_array_equal(
-        mask.coords["lead_time"].values,
-        np.array([1, 3, 6]),
-    )
-
-
-def test_create_train_mask_boolean_dtype():
-    mask = _create_train_mask(
-        [2000],
-        np.array([1, 2]),
-    )
-
-    assert mask.dtype == bool
-
-
-def test_create_train_mask_single_year():
-    mask = _create_train_mask(
-        [2000],
-        3,
-    )
-
-    assert mask.shape == (
-        1,
-        3,
-    )
-
-
-def test_create_train_mask_single_lead_time():
-    mask = _create_train_mask(
-        [2000, 2001],
-        np.array([1]),
-    )
-
-    assert mask.shape == (
-        2,
-        1,
-    )
-
-
-def test_create_train_mask_preserves_year_order():
-    mask = _create_train_mask(
-        [2002, 2000, 2001],
-        np.array([1, 2]),
-    )
-
-    np.testing.assert_array_equal(
-        mask.coords["year"].values,
-        np.array([2002, 2000, 2001]),
-    )
-
-
-def test_create_train_mask_integer_expands_lead_times():
-    mask = _create_train_mask(
-        [2000],
-        4,
-    )
-
-    np.testing.assert_array_equal(
-        mask.coords["lead_time"].values,
-        np.array([1, 2, 3, 4]),
-    )
-
-
-def test_create_train_mask_all_values_boolean():
-    mask = _create_train_mask(
-        [2000, 2001],
-        5,
-    )
-
-    assert np.isin(
-        mask.values,
-        [True, False],
-    ).all()

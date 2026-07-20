@@ -54,10 +54,12 @@ class DummyDatasetConfig:
         self,
         years,
         return_metadata=False,
+        load=False,
     ):
         self.build_called = True
         self.years = np.asarray(years)
         self.return_metadata = return_metadata
+        self.load = load
         return [0, 1, 2]
 
 
@@ -73,6 +75,7 @@ class DummyTrainDatasetConfig:
         train_years,
         save=True,
         save_path=None,
+        save_name=None,
     ):
         self.fit_called = True
         self.fit_args = {
@@ -80,6 +83,9 @@ class DummyTrainDatasetConfig:
             "save": save,
             "save_path": save_path,
         }
+
+        if save_name is not None:
+            self.fit_args["save_name"] = save_name
 
 
 class DummyTrainLoader:
@@ -94,10 +100,12 @@ class DummyDistributed:
         world_size=1,
         root=True,
         device="cpu",
+        distributed=False,
     ):
         self.rank = rank
         self.world_size = world_size
         self.device = device
+        self.distributed = distributed
         self._root = root
         self.barrier_called = False
         self.barrier_calls = 0
@@ -113,14 +121,9 @@ class DummyDistributed:
 class FakeDataloader:
     def __init__(self, **kwargs):
         self.kwargs = kwargs
-        self.dataset = kwargs["dataset"]
-        self.config = kwargs["config"]
-        self.collate_fn = kwargs["collate_fn"]
-        self.rank = kwargs["rank"]
-        self.world_size = kwargs["world_size"]
-        self.shuffle = kwargs["shuffle"]
-        self.return_spatial_mask = kwargs["return_spatial_mask"]
-        self.reduce_spatial_mask = kwargs["reduce_spatial_mask"]
+
+        for name, value in kwargs.items():
+            setattr(self, name, value)
 
 
 @pytest.fixture

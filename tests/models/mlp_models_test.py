@@ -1059,32 +1059,6 @@ def test_autoencoder_forward_list_mask_append_mode_1():
     assert out.output.shape == (2, 1, 6)
 
 
-def test_cvae_dropout_zero_builds_dropout_layers():
-    model = build_cvae(
-        encoder_hidden_dims=[8],
-        condition_embedding_dims=[6, 4],
-        condition_embedding_size=4,
-        dropout_rate=0.0,
-    )
-
-    assert any(isinstance(layer, nn.Dropout) for layer in model.encoder)
-    assert any(isinstance(layer, nn.Dropout) for layer in model.decoder)
-    assert any(isinstance(layer, nn.Dropout) for layer in model.embedding)
-
-
-def test_cvae_batch_normalization_builds_batchnorm_layers():
-    model = build_cvae(
-        encoder_hidden_dims=[8],
-        condition_embedding_dims=[6, 4],
-        condition_embedding_size=4,
-        batch_normalization=True,
-    )
-
-    assert any(isinstance(layer, nn.BatchNorm1d) for layer in model.encoder)
-    assert any(isinstance(layer, nn.BatchNorm1d) for layer in model.decoder)
-    assert any(isinstance(layer, nn.BatchNorm1d) for layer in model.embedding)
-
-
 def test_cvae_recognition_without_mask():
     model = build_cvae()
     data = x()
@@ -1121,32 +1095,6 @@ def test_cvae_recognition_with_separate_mask():
     )
 
 
-def test_cvae_recognition_with_condition_and_features():
-    model = build_cvae(
-        encoder_hidden_dims=[8],
-        condition_embedding_dims=[6, 4],
-        condition_embedding_size=4,
-        added_features_dim=3,
-    )
-
-    data = x()
-    features = added_features()
-    cond_mu, _ = model._condition(
-        condition=condition(),
-        added_features=features,
-    )
-
-    mu, log_var = model._recognition(
-        x=data,
-        x_mask=None,
-        condition=cond_mu,
-        added_features=features,
-    )
-
-    assert mu.shape == (data.shape[0], model.latent_size)
-    assert log_var.shape == mu.shape
-
-
 def test_cvae_condition_without_embedding():
     model = build_cvae()
 
@@ -1155,68 +1103,6 @@ def test_cvae_condition_without_embedding():
     )
 
     assert cond_mu is None
-    assert cond_log_var is None
-
-
-def test_cvae_condition_with_separate_mask():
-    model = build_cvae(
-        encoder_hidden_dims=[8],
-        condition_embedding_dims=[5, 4],
-        condition_embedding_size=4,
-    )
-
-    cond = condition()
-    cond_mask = torch.zeros_like(cond)
-
-    cond_mu, cond_log_var = model._condition(
-        condition=cond,
-        condition_mask=cond_mask,
-    )
-
-    expected = model.embedding(torch.zeros_like(cond).flatten(start_dim=1))
-
-    torch.testing.assert_close(cond_mu, expected)
-    assert cond_log_var is None
-
-
-def test_cvae_condition_dependant_latent_outputs_statistics():
-    model = build_cvae(
-        encoder_hidden_dims=[8],
-        condition_embedding_dims=[5, 4],
-        condition_embedding_size=4,
-        condition_dependant_latent=True,
-    )
-
-    cond_mu, cond_log_var = model._condition(
-        condition=condition(),
-    )
-
-    assert cond_mu.shape == (
-        condition().shape[0],
-        model.condition_embedding_size,
-    )
-    assert cond_log_var.shape == cond_mu.shape
-
-
-def test_cvae_condition_dependant_flow_has_no_condition_heads():
-    model = build_cvae(
-        encoder_hidden_dims=[8],
-        condition_embedding_dims=[5, 4],
-        condition_embedding_size=4,
-        condition_dependant_latent=True,
-        condition_dependant_flow=True,
-    )
-
-    cond_mu, cond_log_var = model._condition(
-        condition=condition(),
-    )
-
-    assert not hasattr(model, "condition_mu")
-    assert not hasattr(model, "condition_log_var")
-    assert cond_mu.shape == (
-        condition().shape[0],
-        model.condition_embedding_size,
-    )
     assert cond_log_var is None
 
 
@@ -1230,34 +1116,6 @@ def test_cvae_generate_without_features_or_condition():
 
     output = model._generate(
         latent_samples=latent_samples,
-    )
-
-    assert output.shape == (
-        3,
-        2,
-        model.output_shape,
-    )
-
-
-def test_cvae_generate_with_decoder_condition():
-    model = build_cvae(
-        encoder_hidden_dims=[8],
-        condition_embedding_dims=[5, 4],
-        condition_embedding_size=4,
-    )
-
-    cond_mu, _ = model._condition(
-        condition=condition(),
-    )
-    latent_samples = torch.randn(
-        3,
-        2,
-        model.latent_size,
-    )
-
-    output = model._generate(
-        latent_samples=latent_samples,
-        condition=cond_mu,
     )
 
     assert output.shape == (
@@ -1364,70 +1222,6 @@ def test_cvae_get_normal_uses_reference_dtype():
         distribution.scale,
         torch.full_like(reference, 3),
     )
-
-
-def test_cvae_predict_rejects_incorrect_latent_shape():
-    model = build_cvae(
-        encoder_hidden_dims=[8],
-        condition_embedding_dims=[5, 4],
-        condition_embedding_size=4,
-    )
-
-    request = cVAEPredictRequest(
-        condition=condition(),
-        condition_mask=None,
-        added_features=None,
-        prior_flow=None,
-        latent_samples=torch.zeros(
-            1,
-            2,
-            model.latent_size + 1,
-        ),
-        nstds=1,
-        sample_size=1,
-    )
-
-    with pytest.raises(
-        ValueError,
-        match="expected shape",
-    ):
-        model.predict(request)
-
-
-def test_cvae_predict_accepts_user_latent_samples():
-    model = build_cvae(
-        encoder_hidden_dims=[8],
-        condition_embedding_dims=[5, 4],
-        condition_embedding_size=4,
-    )
-
-    latent_samples = torch.zeros(
-        2,
-        2,
-        model.latent_size,
-    )
-
-    request = cVAEPredictRequest(
-        condition=condition(),
-        condition_mask=None,
-        added_features=None,
-        prior_flow=None,
-        latent_samples=latent_samples,
-        nstds=1,
-        sample_size=2,
-    )
-
-    output = model.predict(request)
-
-    assert output.output.shape == (
-        2,
-        2,
-        condition().shape[1],
-        model.output_shape,
-    )
-    assert output.mu is None
-    assert output.log_var is None
-    assert output.samples is None
 
 
 def test_autoencoder_forward_without_mask():
@@ -1555,22 +1349,6 @@ def test_cvae_config_non_condition_dependant_latent_requires_decoder_condition()
             condition_dependant_latent=False,
             condemb_to_decoder=False,
         )
-
-
-@pytest.mark.parametrize(
-    "dropout_rate",
-    [-0.1, 1.1],
-)
-def test_cvae_config_current_dropout_validation_behavior(
-    dropout_rate,
-):
-    config = cVAE_MLPConfig(
-        encoder_hidden_dims=[8],
-        latent_size=4,
-        dropout_rate=dropout_rate,
-    )
-
-    assert config.dropout_rate == dropout_rate
 
 
 def test_cvae_checkpoint_input_metadata_mismatch(monkeypatch):

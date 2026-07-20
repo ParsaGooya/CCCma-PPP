@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import torch
 import xarray as xr
 
 from cccma_ppp.train.dataset import (
@@ -581,7 +582,7 @@ def test_concat_condition_false_without_condition():
 def test_get_model_indexes_expected_keys():
     dataset = make_dataset()
 
-    indexes = dataset.get_model_indexes()
+    indexes = dataset.get_model_indexes(dataset.sample_coords)
 
     assert "year" in indexes
     assert "lead_time" in indexes
@@ -596,7 +597,7 @@ def test_get_model_indexes_without_ensemble():
     )
 
     dataset = make_dataset(config)
-    indexes = dataset.get_model_indexes()
+    indexes = dataset.get_model_indexes(dataset.sample_coords)
 
     assert "ensembles" not in indexes
 
@@ -604,20 +605,7 @@ def test_get_model_indexes_without_ensemble():
 def test_get_obs_indexes_none():
     dataset = make_dataset()
 
-    assert dataset.get_obs_indexes(dataset.model_indexes) is None
-
-
-def test_get_obs_indexes():
-    config = make_config(
-        observation=DummyConfig(),
-    )
-
-    dataset = make_dataset(config)
-    indexes = dataset.get_obs_indexes(dataset.model_indexes)
-
-    assert "year" in indexes
-    assert "month" in indexes
-    assert "ensembles" in indexes
+    assert dataset.get_obs_indexes(dataset.sample_coords) is None
 
 
 def test_get_obs_indexes_ensemble_mean():
@@ -628,7 +616,7 @@ def test_get_obs_indexes_ensemble_mean():
     )
 
     dataset = make_dataset(config)
-    indexes = dataset.get_obs_indexes(dataset.model_indexes)
+    indexes = dataset.get_obs_indexes(dataset.sample_coords)
 
     assert indexes is not None
     assert "ensembles" not in indexes
@@ -646,7 +634,7 @@ def test_get_obs_indexes_without_ensemble_coord():
     )
 
     dataset = make_dataset(config)
-    indexes = dataset.get_obs_indexes(dataset.model_indexes)
+    indexes = dataset.get_obs_indexes(dataset.sample_coords)
 
     assert "ensembles" not in indexes
 
@@ -659,29 +647,14 @@ def test_get_cond_indexes_static():
 
     dataset = make_dataset(config)
 
-    assert dataset.get_cond_indexes(dataset.model_indexes) is None
+    assert dataset.get_cond_indexes(dataset.sample_coords) is None
 
 
 def test_get_cond_indexes_without_condition():
     dataset = make_dataset()
     dataset.condition_dataset = None
 
-    assert dataset.get_cond_indexes(dataset.model_indexes) is None
-
-
-def test_get_cond_indexes_cross_ensemble():
-    config = make_config(
-        condition=DummyConfig(),
-        condition_method="cross_ensemble",
-    )
-
-    dataset = make_dataset(config)
-    indexes = dataset.get_cond_indexes(dataset.model_indexes)
-
-    assert "year" in indexes
-    assert "lead_time" in indexes
-    assert "ensembles" in indexes
-    assert len(indexes["ensembles"]) == len(indexes["year"])
+    assert dataset.get_cond_indexes(dataset.sample_coords) is None
 
 
 def test_get_cond_indexes_same_member():
@@ -691,7 +664,7 @@ def test_get_cond_indexes_same_member():
     )
 
     dataset = make_dataset(config)
-    indexes = dataset.get_cond_indexes(dataset.model_indexes)
+    indexes = dataset.get_cond_indexes(dataset.sample_coords)
 
     np.testing.assert_array_equal(
         indexes["ensembles"],
@@ -851,48 +824,6 @@ def test_prepare_mask_ensemble_mean():
     assert "ensembles" not in dataset.mask.dims
 
 
-def test_prepare_existing_mask():
-    mask = xr.DataArray(
-        np.ones((1, 2), dtype=bool),
-        dims=(
-            "year",
-            "lead_time",
-        ),
-        coords={
-            "year": [2000],
-            "lead_time": [1, 2],
-        },
-    )
-
-    dataset = make_dataset(
-        mask=mask,
-    )
-
-    assert dataset.mask is mask
-
-
-def test_prepare_existing_mask_with_ensemble():
-    mask = xr.DataArray(
-        np.ones((2, 1, 2), dtype=bool),
-        dims=(
-            "ensembles",
-            "year",
-            "lead_time",
-        ),
-        coords={
-            "ensembles": [0, 1],
-            "year": [2000],
-            "lead_time": [1, 2],
-        },
-    )
-
-    dataset = make_dataset(
-        mask=mask,
-    )
-
-    assert dataset.mask is mask
-
-
 def test_get_added_features_dim_none():
     dataset = make_dataset()
 
@@ -942,7 +873,9 @@ def test_get_input_shape():
 def test_get_target_shape_without_observation():
     dataset = make_dataset()
 
-    assert dataset.get_target_shape() == dataset.get_input_shape()
+    dataset.input_shape = dataset.get_input_shape()
+
+    assert dataset.get_target_shape() == dataset.input_shape
 
 
 def test_get_target_shape_with_observation():
@@ -964,15 +897,12 @@ def test_len():
     assert len(dataset) > 0
 
 
-def test_len_uses_first_index():
+def test_len_matches_sample_coordinates():
     dataset = make_dataset()
 
-    dataset.model_indexes = {
-        "year": np.array([1, 2, 3]),
-        "lead_time": np.array([1]),
-    }
+    expected = len(next(iter(dataset.sample_coords.values())))
 
-    assert len(dataset) == 3
+    assert len(dataset) == expected
 
 
 def test_getitem_returns_dict(monkeypatch):
@@ -1072,7 +1002,10 @@ def test_getitem_autoencoding(monkeypatch):
 
     result = dataset[0]
 
-    assert result["target"] is result["input"]
+    torch.testing.assert_close(
+        result["target"],
+        result["input"],
+    )
 
 
 def test_getitem_write_condition(monkeypatch):
@@ -1140,7 +1073,12 @@ def test_getitem_concat_condition(monkeypatch):
 
     result = dataset[0]
 
-    assert result["input"].sizes["channels"] == 2
+    assert isinstance(
+        result["input"],
+        torch.Tensor,
+    )
+
+    assert result["input"].shape[0] == 2
 
 
 def test_build_dataset(monkeypatch):
@@ -1269,3 +1207,365 @@ def test_add_fitted_preprocessor_delegates(
 
     assert called["preprocessor"] is value
     assert called["index"] == 4
+
+
+def test_get_obs_indexes():
+    config = make_config(
+        observation=DummyConfig(),
+    )
+
+    dataset = make_dataset(config)
+
+    indexes = dataset.get_obs_indexes(dataset.sample_coords)
+
+    assert set(indexes) == {
+        "year",
+        "month",
+    }
+    assert len(indexes["year"]) == len(dataset)
+    assert len(indexes["month"]) == len(dataset)
+
+
+def test_get_cond_indexes_cross_ensemble():
+    config = make_config(
+        condition=DummyConfig(),
+        condition_method="cross_ensemble",
+    )
+
+    dataset = make_dataset(config)
+
+    indexes = dataset.get_cond_indexes(dataset.sample_coords)
+
+    assert set(indexes) == {
+        "year",
+        "lead_time",
+    }
+    assert len(indexes["year"]) == len(dataset)
+    assert len(indexes["lead_time"]) == len(dataset)
+
+
+def test_prepare_existing_mask():
+    config = make_config()
+    config.model.ensemble_mean = True
+
+    mask = xr.DataArray(
+        np.zeros(
+            (1, 12),
+            dtype=bool,
+        ),
+        dims=(
+            "year",
+            "lead_time",
+        ),
+        coords={
+            "year": [2000],
+            "lead_time": np.arange(1, 13),
+        },
+    )
+
+    dataset = make_dataset(
+        config,
+        mask=mask,
+    )
+
+    assert dataset.mask.dims == (
+        "year",
+        "lead_time",
+    )
+    assert not dataset.mask.any().item()
+    assert len(dataset) == 12
+
+
+def test_prepare_existing_mask_with_ensemble():
+    config = make_config()
+
+    mask = xr.DataArray(
+        np.zeros(
+            (1, 12),
+            dtype=bool,
+        ),
+        dims=(
+            "year",
+            "lead_time",
+        ),
+        coords={
+            "year": [2000],
+            "lead_time": np.arange(1, 13),
+        },
+    )
+
+    dataset = make_dataset(
+        config,
+        mask=mask,
+    )
+
+    assert "ensembles" in dataset.mask.dims
+    assert dataset.mask.sizes["ensembles"] == 2
+    assert dataset.mask.sizes["year"] == 1
+    assert dataset.mask.sizes["lead_time"] == 12
+    assert not dataset.mask.any().item()
+    assert len(dataset) == 24
+
+
+def test_get_obs_indexes_raises_for_missing_coordinates():
+    observation = DummyConfig()
+
+    config = make_config(
+        observation=observation,
+    )
+    dataset = make_dataset(config)
+
+    bad_coords = {
+        "year": np.array([9999]),
+        "lead_time": np.array([1]),
+    }
+
+    with pytest.raises(
+        ValueError,
+        match="observation coordinates were not found",
+    ):
+        dataset.get_obs_indexes(bad_coords)
+
+
+def test_get_cond_indexes_raises_for_missing_coordinates():
+    condition = DummyConfig()
+
+    config = make_config(
+        condition=condition,
+        condition_method="cross_ensemble",
+    )
+    dataset = make_dataset(config)
+
+    bad_coords = {
+        "year": np.array([9999]),
+        "lead_time": np.array([999]),
+    }
+
+    with pytest.raises(
+        ValueError,
+        match="conditioning coordinates were not found",
+    ):
+        dataset.get_cond_indexes(bad_coords)
+
+
+def test_get_cond_indexes_same_member_requires_ensembles():
+    condition = DummyConfig()
+
+    config = make_config(
+        condition=condition,
+        condition_method="same_member",
+    )
+    dataset = make_dataset(config)
+
+    sample_coords = {
+        "year": np.array([2000]),
+        "lead_time": np.array([1]),
+    }
+
+    with pytest.raises(
+        ValueError,
+        match="requires ensemble coordinates",
+    ):
+        dataset.get_cond_indexes(sample_coords)
+
+
+def test_get_cond_indexes_ignores_unavailable_dimensions():
+    condition = DummyConfig()
+
+    config = make_config(
+        condition=condition,
+        condition_method="cross_ensemble",
+    )
+    dataset = make_dataset(config)
+
+    sample_coords = {
+        "year": np.array([2000]),
+        "lead_time": np.array([1]),
+        "ensembles": np.array([0]),
+        "not_a_condition_dimension": np.array([7]),
+    }
+
+    indexes = dataset.get_cond_indexes(sample_coords)
+
+    assert set(indexes) == {
+        "year",
+        "lead_time",
+    }
+
+
+def test_get_obs_indexes_zero_based_positions():
+    observation = DummyConfig()
+
+    config = make_config(
+        observation=observation,
+    )
+    dataset = make_dataset(config)
+
+    sample_coords = {
+        "year": np.array([2000]),
+        "lead_time": np.array([1]),
+    }
+
+    indexes = dataset.get_obs_indexes(sample_coords)
+
+    np.testing.assert_array_equal(
+        indexes["year"],
+        np.array([0]),
+    )
+    np.testing.assert_array_equal(
+        indexes["month"],
+        np.array([0]),
+    )
+
+
+def test_get_obs_indexes_lead_time_crosses_year():
+    observation = DummyConfig()
+
+    config = make_config(
+        observation=observation,
+    )
+    dataset = make_dataset(config)
+
+    sample_coords = {
+        "year": np.array([2000]),
+        "lead_time": np.array([13]),
+    }
+
+    indexes = dataset.get_obs_indexes(sample_coords)
+
+    np.testing.assert_array_equal(
+        indexes["year"],
+        np.array([1]),
+    )
+    np.testing.assert_array_equal(
+        indexes["month"],
+        np.array([0]),
+    )
+
+
+def test_get_cond_indexes_same_member_maps_ensemble_positions():
+    condition = DummyConfig()
+
+    config = make_config(
+        condition=condition,
+        condition_method="same_member",
+    )
+    dataset = make_dataset(config)
+
+    sample_coords = {
+        "year": np.array([2000, 2000]),
+        "lead_time": np.array([1, 2]),
+        "ensembles": np.array([0, 1]),
+    }
+
+    indexes = dataset.get_cond_indexes(sample_coords)
+
+    np.testing.assert_array_equal(
+        indexes["ensembles"],
+        np.array([0, 1]),
+    )
+
+
+def test_get_target_shape_observation_without_flattener():
+    observation = DummyConfig()
+    observation.preprocessing_pipeline.fitted_preprocessors = []
+
+    config = make_config(
+        observation=observation,
+    )
+    dataset = make_dataset(config)
+
+    shape = dataset.get_target_shape()
+
+    assert isinstance(shape, tuple)
+    assert shape == (2, 2)
+
+
+def test_get_input_shape_without_flattener():
+    config = make_config()
+    config.model.preprocessing_pipeline.fitted_preprocessors = []
+
+    dataset = make_dataset(config)
+
+    shape = dataset.get_input_shape()
+
+    assert isinstance(shape, tuple)
+    assert shape == (2, 2)
+
+
+def test_get_input_shape_with_flattener(
+    monkeypatch,
+):
+    class FakeFlattennanremove:
+        pass
+
+    monkeypatch.setattr(
+        "cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove",
+        FakeFlattennanremove,
+    )
+
+    config = make_config()
+    config.model.preprocessing_pipeline.fitted_preprocessors = [FakeFlattennanremove()]
+
+    dataset = make_dataset(config)
+
+    assert dataset.get_input_shape() == (4,)
+
+
+def test_get_target_shape_with_flattener(
+    monkeypatch,
+):
+    class FakeFlattennanremove:
+        pass
+
+    monkeypatch.setattr(
+        "cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove",
+        FakeFlattennanremove,
+    )
+
+    observation = DummyConfig()
+    observation.preprocessing_pipeline.fitted_preprocessors = [FakeFlattennanremove()]
+
+    config = make_config(
+        observation=observation,
+    )
+    dataset = make_dataset(config)
+
+    assert dataset.get_target_shape() == (4,)
+
+
+def test_build_dataset_load_passthrough(
+    monkeypatch,
+):
+    config = make_config()
+
+    monkeypatch.setattr(
+        TrainDataset,
+        "__post_init__",
+        lambda self: None,
+    )
+
+    dataset = config.build_dataset(
+        years=[2000],
+        load=True,
+    )
+
+    assert dataset.load is True
+
+
+def test_build_dataset_load_default_false(
+    monkeypatch,
+):
+    config = make_config()
+
+    monkeypatch.setattr(
+        TrainDataset,
+        "__post_init__",
+        lambda self: None,
+    )
+
+    dataset = config.build_dataset(
+        years=[2000],
+    )
+
+    assert dataset.load is False

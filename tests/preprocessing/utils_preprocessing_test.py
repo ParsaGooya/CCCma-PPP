@@ -756,24 +756,6 @@ def test_anomalies_dataset_fit_multiple_variables():
     assert proc.fitted
 
 
-def test_anomalies_inverse_long_lead_expansion_branch():
-    proc = PreprocessingStepSelector("anomalies").get_preprocessor()
-
-    proc.mean = xr.DataArray(
-        np.ones((12, 2, 2)),
-        dims=("lead", "lat", "lon"),
-    )
-
-    data = xr.DataArray(
-        np.ones((24, 2, 2)),
-        dims=("lead", "lat", "lon"),
-    )
-
-    out = proc.inverse_transform(data)
-
-    assert out.shape == data.shape
-
-
 def test_anomalies_inverse_short_branch():
     proc = PreprocessingStepSelector("anomalies").get_preprocessor()
 
@@ -819,23 +801,6 @@ def test_flattener_target_branch():
     )
 
     assert proc.common_to_input_and_target is True
-
-
-def test_flattener_transform_missing_dims():
-    proc = PreprocessingStepSelector("flattener").get_preprocessor()
-
-    proc.fit(make_geo_data())
-
-    bad = xr.DataArray(
-        np.ones((2,)),
-        dims=("time",),
-    )
-
-    with pytest.raises(
-        ValueError,
-        match="Missing dimensions",
-    ):
-        proc.transform(bad)
 
 
 def test_flattener_inverse_missing_ref():

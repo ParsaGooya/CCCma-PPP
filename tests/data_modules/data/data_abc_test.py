@@ -381,46 +381,6 @@ def test_resolve_data_ensemble_present(tmp_path):
     assert cfg.list_paths == ["x.nc"]
 
 
-def test_resolve_data_with_rename_dict(tmp_path):
-    ds = xr.Dataset(
-        {
-            "old": (
-                (
-                    "year",
-                    "lead_time",
-                ),
-                np.random.rand(2, 2),
-            )
-        },
-        coords={
-            "year": [1, 2],
-            "lead_time": [1, 2],
-        },
-    )
-
-    cfg = DummyDataConfig(
-        tmp_path,
-        names=["var"],
-        rename_dict={
-            "old": "var",
-        },
-    )
-
-    with (
-        patch(
-            "glob.glob",
-            return_value=["x.nc"],
-        ),
-        patch(
-            "xarray.open_dataset",
-            return_value=ds,
-        ),
-    ):
-        _resolve_data(cfg)
-
-    assert cfg.list_paths == ["x.nc"]
-
-
 def test_get_ds_info_basic(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 

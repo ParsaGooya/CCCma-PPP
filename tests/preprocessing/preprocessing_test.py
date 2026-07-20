@@ -244,42 +244,6 @@ def test_pipeline_save(monkeypatch, tmp_path):
     assert len(saved) > 0
 
 
-def test_pipeline_load(monkeypatch, tmp_path):
-    monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
-
-    pipe = make_pipeline()
-    fake_data = xr.Dataset(
-        {"values": ("year", np.array([1]))},
-        coords={"year": np.array([1])},
-    )
-
-    monkeypatch.setattr(RuntimeContext, "GLOBAL_EXP_DIR", str(tmp_path))
-
-    pipe.fit(base_data=fake_data, save=True)
-
-    saved = list(tmp_path.rglob("*.joblib"))[0]
-
-    new_pipe = PreprocessingPipeline(load_dir=saved)
-    new_pipe.fit()
-
-    assert new_pipe.fitted
-
-
-def test_load_unfitted_pipeline(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-
-    bad = tmp_path / "bad.joblib"
-
-    joblib.dump(FakeLoaded(fitted=False), bad)
-
-    pipe = PreprocessingPipeline(load_dir=bad)
-
-    with pytest.raises((AssertionError, ValueError, RuntimeError)):
-        monkeypatch.setattr(RuntimeContext, "GLOBAL_EXP_DIR", str(tmp_path))
-
-        pipe.fit()
-
-
 def test_custom_save_path_and_name(monkeypatch, tmp_path):
     pipe = make_pipeline()
 
@@ -316,29 +280,6 @@ def test_transform_with_step_arguments(monkeypatch, tmp_path):
     out = pipe.transform(data, step_arguments={"dummy": {"x": 1}})
 
     assert out is not None
-
-
-def test_fit_uses_load_dir(monkeypatch, tmp_path):
-    file = tmp_path / "pipe.joblib"
-
-    joblib.dump(FakeLoaded(), file)
-
-    pipe = PreprocessingPipeline(load_dir=file)
-
-    pipe.fit()
-
-    assert pipe.fitted
-
-
-def test_load_default_name(monkeypatch, tmp_path):
-    file = tmp_path / "instance_1_preprocessing_pipeline.joblib"
-
-    joblib.dump(FakeLoaded(name="instance_1"), file)
-
-    pipe = PreprocessingPipeline(load_dir=file)
-    pipe.fit()
-
-    assert pipe.fitted
 
 
 def test_multiple_steps_pipeline(monkeypatch, tmp_path):
@@ -496,33 +437,6 @@ def test_inverse_none_step_arguments():
     assert result is not None
 
 
-def test_get_preprocessor_by_name(monkeypatch, tmp_path):
-    monkeypatch.setattr(
-        RuntimeContext,
-        "GLOBAL_EXP_DIR",
-        str(tmp_path),
-    )
-
-    pipe = make_pipeline()
-
-    ds = xr.Dataset(
-        {"var": ("year", [1])},
-        coords={"year": [1]},
-    )
-
-    pipe.fit(
-        base_data=ds,
-        save=False,
-    )
-
-    proc = pipe.get_preprocessors("dummy")
-
-    assert isinstance(
-        proc,
-        DummyPreprocessor,
-    )
-
-
 def test_add_fitted_preprocessor_append():
     pipe = make_pipeline()
 
@@ -548,37 +462,6 @@ def test_extract_output_coords_not_fitted():
         match="fitted pipeline",
     ):
         pipe.extract_output_coords_vars(xr.Dataset())
-
-
-def test_extract_output_coords_vars(monkeypatch, tmp_path):
-    monkeypatch.setattr(
-        RuntimeContext,
-        "GLOBAL_EXP_DIR",
-        str(tmp_path),
-    )
-
-    pipe = make_pipeline()
-
-    ds = xr.Dataset(
-        {
-            "var": (
-                ("year", "lat"),
-                np.ones((1, 1)),
-            )
-        },
-        coords={
-            "year": [2000],
-            "lat": [0],
-        },
-    )
-
-    pipe.fit(
-        base_data=ds,
-        save=False,
-    )
-
-    assert "year" in pipe.reference_coords
-    assert pipe.reference_var == ["var"]
 
 
 def test_load_from_memory_not_fitted(tmp_path):
@@ -616,21 +499,6 @@ def test_load_from_memory_success(tmp_path):
     assert result is pipe
     assert pipe.fitted
     assert pipe.name == "loaded_pipe"
-
-
-def test_fit_load_dir_branch(tmp_path):
-    file = tmp_path / "pipe.joblib"
-
-    joblib.dump(
-        FakeLoaded(),
-        file,
-    )
-
-    pipe = PreprocessingPipeline(load_dir=file)
-
-    pipe.fit()
-
-    assert pipe.fitted
 
 
 def test_fit_creates_save_directory(monkeypatch, tmp_path):

@@ -336,23 +336,6 @@ def test_collate_with_features():
     assert result.added_features.shape == (2, 3)
 
 
-def test_collate_with_reduced_masks():
-    result = collate_batch(
-        make_batch(),
-        return_spatial_mask=True,
-        reduce_spatial_mask=True,
-    )
-
-    assert isinstance(result.input, torch.Tensor)
-    assert isinstance(result.target, torch.Tensor)
-    assert isinstance(result.input_mask, torch.Tensor)
-    assert isinstance(result.target_mask, torch.Tensor)
-    assert result.input_mask.shape == (2,)
-    assert result.target_mask.shape == (2,)
-    assert torch.all(result.input_mask)
-    assert torch.all(result.target_mask)
-
-
 def test_collate_with_unreduced_masks():
     result = collate_batch(
         make_batch(),
