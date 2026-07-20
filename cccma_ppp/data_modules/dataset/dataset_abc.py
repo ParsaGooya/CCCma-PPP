@@ -16,6 +16,11 @@ from cccma_ppp.data_modules import (
     _create_train_mask,
 )
 
+
+
+
+
+
 @dataclasses.dataclass
 class lead_months_config:
     """
@@ -76,21 +81,16 @@ class DatasetConfigABC(abc.ABC):
     model : ModelDataConfig or None
     condition : ConditionDataConfig or None
     condition_method : str or None
-    time_features : list of str or None
     lead_months : lead_months_config or None
     """
 
     _VALID_CONDITION_METHODS: ClassVar[frozenset[str]] = frozenset(
         {"ensemble_mean", "cross_ensemble", "same_member", "static"}
     )
-    _VALID_TIME_FEATURES: ClassVar[frozenset[str]] = frozenset(
-        {"year", "lead_time", "month_sin", "month_cos"}
-    )
 
     model: ModelDataConfig | None
     condition: ConditionDataConfig | None
     condition_method: str | None
-    time_features: list[str] | None
     lead_months: lead_months_config | None
     _effective_condition: ConditionDataConfig | ModelDataConfig | None
 
@@ -102,12 +102,19 @@ class DatasetConfigABC(abc.ABC):
         -------
         None
         """
+        self._fitted_preprocessors: bool = False
+        self._effective_condition: ConditionDataConfig | ModelDataConfig | None = None
+
         self._check_required_input_source()
         self._check_condition_method()
-        self._check_time_features()
         self._check_model_vs_condition()
+        
         self._resolve_lead_months()
         self._resolve_condition()
+
+        self._check_model()
+        self._check_condition()
+
         if self.lead_months is None:
             self.lead_months = np.arange(1, self.num_input_lead_months + 1)
         if not max(self.lead_months) <= self.num_input_lead_months:
@@ -247,27 +254,55 @@ class DatasetConfigABC(abc.ABC):
                 )
         return self
 
-    @final
-    def _check_time_features(self):
-        """
-        Validate time feature selection.
-
-        Returns
-        -------
-        self
-
-        Raises
-        ------
-        ValueError
-            If invalid time features are specified.
-        """
-        if self.time_features is not None:
-            invalid = set(self.time_features) - self._VALID_TIME_FEATURES
-            if invalid:
-                raise ValueError(
-                    f"Invalid time features: {sorted(invalid)}. "
-                    f"Must be a subset of {sorted(self._VALID_TIME_FEATURES)}."
+    def _check_model(self):
+        if self.model is not None:
+            if self.condition_method == "same_member":
+                if self.model.ensemble_mean:
+                    raise ValueError(
+                    "for same member coniditioning the model data should not be ensemble mean."
                 )
+            
+        return self
+    
+
+    def _check_condition(self):
+        if self.effective_condition is not None:
+            if self.condition_method is None:
+                raise ValueError(
+                "You must specify condition_method for conditioning dataset!"
+            )
+
+            if self.condition_method in ["cross_ensemble", "same_member"]:
+                if self.effective_condition.ensemble_mean: 
+                    raise ValueError(
+                    "condition ensemble_mean cannot be True for cross_ensemble or same_member conditioning."
+                )
+                if self.effective_condition.info.coords.get("ensembles") is None:
+                    raise ValueError(
+                    "For cross_ensemble or same_member conditioning an ensembles dim must exist in the condition."
+                )
+            elif self.condition_method == "ensemble_mean":
+                if not self.effective_condition.ensemble_mean is True:
+                    raise ValueError(
+                    "Ensemble mean must be True for ensemble_mean conditioning."
+                )
+            else:
+                if self.effective_condition.ensemble_list is not None:
+                    raise ValueError(
+                    'For "static" conditioning fields cannot specify ensemble list.'
+                )
+                if self._using_model_data_as_condition:
+                    raise ValueError(
+                    "'static' conditioning method cannot point to the same model data!"
+                )
+
+        else: 
+            if self.condition_method == "static":
+
+                raise ValueError(
+                "For static conditioning method condition dataset must be specified!"
+            )
+            
         return self
 
     @final
@@ -283,27 +318,6 @@ class DatasetConfigABC(abc.ABC):
             isinstance(self.lead_months, lead_months_config)):
             self.lead_months = self.lead_months.build_lead_months()
 
-    @abc.abstractmethod
-    def _check_model(self):
-        """
-        Validate model configuration.
-
-        Returns
-        -------
-        self
-        """
-        pass
-
-    @abc.abstractmethod
-    def _check_condition(self):
-        """
-        Validate condition configuration.
-
-        Returns
-        -------
-        self
-        """
-        pass
 
     @property
     @abc.abstractmethod
@@ -459,11 +473,124 @@ class DatasetConfigABC(abc.ABC):
 
 
 
+@dataclasses.dataclass
+class AddedTimeFeatures:
+    reference_config: DatasetConfigABC 
+    time_features: list[str] | None = None
+
+    def __post_init__(self):
+
+        self.time_dim, self.lead_time_dim = required_sample_dimensions
+        self.feature_indices = {
+                self.time_dim: 0,
+                self.lead_time_dim: 1,
+                "month_sin": 2,
+                "month_cos": 3,
+            }
+        
+        self.time_features = tuple(self.time_features or ())
+            
+        unsupported = (
+            set(self.time_features)
+            - set(self.feature_indices)
+        )
+
+        if unsupported:
+            raise ValueError(
+                f"Unsupported time features: {unsupported}. "
+                f"Supported features are: {set(self.feature_indices)}"
+            )
+        
+
+    def __call__(
+        self,
+        selection: dict[str, int | float],
+        input: xr.DataArray,
+    ) -> np.ndarray | None:
+        """
+        Generate time-based features.
+
+        Parameters
+        ----------
+        selection : dict
+            Selection coords of the sample
+
+        input : xr.DataArray
+            Input data used for shape alignment.
+
+        Returns
+        -------
+        np.ndarray or None
+            Array of time features.
+
+        Broadcasts features to match spatial input dimensions if needed.
+        """
+        if self.time_features is None:
+            return
+        
+        missing = set(required_sample_dimensions) - selection.keys()
+
+        if missing:
+
+            raise ValueError(
+                "The provided selection coords are not in required sample dimensions."
+                f"{missing}"
+            )
+        
+        
+        time = selection[self.time_dim]
+        lead_time = selection[self.lead_time_dim]
+
+
+        target_time = time + lead_time - 0.5 // 12
+        target_month = lead_time
+
+        y = (target_time - np.min(self.reference_config.get_common_time)) / (
+            np.max(self.reference_config.get_common_time) - np.min(self.reference_config.get_common_time)
+        )
+        lt = lead_time / max(self.reference_config.lead_months)
+        msin = np.sin(2 * np.pi * target_month / 12.0)
+        mcos = np.cos(2 * np.pi * target_month / 12.0)
+
+        time_features = np.stack([y, lt, msin, mcos])
+        time_features = time_features[
+            ..., [self.feature_indices[k] for k in self.time_features]
+        ]
+
+        if input.ndim > 2:
+            time_features = np.broadcast_to(
+                time_features[(...,) + (None,) * (input.ndim - 1)],
+                (time_features.shape[0],) + input.shape[1:],
+            )
+
+        return time_features
+    
+    def __len__(self):
+        return len(self.time_features)
+
+
+    def __eq__(self, other):
+        if not isinstance(other, AddedTimeFeatures):
+            return NotImplemented
+
+        return (
+            all(self.reference_config.lead_months 
+            == other.reference_config.lead_months)
+            and all(self.reference_config.get_common_time 
+            == other.reference_config.get_common_time)
+            and (type(self.reference_config) is 
+                 type(other.reference_config))
+            and (self.time_features == other.time_features)
+        )
+
+
+
 class DatasetABC(Dataset, abc.ABC):
 
     config: DatasetConfigABC
     requested_years: list[int] | tuple[int, ...] | np.ndarray
     mask: xr.DataArray | None 
+    time_features: AddedTimeFeatures
     return_metadata: bool 
     load: bool 
     model_dataset: xr.DataArray | None
@@ -474,7 +601,7 @@ class DatasetABC(Dataset, abc.ABC):
 
         self._check_init()
         self._resolve_mask()
-        self._prepare_sampling_mask(self._sampling_selectors)
+        self._prepare_sampling_mask(self._sampling_times_selectors)
 
         self.model_dataset = None
         self.condition_dataset = None
@@ -504,7 +631,7 @@ class DatasetABC(Dataset, abc.ABC):
             set(self.config.available_times)
         ):
             raise ValueError(
-                "the requested years are not common to input and target data."
+                "the requested years are not available given the data sources provided."
             )
 
     @final
@@ -525,7 +652,7 @@ class DatasetABC(Dataset, abc.ABC):
             raise ValueError(f"The mask must have {required_sample_dimensions} dims. Current dims: {missing}")    
 
     @property
-    def _sampling_selectors(self) -> dict:
+    def _sampling_times_selectors(self) -> dict:
 
         time_dim, lead_time_dim = required_sample_dimensions
         return {
@@ -552,16 +679,16 @@ class DatasetABC(Dataset, abc.ABC):
         pass
 
     @final
-    def _prepare_sampling_mask(self, selectors: dict):
+    def _prepare_sampling_mask(self, sampling_times_selectors: dict):
 
 
-        missing = set(required_sample_dimensions) - selectors.keys()
+        missing = set(required_sample_dimensions) - sampling_times_selectors.keys()
 
         if missing:
             raise ValueError(f"No selectors provided for dimensions: {missing}")
 
         mask = self.mask.sel({
-            dim: selectors[dim]
+            dim: sampling_times_selectors[dim]
             for dim in required_sample_dimensions
         })
 
@@ -772,21 +899,11 @@ class DatasetABC(Dataset, abc.ABC):
                 self.config.effective_input.info.coords[dim].size 
                 for dim in supported_NN_dimensions_sorted  
                 if dim in self.config.effective_input.info.coords)
-                
-            
+        
     @final
     def get_added_features_dim(self):
-        """
-        Number of additional features.
 
-        Returns
-        -------
-        int
-        """
-
-        return (
-            0 if self.config.time_features is None else len(self.config.time_features)
-        )
+        return len(self.time_features)
     
     @final
     def _index_condition_dataset(self, ind: int) -> xr.DataArray | None:
@@ -871,3 +988,9 @@ class DatasetABC(Dataset, abc.ABC):
         int
         """
         return len(next(iter(self.sample_coords.values())))
+
+
+
+
+
+

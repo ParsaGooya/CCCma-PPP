@@ -11,7 +11,7 @@ from cccma_ppp.data_modules.dataset import (
     DatasetABC,
     DatasetOperator,
     lead_months_config,
-    _get_time_features,
+    AddedTimeFeatures,
 )
 from cccma_ppp.data_modules.data import (
     ModelDataConfig,
@@ -24,7 +24,8 @@ from cccma_ppp.data_modules import (
     suppress_stderr,
 )
 
-from cccma_ppp.configs import supported_NN_dimensions_sorted
+from cccma_ppp.configs import (supported_NN_dimensions_sorted,
+                                required_sample_dimensions)
 
 @dataclasses.dataclass
 class TrainDatasetConfig(DatasetConfigABC):
@@ -41,8 +42,6 @@ class TrainDatasetConfig(DatasetConfigABC):
         Conditioning dataset configuration.
     condition_method : str or None, optional
         Method for conditioning (e.g., "cross_ensemble", "same_member", "static").
-    time_features : list of str or None, optional
-        Time-based features to include.
     lead_months : array-like or None, optional
         Lead months to use.
     """
@@ -51,7 +50,6 @@ class TrainDatasetConfig(DatasetConfigABC):
     observation: ObsDataConfig | None = None
     condition: ConditionDataConfig | None = None
     condition_method: str = None
-    time_features: list[str] | None = None
     lead_months: lead_months_config | None = None
 
     def __post_init__(self):
@@ -62,38 +60,10 @@ class TrainDatasetConfig(DatasetConfigABC):
         -------
         self
         """
-        self._fitted_preprocessors: bool = False
-        self._effective_condition: ConditionDataConfig | ModelDataConfig | None = None
-
         super().__init__()
 
-        self._check_model()
         self._check_observation()
 
-        self._check_condition()
-        return self
-
-    def _check_model(self):
-        """
-        Validate model dataset configuration.
-
-        Returns
-        -------
-        self
-
-        Raises
-        ------
-        ValueError
-            If configuration is inconsistent.
-        """
-
-        if self.condition_method == "same_member":
-            if self.model.ensemble_mean:
-                raise ValueError(
-                    "for same member coniditioning the model data should not be ensemble mean."
-                )
-            
-        return self
 
     def _check_observation(self):
         """
@@ -142,59 +112,6 @@ class TrainDatasetConfig(DatasetConfigABC):
 
         return self
 
-    def _check_condition(self):
-        """
-        Validate conditioning dataset configuration.
-
-        Returns
-        -------
-        self
-            The validated instance.
-
-        Raises
-        ------
-        ValueError
-            If the conditioning dataset configuration is invalid.
-        """
-        if self.effective_condition is not None:
-            if self.condition_method is None:
-                raise ValueError(
-                    "You must specify condition_method for conditioning dataset!"
-                )
-
-            if self.condition_method in ["cross_ensemble", "same_member"]:
-                if self.effective_condition.ensemble_mean:
-                    raise ValueError(
-                        "condition ensemble_mean cannot be True for cross_ensemble or same_member conditioning."
-                    )
-                if self.effective_condition.info.coords.get("ensembles") is None:
-                    raise ValueError(
-                        "For cross_ensemble or same_member conditioning an ensembles dim and coords must exist in the condition."
-                    )
-
-            elif self.condition_method == "ensemble_mean":
-                if self.effective_condition.ensemble_mean is not True:
-                    raise ValueError(
-                        "Ensemble mean must be True for ensemble_mean conditioning."
-                    )
-            else:
-                if self.effective_condition.ensemble_list is not None:
-                    raise ValueError(
-                        'For "static" conditioning fields cannot specify ensemble list.'
-                    )
-                if self._using_model_data_as_condition:
-                    raise ValueError(
-                        "'static' conditioning method cannot point to the same model data!"
-                    )
-
-        else:
-            if self.condition_method == "static":
-                raise ValueError(
-                    "For static conditioning method condition dataset must be specified!"
-                )
-
-        return self
-    
     @property
     def effective_input(self):
         return self.model
@@ -234,7 +151,7 @@ class TrainDatasetConfig(DatasetConfigABC):
         """
 
         if self.observation is None:
-            return self.model.info.coords["year"].values
+            return self.model.year_range
   
         else:
             return np.intersect1d(self.model.year_range, self.observation.year_range)
@@ -249,10 +166,7 @@ class TrainDatasetConfig(DatasetConfigABC):
         np.ndarray
         """
 
-        if self.observation is None:
-            return self.get_common_time
-        else:
-            return np.intersect1d(self.model.info.coords["year"].values,
+        return np.intersect1d(self.model.info.coords["year"].values,
                                   self.get_common_time)
                                   
 
@@ -306,6 +220,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     def build_dataset(
         self,
         years: np.ndarray,
+        time_features: AddedTimeFeatures,
         mask: xr.DataArray | None = None,
         return_metadata: bool = False,
         load: bool = False,
@@ -320,6 +235,7 @@ class TrainDatasetConfig(DatasetConfigABC):
         return TrainDataset(
             config=self,
             requested_years=years,
+            time_features=time_features,
             mask=mask,
             return_metadata=return_metadata,
             load=load
@@ -341,6 +257,7 @@ class TrainDataset(DatasetABC):
 
     config: TrainDatasetConfig
     requested_years: list[int] | tuple[int, ...] | np.ndarray
+    time_features: AddedTimeFeatures 
     mask: xr.DataArray | None = None
     return_metadata: bool = False
     load: bool = False
@@ -490,8 +407,9 @@ class TrainDataset(DatasetABC):
         if self.observation_dataset is None:
             return None
         
-        model_years = np.asarray(sample_coords["year"])
-        lead_times = np.asarray(sample_coords["lead_time"])
+        time_dim, lead_time_dim = required_sample_dimensions
+        model_years = np.asarray(sample_coords[time_dim])
+        lead_times = np.asarray(sample_coords[lead_time_dim])
 
         offset_years, months = np.divmod(lead_times - 0.5, 12)
 
@@ -617,7 +535,9 @@ class TrainDataset(DatasetABC):
         elif self._concat_condition_to_input:
             input = xr.concat([input, condition], dim="channels")
 
-        time_features = _get_time_features(self.config, selection, input)
+        time_features = self.time_features(
+                                           selection, 
+                                           input)
 
         with suppress_stderr():
             input, target = dask.compute(

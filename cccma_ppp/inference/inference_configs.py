@@ -42,11 +42,9 @@ class InferenceConfig:
         self._resolve_inference_dataset_config()
 
     def _resolve_inference_dataset_config(self):
-        if self.inference_loader.dataset_config is None: ### method needs to be implemented!
-            self.inference_loader.read_datasetConfig_from_train(self.train_loader.dataset_config)
-        else:
-            self._check_inference_dataset()
 
+        self.inference_loader.read_configs_from_train(self.train_loader)
+        self._check_inference_dataset()
 
     def _check_inference_dataset(self):
 
@@ -57,6 +55,13 @@ class InferenceConfig:
                     f'with the trained model at : {self.experiment_dir}' 
                 )
         
+        if not (self.inference_loader.time_features == 
+                    self.train_loader.time_features):
+            
+                raise RuntimeError(
+                    'Input added time features are not consistent'
+                    f'with the trained model at : {self.experiment_dir}' 
+                )    
 
     @property
     def output_preprocessor_dir(self):

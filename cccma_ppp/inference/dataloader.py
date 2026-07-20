@@ -3,11 +3,12 @@ import numpy as np
 import dataclasses
 import torch
 from pathlib import Path
+import copy
 
-from cccma_ppp.train.dataset import TrainDatasetConfig
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
 from cccma_ppp.inference.dataset import InferenceDatasetConfig, _from_train
 from cccma_ppp.data_modules.dataloader import Dataloader, DataloaderConfigABC, BatchDataABC
+from cccma_ppp.data_modules.dataset import AddedTimeFeatures
 from cccma_ppp.generic import Distributed, RuntimeContext
 
 @dataclasses.dataclass
@@ -70,6 +71,12 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     drop_last: bool = False
     load: bool = False
 
+    time_features: AddedTimeFeatures | None = dataclasses.field(
+        init=False,
+        default=None,
+    )
+
+
     def __post_init__(self):
         self._setup = False
         self.pin_memory = False
@@ -81,18 +88,28 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         if self.dataset_config is not None:
             _ = self._inference_years
 
-    def _check_dataset_config(self):
+    def _check_config(self):
         if self.dataset_config is None:
             raise RuntimeError(
-                "dataset_config must be provided or read froim train configs" \
-                "via  read_datasetconfig_from_train method."
+                "dataset_config must be provided or read from train configs " \
+                "via read_configs_from_train method."
+            )
+        
+        if self.time_features is None:
+            raise RuntimeError(
+                "time_features must be read from train configs " \
+                "via read_configs_from_train method."
             )
 
-    def read_datasetConfig_from_train(self, train_dataset_config: TrainDatasetConfig):
+    def read_configs_from_train(self, train_dataloader_config: TrainDataloaderConfig):
+        if self.time_features is None:
+            self.time_features = copy.deepcopy(train_dataloader_config.time_features)
+            
         if self.dataset_config is None:
-            self.dataset_config = _from_train(train_dataset_config)
-            _ = self._inference_years
-            self.train_dataset_config = train_dataset_config
+            self.dataset_config = _from_train(train_dataloader_config.dataset_config)
+                
+        _ = self._inference_years
+        self.train_dataset_config = train_dataloader_config.dataset_config
 
     @property
     def _inference_years(self):
@@ -111,12 +128,12 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         
     @property
     def available_times(self):
-        self._check_dataset_config()
+        self._check_config()
         return self.dataset_config.available_times
     
 
     def _input_preprocessor_exists(self, load_dir: Path | str = None):
-        self._check_dataset_config()
+        self._check_config()
         preprocessor_to_check = []
         exists = []
 
@@ -146,7 +163,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         load_path: Path | str | None = None
     ):
 
-        self._check_dataset_config()
+        self._check_config()
         self.rank = distributed.rank
         self.world_size = distributed.world_size
         
@@ -176,6 +193,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
         inference_dataset = self.dataset_config.build_dataset(
             years=self._inference_years, 
+            time_features=self.time_features,
             return_metadata=True,
             load=self.load
         )
@@ -193,7 +211,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
     @property
     def input_var_metadata(self):
-        self._check_dataset_config()
+        self._check_config()
         return self.dataset_config.ds_operator.get_input_var_metadata()
 
     @property

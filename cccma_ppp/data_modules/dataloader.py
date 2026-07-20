@@ -9,8 +9,8 @@ from collections.abc import Callable, Iterator
 from itertools import islice
 
 
-from cccma_ppp.data_modules.dataset import DatasetConfigABC
-
+from cccma_ppp.data_modules.dataset import (DatasetConfigABC, 
+                                            AddedTimeFeatures)
 
 class BatchDataABC(abc.ABC):
     """
@@ -66,6 +66,7 @@ class DataloaderConfigABC(abc.ABC):
 
     dataset_config: DatasetConfigABC
     pin_memory: bool
+    time_features: AddedTimeFeatures | list[str] | None
 
     @abc.abstractmethod
     def setup_distributed(self):

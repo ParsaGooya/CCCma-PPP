@@ -1,6 +1,7 @@
 import numpy as np
 from pathlib import Path
 import xarray as xr
+import dataclasses
 
 from cccma_ppp.data_modules.data import DataConfigABC
 from cccma_ppp.data_modules.dataset import DatasetConfigABC
@@ -380,73 +381,6 @@ class DatasetOperator:
         return metadata
 
 
-def _get_time_features(
-    config: DatasetConfigABC,
-    selection: dict,
-    input: xr.DataArray,
-) -> np.ndarray | None:
-    """
-    Generate time-based features.
-
-    Parameters
-    ----------
-    config : DatasetConfigABC
-        Configuration containing feature definitions.
-    selection : dict
-        Selection coords of the sample
-
-    input : xr.DataArray
-        Input data used for shape alignment.
-
-    Returns
-    -------
-    np.ndarray or None
-        Array of time features.
-
-    Broadcasts features to match spatial input dimensions if needed.
-    """
-    if any([
-        "year" not in selection,
-        "lead_time" not in selection
-    ]):
-        raise ValueError(
-            "The provided selection coords are not supported by _get_time_features."
-        )
-    
-    year = selection["year"]
-    lead_time = selection["lead_time"]
-
-    if config.time_features is not None:
-        time_features_list = np.array([config.time_features]).flatten()
-        feature_indices = {
-            "year": 0,
-            "lead_time": 1,
-            "month_sin": 2,
-            "month_cos": 3,
-        }
-
-        target_time = year + lead_time // 12
-        target_month = lead_time
-
-        y = (target_time - np.min(config.get_common_time)) / (
-            np.max(config.get_common_time) - np.min(config.get_common_time)
-        )
-        lt = lead_time / max(config.lead_months)
-        msin = np.sin(2 * np.pi * target_month / 12.0)
-        mcos = np.cos(2 * np.pi * target_month / 12.0)
-
-        time_features = np.stack([y, lt, msin, mcos])
-        time_features = time_features[
-            ..., [feature_indices[k] for k in time_features_list]
-        ]
-
-        if input.ndim > 2:
-            time_features = np.broadcast_to(
-                time_features[(...,) + (None,) * (input.ndim - 1)],
-                (time_features.shape[0],) + input.shape[1:],
-            )
-
-        return time_features
 
 
 

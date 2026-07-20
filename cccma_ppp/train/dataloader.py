@@ -7,6 +7,7 @@ from pathlib import Path
 
 from cccma_ppp.train.dataset import TrainDatasetConfig
 from cccma_ppp.data_modules import _create_train_mask, WeightsConfig
+from cccma_ppp.data_modules.dataset import AddedTimeFeatures
 from cccma_ppp.data_modules.dataloader import (
     Dataloader,
     DataloaderConfigABC,
@@ -135,6 +136,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
     dataset_config: TrainDatasetConfig
     batch_size: int
+    time_features: list | None = None
     train_years: tuple | list = None
     num_validation_years: int = 0
     num_data_workers: int = 0
@@ -158,6 +160,10 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         self._setup = False
         self.pin_memory = False
 
+        self.time_features = AddedTimeFeatures(self.dataset_config,
+                                               self.time_features)
+
+        
         if self.num_data_workers == 0:
             self.prefetch_factor = None
 
@@ -180,6 +186,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
                     self.train_years[-1] + 1,
                     self.train_years[-1] + 1 + self.num_validation_years,
                 )
+
 
     @property
     def available_times(self):
@@ -275,6 +282,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         train_dataset = self.dataset_config.build_dataset(
             years=self.train_years, 
             mask=train_mask, 
+            time_features=self.time_features,
             return_metadata=return_metadata,
             load=self.load
         )
@@ -330,6 +338,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             )
             validation_dataset = self.dataset_config.build_dataset(
                 years=self.validation_years, 
+                time_features=self.time_features,
                 mask=validation_mask, 
                 return_metadata=return_metadata,
                 load=self.load
