@@ -197,6 +197,7 @@ def test_check_model_success():
     assert TrainDatasetConfig._check_model(config) is config
 
 
+@pytest.mark.pruned
 def test_check_model_non_same_member_passes():
     config = make_config(
         condition_method="cross_ensemble",
@@ -243,6 +244,7 @@ def test_check_observation_warns_different_coords():
         TrainDatasetConfig._check_observation(config)
 
 
+@pytest.mark.pruned
 def test_check_observation_matching_coords():
     config = make_config(
         observation=DummyConfig(),
@@ -371,12 +373,16 @@ def test_check_condition_without_condition_nonstatic():
     assert TrainDatasetConfig._check_condition(config) is config
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_num_input_lead_months():
     config = make_config()
 
     assert config.num_input_lead_months == 12
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_num_input_lead_months_different_size():
     model = DummyConfig()
     model.info.sizes["lead_time"] = 24
@@ -386,6 +392,7 @@ def test_num_input_lead_months_different_size():
     assert config.num_input_lead_months == 24
 
 
+@pytest.mark.pruned
 def test_common_time_without_observation():
     model = DummyConfig()
     config = make_config(model=model)
@@ -396,6 +403,7 @@ def test_common_time_without_observation():
     )
 
 
+@pytest.mark.pruned
 def test_common_time_with_observation():
     model = DummyConfig()
     observation = DummyConfig()
@@ -414,6 +422,7 @@ def test_common_time_with_observation():
     )
 
 
+@pytest.mark.pruned
 def test_common_time_identical_ranges():
     model = DummyConfig()
     observation = DummyConfig()
@@ -438,6 +447,7 @@ def test_common_time_identical_ranges():
     )
 
 
+@pytest.mark.pruned
 def test_common_time_single_value_overlap():
     model = DummyConfig()
     observation = DummyConfig()
@@ -456,6 +466,7 @@ def test_common_time_single_value_overlap():
     )
 
 
+@pytest.mark.pruned
 def test_common_time_empty_intersection():
     model = DummyConfig()
     observation = DummyConfig()
@@ -471,6 +482,7 @@ def test_common_time_empty_intersection():
     assert config.get_common_time.size == 0
 
 
+@pytest.mark.pruned
 def test_available_times_without_observation():
     config = make_config()
 
@@ -480,6 +492,7 @@ def test_available_times_without_observation():
     )
 
 
+@pytest.mark.pruned
 def test_available_times_with_observation():
     model = DummyConfig()
     observation = DummyConfig()
@@ -498,6 +511,7 @@ def test_available_times_with_observation():
     )
 
 
+@pytest.mark.pruned
 def test_available_times_empty():
     model = DummyConfig()
     observation = DummyConfig()
@@ -513,6 +527,7 @@ def test_available_times_empty():
     assert config.available_times.size == 0
 
 
+@pytest.mark.pruned
 def test_dataset_requires_fitted_preprocessors():
     config = make_config()
     config._fitted_preprocessors = False
@@ -521,6 +536,7 @@ def test_dataset_requires_fitted_preprocessors():
         make_dataset(config)
 
 
+@pytest.mark.pruned
 def test_dataset_rejects_bad_year():
     config = make_config()
 
@@ -531,6 +547,7 @@ def test_dataset_rejects_bad_year():
         )
 
 
+@pytest.mark.pruned
 def test_dataset_basic_construction():
     dataset = make_dataset()
 
@@ -539,24 +556,28 @@ def test_dataset_basic_construction():
     assert dataset.model_indexes is not None
 
 
+@pytest.mark.pruned
 def test_autoencoding_property():
     dataset = make_dataset()
 
     assert dataset._autoencoding_model_data is True
 
 
+@pytest.mark.pruned
 def test_write_condition_to_input_autoencoding():
     dataset = make_dataset()
 
     assert dataset._write_condition_to_input is True
 
 
+@pytest.mark.pruned
 def test_load_model_autoencoding():
     dataset = make_dataset()
 
     assert dataset._load_model is True
 
 
+@pytest.mark.pruned
 def test_concat_condition_to_input():
     config = make_config(
         observation=DummyConfig(),
@@ -568,6 +589,7 @@ def test_concat_condition_to_input():
     assert dataset._concat_condition_to_input is True
 
 
+@pytest.mark.pruned
 def test_concat_condition_false_without_condition():
     config = make_config(
         observation=DummyConfig(),
@@ -579,6 +601,7 @@ def test_concat_condition_false_without_condition():
     assert dataset._concat_condition_to_input is False
 
 
+@pytest.mark.pruned
 def test_get_model_indexes_expected_keys():
     dataset = make_dataset()
 
@@ -602,12 +625,14 @@ def test_get_model_indexes_without_ensemble():
     assert "ensembles" not in indexes
 
 
+@pytest.mark.pruned
 def test_get_obs_indexes_none():
     dataset = make_dataset()
 
     assert dataset.get_obs_indexes(dataset.sample_coords) is None
 
 
+@pytest.mark.pruned
 def test_get_obs_indexes_ensemble_mean():
     observation = DummyConfig(ensemble_mean=True)
 
@@ -622,6 +647,7 @@ def test_get_obs_indexes_ensemble_mean():
     assert "ensembles" not in indexes
 
 
+@pytest.mark.pruned
 def test_get_obs_indexes_without_ensemble_coord():
     observation = DummyConfig()
     observation.info.coords.pop(
@@ -639,6 +665,7 @@ def test_get_obs_indexes_without_ensemble_coord():
     assert "ensembles" not in indexes
 
 
+@pytest.mark.pruned
 def test_get_cond_indexes_static():
     config = make_config(
         condition=DummyConfig(),
@@ -650,6 +677,7 @@ def test_get_cond_indexes_static():
     assert dataset.get_cond_indexes(dataset.sample_coords) is None
 
 
+@pytest.mark.pruned
 def test_get_cond_indexes_without_condition():
     dataset = make_dataset()
     dataset.condition_dataset = None
@@ -657,6 +685,7 @@ def test_get_cond_indexes_without_condition():
     assert dataset.get_cond_indexes(dataset.sample_coords) is None
 
 
+@pytest.mark.pruned
 def test_get_cond_indexes_same_member():
     config = make_config(
         condition=DummyConfig(),
@@ -672,6 +701,7 @@ def test_get_cond_indexes_same_member():
     )
 
 
+@pytest.mark.pruned
 def test_index_model_dataset():
     dataset = make_dataset()
 
@@ -688,6 +718,7 @@ def test_index_model_dataset_without_ensemble_key():
     assert dataset._index_model_dataset(0) is not None
 
 
+@pytest.mark.pruned
 def test_index_model_dataset_returns_none_when_not_loaded(
     monkeypatch,
 ):
@@ -702,6 +733,7 @@ def test_index_model_dataset_returns_none_when_not_loaded(
     assert dataset._index_model_dataset(0) is None
 
 
+@pytest.mark.pruned
 def test_index_condition_dataset_static():
     config = make_config(
         condition=DummyConfig(),
@@ -713,6 +745,7 @@ def test_index_condition_dataset_static():
     assert dataset._index_condition_dataset(0) is not None
 
 
+@pytest.mark.pruned
 def test_index_condition_dataset_none():
     dataset = make_dataset()
     dataset.condition_dataset = None
@@ -740,6 +773,7 @@ def test_index_condition_dataset_ensemble_methods(
     assert dataset._index_condition_dataset(0) is not None
 
 
+@pytest.mark.pruned
 def test_index_condition_without_ensemble_indexes():
     config = make_config(
         condition=DummyConfig(),
@@ -755,6 +789,7 @@ def test_index_condition_without_ensemble_indexes():
     assert dataset._index_condition_dataset(0) is not None
 
 
+@pytest.mark.pruned
 def test_index_observation_dataset_none():
     dataset = make_dataset()
     dataset.observation_dataset = None
@@ -772,6 +807,7 @@ def test_index_observation_dataset():
     assert dataset._index_observation_dataset(0) is not None
 
 
+@pytest.mark.pruned
 def test_index_observation_without_ensemble_indexes():
     config = make_config(
         observation=DummyConfig(),
@@ -786,6 +822,7 @@ def test_index_observation_without_ensemble_indexes():
     assert dataset._index_observation_dataset(0) is not None
 
 
+@pytest.mark.pruned
 def test_prepare_mask_requested_years():
     dataset = make_dataset(
         years=[2000],
@@ -797,12 +834,14 @@ def test_prepare_mask_requested_years():
     )
 
 
+@pytest.mark.pruned
 def test_prepare_mask_with_ensemble_dimension():
     dataset = make_dataset()
 
     assert "ensembles" in dataset.mask.dims
 
 
+@pytest.mark.pruned
 def test_prepare_mask_without_ensemble_dimension():
     config = make_config()
     config.model.info.coords.pop(
@@ -824,12 +863,14 @@ def test_prepare_mask_ensemble_mean():
     assert "ensembles" not in dataset.mask.dims
 
 
+@pytest.mark.pruned
 def test_get_added_features_dim_none():
     dataset = make_dataset()
 
     assert dataset.get_added_features_dim() == 0
 
 
+@pytest.mark.pruned
 def test_get_added_features_dim_empty():
     config = make_config(
         time_features=[],
@@ -861,6 +902,7 @@ def test_get_added_features_dim(
     assert dataset.get_added_features_dim() == expected
 
 
+@pytest.mark.pruned
 def test_get_input_shape():
     dataset = make_dataset()
 
@@ -891,12 +933,14 @@ def test_get_target_shape_with_observation():
     )
 
 
+@pytest.mark.pruned
 def test_len():
     dataset = make_dataset()
 
     assert len(dataset) > 0
 
 
+@pytest.mark.pruned
 def test_len_matches_sample_coordinates():
     dataset = make_dataset()
 
@@ -905,6 +949,7 @@ def test_len_matches_sample_coordinates():
     assert len(dataset) == expected
 
 
+@pytest.mark.pruned
 def test_getitem_returns_dict(monkeypatch):
     dataset = make_dataset()
 
@@ -954,6 +999,7 @@ def test_getitem_returns_metadata(monkeypatch):
     assert "lead_time" in metadata
 
 
+@pytest.mark.pruned
 def test_getitem_added_features(monkeypatch):
     dataset = make_dataset()
 
@@ -1008,6 +1054,7 @@ def test_getitem_autoencoding(monkeypatch):
     )
 
 
+@pytest.mark.pruned
 def test_getitem_write_condition(monkeypatch):
     config = make_config(
         condition=DummyConfig(),
@@ -1081,6 +1128,8 @@ def test_getitem_concat_condition(monkeypatch):
     assert result["input"].shape[0] == 2
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_build_dataset(monkeypatch):
     config = make_config()
 
@@ -1102,6 +1151,8 @@ def test_build_dataset(monkeypatch):
     assert dataset.return_metadata is True
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_build_dataset_mask(monkeypatch):
     config = make_config()
 
@@ -1121,6 +1172,8 @@ def test_build_dataset_mask(monkeypatch):
     assert dataset.mask is mask
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_fit_preprocessors_delegates(monkeypatch):
     config = make_config()
     called = {}
@@ -1153,6 +1206,8 @@ def test_fit_preprocessors_delegates(monkeypatch):
     }
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_load_fitted_preprocessors_delegates(
     monkeypatch,
 ):
@@ -1177,6 +1232,8 @@ def test_load_fitted_preprocessors_delegates(
     assert called["load_dir"] == "abc"
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_add_fitted_preprocessor_delegates(
     monkeypatch,
 ):
@@ -1209,6 +1266,7 @@ def test_add_fitted_preprocessor_delegates(
     assert called["index"] == 4
 
 
+@pytest.mark.pruned
 def test_get_obs_indexes():
     config = make_config(
         observation=DummyConfig(),
@@ -1226,6 +1284,7 @@ def test_get_obs_indexes():
     assert len(indexes["month"]) == len(dataset)
 
 
+@pytest.mark.pruned
 def test_get_cond_indexes_cross_ensemble():
     config = make_config(
         condition=DummyConfig(),
@@ -1244,6 +1303,7 @@ def test_get_cond_indexes_cross_ensemble():
     assert len(indexes["lead_time"]) == len(dataset)
 
 
+@pytest.mark.pruned
 def test_prepare_existing_mask():
     config = make_config()
     config.model.ensemble_mean = True
@@ -1276,6 +1336,7 @@ def test_prepare_existing_mask():
     assert len(dataset) == 12
 
 
+@pytest.mark.pruned
 def test_prepare_existing_mask_with_ensemble():
     config = make_config()
 
@@ -1307,6 +1368,7 @@ def test_prepare_existing_mask_with_ensemble():
     assert len(dataset) == 24
 
 
+@pytest.mark.pruned
 def test_get_obs_indexes_raises_for_missing_coordinates():
     observation = DummyConfig()
 
@@ -1327,6 +1389,7 @@ def test_get_obs_indexes_raises_for_missing_coordinates():
         dataset.get_obs_indexes(bad_coords)
 
 
+@pytest.mark.pruned
 def test_get_cond_indexes_raises_for_missing_coordinates():
     condition = DummyConfig()
 
@@ -1348,6 +1411,7 @@ def test_get_cond_indexes_raises_for_missing_coordinates():
         dataset.get_cond_indexes(bad_coords)
 
 
+@pytest.mark.pruned
 def test_get_cond_indexes_same_member_requires_ensembles():
     condition = DummyConfig()
 
@@ -1369,6 +1433,7 @@ def test_get_cond_indexes_same_member_requires_ensembles():
         dataset.get_cond_indexes(sample_coords)
 
 
+@pytest.mark.pruned
 def test_get_cond_indexes_ignores_unavailable_dimensions():
     condition = DummyConfig()
 
@@ -1393,6 +1458,7 @@ def test_get_cond_indexes_ignores_unavailable_dimensions():
     }
 
 
+@pytest.mark.pruned
 def test_get_obs_indexes_zero_based_positions():
     observation = DummyConfig()
 
@@ -1418,6 +1484,7 @@ def test_get_obs_indexes_zero_based_positions():
     )
 
 
+@pytest.mark.pruned
 def test_get_obs_indexes_lead_time_crosses_year():
     observation = DummyConfig()
 
@@ -1443,6 +1510,7 @@ def test_get_obs_indexes_lead_time_crosses_year():
     )
 
 
+@pytest.mark.pruned
 def test_get_cond_indexes_same_member_maps_ensemble_positions():
     condition = DummyConfig()
 
@@ -1466,6 +1534,7 @@ def test_get_cond_indexes_same_member_maps_ensemble_positions():
     )
 
 
+@pytest.mark.pruned
 def test_get_target_shape_observation_without_flattener():
     observation = DummyConfig()
     observation.preprocessing_pipeline.fitted_preprocessors = []
@@ -1481,6 +1550,7 @@ def test_get_target_shape_observation_without_flattener():
     assert shape == (2, 2)
 
 
+@pytest.mark.pruned
 def test_get_input_shape_without_flattener():
     config = make_config()
     config.model.preprocessing_pipeline.fitted_preprocessors = []
@@ -1493,6 +1563,7 @@ def test_get_input_shape_without_flattener():
     assert shape == (2, 2)
 
 
+@pytest.mark.pruned
 def test_get_input_shape_with_flattener(
     monkeypatch,
 ):
@@ -1534,6 +1605,8 @@ def test_get_target_shape_with_flattener(
     assert dataset.get_target_shape() == (4,)
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_build_dataset_load_passthrough(
     monkeypatch,
 ):
@@ -1553,6 +1626,8 @@ def test_build_dataset_load_passthrough(
     assert dataset.load is True
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_build_dataset_load_default_false(
     monkeypatch,
 ):

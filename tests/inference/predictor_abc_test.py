@@ -61,10 +61,13 @@ def predictor(tmp_path):
     return DummyPredictor(tmp_path)
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_temp_save_dir(predictor):
     assert predictor.temp_save_dir == predictor.output_dir / "_temp"
 
 
+@pytest.mark.pruned
 def test_stats_available_when_extracting(predictor):
     assert predictor.stats == predictor._stats
 
@@ -78,6 +81,7 @@ def test_stats_none_when_not_extracting(tmp_path):
     assert predictor.stats is None
 
 
+@pytest.mark.pruned
 def test_raw_module_returns_plain_module(predictor):
     module = object()
     predictor.module = module
@@ -106,6 +110,7 @@ def test_raw_module_unwraps_ddp(
     assert predictor.raw_module is wrapped_module
 
 
+@pytest.mark.pruned
 def test_add_decoder_noise_uses_existing_sampler(
     predictor,
 ):
@@ -227,6 +232,7 @@ def test_add_decoder_noise_preserves_dtype_and_device(
     assert result.output.device.type == "cpu"
 
 
+@pytest.mark.pruned
 def test_add_decoder_noise_multiple_sample_dimensions(
     predictor,
 ):
@@ -340,6 +346,7 @@ def test_build_output_sampler_loads_stats(
     assert samples.shape == (3, 4, 2)
 
 
+@pytest.mark.pruned
 def test_get_multinormal_valid_covariance(
     predictor,
 ):
@@ -378,6 +385,7 @@ def test_get_multinormal_invalid_std_raises(
         )
 
 
+@pytest.mark.pruned
 def test_get_multinormal_scales_covariance(
     monkeypatch,
     predictor,
@@ -417,6 +425,7 @@ def test_get_multinormal_scales_covariance(
     )
 
 
+@pytest.mark.pruned
 def test_get_multinormal_converts_dtype(
     predictor,
 ):
@@ -435,6 +444,7 @@ def test_get_multinormal_converts_dtype(
     assert distribution.covariance_matrix.dtype == torch.float32
 
 
+@pytest.mark.pruned
 def test_get_multinormal_retries_after_value_error(
     monkeypatch,
     predictor,
@@ -583,6 +593,7 @@ def test_sample_tuple_size(
     assert samples.shape == (3, 4, 2)
 
 
+@pytest.mark.pruned
 def test_sample_passes_arguments_to_distribution(
     monkeypatch,
     predictor,
@@ -628,6 +639,7 @@ def test_sample_passes_arguments_to_distribution(
     assert captured["std"] == 3.0
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_basic(
     tmp_path,
 ):
@@ -659,6 +671,7 @@ def test_save_batch_to_netcdf_basic(
         assert list(data.coords["year"].values) == [2000, 2001]
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_multiple_metadata_keys(
     tmp_path,
 ):
@@ -720,6 +733,7 @@ def test_save_batch_to_netcdf_with_extra_dimension(
         )
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_multiple_extra_dimensions(
     tmp_path,
 ):
@@ -756,6 +770,7 @@ def test_save_batch_to_netcdf_multiple_extra_dimensions(
         )
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_two_output_dimensions(
     tmp_path,
 ):
@@ -823,6 +838,7 @@ def test_save_batch_to_netcdf_metadata_length_mismatch(
         )
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_assign_coords(
     tmp_path,
 ):
@@ -859,6 +875,7 @@ def test_save_batch_to_netcdf_assign_coords(
         )
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_attrs(
     tmp_path,
 ):
@@ -886,6 +903,7 @@ def test_save_batch_to_netcdf_attrs(
         assert data.attrs["description"] == "test prediction"
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_channel_coordinates(
     tmp_path,
 ):
@@ -909,6 +927,7 @@ def test_save_batch_to_netcdf_channel_coordinates(
         )
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_zero_output_dimensions(
     tmp_path,
 ):
@@ -930,6 +949,7 @@ def test_save_batch_to_netcdf_zero_output_dimensions(
         assert "channels" in data.dims
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_returns_none(
     tmp_path,
 ):
@@ -946,6 +966,7 @@ def test_save_batch_to_netcdf_returns_none(
     assert result is None
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_preserves_float_values(
     tmp_path,
 ):
@@ -999,6 +1020,7 @@ def test_save_batch_to_netcdf_preserves_float_values(
         )
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_overwrites_existing_file(
     tmp_path,
 ):

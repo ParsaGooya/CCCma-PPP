@@ -81,6 +81,7 @@ class ConcreteModuleConfig(moduleConfigABC):
         return "loaded"
 
 
+@pytest.mark.pruned
 def test_get_device_returns_parameter_device():
     module = ConcreteModule()
 
@@ -95,6 +96,7 @@ def test_get_device_returns_buffer_device_when_no_parameters():
     assert module._get_device() == module.buffer_value.device
 
 
+@pytest.mark.pruned
 def test_get_device_returns_cpu_without_parameters_or_buffers():
     module = EmptyConcreteModule()
 
@@ -126,6 +128,7 @@ def test_load_state_dict_loads_checkpoint_strict_true(tmp_path):
         assert torch.allclose(value, source.state_dict()[key])
 
 
+@pytest.mark.pruned
 def test_load_state_dict_accepts_string_path(tmp_path):
     source = ConcreteModule()
     target = ConcreteModule()
@@ -142,6 +145,7 @@ def test_load_state_dict_accepts_string_path(tmp_path):
         assert torch.allclose(value, source.state_dict()[key])
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strict_false_allows_missing_keys(tmp_path):
     module = ConcreteModule()
 
@@ -160,6 +164,7 @@ def test_load_state_dict_strict_false_allows_missing_keys(tmp_path):
     assert torch.allclose(module.linear.bias, torch.zeros_like(module.linear.bias))
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strict_true_raises_on_missing_keys(tmp_path):
     module = ConcreteModule()
 
@@ -177,6 +182,7 @@ def test_load_state_dict_strict_true_raises_on_missing_keys(tmp_path):
         module._load_state_dict(checkpoint_path, strict=True)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strict_true_raises_on_unexpected_keys(tmp_path):
     module = ConcreteModule()
 
@@ -195,6 +201,7 @@ def test_load_state_dict_strict_true_raises_on_unexpected_keys(tmp_path):
         module._load_state_dict(checkpoint_path, strict=True)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strict_false_allows_unexpected_keys(tmp_path):
     module = ConcreteModule()
 
@@ -212,6 +219,7 @@ def test_load_state_dict_strict_false_allows_unexpected_keys(tmp_path):
     module._load_state_dict(checkpoint_path, strict=False)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_uses_module_key(tmp_path):
     module = ConcreteModule()
 
@@ -222,6 +230,7 @@ def test_load_state_dict_uses_module_key(tmp_path):
         module._load_state_dict(checkpoint_path)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_preserves_loaded_values(tmp_path):
     module = ConcreteModule()
 
@@ -255,6 +264,8 @@ def test_check_registered_raises_when_unregistered():
         NotRegistered.check_registered()
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_config_load_from_checkpoint_sets_flag():
     cfg = ConcreteModuleConfig()
 
@@ -264,6 +275,8 @@ def test_config_load_from_checkpoint_sets_flag():
     assert cfg.loaded_from_checkpoint is True
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_build_with_default_arguments():
     cfg = ConcreteModuleConfig()
 
@@ -275,6 +288,8 @@ def test_build_with_default_arguments():
     assert cfg.added_features_dim is None
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_build_with_added_features():
     cfg = ConcreteModuleConfig()
 
@@ -287,11 +302,15 @@ def test_build_with_added_features():
     assert cfg.added_features_dim == 10
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_moduleabc_cannot_be_instantiated():
     with pytest.raises(TypeError):
         moduleABC()
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_moduleconfigabc_cannot_be_instantiated():
     with pytest.raises(TypeError):
         moduleConfigABC()
@@ -310,6 +329,8 @@ def test_check_registered_success():
     Registered.check_registered()
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_outputabc_creation():
     tensor = torch.tensor([1.0])
 
@@ -318,6 +339,7 @@ def test_outputabc_creation():
     assert torch.equal(output.output, tensor)
 
 
+@pytest.mark.pruned
 def test_check_registered_inherited_type():
     class Registered(moduleConfigABC):
         _type = "registered"

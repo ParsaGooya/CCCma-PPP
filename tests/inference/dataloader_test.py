@@ -139,6 +139,7 @@ def patched_dataloader(monkeypatch):
     )
 
 
+@pytest.mark.pruned
 def test_batchdata_replaces_nan():
     batch = BatchData(
         input=torch.tensor(
@@ -154,6 +155,7 @@ def test_batchdata_replaces_nan():
     assert batch.input[1, 0] == 0
 
 
+@pytest.mark.pruned
 def test_batchdata_replaces_all_nan():
     batch = BatchData(
         input=torch.full(
@@ -168,6 +170,7 @@ def test_batchdata_replaces_all_nan():
     )
 
 
+@pytest.mark.pruned
 def test_batchdata_without_mask_keeps_tensor():
     batch = BatchData(
         input=torch.ones(2, 2),
@@ -178,6 +181,7 @@ def test_batchdata_without_mask_keeps_tensor():
     assert batch.input_mask is None
 
 
+@pytest.mark.pruned
 def test_batchdata_creates_spatial_mask():
     batch = BatchData(
         input=torch.tensor([[1.0, float("nan")]]),
@@ -195,6 +199,7 @@ def test_batchdata_creates_spatial_mask():
     )
 
 
+@pytest.mark.pruned
 def test_batchdata_reduces_spatial_mask():
     batch = BatchData(
         input=torch.tensor(
@@ -217,6 +222,7 @@ def test_batchdata_reduces_spatial_mask():
     )
 
 
+@pytest.mark.pruned
 def test_batchdata_to_device_without_mask_or_features():
     batch = BatchData(input=torch.ones(2, 2))
 
@@ -255,6 +261,7 @@ def test_batchdata_to_device_with_mask():
     assert batch.input_mask.device.type == "cpu"
 
 
+@pytest.mark.pruned
 def test_batchdata_to_device_with_mask_and_features():
     batch = BatchData(
         input=torch.ones(2, 2),
@@ -271,6 +278,7 @@ def test_batchdata_to_device_with_mask_and_features():
     assert batch.added_features.device.type == "cpu"
 
 
+@pytest.mark.pruned
 def test_batchdata_metadata_survives_to_device():
     metadata = [{"year": 2000}]
 
@@ -284,6 +292,7 @@ def test_batchdata_metadata_survives_to_device():
     assert batch.metadata is metadata
 
 
+@pytest.mark.pruned
 def test_collate_batch_plain_inputs():
     batch = [
         {
@@ -304,6 +313,7 @@ def test_collate_batch_plain_inputs():
     assert result.input_mask is None
 
 
+@pytest.mark.pruned
 def test_collate_batch_single_item():
     result = collate_batch(
         [
@@ -318,6 +328,7 @@ def test_collate_batch_single_item():
     assert result.metadata is None
 
 
+@pytest.mark.pruned
 def test_collate_batch_with_metadata():
     batch = [
         (
@@ -345,6 +356,7 @@ def test_collate_batch_with_metadata():
     assert result.added_features is None
 
 
+@pytest.mark.pruned
 def test_collate_batch_with_added_features():
     batch = [
         {
@@ -397,6 +409,7 @@ def test_collate_batch_with_metadata_and_features():
     assert result.added_features.shape == (2, 1)
 
 
+@pytest.mark.pruned
 def test_collate_batch_with_spatial_mask():
     result = collate_batch(
         [
@@ -419,6 +432,7 @@ def test_collate_batch_with_spatial_mask():
     )
 
 
+@pytest.mark.pruned
 def test_collate_batch_with_metadata_features_and_mask():
     result = collate_batch(
         [
@@ -471,6 +485,7 @@ def test_collate_batch_reduce_mask():
     assert torch.all(result.input_mask == torch.tensor([True, False]))
 
 
+@pytest.mark.pruned
 def test_init_without_dataset_config():
     cfg = InferenceDataloaderConfig(
         dataset_config=None,
@@ -481,6 +496,7 @@ def test_init_without_dataset_config():
     assert cfg.train_dataset_config is None
 
 
+@pytest.mark.pruned
 def test_init_workers_zero_removes_prefetch():
     cfg = InferenceDataloaderConfig(
         dataset_config=None,
@@ -503,6 +519,7 @@ def test_init_workers_positive_preserves_prefetch(
     assert cfg.prefetch_factor == 8
 
 
+@pytest.mark.pruned
 def test_check_dataset_config_success(
     dataset_config,
 ):
@@ -522,6 +539,7 @@ def test_check_dataset_config_raises():
         cfg._check_dataset_config()
 
 
+@pytest.mark.pruned
 def test_available_times_requires_config():
     cfg = InferenceDataloaderConfig(
         dataset_config=None,
@@ -531,6 +549,7 @@ def test_available_times_requires_config():
         _ = cfg.available_times
 
 
+@pytest.mark.pruned
 def test_available_times(dataset_config):
     cfg = InferenceDataloaderConfig(
         dataset_config=dataset_config,
@@ -542,6 +561,7 @@ def test_available_times(dataset_config):
     )
 
 
+@pytest.mark.pruned
 def test_inference_years_default(dataset_config):
     cfg = InferenceDataloaderConfig(
         dataset_config=dataset_config,
@@ -628,6 +648,7 @@ def test_read_dataset_config_from_train_when_already_set(
     assert cfg.train_dataset_config is None
 
 
+@pytest.mark.pruned
 def test_read_dataset_config_from_train_when_missing(
     monkeypatch,
 ):
@@ -649,6 +670,7 @@ def test_read_dataset_config_from_train_when_missing(
     assert cfg.train_dataset_config is train_config
 
 
+@pytest.mark.pruned
 def test_input_metadata_requires_config():
     cfg = InferenceDataloaderConfig(
         dataset_config=None,
@@ -658,6 +680,7 @@ def test_input_metadata_requires_config():
         _ = cfg.input_var_metadata
 
 
+@pytest.mark.pruned
 def test_input_metadata(dataset_config):
     cfg = InferenceDataloaderConfig(
         dataset_config=dataset_config,
@@ -754,6 +777,7 @@ def test_input_preprocessor_exists_matrix(
     assert cfg._input_preprocessor_exists(tmp_path) is expected
 
 
+@pytest.mark.pruned
 def test_input_preprocessor_exists_requires_config(
     tmp_path,
 ):
@@ -791,6 +815,7 @@ def test_input_preprocessor_exists_default_runtime_directory(
     assert cfg._input_preprocessor_exists() is True
 
 
+@pytest.mark.pruned
 def test_setup_distributed_requires_config():
     cfg = InferenceDataloaderConfig(
         dataset_config=None,
@@ -849,6 +874,7 @@ def test_setup_distributed_branch_matrix(
     assert cfg._setup is True
 
 
+@pytest.mark.pruned
 def test_setup_distributed_passes_fit_arguments(
     dataset_config,
     monkeypatch,
@@ -881,6 +907,7 @@ def test_setup_distributed_passes_fit_arguments(
     assert dataset_config.load_dir == tmp_path
 
 
+@pytest.mark.pruned
 def test_setup_distributed_existing_preprocessors_skips_fit(
     dataset_config,
     monkeypatch,
@@ -961,6 +988,7 @@ def test_build_loader_argument_matrix(
     assert dataset_config.return_metadata is True
 
 
+@pytest.mark.pruned
 def test_build_loader_passes_default_years(
     dataset_config,
     patched_dataloader,

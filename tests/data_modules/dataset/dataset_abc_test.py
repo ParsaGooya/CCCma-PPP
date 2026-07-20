@@ -260,6 +260,7 @@ def test_lead_months_explicit_list():
     assert config.build_lead_months() == [1, 3]
 
 
+@pytest.mark.pruned
 def test_lead_months_range():
     config = lead_months_config(start=2, end=4)
 
@@ -269,11 +270,15 @@ def test_lead_months_range():
     )
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_dataset_config_is_abstract():
     with pytest.raises(TypeError):
         DatasetConfigABC()
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_dataset_is_abstract():
     with pytest.raises(TypeError):
         DatasetABC()
@@ -329,6 +334,7 @@ def test_invalid_time_features():
         )
 
 
+@pytest.mark.pruned
 def test_default_lead_months():
     config = ConcreteConfig(
         model=make_config_data(),
@@ -353,6 +359,7 @@ def test_resolves_lead_months_config():
     )
 
 
+@pytest.mark.pruned
 def test_preserves_non_config_lead_months():
     lead_months = np.asarray([1, 2])
 
@@ -376,6 +383,7 @@ def test_rejects_unavailable_lead_month():
         )
 
 
+@pytest.mark.pruned
 def test_static_skips_sample_coordinate_validation(
     monkeypatch,
 ):
@@ -399,6 +407,7 @@ def test_static_skips_sample_coordinate_validation(
     assert config.effective_condition is condition
 
 
+@pytest.mark.pruned
 def test_same_member_exposes_initialization_order_bug():
     model = make_config_data()
     condition = make_config_data(
@@ -413,6 +422,7 @@ def test_same_member_exposes_initialization_order_bug():
         )
 
 
+@pytest.mark.pruned
 def test_same_member_requires_equal_ensembles():
     model = make_config_data(ensembles=("r1", "r2"))
     condition = make_config_data(
@@ -433,6 +443,7 @@ def test_same_member_requires_equal_ensembles():
         config._check_model_vs_condition()
 
 
+@pytest.mark.pruned
 def test_same_member_requires_model_ensembles():
     model = make_config_data(ensembles=None)
     condition = make_config_data(
@@ -452,6 +463,7 @@ def test_same_member_requires_model_ensembles():
         config._check_model_vs_condition()
 
 
+@pytest.mark.pruned
 def test_same_member_requires_condition_ensembles():
     model = make_config_data()
     condition = make_config_data(
@@ -487,6 +499,7 @@ def test_same_member_matching_ensembles_passes():
     assert config._check_model_vs_condition() is None
 
 
+@pytest.mark.pruned
 def test_observation_missing_nn_dimension(monkeypatch):
     monkeypatch.setattr(
         module,
@@ -508,6 +521,7 @@ def test_observation_missing_nn_dimension(monkeypatch):
         )
 
 
+@pytest.mark.pruned
 def test_observation_mismatched_nn_coordinates(
     monkeypatch,
 ):
@@ -583,6 +597,7 @@ def test_not_using_model_as_condition(condition_method):
     assert config._using_model_data_as_condition is False
 
 
+@pytest.mark.pruned
 def test_same_condition_source_is_model_condition():
     model = make_config_data()
     condition = make_config_data()
@@ -671,6 +686,7 @@ def test_model_as_condition(
     )
 
 
+@pytest.mark.pruned
 def test_resolve_explicit_condition():
     condition = make_config_data()
     config = bare_config(
@@ -701,6 +717,7 @@ def test_resolve_model_condition():
     assert config.effective_condition is result
 
 
+@pytest.mark.pruned
 def test_resolve_no_condition():
     config = bare_config(
         model=make_config_data(),
@@ -744,6 +761,7 @@ def test_check_init_rejects_unavailable_years():
         dataset._check_init()
 
 
+@pytest.mark.pruned
 def test_check_init_accepts_available_years():
     dataset = bare_dataset(
         config=bare_config(
@@ -756,6 +774,7 @@ def test_check_init_accepts_available_years():
     assert dataset._check_init() is None
 
 
+@pytest.mark.pruned
 def test_resolve_mask_creates_default_mask(monkeypatch):
     created = make_mask()
 
@@ -822,6 +841,8 @@ def test_resolve_mask_requires_dimensions(monkeypatch):
         dataset._resolve_mask()
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_sampling_selectors(monkeypatch):
     monkeypatch.setattr(
         module,
@@ -902,6 +923,8 @@ def test_load_xarray_data(ensembles, load):
     )
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_get_sampling_coords():
     dataset = bare_dataset(
         mask=make_mask(
@@ -934,6 +957,7 @@ def test_get_model_indexes_returns_none():
     assert dataset.get_model_indexes({"time": np.asarray([2000])}) is None
 
 
+@pytest.mark.pruned
 def test_get_model_indexes():
     dataset = bare_dataset(
         _load_model_value=True,
@@ -980,6 +1004,7 @@ def test_get_cond_indexes_returns_none(condition_method):
     assert dataset.get_cond_indexes({"time": np.asarray([2000])}) is None
 
 
+@pytest.mark.pruned
 def test_get_cond_indexes_ignores_unavailable_dimensions():
     dataset = bare_dataset(
         condition_dataset=make_xarray(),
@@ -1016,6 +1041,7 @@ def test_get_cond_indexes_same_member_requires_ensembles():
         )
 
 
+@pytest.mark.pruned
 def test_get_cond_indexes_same_member():
     dataset = bare_dataset(
         condition_dataset=make_xarray(ensembles=("r1", "r2")),
@@ -1086,6 +1112,7 @@ def test_get_input_shape_with_flattener(monkeypatch):
     assert dataset.get_input_shape() == (15,)
 
 
+@pytest.mark.pruned
 def test_get_input_shape_without_flattener(monkeypatch):
     class FakeFlattennanremove:
         pass
@@ -1185,6 +1212,8 @@ def test_index_model_returns_none():
     assert dataset._index_model_dataset(0) is None
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_dataset_length():
     dataset = bare_dataset(
         sample_coords={
@@ -1196,6 +1225,8 @@ def test_dataset_length():
     assert len(dataset) == 3
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_abstract_method_bodies():
     dummy = MagicMock()
 

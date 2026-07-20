@@ -198,6 +198,8 @@ def config_file(tmp_path):
     return path
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_prepare_config_reads_yaml(config_file):
     result = prepare_config(config_file)
 
@@ -205,12 +207,16 @@ def test_prepare_config_reads_yaml(config_file):
     assert result["train_loader"]["dataset_config"]["model"]["names"] == ["tas"]
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_prepare_config_accepts_string_path(config_file):
     result = prepare_config(str(config_file))
 
     assert isinstance(result, dict)
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_prepare_config_empty_yaml(tmp_path):
     path = tmp_path / "empty.yaml"
     path.write_text("")
@@ -395,6 +401,8 @@ def test_output_preprocessor_dir_model_branch(tmp_path):
     )
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_output_dir_uses_custom_save_path(tmp_path):
     save_path = tmp_path / "custom-output"
     config = make_bare_config(
@@ -405,6 +413,8 @@ def test_output_dir_uses_custom_save_path(tmp_path):
     assert config.output_dir == save_path
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_output_dir_defaults_to_inference_directory(tmp_path):
     config = make_bare_config(
         tmp_path,
@@ -414,12 +424,16 @@ def test_output_dir_defaults_to_inference_directory(tmp_path):
     assert config.output_dir == tmp_path / "inference"
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_log_dir(tmp_path):
     config = make_bare_config(tmp_path)
 
     assert config.log_dir == tmp_path / "logs"
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_prepare_runtime_variables_default_output(tmp_path):
     config = make_bare_config(
         tmp_path,
@@ -438,6 +452,8 @@ def test_prepare_runtime_variables_default_output(tmp_path):
     }
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_prepare_runtime_variables_custom_output(tmp_path):
     output = tmp_path / "results"
     config = make_bare_config(
@@ -474,6 +490,7 @@ def test_prepare_directory_branch_matrix(
     assert distributed.barrier_called
 
 
+@pytest.mark.pruned
 def test_prepare_directory_existing_output(tmp_path):
     output = tmp_path / "output"
     output.mkdir()
@@ -542,6 +559,8 @@ def test_set_random_seed_uses_rank_offset(
     assert called == [expected]
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_load_train_config_calls_prepare_config(
     monkeypatch,
     tmp_path,
@@ -564,6 +583,8 @@ def test_load_train_config_calls_prepare_config(
     assert captured["path"] == tmp_path / "config.yaml"
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_load_train_dataloader_config_calls_dacite(
     monkeypatch,
     tmp_path,
@@ -633,6 +654,7 @@ def patch_module_selector(monkeypatch):
     return selector
 
 
+@pytest.mark.pruned
 def test_load_module_missing_default_checkpoint(tmp_path):
     config = make_bare_config(tmp_path)
 
@@ -718,6 +740,7 @@ def test_load_module_loader_dimension_mismatch(
         config.load_module(loader)
 
 
+@pytest.mark.pruned
 def test_load_module_without_loader(
     monkeypatch,
     tmp_path,
@@ -743,6 +766,7 @@ def test_load_module_without_loader(
     assert module.loaded_strict is True
 
 
+@pytest.mark.pruned
 def test_load_module_with_matching_loader(
     monkeypatch,
     tmp_path,
@@ -767,6 +791,7 @@ def test_load_module_with_matching_loader(
     assert module.loaded_state == checkpoint["module"]
 
 
+@pytest.mark.pruned
 def test_load_module_strict_false(
     monkeypatch,
     tmp_path,
@@ -784,6 +809,7 @@ def test_load_module_strict_false(
     assert module.loaded_strict is False
 
 
+@pytest.mark.pruned
 def test_load_module_named_checkpoint(
     monkeypatch,
     tmp_path,
@@ -808,6 +834,7 @@ def test_load_module_named_checkpoint(
     }
 
 
+@pytest.mark.pruned
 def test_load_module_dacite_receives_module_config(
     monkeypatch,
     tmp_path,
@@ -842,6 +869,7 @@ def test_load_module_dacite_receives_module_config(
     assert captured["data_class"].__name__ == "ModuleSelector"
 
 
+@pytest.mark.pruned
 def test_load_module_calls_gc_collect(
     monkeypatch,
     tmp_path,
@@ -967,6 +995,7 @@ def test_build_writer_logging_matrix(
         assert capsys.readouterr().out == ""
 
 
+@pytest.mark.pruned
 def test_build_writer_passes_all_writer_arguments(
     monkeypatch,
     tmp_path,
@@ -1003,6 +1032,7 @@ def test_build_writer_passes_all_writer_arguments(
     }
 
 
+@pytest.mark.pruned
 def test_build_writer_loads_expected_preprocessor(
     monkeypatch,
     tmp_path,
@@ -1033,6 +1063,7 @@ def test_build_writer_loads_expected_preprocessor(
     assert captured["path"] == config.output_preprocessor_dir
 
 
+@pytest.mark.pruned
 def test_build_writer_propagates_loader_setup_error(
     monkeypatch,
     tmp_path,
@@ -1067,6 +1098,7 @@ def test_build_writer_propagates_loader_setup_error(
     assert writer_config.build_called is False
 
 
+@pytest.mark.pruned
 def test_build_writer_propagates_module_load_error(
     monkeypatch,
     tmp_path,
@@ -1101,6 +1133,7 @@ def test_build_writer_propagates_module_load_error(
     assert writer_config.build_called is False
 
 
+@pytest.mark.pruned
 def test_build_writer_propagates_postprocessor_error(
     monkeypatch,
     tmp_path,

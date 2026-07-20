@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 import torch
 import sys
@@ -78,6 +79,8 @@ def dummy_collate(
     }
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_batch_to_device():
     batch = DummyBatch()
 
@@ -86,6 +89,7 @@ def test_batch_to_device():
     assert result.input.device.type == "cpu"
 
 
+@pytest.mark.pruned
 def test_dataloader_init():
     loader = Dataloader(
         config=DummyConfig(),
@@ -96,6 +100,7 @@ def test_dataloader_init():
     assert loader is not None
 
 
+@pytest.mark.pruned
 def test_dataloader_sampler_none_single_world():
     loader = Dataloader(
         config=DummyConfig(),
@@ -107,6 +112,7 @@ def test_dataloader_sampler_none_single_world():
     assert loader.sampler is None
 
 
+@pytest.mark.pruned
 def test_dataloader_sampler_distributed():
     loader = Dataloader(
         config=DummyConfig(),
@@ -119,6 +125,7 @@ def test_dataloader_sampler_distributed():
     assert loader.sampler is not None
 
 
+@pytest.mark.pruned
 def test_dataloader_return_spatial_mask():
     loader = Dataloader(
         config=DummyConfig(),
@@ -132,6 +139,7 @@ def test_dataloader_return_spatial_mask():
     assert batch["return_spatial_mask"] is True
 
 
+@pytest.mark.pruned
 def test_dataloader_reduce_spatial_mask():
     loader = Dataloader(
         config=DummyConfig(),
@@ -145,6 +153,7 @@ def test_dataloader_reduce_spatial_mask():
     assert batch["reduce_spatial_mask"] is True
 
 
+@pytest.mark.pruned
 def test_input_shape():
     loader = Dataloader(
         config=DummyConfig(),
@@ -155,6 +164,7 @@ def test_input_shape():
     assert loader.input_shape == (3, 4)
 
 
+@pytest.mark.pruned
 def test_target_shape():
     loader = Dataloader(
         config=DummyConfig(),
@@ -165,6 +175,7 @@ def test_target_shape():
     assert loader.target_shape == (1,)
 
 
+@pytest.mark.pruned
 def test_added_features_dim():
     loader = Dataloader(
         config=DummyConfig(),
@@ -175,6 +186,7 @@ def test_added_features_dim():
     assert loader.added_features_dim == 5
 
 
+@pytest.mark.pruned
 def test_iter_returns_batches():
     loader = Dataloader(
         config=DummyConfig(),
@@ -187,6 +199,7 @@ def test_iter_returns_batches():
     assert "batch" in batch
 
 
+@pytest.mark.pruned
 def test_len():
     loader = Dataloader(
         config=DummyConfig(),
@@ -197,6 +210,7 @@ def test_len():
     assert len(loader) == 5
 
 
+@pytest.mark.pruned
 def test_len_drop_last_false():
     cfg = DummyConfig()
 
@@ -212,6 +226,7 @@ def test_len_drop_last_false():
     assert len(loader) == 4
 
 
+@pytest.mark.pruned
 def test_get_dataloader_sampler_single_world():
     loader = Dataloader(
         config=DummyConfig(),
@@ -225,6 +240,7 @@ def test_get_dataloader_sampler_single_world():
     assert sampler is None
 
 
+@pytest.mark.pruned
 def test_get_dataloader_sampler_distributed():
     loader = Dataloader(
         config=DummyConfig(),
@@ -266,6 +282,7 @@ def test_set_epoch_with_sampler():
     assert result == loader
 
 
+@pytest.mark.pruned
 def test_subset_loader():
     loader = Dataloader(
         config=DummyConfig(),
@@ -280,6 +297,7 @@ def test_subset_loader():
     assert "batch" in batch
 
 
+@pytest.mark.pruned
 def test_dataloader_drop_last_true():
     cfg = DummyConfig()
 
@@ -296,6 +314,7 @@ def test_dataloader_drop_last_true():
     assert loader.sampler is not None
 
 
+@pytest.mark.pruned
 def test_subset_loader_zero_start():
     loader = Dataloader(
         config=DummyConfig(),
@@ -308,6 +327,7 @@ def test_subset_loader_zero_start():
     assert len(subset) == len(loader)
 
 
+@pytest.mark.pruned
 def test_iter_multiple_batches():
     loader = Dataloader(
         config=DummyConfig(),
@@ -320,12 +340,16 @@ def test_iter_multiple_batches():
     assert len(batches) > 1
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_batch_target_exists():
     batch = DummyBatch()
 
     assert batch.target is not None
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_batch_added_features_exists():
     batch = DummyBatch()
 

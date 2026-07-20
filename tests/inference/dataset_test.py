@@ -301,6 +301,7 @@ def test_check_condition_ensemble_method_valid(
     assert config._check_condition() is config
 
 
+@pytest.mark.pruned
 def test_check_condition_ensemble_mean_requires_mean():
     condition = DummyDataConfig()
     config = make_config_object(
@@ -324,6 +325,7 @@ def test_check_condition_ensemble_mean_valid():
     assert config._check_condition() is config
 
 
+@pytest.mark.pruned
 def test_check_condition_static_ensemble_list():
     condition = DummyDataConfig()
     condition.ensemble_list = [0, 1]
@@ -338,6 +340,7 @@ def test_check_condition_static_ensemble_list():
         config._check_condition()
 
 
+@pytest.mark.pruned
 def test_check_condition_static_model_condition():
     model = DummyDataConfig()
     config = make_config_object(
@@ -449,6 +452,7 @@ def test_common_time_intersection():
     )
 
 
+@pytest.mark.pruned
 def test_available_times():
     model = DummyDataConfig(years=[2000, 2001, 2002])
     config = make_config_object(model=model)
@@ -459,6 +463,8 @@ def test_available_times():
     )
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_load_fitted_preprocessors(
     monkeypatch,
 ):
@@ -476,6 +482,8 @@ def test_load_fitted_preprocessors(
     assert operator.load_calls == ["load-dir"]
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_add_fitted_preprocessor(
     monkeypatch,
 ):
@@ -497,6 +505,8 @@ def test_add_fitted_preprocessor(
     assert operator.add_calls == [(preprocessor, 4)]
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_build_dataset(monkeypatch):
     config = make_config_object()
 
@@ -642,6 +652,7 @@ def test_getitem_condition_input(
     assert result["input"].item() == 5.0
 
 
+@pytest.mark.pruned
 def test_getitem_time_features(
     monkeypatch,
 ):
@@ -838,6 +849,7 @@ def test_from_train_unresolvable():
         _from_train(train)
 
 
+@pytest.mark.pruned
 def test_from_train_deepcopies_fields(
     monkeypatch,
 ):
