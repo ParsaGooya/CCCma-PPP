@@ -15,9 +15,6 @@ PATTERNS = [
 
 
 def remove_path(path: Path):
-    """
-    Remove a file or directory safely.
-    """
     if path.is_dir():
         shutil.rmtree(path)
 

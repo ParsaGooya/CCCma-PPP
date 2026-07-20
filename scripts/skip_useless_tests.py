@@ -64,7 +64,7 @@ for file_path, test_names in grouped.items():
                 if matching_test in zero_branch_set:
                     modified.insert(start, "# Remove test due to no coverage")
 
-                modified.insert(start, "")
+                modified.insert(start, "@pytest.mark.pruned")
 
         modified.append(line)
         i += 1
