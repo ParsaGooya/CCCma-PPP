@@ -456,7 +456,7 @@ class TrainDataset(DatasetABC):
             
 
         else:
-            return self.input_shape
+            return self.get_input_shape()
 
         
     def _index_observation_dataset(self, ind: int) -> xr.DataArray | None:
