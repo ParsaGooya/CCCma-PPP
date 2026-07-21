@@ -128,17 +128,6 @@ class TrainDatasetConfig(DatasetConfigABC):
 
         return DatasetOperator(self)
 
-    @property
-    def num_input_lead_months(self) -> int:
-        """
-        Number of lead months in model dataset.
-
-        Returns
-        -------
-        int
-        """
-
-        return self.model.info.sizes["lead_time"]
 
     @property
     def get_common_time(self):

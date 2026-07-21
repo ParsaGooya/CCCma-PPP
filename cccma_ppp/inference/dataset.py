@@ -47,13 +47,6 @@ class InferenceDatasetConfig(DatasetConfigABC):
     def ds_operator(self):
         return DatasetOperator(self)
 
-    @property
-    def num_input_lead_months(self) -> int:
-        if self.model is not None:
-            return self.model.info.sizes["lead_time"]
-        
-        return self.condition.info.sizes["lead_time"]
-
 
     @property
     def available_times(self):

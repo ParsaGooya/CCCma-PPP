@@ -241,9 +241,9 @@ def _create_train_mask(
     Parameters
     ----------
     time : array-like
-        Times corresponding to dataset.
+        Times corresponding to dataset in years.
     lead_times : array-like or int
-        Lead times in months.
+        (Num) lead times in months. The minimum is 12.
     exclude_idx : int, optional
         Offset index for masking.
 
@@ -254,14 +254,19 @@ def _create_train_mask(
 
     Notes
     -----
-    Used to exclude samples with insufficient future observations
+    Used to exclude samples from forecast that leak into future
     due to lead-time offsets.
+
+    *********************************************************
+    IMP: when cftime is implemented, lead_time handling needs careful 
+    adjusting.
+    *********************************************************
     """
 
     if not isinstance(lead_times, int):
         lead_times = max(lead_times)
 
-    lead_times = np.arange(1, lead_times + 1)
+    lead_times = np.arange(1, max(lead_times, 12) + 1)
 
     mask = np.full((len(time), len(lead_times)), False, dtype=bool)
     x = np.arange(0, 12 * mask.shape[0], 12)

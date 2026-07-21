@@ -75,11 +75,11 @@ class DatasetOperator:
         -----
         Applies fitting to model, observation, and condition datasets.
         """
-
+        time_dim, lead_time_dim = required_sample_dimensions
         if self.config.model is not None:
             selection = {
                 "year": train_years,
-                "lead_time": self.config.lead_months,
+                "lead_time": self.config.model.info.coords[lead_time_dim],
             }
             if self.config.model.info.coords.get("ensembles") is not None:
                 selection["ensembles"] = self.config.model.info.coords["ensembles"]
@@ -109,7 +109,7 @@ class DatasetOperator:
             else:
                 selection = {
                     "year": train_years,
-                    "lead_time": self.config.lead_months,
+                    "lead_time": self.config.effective_condition.info.coords[lead_time_dim],
                 }
                 if self.config.effective_condition.info.coords.get("ensembles") is not None:
                     selection["ensembles"] = (

@@ -116,10 +116,10 @@ class DatasetConfigABC(abc.ABC):
         self._check_condition()
 
         if self.lead_months is None:
-            self.lead_months = np.arange(1, self.num_input_lead_months + 1)
-        if not max(self.lead_months) <= self.num_input_lead_months:
+            self.lead_months = self.input_lead_months
+        if not set(self.lead_months).issubset(set(self.input_lead_months)):
             raise ValueError(
-                f"Maximum available lead months is {self.num_input_lead_months}"
+                f"The requested lead months are not available: must be in {self.input_lead_months}"
             )
 
     @final
@@ -345,17 +345,16 @@ class DatasetConfigABC(abc.ABC):
         pass
 
     @property
-    @abc.abstractmethod
-    def num_input_lead_months(self) -> int:
+    def input_lead_months(self) -> int:
         """
-        Number of input lead months available in the dataset.
+        Coords of lead months in input dataset.
 
         Returns
         -------
         int
-            Total number of lead months used as input to the model.
         """
-        pass
+        time_dim, lead_time_dim = required_sample_dimensions
+        return self.effective_input.info.coords[lead_time_dim].values
 
 
     @property
@@ -641,7 +640,7 @@ class DatasetABC(Dataset, abc.ABC):
 
             mask = _create_train_mask(
                 time=self.config.available_times,
-                lead_times=np.arange(1, self.config.effective_input.info.sizes["lead_time"] + 1),
+                lead_times=self.config.input_lead_months,
             )
             self.mask = xr.full_like(mask, fill_value=False)               
 

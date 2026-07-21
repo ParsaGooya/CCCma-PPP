@@ -276,7 +276,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
         train_mask = _create_train_mask(
             time=self.train_years,
-            lead_times=self.dataset_config.lead_months,
+            lead_times=self.dataset_config.input_lead_months,
         )
 
         train_dataset = self.dataset_config.build_dataset(
@@ -334,7 +334,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         if self.num_validation_years > 0:
             validation_mask = _create_train_mask(
                 time=self.validation_years,
-                lead_times=self.dataset_config.lead_months,
+                lead_times=self.dataset_config.input_lead_months,
             )
             validation_dataset = self.dataset_config.build_dataset(
                 years=self.validation_years, 
