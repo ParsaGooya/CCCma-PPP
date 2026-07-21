@@ -58,12 +58,7 @@ class ModelDataConfig(DataConfigABC):
         None
         """
         super().__init__()
-        self._check_ensemble = False
-        if self.ensemble_list is not None:
-            self._check_ensemble = True
 
-        self._resolve_data()
-        self.info = self._get_ds_info()
         self.year_range = np.arange(
             self.info.start_year,
             self.info.final_year + self.info.sizes["lead_time"] // 12,
@@ -154,12 +149,7 @@ class ObsDataConfig(DataConfigABC):
         None
         """
         super().__init__()
-        self._check_ensemble = False
-        if self.ensemble_list is not None:
-            self._check_ensemble = True
 
-        self._resolve_data()
-        self.info = self._get_ds_info()
         self.year_range = np.arange(self.info.start_year, self.info.final_year + 1)
 
     @final
@@ -237,12 +227,7 @@ class ConditionDataConfig(DataConfigABC):
         None
         """
         super().__init__()
-        self._check_ensemble = False
-        if self.ensemble_list is not None:
-            self._check_ensemble = True
 
-        self._resolve_data()
-        self.info = self._get_ds_info()
         if self.info.start_year is not None and self.info.final_year is not None:
             self.year_range = np.arange(
                 self.info.start_year,

@@ -7,6 +7,7 @@ import xarray as xr
 import numpy as np
 import dataclasses
 
+from cccma_ppp.preprocessing import PreprocessingPipeline
 from cccma_ppp.configs import (required_sample_dimensions,
                                optional_sample_dimensions,
                                supported_NN_dimensions_sorted)
@@ -48,6 +49,16 @@ class DataConfigABC(abc.ABC):
     """
     Abstract base class for dataset configuration.
     """
+
+    paths: str
+    names: list[str]
+    preprocessing_pipeline: PreprocessingPipeline 
+    ensemble_list: list | None 
+    ensemble_mean: bool | None
+    concat_dim: str
+    file_type: str
+    rename_dict: dict
+
     def __init__(self):
         """
         Initialize data configuration.
@@ -68,7 +79,14 @@ class DataConfigABC(abc.ABC):
                 f"{type(self).__name__} must define preprocessing_pipeline"
             )
 
+        self._check_ensemble = False
+        if self.ensemble_list is not None:
+            self._check_ensemble = True
+
         self.preprocessing_pipeline.set_name(self.TYPE)
+
+        self._resolve_data()
+        self.info = self._get_ds_info()
 
     @property
     @abc.abstractmethod
