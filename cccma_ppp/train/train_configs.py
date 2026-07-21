@@ -460,7 +460,10 @@ def build_trainer(
     
     log(f"Creating {config.optimization.optimizer_type} optimizer ...")
 
-    optimizer = config.optimization.build(module, num_train_batches, config.max_epochs)
+    optimizer = config.optimization.build(module, 
+                                          num_train_batches, 
+                                          config.max_epochs,
+                                          config.trainer.gradient_accumulation_steps)
 
     log("Creating trainer ...")
 

@@ -435,9 +435,12 @@ class Trainer:
                 disable=not self.is_on_root,
                 desc="Train",
             ):
-            batch_loss_dict = self._train_on_batch(batch)
+            current_lr = self.optimizer.learning_rate
+            batch_loss_dict, kwargs = self._train_on_batch(batch)
 
-            self.train_aggregator.record(batch_loss_dict)
+            self.train_aggregator.record(batch_loss_dict,
+                                         current_lr,
+                                         kwargs)
 
         self._epochs_trained += 1
 
@@ -467,6 +470,7 @@ class Trainer:
             beta = self.beta_finder(self.global_step)
             kwargs = dict(beta=beta)
 
+
         with torch.cuda.amp.autocast(
             enabled=self.scaler.is_enabled() and self.device.type == "cuda"
         ):
@@ -480,7 +484,7 @@ class Trainer:
         if self.batch_step % self.config.gradient_accumulation_steps == 0:
             self._optimizer_step()
 
-        return loss_dict
+        return loss_dict, kwargs
 
     @torch.no_grad()
     def _validate_on_epoch(self):
