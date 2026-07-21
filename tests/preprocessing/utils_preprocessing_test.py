@@ -69,19 +69,16 @@ def assert_same_values(a, b, atol=1e-6):
     assert np.allclose(a.to_numpy(), b.to_numpy(), atol=atol, equal_nan=True)
 
 
-@pytest.mark.pruned
 def test_registry_case_insensitive():
     proc = PreprocessingStepSelector("NORMALIZER").get_preprocessor()
     assert proc is not None
 
 
-@pytest.mark.pruned
 def test_registry_invalid_name():
     with pytest.raises(Exception):
         PreprocessingStepSelector("not_registered").get_preprocessor()
 
 
-@pytest.mark.pruned
 def test_normalizer_basic():
     proc = PreprocessingStepSelector("normalizer").get_preprocessor()
 
@@ -110,7 +107,6 @@ def test_normalizer_with_mask():
     assert inv.shape == data.shape
 
 
-@pytest.mark.pruned
 def test_normalizer_no_mask_explicit():
     proc = PreprocessingStepSelector("normalizer").get_preprocessor()
 
@@ -122,7 +118,6 @@ def test_normalizer_no_mask_explicit():
     assert proc.max is not None
 
 
-@pytest.mark.pruned
 def test_normalizer_no_dims():
     proc = PreprocessingStepSelector("normalizer").get_preprocessor()
 
@@ -156,7 +151,6 @@ def test_normalizer_ensemble_branch():
     assert proc.fitted
 
 
-@pytest.mark.pruned
 def test_normalizer_transform_before_fit():
     proc = PreprocessingStepSelector("normalizer").get_preprocessor()
     data = make_data()
@@ -165,7 +159,6 @@ def test_normalizer_transform_before_fit():
         proc.transform(data)
 
 
-@pytest.mark.pruned
 def test_standardizer_basic():
     proc = PreprocessingStepSelector("standardizer").get_preprocessor()
 
@@ -194,7 +187,6 @@ def test_standardizer_with_mask():
     assert inv.shape == data.shape
 
 
-@pytest.mark.pruned
 def test_standardizer_no_mask_explicit():
     proc = PreprocessingStepSelector("standardizer").get_preprocessor()
 
@@ -206,7 +198,6 @@ def test_standardizer_no_mask_explicit():
     assert proc.std is not None
 
 
-@pytest.mark.pruned
 def test_standardizer_zero_std_branch():
     proc = PreprocessingStepSelector("standardizer").get_preprocessor()
 
@@ -216,7 +207,6 @@ def test_standardizer_zero_std_branch():
     assert proc.std is not None
 
 
-@pytest.mark.pruned
 def test_standardizer_std_filtering():
     proc = PreprocessingStepSelector("standardizer").get_preprocessor()
 
@@ -226,7 +216,6 @@ def test_standardizer_std_filtering():
     assert proc.std is not None
 
 
-@pytest.mark.pruned
 def test_standardizer_mixed_std():
     proc = PreprocessingStepSelector("standardizer").get_preprocessor()
 
@@ -248,7 +237,6 @@ def test_standardizer_ensemble_branch():
     assert proc.fitted
 
 
-@pytest.mark.pruned
 def test_standardizer_dims_contains_ensembles():
     proc = PreprocessingStepSelector(
         "standardizer", {"dims": ["ensembles", "time"]}
@@ -260,7 +248,6 @@ def test_standardizer_dims_contains_ensembles():
     assert proc.fitted
 
 
-@pytest.mark.pruned
 def test_standardizer_transform_before_fit():
     proc = PreprocessingStepSelector("standardizer").get_preprocessor()
     data = make_data()
@@ -269,7 +256,6 @@ def test_standardizer_transform_before_fit():
         proc.transform(data)
 
 
-@pytest.mark.pruned
 def test_anomalies_basic():
     proc = PreprocessingStepSelector("anomalies").get_preprocessor()
 
@@ -308,7 +294,6 @@ def test_anomalies_ensemble_branch():
     assert proc.fitted
 
 
-@pytest.mark.pruned
 def test_anomalies_no_expand():
     proc = PreprocessingStepSelector("anomalies").get_preprocessor()
 
@@ -324,7 +309,6 @@ def test_anomalies_no_expand():
     assert out.shape == data.shape
 
 
-@pytest.mark.pruned
 def test_anomalies_equal_shape_branch():
     proc = PreprocessingStepSelector("anomalies").get_preprocessor()
 
@@ -344,7 +328,6 @@ def test_anomalies_equal_shape_branch():
     assert out.shape == data.shape
 
 
-@pytest.mark.pruned
 def test_anomalies_transform_before_fit():
     proc = PreprocessingStepSelector("anomalies").get_preprocessor()
     data = make_data()
@@ -353,7 +336,6 @@ def test_anomalies_transform_before_fit():
         proc.transform(data)
 
 
-@pytest.mark.pruned
 def test_normalizer_inverse_before_fit():
     proc = PreprocessingStepSelector("normalizer").get_preprocessor()
     data = make_data()
@@ -362,7 +344,6 @@ def test_normalizer_inverse_before_fit():
         proc.inverse_transform(data)
 
 
-@pytest.mark.pruned
 def test_standardizer_inverse_before_fit():
     proc = PreprocessingStepSelector("standardizer").get_preprocessor()
     data = make_data()
@@ -371,7 +352,6 @@ def test_standardizer_inverse_before_fit():
         proc.inverse_transform(data)
 
 
-@pytest.mark.pruned
 def test_anomalies_inverse_before_fit():
     proc = PreprocessingStepSelector("anomalies").get_preprocessor()
     data = make_data()
@@ -380,7 +360,6 @@ def test_anomalies_inverse_before_fit():
         proc.inverse_transform(data)
 
 
-@pytest.mark.pruned
 def test_normalizer_with_explicit_dims_lat_lon():
     proc = PreprocessingStepSelector(
         "normalizer", {"dims": ["lat", "lon"]}
@@ -396,7 +375,6 @@ def test_normalizer_with_explicit_dims_lat_lon():
     assert np.allclose(inv, data, equal_nan=True)
 
 
-@pytest.mark.pruned
 def test_standardizer_with_explicit_dims_lat_lon():
     proc = PreprocessingStepSelector(
         "standardizer", {"dims": ["lat", "lon"]}
@@ -412,7 +390,6 @@ def test_standardizer_with_explicit_dims_lat_lon():
     assert np.allclose(inv, data, atol=1e-6, equal_nan=True)
 
 
-@pytest.mark.pruned
 def test_anomalies_with_explicit_dims_lat_lon():
     proc = PreprocessingStepSelector(
         "anomalies", {"dims": ["lat", "lon"]}
@@ -428,7 +405,6 @@ def test_anomalies_with_explicit_dims_lat_lon():
     assert np.allclose(inv, data, atol=1e-6, equal_nan=True)
 
 
-@pytest.mark.pruned
 def test_normalizer_dataset_input():
     proc = PreprocessingStepSelector("normalizer").get_preprocessor()
 
@@ -445,7 +421,6 @@ def test_normalizer_dataset_input():
     assert set(inv.data_vars) == {"a", "b"}
 
 
-@pytest.mark.pruned
 def test_standardizer_dataset_input():
     proc = PreprocessingStepSelector("standardizer").get_preprocessor()
 
@@ -462,7 +437,6 @@ def test_standardizer_dataset_input():
     assert set(inv.data_vars) == {"a", "b"}
 
 
-@pytest.mark.pruned
 def test_anomalies_dataset_input():
     proc = PreprocessingStepSelector("anomalies").get_preprocessor()
 
@@ -477,7 +451,6 @@ def test_anomalies_dataset_input():
     assert set(out.data_vars) == {"a", "b"}
 
 
-@pytest.mark.pruned
 def test_anomalies_no_mask_explicit():
     proc = PreprocessingStepSelector("anomalies").get_preprocessor()
 
@@ -488,7 +461,6 @@ def test_anomalies_no_mask_explicit():
     assert proc.fitted
 
 
-@pytest.mark.pruned
 def test_standardizer_dataset_roundtrip():
     proc = PreprocessingStepSelector("standardizer").get_preprocessor()
 
@@ -502,7 +474,6 @@ def test_standardizer_dataset_roundtrip():
     assert isinstance(out, xr.Dataset)
 
 
-@pytest.mark.pruned
 def test_normalizer_dims_tuple_conversion():
     proc = PreprocessingStepSelector(
         "normalizer", {"dims": ["time"]}
@@ -510,7 +481,6 @@ def test_normalizer_dims_tuple_conversion():
     assert isinstance(proc.dims, tuple)
 
 
-@pytest.mark.pruned
 def test_normalizer_min_equals_max():
     proc = PreprocessingStepSelector("normalizer").get_preprocessor()
 
@@ -521,7 +491,6 @@ def test_normalizer_min_equals_max():
     assert np.isnan(out).any() or np.isfinite(out).all()
 
 
-@pytest.mark.pruned
 def test_standardizer_negative_std_filtered():
     proc = PreprocessingStepSelector("standardizer").get_preprocessor()
 
@@ -531,7 +500,6 @@ def test_standardizer_negative_std_filtered():
     assert proc.std is not None
 
 
-@pytest.mark.pruned
 def test_flattener_reference_shape_created():
     proc = PreprocessingStepSelector("flattener").get_preprocessor()
 
@@ -617,28 +585,24 @@ def test_flattener_inverse_structure():
     assert hasattr(restored, "coords")
 
 
-@pytest.mark.pruned
 def test_normalizer_dims_tuple_none():
     proc = PreprocessingStepSelector("normalizer").get_preprocessor()
 
     assert proc.dims is None
 
 
-@pytest.mark.pruned
 def test_standardizer_dims_tuple_none():
     proc = PreprocessingStepSelector("standardizer").get_preprocessor()
 
     assert proc.dims is None
 
 
-@pytest.mark.pruned
 def test_anomalies_dims_tuple_none():
     proc = PreprocessingStepSelector("anomalies").get_preprocessor()
 
     assert proc.dims is None
 
 
-@pytest.mark.pruned
 def test_normalizer_fit_returns_self():
     proc = PreprocessingStepSelector("normalizer").get_preprocessor()
 
@@ -647,7 +611,6 @@ def test_normalizer_fit_returns_self():
     assert result is proc
 
 
-@pytest.mark.pruned
 def test_standardizer_fit_returns_self():
     proc = PreprocessingStepSelector("standardizer").get_preprocessor()
 
@@ -656,7 +619,6 @@ def test_standardizer_fit_returns_self():
     assert result is proc
 
 
-@pytest.mark.pruned
 def test_anomalies_fit_returns_self():
     proc = PreprocessingStepSelector("anomalies").get_preprocessor()
 
@@ -665,7 +627,6 @@ def test_anomalies_fit_returns_self():
     assert result is proc
 
 
-@pytest.mark.pruned
 def test_normalizer_large_ensemble_not_created():
     proc = PreprocessingStepSelector(
         "normalizer",
@@ -677,7 +638,6 @@ def test_normalizer_large_ensemble_not_created():
     assert not hasattr(proc, "large_ensemble")
 
 
-@pytest.mark.pruned
 def test_standardizer_large_ensemble_not_created():
     proc = PreprocessingStepSelector(
         "standardizer",
@@ -700,7 +660,6 @@ def test_anomalies_large_ensemble_not_created():
     assert not hasattr(proc, "large_ensemble")
 
 
-@pytest.mark.pruned
 def test_normalizer_mask_branch_contains_nan():
     proc = PreprocessingStepSelector("normalizer").get_preprocessor()
 
@@ -716,7 +675,6 @@ def test_normalizer_mask_branch_contains_nan():
     assert proc.fitted
 
 
-@pytest.mark.pruned
 def test_standardizer_mask_branch_contains_nan():
     proc = PreprocessingStepSelector("standardizer").get_preprocessor()
 
@@ -732,7 +690,6 @@ def test_standardizer_mask_branch_contains_nan():
     assert proc.fitted
 
 
-@pytest.mark.pruned
 def test_anomalies_mask_branch_contains_nan():
     proc = PreprocessingStepSelector("anomalies").get_preprocessor()
 
@@ -748,7 +705,6 @@ def test_anomalies_mask_branch_contains_nan():
     assert proc.fitted
 
 
-@pytest.mark.pruned
 def test_normalizer_dataset_fit_multiple_variables():
     proc = PreprocessingStepSelector("normalizer").get_preprocessor()
 
@@ -766,7 +722,6 @@ def test_normalizer_dataset_fit_multiple_variables():
     assert proc.fitted
 
 
-@pytest.mark.pruned
 def test_standardizer_dataset_fit_multiple_variables():
     proc = PreprocessingStepSelector("standardizer").get_preprocessor()
 
@@ -784,7 +739,6 @@ def test_standardizer_dataset_fit_multiple_variables():
     assert proc.fitted
 
 
-@pytest.mark.pruned
 def test_anomalies_dataset_fit_multiple_variables():
     proc = PreprocessingStepSelector("anomalies").get_preprocessor()
 
@@ -802,7 +756,6 @@ def test_anomalies_dataset_fit_multiple_variables():
     assert proc.fitted
 
 
-@pytest.mark.pruned
 def test_anomalies_inverse_short_branch():
     proc = PreprocessingStepSelector("anomalies").get_preprocessor()
 
@@ -821,7 +774,6 @@ def test_anomalies_inverse_short_branch():
     assert out.shape == data.shape
 
 
-@pytest.mark.pruned
 def test_flattener_fit_returns_self():
     proc = PreprocessingStepSelector("flattener").get_preprocessor()
 
@@ -830,7 +782,6 @@ def test_flattener_fit_returns_self():
     assert result is proc
 
 
-@pytest.mark.pruned
 def test_flattener_no_target_branch():
     proc = PreprocessingStepSelector("flattener").get_preprocessor()
 
@@ -839,7 +790,6 @@ def test_flattener_no_target_branch():
     assert proc.common_to_input_and_target is False
 
 
-@pytest.mark.pruned
 def test_flattener_target_branch():
     proc = PreprocessingStepSelector("flattener").get_preprocessor()
 
@@ -853,7 +803,6 @@ def test_flattener_target_branch():
     assert proc.common_to_input_and_target is True
 
 
-@pytest.mark.pruned
 def test_flattener_inverse_missing_ref():
     proc = PreprocessingStepSelector("flattener").get_preprocessor()
 
@@ -871,7 +820,6 @@ def test_flattener_inverse_missing_ref():
         proc.inverse_transform(bad)
 
 
-@pytest.mark.pruned
 def test_flattener_transform_ref_branch():
     proc = PreprocessingStepSelector("flattener").get_preprocessor()
 
@@ -884,7 +832,6 @@ def test_flattener_transform_ref_branch():
     assert "ref" in again.dims
 
 
-@pytest.mark.pruned
 def test_flattener_saved_default_name(
     monkeypatch,
     tmp_path,
@@ -905,7 +852,6 @@ def test_flattener_saved_default_name(
     assert (tmp_path / "flattener.joblib").exists()
 
 
-@pytest.mark.pruned
 def test_flattener_save_creates_nested_path(
     tmp_path,
 ):
@@ -922,7 +868,6 @@ def test_flattener_save_creates_nested_path(
     assert save_dir.exists()
 
 
-@pytest.mark.pruned
 def test_flattener_load_from_memory_direct(
     tmp_path,
 ):
@@ -940,7 +885,6 @@ def test_flattener_load_from_memory_direct(
     assert proc.fitted
 
 
-@pytest.mark.pruned
 def test_flattener_load_from_memory_copies_attributes(
     tmp_path,
 ):
@@ -962,7 +906,6 @@ def test_flattener_load_from_memory_copies_attributes(
     assert proc.common_to_input_and_target
 
 
-@pytest.mark.pruned
 def test_flattener_fit_load_dir_branch(
     tmp_path,
 ):
@@ -1005,7 +948,6 @@ def test_flattener_missing_source_dimensions():
         )
 
 
-@pytest.mark.pruned
 def test_flattener_nn_dims_created():
     proc = PreprocessingStepSelector("flattener").get_preprocessor()
 
@@ -1014,7 +956,6 @@ def test_flattener_nn_dims_created():
     assert len(proc.NN_dims) > 0
 
 
-@pytest.mark.pruned
 def test_flattener_final_locations_created():
     proc = PreprocessingStepSelector("flattener").get_preprocessor()
 

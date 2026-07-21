@@ -57,7 +57,6 @@ def make_agg(
     )
 
 
-@pytest.mark.pruned
 def test_init_defaults():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -76,7 +75,6 @@ def test_init_defaults():
     assert aggregator._aggregated_across_ranks is False
 
 
-@pytest.mark.pruned
 def test_init_with_existing_history_sets_epoch_count():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -109,7 +107,6 @@ def test_init_preserves_explicit_epoch_count():
     assert aggregator.num_epochs_seen == 7
 
 
-@pytest.mark.pruned
 def test_init_rejects_inconsistent_metric_lengths():
     with pytest.raises(AssertionError):
         MetricsAggregator(
@@ -122,7 +119,6 @@ def test_init_rejects_inconsistent_metric_lengths():
         )
 
 
-@pytest.mark.pruned
 def test_init_rejects_inconsistent_epoch_times():
     with pytest.raises(AssertionError):
         MetricsAggregator(
@@ -135,7 +131,6 @@ def test_init_rejects_inconsistent_epoch_times():
         )
 
 
-@pytest.mark.pruned
 def test_init_empty_metric_history():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -149,7 +144,6 @@ def test_init_empty_metric_history():
     assert aggregator.epoch_times == []
 
 
-@pytest.mark.pruned
 def test_record_numeric_metrics():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -208,7 +202,6 @@ def test_record_ignores_none_and_invalid_metrics():
     assert aggregator.num_batches_seen == 1
 
 
-@pytest.mark.pruned
 def test_record_empty_dictionary_increments_batches():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -221,7 +214,6 @@ def test_record_empty_dictionary_increments_batches():
     assert aggregator.loss_terms == {}
 
 
-@pytest.mark.pruned
 def test_record_accumulates_multiple_batches():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -239,7 +231,6 @@ def test_record_accumulates_multiple_batches():
     assert logs["loss"] == 3.0
 
 
-@pytest.mark.pruned
 def test_record_kwargs_numeric_and_tensor():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -328,7 +319,6 @@ def test_record_ignores_invalid_learning_rate(
     assert aggregator.lr_values == 0.0
 
 
-@pytest.mark.pruned
 def test_dist_compute_combines_all_metric_groups():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -373,7 +363,6 @@ def test_dist_compute_zero_batches_returns_nan():
     assert np.isnan(logs["lr"])
 
 
-@pytest.mark.pruned
 def test_dist_average_calls_distributed_reduce():
     distributed = DummyDistributed()
 
@@ -392,7 +381,6 @@ def test_dist_average_calls_distributed_reduce():
     )
 
 
-@pytest.mark.pruned
 def test_dist_average_distributed_scaling_preserves_average():
     distributed = ScalingDistributed(scale=4)
 
@@ -408,7 +396,6 @@ def test_dist_average_distributed_scaling_preserves_average():
     assert logs["lr"] == 0.0
 
 
-@pytest.mark.pruned
 def test_dist_compute_twice_without_new_records():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -465,7 +452,6 @@ def test_record_epoch_appends_metrics():
     assert aggregator.epochs_submitted is True
 
 
-@pytest.mark.pruned
 def test_record_epoch_none_time_becomes_nan():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -482,7 +468,6 @@ def test_record_epoch_none_time_becomes_nan():
     assert np.isnan(aggregator.epoch_times[0])
 
 
-@pytest.mark.pruned
 def test_record_epoch_resets_batch_state():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -528,7 +513,6 @@ def test_record_epoch_replaces_existing_metrics():
     assert aggregator.epoch_times == [9.0]
 
 
-@pytest.mark.pruned
 def test_record_epoch_replacement_none_time_becomes_nan():
     aggregator = make_agg(
         metrics={
@@ -565,7 +549,6 @@ def test_record_epoch_rejects_new_metric_during_replace():
         )
 
 
-@pytest.mark.pruned
 def test_record_epoch_replace_index_out_of_range():
     aggregator = make_agg(
         metrics={
@@ -582,7 +565,6 @@ def test_record_epoch_replace_index_out_of_range():
         )
 
 
-@pytest.mark.pruned
 def test_reset_before_epoch_warns_and_preserves_batches():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -600,7 +582,6 @@ def test_reset_before_epoch_warns_and_preserves_batches():
     assert aggregator.loss_terms["loss"] == 2.0
 
 
-@pytest.mark.pruned
 def test_reset_after_epoch_clears_state():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -622,7 +603,6 @@ def test_reset_after_epoch_clears_state():
     assert aggregator._aggregated_across_ranks is False
 
 
-@pytest.mark.pruned
 def test_state_dict_empty():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -637,7 +617,6 @@ def test_state_dict_empty():
     }
 
 
-@pytest.mark.pruned
 def test_state_dict_roundtrip():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -680,7 +659,6 @@ def test_load_state_dict_missing_keys():
     assert aggregator.num_epochs_seen == 0
 
 
-@pytest.mark.pruned
 def test_load_state_dict_explicit_none_values():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -702,7 +680,6 @@ def test_load_state_dict_explicit_none_values():
     assert aggregator.epoch_times is None
 
 
-@pytest.mark.pruned
 def test_load_state_preserves_batch_state_before_submission():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -726,7 +703,6 @@ def test_load_state_preserves_batch_state_before_submission():
     assert aggregator.loss_terms["loss"] == 3.0
 
 
-@pytest.mark.pruned
 def test_load_state_resets_batches_after_submission():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -783,7 +759,6 @@ def test_plot_rejects_inconsistent_epoch_counts(
         )
 
 
-@pytest.mark.pruned
 def test_plot_rejects_zero_epochs(tmp_path):
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -800,7 +775,6 @@ def test_plot_rejects_zero_epochs(tmp_path):
         )
 
 
-@pytest.mark.pruned
 def test_plot_creates_loss_and_time_files(
     tmp_path,
 ):
@@ -829,7 +803,6 @@ def test_plot_creates_loss_and_time_files(
     assert (tmp_path / "epoch_2_times.png").exists()
 
 
-@pytest.mark.pruned
 def test_plot_uses_custom_styles(tmp_path):
     first = make_agg("first")
     second = make_agg("second")
@@ -846,7 +819,6 @@ def test_plot_uses_custom_styles(tmp_path):
     assert list(tmp_path.glob("*.png"))
 
 
-@pytest.mark.pruned
 def test_plot_random_style_branch(tmp_path):
     first = make_agg("alpha")
     second = make_agg("beta")
@@ -893,7 +865,6 @@ def test_plot_skips_missing_metric(tmp_path):
     assert (tmp_path / "epoch_2_rmse.png").exists()
 
 
-@pytest.mark.pruned
 def test_plot_skips_empty_epoch_times(tmp_path):
     aggregator = make_agg("train")
     aggregator.epoch_times = []
@@ -907,7 +878,6 @@ def test_plot_skips_empty_epoch_times(tmp_path):
     assert (tmp_path / "epoch_2_times.png").exists()
 
 
-@pytest.mark.pruned
 def test_plot_sanitizes_metric_name(tmp_path):
     aggregator = make_agg(
         "train",
@@ -924,7 +894,6 @@ def test_plot_sanitizes_metric_name(tmp_path):
     assert (tmp_path / "epoch_2_loss_train.png").exists()
 
 
-@pytest.mark.pruned
 def test_plot_removes_old_loss_plot(tmp_path):
     old_plot = tmp_path / "epoch_1_loss.png"
     old_plot.write_text("old")
@@ -949,7 +918,6 @@ def test_plot_removes_old_time_plot(tmp_path):
     assert old_plot.exists() is False
 
 
-@pytest.mark.pruned
 def test_plot_accepts_string_directory(tmp_path):
     MetricsAggregator.plot(
         [make_agg("train")],
@@ -976,7 +944,6 @@ def test_plot_uses_runtime_context(
     assert list(tmp_path.glob("*.png"))
 
 
-@pytest.mark.pruned
 def test_plot_closes_figures(tmp_path):
     MetricsAggregator.plot(
         [make_agg("train")],
@@ -986,7 +953,6 @@ def test_plot_closes_figures(tmp_path):
     assert plt.get_fignums() == []
 
 
-@pytest.mark.pruned
 def test_running_covariance_first_update():
     covariance = RunningCovariance(DummyDistributed())
 
@@ -1026,7 +992,6 @@ def test_running_covariance_multiple_updates():
     )
 
 
-@pytest.mark.pruned
 def test_running_covariance_detaches_input():
     covariance = RunningCovariance(DummyDistributed())
 
@@ -1080,7 +1045,6 @@ def test_running_covariance_finalize_rejects_one_sample():
         covariance.finalize()
 
 
-@pytest.mark.pruned
 def test_running_covariance_distributed_reduce():
     distributed = DummyDistributed()
     covariance = RunningCovariance(distributed)

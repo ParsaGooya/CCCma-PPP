@@ -192,7 +192,6 @@ def build_autoencoder(
     )
 
 
-@pytest.mark.pruned
 def test_cvae_mlp_registered():
     selector = cVAEModelSelector(
         type="mlp",
@@ -220,7 +219,6 @@ def test_autoencoder_registered():
     assert isinstance(cfg, AutoencoderConfig)
 
 
-@pytest.mark.pruned
 def test_cvae_config_build_returns_model():
     cfg = make_cvae_config()
 
@@ -234,14 +232,12 @@ def test_cvae_config_build_returns_model():
     assert model.generative_modeling is True
 
 
-@pytest.mark.pruned
 def test_cvae_config_sets_condition_dependant_flow_false():
     cfg = make_cvae_config()
 
     assert getattr(cfg, "condition_dependant_flow", False) is False
 
 
-@pytest.mark.pruned
 def test_cvae_invalid_dropout_low():
     with pytest.raises((AssertionError, ValueError, RuntimeError)):
         cfg = make_cvae_config(dropout_rate=-0.1)
@@ -271,7 +267,6 @@ def test_cvae_decoder_hidden_default_empty_when_encoder_empty():
     assert model.decoder_hidden_dims == []
 
 
-@pytest.mark.pruned
 def test_cvae_decoder_hidden_default_reverse_branch():
     cfg = make_cvae_config(
         encoder_hidden_dims=[16, 8, 4],
@@ -300,7 +295,6 @@ def test_cvae_explicit_decoder_hidden_dims():
     assert model.decoder_hidden_dims == [7, 6]
 
 
-@pytest.mark.pruned
 def test_cvae_condition_embedding_none_disables_decoder_condition():
     cfg = make_cvae_config(
         condition_embedding_dims=None,
@@ -315,7 +309,6 @@ def test_cvae_condition_embedding_none_disables_decoder_condition():
     assert model.condemb_to_decoder is False
 
 
-@pytest.mark.pruned
 def test_cvae_condition_embedding_sets_condition_size():
     cfg = make_cvae_config(condition_embedding_dims=[5, 4])
 
@@ -328,7 +321,6 @@ def test_cvae_condition_embedding_sets_condition_size():
     assert model.condition_embedding_dims == [5]
 
 
-@pytest.mark.pruned
 def test_cvae_condition_dependant_latent_valid():
     cfg = make_cvae_config(
         latent_size=4,
@@ -344,7 +336,6 @@ def test_cvae_condition_dependant_latent_valid():
     assert model.condition_dependant_latent is True
 
 
-@pytest.mark.pruned
 def test_cvae_condition_dependant_flow_skips_latent_size_assert():
     cfg = make_cvae_config(
         latent_size=3,
@@ -361,7 +352,6 @@ def test_cvae_condition_dependant_flow_skips_latent_size_assert():
     assert model.condition_dependant_flow is True
 
 
-@pytest.mark.pruned
 def test_cvae_build_basic():
     model = build_cvae()
 
@@ -373,7 +363,6 @@ def test_cvae_build_basic():
     assert model.output_shape == 6
 
 
-@pytest.mark.pruned
 def test_cvae_build_with_added_features():
     model = build_cvae(
         encoder_hidden_dims=[8],
@@ -383,7 +372,6 @@ def test_cvae_build_with_added_features():
     assert model.added_features_dim == 3
 
 
-@pytest.mark.pruned
 def test_cvae_build_added_features_none_defaults_zero():
     model = build_cvae()
 
@@ -411,7 +399,6 @@ def test_cvae_build_with_dropout_and_batchnorm():
     assert any(isinstance(layer, torch.nn.BatchNorm1d) for layer in model.encoder)
 
 
-@pytest.mark.pruned
 def test_cvae_build_with_condition_embedding():
     model = build_cvae(
         encoder_hidden_dims=[8],
@@ -422,7 +409,6 @@ def test_cvae_build_with_condition_embedding():
     assert hasattr(model, "embedding")
 
 
-@pytest.mark.pruned
 def test_cvae_build_condition_dependant_latent_layers():
     model = build_cvae(
         encoder_hidden_dims=[8],
@@ -436,7 +422,6 @@ def test_cvae_build_condition_dependant_latent_layers():
     assert hasattr(model, "condition_log_var")
 
 
-@pytest.mark.pruned
 def test_cvae_build_checkpoint_input_shape_mismatch():
     cfg = make_cvae_config()
     cfg._add_checkpoint_config(
@@ -494,7 +479,6 @@ def test_cvae_build_checkpoint_success_calls_load(monkeypatch):
     assert called["load"] is True
 
 
-@pytest.mark.pruned
 def test_cvae_recognition_plain():
     model = build_cvae()
 
@@ -504,7 +488,6 @@ def test_cvae_recognition_plain():
     assert log_var.shape == (2, 4)
 
 
-@pytest.mark.pruned
 def test_cvae_recognition_with_mask():
     model = build_cvae()
 
@@ -517,7 +500,6 @@ def test_cvae_recognition_with_mask():
     assert log_var.shape == (2, 4)
 
 
-@pytest.mark.pruned
 def test_cvae_recognition_with_added_features():
     model = build_cvae(
         encoder_hidden_dims=[8],
@@ -533,7 +515,6 @@ def test_cvae_recognition_with_added_features():
     assert mu.shape == (2, 4)
 
 
-@pytest.mark.pruned
 def test_cvae_recognition_with_condition():
     model = build_cvae(
         encoder_hidden_dims=[8],
@@ -552,7 +533,6 @@ def test_cvae_recognition_with_condition():
     assert log_var.shape == (2, 4)
 
 
-@pytest.mark.pruned
 def test_cvae_condition_none():
     model = build_cvae()
 
@@ -562,7 +542,6 @@ def test_cvae_condition_none():
     assert cond_log_var is None
 
 
-@pytest.mark.pruned
 def test_cvae_condition_plain():
     model = build_cvae(
         encoder_hidden_dims=[8],
@@ -589,7 +568,6 @@ def test_cvae_condition_with_mask():
     assert cond_mu.shape == (2, 4)
 
 
-@pytest.mark.pruned
 def test_cvae_condition_with_added_features():
     model = build_cvae(
         encoder_hidden_dims=[8],
@@ -605,7 +583,6 @@ def test_cvae_condition_with_added_features():
     assert cond_mu.shape == (2, 4)
 
 
-@pytest.mark.pruned
 def test_cvae_condition_dependant_latent_outputs_cond_mu_log_var():
     model = build_cvae(
         encoder_hidden_dims=[8],
@@ -620,7 +597,6 @@ def test_cvae_condition_dependant_latent_outputs_cond_mu_log_var():
     assert cond_log_var.shape == (2, 4)
 
 
-@pytest.mark.pruned
 def test_cvae_sample_shape():
     model = build_cvae()
 
@@ -632,7 +608,6 @@ def test_cvae_sample_shape():
     assert samples.shape == (3, 2, 4)
 
 
-@pytest.mark.pruned
 def test_cvae_get_normal_std():
     model = build_cvae()
 
@@ -642,7 +617,6 @@ def test_cvae_get_normal_std():
     assert dist.sample().shape == ref.shape
 
 
-@pytest.mark.pruned
 def test_cvae_generate_plain():
     model = build_cvae()
 
@@ -652,7 +626,6 @@ def test_cvae_generate_plain():
     assert out.shape == (3, 2, 6)
 
 
-@pytest.mark.pruned
 def test_cvae_generate_with_added_features():
     model = build_cvae(
         encoder_hidden_dims=[8],
@@ -668,7 +641,6 @@ def test_cvae_generate_with_added_features():
     assert out.shape == (3, 2, 6)
 
 
-@pytest.mark.pruned
 def test_cvae_generate_with_condition():
     model = build_cvae(
         encoder_hidden_dims=[8],
@@ -683,7 +655,6 @@ def test_cvae_generate_with_condition():
     assert out.shape == (3, 2, 6)
 
 
-@pytest.mark.pruned
 def test_cvae_generate_with_condition_but_decoder_flag_false():
     model = build_cvae(
         encoder_hidden_dims=[8],
@@ -700,7 +671,6 @@ def test_cvae_generate_with_condition_but_decoder_flag_false():
     assert out.shape == (3, 2, 6)
 
 
-@pytest.mark.pruned
 def test_cvae_forward_basic():
     model = build_cvae()
 
@@ -712,7 +682,6 @@ def test_cvae_forward_basic():
     assert out.log_var.shape == (2, 4)
 
 
-@pytest.mark.pruned
 def test_cvae_forward_sample_size():
     model = build_cvae()
 
@@ -755,7 +724,6 @@ def test_cvae_forward_with_condition_and_added_features():
     assert out.cond_mu.shape == (2, 4)
 
 
-@pytest.mark.pruned
 def test_cvae_forward_condition_dependant_latent():
     model = build_cvae(
         encoder_hidden_dims=[8],
@@ -774,7 +742,6 @@ def test_cvae_forward_condition_dependant_latent():
     assert out.cond_log_var.shape == (2, 4)
 
 
-@pytest.mark.pruned
 def test_cvae_predict_basic():
     model = build_cvae()
 
@@ -789,7 +756,6 @@ def test_cvae_predict_basic():
     assert out.output.shape == (2, 2, 1, 6)
 
 
-@pytest.mark.pruned
 def test_cvae_predict_condition_as_tuple():
     model = build_cvae(
         encoder_hidden_dims=[8],
@@ -827,7 +793,6 @@ def test_cvae_predict_condition_dependant_latent():
     assert out.output.shape == (2, 2, 1, 6)
 
 
-@pytest.mark.pruned
 def test_cvae_predict_with_prior_flow_no_condition():
     model = build_cvae()
 
@@ -867,7 +832,6 @@ def test_cvae_predict_with_prior_flow_conditioned():
     assert out.output.shape == (2, 2, 1, 6)
 
 
-@pytest.mark.pruned
 def test_autoencoder_config_build_returns_model():
     cfg = AutoencoderConfig(encoder_hidden_dims=[4])
 
@@ -879,7 +843,6 @@ def test_autoencoder_config_build_returns_model():
     assert isinstance(model, Autoencoder)
 
 
-@pytest.mark.pruned
 def test_autoencoder_decoder_hidden_default_empty_for_single_encoder_dim():
     cfg = AutoencoderConfig(encoder_hidden_dims=[4])
 
@@ -891,7 +854,6 @@ def test_autoencoder_decoder_hidden_default_empty_for_single_encoder_dim():
     assert model.decoder_hidden_dims == []
 
 
-@pytest.mark.pruned
 def test_autoencoder_decoder_hidden_default_reverse_branch():
     cfg = AutoencoderConfig(encoder_hidden_dims=[16, 8, 4])
 
@@ -930,7 +892,6 @@ def test_autoencoder_build_append_modes(append_mode):
     assert model.append_mode == append_mode
 
 
-@pytest.mark.pruned
 def test_autoencoder_build_append_mode_other():
     model = build_autoencoder(
         encoder_hidden_dims=[4],
@@ -941,7 +902,6 @@ def test_autoencoder_build_append_mode_other():
     assert model.append_mode == 0
 
 
-@pytest.mark.pruned
 def test_autoencoder_build_no_added_features():
     model = build_autoencoder()
 
@@ -969,7 +929,6 @@ def test_autoencoder_build_dropout_and_batchnorm():
     assert any(isinstance(layer, torch.nn.BatchNorm1d) for layer in model.encoder)
 
 
-@pytest.mark.pruned
 def test_autoencoder_build_checkpoint_input_shape_mismatch():
     cfg = AutoencoderConfig(encoder_hidden_dims=[4])
     cfg._add_checkpoint_config(
@@ -1036,7 +995,6 @@ def test_autoencoder_forward_plain():
     assert out.output.shape == (2, 1, 6)
 
 
-@pytest.mark.pruned
 def test_autoencoder_forward_tuple_mask_append_mode_1():
     model = build_autoencoder(
         encoder_hidden_dims=[4],
@@ -1085,7 +1043,6 @@ def test_autoencoder_forward_tuple_mask_append_mode_3():
     assert out.output.shape == (2, 1, 6)
 
 
-@pytest.mark.pruned
 def test_autoencoder_forward_list_mask_append_mode_1():
     model = build_autoencoder(
         encoder_hidden_dims=[4],
@@ -1102,7 +1059,6 @@ def test_autoencoder_forward_list_mask_append_mode_1():
     assert out.output.shape == (2, 1, 6)
 
 
-@pytest.mark.pruned
 def test_cvae_recognition_without_mask():
     model = build_cvae()
     data = x()
@@ -1116,7 +1072,6 @@ def test_cvae_recognition_without_mask():
     assert log_var.shape == mu.shape
 
 
-@pytest.mark.pruned
 def test_cvae_recognition_with_separate_mask():
     model = build_cvae()
     data = x()
@@ -1140,7 +1095,6 @@ def test_cvae_recognition_with_separate_mask():
     )
 
 
-@pytest.mark.pruned
 def test_cvae_condition_without_embedding():
     model = build_cvae()
 
@@ -1152,7 +1106,6 @@ def test_cvae_condition_without_embedding():
     assert cond_log_var is None
 
 
-@pytest.mark.pruned
 def test_cvae_generate_without_features_or_condition():
     model = build_cvae()
     latent_samples = torch.randn(
@@ -1172,7 +1125,6 @@ def test_cvae_generate_without_features_or_condition():
     )
 
 
-@pytest.mark.pruned
 def test_cvae_generate_ignores_condition_when_decoder_flag_false():
     model = build_cvae(
         condition_embedding_dims=None,
@@ -1197,7 +1149,6 @@ def test_cvae_generate_ignores_condition_when_decoder_flag_false():
     )
 
 
-@pytest.mark.pruned
 def test_cvae_forward_with_separate_mask():
     model = build_cvae()
     data = x()
@@ -1220,7 +1171,6 @@ def test_cvae_forward_with_separate_mask():
     assert output.log_var.shape == output.mu.shape
 
 
-@pytest.mark.pruned
 def test_cvae_forward_clamps_posterior_variance():
     model = build_cvae()
     minimum = torch.tensor(10.0)
@@ -1234,7 +1184,6 @@ def test_cvae_forward_clamps_posterior_variance():
     assert torch.all(output.log_var >= minimum)
 
 
-@pytest.mark.pruned
 def test_cvae_sample_shape_with_custom_std():
     model = build_cvae()
     mu = torch.zeros(2, model.latent_size)
@@ -1254,7 +1203,6 @@ def test_cvae_sample_shape_with_custom_std():
     )
 
 
-@pytest.mark.pruned
 def test_cvae_get_normal_uses_reference_dtype():
     model = build_cvae()
     reference = torch.zeros(
@@ -1276,7 +1224,6 @@ def test_cvae_get_normal_uses_reference_dtype():
     )
 
 
-@pytest.mark.pruned
 def test_autoencoder_forward_without_mask():
     model = build_autoencoder()
     data = x()
@@ -1289,7 +1236,6 @@ def test_autoencoder_forward_without_mask():
     assert output.output.shape == data.shape
 
 
-@pytest.mark.pruned
 def test_autoencoder_forward_with_mask():
     model = build_autoencoder()
     data = x()
@@ -1336,7 +1282,6 @@ def test_autoencoder_forward_append_modes(
     assert output.output.shape == data.shape
 
 
-@pytest.mark.pruned
 def test_autoencoder_ignores_features_for_other_append_mode():
     model = build_autoencoder(
         encoder_hidden_dims=[4],
@@ -1355,7 +1300,6 @@ def test_autoencoder_ignores_features_for_other_append_mode():
     assert output.output.shape == data.shape
 
 
-@pytest.mark.pruned
 def test_autoencoder_dropout_zero_builds_dropout_layers():
     model = build_autoencoder(
         encoder_hidden_dims=[8, 4],
@@ -1367,7 +1311,6 @@ def test_autoencoder_dropout_zero_builds_dropout_layers():
     assert any(isinstance(layer, nn.Dropout) for layer in model.decoder)
 
 
-@pytest.mark.pruned
 def test_autoencoder_batch_normalization_builds_batchnorm_layers():
     model = build_autoencoder(
         encoder_hidden_dims=[8, 4],
@@ -1379,7 +1322,6 @@ def test_autoencoder_batch_normalization_builds_batchnorm_layers():
     assert any(isinstance(layer, nn.BatchNorm1d) for layer in model.decoder)
 
 
-@pytest.mark.pruned
 def test_cvae_config_condition_dependant_latent_allows_no_decoder_condition():
     config = cVAE_MLPConfig(
         encoder_hidden_dims=[8],

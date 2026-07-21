@@ -142,7 +142,6 @@ def test_writer_config_negative_sampling():
         )
 
 
-@pytest.mark.pruned
 def test_writer_config_build(tmp_path):
     cfg = WriterConfig(
         predictor=object(),
@@ -159,7 +158,6 @@ def test_writer_config_build(tmp_path):
     assert isinstance(writer, Writer)
 
 
-@pytest.mark.pruned
 def test_log_root_logger_branch():
     writer = object.__new__(Writer)
 
@@ -171,7 +169,6 @@ def test_log_root_logger_branch():
     assert len(writer.logger.messages) == 1
 
 
-@pytest.mark.pruned
 def test_log_root_print_branch(capsys):
     writer = object.__new__(Writer)
 
@@ -194,7 +191,6 @@ def test_log_root_non_root_noop(capsys):
     assert capsys.readouterr().out == ""
 
 
-@pytest.mark.pruned
 def test_raw_module_normal():
     writer = object.__new__(Writer)
 
@@ -205,7 +201,6 @@ def test_raw_module_normal():
     assert writer.raw_module is module
 
 
-@pytest.mark.pruned
 def test_setup_distributed_success(tmp_path):
     predictor = DummyPredictor()
 
@@ -420,16 +415,12 @@ def test_build_train_loader_train(tmp_path):
     assert cfg.train_called
 
 
-@pytest.mark.pruned
-                                
 def test_build_train_loader_validation():
     writer = object.__new__(Writer)
 
     cfg = DummyTrainLoaderConfig
 
 
-@pytest.mark.pruned
-                                
 def test_train_stats_save_dir_property(tmp_path):
     writer = object.__new__(Writer)
     writer.output_dir = tmp_path
@@ -549,7 +540,6 @@ def test_save_train_stats_barrier(tmp_path):
     assert dist.barrier_called == 1
 
 
-@pytest.mark.pruned
 def test_save_train_stats_validation_branch(
     tmp_path,
 ):
@@ -582,7 +572,6 @@ def test_save_train_stats_validation_branch(
     assert called["validation"] is True
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_to_netcdf_root(
     monkeypatch,
 ):
@@ -695,7 +684,6 @@ def test_aggregate_predictions_to_netcdf_latent(
     assert captured["name"] == "latent"
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_cleanup_false(
     tmp_path,
 ):
@@ -906,7 +894,6 @@ def test_aggregate_predictions_logger_called(
     assert len(messages) >= 2
 
 
-@pytest.mark.pruned
 def test_aggregate_train_stats_root_empty_stats(
     tmp_path,
 ):
@@ -923,7 +910,6 @@ def test_aggregate_train_stats_root_empty_stats(
     assert saved == {}
 
 
-@pytest.mark.pruned
 def test_aggregate_train_stats_skip_sum_x_none(
     tmp_path,
 ):
@@ -1009,7 +995,6 @@ def test_aggregate_train_stats_distributed_reduce_called():
     assert called["reduce"]
 
 
-@pytest.mark.pruned
 def test_save_train_stats_existing_file_skips_loader(
     tmp_path,
 ):
@@ -1079,7 +1064,6 @@ def test_save_train_stats_calls_aggregate(
     assert called["aggregate"]
 
 
-@pytest.mark.pruned
 def test_save_train_stats_validation_loader_branch(
     tmp_path,
 ):
@@ -1152,7 +1136,6 @@ def test_aggregate_predictions_to_netcdf_distributed_barriers(
     assert calls["aggregate"] == 1
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_to_netcdf_latent_name(
     monkeypatch,
 ):
@@ -1181,7 +1164,6 @@ def test_aggregate_predictions_to_netcdf_latent_name(
     assert captured["name"] == "latent"
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_no_files(
     tmp_path,
 ):
@@ -1195,7 +1177,6 @@ def test_aggregate_predictions_no_files(
         )
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_missing_year_coordinate(
     tmp_path,
 ):
@@ -1219,7 +1200,6 @@ def test_aggregate_predictions_missing_year_coordinate(
         )
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_multiple_years(
     tmp_path,
 ):
@@ -1257,7 +1237,6 @@ def test_aggregate_predictions_multiple_years(
     assert (tmp_path / "prediction_2001.nc").exists()
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_year_missing_from_one_file(
     tmp_path,
 ):
