@@ -169,7 +169,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         
         if not self._input_preprocessor_exists(load_path):
             if distributed.is_root():
-                train_loader_config.dataset_config._fit_preprocessors(
+                train_loader_config.dataset_config.fit_preprocessors(
                     train_loader_config.dataset_config.train_years, 
                     save=True, 
                     save_path=load_path
@@ -177,7 +177,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
         distributed.barrier()
 
-        self.dataset_config._load_fitted_preprocessors(load_dir=load_path)
+        self.dataset_config.load_fitted_preprocessors(load_dir=load_path)
 
         if distributed.distributed:
             self.pin_memory = True

@@ -67,14 +67,14 @@ class InferenceDatasetConfig(DatasetConfigABC):
 
         return common
 
-    def _load_fitted_preprocessors(
+    def load_fitted_preprocessors(
         self, load_dir: Path | str | None = None
     ):
-        self.ds_operator._load_fitted_preprocessors(load_dir)
+        self.ds_operator.load_fitted_preprocessors(load_dir)
 
-    def _add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
+    def add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
 
-        self.ds_operator._add_fitted_preprocessor(preprocessor, index)
+        self.ds_operator.add_fitted_preprocessor(preprocessor, index)
 
 
     def build_dataset(

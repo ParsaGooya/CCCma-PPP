@@ -227,7 +227,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
         if distributed.is_root():
             if load_path is None:
-                self.dataset_config._fit_preprocessors(
+                self.dataset_config.fit_preprocessors(
                     self.train_years, save=True
                 )
 
@@ -235,7 +235,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
         if (distributed.distributed or 
             load_path is not None):
-            self.dataset_config._load_fitted_preprocessors(load_dir=load_path)
+            self.dataset_config.load_fitted_preprocessors(load_dir=load_path)
 
         if distributed.distributed:
             self.pin_memory = True

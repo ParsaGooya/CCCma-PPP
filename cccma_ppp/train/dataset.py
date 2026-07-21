@@ -159,7 +159,7 @@ class TrainDatasetConfig(DatasetConfigABC):
                                   self.get_common_time)
                                   
 
-    def _fit_preprocessors(
+    def fit_preprocessors(
         self,
         train_years,
         save=False,
@@ -173,14 +173,14 @@ class TrainDatasetConfig(DatasetConfigABC):
         -------
         None
         """
-        self.ds_operator._fit_preprocessors(
+        self.ds_operator.fit_preprocessors(
             train_years=train_years,
             save=save,
             save_path=save_path,
             save_name=save_name,
         )
 
-    def _load_fitted_preprocessors(self, load_dir: Path | str | None = None):
+    def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         """
         Load fitted preprocessors.
 
@@ -188,9 +188,9 @@ class TrainDatasetConfig(DatasetConfigABC):
         -------
         None
         """
-        self.ds_operator._load_fitted_preprocessors(load_dir)
+        self.ds_operator.load_fitted_preprocessors(load_dir)
 
-    def _add_fitted_preprocessor(self, preprocessor, index=0):
+    def add_fitted_preprocessor(self, preprocessor, index=0):
         """
         Add fitted preprocessor.
 
@@ -204,7 +204,7 @@ class TrainDatasetConfig(DatasetConfigABC):
         None
         """
 
-        self.ds_operator._add_fitted_preprocessor(preprocessor, index)
+        self.ds_operator.add_fitted_preprocessor(preprocessor, index)
 
     def build_dataset(
         self,

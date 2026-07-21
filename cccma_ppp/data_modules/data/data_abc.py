@@ -149,7 +149,7 @@ class DataConfigABC(abc.ABC):
         return _get_ds_info(self)
 
     @final
-    def _fit_preprocessor_pipeline(
+    def fit_preprocessor_pipeline(
         self,
         selection: dict,
         mask: bool = False,
@@ -200,7 +200,7 @@ class DataConfigABC(abc.ABC):
         gc.collect()
 
     @final
-    def _load_preprocessor_pipeline(self, load_dir: Path | str | None = None):
+    def load_preprocessor_pipeline(self, load_dir: Path | str | None = None):
         """
         Load fitted preprocessing pipeline.
 

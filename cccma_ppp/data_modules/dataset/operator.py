@@ -48,7 +48,7 @@ class DatasetOperator:
         if hasattr(self.config, "observation"):
             return self.config.observation
 
-    def _fit_preprocessors(
+    def fit_preprocessors(
         self,
         train_years: np.ndarray | list | tuple,
         save=False,
@@ -84,7 +84,7 @@ class DatasetOperator:
             if self.config.model.info.coords.get("ensembles") is not None:
                 selection["ensembles"] = self.config.model.info.coords["ensembles"]
 
-            self.config.model._fit_preprocessor_pipeline(
+            self.config.model.fit_preprocessor_pipeline(
                 selection=selection,
                 mask=True,
                 save=save,
@@ -99,7 +99,7 @@ class DatasetOperator:
                     "ensembles"
                 ]
 
-            self.config_observation._fit_preprocessor_pipeline(
+            self.config_observation.fit_preprocessor_pipeline(
                 selection=selection, save=save, save_path=save_path, save_name=save_name
             )
 
@@ -116,7 +116,7 @@ class DatasetOperator:
                         self.config.effective_condition.info.coords["ensembles"]
                     )
 
-            self.config.effective_condition._fit_preprocessor_pipeline(
+            self.config.effective_condition.fit_preprocessor_pipeline(
                 selection=selection,
                 mask=True,
                 save=save,
@@ -126,7 +126,7 @@ class DatasetOperator:
 
         self.config._fitted_preprocessors = True
 
-    def _load_fitted_preprocessors(self, load_dir: Path | str | None = None):
+    def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         """
         Load fitted preprocessing pipelines.
 
@@ -140,17 +140,17 @@ class DatasetOperator:
         """
 
         if self.config.model is not None:
-            self.config.model._load_preprocessor_pipeline(load_dir)
+            self.config.model.load_preprocessor_pipeline(load_dir)
 
         if self.config_observation is not None:
-            self.config_observation._load_preprocessor_pipeline(load_dir)
+            self.config_observation.load_preprocessor_pipeline(load_dir)
 
         if self.config.effective_condition is not None:
-            self.config.effective_condition._load_preprocessor_pipeline(load_dir)
+            self.config.effective_condition.load_preprocessor_pipeline(load_dir)
 
         self.config._fitted_preprocessors = True
 
-    def _add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
+    def add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
         """
         Add a fitted preprocessor to all relevant pipelines.
 
