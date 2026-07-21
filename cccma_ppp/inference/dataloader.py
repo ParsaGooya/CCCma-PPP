@@ -70,6 +70,8 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     prefetch_factor: int | None = None
     drop_last: bool = False
     load: bool = False
+    return_spatial_mask: bool = False
+    reduce_spatial_mask: bool = False
 
     time_features: AddedTimeFeatures | None = dataclasses.field(
         init=False,
@@ -182,7 +184,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         self._setup = True
 
 
-    def build_inference_loader(self, return_spatial_mask=False, reduce_spatial_mask=False):
+    def build_inference_loader(self):
         if not self._setup:
             raise RuntimeError(
                 "Dataloader has to be setup for distributed training first by calling .setup_distributed()"
@@ -202,8 +204,6 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
             rank=self.rank,
             world_size=self.world_size,
             shuffle=False,
-            return_spatial_mask=return_spatial_mask,
-            reduce_spatial_mask=reduce_spatial_mask,
         )
 
     @property

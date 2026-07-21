@@ -143,6 +143,8 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     prefetch_factor: int = 2
     drop_last: bool = False
     load: bool = False
+    return_spatial_mask: bool = False
+    reduce_spatial_mask: bool = False
 
     def __post_init__(self):
         """
@@ -242,18 +244,16 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         self,
         return_metadata: bool = False,
         shuffle: bool | None = None,
-        return_spatial_mask: bool = False,
-        reduce_spatial_mask: bool = True,
     ):
         """
         Construct training dataloader.
 
         Parameters
         ----------
-        return_spatial_mask : bool, optional
-            Whether to return the spatial mask along with the dataloader output.
-        reduce_spatial_mask : bool, optional
-            Whether to reduce the spatial mask before returning it.
+        return_metadata : bool, optional
+            Whether to return the metadata for selection (coords).
+        shuffle : bool, optional
+            Whether to shuffle the dataset chunk.
 
         Returns
         -------
@@ -290,16 +290,12 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             rank=self.rank,
             shuffle=shuffle,
             world_size=self.world_size,
-            return_spatial_mask=return_spatial_mask,
-            reduce_spatial_mask=reduce_spatial_mask,
         )
 
     def build_validation_loader(
         self,
         return_metadata: bool = False,
         shuffle: bool | None = None,
-        return_spatial_mask: bool = False,
-        reduce_spatial_mask: bool = False,
         supress_error: bool = True,
     ):
         """
@@ -307,10 +303,12 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
         Parameters
         ----------
-        return_spatial_mask : bool, optional
-            Whether to return the spatial mask along with the dataloader output.
-        reduce_spatial_mask : bool, optional
-            Whether to reduce the spatial mask before returning it.
+        return_metadata : bool, optional
+            Whether to return the metadata for selection (coords).
+        shuffle : bool, optional
+            Whether to shuffle the dataset chunk.
+        supress_error : bool, optional
+            Whether to raise error if validation could not be built.
 
         Returns
         -------
@@ -347,8 +345,6 @@ class TrainDataloaderConfig(DataloaderConfigABC):
                 rank=self.rank,
                 shuffle=shuffle,
                 world_size=self.world_size,
-                return_spatial_mask=return_spatial_mask,
-                reduce_spatial_mask=reduce_spatial_mask,
             )
 
         else:

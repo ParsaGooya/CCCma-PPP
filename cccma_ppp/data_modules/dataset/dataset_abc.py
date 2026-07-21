@@ -4,6 +4,7 @@ import dataclasses
 import numpy as np
 from torch.utils.data import Dataset
 import xarray as xr
+import dask
 
 from cccma_ppp.data_modules.data import ModelDataConfig, ConditionDataConfig, DataConfigABC
 from cccma_ppp.configs import (supported_NN_dimensions_sorted,
@@ -14,8 +15,8 @@ from cccma_ppp.data_modules import (
     _unwrap_data_variables,
     _load_xarray_data,
     _create_train_mask,
+    suppress_stderr
 )
-
 
 
 
@@ -976,6 +977,12 @@ class DatasetABC(Dataset, abc.ABC):
         model = self.config.model.preprocessing_pipeline.transform(model)
 
         return _unwrap_data_variables(model)
+
+
+    @staticmethod
+    def _compute(*arrays):
+        with suppress_stderr(), dask.config.set(scheduler="synchronous"):
+            return dask.compute(*arrays)
 
     @final
     def __len__(self):

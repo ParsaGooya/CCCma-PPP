@@ -3,7 +3,6 @@ from pathlib import Path
 import numpy as np
 import xarray as xr
 import torch
-import dask
 
 from cccma_ppp.data_modules.dataset import (
     DatasetConfigABC, 
@@ -18,9 +17,6 @@ from cccma_ppp.data_modules.data import (
     ConditionDataConfig,
 )
 
-from cccma_ppp.data_modules import (
-    suppress_stderr,
-)
 
 from cccma_ppp.train.dataset import TrainDatasetConfig
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
@@ -149,12 +145,10 @@ class InferenceDataset(DatasetABC):
                                            selection, 
                                            input)
 
-        with suppress_stderr():
-            input = dask.compute(input.data,)
-
+        input_array = self._compute(input.data)
 
         datadict = dict(
-            input=torch.as_tensor(input, dtype=torch.float32),
+            input=torch.as_tensor(input_array, dtype=torch.float32),
             added_features=torch.as_tensor(time_features, dtype=torch.float32)
             if time_features is not None
             else None,

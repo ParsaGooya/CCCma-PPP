@@ -21,8 +21,9 @@ from cccma_ppp.data_modules.data import (
 
 from cccma_ppp.data_modules import (
     _unwrap_data_variables,
-    suppress_stderr,
 )
+
+from torch.utils.data import get_worker_info
 
 from cccma_ppp.configs import (supported_NN_dimensions_sorted,
                                 required_sample_dimensions)
@@ -506,7 +507,6 @@ class TrainDataset(DatasetABC):
         dict or tuple
             Sample dictionary, optionally with metadata.
         """
-
         selection = {dim : value[ind]
             for dim, value in self.sample_coords.items()
         }
@@ -528,20 +528,19 @@ class TrainDataset(DatasetABC):
                                            selection, 
                                            input)
 
-        with suppress_stderr():
-            input, target = dask.compute(
+        input_array, target_array = self._compute(
                 input.data,
                 target.data,
             )
 
         datadict = dict(
-            input=torch.as_tensor(input, dtype=torch.float32),
-            target=torch.as_tensor(target, dtype=torch.float32),
+            input=torch.as_tensor(input_array, dtype=torch.float32),
+            target=torch.as_tensor(target_array, dtype=torch.float32),
             added_features=torch.as_tensor(time_features, dtype=torch.float32)
             if time_features is not None
             else None,
         )
-
+        
         if self.return_metadata:
             return datadict, selection
         else:
