@@ -78,13 +78,10 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
 
     def __post_init__(self):
-        self._setup = False
-        self.pin_memory = False
+        
+        super().__init__()
         self.train_dataset_config = None
 
-        if self.num_data_workers == 0:
-            self.prefetch_factor = None
-        
         if self.dataset_config is not None:
             _ = self._inference_years
 

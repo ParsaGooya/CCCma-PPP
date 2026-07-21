@@ -157,15 +157,11 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         ValueError
             If requested training years are invalid.
         """
-        self._setup = False
-        self.pin_memory = False
+        super().__init__()
 
         self.time_features = AddedTimeFeatures(self.dataset_config,
                                                self.time_features)
 
-        
-        if self.num_data_workers == 0:
-            self.prefetch_factor = None
 
         if self.train_years is None:
             self.train_years = self.available_times
