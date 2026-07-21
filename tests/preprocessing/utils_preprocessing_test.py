@@ -133,7 +133,6 @@ def test_normalizer_no_dims():
     assert proc.max is not None
 
 
-@pytest.mark.pruned
 def test_normalizer_dims_contains_ensembles():
     proc = PreprocessingStepSelector(
         "normalizer", {"dims": ["ensembles", "time"]}
@@ -249,6 +248,7 @@ def test_standardizer_ensemble_branch():
     assert proc.fitted
 
 
+@pytest.mark.pruned
 def test_standardizer_dims_contains_ensembles():
     proc = PreprocessingStepSelector(
         "standardizer", {"dims": ["ensembles", "time"]}

@@ -404,7 +404,6 @@ def test_kld_cond_shape_mismatch():
         m._compute_loss(1.0, DummyBatch())
 
 
-@pytest.mark.pruned
 def test_load_checkpoint_missing():
     cfg = cVAEConfig(ModelConfig=DummySelector())
 

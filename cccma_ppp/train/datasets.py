@@ -10,10 +10,7 @@ from cccma_ppp.data_modules.dataset.config_abc import (
     DatasetConfigABC,
     lead_months_config,
 )
-from cccma_ppp.data_modules.dataset.operator import (
-    DatasetOperator,
-    _get_time_features,
-)
+from cccma_ppp.data_modules.dataset.operator import DatasetOperator
 from cccma_ppp.data_modules.data.data_configs import (
     ModelDataConfig,
     ObsDataConfig,
@@ -675,9 +672,7 @@ class TrainDataset(Dataset):
         int
         """
 
-        return (
-            0 if self.config.time_features is None else len(self.config.time_features)
-        )
+        return len(self.time_features)
 
     def _index_condition_dataset(self, ind):
         """
@@ -785,7 +780,7 @@ class TrainDataset(Dataset):
         elif self._concat_condition_to_input:
             input = xr.concat([input, condition], dim="channels")
 
-        time_features = _get_time_features(self.config, year, lead_time, input)
+        time_features = self.time_features(selection, input)
 
         datadict = dict(
             input=torch.as_tensor(input.to_numpy(), dtype=torch.float32),

@@ -1,480 +1,424 @@
+from types import SimpleNamespace
+from unittest.mock import MagicMock, PropertyMock, patch
+import warnings
+
 import numpy as np
 import pytest
 import torch
 import xarray as xr
 
+import cccma_ppp.train.dataset as module
+from cccma_ppp.data_modules.dataset.dataset_abc import (
+    AddedTimeFeatures,
+    DatasetABC,
+)
 from cccma_ppp.train.dataset import (
     TrainDataset,
     TrainDatasetConfig,
 )
 
 
+class Coordinate:
+    def __init__(self, values):
+        self.values = np.asarray(values)
+        self.size = self.values.size
+
+    def equals(self, other):
+        return np.array_equal(
+            self.values,
+            other.values,
+        )
+
+    def __iter__(self):
+        return iter(self.values)
+
+    def __len__(self):
+        return len(self.values)
+
+    def __getitem__(self, index):
+        return self.values[index]
+
+
 class DummyPipeline:
-    def __init__(self):
-        self.fitted_preprocessors = []
+    def __init__(
+        self,
+        fitted_preprocessors=None,
+    ):
+        self.fitted_preprocessors = list(fitted_preprocessors or [])
+        self.transform_calls = []
 
     def transform(self, value):
+        self.transform_calls.append(value)
         return value
 
     def get_preprocessors(self, name):
-        class Preprocessor:
-            final_locations = np.arange(4)
-
-        return Preprocessor()
+        return self._flattener
 
 
-class DummyInfo:
-    def __init__(self):
-        self.sizes = {
-            "lead_time": 12,
-        }
-        self.coords = {
-            "lat": xr.DataArray(
-                [0, 1],
-                dims="lat",
-            ),
-            "lon": xr.DataArray(
-                [0, 1],
-                dims="lon",
-            ),
-            "ensembles": xr.DataArray(
-                [0, 1],
-                dims="ensembles",
-            ),
-            "year": xr.DataArray(
-                [2000, 2001, 2002],
-                dims="year",
-            ),
-            "lead_time": xr.DataArray(
-                np.arange(1, 13),
-                dims="lead_time",
-            ),
-            "month": xr.DataArray(
-                np.arange(1, 13),
-                dims="month",
-            ),
-        }
+def make_data_config(
+    *,
+    paths=("data.nc",),
+    names=("tas",),
+    years=(2000, 2001, 2002),
+    lead_times=(1, 2, 3),
+    months=(0.5, 1.5, 2.5),
+    ensembles=(0, 1),
+    ensemble_mean=False,
+    ensemble_list=None,
+    lat=(0, 1),
+    lon=(10, 20),
+    pipeline=None,
+):
+    coords = {
+        "year": Coordinate(years),
+        "lead_time": Coordinate(lead_times),
+        "month": Coordinate(months),
+        "lat": Coordinate(lat),
+        "lon": Coordinate(lon),
+    }
 
+    if ensembles is not None:
+        coords["ensembles"] = Coordinate(ensembles)
 
-class DummyConfig:
-    def __init__(self, ensemble_mean=False):
-        self.info = DummyInfo()
-        self.ensemble_mean = ensemble_mean
-        self.preprocessing_pipeline = DummyPipeline()
-        self.year_range = np.array([2000, 2001, 2002])
-        self.names = ["a"]
-        self.list_paths = ["x"]
-        self.concat_dim = None
-        self.rename_dict = {}
-        self.ensemble_list = None
-        self.paths = ["x"]
-
-
-def set_years(config, years):
-    years = np.asarray(years)
-
-    config.year_range = years
-    config.info.coords["year"] = xr.DataArray(
-        years,
-        dims="year",
-    )
-
-
-@pytest.fixture
-def fake_ds():
-    return xr.Dataset(
-        {
-            "var": (
-                (
-                    "ensembles",
-                    "year",
-                    "lead_time",
-                    "month",
-                ),
-                np.zeros((2, 3, 12, 12)),
-            )
-        },
-        coords={
-            "ensembles": [0, 1],
-            "year": [2000, 2001, 2002],
-            "lead_time": np.arange(1, 13),
-            "month": np.arange(1, 13),
-        },
-    )
-
-
-@pytest.fixture(autouse=True)
-def patch_helpers(monkeypatch, fake_ds):
-    monkeypatch.setattr(
-        TrainDatasetConfig,
-        "effective_condition",
-        property(
-            lambda self: getattr(
-                self,
-                "_effective_condition",
-                None,
-            )
+    return SimpleNamespace(
+        paths=list(paths),
+        list_paths=list(paths),
+        names=list(names),
+        year_range=np.asarray(years),
+        ensemble_mean=ensemble_mean,
+        ensemble_list=ensemble_list,
+        concat_dim="year",
+        file_type="netcdf",
+        rename_dict={},
+        preprocessing_pipeline=(pipeline if pipeline is not None else DummyPipeline()),
+        info=SimpleNamespace(
+            coords=coords,
+            sizes={name: coordinate.size for name, coordinate in coords.items()},
         ),
     )
 
-    monkeypatch.setattr(
-        TrainDataset,
-        "_load_xarray_data",
-        lambda *args, **kwargs: fake_ds,
-    )
 
-    monkeypatch.setattr(
-        "cccma_ppp.train.dataset._get_time_features",
-        lambda *args, **kwargs: None,
-    )
-
-
-def make_config(
+def make_config_stub(
+    *,
     model=None,
     observation=None,
     condition=None,
+    effective_condition=None,
     condition_method="static",
-    using_model_condition=False,
-    time_features=None,
-    lead_months=None,
+    using_model_as_condition=False,
 ):
     if model is None:
-        model = DummyConfig()
+        model = make_data_config(
+            paths=("model.nc",),
+        )
 
-    config = TrainDatasetConfig.__new__(TrainDatasetConfig)
-
-    config.model = model
-    config.observation = observation
-    config.condition = condition
-    config.condition_method = condition_method
-    config.time_features = time_features
-    config.lead_months = (
-        np.arange(1, 13) if lead_months is None else np.asarray(lead_months)
+    return SimpleNamespace(
+        model=model,
+        observation=observation,
+        condition=condition,
+        effective_condition=(effective_condition),
+        condition_method=condition_method,
+        _using_model_data_as_condition=(using_model_as_condition),
+        lead_months=np.asarray([1, 2, 3]),
+        available_times=np.asarray([2000, 2001, 2002]),
+        input_lead_months=np.asarray([1, 2, 3]),
+        get_common_time=np.asarray([2000, 2001, 2002]),
+        _fitted_preprocessors=True,
     )
-    config._fitted_preprocessors = True
-    config._effective_condition = condition
 
-    monkey_value = bool(using_model_condition)
 
-    type(config)._using_model_data_as_condition = property(lambda self: monkey_value)
+class ConcreteTrainDatasetConfig(TrainDatasetConfig):
+    def _check_model(self):
+        return self
+
+    def _check_condition(self):
+        return self
+
+    @property
+    def num_input_lead_months(self):
+        return self.model.info.sizes["lead_time"]
+
+
+def bare_config(**kwargs):
+    config = object.__new__(ConcreteTrainDatasetConfig)
+
+    config.model = kwargs.get(
+        "model",
+        make_data_config(
+            paths=("model.nc",),
+        ),
+    )
+    config.observation = kwargs.get("observation")
+    config.condition = kwargs.get("condition")
+    config.condition_method = kwargs.get("condition_method")
+    config.lead_months = kwargs.get("lead_months")
+    config._effective_condition = kwargs.get("effective_condition")
+    config._fitted_preprocessors = kwargs.get(
+        "fitted_preprocessors",
+        True,
+    )
 
     return config
 
 
-def make_dataset(
-    config=None,
-    years=None,
-    mask=None,
-    return_metadata=False,
+def bare_dataset(**kwargs):
+    dataset = object.__new__(TrainDataset)
+
+    for name, value in kwargs.items():
+        setattr(dataset, name, value)
+
+    return dataset
+
+
+def make_loaded_dataset(
+    *,
+    ensembles=(0, 1),
 ):
-    if config is None:
-        config = make_config()
-
-    if years is None:
-        years = [2000]
-
-    return TrainDataset(
-        config=config,
-        requested_years=years,
-        mask=mask,
-        return_metadata=return_metadata,
-    )
-
-
-def test_check_model_same_member_raises():
-    config = make_config(
-        model=DummyConfig(ensemble_mean=True),
-        condition_method="same_member",
-    )
-
-    with pytest.raises(ValueError):
-        TrainDatasetConfig._check_model(config)
-
-
-def test_check_model_success():
-    config = make_config()
-
-    assert TrainDatasetConfig._check_model(config) is config
-
-
-@pytest.mark.pruned
-def test_check_model_non_same_member_passes():
-    config = make_config(
-        condition_method="cross_ensemble",
-    )
-
-    assert TrainDatasetConfig._check_model(config) is config
-
-
-def test_check_observation_missing_target_raises():
-    config = make_config(
-        observation=None,
-        condition=None,
-        condition_method=None,
-    )
-
-    with pytest.raises(ValueError):
-        TrainDatasetConfig._check_observation(config)
-
-
-def test_check_observation_returns_self_without_observation():
-    config = make_config(
-        observation=None,
-        condition_method="static",
-    )
-
-    assert TrainDatasetConfig._check_observation(config) is config
-
-
-def test_check_observation_warns_different_coords():
-    model = DummyConfig()
-    observation = DummyConfig()
-
-    observation.info.coords["lat"] = xr.DataArray(
-        [99],
-        dims="lat",
-    )
-
-    config = make_config(
-        model=model,
-        observation=observation,
-    )
-
-    with pytest.warns(UserWarning):
-        TrainDatasetConfig._check_observation(config)
-
-
-@pytest.mark.pruned
-def test_check_observation_matching_coords():
-    config = make_config(
-        observation=DummyConfig(),
-    )
-
-    assert TrainDatasetConfig._check_observation(config) is config
-
-
-def test_check_condition_requires_method():
-    config = make_config(
-        condition=DummyConfig(),
-        condition_method=None,
-    )
-
-    with pytest.raises(ValueError):
-        TrainDatasetConfig._check_condition(config)
-
-
-def test_check_condition_cross_ensemble_rejects_mean():
-    config = make_config(
-        condition=DummyConfig(ensemble_mean=True),
-        condition_method="cross_ensemble",
-    )
-
-    with pytest.raises(ValueError):
-        TrainDatasetConfig._check_condition(config)
-
-
-def test_check_condition_cross_ensemble_requires_ensembles():
-    condition = DummyConfig()
-    condition.info.coords.pop(
+    dims = [
         "ensembles",
-        None,
+        "year",
+        "lead_time",
+        "month",
+        "channels",
+    ]
+    coords = {
+        "ensembles": list(ensembles),
+        "year": [2000, 2001, 2002],
+        "lead_time": [1, 2, 3],
+        "month": [0.5, 1.5, 2.5],
+        "channels": ["tas"],
+    }
+    shape = [
+        len(ensembles),
+        3,
+        3,
+        3,
+        1,
+    ]
+
+    return xr.DataArray(
+        np.arange(
+            np.prod(shape),
+            dtype=float,
+        ).reshape(shape),
+        dims=dims,
+        coords=coords,
+        name="tas",
     )
 
-    config = make_config(
-        condition=condition,
-        condition_method="cross_ensemble",
-    )
 
-    with pytest.raises(ValueError):
-        TrainDatasetConfig._check_condition(config)
-
-
-def test_check_condition_ensemble_mean_requires_mean():
-    config = make_config(
-        condition=DummyConfig(),
-        condition_method="ensemble_mean",
-    )
-
-    with pytest.raises(ValueError):
-        TrainDatasetConfig._check_condition(config)
-
-
-def test_check_condition_static_rejects_ensemble_list():
-    condition = DummyConfig()
-    condition.ensemble_list = [1]
-
-    config = make_config(
-        condition=condition,
-        condition_method="static",
-    )
-
-    with pytest.raises(ValueError):
-        TrainDatasetConfig._check_condition(config)
-
-
-def test_check_condition_static_rejects_model_condition():
-    config = make_config(
-        condition=DummyConfig(),
-        condition_method="static",
-        using_model_condition=True,
-    )
-
-    with pytest.raises(ValueError):
-        TrainDatasetConfig._check_condition(config)
-
-
-def test_check_condition_static_without_condition_raises():
-    config = make_config(
-        condition=None,
-        condition_method="static",
-    )
-
-    with pytest.raises(ValueError):
-        TrainDatasetConfig._check_condition(config)
-
-
-@pytest.mark.parametrize(
-    "method",
-    [
-        "cross_ensemble",
-        "same_member",
-    ],
-)
-def test_check_condition_valid_ensemble_methods(
-    method,
+def make_observation_dataset(
+    *,
+    ensembles=(0, 1),
 ):
-    condition = DummyConfig()
+    dims = [
+        "year",
+        "month",
+        "channels",
+    ]
+    coords = {
+        "year": [2000, 2001, 2002, 2003],
+        "month": [
+            0.5,
+            1.5,
+            2.5,
+            3.5,
+        ],
+        "channels": ["tas"],
+    }
+    shape = [
+        4,
+        4,
+        1,
+    ]
 
-    config = make_config(
-        condition=condition,
-        condition_method=method,
+    if ensembles is not None:
+        dims.insert(0, "ensembles")
+        coords["ensembles"] = list(ensembles)
+        shape.insert(0, len(ensembles))
+
+    return xr.DataArray(
+        np.arange(
+            np.prod(shape),
+            dtype=float,
+        ).reshape(shape),
+        dims=dims,
+        coords=coords,
+        name="tas",
     )
 
-    assert TrainDatasetConfig._check_condition(config) is config
 
+def make_sample_coords(
+    *,
+    years=(2000,),
+    lead_times=(1,),
+    ensembles=(0,),
+):
+    result = {
+        "year": np.asarray(years),
+        "lead_time": np.asarray(lead_times),
+    }
 
-def test_check_condition_valid_ensemble_mean():
-    condition = DummyConfig(ensemble_mean=True)
+    if ensembles is not None:
+        result["ensembles"] = np.asarray(ensembles)
 
-    config = make_config(
-        condition=condition,
-        condition_method="ensemble_mean",
-    )
-
-    assert TrainDatasetConfig._check_condition(config) is config
-
-
-def test_check_condition_without_condition_nonstatic():
-    config = make_config(
-        condition=None,
-        condition_method="same_member",
-    )
-
-    assert TrainDatasetConfig._check_condition(config) is config
+    return result
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
-def test_num_input_lead_months():
-    config = make_config()
+                                
+def test_effective_input_returns_model():
+    model = object()
 
-    assert config.num_input_lead_months == 12
+    config = bare_config(
+        model=model,
+    )
 
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_num_input_lead_months_different_size():
-    model = DummyConfig()
-    model.info.sizes["lead_time"] = 24
-
-    config = make_config(model=model)
-
-    assert config.num_input_lead_months == 24
+    assert config.effective_input is model
 
 
 @pytest.mark.pruned
+                                
+def test_ds_operator_builds_operator():
+    config = bare_config()
+
+    with patch.object(
+        module,
+        "DatasetOperator",
+    ) as constructor:
+        result = config.ds_operator
+
+    constructor.assert_called_once_with(config)
+    assert result is constructor.return_value
+
+
+def test_check_observation_none_requires_method():
+    config = bare_config(
+        observation=None,
+        condition_method=None,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="No target observation",
+    ):
+        config._check_observation()
+
+
+def test_check_observation_none_with_method():
+    config = bare_config(
+        observation=None,
+        condition_method="static",
+    )
+
+    assert config._check_observation() is config
+
+
+@pytest.mark.pruned
+def test_check_observation_equal_coordinates():
+    model = make_data_config()
+    observation = make_data_config()
+
+    config = bare_config(
+        model=model,
+        observation=observation,
+        condition_method="static",
+    )
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        result = config._check_observation()
+
+    assert result is config
+    assert caught == []
+
+
+@pytest.mark.pruned
+def test_check_observation_coordinate_mismatch():
+    model = make_data_config(
+        lat=(0, 1),
+    )
+    observation = make_data_config(
+        lat=(8, 9),
+    )
+
+    config = bare_config(
+        model=model,
+        observation=observation,
+        condition_method="static",
+    )
+
+    with pytest.warns(
+        UserWarning,
+        match="lat",
+    ):
+        assert config._check_observation() is config
+
+
+def test_check_observation_dimension_missing_from_model():
+    model = make_data_config()
+    observation = make_data_config()
+
+    del model.info.coords["lat"]
+
+    config = bare_config(
+        model=model,
+        observation=observation,
+        condition_method="static",
+    )
+
+    with pytest.warns(
+        UserWarning,
+        match="not present in model",
+    ):
+        config._check_observation()
+
+
 def test_common_time_without_observation():
-    model = DummyConfig()
-    config = make_config(model=model)
+    model = make_data_config(
+        years=(2000, 2001, 2002),
+    )
+
+    config = bare_config(
+        model=model,
+        observation=None,
+    )
 
     np.testing.assert_array_equal(
         config.get_common_time,
-        np.array([2000, 2001, 2002]),
+        [2000, 2001, 2002],
     )
 
 
-@pytest.mark.pruned
 def test_common_time_with_observation():
-    model = DummyConfig()
-    observation = DummyConfig()
+    model = make_data_config(
+        years=(2000, 2001, 2002),
+    )
+    observation = make_data_config(
+        years=(2001, 2002, 2003),
+    )
 
-    set_years(model, [2000, 2001])
-    set_years(observation, [2001, 2002])
-
-    config = make_config(
+    config = bare_config(
         model=model,
         observation=observation,
     )
 
     np.testing.assert_array_equal(
         config.get_common_time,
-        np.array([2001]),
-    )
-
-
-@pytest.mark.pruned
-def test_common_time_identical_ranges():
-    model = DummyConfig()
-    observation = DummyConfig()
-
-    set_years(
-        model,
-        [2000, 2001, 2002],
-    )
-    set_years(
-        observation,
-        [2000, 2001, 2002],
-    )
-
-    config = make_config(
-        model=model,
-        observation=observation,
-    )
-
-    np.testing.assert_array_equal(
-        config.get_common_time,
-        np.array([2000, 2001, 2002]),
-    )
-
-
-@pytest.mark.pruned
-def test_common_time_single_value_overlap():
-    model = DummyConfig()
-    observation = DummyConfig()
-
-    set_years(model, [1999, 2000])
-    set_years(observation, [2000, 2001])
-
-    config = make_config(
-        model=model,
-        observation=observation,
-    )
-
-    np.testing.assert_array_equal(
-        config.get_common_time,
-        np.array([2000]),
+        [2001, 2002],
     )
 
 
 @pytest.mark.pruned
 def test_common_time_empty_intersection():
-    model = DummyConfig()
-    observation = DummyConfig()
+    model = make_data_config(
+        years=(2000, 2001),
+    )
+    observation = make_data_config(
+        years=(2010, 2011),
+    )
 
-    set_years(model, [2000])
-    set_years(observation, [2001])
-
-    config = make_config(
+    config = bare_config(
         model=model,
         observation=observation,
     )
@@ -483,1164 +427,1695 @@ def test_common_time_empty_intersection():
 
 
 @pytest.mark.pruned
-def test_available_times_without_observation():
-    config = make_config()
-
-    np.testing.assert_array_equal(
-        config.available_times,
-        np.array([2000, 2001, 2002]),
+def test_available_times_intersects_coordinates():
+    model = make_data_config(
+        years=(2000, 2001, 2002),
+    )
+    observation = make_data_config(
+        years=(2001, 2002, 2003),
     )
 
-
-@pytest.mark.pruned
-def test_available_times_with_observation():
-    model = DummyConfig()
-    observation = DummyConfig()
-
-    set_years(model, [2000, 2001, 2002])
-    set_years(observation, [2001, 2002])
-
-    config = make_config(
+    config = bare_config(
         model=model,
         observation=observation,
     )
 
     np.testing.assert_array_equal(
         config.available_times,
-        np.array([2001, 2002]),
+        [2001, 2002],
     )
 
 
 @pytest.mark.pruned
-def test_available_times_empty():
-    model = DummyConfig()
-    observation = DummyConfig()
+                                
+def test_fit_preprocessors_delegates():
+    config = bare_config()
+    operator = MagicMock()
 
-    set_years(model, [2000])
-    set_years(observation, [2001])
+    with patch.object(
+        module,
+        "DatasetOperator",
+        return_value=operator,
+    ):
+        config.fit_preprocessors(
+            train_years=[2000],
+            save=True,
+            save_path="path",
+            save_name="name",
+        )
 
-    config = make_config(
-        model=model,
+    operator.fit_preprocessors.assert_called_once_with(
+        train_years=[2000],
+        save=True,
+        save_path="path",
+        save_name="name",
+    )
+
+
+@pytest.mark.pruned
+                                
+def test_load_fitted_preprocessors_delegates():
+    config = bare_config()
+    operator = MagicMock()
+
+    with patch.object(
+        module,
+        "DatasetOperator",
+        return_value=operator,
+    ):
+        config.load_fitted_preprocessors("path")
+
+    operator.load_fitted_preprocessors.assert_called_once_with("path")
+
+
+@pytest.mark.pruned
+                                
+def test_add_fitted_preprocessor_delegates():
+    config = bare_config()
+    operator = MagicMock()
+    preprocessor = object()
+
+    with patch.object(
+        module,
+        "DatasetOperator",
+        return_value=operator,
+    ):
+        config.add_fitted_preprocessor(
+            preprocessor,
+            index=3,
+        )
+
+    operator.add_fitted_preprocessor.assert_called_once_with(
+        preprocessor,
+        3,
+    )
+
+
+@pytest.mark.pruned
+                                
+def test_build_dataset_all_arguments():
+    config = bare_config()
+    features = object()
+    mask = object()
+    expected = object()
+
+    with patch.object(
+        module,
+        "TrainDataset",
+        return_value=expected,
+    ) as constructor:
+        result = config.build_dataset(
+            years=np.asarray([2000]),
+            time_features=features,
+            mask=mask,
+            return_metadata=True,
+            load=True,
+        )
+
+    assert result is expected
+
+    constructor.assert_called_once_with(
+        config=config,
+        requested_years=np.asarray([2000]),
+        time_features=features,
+        mask=mask,
+        return_metadata=True,
+        load=True,
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "observation",
+        "expected",
+    ),
+    [
+        (None, True),
+        (object(), False),
+    ],
+)
+def test_autoencoding_model_data(
+    observation,
+    expected,
+):
+    dataset = bare_dataset(config=SimpleNamespace(observation=observation))
+
+    assert dataset._autoencoding_model_data is expected
+
+
+@pytest.mark.parametrize(
+    (
+        "observation",
+        "using_model_condition",
+        "expected",
+    ),
+    [
+        (None, False, True),
+        (None, True, True),
+        (object(), False, True),
+        (object(), True, False),
+    ],
+)
+def test_load_model_truth_table(
+    observation,
+    using_model_condition,
+    expected,
+):
+    dataset = bare_dataset(
+        config=SimpleNamespace(
+            observation=observation,
+            _using_model_data_as_condition=(using_model_condition),
+        )
+    )
+
+    assert dataset._load_model is expected
+
+
+@pytest.mark.parametrize(
+    (
+        "observation",
+        "using_model_condition",
+        "expected",
+    ),
+    [
+        (None, False, True),
+        (None, True, True),
+        (object(), False, False),
+        (object(), True, True),
+    ],
+)
+def test_write_condition_to_input_truth_table(
+    observation,
+    using_model_condition,
+    expected,
+):
+    dataset = bare_dataset(
+        config=SimpleNamespace(
+            observation=observation,
+            _using_model_data_as_condition=(using_model_condition),
+        )
+    )
+
+    assert dataset._write_condition_to_input is expected
+
+
+@pytest.mark.parametrize(
+    (
+        "observation",
+        "using_model_condition",
+        "effective_condition",
+        "expected",
+    ),
+    [
+        (
+            object(),
+            False,
+            object(),
+            True,
+        ),
+        (
+            object(),
+            False,
+            None,
+            False,
+        ),
+        (
+            object(),
+            True,
+            object(),
+            False,
+        ),
+        (
+            None,
+            False,
+            object(),
+            False,
+        ),
+    ],
+)
+def test_concat_condition_to_input_truth_table(
+    observation,
+    using_model_condition,
+    effective_condition,
+    expected,
+):
+    dataset = bare_dataset(
+        config=SimpleNamespace(
+            observation=observation,
+            _using_model_data_as_condition=(using_model_condition),
+            effective_condition=(effective_condition),
+        )
+    )
+
+    assert dataset._concat_condition_to_input is expected
+
+
+def test_post_init_without_observation():
+    config = make_config_stub(
+        observation=None,
+    )
+    features = AddedTimeFeatures(
+        config,
+        None,
+    )
+
+    dataset = object.__new__(TrainDataset)
+    dataset.config = config
+    dataset.requested_years = [2000]
+    dataset.time_features = features
+    dataset.mask = None
+    dataset.return_metadata = False
+    dataset.load = False
+
+    sample_coords = make_sample_coords()
+
+    with (
+        patch.object(
+            DatasetABC,
+            "__init__",
+            return_value=None,
+        ),
+        patch.object(
+            TrainDataset,
+            "get_obs_indexes",
+            return_value=None,
+        ) as get_indexes,
+    ):
+        dataset.sample_coords = sample_coords
+        dataset.observation_dataset = None
+
+        dataset.__post_init__()
+
+    assert dataset.observation_dataset is None
+    get_indexes.assert_called_once_with(sample_coords)
+
+
+def test_post_init_loads_observation():
+    observation = make_data_config(
+        paths=("obs.nc",),
+    )
+    config = make_config_stub(
         observation=observation,
     )
+    features = AddedTimeFeatures(
+        config,
+        None,
+    )
 
-    assert config.available_times.size == 0
+    dataset = object.__new__(TrainDataset)
+    dataset.config = config
+    dataset.requested_years = [2000]
+    dataset.time_features = features
+    dataset.mask = None
+    dataset.return_metadata = False
+    dataset.load = True
+    dataset.sample_coords = make_sample_coords()
+    dataset.observation_dataset = None
+
+    loaded = make_observation_dataset()
+
+    with (
+        patch.object(
+            DatasetABC,
+            "__init__",
+            return_value=None,
+        ),
+        patch.object(
+            TrainDataset,
+            "_load_xarray_data",
+            return_value=loaded,
+        ) as loader,
+        patch.object(
+            TrainDataset,
+            "get_obs_indexes",
+            return_value={
+                "year": np.asarray([0]),
+                "month": np.asarray([0]),
+            },
+        ),
+    ):
+        dataset.__post_init__()
+
+    assert dataset.observation_dataset is loaded
+
+    loader.assert_called_once_with(
+        observation,
+        load=True,
+    )
 
 
-@pytest.mark.pruned
-def test_dataset_requires_fitted_preprocessors():
-    config = make_config()
-    config._fitted_preprocessors = False
+def test_get_obs_indexes_returns_none():
+    dataset = bare_dataset(
+        observation_dataset=None,
+    )
 
-    with pytest.raises(RuntimeError):
-        make_dataset(config)
+    assert dataset.get_obs_indexes(make_sample_coords()) is None
 
 
-@pytest.mark.pruned
-def test_dataset_rejects_bad_year():
-    config = make_config()
+def test_get_obs_indexes_missing_year():
+    dataset = bare_dataset(
+        observation_dataset=(
+            make_observation_dataset(
+                ensembles=None,
+            )
+        )
+    )
 
-    with pytest.raises(ValueError):
-        make_dataset(
-            config,
-            years=[9999],
+    with pytest.raises(
+        ValueError,
+        match="observation coordinates",
+    ):
+        dataset.get_obs_indexes(
+            make_sample_coords(
+                years=(2099,),
+                lead_times=(1,),
+                ensembles=None,
+            )
         )
 
 
 @pytest.mark.pruned
-def test_dataset_basic_construction():
-    dataset = make_dataset()
-
-    assert dataset.model_dataset is not None
-    assert dataset.mask is not None
-    assert dataset.model_indexes is not None
-
-
-@pytest.mark.pruned
-def test_autoencoding_property():
-    dataset = make_dataset()
-
-    assert dataset._autoencoding_model_data is True
-
-
-@pytest.mark.pruned
-def test_write_condition_to_input_autoencoding():
-    dataset = make_dataset()
-
-    assert dataset._write_condition_to_input is True
-
-
-@pytest.mark.pruned
-def test_load_model_autoencoding():
-    dataset = make_dataset()
-
-    assert dataset._load_model is True
-
-
-@pytest.mark.pruned
-def test_concat_condition_to_input():
-    config = make_config(
-        observation=DummyConfig(),
-        condition=DummyConfig(),
+def test_get_obs_indexes_missing_month():
+    observation = make_observation_dataset(
+        ensembles=None,
+    ).sel(month=[0.5])
+    dataset = bare_dataset(
+        observation_dataset=observation,
     )
 
-    dataset = make_dataset(config)
+    with pytest.raises(
+        ValueError,
+        match="observation coordinates",
+    ):
+        dataset.get_obs_indexes(
+            make_sample_coords(
+                years=(2000,),
+                lead_times=(2,),
+                ensembles=None,
+            )
+        )
 
-    assert dataset._concat_condition_to_input is True
 
-
-@pytest.mark.pruned
-def test_concat_condition_false_without_condition():
-    config = make_config(
-        observation=DummyConfig(),
-        condition=None,
+def test_get_target_shape_without_observation():
+    dataset = bare_dataset(
+        observation_dataset=None,
     )
 
-    dataset = make_dataset(config)
+    with patch.object(
+        TrainDataset,
+        "get_input_shape",
+        return_value=(2, 3),
+    ) as get_shape:
+        result = dataset.get_target_shape()
 
-    assert dataset._concat_condition_to_input is False
-
-
-@pytest.mark.pruned
-def test_get_model_indexes_expected_keys():
-    dataset = make_dataset()
-
-    indexes = dataset.get_model_indexes(dataset.sample_coords)
-
-    assert "year" in indexes
-    assert "lead_time" in indexes
-    assert "ensembles" in indexes
+    assert result == (2, 3)
+    get_shape.assert_called_once_with()
 
 
-def test_get_model_indexes_without_ensemble():
-    config = make_config()
-    config.model.info.coords.pop(
-        "ensembles",
-        None,
-    )
-
-    dataset = make_dataset(config)
-    indexes = dataset.get_model_indexes(dataset.sample_coords)
-
-    assert "ensembles" not in indexes
-
-
-@pytest.mark.pruned
-def test_get_obs_indexes_none():
-    dataset = make_dataset()
-
-    assert dataset.get_obs_indexes(dataset.sample_coords) is None
-
-
-@pytest.mark.pruned
-def test_get_obs_indexes_ensemble_mean():
-    observation = DummyConfig(ensemble_mean=True)
-
-    config = make_config(
-        observation=observation,
-    )
-
-    dataset = make_dataset(config)
-    indexes = dataset.get_obs_indexes(dataset.sample_coords)
-
-    assert indexes is not None
-    assert "ensembles" not in indexes
-
-
-@pytest.mark.pruned
-def test_get_obs_indexes_without_ensemble_coord():
-    observation = DummyConfig()
-    observation.info.coords.pop(
-        "ensembles",
-        None,
-    )
-
-    config = make_config(
-        observation=observation,
-    )
-
-    dataset = make_dataset(config)
-    indexes = dataset.get_obs_indexes(dataset.sample_coords)
-
-    assert "ensembles" not in indexes
-
-
-@pytest.mark.pruned
-def test_get_cond_indexes_static():
-    config = make_config(
-        condition=DummyConfig(),
-        condition_method="static",
-    )
-
-    dataset = make_dataset(config)
-
-    assert dataset.get_cond_indexes(dataset.sample_coords) is None
-
-
-@pytest.mark.pruned
-def test_get_cond_indexes_without_condition():
-    dataset = make_dataset()
-    dataset.condition_dataset = None
-
-    assert dataset.get_cond_indexes(dataset.sample_coords) is None
-
-
-@pytest.mark.pruned
-def test_get_cond_indexes_same_member():
-    config = make_config(
-        condition=DummyConfig(),
-        condition_method="same_member",
-    )
-
-    dataset = make_dataset(config)
-    indexes = dataset.get_cond_indexes(dataset.sample_coords)
-
-    np.testing.assert_array_equal(
-        indexes["ensembles"],
-        dataset.model_indexes["ensembles"],
-    )
-
-
-@pytest.mark.pruned
-def test_index_model_dataset():
-    dataset = make_dataset()
-
-    assert dataset._index_model_dataset(0) is not None
-
-
-def test_index_model_dataset_without_ensemble_key():
-    dataset = make_dataset()
-    dataset.model_indexes.pop(
-        "ensembles",
-        None,
-    )
-
-    assert dataset._index_model_dataset(0) is not None
-
-
-@pytest.mark.pruned
-def test_index_model_dataset_returns_none_when_not_loaded(
+def test_get_target_shape_observation_without_flattener(
     monkeypatch,
 ):
-    dataset = make_dataset()
+    class FakeFlatten:
+        pass
 
     monkeypatch.setattr(
-        TrainDataset,
-        "_load_model",
-        property(lambda self: False),
+        ("cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove"),
+        FakeFlatten,
     )
 
-    assert dataset._index_model_dataset(0) is None
+    observation = make_data_config(
+        names=("tas",),
+        pipeline=DummyPipeline(),
+    )
+
+    dataset = bare_dataset(
+        observation_dataset=object(),
+        config=SimpleNamespace(
+            observation=observation,
+        ),
+    )
+
+    assert dataset.get_target_shape() == (
+        2,
+        2,
+    )
+
+
+def test_index_observation_returns_none():
+    dataset = bare_dataset(
+        observation_dataset=None,
+    )
+
+    assert dataset._index_observation_dataset(0) is None
+
+
+def test_index_observation_without_ensembles():
+    observation_dataset = make_observation_dataset(
+        ensembles=None,
+    )
+    pipeline = DummyPipeline()
+
+    dataset = bare_dataset(
+        observation_dataset=(observation_dataset),
+        obs_indexes={
+            "year": np.asarray([0]),
+            "month": np.asarray([0]),
+        },
+        config=SimpleNamespace(
+            observation=SimpleNamespace(preprocessing_pipeline=(pipeline))
+        ),
+    )
+
+    with patch.object(
+        module,
+        "_unwrap_data_variables",
+        side_effect=lambda value: value,
+    ):
+        result = dataset._index_observation_dataset(0)
+
+    assert result is not None
+    assert "ensembles" not in result.dims
+    assert len(pipeline.transform_calls) == 1
+
+
+def test_index_observation_with_random_ensemble(
+    monkeypatch,
+):
+    observation_dataset = make_observation_dataset()
+    pipeline = DummyPipeline()
+
+    dataset = bare_dataset(
+        observation_dataset=(observation_dataset),
+        obs_indexes={
+            "year": np.asarray([0]),
+            "month": np.asarray([0]),
+        },
+        config=SimpleNamespace(
+            observation=SimpleNamespace(preprocessing_pipeline=(pipeline))
+        ),
+    )
+
+    randint = MagicMock(return_value=1)
+
+    monkeypatch.setattr(
+        module.np.random,
+        "randint",
+        randint,
+    )
+
+    with patch.object(
+        module,
+        "_unwrap_data_variables",
+        side_effect=lambda value: value,
+    ):
+        result = dataset._index_observation_dataset(0)
+
+    randint.assert_called_once_with(2)
+    np.testing.assert_array_equal(
+        result.coords["ensembles"].values,
+        [1],
+    )
+
+
+def make_getitem_dataset(
+    *,
+    autoencoding=False,
+    write_condition=False,
+    concat_condition=False,
+    return_metadata=False,
+    time_features=None,
+):
+    sample_coords = {
+        "year": np.asarray([2000]),
+        "lead_time": np.asarray([1]),
+    }
+
+    reference = make_config_stub()
+
+    dataset = bare_dataset(
+        config=reference,
+        sample_coords=sample_coords,
+        return_metadata=return_metadata,
+        time_features=AddedTimeFeatures(
+            reference,
+            time_features,
+        ),
+    )
+
+    dataset._index_condition_dataset = MagicMock(
+        return_value=xr.DataArray(
+            np.asarray([3.0]),
+            dims=("channels",),
+        )
+    )
+    dataset._index_observation_dataset = MagicMock(
+        return_value=xr.DataArray(
+            np.asarray([2.0]),
+            dims=("channels",),
+        )
+    )
+    dataset._index_model_dataset = MagicMock(
+        return_value=xr.DataArray(
+            np.asarray([1.0]),
+            dims=("channels",),
+        )
+    )
+
+    type(dataset)._autoencoding_model_data = property(lambda self: autoencoding)
+    type(dataset)._write_condition_to_input = property(lambda self: write_condition)
+    type(dataset)._concat_condition_to_input = property(lambda self: concat_condition)
+
+    return dataset
 
 
 @pytest.mark.pruned
-def test_index_condition_dataset_static():
-    config = make_config(
-        condition=DummyConfig(),
-        condition_method="static",
+def test_getitem_autoencoding_target():
+    dataset = make_getitem_dataset(
+        autoencoding=True,
     )
 
-    dataset = make_dataset(config)
+    result = dataset[0]
 
-    assert dataset._index_condition_dataset(0) is not None
+    torch.testing.assert_close(
+        result["input"],
+        result["target"],
+    )
 
 
 @pytest.mark.pruned
-def test_index_condition_dataset_none():
-    dataset = make_dataset()
-    dataset.condition_dataset = None
+def test_getitem_condition_replaces_input():
+    dataset = make_getitem_dataset(
+        write_condition=True,
+    )
 
-    assert dataset._index_condition_dataset(0) is None
+    result = dataset[0]
+
+    torch.testing.assert_close(
+        result["input"],
+        torch.tensor([3.0]),
+    )
+
+
+def test_getitem_concatenates_condition():
+    dataset = make_getitem_dataset(
+        concat_condition=True,
+    )
+
+    result = dataset[0]
+
+    torch.testing.assert_close(
+        result["input"],
+        torch.tensor([1.0, 3.0]),
+    )
+
+
+@pytest.mark.pruned
+def test_getitem_with_time_features():
+    dataset = make_getitem_dataset(
+        time_features=[
+            "year",
+            "lead_time",
+            "month_sin",
+            "month_cos",
+        ],
+    )
+
+    result = dataset[0]
+
+    assert result["added_features"] is not None
+    assert result["added_features"].shape == (4,)
+
+
+@pytest.mark.pruned
+def test_getitem_without_metadata_returns_dict():
+    dataset = make_getitem_dataset(
+        return_metadata=False,
+    )
+
+    result = dataset[0]
+
+    assert isinstance(result, dict)
+
+
+def test_getitem_with_metadata_returns_tuple():
+    dataset = make_getitem_dataset(
+        return_metadata=True,
+    )
+
+    result, selection = dataset[0]
+
+    assert isinstance(result, dict)
+    assert selection == {
+        "year": 2000,
+        "lead_time": 1,
+    }
+
+
+                                                               
+ 
+                                                                      
 
 
 @pytest.mark.parametrize(
-    "method",
+    (
+        "condition_method",
+        "ensemble_mean",
+        "expected_exception",
+    ),
+    [
+        ("same_member", True, ValueError),
+        ("same_member", False, None),
+        ("ensemble_mean", True, None),
+        ("cross_ensemble", False, None),
+        ("static", False, None),
+        (None, True, None),
+    ],
+)
+def test_check_model_branches(
+    condition_method,
+    ensemble_mean,
+    expected_exception,
+):
+    model = make_data_config(
+        ensemble_mean=ensemble_mean,
+    )
+
+    config = bare_config(
+        model=model,
+        condition_method=condition_method,
+    )
+
+    if expected_exception is None:
+        assert TrainDatasetConfig._check_model(config) is config
+    else:
+        with pytest.raises(
+            expected_exception,
+            match="same member",
+        ):
+            TrainDatasetConfig._check_model(config)
+
+
+def test_check_condition_without_effective_condition_non_static():
+    config = bare_config(
+        condition_method="ensemble_mean",
+        effective_condition=None,
+    )
+
+    assert TrainDatasetConfig._check_condition(config) is config
+
+
+def test_check_condition_static_without_effective_condition():
+    config = bare_config(
+        condition_method="static",
+        effective_condition=None,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="condition dataset must be specified",
+    ):
+        TrainDatasetConfig._check_condition(config)
+
+
+def test_check_condition_effective_condition_requires_method():
+    condition = make_data_config(
+        ensemble_mean=False,
+    )
+
+    config = bare_config(
+        condition=condition,
+        condition_method=None,
+        effective_condition=condition,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="specify condition_method",
+    ):
+        TrainDatasetConfig._check_condition(config)
+
+
+@pytest.mark.parametrize(
+    "condition_method",
     [
         "cross_ensemble",
         "same_member",
     ],
 )
-def test_index_condition_dataset_ensemble_methods(
-    method,
+def test_check_condition_member_methods_reject_ensemble_mean(
+    condition_method,
 ):
-    config = make_config(
-        condition=DummyConfig(),
-        condition_method=method,
+    condition = make_data_config(
+        ensemble_mean=True,
     )
 
-    dataset = make_dataset(config)
-
-    assert dataset._index_condition_dataset(0) is not None
-
-
-@pytest.mark.pruned
-def test_index_condition_without_ensemble_indexes():
-    config = make_config(
-        condition=DummyConfig(),
-        condition_method="same_member",
+    config = bare_config(
+        condition=condition,
+        condition_method=condition_method,
+        effective_condition=condition,
     )
 
-    dataset = make_dataset(config)
-    dataset.cond_indexes.pop(
-        "ensembles",
-        None,
-    )
-
-    assert dataset._index_condition_dataset(0) is not None
-
-
-@pytest.mark.pruned
-def test_index_observation_dataset_none():
-    dataset = make_dataset()
-    dataset.observation_dataset = None
-
-    assert dataset._index_observation_dataset(0) is None
-
-
-def test_index_observation_dataset():
-    config = make_config(
-        observation=DummyConfig(),
-    )
-
-    dataset = make_dataset(config)
-
-    assert dataset._index_observation_dataset(0) is not None
-
-
-@pytest.mark.pruned
-def test_index_observation_without_ensemble_indexes():
-    config = make_config(
-        observation=DummyConfig(),
-    )
-
-    dataset = make_dataset(config)
-    dataset.obs_indexes.pop(
-        "ensembles",
-        None,
-    )
-
-    assert dataset._index_observation_dataset(0) is not None
-
-
-@pytest.mark.pruned
-def test_prepare_mask_requested_years():
-    dataset = make_dataset(
-        years=[2000],
-    )
-
-    np.testing.assert_array_equal(
-        dataset.mask.coords["year"].values,
-        np.array([2000]),
-    )
-
-
-@pytest.mark.pruned
-def test_prepare_mask_with_ensemble_dimension():
-    dataset = make_dataset()
-
-    assert "ensembles" in dataset.mask.dims
-
-
-@pytest.mark.pruned
-def test_prepare_mask_without_ensemble_dimension():
-    config = make_config()
-    config.model.info.coords.pop(
-        "ensembles",
-        None,
-    )
-
-    dataset = make_dataset(config)
-
-    assert "ensembles" not in dataset.mask.dims
-
-
-def test_prepare_mask_ensemble_mean():
-    config = make_config()
-    config.model.ensemble_mean = True
-
-    dataset = make_dataset(config)
-
-    assert "ensembles" not in dataset.mask.dims
-
-
-@pytest.mark.pruned
-def test_get_added_features_dim_none():
-    dataset = make_dataset()
-
-    assert dataset.get_added_features_dim() == 0
-
-
-@pytest.mark.pruned
-def test_get_added_features_dim_empty():
-    config = make_config(
-        time_features=[],
-    )
-
-    dataset = make_dataset(config)
-
-    assert dataset.get_added_features_dim() == 0
+    with pytest.raises(
+        ValueError,
+        match="ensemble_mean cannot be True",
+    ):
+        TrainDatasetConfig._check_condition(config)
 
 
 @pytest.mark.parametrize(
-    ("features", "expected"),
+    "condition_method",
     [
+        "cross_ensemble",
+        "same_member",
+    ],
+)
+def test_check_condition_member_methods_accept_ensemble_data(
+    condition_method,
+):
+    condition = make_data_config(
+        ensembles=(0, 1),
+        ensemble_mean=False,
+    )
+
+    config = bare_config(
+        condition=condition,
+        condition_method=condition_method,
+        effective_condition=condition,
+    )
+
+    assert TrainDatasetConfig._check_condition(config) is config
+
+
+def test_check_condition_ensemble_mean_requires_ensemble_mean_data():
+    condition = make_data_config(
+        ensemble_mean=False,
+    )
+
+    config = bare_config(
+        condition=condition,
+        condition_method="ensemble_mean",
+        effective_condition=condition,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Ensemble mean must be True",
+    ):
+        TrainDatasetConfig._check_condition(config)
+
+
+def test_check_condition_ensemble_mean_accepts_ensemble_mean_data():
+    condition = make_data_config(
+        ensemble_mean=True,
+    )
+
+    config = bare_config(
+        condition=condition,
+        condition_method="ensemble_mean",
+        effective_condition=condition,
+    )
+
+    assert TrainDatasetConfig._check_condition(config) is config
+
+
+def test_check_condition_static_rejects_ensemble_list():
+    condition = make_data_config(
+        ensemble_mean=False,
+        ensemble_list=[0],
+    )
+
+    config = bare_config(
+        condition=condition,
+        condition_method="static",
+        effective_condition=condition,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="cannot specify ensemble list",
+    ):
+        TrainDatasetConfig._check_condition(config)
+
+
+@pytest.mark.pruned
+                                
+def test_num_input_lead_months():
+    model = make_data_config(
+        lead_times=(1, 2, 3, 4, 5),
+    )
+
+    config = bare_config(
+        model=model,
+    )
+
+    assert TrainDatasetConfig.num_input_lead_months.fget(config) == 5
+
+
+@pytest.mark.pruned
+def test_available_times_without_observation():
+    model = make_data_config(
+        years=(1999, 2000, 2001),
+    )
+
+    config = bare_config(
+        model=model,
+        observation=None,
+    )
+
+    np.testing.assert_array_equal(
+        config.available_times,
+        [1999, 2000, 2001],
+    )
+
+
+@pytest.mark.pruned
+def test_available_times_respects_model_coordinate_values():
+    model = make_data_config(
+        years=(1999, 2000, 2001, 2002),
+    )
+    observation = make_data_config(
+        years=(2000, 2001, 2002, 2003),
+    )
+
+                                                                           
+                                              
+    model.year_range = np.asarray([1999, 2000, 2001, 2002, 2003])
+
+    config = bare_config(
+        model=model,
+        observation=observation,
+    )
+
+    np.testing.assert_array_equal(
+        config.available_times,
+        [2000, 2001, 2002],
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "dimension",
+        "model_values",
+        "observation_values",
+    ),
+    [
+        ("lat", (0, 1), (8, 9)),
+        ("lon", (10, 20), (30, 40)),
+    ],
+)
+def test_check_observation_warns_for_each_coordinate_mismatch(
+    dimension,
+    model_values,
+    observation_values,
+):
+    model_kwargs = {
+        dimension: model_values,
+    }
+    observation_kwargs = {
+        dimension: observation_values,
+    }
+
+    model = make_data_config(**model_kwargs)
+    observation = make_data_config(**observation_kwargs)
+
+    config = bare_config(
+        model=model,
+        observation=observation,
+        condition_method="static",
+    )
+
+    with pytest.warns(
+        UserWarning,
+        match=dimension,
+    ):
+        assert config._check_observation() is config
+
+
+@pytest.mark.parametrize(
+    "dimension",
+    [
+        "lat",
+        "lon",
+    ],
+)
+def test_check_observation_warns_when_nn_dimension_missing(
+    dimension,
+):
+    model = make_data_config()
+    observation = make_data_config()
+
+    del model.info.coords[dimension]
+
+    config = bare_config(
+        model=model,
+        observation=observation,
+        condition_method="static",
+    )
+
+    with pytest.warns(
+        UserWarning,
+        match=f"observation data has NN dim {dimension}",
+    ):
+        assert config._check_observation() is config
+
+
+def test_check_observation_collects_multiple_warnings():
+    model = make_data_config(
+        lat=(0, 1),
+        lon=(10, 20),
+    )
+    observation = make_data_config(
+        lat=(8, 9),
+        lon=(30, 40),
+    )
+
+    config = bare_config(
+        model=model,
+        observation=observation,
+        condition_method="static",
+    )
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        result = config._check_observation()
+
+    assert result is config
+    assert len(caught) == 2
+    assert any("lat" in str(item.message) for item in caught)
+    assert any("lon" in str(item.message) for item in caught)
+
+
+@pytest.mark.pruned
+def test_get_obs_indexes_reports_missing_year_values():
+    dataset = bare_dataset(
+        observation_dataset=make_observation_dataset(
+            ensembles=None,
+        )
+    )
+
+    with pytest.raises(ValueError) as exc_info:
+        dataset.get_obs_indexes(
+            make_sample_coords(
+                years=(2000, 2099),
+                lead_times=(1, 1),
+                ensembles=None,
+            )
+        )
+
+    message = str(exc_info.value)
+
+    assert "observation coordinates" in message
+    assert "year" in message
+    assert "2099" in message
+
+
+@pytest.mark.pruned
+def test_get_obs_indexes_reports_missing_month_values():
+    observation = make_observation_dataset(
+        ensembles=None,
+    ).sel(
+        month=[0.5],
+    )
+
+    dataset = bare_dataset(
+        observation_dataset=observation,
+    )
+
+    with pytest.raises(ValueError) as exc_info:
+        dataset.get_obs_indexes(
+            make_sample_coords(
+                years=(2000, 2000),
+                lead_times=(1, 2),
+                ensembles=None,
+            )
+        )
+
+    message = str(exc_info.value)
+
+    assert "observation coordinates" in message
+    assert "month" in message
+
+
+@pytest.mark.pruned
+def test_get_obs_indexes_reports_multiple_missing_dimensions():
+    observation = make_observation_dataset(
+        ensembles=None,
+    ).sel(
+        year=[2000],
+        month=[0.5],
+    )
+
+    dataset = bare_dataset(
+        observation_dataset=observation,
+    )
+
+    with pytest.raises(ValueError) as exc_info:
+        dataset.get_obs_indexes(
+            make_sample_coords(
+                years=(2099,),
+                lead_times=(2,),
+                ensembles=None,
+            )
+        )
+
+    message = str(exc_info.value)
+
+    assert "year" in message
+    assert "month" in message
+
+
+@pytest.mark.pruned
+def test_get_target_shape_multiple_observation_variables_without_flattener(
+    monkeypatch,
+):
+    class FakeFlatten:
+        pass
+
+    monkeypatch.setattr(
+        "cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove",
+        FakeFlatten,
+    )
+
+    observation = make_data_config(
+        names=("tas", "pr"),
+        lat=(0, 1, 2),
+        lon=(10, 20, 30, 40),
+        pipeline=DummyPipeline(),
+    )
+
+    dataset = bare_dataset(
+        observation_dataset=object(),
+        config=SimpleNamespace(
+            observation=observation,
+        ),
+    )
+
+                                                                             
+    assert dataset.get_target_shape() == (
+        3,
+        4,
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "features",
+        "expected",
+    ),
+    [
+        (None, 0),
+        ([], 0),
         (["year"], 1),
-        (["a", "b"], 2),
-        (["a", "b", "c"], 3),
+        (["year", "lead_time"], 2),
+        (
+            [
+                "year",
+                "lead_time",
+                "month_sin",
+                "month_cos",
+            ],
+            4,
+        ),
     ],
 )
 def test_get_added_features_dim(
     features,
     expected,
 ):
-    config = make_config(
-        time_features=features,
+    config = make_config_stub()
+    time_features = AddedTimeFeatures(
+        config,
+        features,
     )
 
-    dataset = make_dataset(config)
+    dataset = bare_dataset(
+        time_features=time_features,
+    )
 
     assert dataset.get_added_features_dim() == expected
 
 
 @pytest.mark.pruned
-def test_get_input_shape():
-    dataset = make_dataset()
+def test_index_observation_random_ensemble_lower_bound(
+    monkeypatch,
+):
+    observation_dataset = make_observation_dataset(
+        ensembles=(5, 8, 13),
+    )
+    pipeline = DummyPipeline()
 
-    assert isinstance(
-        dataset.get_input_shape(),
-        tuple,
+    dataset = bare_dataset(
+        observation_dataset=observation_dataset,
+        obs_indexes={
+            "year": np.asarray([0]),
+            "month": np.asarray([0]),
+        },
+        config=SimpleNamespace(
+            observation=SimpleNamespace(
+                preprocessing_pipeline=pipeline,
+            )
+        ),
     )
 
-
-def test_get_target_shape_without_observation():
-    dataset = make_dataset()
-
-    dataset.input_shape = dataset.get_input_shape()
-
-    assert dataset.get_target_shape() == dataset.input_shape
-
-
-def test_get_target_shape_with_observation():
-    config = make_config(
-        observation=DummyConfig(),
-    )
-
-    dataset = make_dataset(config)
-
-    assert isinstance(
-        dataset.get_target_shape(),
-        tuple,
-    )
-
-
-@pytest.mark.pruned
-def test_len():
-    dataset = make_dataset()
-
-    assert len(dataset) > 0
-
-
-@pytest.mark.pruned
-def test_len_matches_sample_coordinates():
-    dataset = make_dataset()
-
-    expected = len(next(iter(dataset.sample_coords.values())))
-
-    assert len(dataset) == expected
-
-
-@pytest.mark.pruned
-def test_getitem_returns_dict(monkeypatch):
-    dataset = make_dataset()
-
-    value = xr.DataArray(np.array([1.0]))
+    randint = MagicMock(return_value=0)
 
     monkeypatch.setattr(
-        dataset,
-        "_index_model_dataset",
-        lambda index: value,
+        module.np.random,
+        "randint",
+        randint,
     )
+
+    with patch.object(
+        module,
+        "_unwrap_data_variables",
+        side_effect=lambda value: value,
+    ):
+        result = dataset._index_observation_dataset(0)
+
+    randint.assert_called_once_with(3)
+
+    np.testing.assert_array_equal(
+        result.coords["ensembles"].values,
+        [5],
+    )
+
+
+@pytest.mark.pruned
+def test_index_observation_random_ensemble_upper_bound(
+    monkeypatch,
+):
+    observation_dataset = make_observation_dataset(
+        ensembles=(5, 8, 13),
+    )
+    pipeline = DummyPipeline()
+
+    dataset = bare_dataset(
+        observation_dataset=observation_dataset,
+        obs_indexes={
+            "year": np.asarray([0]),
+            "month": np.asarray([0]),
+        },
+        config=SimpleNamespace(
+            observation=SimpleNamespace(
+                preprocessing_pipeline=pipeline,
+            )
+        ),
+    )
+
+    randint = MagicMock(return_value=2)
+
     monkeypatch.setattr(
-        dataset,
-        "_index_condition_dataset",
-        lambda index: value,
+        module.np.random,
+        "randint",
+        randint,
+    )
+
+    with patch.object(
+        module,
+        "_unwrap_data_variables",
+        side_effect=lambda value: value,
+    ):
+        result = dataset._index_observation_dataset(0)
+
+    randint.assert_called_once_with(3)
+
+    np.testing.assert_array_equal(
+        result.coords["ensembles"].values,
+        [13],
+    )
+
+
+@pytest.mark.pruned
+def test_index_observation_calls_pipeline_before_unwrap():
+    observation_dataset = make_observation_dataset(
+        ensembles=None,
+    )
+    events = []
+
+    class RecordingPipeline:
+        def transform(self, value):
+            events.append("transform")
+            return value
+
+    dataset = bare_dataset(
+        observation_dataset=observation_dataset,
+        obs_indexes={
+            "year": np.asarray([0]),
+            "month": np.asarray([0]),
+        },
+        config=SimpleNamespace(
+            observation=SimpleNamespace(
+                preprocessing_pipeline=RecordingPipeline(),
+            )
+        ),
+    )
+
+    def unwrap(value):
+        events.append("unwrap")
+        return value
+
+    with patch.object(
+        module,
+        "_unwrap_data_variables",
+        side_effect=unwrap,
+    ):
+        dataset._index_observation_dataset(0)
+
+    assert events == [
+        "transform",
+        "unwrap",
+    ]
+
+
+@pytest.mark.pruned
+def test_getitem_calls_all_index_helpers():
+    dataset = make_getitem_dataset()
+
+    dataset[0]
+
+    dataset._index_condition_dataset.assert_called_once_with(0)
+    dataset._index_observation_dataset.assert_called_once_with(0)
+    dataset._index_model_dataset.assert_called_once_with(0)
+
+
+@pytest.mark.pruned
+def test_getitem_returns_float32_tensors():
+    dataset = make_getitem_dataset(
+        time_features=[
+            "year",
+            "lead_time",
+        ],
     )
 
     result = dataset[0]
 
-    assert isinstance(result, dict)
-    assert "input" in result
-    assert "target" in result
-    assert "added_features" in result
+    assert result["input"].dtype == torch.float32
+    assert result["target"].dtype == torch.float32
+    assert result["added_features"].dtype == torch.float32
 
 
-def test_getitem_returns_metadata(monkeypatch):
-    dataset = make_dataset(
-        return_metadata=True,
-    )
-
-    value = xr.DataArray(np.array([1.0]))
-
-    monkeypatch.setattr(
-        dataset,
-        "_index_model_dataset",
-        lambda index: value,
-    )
-    monkeypatch.setattr(
-        dataset,
-        "_index_condition_dataset",
-        lambda index: value,
-    )
-
-    result, metadata = dataset[0]
-
-    assert isinstance(result, dict)
-    assert metadata["year"] == 2000
-    assert "lead_time" in metadata
-
-
-@pytest.mark.pruned
-def test_getitem_added_features(monkeypatch):
-    dataset = make_dataset()
-
-    value = xr.DataArray(np.array([1.0]))
-
-    monkeypatch.setattr(
-        dataset,
-        "_index_model_dataset",
-        lambda index: value,
-    )
-    monkeypatch.setattr(
-        dataset,
-        "_index_condition_dataset",
-        lambda index: value,
-    )
-    monkeypatch.setattr(
-        "cccma_ppp.train.dataset._get_time_features",
-        lambda *args, **kwargs: np.array([1.0, 2.0]),
-    )
-
-    result = dataset[0]
-
-    assert result["added_features"] is not None
-
-
-def test_getitem_autoencoding(monkeypatch):
-    dataset = make_dataset()
-
-    value = xr.DataArray(np.array([1.0]))
-
-    monkeypatch.setattr(
-        dataset,
-        "_index_model_dataset",
-        lambda index: value,
-    )
-    monkeypatch.setattr(
-        dataset,
-        "_index_condition_dataset",
-        lambda index: value,
-    )
-    monkeypatch.setattr(
-        TrainDataset,
-        "_write_condition_to_input",
-        property(lambda self: False),
+def test_getitem_autoencoding_happens_before_condition_replacement():
+    dataset = make_getitem_dataset(
+        autoencoding=True,
+        write_condition=True,
     )
 
     result = dataset[0]
 
     torch.testing.assert_close(
+        result["input"],
+        torch.tensor([3.0]),
+    )
+    torch.testing.assert_close(
         result["target"],
-        result["input"],
+        torch.tensor([1.0]),
     )
 
 
 @pytest.mark.pruned
-def test_getitem_write_condition(monkeypatch):
-    config = make_config(
-        condition=DummyConfig(),
-    )
-
-    dataset = make_dataset(config)
-
-    model_value = xr.DataArray(np.array([1.0]))
-    condition_value = xr.DataArray(np.array([2.0]))
-
-    monkeypatch.setattr(
-        dataset,
-        "_index_model_dataset",
-        lambda index: model_value,
-    )
-    monkeypatch.setattr(
-        dataset,
-        "_index_condition_dataset",
-        lambda index: condition_value,
+def test_getitem_condition_replacement_takes_precedence_over_concat():
+    dataset = make_getitem_dataset(
+        write_condition=True,
+        concat_condition=True,
     )
 
     result = dataset[0]
 
-    assert result["input"].item() == 2.0
-
-
-def test_getitem_concat_condition(monkeypatch):
-    config = make_config(
-        observation=DummyConfig(),
-        condition=DummyConfig(),
-    )
-
-    dataset = make_dataset(config)
-
-    model_value = xr.DataArray(
-        np.array([1.0]),
-        dims="channels",
-    )
-    condition_value = xr.DataArray(
-        np.array([2.0]),
-        dims="channels",
-    )
-    target_value = xr.DataArray(
-        np.array([3.0]),
-        dims="channels",
-    )
-
-    monkeypatch.setattr(
-        dataset,
-        "_index_model_dataset",
-        lambda index: model_value,
-    )
-    monkeypatch.setattr(
-        dataset,
-        "_index_condition_dataset",
-        lambda index: condition_value,
-    )
-    monkeypatch.setattr(
-        dataset,
-        "_index_observation_dataset",
-        lambda index: target_value,
-    )
-
-    result = dataset[0]
-
-    assert isinstance(
+    torch.testing.assert_close(
         result["input"],
-        torch.Tensor,
+        torch.tensor([3.0]),
     )
-
-    assert result["input"].shape[0] == 2
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
-def test_build_dataset(monkeypatch):
-    config = make_config()
-
-    monkeypatch.setattr(
-        TrainDataset,
-        "__post_init__",
-        lambda self: None,
+def test_getitem_concatenation_preserves_channel_order():
+    dataset = make_getitem_dataset(
+        concat_condition=True,
     )
 
-    dataset = config.build_dataset(
-        years=[2000],
+    dataset._index_model_dataset.return_value = xr.DataArray(
+        np.asarray(
+            [
+                1.0,
+                2.0,
+            ]
+        ),
+        dims=("channels",),
+        coords={
+            "channels": [
+                "model_a",
+                "model_b",
+            ]
+        },
+    )
+
+    dataset._index_condition_dataset.return_value = xr.DataArray(
+        np.asarray(
+            [
+                3.0,
+                4.0,
+            ]
+        ),
+        dims=("channels",),
+        coords={
+            "channels": [
+                "condition_a",
+                "condition_b",
+            ]
+        },
+    )
+
+    result = dataset[0]
+
+    torch.testing.assert_close(
+        result["input"],
+        torch.tensor(
+            [
+                1.0,
+                2.0,
+                3.0,
+                4.0,
+            ]
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "lead_time",
+        "expected_count",
+    ),
+    [
+        (1, 4),
+        (2, 4),
+        (12, 4),
+        (13, 4),
+    ],
+)
+def test_getitem_all_time_features_for_multiple_leads(
+    lead_time,
+    expected_count,
+):
+    dataset = make_getitem_dataset(
+        time_features=[
+            "year",
+            "lead_time",
+            "month_sin",
+            "month_cos",
+        ],
+    )
+
+    dataset.sample_coords = {
+        "year": np.asarray([2000]),
+        "lead_time": np.asarray([lead_time]),
+    }
+
+    result = dataset[0]
+
+    assert result["added_features"] is not None
+    assert result["added_features"].shape == (expected_count,)
+    assert torch.isfinite(result["added_features"]).all()
+
+
+@pytest.mark.pruned
+def test_getitem_metadata_values_are_scalars():
+    dataset = make_getitem_dataset(
         return_metadata=True,
     )
 
-    assert isinstance(
-        dataset,
-        TrainDataset,
-    )
-    assert dataset.return_metadata is True
+    _, selection = dataset[0]
+
+    assert np.isscalar(selection["year"])
+    assert np.isscalar(selection["lead_time"])
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
-def test_build_dataset_mask(monkeypatch):
-    config = make_config()
+def test_getitem_selects_requested_sample_index():
+    reference = make_config_stub()
 
-    monkeypatch.setattr(
-        TrainDataset,
-        "__post_init__",
-        lambda self: None,
+    dataset = bare_dataset(
+        config=reference,
+        sample_coords={
+            "year": np.asarray(
+                [
+                    2000,
+                    2001,
+                ]
+            ),
+            "lead_time": np.asarray(
+                [
+                    1,
+                    13,
+                ]
+            ),
+        },
+        return_metadata=True,
+        time_features=AddedTimeFeatures(
+            reference,
+            None,
+        ),
     )
 
-    mask = object()
-
-    dataset = config.build_dataset(
-        years=[2000],
-        mask=mask,
+    dataset._index_condition_dataset = MagicMock(
+        return_value=None,
+    )
+    dataset._index_observation_dataset = MagicMock(
+        return_value=xr.DataArray(
+            np.asarray([2.0]),
+            dims=("channels",),
+        )
+    )
+    dataset._index_model_dataset = MagicMock(
+        return_value=xr.DataArray(
+            np.asarray([1.0]),
+            dims=("channels",),
+        )
     )
 
-    assert dataset.mask is mask
+    with (
+        patch.object(
+            TrainDataset,
+            "_autoencoding_model_data",
+            new_callable=PropertyMock,
+            return_value=False,
+        ),
+        patch.object(
+            TrainDataset,
+            "_write_condition_to_input",
+            new_callable=PropertyMock,
+            return_value=False,
+        ),
+        patch.object(
+            TrainDataset,
+            "_concat_condition_to_input",
+            new_callable=PropertyMock,
+            return_value=False,
+        ),
+    ):
+        _, selection = dataset[1]
+
+    assert selection == {
+        "year": 2001,
+        "lead_time": 13,
+    }
+
+    dataset._index_condition_dataset.assert_called_once_with(1)
+    dataset._index_observation_dataset.assert_called_once_with(1)
+    dataset._index_model_dataset.assert_called_once_with(1)
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
-def test_fit_preprocessors_delegates(monkeypatch):
-    config = make_config()
-    called = {}
-
-    class Operator:
-        def _fit_preprocessors(
-            self,
-            **kwargs,
-        ):
-            called.update(kwargs)
-
-    monkeypatch.setattr(
-        TrainDatasetConfig,
-        "ds_operator",
-        property(lambda self: Operator()),
+def test_post_init_passes_load_false_to_observation_loader():
+    observation = make_data_config(
+        paths=("obs.nc",),
     )
 
-    config._fit_preprocessors(
+    config = make_config_stub(
+        observation=observation,
+    )
+
+    features = AddedTimeFeatures(
+        config,
+        None,
+    )
+
+    dataset = object.__new__(TrainDataset)
+    dataset.config = config
+    dataset.requested_years = [2000]
+    dataset.time_features = features
+    dataset.mask = None
+    dataset.return_metadata = False
+    dataset.load = False
+    dataset.sample_coords = make_sample_coords()
+    dataset.observation_dataset = None
+
+    loaded = make_observation_dataset()
+
+    with (
+        patch.object(
+            DatasetABC,
+            "__init__",
+            return_value=None,
+        ),
+        patch.object(
+            TrainDataset,
+            "_load_xarray_data",
+            return_value=loaded,
+        ) as loader,
+        patch.object(
+            TrainDataset,
+            "get_obs_indexes",
+            return_value={
+                "year": np.asarray([0]),
+                "month": np.asarray([0]),
+            },
+        ),
+    ):
+        dataset.__post_init__()
+
+    loader.assert_called_once_with(
+        observation,
+        load=False,
+    )
+
+
+@pytest.mark.pruned
+def test_post_init_sets_observation_indexes():
+    observation = make_data_config(
+        paths=("obs.nc",),
+    )
+
+    config = make_config_stub(
+        observation=observation,
+    )
+
+    features = AddedTimeFeatures(
+        config,
+        None,
+    )
+
+    dataset = object.__new__(TrainDataset)
+    dataset.config = config
+    dataset.requested_years = [2000]
+    dataset.time_features = features
+    dataset.mask = None
+    dataset.return_metadata = False
+    dataset.load = False
+    dataset.sample_coords = make_sample_coords()
+    dataset.observation_dataset = None
+
+    loaded = make_observation_dataset()
+    expected_indexes = {
+        "year": np.asarray([0]),
+        "month": np.asarray([0]),
+    }
+
+    with (
+        patch.object(
+            DatasetABC,
+            "__init__",
+            return_value=None,
+        ),
+        patch.object(
+            TrainDataset,
+            "_load_xarray_data",
+            return_value=loaded,
+        ),
+        patch.object(
+            TrainDataset,
+            "get_obs_indexes",
+            return_value=expected_indexes,
+        ) as get_indexes,
+    ):
+        dataset.__post_init__()
+
+    assert dataset.obs_indexes is expected_indexes
+    get_indexes.assert_called_once_with(dataset.sample_coords)
+
+
+@pytest.mark.pruned
+                                
+def test_build_dataset_defaults():
+    config = bare_config()
+    features = object()
+    expected = object()
+
+    with patch.object(
+        module,
+        "TrainDataset",
+        return_value=expected,
+    ) as constructor:
+        result = config.build_dataset(
+            years=[2000],
+            time_features=features,
+        )
+
+    assert result is expected
+
+    constructor.assert_called_once_with(
+        config=config,
+        requested_years=[2000],
+        time_features=features,
+        mask=None,
+        return_metadata=False,
+        load=False,
+    )
+
+
+@pytest.mark.pruned
+                                
+def test_fit_preprocessors_default_arguments():
+    config = bare_config()
+    operator = MagicMock()
+
+    with patch.object(
+        module,
+        "DatasetOperator",
+        return_value=operator,
+    ):
+        config.fit_preprocessors(
+            train_years=[2000],
+        )
+
+    operator.fit_preprocessors.assert_called_once_with(
         train_years=[2000],
-        save=True,
-        save_path="a",
-        save_name="b",
+        save=False,
+        save_path=None,
+        save_name=None,
     )
-
-    assert called == {
-        "train_years": [2000],
-        "save": True,
-        "save_path": "a",
-        "save_name": "b",
-    }
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
-def test_load_fitted_preprocessors_delegates(
-    monkeypatch,
-):
-    config = make_config()
-    called = {}
+                                
+def test_load_fitted_preprocessors_default_argument():
+    config = bare_config()
+    operator = MagicMock()
 
-    class Operator:
-        def _load_fitted_preprocessors(
-            self,
-            load_dir,
-        ):
-            called["load_dir"] = load_dir
-
-    monkeypatch.setattr(
-        TrainDatasetConfig,
-        "ds_operator",
-        property(lambda self: Operator()),
-    )
-
-    config._load_fitted_preprocessors("abc")
-
-    assert called["load_dir"] == "abc"
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_add_fitted_preprocessor_delegates(
-    monkeypatch,
-):
-    config = make_config()
-    called = {}
-
-    class Operator:
-        def _add_fitted_preprocessor(
-            self,
-            preprocessor,
-            index,
-        ):
-            called["preprocessor"] = preprocessor
-            called["index"] = index
-
-    monkeypatch.setattr(
-        TrainDatasetConfig,
-        "ds_operator",
-        property(lambda self: Operator()),
-    )
-
-    value = object()
-
-    config._add_fitted_preprocessor(
-        value,
-        index=4,
-    )
-
-    assert called["preprocessor"] is value
-    assert called["index"] == 4
-
-
-@pytest.mark.pruned
-def test_get_obs_indexes():
-    config = make_config(
-        observation=DummyConfig(),
-    )
-
-    dataset = make_dataset(config)
-
-    indexes = dataset.get_obs_indexes(dataset.sample_coords)
-
-    assert set(indexes) == {
-        "year",
-        "month",
-    }
-    assert len(indexes["year"]) == len(dataset)
-    assert len(indexes["month"]) == len(dataset)
-
-
-@pytest.mark.pruned
-def test_get_cond_indexes_cross_ensemble():
-    config = make_config(
-        condition=DummyConfig(),
-        condition_method="cross_ensemble",
-    )
-
-    dataset = make_dataset(config)
-
-    indexes = dataset.get_cond_indexes(dataset.sample_coords)
-
-    assert set(indexes) == {
-        "year",
-        "lead_time",
-    }
-    assert len(indexes["year"]) == len(dataset)
-    assert len(indexes["lead_time"]) == len(dataset)
-
-
-@pytest.mark.pruned
-def test_prepare_existing_mask():
-    config = make_config()
-    config.model.ensemble_mean = True
-
-    mask = xr.DataArray(
-        np.zeros(
-            (1, 12),
-            dtype=bool,
-        ),
-        dims=(
-            "year",
-            "lead_time",
-        ),
-        coords={
-            "year": [2000],
-            "lead_time": np.arange(1, 13),
-        },
-    )
-
-    dataset = make_dataset(
-        config,
-        mask=mask,
-    )
-
-    assert dataset.mask.dims == (
-        "year",
-        "lead_time",
-    )
-    assert not dataset.mask.any().item()
-    assert len(dataset) == 12
-
-
-@pytest.mark.pruned
-def test_prepare_existing_mask_with_ensemble():
-    config = make_config()
-
-    mask = xr.DataArray(
-        np.zeros(
-            (1, 12),
-            dtype=bool,
-        ),
-        dims=(
-            "year",
-            "lead_time",
-        ),
-        coords={
-            "year": [2000],
-            "lead_time": np.arange(1, 13),
-        },
-    )
-
-    dataset = make_dataset(
-        config,
-        mask=mask,
-    )
-
-    assert "ensembles" in dataset.mask.dims
-    assert dataset.mask.sizes["ensembles"] == 2
-    assert dataset.mask.sizes["year"] == 1
-    assert dataset.mask.sizes["lead_time"] == 12
-    assert not dataset.mask.any().item()
-    assert len(dataset) == 24
-
-
-@pytest.mark.pruned
-def test_get_obs_indexes_raises_for_missing_coordinates():
-    observation = DummyConfig()
-
-    config = make_config(
-        observation=observation,
-    )
-    dataset = make_dataset(config)
-
-    bad_coords = {
-        "year": np.array([9999]),
-        "lead_time": np.array([1]),
-    }
-
-    with pytest.raises(
-        ValueError,
-        match="observation coordinates were not found",
+    with patch.object(
+        module,
+        "DatasetOperator",
+        return_value=operator,
     ):
-        dataset.get_obs_indexes(bad_coords)
+        config.load_fitted_preprocessors()
+
+    operator.load_fitted_preprocessors.assert_called_once_with(None)
 
 
 @pytest.mark.pruned
-def test_get_cond_indexes_raises_for_missing_coordinates():
-    condition = DummyConfig()
+                                
+def test_add_fitted_preprocessor_default_index():
+    config = bare_config()
+    operator = MagicMock()
+    preprocessor = object()
 
-    config = make_config(
-        condition=condition,
-        condition_method="cross_ensemble",
-    )
-    dataset = make_dataset(config)
-
-    bad_coords = {
-        "year": np.array([9999]),
-        "lead_time": np.array([999]),
-    }
-
-    with pytest.raises(
-        ValueError,
-        match="conditioning coordinates were not found",
+    with patch.object(
+        module,
+        "DatasetOperator",
+        return_value=operator,
     ):
-        dataset.get_cond_indexes(bad_coords)
+        config.add_fitted_preprocessor(preprocessor)
 
-
-@pytest.mark.pruned
-def test_get_cond_indexes_same_member_requires_ensembles():
-    condition = DummyConfig()
-
-    config = make_config(
-        condition=condition,
-        condition_method="same_member",
+    operator.add_fitted_preprocessor.assert_called_once_with(
+        preprocessor,
+        0,
     )
-    dataset = make_dataset(config)
-
-    sample_coords = {
-        "year": np.array([2000]),
-        "lead_time": np.array([1]),
-    }
-
-    with pytest.raises(
-        ValueError,
-        match="requires ensemble coordinates",
-    ):
-        dataset.get_cond_indexes(sample_coords)
-
-
-@pytest.mark.pruned
-def test_get_cond_indexes_ignores_unavailable_dimensions():
-    condition = DummyConfig()
-
-    config = make_config(
-        condition=condition,
-        condition_method="cross_ensemble",
-    )
-    dataset = make_dataset(config)
-
-    sample_coords = {
-        "year": np.array([2000]),
-        "lead_time": np.array([1]),
-        "ensembles": np.array([0]),
-        "not_a_condition_dimension": np.array([7]),
-    }
-
-    indexes = dataset.get_cond_indexes(sample_coords)
-
-    assert set(indexes) == {
-        "year",
-        "lead_time",
-    }
-
-
-@pytest.mark.pruned
-def test_get_obs_indexes_zero_based_positions():
-    observation = DummyConfig()
-
-    config = make_config(
-        observation=observation,
-    )
-    dataset = make_dataset(config)
-
-    sample_coords = {
-        "year": np.array([2000]),
-        "lead_time": np.array([1]),
-    }
-
-    indexes = dataset.get_obs_indexes(sample_coords)
-
-    np.testing.assert_array_equal(
-        indexes["year"],
-        np.array([0]),
-    )
-    np.testing.assert_array_equal(
-        indexes["month"],
-        np.array([0]),
-    )
-
-
-@pytest.mark.pruned
-def test_get_obs_indexes_lead_time_crosses_year():
-    observation = DummyConfig()
-
-    config = make_config(
-        observation=observation,
-    )
-    dataset = make_dataset(config)
-
-    sample_coords = {
-        "year": np.array([2000]),
-        "lead_time": np.array([13]),
-    }
-
-    indexes = dataset.get_obs_indexes(sample_coords)
-
-    np.testing.assert_array_equal(
-        indexes["year"],
-        np.array([1]),
-    )
-    np.testing.assert_array_equal(
-        indexes["month"],
-        np.array([0]),
-    )
-
-
-@pytest.mark.pruned
-def test_get_cond_indexes_same_member_maps_ensemble_positions():
-    condition = DummyConfig()
-
-    config = make_config(
-        condition=condition,
-        condition_method="same_member",
-    )
-    dataset = make_dataset(config)
-
-    sample_coords = {
-        "year": np.array([2000, 2000]),
-        "lead_time": np.array([1, 2]),
-        "ensembles": np.array([0, 1]),
-    }
-
-    indexes = dataset.get_cond_indexes(sample_coords)
-
-    np.testing.assert_array_equal(
-        indexes["ensembles"],
-        np.array([0, 1]),
-    )
-
-
-@pytest.mark.pruned
-def test_get_target_shape_observation_without_flattener():
-    observation = DummyConfig()
-    observation.preprocessing_pipeline.fitted_preprocessors = []
-
-    config = make_config(
-        observation=observation,
-    )
-    dataset = make_dataset(config)
-
-    shape = dataset.get_target_shape()
-
-    assert isinstance(shape, tuple)
-    assert shape == (2, 2)
-
-
-@pytest.mark.pruned
-def test_get_input_shape_without_flattener():
-    config = make_config()
-    config.model.preprocessing_pipeline.fitted_preprocessors = []
-
-    dataset = make_dataset(config)
-
-    shape = dataset.get_input_shape()
-
-    assert isinstance(shape, tuple)
-    assert shape == (2, 2)
-
-
-@pytest.mark.pruned
-def test_get_input_shape_with_flattener(
-    monkeypatch,
-):
-    class FakeFlattennanremove:
-        pass
-
-    monkeypatch.setattr(
-        "cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove",
-        FakeFlattennanremove,
-    )
-
-    config = make_config()
-    config.model.preprocessing_pipeline.fitted_preprocessors = [FakeFlattennanremove()]
-
-    dataset = make_dataset(config)
-
-    assert dataset.get_input_shape() == (4,)
-
-
-def test_get_target_shape_with_flattener(
-    monkeypatch,
-):
-    class FakeFlattennanremove:
-        pass
-
-    monkeypatch.setattr(
-        "cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove",
-        FakeFlattennanremove,
-    )
-
-    observation = DummyConfig()
-    observation.preprocessing_pipeline.fitted_preprocessors = [FakeFlattennanremove()]
-
-    config = make_config(
-        observation=observation,
-    )
-    dataset = make_dataset(config)
-
-    assert dataset.get_target_shape() == (4,)
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_build_dataset_load_passthrough(
-    monkeypatch,
-):
-    config = make_config()
-
-    monkeypatch.setattr(
-        TrainDataset,
-        "__post_init__",
-        lambda self: None,
-    )
-
-    dataset = config.build_dataset(
-        years=[2000],
-        load=True,
-    )
-
-    assert dataset.load is True
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_build_dataset_load_default_false(
-    monkeypatch,
-):
-    config = make_config()
-
-    monkeypatch.setattr(
-        TrainDataset,
-        "__post_init__",
-        lambda self: None,
-    )
-
-    dataset = config.build_dataset(
-        years=[2000],
-    )
-
-    assert dataset.load is False

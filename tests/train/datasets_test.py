@@ -9,8 +9,7 @@ from cccma_ppp.train.datasets import (
     TrainDatasetConfig,
     TrainDataset,
 )
-
-original_get_time_features = module._get_time_features
+from cccma_ppp.data_modules.dataset.dataset_abc import AddedTimeFeatures
 
 
 @pytest.fixture(autouse=True)
@@ -36,33 +35,26 @@ def patch_xarray_loader(monkeypatch):
             },
         )
 
-    def time_features_adapter(
-        config,
-        year,
-        lead_time,
-        data,
-    ):
-        selection = {
-            "year": year,
-            "lead_time": lead_time,
-        }
+    original_init = TrainDataset.__init__
 
-        return original_get_time_features(
-            config,
-            selection,
-            data,
-        )
+    def patched_init(self, *args, **kwargs):
+        original_init(self, *args, **kwargs)
+
+        if not hasattr(self, "time_features"):
+            self.time_features = AddedTimeFeatures(
+                self.config,
+                None,
+            )
 
     monkeypatch.setattr(
         module,
         "_load_xarray_data",
         fake_loader,
     )
-
     monkeypatch.setattr(
-        module,
-        "_get_time_features",
-        time_features_adapter,
+        TrainDataset,
+        "__init__",
+        patched_init,
     )
 
 
@@ -176,6 +168,7 @@ def test_invalid_condition_without_method():
         )
 
 
+@pytest.mark.pruned
 def test_static_condition_missing_dataset():
     model = DummyDataConfig()
 
@@ -289,7 +282,6 @@ def test_ensemble_mean_condition_requires_true():
         )
 
 
-@pytest.mark.pruned
 def test_cross_ensemble_requires_ensemble_dim():
     model = DummyDataConfig()
 
@@ -305,7 +297,6 @@ def test_cross_ensemble_requires_ensemble_dim():
         )
 
 
-@pytest.mark.pruned
 def test_static_condition_with_ensemble_list_fails():
     model = DummyDataConfig()
 
@@ -389,6 +380,7 @@ def test_concat_condition_flag():
     assert isinstance(ds._concat_condition_to_input, bool)
 
 
+@pytest.mark.pruned
 def test_prepare_mask_with_existing_mask():
     cfg = make_valid_config_with()
     years = cfg.get_common_time[:1]
@@ -730,16 +722,6 @@ def test_get_target_shape_without_observation():
 
 
 @pytest.mark.pruned
-def test_get_added_features_dim():
-    cfg = make_valid_config_with()
-    cfg.time_features = ["year", "month"]
-
-    ds = TrainDataset(cfg, requested_years=cfg.get_common_time[:1])
-
-    assert ds.get_added_features_dim() == 2
-
-
-@pytest.mark.pruned
 def test_index_condition_dataset_non_static():
     model = DummyDataConfig()
 
@@ -835,6 +817,7 @@ def test_obs_indexes_without_ensemble_sampling():
     assert "ensembles" not in indexes
 
 
+@pytest.mark.pruned
 def test_condition_dataset_none_branch():
     cfg = make_valid_config_with()
 
@@ -858,7 +841,6 @@ def test_model_dataset_indexing():
     assert result is not None
 
 
-@pytest.mark.pruned
 def test_get_input_shape_flattener_branch(monkeypatch):
     class FakeFlatten:
         pass
@@ -1149,17 +1131,6 @@ def test_prepare_mask_existing_mask_branch():
 
 
 @pytest.mark.pruned
-def test_getitem_added_features_none():
-    cfg = make_valid_config_with()
-
-    ds = TrainDataset(cfg, requested_years=cfg.get_common_time[:1])
-
-    result = ds[0]
-
-    assert result["added_features"] is None
-
-
-@pytest.mark.pruned
 def test_build_dataset_wrapper():
     cfg = make_valid_config_with()
 
@@ -1194,7 +1165,6 @@ def test_available_train_time_with_observation_branch():
     assert np.array_equal(result, np.array([2001, 2002]))
 
 
-@pytest.mark.pruned
 def test_prepare_mask_existing_mask_branch_again():
     model = DummyDataConfig()
     model.ensemble_mean = True
@@ -1352,17 +1322,6 @@ def test_getitem_returns_input_key():
     result = ds[0]
 
     assert "input" in result
-
-
-@pytest.mark.pruned
-def test_getitem_returns_added_features_none():
-    cfg = make_valid_config_with()
-
-    ds = TrainDataset(cfg, requested_years=cfg.get_common_time[:1])
-
-    result = ds[0]
-
-    assert result["added_features"] is None
 
 
 @pytest.mark.pruned
@@ -1850,18 +1809,6 @@ def test_getitem_concat_path(monkeypatch):
 
 
 @pytest.mark.pruned
-def test_getitem_without_time_features_branch():
-    cfg = make_valid_config_with()
-    cfg.time_features = None
-
-    ds = TrainDataset(cfg, requested_years=cfg.get_common_time[:1])
-
-    item = ds[0]
-
-    assert item["added_features"] is None
-
-
-@pytest.mark.pruned
 def test_getitem_with_time_features_branch():
     cfg = make_valid_config_with()
     cfg.time_features = ["year"]
@@ -2312,30 +2259,6 @@ def test_get_target_shape_tuple_again():
 
 
 @pytest.mark.pruned
-def test_added_features_dim_value():
-    cfg = make_valid_config_with()
-
-    cfg.time_features = ["year"]
-
-    ds = TrainDataset(cfg, requested_years=[2000])
-
-    assert ds.get_added_features_dim() == 1
-
-
-@pytest.mark.pruned
-def test_time_features_none_path_again():
-    cfg = make_valid_config_with()
-
-    cfg.time_features = None
-
-    ds = TrainDataset(cfg, requested_years=[2000])
-
-    item = ds[0]
-
-    assert item["added_features"] is None
-
-
-@pytest.mark.pruned
 def test_time_features_present_path_again():
     cfg = make_valid_config_with()
 
@@ -2629,17 +2552,6 @@ def test_get_target_shape_no_observation_branch():
 
 
 @pytest.mark.pruned
-def test_get_added_features_dim_branch():
-    cfg = make_valid_config_with()
-
-    cfg.time_features = ["year", "month", "lead"]
-
-    ds = TrainDataset(cfg, requested_years=cfg.get_common_time[:1])
-
-    assert ds.get_added_features_dim() == 3
-
-
-@pytest.mark.pruned
 def test_return_metadata_true_real():
     cfg = make_valid_config_with()
 
@@ -2745,17 +2657,6 @@ def test_getitem_contains_added_features_key():
     item = ds[0]
 
     assert "added_features" in item
-
-
-@pytest.mark.pruned
-def test_getitem_added_features_none_without_time_features():
-    cfg = make_valid_config_with(time_features=None)
-
-    ds = TrainDataset(cfg, requested_years=[2000])
-
-    item = ds[0]
-
-    assert item["added_features"] is None
 
 
 @pytest.mark.pruned
@@ -3206,22 +3107,6 @@ def test_getitem_time_features_branch():
     assert item["added_features"] is not None
 
 
-@pytest.mark.pruned
-def test_getitem_added_features_none_branch():
-    cfg = make_valid_config_with()
-
-    cfg.time_features = None
-
-    ds = TrainDataset(
-        cfg,
-        requested_years=[2000],
-    )
-
-    item = ds[0]
-
-    assert item["added_features"] is None
-
-
 def test_index_model_dataset_returns_none_when_not_loading():
     model = DummyDataConfig()
 
@@ -3363,56 +3248,6 @@ def test_load_xarray_without_ensemble_selection():
     )
 
     assert ds.model_dataset is not None
-
-
-@pytest.mark.pruned
-def test_prepare_mask_existing_without_expand():
-    model = DummyDataConfig()
-
-    model.ensemble_mean = True
-
-    cond = DummyDataConfig()
-    cond.paths = ["different"]
-
-    cfg = TrainDatasetConfig(
-        model=model,
-        condition=cond,
-        condition_method="static",
-    )
-
-    cfg._fitted_preprocessors = True
-
-    mask = xr.DataArray(
-        np.zeros((5, 12), dtype=bool),
-        dims=("year", "lead_time"),
-        coords={
-            "year": cfg.model.year_range,
-            "lead_time": np.arange(1, 13),
-        },
-    )
-
-    ds = TrainDataset(
-        cfg,
-        requested_years=[2000],
-        mask=mask,
-    )
-
-    assert "ensembles" not in ds.mask.dims
-
-    cfg = make_valid_config_with()
-
-    cfg.time_features = [
-        "year",
-        "month",
-        "lead_time",
-    ]
-
-    ds = TrainDataset(
-        cfg,
-        requested_years=[2000],
-    )
-
-    assert ds.get_added_features_dim() == 3
 
 
 @pytest.mark.pruned
@@ -3846,24 +3681,6 @@ def test_added_feature_dimension_zero():
 
 
 @pytest.mark.pruned
-def test_added_feature_dimension_three():
-    cfg = make_valid_config_with()
-
-    cfg.time_features = [
-        "year",
-        "month",
-        "lead_time",
-    ]
-
-    ds = TrainDataset(
-        cfg,
-        requested_years=[2000],
-    )
-
-    assert ds.get_added_features_dim() == 3
-
-
-@pytest.mark.pruned
 def test_getitem_metadata_contains_keys():
     cfg = make_valid_config_with()
 
@@ -3922,24 +3739,6 @@ def test_build_dataset_return_metadata_false_branch():
 
     assert isinstance(ds, TrainDataset)
     assert ds.return_metadata is False
-
-
-@pytest.mark.pruned
-def test_get_added_features_dim_multiple():
-    cfg = make_valid_config_with()
-
-    cfg.time_features = [
-        "year",
-        "month",
-        "lead_time",
-    ]
-
-    ds = TrainDataset(
-        cfg,
-        requested_years=[2000],
-    )
-
-    assert ds.get_added_features_dim() == 3
 
 
 @pytest.mark.pruned
@@ -4222,27 +4021,6 @@ def test_time_feature_month_cos():
 
 
 @pytest.mark.pruned
-def test_time_feature_all_supported():
-    cfg = make_valid_config_with()
-
-    cfg.time_features = [
-        "year",
-        "lead_time",
-        "month_sin",
-        "month_cos",
-    ]
-
-    ds = TrainDataset(
-        cfg,
-        requested_years=[2000],
-    )
-
-    item = ds[0]
-
-    assert len(item["added_features"]) == 4
-
-
-@pytest.mark.pruned
 def test_dataset_empty_requested_years():
     cfg = make_valid_config_with()
 
@@ -4275,20 +4053,6 @@ def test_observation_without_condition():
 
 
 @pytest.mark.pruned
-def test_added_feature_dimension_month_cos():
-    cfg = make_valid_config_with()
-
-    cfg.time_features = ["month_cos"]
-
-    ds = TrainDataset(
-        cfg,
-        requested_years=[2000],
-    )
-
-    assert ds.get_added_features_dim() == 1
-
-
-@pytest.mark.pruned
 def test_time_feature_month_cos_only():
     cfg = make_valid_config_with()
 
@@ -4302,20 +4066,6 @@ def test_time_feature_month_cos_only():
     item = ds[0]
 
     assert item["added_features"] is not None
-
-
-@pytest.mark.pruned
-def test_get_added_features_dim_month_cos():
-    cfg = make_valid_config_with()
-
-    cfg.time_features = ["month_cos"]
-
-    ds = TrainDataset(
-        cfg,
-        requested_years=[2000],
-    )
-
-    assert ds.get_added_features_dim() == 1
 
 
 @pytest.mark.pruned
@@ -4334,6 +4084,7 @@ def test_check_condition_requires_method_when_effective_condition_exists():
         )
 
 
+@pytest.mark.pruned
 def test_cross_ensemble_rejects_ensemble_mean_condition():
     model = DummyDataConfig()
 
@@ -4348,7 +4099,6 @@ def test_cross_ensemble_rejects_ensemble_mean_condition():
         )
 
 
-@pytest.mark.pruned
 def test_same_member_rejects_ensemble_mean_condition():
     model = DummyDataConfig()
 
@@ -4363,6 +4113,7 @@ def test_same_member_rejects_ensemble_mean_condition():
         )
 
 
+@pytest.mark.pruned
 def test_static_condition_cannot_use_model_data_as_condition():
     model = DummyDataConfig()
 
@@ -4377,75 +4128,6 @@ def test_static_condition_cannot_use_model_data_as_condition():
             condition=cond,
             condition_method="static",
         )
-
-
-@pytest.mark.pruned
-def test_load_fitted_preprocessors_delegates(monkeypatch):
-    cfg = make_valid_config_with()
-
-    called = {}
-
-    def fake_loader(self, load_dir):
-        called["load_dir"] = load_dir
-
-    monkeypatch.setattr(
-        "cccma_ppp.data_modules.dataset.operator.DatasetOperator._load_fitted_preprocessors",
-        fake_loader,
-    )
-
-    cfg._load_fitted_preprocessors("abc")
-
-    assert called["load_dir"] == "abc"
-
-
-@pytest.mark.pruned
-def test_add_fitted_preprocessor_delegates(monkeypatch):
-    cfg = make_valid_config_with()
-
-    called = {}
-
-    def fake_add(self, preprocessor, index):
-        called["preprocessor"] = preprocessor
-        called["index"] = index
-
-    monkeypatch.setattr(
-        "cccma_ppp.data_modules.dataset.operator.DatasetOperator._add_fitted_preprocessor",
-        fake_add,
-    )
-
-    obj = object()
-
-    cfg._add_fitted_preprocessor(obj, index=5)
-
-    assert called["preprocessor"] is obj
-    assert called["index"] == 5
-
-
-@pytest.mark.pruned
-def test_fit_preprocessors_delegates(monkeypatch):
-    cfg = make_valid_config_with()
-
-    called = {}
-
-    def fake_fit(self, **kwargs):
-        called.update(kwargs)
-
-    monkeypatch.setattr(
-        "cccma_ppp.data_modules.dataset.operator.DatasetOperator._fit_preprocessors",
-        fake_fit,
-    )
-
-    cfg._fit_preprocessors(
-        train_years=[2000],
-        save=True,
-        save_path="path",
-        save_name="name",
-    )
-
-    assert called["train_years"] == [2000]
-    assert called["save"] is True
-    assert called["save_path"] == "path"
-    assert called["save_name"] == "name"
 
 
 @pytest.mark.pruned

@@ -113,6 +113,8 @@ class DummyLossPipeline:
 
 
 class DummyTrainer:
+    gradient_accumulation_steps = 1
+
     def __init__(self):
         self.beta_finder = True
 
@@ -225,6 +227,7 @@ def test_set_random_seed(tmp_path):
     cfg.set_random_seed(0)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_creates_dirs(tmp_path):
     cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
@@ -234,7 +237,6 @@ def test_prepare_directory_creates_dirs(tmp_path):
     assert os.path.exists(cfg.checkpoint_dir)
 
 
-@pytest.mark.pruned
 def test_prepare_directory_yaml_copy(tmp_path):
     cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
@@ -327,6 +329,7 @@ def test_resolve_resuming_updates_config(tmp_path):
     assert cfg.max_epochs == halted.max_epochs
 
 
+@pytest.mark.pruned
 def test_set_random_seed_none(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -691,6 +694,7 @@ def test_optimization_exists(tmp_path):
     assert cfg.optimization is not None
 
 
+@pytest.mark.pruned
 def test_deterministic_beta_finder_warning(tmp_path):
     loader = DummyTrainLoader()
     loader.dataset_config.observation = DummyObservation()
@@ -781,7 +785,6 @@ def test_figures_dir_property(tmp_path):
     assert "figures" in str(cfg.figures_dir)
 
 
-@pytest.mark.pruned
 def test_prepare_directory_copy_resume_branch(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"
@@ -1845,7 +1848,6 @@ def test_resolve_resuming_copy_flag_false(tmp_path):
     assert cfg.copy_resume_dir_to_new_path is False
 
 
-@pytest.mark.pruned
 def test_logger_not_called_when_not_root(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -2370,6 +2372,7 @@ def test_prepare_directory_root_false_copy_resume_false_yaml_present(tmp_path):
     cfg.prepare_directory(d, yaml_config=yaml_path)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_root_true_copy_resume_true_yaml_present(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"
@@ -2521,7 +2524,6 @@ def test_generator_branch_true_valid(tmp_path):
     assert cfg is not None
 
 
-@pytest.mark.pruned
 def test_cvae_requires_beta_finder(tmp_path):
     trainer = DummyTrainer()
     trainer.beta_finder = None
@@ -2699,7 +2701,7 @@ def test_check_io_multid_with_flattener_correct_dims():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_prepare_config(tmp_path):
     yaml_file = tmp_path / "cfg.yaml"
 
@@ -2718,7 +2720,7 @@ b:
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_set_seed_changes_torch_state():
     set_seed(123)
 
@@ -2732,7 +2734,7 @@ def test_set_seed_changes_torch_state():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_set_seed_changes_numpy_state():
     set_seed(456)
 

@@ -5,25 +5,26 @@ import xarray as xr
 import torch
 import dask
 
-from cccma_ppp.data_modules.dataset import (
-    DatasetConfigABC, 
+from cccma_ppp.data_modules.dataset.config_abc import (
+    DatasetConfigABC,
+    lead_months_config,
+)
+from cccma_ppp.data_modules.dataset.dataset_abc import (
     DatasetABC,
-    lead_months_config, 
-    DatasetOperator,
     AddedTimeFeatures,
 )
+from cccma_ppp.data_modules.dataset.operator import DatasetOperator
 
-from cccma_ppp.data_modules.data import (
+from cccma_ppp.data_modules.data.data_configs import (
     ModelDataConfig,
     ConditionDataConfig,
 )
 
-from cccma_ppp.data_modules import (
-    suppress_stderr,
-)
+from cccma_ppp.data_modules.utils import suppress_stderr
 
 from cccma_ppp.train.dataset import TrainDatasetConfig
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
+
 
 @dataclasses.dataclass
 class InferenceDatasetConfig(DatasetConfigABC):
@@ -47,7 +48,6 @@ class InferenceDatasetConfig(DatasetConfigABC):
     def ds_operator(self):
         return DatasetOperator(self)
 
-
     @property
     def available_times(self):
 
@@ -55,11 +55,11 @@ class InferenceDatasetConfig(DatasetConfigABC):
         if self.condition is not None:
             year_ranges.append(
                 self.condition.info.coords["year"].values,
-                )
+            )
         if self.model is not None:
             year_ranges.append(
                 self.model.info.coords["year"].values,
-                )
+            )
 
         common = year_ranges[0]
         for yr in year_ranges[1:]:
@@ -67,39 +67,120 @@ class InferenceDatasetConfig(DatasetConfigABC):
 
         return common
 
-    def load_fitted_preprocessors(
-        self, load_dir: Path | str | None = None
-    ):
+    def _check_model(self):
+        """
+        Validate model dataset configuration.
+
+        Returns
+        -------
+        self
+
+        Raises
+        ------
+        ValueError
+            If configuration is inconsistent.
+        """
+
+        if self.condition_method == "same_member":
+            if self.model.ensemble_mean:
+                raise ValueError(
+                    "for same member coniditioning the model data should not be ensemble mean."
+                )
+
+        return self
+
+    def _check_condition(self):
+        """
+        Validate conditioning dataset configuration.
+
+        Returns
+        -------
+        self
+            The validated instance.
+
+        Raises
+        ------
+        ValueError
+            If the conditioning dataset configuration is invalid.
+        """
+        if self.effective_condition is not None:
+            if self.condition_method is None:
+                raise ValueError(
+                    "You must specify condition_method for conditioning dataset!"
+                )
+
+            if self.condition_method in ["cross_ensemble", "same_member"]:
+                if self.effective_condition.ensemble_mean:
+                    raise ValueError(
+                        "condition ensemble_mean cannot be True for cross_ensemble or same_member conditioning."
+                    )
+                if self.effective_condition.info.coords["ensembles"] is None:
+                    raise ValueError(
+                        "For cross_ensemble or same_member conditioning an ensembles dim must exist in the condition."
+                    )
+            elif self.condition_method == "ensemble_mean":
+                if self.effective_condition.ensemble_mean is not True:
+                    raise ValueError(
+                        "Ensemble mean must be True for ensemble_mean conditioning."
+                    )
+            else:
+                if self.effective_condition.ensemble_list is not None:
+                    raise ValueError(
+                        'For "static" conditioning fields cannot specify ensemble list.'
+                    )
+                if self._using_model_data_as_condition:
+                    raise ValueError(
+                        "'static' conditioning method cannot point to the same model data!"
+                    )
+
+        else:
+            if self.condition_method == "static":
+                raise ValueError(
+                    "For static conditioning method condition dataset must be specified!"
+                )
+
+        return self
+
+    @property
+    def num_input_lead_months(self) -> int:
+        """
+        Number of lead months in model dataset.
+
+        Returns
+        -------
+        int
+        """
+
+        return self.model.info.sizes["lead_time"]
+
+    def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         self.ds_operator.load_fitted_preprocessors(load_dir)
 
     def add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
 
         self.ds_operator.add_fitted_preprocessor(preprocessor, index)
 
-
     def build_dataset(
         self,
         years: np.ndarray,
         time_features: AddedTimeFeatures,
         return_metadata: bool = False,
-        load: bool = False
+        load: bool = False,
     ):
         return InferenceDataset(
             config=self,
             requested_years=years,
             time_features=time_features,
             return_metadata=return_metadata,
-            load=load
+            load=load,
         )
-
-
 
 
 @dataclasses.dataclass
 class InferenceDataset(DatasetABC):
     config: InferenceDatasetConfig
     requested_years: list[int] | tuple[int, ...] | np.ndarray
-    time_features: AddedTimeFeatures 
+    time_features: AddedTimeFeatures
     return_metadata: bool = False
     load: bool = False
 
@@ -114,44 +195,47 @@ class InferenceDataset(DatasetABC):
     @property
     def _load_model(self):
 
-        return all([not self.config._using_model_data_as_condition,
-                    self.config.model is not None])
-    
+        return all(
+            [
+                not self.config._using_model_data_as_condition,
+                self.config.model is not None,
+            ]
+        )
+
     @property
     def _write_condition_to_input(self):
 
-        return any([self.config._using_model_data_as_condition, 
-                        self.config.model is None])
-    
+        return any(
+            [self.config._using_model_data_as_condition, self.config.model is None]
+        )
+
     @property
     def _concat_condition_to_input(self):
 
-        return (self._write_condition_to_input is False and
-                self.config.condition is not None)
-
+        return (
+            self._write_condition_to_input is False
+            and self.config.condition is not None
+        )
 
     def __getitem__(self, ind):
 
-        selection = {dim : value[ind]
-            for dim, value in self.sample_coords.items()
-        }
-        
+        selection = {dim: value[ind] for dim, value in self.sample_coords.items()}
+
         condition = self._index_condition_dataset(ind)
         input = self._index_model_dataset(ind)
-        
+
         if self._write_condition_to_input:
             input = condition
 
         elif self._concat_condition_to_input:
             input = xr.concat([input, condition], dim="channels")
 
-        time_features = self.time_features( 
-                                           selection, 
-                                           input)
+        time_features = self.time_features(selection, input)
 
         with suppress_stderr():
-            input = dask.compute(input.data,)
-
+            input = dask.compute(
+                input.data,
+            )
 
         datadict = dict(
             input=torch.as_tensor(input, dtype=torch.float32),
@@ -164,8 +248,6 @@ class InferenceDataset(DatasetABC):
             return datadict, selection
         else:
             return datadict
-
-
 
 
 def _from_train(
@@ -192,7 +274,7 @@ def _from_train(
         if train_has_observation:
             kwargs["model"] = copy.deepcopy(train_dataset_config.model)
         kwargs["condition"] = copy.deepcopy(train_dataset_config.condition)
-        
+
     else:
         raise ValueError(
             "Could not infer inference dataset config from training dataset config."

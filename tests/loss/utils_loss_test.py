@@ -234,12 +234,12 @@ def test_mse_1d_lowres():
     )
 
 
+@pytest.mark.pruned
 def test_mse_invalid_reduction():
     with pytest.raises(NotImplementedError):
         WeightedMSE(w2d(), reduction="invalid")(d(), t())
 
 
-@pytest.mark.pruned
 def test_mse_uppercase_reduction_invalid():
     with pytest.raises(NotImplementedError):
         WeightedMSE(w2d(), reduction="SUM")(d(), t())
@@ -285,7 +285,6 @@ def test_mse_print(capsys):
     assert "MSE" in capsys.readouterr().out
 
 
-@pytest.mark.pruned
 def test_mse_lowres_print(capsys):
     WeightedMSE(w2d(), low_ress_kernel_size=3)(d(), t(), print_loss=True)
     assert "MSE_lowress" in capsys.readouterr().out
@@ -318,7 +317,6 @@ def test_downsample_1d_branch():
     assert out is not None
 
 
-@pytest.mark.pruned
 def test_generator_structure_failure_mse():
     with pytest.raises(ValueError):
         WeightedMSE(w2d())(torch.ones(2, 3, 4), torch.ones(2, 3, 4), generator=True)
@@ -368,6 +366,7 @@ def test_crps_requires_generator():
         WeightedCRPS(w2d())(ens(), t(), generator=False)
 
 
+@pytest.mark.pruned
 def test_crps_generator_structure_failure():
     with pytest.raises(ValueError):
         WeightedCRPS(w2d())(torch.ones(2, 3, 4), torch.ones(2, 3, 4))
@@ -441,6 +440,7 @@ def test_crps_lowres_mask_none_branch():
     )
 
 
+@pytest.mark.pruned
 def test_crps_mask_exact_shape_generative_lowres():
     target = torch.randn(2, 1, 3, 4)
     m = torch.ones_like(target)
@@ -456,7 +456,6 @@ def test_crps_mask_exact_shape_generative_lowres():
     )
 
 
-@pytest.mark.pruned
 def test_crps_mask_mismatch_lowres_generative():
     with pytest.raises(RuntimeError):
         WeightedCRPS(w2d(), low_ress_kernel_size=3)(
@@ -503,6 +502,7 @@ def test_crps_aggregate_mask_none_vs_present():
     assert out2 >= 0
 
 
+@pytest.mark.pruned
 def test_crps_print(capsys):
     WeightedCRPS(w2d())(ens(), t(), print_loss=True)
     assert "CRPS" in capsys.readouterr().out

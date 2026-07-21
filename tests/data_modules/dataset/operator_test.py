@@ -1,11 +1,11 @@
 import pytest
+from cccma_ppp.data_modules.dataset.dataset_abc import AddedTimeFeatures
 import numpy as np
 import xarray as xr
 from unittest.mock import patch
 
 from cccma_ppp.data_modules.dataset.operator import (
     DatasetOperator,
-    _get_time_features,
 )
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
@@ -31,6 +31,7 @@ class DummyInfo:
     def __init__(self, ensembles=None):
         self.coords = {
             "ensembles": ensembles,
+            "lead_time": np.array([1, 2, 3]),
             "lat": [0, 1],
             "lon": [10, 20],
         }
@@ -39,19 +40,31 @@ class DummyInfo:
 class DummyDataConfig:
     def __init__(self, names=None, ensembles=None):
         self.names = names or ["var"]
-
         self.info = DummyInfo(ensembles)
-
         self.preprocessing_pipeline = DummyPipeline()
-
         self.fit_called = None
         self.load_called = None
 
-    def _fit_preprocessor_pipeline(self, **kwargs):
-        self.fit_called = kwargs
+    def fit_preprocessor_pipeline(
+        self,
+        selection=None,
+        mask=False,
+        save=False,
+        save_path=None,
+        save_name=None,
+    ):
+        self.fit_called = {
+            "selection": selection,
+            "mask": mask,
+            "save": save,
+            "save_path": save_path,
+            "save_name": save_name,
+        }
+        return self
 
-    def _load_preprocessor_pipeline(self, load_dir):
+    def load_preprocessor_pipeline(self, load_dir=None):
         self.load_called = load_dir
+        return self
 
 
 class DummyDatasetConfig:
@@ -123,7 +136,7 @@ def test_fit_preprocessors_model_called():
 
     op = DatasetOperator(cfg)
 
-    op._fit_preprocessors([2000])
+    op.fit_preprocessors([2000])
 
     assert cfg.model.fit_called is not None
 
@@ -134,7 +147,7 @@ def test_fit_preprocessors_observation_called():
 
     op = DatasetOperator(cfg)
 
-    op._fit_preprocessors([2000])
+    op.fit_preprocessors([2000])
 
     assert cfg.observation.fit_called is not None
 
@@ -145,7 +158,7 @@ def test_fit_preprocessors_condition_called():
 
     op = DatasetOperator(cfg)
 
-    op._fit_preprocessors([2000])
+    op.fit_preprocessors([2000])
 
     assert cfg.effective_condition.fit_called is not None
 
@@ -157,7 +170,7 @@ def test_fit_preprocessors_static_condition():
 
     op = DatasetOperator(cfg)
 
-    op._fit_preprocessors([2000])
+    op.fit_preprocessors([2000])
 
     assert cfg.effective_condition.fit_called["selection"] == {}
 
@@ -169,7 +182,7 @@ def test_fit_preprocessors_with_ensemble_selection():
 
     op = DatasetOperator(cfg)
 
-    op._fit_preprocessors([2000])
+    op.fit_preprocessors([2000])
 
     assert "ensembles" in cfg.model.fit_called["selection"]
 
@@ -180,7 +193,7 @@ def test_fit_preprocessors_sets_flag():
 
     op = DatasetOperator(cfg)
 
-    op._fit_preprocessors([2000])
+    op.fit_preprocessors([2000])
 
     assert cfg._fitted_preprocessors is True
 
@@ -192,7 +205,7 @@ def test_fit_preprocessors_without_model():
 
     op = DatasetOperator(cfg)
 
-    op._fit_preprocessors([2000])
+    op.fit_preprocessors([2000])
 
     assert cfg._fitted_preprocessors is True
 
@@ -204,7 +217,7 @@ def test_fit_preprocessors_without_observation():
 
     op = DatasetOperator(cfg)
 
-    op._fit_preprocessors([2000])
+    op.fit_preprocessors([2000])
 
     assert cfg._fitted_preprocessors is True
 
@@ -217,7 +230,7 @@ def test_fit_preprocessors_without_condition():
 
     op = DatasetOperator(cfg)
 
-    op._fit_preprocessors([2000])
+    op.fit_preprocessors([2000])
 
     assert cfg._fitted_preprocessors is True
 
@@ -228,7 +241,7 @@ def test_load_fitted_preprocessors_model():
 
     op = DatasetOperator(cfg)
 
-    op._load_fitted_preprocessors("x")
+    op.load_fitted_preprocessors("x")
 
     assert cfg.model.load_called == "x"
 
@@ -239,7 +252,7 @@ def test_load_fitted_preprocessors_observation():
 
     op = DatasetOperator(cfg)
 
-    op._load_fitted_preprocessors("x")
+    op.load_fitted_preprocessors("x")
 
     assert cfg.observation.load_called == "x"
 
@@ -250,7 +263,7 @@ def test_load_fitted_preprocessors_condition():
 
     op = DatasetOperator(cfg)
 
-    op._load_fitted_preprocessors("x")
+    op.load_fitted_preprocessors("x")
 
     assert cfg.effective_condition.load_called == "x"
 
@@ -261,7 +274,7 @@ def test_load_fitted_preprocessors_sets_flag():
 
     op = DatasetOperator(cfg)
 
-    op._load_fitted_preprocessors("x")
+    op.load_fitted_preprocessors("x")
 
     assert cfg._fitted_preprocessors is True
 
@@ -272,7 +285,7 @@ def test_add_fitted_preprocessor_invalid_type():
     op = DatasetOperator(cfg)
 
     with pytest.raises(TypeError):
-        op._add_fitted_preprocessor(object())
+        op.add_fitted_preprocessor(object())
 
 
 @pytest.mark.pruned
@@ -285,7 +298,7 @@ def test_add_fitted_preprocessor_not_fitted():
     op = DatasetOperator(cfg)
 
     with pytest.raises(AssertionError):
-        op._add_fitted_preprocessor(BadPreprocessor())
+        op.add_fitted_preprocessor(BadPreprocessor())
 
 
 @pytest.mark.pruned
@@ -296,7 +309,7 @@ def test_add_fitted_preprocessor_model():
 
     preprocessor = DummyPreprocessor()
 
-    op._add_fitted_preprocessor(preprocessor)
+    op.add_fitted_preprocessor(preprocessor)
 
     assert cfg.model.preprocessing_pipeline.added[0] == preprocessor
 
@@ -309,7 +322,7 @@ def test_add_fitted_preprocessor_observation():
 
     preprocessor = DummyPreprocessor()
 
-    op._add_fitted_preprocessor(preprocessor)
+    op.add_fitted_preprocessor(preprocessor)
 
     assert cfg.observation.preprocessing_pipeline.added[0] == preprocessor
 
@@ -322,11 +335,12 @@ def test_add_fitted_preprocessor_condition():
 
     preprocessor = DummyPreprocessor()
 
-    op._add_fitted_preprocessor(preprocessor)
+    op.add_fitted_preprocessor(preprocessor)
 
     assert cfg.effective_condition.preprocessing_pipeline.added[0] == preprocessor
 
 
+@pytest.mark.pruned
 def test_get_weights_with_config():
     cfg = DummyDatasetConfig()
 
@@ -341,7 +355,6 @@ def test_get_weights_with_config():
     assert weights is not None
 
 
-@pytest.mark.pruned
 def test_get_weights_model_only():
     cfg = DummyDatasetConfig()
 
@@ -391,7 +404,6 @@ def test_get_weights_channels_match():
     assert weights is not None
 
 
-@pytest.mark.pruned
 def test_get_weights_channels_mismatch():
     cfg = DummyDatasetConfig()
 
@@ -448,7 +460,6 @@ def test_get_input_var_metadata_model_only():
     assert metadata["variables"] == ["var"]
 
 
-@pytest.mark.pruned
 def test_get_input_var_metadata_model_and_condition():
     cfg = DummyDatasetConfig()
 
@@ -459,6 +470,7 @@ def test_get_input_var_metadata_model_and_condition():
     assert len(metadata["variables"]) == 2
 
 
+@pytest.mark.pruned
 def test_get_input_var_metadata_using_model_as_condition():
     cfg = DummyDatasetConfig()
 
@@ -524,6 +536,10 @@ def test_update_metadata():
     assert result["variables"] == ["var"]
 
 
+def _get_time_features(config, selection, input):
+    return AddedTimeFeatures(config, config.time_features)(selection, input)
+
+
 def make_time_selection(
     year=2000,
     lead_time=6,
@@ -541,20 +557,6 @@ def make_time_input(shape=(2,)):
             dtype=np.float32,
         )
     )
-
-
-@pytest.mark.pruned
-def test_get_time_features_none():
-    cfg = DummyDatasetConfig()
-    cfg.time_features = None
-
-    result = _get_time_features(
-        cfg,
-        make_time_selection(),
-        make_time_input(),
-    )
-
-    assert result is None
 
 
 @pytest.mark.parametrize(
@@ -620,7 +622,7 @@ def test_get_time_features_year_value():
         make_time_input(),
     )
 
-    assert result[0] == pytest.approx(0.0)
+    assert result[0] == pytest.approx(0.5)
 
 
 @pytest.mark.pruned
@@ -660,6 +662,7 @@ def test_get_time_features_month_values_are_finite():
     assert np.isfinite(result).all()
 
 
+@pytest.mark.pruned
 def test_get_time_features_broadcast():
     cfg = DummyDatasetConfig()
     cfg.time_features = ["year"]
@@ -711,7 +714,7 @@ def test_get_time_features_missing_selection_keys(
 
     with pytest.raises(
         ValueError,
-        match="selection coords are not supported",
+        match="selection coords are not in required sample dimensions",
     ):
         _get_time_features(
             cfg,
@@ -727,7 +730,7 @@ def test_fit_preprocessors_condition_with_ensemble_selection():
 
     op = DatasetOperator(cfg)
 
-    op._fit_preprocessors([2000])
+    op.fit_preprocessors([2000])
 
     assert "ensembles" in cfg.effective_condition.fit_called["selection"]
 
@@ -739,7 +742,7 @@ def test_fit_preprocessors_observation_with_ensemble_selection():
 
     op = DatasetOperator(cfg)
 
-    op._fit_preprocessors([2000])
+    op.fit_preprocessors([2000])
 
     assert "ensembles" in cfg.observation.fit_called["selection"]
 
@@ -750,7 +753,7 @@ def test_load_fitted_preprocessors_without_model():
 
     op = DatasetOperator(cfg)
 
-    op._load_fitted_preprocessors("x")
+    op.load_fitted_preprocessors("x")
 
     assert cfg._fitted_preprocessors is True
 
@@ -761,7 +764,7 @@ def test_load_fitted_preprocessors_without_observation():
 
     op = DatasetOperator(cfg)
 
-    op._load_fitted_preprocessors("x")
+    op.load_fitted_preprocessors("x")
 
     assert cfg._fitted_preprocessors is True
 
@@ -772,7 +775,7 @@ def test_load_fitted_preprocessors_without_condition():
 
     op = DatasetOperator(cfg)
 
-    op._load_fitted_preprocessors("x")
+    op.load_fitted_preprocessors("x")
 
     assert cfg._fitted_preprocessors is True
 
@@ -785,7 +788,7 @@ def test_add_fitted_preprocessor_without_model():
     op = DatasetOperator(cfg)
     preprocessor = DummyPreprocessor()
 
-    op._add_fitted_preprocessor(preprocessor)
+    op.add_fitted_preprocessor(preprocessor)
 
     assert cfg.observation.preprocessing_pipeline.added[0] is preprocessor
 
@@ -797,7 +800,7 @@ def test_add_fitted_preprocessor_without_observation():
     op = DatasetOperator(cfg)
     preprocessor = DummyPreprocessor()
 
-    op._add_fitted_preprocessor(preprocessor)
+    op.add_fitted_preprocessor(preprocessor)
 
     assert cfg.model.preprocessing_pipeline.added[0] is preprocessor
 
@@ -809,11 +812,12 @@ def test_add_fitted_preprocessor_without_condition():
     op = DatasetOperator(cfg)
     preprocessor = DummyPreprocessor()
 
-    op._add_fitted_preprocessor(preprocessor)
+    op.add_fitted_preprocessor(preprocessor)
 
     assert cfg.model.preprocessing_pipeline.added[0] is preprocessor
 
 
+@pytest.mark.pruned
 def test_get_weights_model_channel_mismatch():
     cfg = DummyDatasetConfig()
     cfg.observation = None

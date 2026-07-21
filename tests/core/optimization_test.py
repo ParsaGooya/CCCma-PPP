@@ -324,6 +324,7 @@ def test_optimizer_step():
     assert wrapper.optimizer is not None
 
 
+@pytest.mark.pruned
 def test_optimizer_zero_grad_default():
     module = make_module()
     cfg = OptimizerConfig(lr=0.01)
@@ -339,7 +340,6 @@ def test_optimizer_zero_grad_default():
         assert p.grad is None
 
 
-@pytest.mark.pruned
 def test_optimizer_zero_grad_set_to_none_false():
     module = make_module()
     cfg = OptimizerConfig(lr=0.01)

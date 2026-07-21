@@ -9,8 +9,9 @@ from collections.abc import Callable, Iterator
 from itertools import islice
 
 
-from cccma_ppp.data_modules.dataset import (DatasetConfigABC, 
-                                            AddedTimeFeatures)
+from cccma_ppp.data_modules.dataset.config_abc import DatasetConfigABC
+from cccma_ppp.data_modules.dataset.dataset_abc import AddedTimeFeatures
+
 
 class BatchDataABC(abc.ABC):
     """
@@ -67,12 +68,12 @@ class DataloaderConfigABC(abc.ABC):
     dataset_config: DatasetConfigABC
     pin_memory: bool
     time_features: AddedTimeFeatures | list[str] | None
-    prefetch_factor: int | None 
+    prefetch_factor: int | None
 
     def __init__(self):
         self._setup = False
         self.pin_memory = False
-        
+
         if self.num_data_workers == 0:
             self.prefetch_factor = None
 
@@ -88,7 +89,7 @@ class DataloaderConfigABC(abc.ABC):
         Note
         -------
         preprocessors must be fit at this stage.
-        
+
         """
         pass
 

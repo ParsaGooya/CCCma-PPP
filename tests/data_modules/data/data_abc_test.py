@@ -135,11 +135,11 @@ class DummyDataConfig(DataConfigABC):
         concat_dim=None,
         file_type="*.nc",
     ):
-        # The production code calls Path(self.paths), so this
-        # must be one path rather than a list of paths.
+                                                             
+                                                       
         self.paths = Path(paths)
 
-        # This is populated by _resolve_data after globbing.
+                                                            
         self.list_paths = None
 
         self.names = ["var"] if names is None else names
@@ -175,7 +175,7 @@ def test_missing_preprocessing_pipeline():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_pipeline_name_set(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -315,6 +315,7 @@ def test_resolve_data_missing_variable(tmp_path):
             _resolve_data(cfg)
 
 
+@pytest.mark.pruned
 def test_resolve_data_missing_coords(tmp_path):
     ds = xr.Dataset(
         {
@@ -513,7 +514,7 @@ def test_get_ds_info_sizes_none(tmp_path):
 def test_load_preprocessor_pipeline(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
-    cfg._load_preprocessor_pipeline(
+    cfg.load_preprocessor_pipeline(
         tmp_path,
     )
 
@@ -528,13 +529,13 @@ def test_load_preprocessor_pipeline_not_fitted(tmp_path):
     cfg.preprocessing_pipeline.fitted = False
 
     with pytest.raises(RuntimeError):
-        cfg._load_preprocessor_pipeline(
+        cfg.load_preprocessor_pipeline(
             tmp_path,
         )
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_method_wrapper_resolve_data(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -545,7 +546,7 @@ def test_method_wrapper_resolve_data(tmp_path):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_method_wrapper_get_ds_info(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -689,7 +690,7 @@ def test_get_ds_info_coord_contents(tmp_path):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_fit_preprocessor_pipeline_no_mask(
     tmp_path,
 ):
@@ -709,7 +710,7 @@ def test_fit_preprocessor_pipeline_no_mask(
         "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
         return_value=DummyDS(),
     ):
-        cfg._fit_preprocessor_pipeline(
+        cfg.fit_preprocessor_pipeline(
             selection={},
         )
 
@@ -717,7 +718,7 @@ def test_fit_preprocessor_pipeline_no_mask(
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_fit_preprocessor_pipeline_with_mask(
     tmp_path,
 ):
@@ -743,7 +744,7 @@ def test_fit_preprocessor_pipeline_with_mask(
             return_value="MASK",
         ) as mask_mock,
     ):
-        cfg._fit_preprocessor_pipeline(
+        cfg.fit_preprocessor_pipeline(
             selection={},
             mask=True,
         )
@@ -753,7 +754,7 @@ def test_fit_preprocessor_pipeline_with_mask(
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_fit_preprocessor_pipeline_save_args(
     tmp_path,
 ):
@@ -780,7 +781,7 @@ def test_fit_preprocessor_pipeline_save_args(
         "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
         return_value=DummyDS(),
     ):
-        cfg._fit_preprocessor_pipeline(
+        cfg.fit_preprocessor_pipeline(
             selection={},
             save=False,
             save_path="abc",
@@ -805,7 +806,7 @@ def test_load_preprocessor_pipeline_default_path(
 
     cfg.preprocessing_pipeline.load_from_memory = fake_load
 
-    cfg._load_preprocessor_pipeline()
+    cfg.load_preprocessor_pipeline()
 
     assert captured["path"].name == ("dummy_preprocessing_pipeline.joblib")
     assert captured["path"].parent == (tmp_path / "preprocessing_pipeline")
@@ -823,7 +824,7 @@ def test_load_preprocessor_pipeline_custom_path(
 
     cfg.preprocessing_pipeline.load_from_memory = fake_load
 
-    cfg._load_preprocessor_pipeline(
+    cfg.load_preprocessor_pipeline(
         load_dir=tmp_path,
     )
 
@@ -838,4 +839,4 @@ def test_load_preprocessor_pipeline_fitted_success(
     cfg.preprocessing_pipeline.fitted = True
     cfg.preprocessing_pipeline.load_from_memory = lambda path: None
 
-    cfg._load_preprocessor_pipeline(tmp_path)
+    cfg.load_preprocessor_pipeline(tmp_path)

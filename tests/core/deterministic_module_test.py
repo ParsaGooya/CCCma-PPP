@@ -217,6 +217,7 @@ def test_constructor_passes_shapes_to_model():
     assert module.model.last_build_kwargs["added_features_dim"] == 3
 
 
+@pytest.mark.pruned
 def test_load_dir_input_metadata_mismatch(monkeypatch):
     import cccma_ppp.core.deterministic_module as mod
 
@@ -238,7 +239,6 @@ def test_load_dir_input_metadata_mismatch(monkeypatch):
         ConcreteDeterministic(cfg, input_shape=np.array([1]))
 
 
-@pytest.mark.pruned
 def test_load_dir_output_metadata_mismatch(monkeypatch):
     import cccma_ppp.core.deterministic_module as mod
 

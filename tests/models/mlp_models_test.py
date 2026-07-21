@@ -827,6 +827,7 @@ def test_cvae_predict_condition_dependant_latent():
     assert out.output.shape == (2, 2, 1, 6)
 
 
+@pytest.mark.pruned
 def test_cvae_predict_with_prior_flow_no_condition():
     model = build_cvae()
 
@@ -845,7 +846,6 @@ def test_cvae_predict_with_prior_flow_no_condition():
     assert out.output.shape == (2, 2, 1, 6)
 
 
-@pytest.mark.pruned
 def test_cvae_predict_with_prior_flow_conditioned():
     model = build_cvae(
         encoder_hidden_dims=[8],
@@ -969,6 +969,7 @@ def test_autoencoder_build_dropout_and_batchnorm():
     assert any(isinstance(layer, torch.nn.BatchNorm1d) for layer in model.encoder)
 
 
+@pytest.mark.pruned
 def test_autoencoder_build_checkpoint_input_shape_mismatch():
     cfg = AutoencoderConfig(encoder_hidden_dims=[4])
     cfg._add_checkpoint_config(
@@ -1026,7 +1027,6 @@ def test_autoencoder_build_checkpoint_success_calls_load(monkeypatch):
     assert called["load"] is True
 
 
-@pytest.mark.pruned
 def test_autoencoder_forward_plain():
     model = build_autoencoder()
 
@@ -1036,6 +1036,7 @@ def test_autoencoder_forward_plain():
     assert out.output.shape == (2, 1, 6)
 
 
+@pytest.mark.pruned
 def test_autoencoder_forward_tuple_mask_append_mode_1():
     model = build_autoencoder(
         encoder_hidden_dims=[4],
@@ -1052,7 +1053,6 @@ def test_autoencoder_forward_tuple_mask_append_mode_1():
     assert out.output.shape == (2, 1, 6)
 
 
-@pytest.mark.pruned
 def test_autoencoder_forward_tuple_mask_append_mode_2():
     model = build_autoencoder(
         encoder_hidden_dims=[4],
@@ -1336,6 +1336,7 @@ def test_autoencoder_forward_append_modes(
     assert output.output.shape == data.shape
 
 
+@pytest.mark.pruned
 def test_autoencoder_ignores_features_for_other_append_mode():
     model = build_autoencoder(
         encoder_hidden_dims=[4],
@@ -1439,7 +1440,6 @@ def test_cvae_checkpoint_input_metadata_mismatch(monkeypatch):
         )
 
 
-@pytest.mark.pruned
 def test_cvae_checkpoint_output_metadata_mismatch(monkeypatch):
     checkpoint = SimpleNamespace(
         checkpoint_input_shape=np.asarray([6]),

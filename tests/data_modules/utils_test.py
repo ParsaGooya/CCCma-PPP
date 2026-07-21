@@ -124,6 +124,7 @@ def test_build_weights_uniform():
     assert np.allclose(weights.values, 1.0)
 
 
+@pytest.mark.pruned
 def test_build_weights_cosine_lat():
     cfg = WeightsConfig(
         spatial_method="cosine_lat",
@@ -137,7 +138,6 @@ def test_build_weights_cosine_lat():
     assert not np.allclose(weights.values, 1.0)
 
 
-@pytest.mark.pruned
 def test_build_weights_variable_weights():
     cfg = WeightsConfig(
         variable_weights={
@@ -396,6 +396,7 @@ def test_load_xarray_data_names():
     assert list(result.data_vars) == ["a"]
 
 
+@pytest.mark.pruned
 def test_load_xarray_data_ensemble_mean():
     ds = make_ensemble_dataset()
 
@@ -411,7 +412,6 @@ def test_load_xarray_data_ensemble_mean():
     assert "ensembles" not in result.dims
 
 
-@pytest.mark.pruned
 def test_load_xarray_data_no_ensemble_mean():
     ds = make_ensemble_dataset()
 

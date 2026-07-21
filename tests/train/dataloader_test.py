@@ -25,6 +25,35 @@ class DummySet:
 
 
 class DummyOperator:
+    def __init__(self, config):
+        self.config = config
+
+    def fit_preprocessors(
+        self,
+        train_years,
+        save=False,
+        save_path=None,
+        save_name=None,
+    ):
+        self.config.fit_calls.append(
+            {
+                "train_years": np.asarray(train_years),
+                "save": save,
+                "save_path": save_path,
+                "save_name": save_name,
+            }
+        )
+        self.config._fitted_preprocessors = True
+        return self
+
+    def load_fitted_preprocessors(
+        self,
+        load_dir=None,
+    ):
+        self.config.load_calls.append(load_dir)
+        self.config._fitted_preprocessors = True
+        return self
+
     def get_weights(self, *args, **kwargs):
         return "w"
 
@@ -37,22 +66,56 @@ class DummyOperator:
 
 class DummyDatasetConfig:
     def __init__(self):
-        self.available_times = np.arange(2000, 2005)
+        self.available_times = np.arange(
+            2000,
+            2005,
+        )
         self.available_train_time = self.available_times
-        self.lead_months = np.arange(1, 13)
+
+        self.input_lead_months = np.arange(
+            1,
+            13,
+        )
+        self.lead_months = np.arange(
+            1,
+            13,
+        )
+
         self.fit_calls = []
         self.load_calls = []
         self.build_calls = []
         self._fitted_preprocessors = False
-        self._operator = DummyOperator()
 
-    def _fit_preprocessors(self, *args, **kwargs):
-        self.fit_calls.append((args, kwargs))
-        self._fitted_preprocessors = True
+        self._operator = DummyOperator(self)
 
-    def _load_fitted_preprocessors(self, *args, **kwargs):
-        self.load_calls.append((args, kwargs))
+    def fit_preprocessors(
+        self,
+        years,
+        save=False,
+        save_path=None,
+        save_name=None,
+        **kwargs,
+    ):
+        self.fit_calls.append(
+            {
+                "train_years": np.asarray(years),
+                "save": save,
+                "save_path": save_path,
+                "save_name": save_name,
+                **kwargs,
+            }
+        )
         self._fitted_preprocessors = True
+        return self
+
+    def load_fitted_preprocessors(
+        self,
+        load_dir=None,
+        **kwargs,
+    ):
+        self.load_calls.append(load_dir)
+        self._fitted_preprocessors = True
+        return self
 
     def build_dataset(self, **kwargs):
         self.build_calls.append(kwargs)
@@ -417,6 +480,7 @@ def test_config_workers_zero_sets_prefetch_none():
     assert config.prefetch_factor is None
 
 
+@pytest.mark.pruned
 def test_config_workers_positive_preserves_prefetch():
     config = make_config(
         num_data_workers=2,
@@ -426,6 +490,7 @@ def test_config_workers_positive_preserves_prefetch():
     assert config.prefetch_factor == 4
 
 
+@pytest.mark.pruned
 def test_config_invalid_train_years():
     with pytest.raises(
         ValueError,
@@ -447,7 +512,6 @@ def test_config_custom_train_years_valid():
     )
 
 
-@pytest.mark.pruned
 def test_config_custom_train_and_validation_split_rejects_overlap():
     with pytest.raises(
         ValueError,
@@ -702,7 +766,7 @@ def test_target_var_metadata():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_dataset_config_available_times_complete():
     dataset_config = DummyDatasetConfig()
 
@@ -713,7 +777,7 @@ def test_dataset_config_available_times_complete():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_dataset_config_operator():
     dataset_config = DummyDatasetConfig()
 
@@ -724,7 +788,7 @@ def test_dataset_config_operator():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_dataset_config_build_dataset():
     dataset_config = DummyDatasetConfig()
 
@@ -737,7 +801,7 @@ def test_dataset_config_build_dataset():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_dummy_dataset_item():
     dataset = DummySet()
 

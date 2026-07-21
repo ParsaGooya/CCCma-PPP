@@ -62,7 +62,7 @@ def predictor(tmp_path):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_temp_save_dir(predictor):
     assert predictor.temp_save_dir == predictor.output_dir / "_temp"
 
@@ -818,6 +818,7 @@ def test_save_batch_to_netcdf_dimension_mismatch(
         )
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_metadata_length_mismatch(
     tmp_path,
 ):
@@ -875,7 +876,6 @@ def test_save_batch_to_netcdf_assign_coords(
         )
 
 
-@pytest.mark.pruned
 def test_save_batch_to_netcdf_attrs(
     tmp_path,
 ):

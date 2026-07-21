@@ -405,6 +405,7 @@ def test_flow_selector_case_insensitive_lookup():
     assert flow.scale == 8
 
 
+@pytest.mark.pruned
 def test_load_config_from_checkpoint_missing_file():
     with pytest.raises(FileNotFoundError):
         _load_config_from_checkpoint("missing_checkpoint.pt")

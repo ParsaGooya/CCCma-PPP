@@ -85,6 +85,8 @@ class DummyCVAE(DummyModule):
 
 
 class DummyOptimizer:
+    learning_rate = 0.001
+
     def __init__(self, module):
         self.optimizer = torch.optim.SGD(module.parameters(), lr=0.1)
         self.zero_grad_calls = []
@@ -162,7 +164,7 @@ class FakeAggregator:
         self.loaded_state = None
         self.remove_second_last_called = False
 
-    def record(self, loss_dict):
+    def record(self, loss_dict, current_lr=None, kwargs=None):
         self.records.append(loss_dict)
 
     def _dist_compute(self):
@@ -548,7 +550,7 @@ def test_train_on_batch_basic(env_dirs):
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
 
     batch = DummyBatch()
-    logs = trainer._train_on_batch(batch)
+    logs, _ = trainer._train_on_batch(batch)
 
     assert batch.moved_to == torch.device("cpu")
     assert logs["total_loss"] == 1.0
@@ -573,7 +575,7 @@ def test_train_on_batch_with_beta(env_dirs):
     )
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
 
-    logs = trainer._train_on_batch(DummyBatch())
+    logs, _ = trainer._train_on_batch(DummyBatch())
 
     assert logs["beta"] == 0.5
     assert beta.calls == [0]

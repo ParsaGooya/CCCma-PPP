@@ -569,6 +569,7 @@ def test_cvae_prediction_adds_decoder_noise(
     ]
 
 
+@pytest.mark.pruned
 def test_cvae_update_stats_requires_samples(tmp_path):
     predictor, _ = make_cvae_predictor(
         tmp_path,
@@ -589,7 +590,6 @@ def test_cvae_update_stats_requires_samples(tmp_path):
         )
 
 
-@pytest.mark.pruned
 def test_cvae_update_train_stats(
     tmp_path,
 ):
@@ -629,6 +629,7 @@ def test_cvae_update_train_stats(
     )
 
 
+@pytest.mark.pruned
 def test_cvae_update_train_stats_with_target_mask(
     tmp_path,
 ):
@@ -671,6 +672,7 @@ def test_cvae_update_train_stats_with_target_mask(
     )
 
 
+@pytest.mark.pruned
 def test_get_latent_samples_builds_sampler(
     monkeypatch,
     tmp_path,
@@ -718,7 +720,6 @@ def test_get_latent_samples_builds_sampler(
     assert result.device.type == "cpu"
 
 
-@pytest.mark.pruned
 def test_get_latent_samples_reuses_sampler(tmp_path):
     predictor, _ = make_cvae_predictor(
         tmp_path,
@@ -914,7 +915,6 @@ def test_build_latent_sampler_valid_stats(
     assert result.shape == (3, 4, 2)
 
 
-@pytest.mark.pruned
 def test_cvae_batch_to_netcdf_predictions_no_noise(
     monkeypatch,
     tmp_path,
@@ -1003,6 +1003,7 @@ def test_cvae_batch_to_netcdf_predictions_with_noise(
     assert captured["name"] == ("prediction_rank0_00000000.nc")
 
 
+@pytest.mark.pruned
 def test_cvae_batch_to_netcdf_prediction_counter(
     monkeypatch,
     tmp_path,
@@ -1368,7 +1369,6 @@ def test_deterministic_training_stats_branch(
     assert module.predict_called is False
 
 
-@pytest.mark.pruned
 def test_deterministic_prediction_branch(
     monkeypatch,
     tmp_path,

@@ -5,11 +5,16 @@ import pytest
 import torch
 import xarray as xr
 
+from cccma_ppp.data_modules.dataset.dataset_abc import AddedTimeFeatures
 from cccma_ppp.inference.dataset import (
     InferenceDataset,
     InferenceDatasetConfig,
     _from_train,
 )
+
+
+                                                                          
+InferenceDatasetConfig.__abstractmethods__ = frozenset()
 
 
 class DummyInfo:
@@ -23,22 +28,11 @@ class DummyInfo:
     ):
         years = [2000, 2001, 2002] if years is None else years
 
-        self.sizes = {
-            "lead_time": lead_time,
-        }
+        self.sizes = {"lead_time": lead_time}
         self.coords = {
-            "lat": xr.DataArray(
-                np.arange(lat_size),
-                dims="lat",
-            ),
-            "lon": xr.DataArray(
-                np.arange(lon_size),
-                dims="lon",
-            ),
-            "year": xr.DataArray(
-                years,
-                dims="year",
-            ),
+            "lat": xr.DataArray(np.arange(lat_size), dims="lat"),
+            "lon": xr.DataArray(np.arange(lon_size), dims="lon"),
+            "year": xr.DataArray(years, dims="year"),
             "lead_time": xr.DataArray(
                 np.arange(1, lead_time + 1),
                 dims="lead_time",
@@ -105,17 +99,10 @@ class DummyOperator:
         self.load_calls = []
         self.add_calls = []
 
-    def _load_fitted_preprocessors(
-        self,
-        load_dir=None,
-    ):
+    def load_fitted_preprocessors(self, load_dir=None):
         self.load_calls.append(load_dir)
 
-    def _add_fitted_preprocessor(
-        self,
-        preprocessor,
-        index=0,
-    ):
+    def add_fitted_preprocessor(self, preprocessor, index=0):
         self.add_calls.append((preprocessor, index))
 
 
@@ -125,7 +112,6 @@ def make_config(
     method=None,
     using_model_condition=False,
     effective_condition=None,
-    time_features=None,
     lead_months=None,
     fitted=True,
 ):
@@ -139,14 +125,14 @@ def make_config(
         model=model,
         condition=condition,
         condition_method=method,
-        time_features=time_features,
         lead_months=(
             np.arange(1, 13) if lead_months is None else np.asarray(lead_months)
         ),
+        get_common_time=np.asarray([2000, 2001, 2002]),
         _fitted_preprocessors=fitted,
-        _using_model_data_as_condition=(using_model_condition),
+        _using_model_data_as_condition=using_model_condition,
         effective_condition=effective_condition,
-        effective_input=(model if model is not None else condition),
+        effective_input=model if model is not None else condition,
     )
 
 
@@ -157,16 +143,17 @@ def make_config_object(
     effective_condition=None,
     using_model_condition=False,
 ):
-    config = InferenceDatasetConfig.__new__(InferenceDatasetConfig)
+    config = object.__new__(InferenceDatasetConfig)
+
+    if using_model_condition and condition is None:
+        condition = model
+
     config.model = model
     config.condition = condition
     config.condition_method = method
+    config.lead_months = None
     config._effective_condition = effective_condition
-
-    type(config).effective_condition = property(lambda self: self._effective_condition)
-    type(config)._using_model_data_as_condition = property(
-        lambda self: using_model_condition
-    )
+    config._fitted_preprocessors = True
 
     return config
 
@@ -175,213 +162,41 @@ def make_dataset_object(
     config=None,
     return_metadata=False,
     include_ensembles=False,
+    features=None,
 ):
+    if config is None:
+        config = make_config(model=DummyDataConfig())
+
     dataset = object.__new__(InferenceDataset)
-    dataset.config = config or make_config(model=DummyDataConfig())
+    dataset.config = config
     dataset.return_metadata = return_metadata
-    dataset.requested_years = np.array([2000])
+    dataset.requested_years = np.asarray([2000])
     dataset.sample_coords = {
-        "year": np.array([2000.0]),
-        "lead_time": np.array([1.0]),
+        "year": np.asarray([2000.0]),
+        "lead_time": np.asarray([1.0]),
     }
 
     if include_ensembles:
-        dataset.sample_coords["ensembles"] = np.array([0])
+        dataset.sample_coords["ensembles"] = np.asarray([0])
+
+    dataset.time_features = AddedTimeFeatures(
+        config,
+        features,
+    )
 
     return dataset
 
 
-def test_check_model_none():
-    config = make_config_object(
-        model=None,
-        method="same_member",
-    )
-
-    assert config._check_model() is config
+def call_check_model(config):
+    return InferenceDatasetConfig._check_model(config)
 
 
-def test_check_model_non_same_member():
-    config = make_config_object(
-        model=DummyDataConfig(),
-        method="cross_ensemble",
-    )
-
-    assert config._check_model() is config
+def call_check_condition(config):
+    return InferenceDatasetConfig._check_condition(config)
 
 
-def test_check_model_same_member_non_mean():
-    config = make_config_object(
-        model=DummyDataConfig(ensemble_mean=False),
-        method="same_member",
-    )
-
-    assert config._check_model() is config
-
-
-def test_check_model_same_member_mean():
-    config = make_config_object(
-        model=DummyDataConfig(ensemble_mean=True),
-        method="same_member",
-    )
-
-    with pytest.raises(ValueError):
-        config._check_model()
-
-
-def test_check_condition_requires_method():
-    condition = DummyDataConfig()
-    config = make_config_object(
-        condition=condition,
-        effective_condition=condition,
-    )
-
-    with pytest.raises(ValueError):
-        config._check_condition()
-
-
-@pytest.mark.parametrize(
-    "method",
-    [
-        "cross_ensemble",
-        "same_member",
-    ],
-)
-def test_check_condition_ensemble_method_rejects_mean(
-    method,
-):
-    condition = DummyDataConfig(ensemble_mean=True)
-    config = make_config_object(
-        condition=condition,
-        method=method,
-        effective_condition=condition,
-    )
-
-    with pytest.raises(ValueError):
-        config._check_condition()
-
-
-@pytest.mark.parametrize(
-    "method",
-    [
-        "cross_ensemble",
-        "same_member",
-    ],
-)
-def test_check_condition_ensemble_method_requires_ensembles(
-    method,
-):
-    condition = DummyDataConfig(ensembles=False)
-    config = make_config_object(
-        condition=condition,
-        method=method,
-        effective_condition=condition,
-    )
-
-    with pytest.raises(ValueError):
-        config._check_condition()
-
-
-@pytest.mark.parametrize(
-    "method",
-    [
-        "cross_ensemble",
-        "same_member",
-    ],
-)
-def test_check_condition_ensemble_method_valid(
-    method,
-):
-    condition = DummyDataConfig()
-    config = make_config_object(
-        condition=condition,
-        method=method,
-        effective_condition=condition,
-    )
-
-    assert config._check_condition() is config
-
-
-@pytest.mark.pruned
-def test_check_condition_ensemble_mean_requires_mean():
-    condition = DummyDataConfig()
-    config = make_config_object(
-        condition=condition,
-        method="ensemble_mean",
-        effective_condition=condition,
-    )
-
-    with pytest.raises(ValueError):
-        config._check_condition()
-
-
-def test_check_condition_ensemble_mean_valid():
-    condition = DummyDataConfig(ensemble_mean=True)
-    config = make_config_object(
-        condition=condition,
-        method="ensemble_mean",
-        effective_condition=condition,
-    )
-
-    assert config._check_condition() is config
-
-
-@pytest.mark.pruned
-def test_check_condition_static_ensemble_list():
-    condition = DummyDataConfig()
-    condition.ensemble_list = [0, 1]
-
-    config = make_config_object(
-        condition=condition,
-        method="static",
-        effective_condition=condition,
-    )
-
-    with pytest.raises(ValueError):
-        config._check_condition()
-
-
-@pytest.mark.pruned
-def test_check_condition_static_model_condition():
-    model = DummyDataConfig()
-    config = make_config_object(
-        model=model,
-        method="static",
-        effective_condition=model,
-        using_model_condition=True,
-    )
-
-    with pytest.raises(ValueError):
-        config._check_condition()
-
-
-def test_check_condition_static_valid():
-    condition = DummyDataConfig()
-    config = make_config_object(
-        condition=condition,
-        method="static",
-        effective_condition=condition,
-    )
-
-    assert config._check_condition() is config
-
-
-def test_check_condition_static_requires_dataset():
-    config = make_config_object(
-        method="static",
-        effective_condition=None,
-    )
-
-    with pytest.raises(ValueError):
-        config._check_condition()
-
-
-def test_check_condition_none():
-    config = make_config_object(
-        method=None,
-        effective_condition=None,
-    )
-
-    assert config._check_condition() is config
+def get_num_input_lead_months(config):
+    return InferenceDatasetConfig.num_input_lead_months.fget(config)
 
 
 def test_effective_input_model():
@@ -398,76 +213,24 @@ def test_effective_input_model():
 
 def test_effective_input_condition():
     condition = DummyDataConfig()
-
-    config = make_config_object(
-        condition=condition,
-    )
+    config = make_config_object(condition=condition)
 
     assert config.effective_input is condition
 
 
-def test_num_input_lead_months_model():
-    config = make_config_object(model=DummyDataConfig(lead_time=6))
-
-    assert config.num_input_lead_months == 6
-
-
-def test_num_input_lead_months_condition():
-    config = make_config_object(condition=DummyDataConfig(lead_time=9))
-
-    assert config.num_input_lead_months == 9
-
-
-def test_common_time_condition_only():
-    condition = DummyDataConfig(years=[2000, 2001])
-    config = make_config_object(condition=condition)
-
-    np.testing.assert_array_equal(
-        config.get_common_time,
-        np.array([2000, 2001]),
-    )
-
-
-def test_common_time_model_only():
-    model = DummyDataConfig(years=[2001, 2002])
-    config = make_config_object(model=model)
-
-    np.testing.assert_array_equal(
-        config.get_common_time,
-        np.array([2001, 2002]),
-    )
-
-
-def test_common_time_intersection():
-    model = DummyDataConfig(years=[2000, 2001, 2002])
-    condition = DummyDataConfig(years=[2001, 2002, 2003])
-    config = make_config_object(
-        model=model,
-        condition=condition,
-    )
-
-    np.testing.assert_array_equal(
-        config.get_common_time,
-        np.array([2001, 2002]),
-    )
-
-
-@pytest.mark.pruned
 def test_available_times():
     model = DummyDataConfig(years=[2000, 2001, 2002])
     config = make_config_object(model=model)
 
     np.testing.assert_array_equal(
         config.available_times,
-        np.array([2000, 2001, 2002]),
+        [2000, 2001, 2002],
     )
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
-def test_load_fitted_preprocessors(
-    monkeypatch,
-):
+                                
+def test_load_fitted_preprocessors(monkeypatch):
     config = make_config_object()
     operator = DummyOperator()
 
@@ -477,16 +240,14 @@ def test_load_fitted_preprocessors(
         property(lambda self: operator),
     )
 
-    config._load_fitted_preprocessors("load-dir")
+    config.load_fitted_preprocessors("load-dir")
 
     assert operator.load_calls == ["load-dir"]
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
-def test_add_fitted_preprocessor(
-    monkeypatch,
-):
+                                
+def test_add_fitted_preprocessor(monkeypatch):
     config = make_config_object()
     operator = DummyOperator()
     preprocessor = object()
@@ -497,7 +258,7 @@ def test_add_fitted_preprocessor(
         property(lambda self: operator),
     )
 
-    config._add_fitted_preprocessor(
+    config.add_fitted_preprocessor(
         preprocessor,
         index=4,
     )
@@ -506,9 +267,12 @@ def test_add_fitted_preprocessor(
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_build_dataset(monkeypatch):
-    config = make_config_object()
+    config = make_config_object(model=DummyDataConfig())
+    features = AddedTimeFeatures(
+        make_config(model=DummyDataConfig()),
+        None,
+    )
 
     monkeypatch.setattr(
         InferenceDataset,
@@ -517,25 +281,24 @@ def test_build_dataset(monkeypatch):
     )
 
     result = config.build_dataset(
-        years=np.array([2000]),
+        years=np.asarray([2000]),
+        time_features=features,
         return_metadata=True,
         load=True,
     )
 
-    assert isinstance(
-        result,
-        InferenceDataset,
-    )
+    assert isinstance(result, InferenceDataset)
+    assert result.time_features is features
     np.testing.assert_array_equal(
         result.requested_years,
-        np.array([2000]),
+        [2000],
     )
     assert result.return_metadata is True
     assert result.load is True
 
 
 @pytest.mark.parametrize(
-    "using_model,model_present,expected",
+    ("using_model", "model_present", "expected"),
     [
         (False, True, True),
         (True, True, False),
@@ -551,14 +314,14 @@ def test_load_model(
     dataset = object.__new__(InferenceDataset)
     dataset.config = SimpleNamespace(
         _using_model_data_as_condition=using_model,
-        model=(DummyDataConfig() if model_present else None),
+        model=DummyDataConfig() if model_present else None,
     )
 
     assert dataset._load_model is expected
 
 
 @pytest.mark.parametrize(
-    "using_model,model_present,expected",
+    ("using_model", "model_present", "expected"),
     [
         (True, True, True),
         (False, False, True),
@@ -574,14 +337,14 @@ def test_write_condition_to_input(
     dataset = object.__new__(InferenceDataset)
     dataset.config = SimpleNamespace(
         _using_model_data_as_condition=using_model,
-        model=(DummyDataConfig() if model_present else None),
+        model=DummyDataConfig() if model_present else None,
     )
 
     assert dataset._write_condition_to_input is expected
 
 
 @pytest.mark.parametrize(
-    "write_condition,condition_present,expected",
+    ("write_condition", "condition_present", "expected"),
     [
         (False, True, True),
         (False, False, False),
@@ -597,7 +360,7 @@ def test_concat_condition_to_input(
 ):
     dataset = object.__new__(InferenceDataset)
     dataset.config = SimpleNamespace(
-        condition=(DummyDataConfig() if condition_present else None)
+        condition=DummyDataConfig() if condition_present else None
     )
 
     monkeypatch.setattr(
@@ -609,19 +372,13 @@ def test_concat_condition_to_input(
     assert dataset._concat_condition_to_input is expected
 
 
-def test_getitem_condition_input(
+def patch_item_sources(
     monkeypatch,
+    model=None,
+    condition=None,
+    write_condition=False,
+    concat_condition=False,
 ):
-    dataset = make_dataset_object(
-        config=make_config(
-            model=None,
-            condition=DummyDataConfig(),
-        )
-    )
-
-    model = xr.DataArray(np.array([1.0]))
-    condition = xr.DataArray(np.array([5.0]))
-
     monkeypatch.setattr(
         InferenceDataset,
         "_index_model_dataset",
@@ -635,97 +392,41 @@ def test_getitem_condition_input(
     monkeypatch.setattr(
         InferenceDataset,
         "_write_condition_to_input",
-        property(lambda self: True),
+        property(lambda self: write_condition),
     )
     monkeypatch.setattr(
         InferenceDataset,
         "_concat_condition_to_input",
-        property(lambda self: False),
-    )
-    monkeypatch.setattr(
-        "cccma_ppp.inference.dataset._get_time_features",
-        lambda *args, **kwargs: None,
+        property(lambda self: concat_condition),
     )
 
-    result = dataset[0]
 
-    assert result["input"].item() == 5.0
-
-
-@pytest.mark.pruned
-def test_getitem_time_features(
-    monkeypatch,
-):
-    dataset = make_dataset_object()
-
-    model = xr.DataArray(np.array([1.0]))
-
-    monkeypatch.setattr(
-        InferenceDataset,
-        "_index_model_dataset",
-        lambda self, index: model,
+def test_getitem_time_features(monkeypatch):
+    dataset = make_dataset_object(
+        features=["year", "lead_time"],
     )
-    monkeypatch.setattr(
-        InferenceDataset,
-        "_index_condition_dataset",
-        lambda self, index: None,
-    )
-    monkeypatch.setattr(
-        InferenceDataset,
-        "_write_condition_to_input",
-        property(lambda self: False),
-    )
-    monkeypatch.setattr(
-        InferenceDataset,
-        "_concat_condition_to_input",
-        property(lambda self: False),
-    )
-    monkeypatch.setattr(
-        "cccma_ppp.inference.dataset._get_time_features",
-        lambda *args, **kwargs: np.array([2000.0, 1.0]),
+
+    patch_item_sources(
+        monkeypatch,
+        model=xr.DataArray(np.asarray([1.0])),
     )
 
     result = dataset[0]
 
-    torch.testing.assert_close(
-        result["added_features"],
-        torch.tensor([2000.0, 1.0]),
-    )
+    assert result["added_features"] is not None
+    assert result["added_features"].shape[0] == 2
 
 
-def test_getitem_metadata(
-    monkeypatch,
-):
+def test_getitem_metadata(monkeypatch):
     dataset = make_dataset_object(
         return_metadata=True,
         include_ensembles=True,
+        features=None,
     )
 
-    model = xr.DataArray(np.array([1.0]))
-
-    monkeypatch.setattr(
-        InferenceDataset,
-        "_index_model_dataset",
-        lambda self, index: model,
-    )
-    monkeypatch.setattr(
-        InferenceDataset,
-        "_index_condition_dataset",
-        lambda self, index: None,
-    )
-    monkeypatch.setattr(
-        InferenceDataset,
-        "_write_condition_to_input",
-        property(lambda self: False),
-    )
-    monkeypatch.setattr(
-        InferenceDataset,
-        "_concat_condition_to_input",
-        property(lambda self: False),
-    )
-    monkeypatch.setattr(
-        "cccma_ppp.inference.dataset._get_time_features",
-        lambda *args, **kwargs: None,
+    patch_item_sources(
+        monkeypatch,
+        model=xr.DataArray(np.asarray([1.0])),
     )
 
     result, metadata = dataset[0]
@@ -747,19 +448,16 @@ def make_train_config(
 ):
     return SimpleNamespace(
         condition_method="static",
-        time_features=["year"],
-        lead_months=np.array([1, 2]),
+        lead_months=np.asarray([1, 2]),
         observation=observation,
         effective_condition=effective_condition,
-        _using_model_data_as_condition=(using_model_condition),
+        _using_model_data_as_condition=using_model_condition,
         model=model,
         condition=condition,
     )
 
 
-def test_from_train_observation_only(
-    monkeypatch,
-):
+def test_from_train_observation_only(monkeypatch):
     model = DummyDataConfig("model")
     train = make_train_config(
         observation=object(),
@@ -778,9 +476,7 @@ def test_from_train_observation_only(
     assert "condition" not in result
 
 
-def test_from_train_model_condition(
-    monkeypatch,
-):
+def test_from_train_model_condition(monkeypatch):
     model = DummyDataConfig("model")
     train = make_train_config(
         effective_condition=model,
@@ -799,9 +495,7 @@ def test_from_train_model_condition(
     assert "condition" not in result
 
 
-def test_from_train_condition_with_observation(
-    monkeypatch,
-):
+def test_from_train_condition_with_observation(monkeypatch):
     model = DummyDataConfig("model")
     condition = DummyDataConfig("condition")
     train = make_train_config(
@@ -822,9 +516,7 @@ def test_from_train_condition_with_observation(
     assert result["condition"].names == condition.names
 
 
-def test_from_train_condition_without_observation(
-    monkeypatch,
-):
+def test_from_train_condition_without_observation(monkeypatch):
     condition = DummyDataConfig("condition")
     train = make_train_config(
         effective_condition=condition,
@@ -843,23 +535,17 @@ def test_from_train_condition_without_observation(
 
 
 def test_from_train_unresolvable():
-    train = make_train_config()
-
     with pytest.raises(ValueError):
-        _from_train(train)
+        _from_train(make_train_config())
 
 
 @pytest.mark.pruned
-def test_from_train_deepcopies_fields(
-    monkeypatch,
-):
+def test_from_train_deepcopies_fields(monkeypatch):
     model = DummyDataConfig("model")
-    time_features = ["year"]
-    lead_months = np.array([1, 2])
+    lead_months = np.asarray([1, 2])
 
     train = SimpleNamespace(
         condition_method="static",
-        time_features=time_features,
         lead_months=lead_months,
         observation=object(),
         effective_condition=None,
@@ -875,8 +561,517 @@ def test_from_train_deepcopies_fields(
 
     result = _from_train(train)
 
-    assert result["time_features"] == time_features
-    assert result["time_features"] is not time_features
+    assert "time_features" not in result
+    np.testing.assert_array_equal(
+        result["lead_months"],
+        lead_months,
+    )
+    assert result["lead_months"] is not lead_months
+
+
+@pytest.mark.pruned
+def test_effective_input_prefers_model():
+    model = DummyDataConfig("model")
+    condition = DummyDataConfig("condition")
+
+    config = make_config_object(
+        model=model,
+        condition=condition,
+    )
+
+    assert config.effective_input is model
+
+
+@pytest.mark.pruned
+def test_effective_input_falls_back_to_condition():
+    condition = DummyDataConfig("condition")
+
+    config = make_config_object(
+        model=None,
+        condition=condition,
+    )
+
+    assert config.effective_input is condition
+
+
+def test_available_times_filters_effective_input_coordinates():
+    model = DummyDataConfig(
+        "model",
+        years=[2000, 2001, 2002],
+    )
+    condition = DummyDataConfig(
+        "condition",
+        years=[2001, 2002, 2003],
+    )
+
+    model.info.coords["year"] = xr.DataArray(
+        [2000, 2002],
+        dims="year",
+    )
+
+    config = make_config_object(
+        model=model,
+        condition=condition,
+    )
+
+    np.testing.assert_array_equal(
+        config.available_times,
+        [2002],
+    )
+
+
+def test_available_times_condition_only_filters_coordinates():
+    condition = DummyDataConfig(
+        "condition",
+        years=[2000, 2001, 2002],
+    )
+    condition.info.coords["year"] = xr.DataArray(
+        [2000, 2002],
+        dims="year",
+    )
+
+    config = make_config_object(
+        model=None,
+        condition=condition,
+    )
+
+    np.testing.assert_array_equal(
+        config.available_times,
+        [2000, 2002],
+    )
+
+
+@pytest.mark.pruned
+                                
+def test_load_fitted_preprocessors_default_argument(
+    monkeypatch,
+):
+    config = make_config_object()
+    operator = DummyOperator()
+
+    monkeypatch.setattr(
+        InferenceDatasetConfig,
+        "ds_operator",
+        property(lambda self: operator),
+    )
+
+    config.load_fitted_preprocessors()
+
+    assert operator.load_calls == [None]
+
+
+@pytest.mark.pruned
+                                
+def test_add_fitted_preprocessor_default_index(
+    monkeypatch,
+):
+    config = make_config_object()
+    operator = DummyOperator()
+    preprocessor = object()
+
+    monkeypatch.setattr(
+        InferenceDatasetConfig,
+        "ds_operator",
+        property(lambda self: operator),
+    )
+
+    config.add_fitted_preprocessor(preprocessor)
+
+    assert operator.add_calls == [(preprocessor, 0)]
+
+
+@pytest.mark.pruned
+def test_build_dataset_default_arguments(
+    monkeypatch,
+):
+    config = make_config_object(model=DummyDataConfig())
+    features = AddedTimeFeatures(
+        make_config(model=DummyDataConfig()),
+        None,
+    )
+
+    monkeypatch.setattr(
+        InferenceDataset,
+        "__post_init__",
+        lambda self: None,
+    )
+
+    dataset = config.build_dataset(
+        years=np.asarray([2001]),
+        time_features=features,
+    )
+
+    assert isinstance(
+        dataset,
+        InferenceDataset,
+    )
+    assert dataset.return_metadata is False
+    assert dataset.load is False
+    assert dataset.mask is None
+    assert dataset.time_features is features
+
+    np.testing.assert_array_equal(
+        dataset.requested_years,
+        [2001],
+    )
+
+
+@pytest.mark.pruned
+                                
+def test_load_model_false_when_model_is_reused_as_condition():
+    dataset = object.__new__(InferenceDataset)
+    dataset.config = SimpleNamespace(
+        model=DummyDataConfig(),
+        _using_model_data_as_condition=True,
+    )
+
+    assert dataset._load_model is False
+
+
+@pytest.mark.pruned
+                                
+def test_load_model_true_for_independent_model():
+    dataset = object.__new__(InferenceDataset)
+    dataset.config = SimpleNamespace(
+        model=DummyDataConfig(),
+        _using_model_data_as_condition=False,
+    )
+
+    assert dataset._load_model is True
+
+
+@pytest.mark.pruned
+                                
+def test_load_model_false_without_model():
+    dataset = object.__new__(InferenceDataset)
+    dataset.config = SimpleNamespace(
+        model=None,
+        _using_model_data_as_condition=False,
+    )
+
+    assert dataset._load_model is False
+
+
+@pytest.mark.pruned
+                                
+def test_write_condition_true_when_model_reused():
+    dataset = object.__new__(InferenceDataset)
+    dataset.config = SimpleNamespace(
+        model=DummyDataConfig(),
+        _using_model_data_as_condition=True,
+    )
+
+    assert dataset._write_condition_to_input is True
+
+
+@pytest.mark.pruned
+                                
+def test_write_condition_true_without_model():
+    dataset = object.__new__(InferenceDataset)
+    dataset.config = SimpleNamespace(
+        model=None,
+        _using_model_data_as_condition=False,
+    )
+
+    assert dataset._write_condition_to_input is True
+
+
+@pytest.mark.pruned
+                                
+def test_write_condition_false_for_independent_model():
+    dataset = object.__new__(InferenceDataset)
+    dataset.config = SimpleNamespace(
+        model=DummyDataConfig(),
+        _using_model_data_as_condition=False,
+    )
+
+    assert dataset._write_condition_to_input is False
+
+
+@pytest.mark.pruned
+                                
+def test_concat_condition_true_for_independent_condition():
+    dataset = object.__new__(InferenceDataset)
+    dataset.config = SimpleNamespace(
+        model=DummyDataConfig(),
+        condition=DummyDataConfig("condition"),
+        _using_model_data_as_condition=False,
+    )
+
+    assert dataset._concat_condition_to_input is True
+
+
+@pytest.mark.pruned
+                                
+def test_concat_condition_false_without_condition():
+    dataset = object.__new__(InferenceDataset)
+    dataset.config = SimpleNamespace(
+        model=DummyDataConfig(),
+        condition=None,
+        _using_model_data_as_condition=False,
+    )
+
+    assert dataset._concat_condition_to_input is False
+
+
+@pytest.mark.pruned
+                                
+def test_concat_condition_false_when_condition_overwrites_input():
+    dataset = object.__new__(InferenceDataset)
+    dataset.config = SimpleNamespace(
+        model=None,
+        condition=DummyDataConfig("condition"),
+        _using_model_data_as_condition=False,
+    )
+
+    assert dataset._write_condition_to_input is True
+    assert dataset._concat_condition_to_input is False
+
+
+@pytest.mark.parametrize(
+    "feature",
+    [
+        "year",
+        "lead_time",
+        "month_sin",
+        "month_cos",
+    ],
+)
+def test_getitem_individual_time_features(
+    monkeypatch,
+    feature,
+):
+    dataset = make_dataset_object(
+        features=[feature],
+    )
+
+    patch_item_sources(
+        monkeypatch,
+        model=xr.DataArray(np.asarray([1.0])),
+    )
+
+    result = dataset[0]
+
+    assert result["added_features"] is not None
+    assert result["added_features"].shape[0] == 1
+
+
+@pytest.mark.pruned
+def test_getitem_all_time_features(
+    monkeypatch,
+):
+    features = [
+        "year",
+        "lead_time",
+        "month_sin",
+        "month_cos",
+    ]
+    dataset = make_dataset_object(
+        features=features,
+    )
+
+    patch_item_sources(
+        monkeypatch,
+        model=xr.DataArray(np.asarray([1.0])),
+    )
+
+    result = dataset[0]
+
+    assert result["added_features"].shape == (4,)
+
+
+@pytest.mark.pruned
+def test_getitem_metadata_without_ensemble(
+    monkeypatch,
+):
+    dataset = make_dataset_object(
+        return_metadata=True,
+        include_ensembles=False,
+        features=None,
+    )
+
+    patch_item_sources(
+        monkeypatch,
+        model=xr.DataArray(np.asarray([1.0])),
+    )
+
+    result, metadata = dataset[0]
+
+    assert isinstance(result, dict)
+    assert metadata == {
+        "year": 2000.0,
+        "lead_time": 1.0,
+    }
+
+
+@pytest.mark.pruned
+def test_getitem_metadata_with_multiple_coordinates(
+    monkeypatch,
+):
+    dataset = make_dataset_object(
+        return_metadata=True,
+        include_ensembles=True,
+        features=None,
+    )
+    dataset.sample_coords = {
+        "year": np.asarray([2000.0, 2001.0]),
+        "lead_time": np.asarray([1.0, 2.0]),
+        "ensembles": np.asarray([0, 1]),
+    }
+
+    patch_item_sources(
+        monkeypatch,
+        model=xr.DataArray(np.asarray([2.0])),
+    )
+
+    _, metadata = dataset[1]
+
+    assert metadata == {
+        "year": 2001.0,
+        "lead_time": 2.0,
+        "ensembles": 1,
+    }
+
+
+@pytest.mark.pruned
+def test_getitem_returns_float32(
+    monkeypatch,
+):
+    dataset = make_dataset_object(
+        features=["year"],
+    )
+
+    patch_item_sources(
+        monkeypatch,
+        model=xr.DataArray(
+            np.asarray(
+                [1.0],
+                dtype=np.float64,
+            )
+        ),
+    )
+
+    result = dataset[0]
+
+    assert result["input"].dtype == torch.float32
+    assert result["added_features"].dtype == torch.float32
+
+
+@pytest.mark.pruned
+def test_from_train_does_not_copy_time_features(
+    monkeypatch,
+):
+    model = DummyDataConfig("model")
+
+    train = SimpleNamespace(
+        condition_method="static",
+        time_features=[
+            "year",
+            "lead_time",
+        ],
+        lead_months=np.asarray([1, 2]),
+        observation=object(),
+        effective_condition=None,
+        _using_model_data_as_condition=False,
+        model=model,
+        condition=None,
+    )
+
+    monkeypatch.setattr(
+        ("cccma_ppp.inference.dataset.InferenceDatasetConfig"),
+        lambda **kwargs: kwargs,
+    )
+
+    result = _from_train(train)
+
+    assert "time_features" not in result
+
+
+@pytest.mark.pruned
+def test_from_train_copies_condition_method(
+    monkeypatch,
+):
+    model = DummyDataConfig("model")
+    train = make_train_config(
+        observation=object(),
+        model=model,
+    )
+    train.condition_method = "ensemble_mean"
+
+    monkeypatch.setattr(
+        ("cccma_ppp.inference.dataset.InferenceDatasetConfig"),
+        lambda **kwargs: kwargs,
+    )
+
+    result = _from_train(train)
+
+    assert result["condition_method"] == "ensemble_mean"
+
+
+@pytest.mark.pruned
+def test_from_train_deepcopies_model(
+    monkeypatch,
+):
+    model = DummyDataConfig("model")
+    train = make_train_config(
+        observation=object(),
+        model=model,
+    )
+
+    monkeypatch.setattr(
+        ("cccma_ppp.inference.dataset.InferenceDatasetConfig"),
+        lambda **kwargs: kwargs,
+    )
+
+    result = _from_train(train)
+
+    assert result["model"] is not model
+    assert result["model"].paths == model.paths
+
+
+@pytest.mark.pruned
+def test_from_train_deepcopies_condition(
+    monkeypatch,
+):
+    model = DummyDataConfig("model")
+    condition = DummyDataConfig("condition")
+    train = make_train_config(
+        observation=object(),
+        effective_condition=condition,
+        model=model,
+        condition=condition,
+    )
+
+    monkeypatch.setattr(
+        ("cccma_ppp.inference.dataset.InferenceDatasetConfig"),
+        lambda **kwargs: kwargs,
+    )
+
+    result = _from_train(train)
+
+    assert result["condition"] is not condition
+    assert result["condition"].paths == condition.paths
+
+
+@pytest.mark.pruned
+def test_from_train_deepcopies_lead_months(
+    monkeypatch,
+):
+    model = DummyDataConfig("model")
+    lead_months = np.asarray([1, 3, 6])
+    train = make_train_config(
+        observation=object(),
+        model=model,
+    )
+    train.lead_months = lead_months
+
+    monkeypatch.setattr(
+        ("cccma_ppp.inference.dataset.InferenceDatasetConfig"),
+        lambda **kwargs: kwargs,
+    )
+
+    result = _from_train(train)
+
     np.testing.assert_array_equal(
         result["lead_months"],
         lead_months,

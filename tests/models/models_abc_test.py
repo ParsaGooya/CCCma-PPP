@@ -127,12 +127,12 @@ def test_freeze_weights(tmp_path):
         assert p.requires_grad is False
 
 
-@pytest.mark.pruned
 def test_cvae_resolve_flow_success():
     cfg = DummyCvaeConfig()
     cfg._resolve_flow_settings(condition_dependant_flow=False)
 
 
+@pytest.mark.pruned
 def test_cvae_resolve_flow_error():
     cfg = DummyCvaeConfig()
     cfg.condition_embedding_size = 3

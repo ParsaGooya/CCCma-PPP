@@ -180,7 +180,7 @@ def test_lead_months_empty_list_uses_range():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_abstract_class_cannot_be_instantiated():
     with pytest.raises(TypeError):
         DatasetConfigABC()
@@ -402,6 +402,7 @@ def test_condition_may_cover_additional_years():
     assert config.effective_condition is condition
 
 
+@pytest.mark.pruned
 def test_condition_leads_must_cover_model_leads():
     with pytest.raises(
         ValueError,
@@ -1015,7 +1016,7 @@ def test_concrete_abstract_implementations():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_abstract_method_bodies_are_callable():
     dummy = MagicMock()
 
@@ -1027,7 +1028,7 @@ def test_abstract_method_bodies_are_callable():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_class_is_abstract():
     assert issubclass(
         DatasetConfigABC,

@@ -6,7 +6,7 @@ from pathlib import Path
 import os
 import xarray as xr
 
-from cccma_ppp.generic import RuntimeContext
+from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
 from cccma_ppp.configs import supported_NN_dimensions_sorted
 
@@ -98,12 +98,11 @@ class PreprocessingPipeline:
         """
 
         if self.load_dir is None:
-            
             data_processed = base_data
             self.fitted_based_year = base_data["year"].values
             self.steps = []
             self.fitted_preprocessors = []
-            
+
             for step_name, preprocessor in self.pipeline:
                 preprocessor.fit(data_processed, mask=mask)
                 data_processed = preprocessor.transform(data_processed)
@@ -219,37 +218,42 @@ class PreprocessingPipeline:
         Raises
         ------
         ValueError
-            If the dara array does not have at least the same number 
+            If the dara array does not have at least the same number
             of dimensions as the base dataset.
 
-        """      
-  
+        """
+
         if len(data.channels) != len(self.reference_var):
-        
             raise ValueError(
-                "The dataset does not match the preprocessing pipeline." \
+                "The dataset does not match the preprocessing pipeline."
                 "make sure to use the same pipeline that was used during training."
             )
-        
+
         output_dims = [dim for dim in data.dims if "output_dim_" in dim]
 
         from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
+
         checklist = [
-            isinstance(item, Flattennanremove)
-            for item in self.fitted_preprocessors
+            isinstance(item, Flattennanremove) for item in self.fitted_preprocessors
         ]
 
         if any(checklist):
-            data = data.rename({'output_dim_0' : 'ref'})
-            data = data.assign_coords(ref = self.get_preprocessors(
-                    "flattener"
-                ).final_locations)
+            data = data.rename({"output_dim_0": "ref"})
+            data = data.assign_coords(
+                ref=self.get_preprocessors("flattener").final_locations
+            )
         else:
-            data = data.rename({dim: list(self.reference_coords)[ind] for ind, dim in enumerate(output_dims)})
+            data = data.rename(
+                {
+                    dim: list(self.reference_coords)[ind]
+                    for ind, dim in enumerate(output_dims)
+                }
+            )
             data.assign_coords(self.reference_coords)
 
-        return data.assign_coords(channels = self.reference_var).to_dataset(dim="channels")
-    
+        return data.assign_coords(channels=self.reference_var).to_dataset(
+            dim="channels"
+        )
 
     def get_preprocessors(self, name=None):
         """
@@ -282,8 +286,7 @@ class PreprocessingPipeline:
             idx = np.argwhere(np.array(self.steps) == name).flatten()
             if idx.size == 0:
                 raise ValueError(f"{name} not in preprocessing steps!")
-            return self.fitted_preprocessors[int(idx)]
-
+            return self.fitted_preprocessors[idx.item()]
 
     def add_fitted_preprocessor(self, preprocessor, name, index=None):
         """
@@ -316,10 +319,9 @@ class PreprocessingPipeline:
             self.fitted_preprocessors.insert(index, preprocessor)
             self.steps.insert(index, name)
 
-
     def extract_output_coords_vars(self, base_data: xr.Dataset | xr.DataArray = None):
         """
-        Save the reference coordinates and variable names 
+        Save the reference coordinates and variable names
         for the writer to use.
 
         Parameters
@@ -333,16 +335,16 @@ class PreprocessingPipeline:
         """
         if not self.fitted:
             raise ValueError(
-                'Spatial coords can only be extracted for a fitted pipeline.'
+                "Spatial coords can only be extracted for a fitted pipeline."
             )
-        
 
-        self.reference_coords = {dim: base_data[dim]
-                                 for dim in supported_NN_dimensions_sorted 
-                                 if dim in base_data.dims }
-                        
+        self.reference_coords = {
+            dim: base_data[dim]
+            for dim in supported_NN_dimensions_sorted
+            if dim in base_data.dims
+        }
+
         self.reference_var = list(base_data.data_vars)
-
 
     def load_from_memory(self, load_dir: str | Path):
         """

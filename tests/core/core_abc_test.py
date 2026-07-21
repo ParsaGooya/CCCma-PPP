@@ -112,6 +112,7 @@ def test_load_state_dict_missing_file_raises(tmp_path):
         module._load_state_dict(missing_path)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_loads_checkpoint_strict_true(tmp_path):
     source = ConcreteModule()
     target = ConcreteModule()
@@ -128,7 +129,6 @@ def test_load_state_dict_loads_checkpoint_strict_true(tmp_path):
         assert torch.allclose(value, source.state_dict()[key])
 
 
-@pytest.mark.pruned
 def test_load_state_dict_accepts_string_path(tmp_path):
     source = ConcreteModule()
     target = ConcreteModule()
@@ -265,7 +265,7 @@ def test_check_registered_raises_when_unregistered():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_config_load_from_checkpoint_sets_flag():
     cfg = ConcreteModuleConfig()
 
@@ -276,7 +276,7 @@ def test_config_load_from_checkpoint_sets_flag():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_build_with_default_arguments():
     cfg = ConcreteModuleConfig()
 
@@ -289,7 +289,7 @@ def test_build_with_default_arguments():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_build_with_added_features():
     cfg = ConcreteModuleConfig()
 
@@ -303,14 +303,14 @@ def test_build_with_added_features():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_moduleabc_cannot_be_instantiated():
     with pytest.raises(TypeError):
         moduleABC()
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_moduleconfigabc_cannot_be_instantiated():
     with pytest.raises(TypeError):
         moduleConfigABC()
@@ -330,7 +330,7 @@ def test_check_registered_success():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
+                                
 def test_outputabc_creation():
     tensor = torch.tensor([1.0])
 
