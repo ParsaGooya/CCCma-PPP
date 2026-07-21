@@ -221,6 +221,7 @@ class MAF(flowABC):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.base_network = base_network
+        self._conditional = False
 
     def build(self, dim, condition_size=None):
         """
@@ -248,9 +249,14 @@ class MAF(flowABC):
             self.register_parameter(
                 "initial_param", param=nn.Parameter(torch.Tensor(1, 2))
             )
+            
             self.reset_parameters()
         else:
             self.initial_param = self.base_network(added_features, 2, self.hidden_dim)
+
+
+        if added_features > 0 :
+            self._conditional = True
 
         return self
 
@@ -281,18 +287,24 @@ class MAF(flowABC):
         tuple
             (z, log_det)
         """
-
+        if self._conditional:
+            if condition is None:
+                raise ValueError(
+                    "The flow model is build as condition dependant but no condition " \
+                    "was provided in forward."
+                )
+            
         z = torch.zeros_like(x)
         log_det = torch.zeros(z.shape[0], device=x.device)
         for i in range(self.dim):
             if i == 0:
-                if condition is None:
-                    mu, alpha = self.initial_param[:, 0], self.initial_param[:, 1]
+                if not self._conditional:
+                    mu, alpha = self.initial_param.unbind(dim=-1)
                 else:
                     out = self.initial_param(condition)
                     mu, alpha = out[:, 0], out[:, 1]
             else:
-                if condition is None:
+                if not self._conditional:
                     x_in = x[:, :i].clone()
                 else:
                     x_in = torch.cat([x[:, :i].clone(), condition], dim=-1)
@@ -317,19 +329,25 @@ class MAF(flowABC):
         tuple
             (x, log_det)
         """
+        if self._conditional:
+            if condition is None:
+                raise ValueError(
+                    "The flow model is build as condition dependant but no condition " \
+                    "was provided in forward."
+                )
 
         x = torch.zeros_like(z)
         log_det = torch.zeros(z.shape[0], device=z.device)
         z = z.flip(dims=(1,))
         for i in range(self.dim):
             if i == 0:
-                if condition is None:
-                    mu, alpha = self.initial_param[0], self.initial_param[1]
+                if not self._conditional:
+                    mu, alpha = self.initial_param.unbind(dim=-1)
                 else:
                     out = self.initial_param(condition)
                     mu, alpha = out[:, 0], out[:, 1]
             else:
-                if condition is None:
+                if not self._conditional:
                     x_in = x[:, :i].clone()
                 else:
                     x_in = torch.cat([x[:, :i].clone(), condition], dim=-1)
@@ -360,6 +378,7 @@ class RealNVP(flowABC):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.base_network = base_network
+        self._conditional = False
 
     def build(self, dim, condition_size=None):
         """
@@ -388,6 +407,9 @@ class RealNVP(flowABC):
             added_features + self.dim // 2, self.dim // 2, self.hidden_dim
         )
 
+        if added_features > 0 :
+            self._conditional = True
+
         return self
 
     def forward(self, x, condition=None):
@@ -404,16 +426,23 @@ class RealNVP(flowABC):
         tuple
             (z, log_det)
         """
+        if self._conditional:
+            if condition is None:
+                raise ValueError(
+                    "The flow model is build as condition dependant but no condition " \
+                    "was provided in forward."
+                )
+            
 
         lower, upper = x[:, : self.dim // 2].clone(), x[:, self.dim // 2 :].clone()
-        if condition is not None:
+        if self._conditional:
             t1_transformed = self.t1(torch.cat([lower, condition], dim=-1))
             s1_transformed = self.s1(torch.cat([lower, condition], dim=-1))
         else:
             t1_transformed = self.t1(lower)
             s1_transformed = self.s1(lower)
         upper = t1_transformed + upper * torch.exp(s1_transformed)
-        if condition is not None:
+        if self._conditional:
             t2_transformed = self.t2(torch.cat([upper, condition], dim=-1))
             s2_transformed = self.s2(torch.cat([upper, condition], dim=-1))
         else:
@@ -440,8 +469,15 @@ class RealNVP(flowABC):
             (x, log_det)
         """
 
+        if self._conditional:
+            if condition is None:
+                raise ValueError(
+                    "The flow model is build as condition dependant but no condition " \
+                    "was provided in forward."
+                )
+
         lower, upper = z[:, : self.dim // 2].clone(), z[:, self.dim // 2 :].clone()
-        if condition is not None:
+        if self._conditional:
             t2_transformed = self.t2(torch.cat([upper, condition], dim=-1))
             s2_transformed = self.s2(torch.cat([upper, condition], dim=-1))
         else:
@@ -450,7 +486,7 @@ class RealNVP(flowABC):
 
         lower = (lower - t2_transformed) * torch.exp(-s2_transformed)
 
-        if condition is not None:
+        if self._conditional:
             t1_transformed = self.t1(torch.cat([lower, condition], dim=-1))
             s1_transformed = self.s1(torch.cat([lower, condition], dim=-1))
         else:

@@ -16,7 +16,7 @@ from cccma_ppp.models.models_abc import (
 from cccma_ppp.core.selectors import deterministicModelSelector, cVAEModelSelector
 from cccma_ppp.core.cVAE_module import cVAEOutput
 from cccma_ppp.core.deterministic_module import deterministicOutput
-from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.generic import RuntimeContext
 
 
 AppendMode = Literal[1, 2, 3]
@@ -137,7 +137,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
             added_features_dim=added_features_dim,
         )
 
-
+    
 class cVAE_MLP(cVAEmodelsABC):
     """
     MLP-based conditional variational autoencoder (cVAE).
@@ -329,7 +329,7 @@ class cVAE_MLP(cVAEmodelsABC):
         added_features: torch.Tensor | None = None,
         condition: torch.Tensor | None = None,
         condition_mask: torch.Tensor | None = None,
-        sample_size: int = 1,
+        sample_size: int =1,
         min_posterior_variance: torch.Tensor | None = None,
     ) -> cVAEOutput:
         """
@@ -358,9 +358,7 @@ class cVAE_MLP(cVAEmodelsABC):
         self._shape_model_output = x.shape
 
         cond_mu, cond_log_var = self._condition(
-            condition=condition,
-            condition_mask=condition_mask,
-            added_features=added_features,
+            condition=condition, condition_mask=condition_mask, added_features=added_features
         )
 
         mu, log_var = self._recognition(
@@ -403,7 +401,7 @@ class cVAE_MLP(cVAEmodelsABC):
         Parameters
         ----------
         request
-            cVAE predict arguments specified
+            cVAE predict arguments specified 
             by cVAEPredictRequest.
 
         Returns
@@ -427,21 +425,16 @@ class cVAE_MLP(cVAEmodelsABC):
         _shape_model_output = (sample_size, B, C, -1)
 
         cond_mu, cond_log_var = self._condition(
-            condition=condition,
-            condition_mask=condition_mask,
-            added_features=added_features,
-        )
+                condition=condition, condition_mask=condition_mask, added_features=added_features
+            )
 
         if latent_samples is None:
+
             if self.condition_dependant_latent and not self.condition_dependant_flow:
-                latent_samples = self._sample(
-                    cond_mu, cond_log_var, sample_size, std=nstds
-                )
+                latent_samples = self._sample(cond_mu, cond_log_var, sample_size, std=nstds)
 
             else:
-                latent_samples = self._get_normal(latent_ref_tensor, std=nstds).sample(
-                    (sample_size,)
-                )
+                latent_samples = self._get_normal(latent_ref_tensor, std=nstds).sample((sample_size,))
 
             if prior_flow is not None:
                 cond = None
@@ -449,8 +442,9 @@ class cVAE_MLP(cVAEmodelsABC):
 
                 if prior_flow.condition_size is not None:
                     cond = (
-                        cond_mu.unsqueeze(0)  # [1, B, C]
-                        .expand(sample_size, -1, -1)  # [S, B, C]
+                        cond_mu
+                        .unsqueeze(0)                     # [1, B, C]
+                        .expand(sample_size, -1, -1)      # [S, B, C]
                         .reshape(sample_size * batch_size, -1)
                     )
 
@@ -465,7 +459,7 @@ class cVAE_MLP(cVAEmodelsABC):
             expected_shape = (sample_size, *latent_ref_tensor.shape)
             if not latent_samples.shape == expected_shape:
                 raise ValueError(
-                    f"Got user specified latent_samples of shape ({latent_samples.shape}) "
+                    f"Got user specified latent_samples of shape ({latent_samples.shape}) " \
                     f"but expected shape {(expected_shape)}"
                 )
 
@@ -485,7 +479,7 @@ class cVAE_MLP(cVAEmodelsABC):
     def _recognition(
         self,
         x: torch.Tensor,
-        x_mask: torch.Tensor,
+        x_mask:  torch.Tensor,
         condition: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
@@ -554,6 +548,7 @@ class cVAE_MLP(cVAEmodelsABC):
             else:
                 x_features = None
 
+  
             if condition_mask is not None:
                 condition = condition * condition_mask
 
@@ -900,9 +895,7 @@ class Autoencoder(deterministicmodelsABC):
         else:
             self._initialize_weights(self.init_method)
 
-    def forward(
-        self, x: torch.Tensor, x_mask: torch.Tensor, added_features=None
-    ) -> deterministicOutput:
+    def forward(self, x: torch.Tensor, x_mask: torch.Tensor, added_features=None) -> deterministicOutput:
         """
         Forward pass through the encoder/decoder.
 

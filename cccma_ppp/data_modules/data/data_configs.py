@@ -2,19 +2,16 @@ import numpy as np
 import dataclasses
 from typing import final, Literal
 
-from cccma_ppp.data_modules.data.data_abc import DataConfigABC
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
-from cccma_ppp.configs import (
-    model_data_allowed_dimensions,
-    model_data_required_dimensions,
-    observation_data_allowed_dimensions,
-    observation_data_required_dimensions,
-    condition_data_allowed_dimensions,
-    condition_data_required_dimensions,
-)
+from cccma_ppp.data_modules.data import DataConfigABC
+from cccma_ppp.preprocessing import PreprocessingPipeline
+from cccma_ppp.configs import (model_data_allowed_dimensions,
+                               model_data_required_dimensions,
+                               observation_data_allowed_dimensions,
+                               observation_data_required_dimensions,
+                               condition_data_allowed_dimensions,
+                               condition_data_required_dimensions)
 
 spatialmethod = Literal["uniform", "cosine_lat"]
-
 
 @dataclasses.dataclass
 class ModelDataConfig(DataConfigABC):
@@ -61,12 +58,7 @@ class ModelDataConfig(DataConfigABC):
         None
         """
         super().__init__()
-        self._check_ensemble = False
-        if self.ensemble_list is not None:
-            self._check_ensemble = True
 
-        self._resolve_data()
-        self.info = self._get_ds_info()
         self.year_range = np.arange(
             self.info.start_year,
             self.info.final_year + self.info.sizes["lead_time"] // 12,
@@ -157,12 +149,7 @@ class ObsDataConfig(DataConfigABC):
         None
         """
         super().__init__()
-        self._check_ensemble = False
-        if self.ensemble_list is not None:
-            self._check_ensemble = True
 
-        self._resolve_data()
-        self.info = self._get_ds_info()
         self.year_range = np.arange(self.info.start_year, self.info.final_year + 1)
 
     @final
@@ -240,12 +227,7 @@ class ConditionDataConfig(DataConfigABC):
         None
         """
         super().__init__()
-        self._check_ensemble = False
-        if self.ensemble_list is not None:
-            self._check_ensemble = True
 
-        self._resolve_data()
-        self.info = self._get_ds_info()
         if self.info.start_year is not None and self.info.final_year is not None:
             self.year_range = np.arange(
                 self.info.start_year,

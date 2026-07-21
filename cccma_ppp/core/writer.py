@@ -12,19 +12,18 @@ import xarray as xr
 from cccma_ppp.core.trainer import clear_memory
 
 from cccma_ppp.data_modules.dataloader import Dataloader
-from cccma_ppp.generic.distributed import Distributed
-from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.generic.aggregator import RunningCovariance
-from cccma_ppp.train.dataloader import TrainDataloaderConfig
-from cccma_ppp.core.core_abc import moduleABC
+from cccma_ppp.generic import Distributed, RuntimeContext, RunningCovariance
+from cccma_ppp.train import TrainDataloaderConfig
+from cccma_ppp.core import moduleABC
 from cccma_ppp.core.selectors import PredictorSelector
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
+from cccma_ppp.preprocessing import PreprocessingPipeline
 
-from cccma_ppp.configs import required_sample_dimensions, optional_sample_dimensions
-
+from cccma_ppp.configs import (required_sample_dimensions,
+                               optional_sample_dimensions)
 
 @dataclasses.dataclass
 class WriterConfig:
+
     predictor: PredictorSelector
     num_output_covariance_sampling: int = 0
     saved_model_training_vars_from_validation: bool = False
@@ -32,7 +31,9 @@ class WriterConfig:
     def __post_init__(self):
 
         if self.num_output_covariance_sampling < 0:
-            raise ValueError("num_output_covariance_sampling cannot be negative.")
+            raise ValueError(
+                "num_output_covariance_sampling cannot be negative."
+            )
 
     def build(
         self,
@@ -43,17 +44,19 @@ class WriterConfig:
         output_dir: Path | str,
     ):
 
+
         return Writer(
             config=self,
             inference_data_loader=inference_data_loader,
             train_dataloader_config=train_dataloader_config,
             module=module,
             post_processor=post_processor,
-            output_dir=output_dir,
+            output_dir = output_dir
         )
 
 
 class Writer:
+
     def __init__(
         self,
         config: WriterConfig,
@@ -61,7 +64,7 @@ class Writer:
         train_dataloader_config: TrainDataloaderConfig,
         module: moduleABC,
         post_processor: PreprocessingPipeline,
-        output_dir: Path | str,
+        output_dir: Path | str
     ):
 
         self.config = config
@@ -78,6 +81,7 @@ class Writer:
         distributed: Distributed,
         logger: logging.Logger,
     ):
+
 
         self.logger = logger
         if self.logger is None:
@@ -110,19 +114,14 @@ class Writer:
         if self.is_distributed:
             self.distributed.barrier()
 
-        self.predictor = self.config.predictor.build_predictor(
-            self.module,
-            self.distributed,
-            self.output_dir,
-            self.config.num_output_covariance_sampling,
-        )
+        self.predictor = self.config.predictor.build_predictor(self.module,                                              
+                                                               self.distributed,
+                                                               self.output_dir,
+                                                               self.config.num_output_covariance_sampling)
 
         if self.predictor.extract_training_vars:
-            self.log_root(
-                logging.INFO,
-                "Running the model to extract training statistics. \n"
-                "This might take a few minutes...",
-            )
+            self.log_root(logging.INFO, "Running the model to extract training statistics. \n" \
+                            "This might take a few minutes...")
             self._save_train_stats()
 
         self._setup = True
@@ -133,15 +132,17 @@ class Writer:
         return Path(self.output_dir) / "training_variable_stats.pt"
 
     def predict(self):
-
+  
         if not self._setup:
-            raise RuntimeError("Call setup_distributed() before predict().")
+            raise RuntimeError(
+                "Call setup_distributed() before predict()."
+            )
         self.log_root(logging.INFO, "Starting Inference Loop...")
         self.start_time = time.time()
         clear_memory()
 
         self._predict()
-
+ 
         time_elapsed = time.time() - self.start_time
 
         self.log_root(logging.INFO, f"Inference finished in {time_elapsed:.2f}s")
@@ -153,40 +154,42 @@ class Writer:
         do_post_process = True
 
         if getattr(self.predictor, "save_latent", False):
-            loader = self.build_train_loader(return_metadata=True, shuffle=False)
+            loader = self.build_train_loader(return_metadata = True,
+                                             shuffle = False)
             do_post_process = False
         with torch.inference_mode():
+            
             for batch in tqdm(
                 loader,
                 disable=not self.is_on_root,
                 desc="Inference",
             ):
+
                 batch = batch.to_device(self.device)
 
                 self.predictor._infer_on_batch(batch)
-
+        
             self.aggregate_predictions_to_netcdf(do_post_process)
 
     def _save_train_stats(self):
 
         if not self.train_stats_save_dir.exists():
-            loader = self.build_train_loader(
-                from_validation=self.config.saved_model_training_vars_from_validation
-            )
 
-            stats = self.predictor.stats
-            for batch in tqdm(
-                loader,
-                disable=not self.is_on_root,
-                desc="Extracting training statistics",
-            ):
+            loader =  self.build_train_loader(from_validation = 
+                                self.config.saved_model_training_vars_from_validation) 
+
+            stats = self.predictor.stats    
+            for batch in tqdm(loader,
+                            disable=not self.is_on_root,
+                            desc="Extracting training statistics"):
+
                 batch = batch.to_device(self.device)
 
                 stats = self.predictor._infer_on_batch(
                     batch,
                     _getting_train_stats=True,
                 )
-
+            
             self.aggregate_train_stats(stats)
             del loader
             gc.collect()
@@ -194,26 +197,21 @@ class Writer:
         if self.is_distributed:
             self.distributed.barrier()
 
-    def build_train_loader(
-        self,
-        from_validation: bool = False,
-        return_metadata: bool = False,
-        shuffle: bool | None = None,
-    ):
+    def build_train_loader(self, 
+                           from_validation:bool = False, 
+                           return_metadata: bool = False,
+                           shuffle: bool | None = None):
 
-        self.TrainLoaderConfig.setup_distributed(
-            self.distributed,
-            load_path=Path(RuntimeContext.GLOBAL_EXP_DIR) / "preprocessing_pipeline",
-        )
-
-        if from_validation:
-            return self.TrainLoaderConfig.build_validation_loader(
-                supress_error=False, return_metadata=return_metadata, shuffle=shuffle
-            )
+        self.TrainLoaderConfig.setup_distributed(self.distributed,
+                load_path= Path(RuntimeContext.GLOBAL_EXP_DIR) / "preprocessing_pipeline")
+        
+        if from_validation: 
+            return self.TrainLoaderConfig.build_validation_loader(supress_error=False, 
+                                                                  return_metadata=return_metadata,
+                                                                  shuffle=shuffle) 
         else:
-            return self.TrainLoaderConfig.build_train_loader(
-                return_metadata=return_metadata, shuffle=shuffle
-            )
+            return self.TrainLoaderConfig.build_train_loader(return_metadata=return_metadata,
+                                                             shuffle=shuffle)  
 
     def aggregate_train_stats(self, stats: dict[str, RunningCovariance]):
 
@@ -240,6 +238,7 @@ class Writer:
         if self.is_distributed:
             self.distributed.barrier()
 
+
     def log_root(self, level: int, msg: str, *args):
         """
         Log message from root process.
@@ -264,15 +263,17 @@ class Writer:
             else:
                 print(msg)
 
+    
     @property
     def raw_module(self):
         if isinstance(self.module, torch.nn.parallel.DistributedDataParallel):
             return self.module.module
         return self.module
-
+    
     def aggregate_predictions_to_netcdf(self, do_post_process: bool = True):
         if self.is_distributed:
             self.distributed.barrier()
+        
 
         post_processor = self.post_processor
         if not do_post_process:
@@ -283,66 +284,86 @@ class Writer:
             naming_convention = "latent"
 
         if self.is_on_root:
-            aggregate_predictions(
-                post_processor, self.output_dir, naming_convention, self.log_root
-            )
-
+            aggregate_predictions(post_processor, 
+                                self.output_dir, 
+                                naming_convention,
+                                self.log_root)
+        
         if self.is_distributed:
             self.distributed.barrier()
 
+            
 
-def aggregate_predictions(
-    post_processor: PreprocessingPipeline | None,
-    output_dir: Path,
-    naming_convention: str = "prediction",
-    logger_function: callable = None,
-    cleanup_temp: bool = True,
-):
+
+def aggregate_predictions(post_processor: PreprocessingPipeline | None,
+                          output_dir: Path, 
+                          naming_convention: str = "prediction",
+                          logger_function: callable = None,
+                          cleanup_temp: bool = True):
 
     temp_save_dir = Path(output_dir) / "_temp"
     output_dir = Path(output_dir)
 
-    temp_files = sorted(temp_save_dir.glob(f"{naming_convention}_rank*_*.nc"))
+    temp_files = sorted(
+        temp_save_dir.glob(f"{naming_convention}_rank*_*.nc")
+    )
 
     if not temp_files:
-        raise RuntimeError(f"No temporary prediction files found in {temp_save_dir}")
+        raise RuntimeError(
+            f"No temporary prediction files found in {temp_save_dir}"
+        )
 
     years = set()
 
     for path in temp_files:
         with xr.open_dataset(path) as ds:
             if "year" not in ds.coords:
-                raise RuntimeError(f"{path} does not contain a 'year' coordinate.")
+                raise RuntimeError(
+                    f"{path} does not contain a 'year' coordinate."
+                )
 
-            years.update(np.asarray(ds["year"].values).reshape(-1).tolist())
+            years.update(
+                np.asarray(ds["year"].values).reshape(-1).tolist()
+            )
 
     years = sorted(years)
 
     if logger_function is not None:
         logger_function(
             logging.INFO,
-            "Aggregating temporary prediction files year-by-year: ",
+            f"Aggregating temporary prediction files year-by-year: ",
         )
 
-    sample_coords = (*required_sample_dimensions, *optional_sample_dimensions)
-
+    sample_coords = (*required_sample_dimensions,
+                     *optional_sample_dimensions)
+                    
     def _sort_sample_coords(ds):
-        sort_coords = [coord for coord in sample_coords if coord in ds.coords]
+        sort_coords = [
+            coord
+            for coord in sample_coords
+            if coord in ds.coords
+        ]
 
         for coord in sort_coords:
             ds = ds.sortby(coord)
-
+        
         return ds
 
-    for year in tqdm(years, desc="Saving years ..."):
+    for year in tqdm(years,
+                    desc="Saving years ..."):
         year_datasets = []
+
 
         for path in temp_files:
             with xr.open_dataarray(path) as ds:
                 if "year" not in ds.coords:
-                    raise RuntimeError(f"{path} does not contain a 'year' coordinate.")
+                    raise RuntimeError(
+                        f"{path} does not contain a 'year' coordinate."
+                    )
 
-                available_years = np.asarray(ds["year"].values).reshape(-1)
+                available_years = np.asarray(
+                    ds["year"].values
+                ).reshape(-1)
 
                 if year not in available_years:
                     continue
@@ -362,6 +383,7 @@ def aggregate_predictions(
                             dim=dim,
                             how="all",
                         )
+
 
                 ds_year_part = ds_year_part.load()
                 ds_year_part = _sort_sample_coords(ds_year_part)
@@ -401,4 +423,4 @@ def aggregate_predictions(
     if cleanup_temp:
         for path in temp_files:
             path.unlink()
-        os.remove(temp_save_dir)
+        os.rmdir(temp_save_dir)
