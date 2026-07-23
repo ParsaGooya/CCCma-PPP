@@ -444,16 +444,21 @@ class TrainDataset(DatasetABC):
                 isinstance(item, Flattennanremove)
                 for item in self.config.observation.preprocessing_pipeline.fitted_preprocessors
             ]
+            
+            len_names = len(self.config.observation.names)
 
             if any(checklist):
-                return self.config.observation.preprocessing_pipeline.get_preprocessors(
+                out_shape =  self.config.observation.preprocessing_pipeline.get_preprocessors(
                     "flattener"
-                ).final_locations.shape * len(self.config.observation.names)
+                ).final_locations.shape
+
             else:
-                return tuple(
+                out_shape = tuple(
                 self.config.observation.info.coords[dim].size 
                 for dim in supported_NN_dimensions_sorted  
                 if dim in self.config.observation.info.coords)
+
+            return tuple([len_names, *out_shape])
             
 
         else:
@@ -524,7 +529,7 @@ class TrainDataset(DatasetABC):
         elif self._concat_condition_to_input:
             input = xr.concat([input, condition], dim="channels")
 
-        time_features = self.time_features(
+        time_features_array = self.time_features(
                                            selection, 
                                            input)
 
@@ -536,8 +541,8 @@ class TrainDataset(DatasetABC):
         datadict = dict(
             input=torch.as_tensor(input_array, dtype=torch.float32),
             target=torch.as_tensor(target_array, dtype=torch.float32),
-            added_features=torch.as_tensor(time_features, dtype=torch.float32)
-            if time_features is not None
+            added_features=torch.as_tensor(time_features_array, dtype=torch.float32)
+            if time_features_array is not None
             else None,
         )
         

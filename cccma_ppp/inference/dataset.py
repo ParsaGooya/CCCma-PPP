@@ -141,7 +141,7 @@ class InferenceDataset(DatasetABC):
         elif self._concat_condition_to_input:
             input = xr.concat([input, condition], dim="channels")
 
-        time_features = self.time_features( 
+        time_features_array = self.time_features( 
                                            selection, 
                                            input)
 
@@ -149,8 +149,8 @@ class InferenceDataset(DatasetABC):
 
         datadict = dict(
             input=torch.as_tensor(input_array, dtype=torch.float32),
-            added_features=torch.as_tensor(time_features, dtype=torch.float32)
-            if time_features is not None
+            added_features=torch.as_tensor(time_features_array, dtype=torch.float32)
+            if time_features_array is not None
             else None,
         )
 
