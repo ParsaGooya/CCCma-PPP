@@ -1573,7 +1573,6 @@ def write_summary(
 
 from cccma_ppp.data_modules.dataset.config_abc import DatasetConfigABC
 import numpy as np
-from cccma_ppp.data_modules.dataset.config_abc import DatasetConfigABC
 from cccma_ppp.train.dataset import TrainDatasetConfig
 
 
