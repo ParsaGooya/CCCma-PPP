@@ -20,7 +20,7 @@
   "cccma_ppp/generic/monitoring.py": 0.9051,
   "cccma_ppp/inference/__main__.py": 0.0,
   "cccma_ppp/inference/dataloader.py": 0.913,
-  "cccma_ppp/inference/dataset.py": 0.9091,
+  "cccma_ppp/inference/dataset.py": 0.913,
   "cccma_ppp/inference/inference_configs.py": 0.9231,
   "cccma_ppp/inference/predict.py": 0.0,
   "cccma_ppp/inference/predictor_abc.py": 0.9286,

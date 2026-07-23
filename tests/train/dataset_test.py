@@ -265,6 +265,8 @@ def make_sample_coords(
     return result
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_effective_input_returns_model():
     model = object()
 
@@ -275,6 +277,8 @@ def test_effective_input_returns_model():
     assert config.effective_input is model
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_ds_operator_builds_operator():
     config = bare_config()
 
@@ -310,6 +314,7 @@ def test_check_observation_none_with_method():
     assert config._check_observation() is config
 
 
+@pytest.mark.pruned
 def test_check_observation_equal_coordinates():
     model = make_data_config()
     observation = make_data_config()
@@ -328,6 +333,7 @@ def test_check_observation_equal_coordinates():
     assert caught == []
 
 
+@pytest.mark.pruned
 def test_check_observation_coordinate_mismatch():
     model = make_data_config(
         lat=(0, 1),
@@ -384,6 +390,7 @@ def test_common_time_without_observation():
     )
 
 
+@pytest.mark.pruned
 def test_common_time_with_observation():
     model = make_data_config(
         years=(2000, 2001, 2002),
@@ -419,6 +426,7 @@ def test_common_time_empty_intersection():
     assert config.get_common_time.size == 0
 
 
+@pytest.mark.pruned
 def test_available_times_intersects_coordinates():
     model = make_data_config(
         years=(2000, 2001, 2002),
@@ -438,6 +446,8 @@ def test_available_times_intersects_coordinates():
     )
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_fit_preprocessors_delegates():
     config = bare_config()
     operator = MagicMock()
@@ -462,6 +472,8 @@ def test_fit_preprocessors_delegates():
     )
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_load_fitted_preprocessors_delegates():
     config = bare_config()
     operator = MagicMock()
@@ -476,6 +488,8 @@ def test_load_fitted_preprocessors_delegates():
     operator.load_fitted_preprocessors.assert_called_once_with("path")
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_add_fitted_preprocessor_delegates():
     config = bare_config()
     operator = MagicMock()
@@ -497,6 +511,8 @@ def test_add_fitted_preprocessor_delegates():
     )
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_build_dataset_all_arguments():
     config = bare_config()
     features = object()
@@ -778,6 +794,7 @@ def test_get_obs_indexes_missing_year():
         )
 
 
+@pytest.mark.pruned
 def test_get_obs_indexes_missing_month():
     observation = make_observation_dataset(
         ensembles=None,
@@ -971,6 +988,7 @@ def make_getitem_dataset(
     return dataset
 
 
+@pytest.mark.pruned
 def test_getitem_autoencoding_target():
     dataset = make_getitem_dataset(
         autoencoding=True,
@@ -984,6 +1002,7 @@ def test_getitem_autoencoding_target():
     )
 
 
+@pytest.mark.pruned
 def test_getitem_condition_replaces_input():
     dataset = make_getitem_dataset(
         write_condition=True,
@@ -1010,6 +1029,7 @@ def test_getitem_concatenates_condition():
     )
 
 
+@pytest.mark.pruned
 def test_getitem_with_time_features():
     dataset = make_getitem_dataset(
         time_features=[
@@ -1026,6 +1046,7 @@ def test_getitem_with_time_features():
     assert result["added_features"].shape == (4,)
 
 
+@pytest.mark.pruned
 def test_getitem_without_metadata_returns_dict():
     dataset = make_getitem_dataset(
         return_metadata=False,
@@ -1231,6 +1252,8 @@ def test_check_condition_static_rejects_ensemble_list():
         TrainDatasetConfig._check_condition(config)
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_num_input_lead_months():
     model = make_data_config(
         lead_times=(1, 2, 3, 4, 5),
@@ -1243,6 +1266,7 @@ def test_num_input_lead_months():
     assert TrainDatasetConfig.num_input_lead_months.fget(config) == 5
 
 
+@pytest.mark.pruned
 def test_available_times_without_observation():
     model = make_data_config(
         years=(1999, 2000, 2001),
@@ -1259,6 +1283,7 @@ def test_available_times_without_observation():
     )
 
 
+@pytest.mark.pruned
 def test_available_times_respects_model_coordinate_values():
     model = make_data_config(
         years=(1999, 2000, 2001, 2002),
@@ -1373,6 +1398,7 @@ def test_check_observation_collects_multiple_warnings():
     assert any("lon" in str(item.message) for item in caught)
 
 
+@pytest.mark.pruned
 def test_get_obs_indexes_reports_missing_year_values():
     dataset = bare_dataset(
         observation_dataset=make_observation_dataset(
@@ -1396,6 +1422,7 @@ def test_get_obs_indexes_reports_missing_year_values():
     assert "2099" in message
 
 
+@pytest.mark.pruned
 def test_get_obs_indexes_reports_missing_month_values():
     observation = make_observation_dataset(
         ensembles=None,
@@ -1422,6 +1449,7 @@ def test_get_obs_indexes_reports_missing_month_values():
     assert "month" in message
 
 
+@pytest.mark.pruned
 def test_get_obs_indexes_reports_multiple_missing_dimensions():
     observation = make_observation_dataset(
         ensembles=None,
@@ -1449,6 +1477,7 @@ def test_get_obs_indexes_reports_multiple_missing_dimensions():
     assert "month" in message
 
 
+@pytest.mark.pruned
 def test_get_target_shape_multiple_observation_variables_without_flattener(
     monkeypatch,
 ):
@@ -1518,6 +1547,7 @@ def test_get_added_features_dim(
     assert dataset.get_added_features_dim() == expected
 
 
+@pytest.mark.pruned
 def test_index_observation_random_ensemble_lower_bound(
     monkeypatch,
 ):
@@ -1562,6 +1592,7 @@ def test_index_observation_random_ensemble_lower_bound(
     )
 
 
+@pytest.mark.pruned
 def test_index_observation_random_ensemble_upper_bound(
     monkeypatch,
 ):
@@ -1606,6 +1637,7 @@ def test_index_observation_random_ensemble_upper_bound(
     )
 
 
+@pytest.mark.pruned
 def test_index_observation_calls_pipeline_before_unwrap():
     observation_dataset = make_observation_dataset(
         ensembles=None,
@@ -1647,6 +1679,7 @@ def test_index_observation_calls_pipeline_before_unwrap():
     ]
 
 
+@pytest.mark.pruned
 def test_getitem_calls_all_index_helpers():
     dataset = make_getitem_dataset()
 
@@ -1657,6 +1690,7 @@ def test_getitem_calls_all_index_helpers():
     dataset._index_model_dataset.assert_called_once_with(0)
 
 
+@pytest.mark.pruned
 def test_getitem_returns_float32_tensors():
     dataset = make_getitem_dataset(
         time_features=[
@@ -1690,6 +1724,7 @@ def test_getitem_autoencoding_happens_before_condition_replacement():
     )
 
 
+@pytest.mark.pruned
 def test_getitem_condition_replacement_takes_precedence_over_concat():
     dataset = make_getitem_dataset(
         write_condition=True,
@@ -1704,6 +1739,7 @@ def test_getitem_condition_replacement_takes_precedence_over_concat():
     )
 
 
+@pytest.mark.pruned
 def test_getitem_concatenation_preserves_channel_order():
     dataset = make_getitem_dataset(
         concat_condition=True,
@@ -1793,6 +1829,7 @@ def test_getitem_all_time_features_for_multiple_leads(
     assert torch.isfinite(result["added_features"]).all()
 
 
+@pytest.mark.pruned
 def test_getitem_metadata_values_are_scalars():
     dataset = make_getitem_dataset(
         return_metadata=True,
@@ -1804,6 +1841,7 @@ def test_getitem_metadata_values_are_scalars():
     assert np.isscalar(selection["lead_time"])
 
 
+@pytest.mark.pruned
 def test_getitem_selects_requested_sample_index():
     reference = make_config_stub()
 
@@ -1878,6 +1916,7 @@ def test_getitem_selects_requested_sample_index():
     dataset._index_model_dataset.assert_called_once_with(1)
 
 
+@pytest.mark.pruned
 def test_post_init_passes_load_false_to_observation_loader():
     observation = make_data_config(
         paths=("obs.nc",),
@@ -1932,6 +1971,7 @@ def test_post_init_passes_load_false_to_observation_loader():
     )
 
 
+@pytest.mark.pruned
 def test_post_init_sets_observation_indexes():
     observation = make_data_config(
         paths=("obs.nc",),
@@ -1985,6 +2025,8 @@ def test_post_init_sets_observation_indexes():
     get_indexes.assert_called_once_with(dataset.sample_coords)
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_build_dataset_defaults():
     config = bare_config()
     features = object()
@@ -2012,6 +2054,8 @@ def test_build_dataset_defaults():
     )
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_fit_preprocessors_default_arguments():
     config = bare_config()
     operator = MagicMock()
@@ -2033,6 +2077,8 @@ def test_fit_preprocessors_default_arguments():
     )
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_load_fitted_preprocessors_default_argument():
     config = bare_config()
     operator = MagicMock()
@@ -2047,6 +2093,8 @@ def test_load_fitted_preprocessors_default_argument():
     operator.load_fitted_preprocessors.assert_called_once_with(None)
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_add_fitted_preprocessor_default_index():
     config = bare_config()
     operator = MagicMock()

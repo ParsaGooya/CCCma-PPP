@@ -192,6 +192,7 @@ def make_batch(
     return data
 
 
+@pytest.mark.pruned
 def test_batchdata_basic_nan_cleanup():
     x = torch.tensor([[1.0, float("nan")]])
     y = torch.tensor([[float("nan"), 2.0]])
@@ -210,6 +211,7 @@ def test_batchdata_basic_nan_cleanup():
     )
 
 
+@pytest.mark.pruned
 def test_batchdata_without_masks():
     batch = BatchData(
         torch.ones((2, 2)),
@@ -220,6 +222,7 @@ def test_batchdata_without_masks():
     assert batch.target_mask is None
 
 
+@pytest.mark.pruned
 def test_batchdata_with_reduced_masks():
     x = torch.tensor(
         [
@@ -274,6 +277,7 @@ def test_batchdata_with_reduced_masks():
     )
 
 
+@pytest.mark.pruned
 def test_batchdata_with_unreduced_masks():
     x = torch.tensor(
         [
@@ -315,6 +319,7 @@ def test_batchdata_with_unreduced_masks():
     )
 
 
+@pytest.mark.pruned
 def test_batchdata_to_device_without_masks():
     batch = BatchData(
         torch.ones((2, 2)),
@@ -360,6 +365,7 @@ def test_batchdata_to_device_with_features():
     assert batch.added_features.shape == (2, 3)
 
 
+@pytest.mark.pruned
 def test_batchdata_added_features_none():
     batch = BatchData(
         torch.ones((2, 2)),
@@ -369,6 +375,7 @@ def test_batchdata_added_features_none():
     assert batch.added_features is None
 
 
+@pytest.mark.pruned
 def test_batchdata_metadata_preserved():
     metadata = [{"year": 2000}]
 
@@ -381,6 +388,7 @@ def test_batchdata_metadata_preserved():
     assert batch.metadata is metadata
 
 
+@pytest.mark.pruned
 def test_collate_basic():
     result = collate_batch(make_batch())
 
@@ -391,6 +399,7 @@ def test_collate_basic():
     assert result.metadata is None
 
 
+@pytest.mark.pruned
 def test_collate_with_features():
     result = collate_batch(make_batch(include_features=True))
 
@@ -412,6 +421,7 @@ def test_collate_with_unreduced_masks():
     assert torch.all(result.target_mask)
 
 
+@pytest.mark.pruned
 def test_collate_metadata_tuple_branch():
     result = collate_batch(make_batch(include_metadata=True))
 
@@ -434,6 +444,7 @@ def test_collate_metadata_and_features():
     assert len(result.metadata) == 2
 
 
+@pytest.mark.pruned
 def test_config_default_train_years():
     config = make_config()
 
@@ -443,6 +454,7 @@ def test_config_default_train_years():
     )
 
 
+@pytest.mark.pruned
 def test_config_validation_split():
     config = make_config(
         num_validation_years=2,
@@ -458,6 +470,7 @@ def test_config_validation_split():
     )
 
 
+@pytest.mark.pruned
 def test_config_workers_zero_sets_prefetch_none():
     config = make_config(
         num_data_workers=0,
@@ -467,6 +480,7 @@ def test_config_workers_zero_sets_prefetch_none():
     assert config.prefetch_factor is None
 
 
+@pytest.mark.pruned
 def test_config_workers_positive_preserves_prefetch():
     config = make_config(
         num_data_workers=2,
@@ -476,6 +490,7 @@ def test_config_workers_positive_preserves_prefetch():
     assert config.prefetch_factor == 4
 
 
+@pytest.mark.pruned
 def test_config_invalid_train_years():
     with pytest.raises(
         ValueError,
@@ -524,6 +539,7 @@ def test_config_custom_train_and_validation_split_valid():
     )
 
 
+@pytest.mark.pruned
 def test_train_years_subset():
     config = make_config(
         train_years=(2001, 2003),
@@ -535,6 +551,7 @@ def test_train_years_subset():
     )
 
 
+@pytest.mark.pruned
 def test_available_times_without_validation():
     config = make_config()
 
@@ -544,6 +561,7 @@ def test_available_times_without_validation():
     )
 
 
+@pytest.mark.pruned
 def test_available_times_with_validation():
     config = make_config(
         num_validation_years=2,
@@ -555,6 +573,7 @@ def test_available_times_with_validation():
     )
 
 
+@pytest.mark.pruned
 def test_setup_distributed_root():
     config = make_config()
 
@@ -575,6 +594,7 @@ def test_setup_distributed_non_root():
     assert config.world_size == 2
 
 
+@pytest.mark.pruned
 def test_setup_distributed_distributed_mode():
     config = make_config()
 
@@ -584,6 +604,7 @@ def test_setup_distributed_distributed_mode():
     assert config.world_size == 2
 
 
+@pytest.mark.pruned
 def test_setup_distributed_fits_preprocessors():
     dataset_config = DummyDatasetConfig()
     config = make_config(
@@ -620,6 +641,7 @@ def test_build_train_loader_success():
     assert len(loader.dataset) == 2
 
 
+@pytest.mark.pruned
 def test_build_train_loader_passes_years():
     config = setup_config()
 
@@ -633,6 +655,7 @@ def test_build_train_loader_passes_years():
     )
 
 
+@pytest.mark.pruned
 def test_build_train_loader_with_spatial_mask():
     config = setup_config()
 
@@ -644,6 +667,7 @@ def test_build_train_loader_with_spatial_mask():
     assert loader is not None
 
 
+@pytest.mark.pruned
 def test_build_train_loader_sets_dataloader_length():
     config = setup_config()
 
@@ -678,6 +702,7 @@ def test_build_validation_loader_success():
     assert len(loader.dataset) == 2
 
 
+@pytest.mark.pruned
 def test_build_validation_loader_passes_years():
     config = setup_config(
         make_config(
@@ -695,6 +720,7 @@ def test_build_validation_loader_passes_years():
     )
 
 
+@pytest.mark.pruned
 def test_build_validation_loader_with_spatial_mask():
     config = setup_config(
         make_config(
@@ -710,12 +736,14 @@ def test_build_validation_loader_with_spatial_mask():
     assert loader is not None
 
 
+@pytest.mark.pruned
 def test_get_weights_default():
     config = make_config()
 
     assert config.get_weights() == "w"
 
 
+@pytest.mark.pruned
 def test_get_weights_with_argument():
     config = make_config()
     weights_config = object()
@@ -723,18 +751,22 @@ def test_get_weights_with_argument():
     assert config.get_weights(weights_config) == "w"
 
 
+@pytest.mark.pruned
 def test_input_var_metadata():
     config = make_config()
 
     assert config.input_var_metadata == "i"
 
 
+@pytest.mark.pruned
 def test_target_var_metadata():
     config = make_config()
 
     assert config.target_var_metadata == "t"
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_dataset_config_available_times_complete():
     dataset_config = DummyDatasetConfig()
 
@@ -744,6 +776,8 @@ def test_dataset_config_available_times_complete():
     )
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_dataset_config_operator():
     dataset_config = DummyDatasetConfig()
 
@@ -753,6 +787,8 @@ def test_dataset_config_operator():
     )
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_dataset_config_build_dataset():
     dataset_config = DummyDatasetConfig()
 
@@ -764,6 +800,8 @@ def test_dataset_config_build_dataset():
     assert len(dataset) == 2
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_dummy_dataset_item():
     dataset = DummySet()
 

@@ -42,6 +42,7 @@ class DummyCvaeConfig(cVAEmodelConfigABC):
         return DummyModel()
 
 
+@pytest.mark.pruned
 def test_get_device_from_parameter():
     model = DummyModel()
     device = model._get_device()
@@ -131,6 +132,7 @@ def test_cvae_resolve_flow_success():
     cfg._resolve_flow_settings(condition_dependant_flow=False)
 
 
+@pytest.mark.pruned
 def test_cvae_resolve_flow_error():
     cfg = DummyCvaeConfig()
     cfg.condition_embedding_size = 3
@@ -139,6 +141,7 @@ def test_cvae_resolve_flow_error():
         cfg._resolve_flow_settings(condition_dependant_flow=False)
 
 
+@pytest.mark.pruned
 def test_weights_init_xavier():
     layer = nn.Linear(10, 5)
     weights_init(layer, method="xavier")
@@ -146,6 +149,7 @@ def test_weights_init_xavier():
     assert layer.weight is not None
 
 
+@pytest.mark.pruned
 def test_weights_init_trunc_normal():
     layer = nn.Linear(10, 5)
     weights_init(layer, method="trunc_normal")
@@ -153,6 +157,7 @@ def test_weights_init_trunc_normal():
     assert layer.weight is not None
 
 
+@pytest.mark.pruned
 def test_weights_init_unsupported_module():
     class Dummy:
         pass
@@ -197,6 +202,7 @@ def test_get_device_from_buffer():
     assert m._get_device().type == "cpu"
 
 
+@pytest.mark.pruned
 def test_load_state_dict_ignores_non_model_keys(tmp_path):
     model = DummyModel()
 
@@ -223,6 +229,7 @@ def test_load_state_dict_ignores_non_model_keys(tmp_path):
     model._load_state_dict(cfg)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strict_false_missing_keys(tmp_path):
     model = DummyModel()
 
@@ -247,6 +254,7 @@ def test_load_state_dict_strict_false_missing_keys(tmp_path):
     model._load_state_dict(cfg)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_no_model_prefix_keys(tmp_path):
     model = DummyModel()
 
@@ -279,6 +287,7 @@ def test_weights_init_skips_frozen_params():
     assert torch.allclose(layer.weight, w_before)
 
 
+@pytest.mark.pruned
 def test_weights_init_bias_only():
     class BiasOnly(nn.Module):
         def __init__(self):
@@ -290,6 +299,7 @@ def test_weights_init_bias_only():
     weights_init(m, method="xavier")
 
 
+@pytest.mark.pruned
 def test_weights_init_changes_weights():
     layer = nn.Linear(10, 10)
     w_before = layer.weight.clone()

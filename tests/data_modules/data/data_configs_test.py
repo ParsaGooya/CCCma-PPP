@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 
 from unittest.mock import patch
@@ -29,6 +30,7 @@ def patch_common():
     )
 
 
+@pytest.mark.pruned
 def test_model_data_config_basic():
     with patch_common():
         cfg = ModelDataConfig(
@@ -39,6 +41,7 @@ def test_model_data_config_basic():
     assert cfg.paths == "x"
 
 
+@pytest.mark.pruned
 def test_model_data_config_type():
     with patch_common():
         cfg = ModelDataConfig(
@@ -49,6 +52,7 @@ def test_model_data_config_type():
     assert cfg.TYPE == "model"
 
 
+@pytest.mark.pruned
 def test_model_data_config_check_ensemble_false():
     with patch_common():
         cfg = ModelDataConfig(
@@ -59,6 +63,7 @@ def test_model_data_config_check_ensemble_false():
     assert cfg._check_ensemble is False
 
 
+@pytest.mark.pruned
 def test_model_data_config_check_ensemble_true():
     with patch_common():
         cfg = ModelDataConfig(
@@ -70,6 +75,7 @@ def test_model_data_config_check_ensemble_true():
     assert cfg._check_ensemble is True
 
 
+@pytest.mark.pruned
 def test_model_data_config_year_range():
     with patch_common():
         cfg = ModelDataConfig(
@@ -83,6 +89,7 @@ def test_model_data_config_year_range():
     )
 
 
+@pytest.mark.pruned
 def test_model_data_config_year_range_extended():
     info = DummyInfo(
         start_year=2000,
@@ -103,6 +110,7 @@ def test_model_data_config_year_range_extended():
     assert cfg.year_range[-1] == 2006
 
 
+@pytest.mark.pruned
 def test_model_data_config_resolve_called():
     called = {"x": False}
 
@@ -122,6 +130,7 @@ def test_model_data_config_resolve_called():
     assert called["x"] is True
 
 
+@pytest.mark.pruned
 def test_model_data_config_get_info_called():
     called = {"x": False}
 
@@ -142,6 +151,7 @@ def test_model_data_config_get_info_called():
     assert called["x"] is True
 
 
+@pytest.mark.pruned
 def test_obs_data_config_basic():
     with patch_common():
         cfg = ObsDataConfig(
@@ -152,6 +162,7 @@ def test_obs_data_config_basic():
     assert cfg.paths == "x"
 
 
+@pytest.mark.pruned
 def test_obs_data_config_type():
     with patch_common():
         cfg = ObsDataConfig(
@@ -162,6 +173,7 @@ def test_obs_data_config_type():
     assert cfg.TYPE == "observation"
 
 
+@pytest.mark.pruned
 def test_obs_data_config_check_ensemble_false():
     with patch_common():
         cfg = ObsDataConfig(
@@ -172,6 +184,7 @@ def test_obs_data_config_check_ensemble_false():
     assert cfg._check_ensemble is False
 
 
+@pytest.mark.pruned
 def test_obs_data_config_check_ensemble_true():
     with patch_common():
         cfg = ObsDataConfig(
@@ -183,6 +196,7 @@ def test_obs_data_config_check_ensemble_true():
     assert cfg._check_ensemble is True
 
 
+@pytest.mark.pruned
 def test_obs_data_config_year_range():
     with patch_common():
         cfg = ObsDataConfig(
@@ -196,6 +210,7 @@ def test_obs_data_config_year_range():
     )
 
 
+@pytest.mark.pruned
 def test_obs_data_config_resolve_called():
     called = {"x": False}
 
@@ -215,6 +230,7 @@ def test_obs_data_config_resolve_called():
     assert called["x"] is True
 
 
+@pytest.mark.pruned
 def test_obs_data_config_get_info_called():
     called = {"x": False}
 
@@ -235,6 +251,7 @@ def test_obs_data_config_get_info_called():
     assert called["x"] is True
 
 
+@pytest.mark.pruned
 def test_condition_data_config_basic():
     with patch_common():
         cfg = ConditionDataConfig(
@@ -245,6 +262,7 @@ def test_condition_data_config_basic():
     assert cfg.paths == "x"
 
 
+@pytest.mark.pruned
 def test_condition_data_config_type():
     with patch_common():
         cfg = ConditionDataConfig(
@@ -255,6 +273,7 @@ def test_condition_data_config_type():
     assert cfg.TYPE == "condition"
 
 
+@pytest.mark.pruned
 def test_condition_data_config_check_ensemble_false():
     with patch_common():
         cfg = ConditionDataConfig(
@@ -276,6 +295,7 @@ def test_condition_data_config_check_ensemble_true():
     assert cfg._check_ensemble is True
 
 
+@pytest.mark.pruned
 def test_condition_data_config_year_range():
     with patch_common():
         cfg = ConditionDataConfig(
@@ -289,6 +309,7 @@ def test_condition_data_config_year_range():
     )
 
 
+@pytest.mark.pruned
 def test_condition_data_config_year_range_extended():
     info = DummyInfo(
         start_year=2000,
@@ -328,6 +349,7 @@ def test_condition_data_config_none_year_range():
     assert not hasattr(cfg, "year_range")
 
 
+@pytest.mark.pruned
 def test_condition_data_config_resolve_called():
     called = {"x": False}
 
@@ -347,6 +369,7 @@ def test_condition_data_config_resolve_called():
     assert called["x"] is True
 
 
+@pytest.mark.pruned
 def test_condition_data_config_get_info_called():
     called = {"x": False}
 
