@@ -72,8 +72,8 @@ class deterministicConfig(moduleConfigABC):
 
     def build(
         self,
-        input_shape: np.ndarray,
-        output_shape: np.ndarray | None = None,
+        input_shape: np.ndarray | tuple,
+        output_shape: np.ndarray | tuple | None = None,
         added_features_dim: int = None,
     ):
         """
