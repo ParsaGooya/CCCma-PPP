@@ -26,3 +26,4 @@ scripts/build_test_map_parallel.py
 
 train_config.yaml
 inference_config.yaml
+_internal/

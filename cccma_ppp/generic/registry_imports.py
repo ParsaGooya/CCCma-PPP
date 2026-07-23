@@ -1,4 +1,5 @@
 import cccma_ppp.models.mlp_models
+import cccma_ppp.models.unet_models
 import cccma_ppp.core.cVAE_module
 import cccma_ppp.core.deterministic_module
 import cccma_ppp.loss.utils_loss
