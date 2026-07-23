@@ -20,6 +20,28 @@ from cccma_ppp.train.train_configs import set_seed
 
 @dataclasses.dataclass
 class InferenceConfig:
+    """
+    Configuration for running inference from a trained experiment.
+
+    Parameters
+    ----------
+    experiment_dir : str
+        Directory containing the trained experiment configuration,
+        preprocessing pipelines, and checkpoints.
+    writer : WriterConfig
+        Configuration used to construct the inference writer.
+    inference_loader : InferenceDataloaderConfig, optional
+        Configuration used to construct the inference data loader.
+    save_path : str or None, optional
+        Directory in which inference outputs are saved. If ``None``, outputs
+        are saved in the experiment's ``inference`` directory.
+    seed : int or None, optional
+        Base random seed used during inference.
+    checkpoint_name : str or None, optional
+        Name of the checkpoint file to load. If ``None``, ``best.pt`` is used.
+
+    """
+
     experiment_dir: str
     writer: WriterConfig
     inference_loader: InferenceDataloaderConfig = dataclasses.field(
@@ -30,6 +52,10 @@ class InferenceConfig:
     checkpoint_name: str | None = None
 
     def __post_init__(self):
+        """
+        Initialize paths and load the training configuration.
+
+        """
         self.experiment_dir = Path(self.experiment_dir)
 
         if self.save_path is not None:
@@ -41,11 +67,34 @@ class InferenceConfig:
         self._resolve_inference_dataset_config()
 
     def _resolve_inference_dataset_config(self):
+        """
+        Resolve and validate the inference dataset configuration.
+
+        Raises
+        ------
+        RuntimeError
+            If the inference input metadata or temporal features are inconsistent
+            with the training configuration.
+
+        """
 
         self.inference_loader.read_configs_from_train(self.train_loader)
         self._check_inference_dataset()
 
     def _check_inference_dataset(self):
+        """
+        Validate the inference dataset against the training dataset.
+
+        Raises
+        ------
+        RuntimeError
+            If the inference input variables or preprocessing metadata differ from
+            those used during training.
+        RuntimeError
+            If the inference temporal features differ from those used during
+            training.
+
+        """
 
         if (
             self.inference_loader.input_var_metadata
@@ -64,6 +113,16 @@ class InferenceConfig:
 
     @property
     def output_preprocessor_dir(self):
+        """
+        Return the path to the fitted output preprocessing pipeline.
+
+        Returns
+        -------
+        pathlib.Path
+            Path to the observation or model preprocessing pipeline used to
+            post-process inference outputs.
+
+        """
 
         if "observation" in self.train_config["train_loader"]["dataset_config"]:
             preprocessor_name = "observation"
@@ -75,6 +134,16 @@ class InferenceConfig:
 
     @property
     def output_dir(self) -> Path:
+        """
+        Return the inference output directory.
+
+        Returns
+        -------
+        pathlib.Path
+            Explicit save path when configured, otherwise the experiment's
+            ``inference`` directory.
+
+        """
         return (
             self.save_path
             if self.save_path is not None
@@ -83,9 +152,22 @@ class InferenceConfig:
 
     @property
     def log_dir(self) -> Path:
+        """
+        Return the experiment log directory.
+
+        Returns
+        -------
+        pathlib.Path
+            Path to the experiment's ``logs`` directory.
+
+        """
         return self.experiment_dir / "logs"
 
     def _prepare_runtime_variables(self):
+        """
+        Set global runtime paths and input-variable metadata.
+
+        """
 
         RuntimeContext.GLOBAL_EXP_DIR = str(self.experiment_dir)
         RuntimeContext.GLOBAL_OUTPUT_DIR = str(self.output_dir)
@@ -94,7 +176,14 @@ class InferenceConfig:
 
     def prepare_directory(self, distributed: Distributed):
         """
-        Create output (sub)directories.
+        Prepare runtime variables and create the inference output directory.
+
+        Parameters
+        ----------
+        distributed : Distributed
+            Distributed execution context. The output directory is created by the
+            root process before all processes are synchronized.
+
         """
 
         self._prepare_runtime_variables()
@@ -106,21 +195,43 @@ class InferenceConfig:
 
     def set_random_seed(self, rank: int):
         """
-        Apply configured random seed.
+        Apply the configured process-specific random seed.
 
-        Returns
-        -------
-        None
+        Parameters
+        ----------
+        rank : int
+            Process rank added to the configured base seed.
+
         """
 
         if self.seed is not None:
             set_seed(self.seed + rank)
 
     def load_train_config(self):
+        """
+        Load the training configuration.
+
+        Returns
+        -------
+        dict
+            Training configuration loaded from the experiment's ``config.yaml``
+            file.
+
+        """
 
         return prepare_config(self.experiment_dir / "config.yaml")
 
     def load_train_dataloader_config(self):
+        """
+        Reconstruct the training data-loader configuration.
+
+        Returns
+        -------
+        TrainDataloaderConfig
+            Training data-loader configuration reconstructed from the saved
+            experiment configuration.
+
+        """
         return dacite.from_dict(
             data_class=TrainDataloaderConfig,
             data=self.train_config.get("train_loader"),
@@ -128,8 +239,41 @@ class InferenceConfig:
         )
 
     def load_module(
-        self, inference_loader: Dataloader | None = None, strict: bool = False
+        self,
+        inference_loader: Dataloader | None = None,
+        strict: bool = False,
     ):
+        """
+        Load the trained module from a checkpoint.
+
+        Parameters
+        ----------
+        inference_loader : Dataloader or None, optional
+            Inference data loader whose input shape and additional-feature
+            dimension are validated against the checkpoint.
+        strict : bool, optional
+            Whether checkpoint parameters must exactly match the reconstructed
+            module state.
+
+        Returns
+        -------
+        moduleABC
+            Reconstructed module with its trained parameters loaded.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the requested checkpoint does not exist.
+        KeyError
+            If the checkpoint does not contain the required shape, feature, or
+            module-state entries.
+        RuntimeError
+            If the inference data dimensions do not match the checkpoint.
+        RuntimeError
+            If checkpoint parameters do not match the reconstructed module when
+            ``strict`` is ``True``.
+
+        """
 
         path = Path(self.experiment_dir) / "checkpoints"
 
@@ -189,7 +333,20 @@ class InferenceConfig:
 
 
 def prepare_config(path: Path | str) -> dict:
-    """Get config and update with possible dotlist override."""
+    """
+    Load a YAML configuration file.
+
+    Parameters
+    ----------
+    path : pathlib.Path or str
+        Path to the YAML configuration file.
+
+    Returns
+    -------
+    dict
+        Parsed configuration dictionary.
+
+    """
     with open(path) as f:
         data = yaml.safe_load(f)
     return data
@@ -200,6 +357,26 @@ def build_writer(
     distributed: Distributed,
     logger: logging.Logger | None = None,
 ):
+    """
+    Construct a writer for distributed inference.
+
+    Parameters
+    ----------
+    config : InferenceConfig
+        Inference configuration.
+    distributed : Distributed
+        Distributed execution context.
+    logger : logging.Logger or None, optional
+        Logger used to report setup progress. If ``None``, messages are printed
+        by the root process.
+
+    Returns
+    -------
+    Writer
+        Configured inference writer.
+
+    """
+
     def log(msg, **kwargs):
         if distributed.is_root():
             if logger is not None:

@@ -28,17 +28,47 @@ from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 @dataclasses.dataclass
 class InferenceDatasetConfig(DatasetConfigABC):
+    """
+    Configuration for an inference dataset.
+
+    Parameters
+    ----------
+    model : ModelDataConfig or None, optional
+        Configuration of the model dataset used as inference input.
+    condition : ConditionDataConfig or None, optional
+        Configuration of the conditioning dataset.
+    condition_method : str or None, optional
+        Method used to incorporate conditioning data.
+    lead_months : lead_months_config or None, optional
+        Lead months selected for inference.
+
+    """
+
     model: ModelDataConfig | None = None
     condition: ConditionDataConfig | None = None
     condition_method: str = None
     lead_months: lead_months_config | None = None
 
     def __post_init__(self):
+        """
+        Initialize and validate the inference dataset configuration.
+
+        """
 
         super().__init__()
 
     @property
     def effective_input(self):
+        """
+        Return the effective input-data configuration.
+
+        Returns
+        -------
+        ModelDataConfig or ConditionDataConfig
+            Model configuration when model data are available, otherwise the
+            conditioning-data configuration.
+
+        """
         if self.model is not None:
             return self.model
         else:
@@ -46,10 +76,29 @@ class InferenceDatasetConfig(DatasetConfigABC):
 
     @property
     def ds_operator(self):
+        """
+        Return the dataset operator.
+
+        Returns
+        -------
+        DatasetOperator
+            Operator configured for this inference dataset.
+
+        """
         return DatasetOperator(self)
 
     @property
     def available_times(self):
+        """
+        Return the times shared by the configured data sources.
+
+        Returns
+        -------
+        numpy.ndarray
+            Intersection of the available year coordinates across the model and
+            conditioning datasets.
+
+        """
 
         year_ranges = list()
         if self.condition is not None:
@@ -153,10 +202,38 @@ class InferenceDatasetConfig(DatasetConfigABC):
 
         return self.model.info.sizes["lead_time"]
 
-    def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
+    def load_fitted_preprocessors(
+        self,
+        load_dir: Path | str | None = None,
+    ):
+        """
+        Load fitted preprocessing pipelines.
+
+        Parameters
+        ----------
+        load_dir : pathlib.Path, str, or None, optional
+            Directory containing the fitted preprocessing pipelines. If ``None``,
+            the default preprocessing directory is used.
+
+        """
         self.ds_operator.load_fitted_preprocessors(load_dir)
 
-    def add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
+    def add_fitted_preprocessor(
+        self,
+        preprocessor: PreprocessModuleABC,
+        index=0,
+    ):
+        """
+        Add a fitted preprocessor to the dataset pipelines.
+
+        Parameters
+        ----------
+        preprocessor : PreprocessModuleABC
+            Fitted preprocessing module to add.
+        index : int, optional
+            Position at which the preprocessor is inserted.
+
+        """
 
         self.ds_operator.add_fitted_preprocessor(preprocessor, index)
 
@@ -167,6 +244,26 @@ class InferenceDatasetConfig(DatasetConfigABC):
         return_metadata: bool = False,
         load: bool = False,
     ):
+        """
+        Construct an inference dataset.
+
+        Parameters
+        ----------
+        years : numpy.ndarray
+            Years selected for inference.
+        time_features : AddedTimeFeatures
+            Generator for additional temporal features.
+        return_metadata : bool, optional
+            Whether each sample includes its coordinate metadata.
+        load : bool, optional
+            Whether the underlying data are loaded eagerly into memory.
+
+        Returns
+        -------
+        InferenceDataset
+            Configured inference dataset.
+
+        """
         return InferenceDataset(
             config=self,
             requested_years=years,
@@ -178,6 +275,26 @@ class InferenceDatasetConfig(DatasetConfigABC):
 
 @dataclasses.dataclass
 class InferenceDataset(DatasetABC):
+    """
+    Dataset used to prepare samples for model inference.
+
+    Parameters
+    ----------
+    config : InferenceDatasetConfig
+        Inference dataset configuration.
+    requested_years : list of int, tuple of int, or numpy.ndarray
+        Years selected for inference.
+    time_features : AddedTimeFeatures
+        Generator for additional temporal features.
+    return_metadata : bool, optional
+        Whether each sample includes its coordinate metadata.
+    load : bool, optional
+        Whether the underlying data are loaded eagerly into memory.
+    mask : xarray.DataArray or None, optional
+        Sampling mask initialized automatically by the dataset.
+
+    """
+
     config: InferenceDatasetConfig
     requested_years: list[int] | tuple[int, ...] | np.ndarray
     time_features: AddedTimeFeatures
@@ -190,10 +307,24 @@ class InferenceDataset(DatasetABC):
     )
 
     def __post_init__(self):
+        """
+        Initialize the inference dataset.
+
+        """
         super().__init__()
 
     @property
     def _load_model(self):
+        """
+        Indicate whether model data should be loaded separately.
+
+        Returns
+        -------
+        bool
+            ``True`` when model data are available and are not reused as
+            conditioning data.
+
+        """
 
         return all(
             [
@@ -204,6 +335,16 @@ class InferenceDataset(DatasetABC):
 
     @property
     def _write_condition_to_input(self):
+        """
+        Indicate whether conditioning data should replace the model input.
+
+        Returns
+        -------
+        bool
+            ``True`` when model data are reused as conditioning data or no model
+            dataset is configured.
+
+        """
 
         return any(
             [self.config._using_model_data_as_condition, self.config.model is None]
@@ -211,6 +352,16 @@ class InferenceDataset(DatasetABC):
 
     @property
     def _concat_condition_to_input(self):
+        """
+        Indicate whether conditioning data should be concatenated with model input.
+
+        Returns
+        -------
+        bool
+            ``True`` when model and independent conditioning data are both used as
+            input.
+
+        """
 
         return (
             self._write_condition_to_input is False
@@ -218,6 +369,22 @@ class InferenceDataset(DatasetABC):
         )
 
     def __getitem__(self, ind):
+        """
+        Return one inference sample.
+
+        Parameters
+        ----------
+        ind : int
+            Positional index of the requested sample.
+
+        Returns
+        -------
+        dict or tuple of dict and dict
+            Dictionary containing the input tensor and optional temporal features.
+            If metadata are requested, the dictionary is returned with its sample
+            coordinate selection.
+
+        """
 
         selection = {dim: value[ind] for dim, value in self.sample_coords.items()}
 
@@ -253,6 +420,29 @@ class InferenceDataset(DatasetABC):
 def _from_train(
     train_dataset_config: TrainDatasetConfig,
 ) -> "InferenceDatasetConfig":
+    """
+    Derive an inference dataset configuration from a training configuration.
+
+    Parameters
+    ----------
+    train_dataset_config : TrainDatasetConfig
+        Training dataset configuration from which inference settings are
+        derived.
+
+    Returns
+    -------
+    InferenceDatasetConfig
+        Inference configuration containing copied model, condition, lead-month,
+        and conditioning-method settings.
+
+    Raises
+    ------
+    ValueError
+        If an inference configuration cannot be inferred from the training
+        dataset configuration.
+
+    """
+
     import copy
 
     kwargs = {

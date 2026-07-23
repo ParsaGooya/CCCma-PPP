@@ -19,12 +19,45 @@ from cccma_ppp.data_modules.dataloader import BatchDataABC
 @PredictorSelector.register("cvae")
 @dataclasses.dataclass
 class cVAEPredictorConfig:
+    """
+    Configuration for a conditional variational autoencoder predictor.
+
+    Parameters
+    ----------
+    num_latent_samples : int, optional
+        Number of latent samples generated for each input sample.
+    nstds : float, optional
+        Standard-deviation scale applied when sampling latent variables.
+    infer_latent_samples_from_training : bool, optional
+        Whether to sample latent variables from statistics extracted from the
+        training data.
+    save_latent : bool, optional
+        Whether to save latent variables instead of model predictions.
+
+    """
+
     num_latent_samples: int = 1
     nstds: float = 1.0
     infer_latent_samples_from_training: bool = False
     save_latent: bool = False
 
     def __post_init__(self) -> None:
+        """
+        Validate the cVAE predictor configuration.
+
+        Warns
+        -----
+        UserWarning
+            If ``save_latent`` is enabled because predictions will not be saved.
+
+        Raises
+        ------
+        ValueError
+            If ``num_latent_samples`` is less than one.
+        ValueError
+            If ``nstds`` is not positive.
+
+        """
         if self.num_latent_samples < 1:
             raise ValueError("num_latent_samples must be at least 1.")
 
@@ -45,6 +78,26 @@ class cVAEPredictorConfig:
         output_dir: Path | str,
         num_output_covariance_sampling: int = 0,
     ):
+        """
+        Construct a cVAE predictor.
+
+        Parameters
+        ----------
+        module : moduleABC
+            Trained cVAE module used to generate predictions.
+        distributed : Distributed
+            Distributed execution context.
+        output_dir : pathlib.Path or str
+            Directory in which predictions and training statistics are stored.
+        num_output_covariance_sampling : int, optional
+            Number of decoder-noise samples generated from the residual covariance.
+
+        Returns
+        -------
+        cVAEPredictor
+            Configured cVAE predictor.
+
+        """
 
         return cVAEPredictor(
             self, module, distributed, output_dir, num_output_covariance_sampling
@@ -52,6 +105,24 @@ class cVAEPredictorConfig:
 
 
 class cVAEPredictor(PredictorABC):
+    """
+    Generate and save predictions from a conditional variational autoencoder.
+
+    Parameters
+    ----------
+    config : cVAEPredictorConfig
+        Predictor configuration.
+    module : moduleABC
+        Trained cVAE module used for inference.
+    distributed : Distributed
+        Distributed execution context.
+    output_dir : pathlib.Path or str
+        Directory in which predictions and statistics are stored.
+    num_output_covariance_sampling : int, optional
+        Number of decoder-noise samples generated from the residual covariance.
+
+    """
+
     def __init__(
         self,
         config: cVAEPredictorConfig,
@@ -60,6 +131,23 @@ class cVAEPredictor(PredictorABC):
         output_dir: Path | str,
         num_output_covariance_sampling: int = 0,
     ):
+        """
+        Initialize the cVAE predictor.
+
+        Parameters
+        ----------
+        config : cVAEPredictorConfig
+            Predictor configuration.
+        module : moduleABC
+            Trained cVAE module used for inference.
+        distributed : Distributed
+            Distributed execution context.
+        output_dir : pathlib.Path or str
+            Directory in which predictions and statistics are stored.
+        num_output_covariance_sampling : int, optional
+            Number of decoder-noise samples generated from the residual covariance.
+
+        """
 
         self.config = config
         self.module = module
@@ -88,6 +176,16 @@ class cVAEPredictor(PredictorABC):
 
     @property
     def extract_training_vars(self):
+        """
+        Indicate whether training-variable statistics must be extracted.
+
+        Returns
+        -------
+        bool
+            ``True`` when latent sampling from training statistics or output
+            covariance sampling is enabled.
+
+        """
         return any(
             [
                 self.infer_latent_samples_from_training,
@@ -101,6 +199,33 @@ class cVAEPredictor(PredictorABC):
         batch: BatchDataABC,
         _getting_train_stats: bool = False,
     ) -> cVAEOutput | dict[str, RunningCovariance]:
+        """
+        Perform cVAE inference on a batch.
+
+        Parameters
+        ----------
+        batch : BatchDataABC
+            Batch containing model inputs, targets, masks, metadata, and optional
+            additional features.
+        _getting_train_stats : bool, optional
+            Whether to update and return training-variable statistics instead of
+            saving predictions.
+
+        Returns
+        -------
+        cVAEOutput or dict of str to RunningCovariance
+            Model output during inference or updated running statistics during
+            training-statistics extraction.
+
+        Raises
+        ------
+        RuntimeError
+            If targets are unavailable when posterior variables or training
+            statistics are requested.
+        ValueError
+            If required saved training statistics are unavailable or invalid.
+
+        """
 
         clear_memory()
         self.raw_module.eval()
@@ -152,6 +277,27 @@ class cVAEPredictor(PredictorABC):
         output: cVAEOutput,
         data: BatchDataABC,
     ) -> dict[str, RunningCovariance]:
+        """
+        Update latent-sample and residual statistics.
+
+        Parameters
+        ----------
+        output : cVAEOutput
+            Model output containing posterior samples and predictions.
+        data : BatchDataABC
+            Batch containing the target values associated with the predictions.
+
+        Returns
+        -------
+        dict of str to RunningCovariance
+            Updated latent-sample and residual covariance accumulators.
+
+        Raises
+        ------
+        RuntimeError
+            If the model output does not contain posterior samples.
+
+        """
 
         if output.samples is None:
             raise RuntimeError(
@@ -170,7 +316,29 @@ class cVAEPredictor(PredictorABC):
 
         return self.stats
 
-    def _get_latent_samples_based_on_train(self, data: BatchDataABC):
+    def _get_latent_samples_based_on_train(
+        self,
+        data: BatchDataABC,
+    ):
+        """
+        Sample latent variables from training-data statistics.
+
+        Parameters
+        ----------
+        data : BatchDataABC
+            Batch whose size determines the latent-sample shape.
+
+        Returns
+        -------
+        torch.Tensor
+            Latent samples on the predictor device.
+
+        Raises
+        ------
+        ValueError
+            If the required training statistics are unavailable or invalid.
+
+        """
         if self.infer_latent_samples_from_training and self.latent_sampler is None:
             self.latent_sampler = self.build_latent_sampler()
 
@@ -184,6 +352,24 @@ class cVAEPredictor(PredictorABC):
         return latent_samples.to(self.device)
 
     def build_latent_sampler(self) -> Callable[..., torch.Tensor]:
+        """
+        Construct a latent sampler from saved training statistics.
+
+        Returns
+        -------
+        callable
+            Function that samples latent variables from the saved training mean
+            and covariance.
+
+        Raises
+        ------
+        ValueError
+            If the training-statistics file does not exist.
+        ValueError
+            If the saved statistics do not contain the cVAE latent mean and
+            covariance.
+
+        """
         stats_path = self.output_dir / "training_variable_stats.pt"
 
         if not stats_path.exists():
@@ -206,7 +392,26 @@ class cVAEPredictor(PredictorABC):
         ):
             raise ValueError("The loaded training stats is not for a cVAE model.")
 
-        def _sampler(sample_size: int | tuple[int, ...], std: float):
+        def _sampler(
+            sample_size: int | tuple[int, ...],
+            std: float,
+        ):
+            """
+            Sample latent variables from the training distribution.
+
+            Parameters
+            ----------
+            sample_size : int or tuple of int
+                Number or shape of latent samples to generate.
+            std : float
+                Standard-deviation scale applied to the latent distribution.
+
+            Returns
+            -------
+            torch.Tensor
+                Sampled latent variables.
+
+            """
             return self._sample(
                 stats["samples_mean"],
                 stats["samples_cov"],
@@ -221,6 +426,23 @@ class cVAEPredictor(PredictorABC):
         output: cVAEOutput,
         metadata: list[dict],
     ):
+        """
+        Save cVAE predictions or latent variables as a NetCDF file.
+
+        Parameters
+        ----------
+        output : cVAEOutput
+            Model output containing predictions and optional latent variables.
+        metadata : list of dict
+            Coordinate metadata associated with each sample in the batch.
+
+        Raises
+        ------
+        RuntimeError
+            If latent-variable saving is enabled but no latent variables are
+            available.
+
+        """
         attrs = None
         if self.save_latent:
             latent_vars = {
@@ -303,6 +525,11 @@ class cVAEPredictor(PredictorABC):
 @PredictorSelector.register("deterministic")
 @dataclasses.dataclass
 class DeterministicPredictorConfig:
+    """
+    Configuration for a deterministic predictor.
+
+    """
+
     def build(
         self,
         module: moduleABC,
@@ -310,6 +537,26 @@ class DeterministicPredictorConfig:
         output_dir: Path | str,
         num_output_covariance_sampling: int = 0,
     ):
+        """
+        Construct a deterministic predictor.
+
+        Parameters
+        ----------
+        module : moduleABC
+            Trained deterministic module used to generate predictions.
+        distributed : Distributed
+            Distributed execution context.
+        output_dir : pathlib.Path or str
+            Directory in which predictions and training statistics are stored.
+        num_output_covariance_sampling : int, optional
+            Number of output-noise samples generated from the residual covariance.
+
+        Returns
+        -------
+        DetermninisticPredictor
+            Configured deterministic predictor.
+
+        """
 
         return DetermninisticPredictor(
             self, module, distributed, output_dir, num_output_covariance_sampling
@@ -317,14 +564,49 @@ class DeterministicPredictorConfig:
 
 
 class DetermninisticPredictor(PredictorABC):
+    """
+    Generate and save predictions from a deterministic model.
+
+    Parameters
+    ----------
+    config : DeterministicPredictorConfig
+        Predictor configuration.
+    module : moduleABC
+        Trained deterministic module used for inference.
+    distributed : Distributed
+        Distributed execution context.
+    output_dir : pathlib.Path or str
+        Directory in which predictions and statistics are stored.
+    num_output_covariance_sampling : int, optional
+        Number of output-noise samples generated from the residual covariance.
+
+    """
+
     def __init__(
         self,
-        config: cVAEPredictorConfig,
+        config: DeterministicPredictorConfig,
         module: moduleABC,
         distributed: Distributed,
         output_dir: Path | str,
         num_output_covariance_sampling: int = 0,
     ):
+        """
+        Initialize the deterministic predictor.
+
+        Parameters
+        ----------
+        config : DeterministicPredictorConfig
+            Predictor configuration.
+        module : moduleABC
+            Trained deterministic module used for inference.
+        distributed : Distributed
+            Distributed execution context.
+        output_dir : pathlib.Path or str
+            Directory in which predictions and statistics are stored.
+        num_output_covariance_sampling : int, optional
+            Number of output-noise samples generated from the residual covariance.
+
+        """
 
         self.config = config
         self.module = module
@@ -344,6 +626,15 @@ class DetermninisticPredictor(PredictorABC):
 
     @property
     def extract_training_vars(self):
+        """
+        Indicate whether residual statistics must be extracted.
+
+        Returns
+        -------
+        bool
+            ``True`` when output covariance sampling is enabled.
+
+        """
         return self.num_output_covariance_sampling > 0
 
     @torch.no_grad()
@@ -352,6 +643,32 @@ class DetermninisticPredictor(PredictorABC):
         batch: BatchDataABC,
         _getting_train_stats: bool = False,
     ) -> deterministicOutput | dict[str, RunningCovariance]:
+        """
+        Perform deterministic inference on a batch.
+
+        Parameters
+        ----------
+        batch : BatchDataABC
+            Batch containing model inputs, targets, metadata, and optional
+            additional features.
+        _getting_train_stats : bool, optional
+            Whether to update and return residual statistics instead of saving
+            predictions.
+
+        Returns
+        -------
+        deterministicOutput or dict of str to RunningCovariance
+            Model output during inference or updated residual statistics during
+            training-statistics extraction.
+
+        Raises
+        ------
+        RuntimeError
+            If targets are unavailable when training statistics are requested.
+        ValueError
+            If required saved training statistics are unavailable.
+
+        """
 
         clear_memory()
         self.raw_module.eval()
@@ -390,6 +707,22 @@ class DetermninisticPredictor(PredictorABC):
         output: deterministicOutput,
         data: BatchDataABC,
     ) -> dict[str, RunningCovariance]:
+        """
+        Update residual statistics from deterministic predictions.
+
+        Parameters
+        ----------
+        output : deterministicOutput
+            Deterministic model predictions.
+        data : BatchDataABC
+            Batch containing the corresponding target values.
+
+        Returns
+        -------
+        dict of str to RunningCovariance
+            Updated residual covariance accumulator.
+
+        """
 
         prediction = output.output
         target = data.target
@@ -402,9 +735,20 @@ class DetermninisticPredictor(PredictorABC):
 
     def _batch_to_netcdf(
         self,
-        output: cVAEOutput,
+        output: deterministicOutput,
         metadata: list[dict],
     ):
+        """
+        Save deterministic predictions as a NetCDF file.
+
+        Parameters
+        ----------
+        output : deterministicOutput
+            Deterministic model predictions.
+        metadata : list of dict
+            Coordinate metadata associated with each sample in the batch.
+
+        """
 
         prediction = output.output.detach().cpu()
 
