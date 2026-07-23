@@ -23,7 +23,7 @@ class WeightedMSE(lossABC):
     reduction : {"mean", "sum"}, optional
         Reduction method.
     num_output_dimensions : int, optional
-        Number of spatial/output dimensions.
+        Number of output dimensions.
     low_ress_kernel_size : int or None, optional
         Kernel size for optional low-resolution downsampling.
     hyperparam : float, optional
@@ -55,7 +55,7 @@ class WeightedMSE(lossABC):
         reduction : {"mean", "sum"}, optional
             Reduction method applied to the loss.
         num_output_dimensions : int, optional
-            Number of spatial/output dimensions.
+            Number of output dimensions.
         low_ress_kernel_size : int or None, optional
             Kernel size for downsampling.
         hyperparam : float, optional
@@ -114,10 +114,10 @@ class WeightedMSE(lossABC):
                 weights_mask = weights_mask.unsqueeze(0)
                 weights = weights.unsqueeze(0)
 
-            if self.num_output_dimensions == 1:
+            if self.num_output_dimensions == 2:
                 self.average_pool = F.avg_pool1d
 
-            elif self.num_output_dimensions == 2:
+            elif self.num_output_dimensions == 3:
                 self.average_pool = F.avg_pool2d
 
             else:
@@ -322,7 +322,7 @@ class WeightedMSE(lossABC):
         elif self.reduction == "sum":
             loss = torch.sum(
                 loss,
-                dim=tuple(-i for i in np.arange(1, self.num_output_dimensions + 1 + 1)),
+                dim=tuple(-i for i in np.arange(1, self.num_output_dimensions + 1)),
             ).mean()
 
         else:
@@ -370,7 +370,7 @@ class WeightedCRPS(lossABC):
         reduction : {"mean", "sum"}, optional
             Reduction method applied to the loss.
         num_output_dimensions : int, optional
-            Number of spatial/output dimensions.
+            Number of output dimensions.
         low_ress_kernel_size : int or None, optional
             Kernel size for downsampling.
 
@@ -410,10 +410,10 @@ class WeightedCRPS(lossABC):
                 weights_mask = weights_mask.unsqueeze(0)
                 weights = weights.unsqueeze(0)
 
-            if self.num_output_dimensions == 1:
+            if self.num_output_dimensions == 2:
                 self.average_pool = F.avg_pool1d
 
-            elif self.num_output_dimensions == 2:
+            elif self.num_output_dimensions == 3:
                 self.average_pool = F.avg_pool2d
 
             else:
@@ -622,7 +622,7 @@ class WeightedCRPS(lossABC):
         elif self.reduction.lower() == "sum":
             loss = torch.sum(
                 loss,
-                dim=tuple(-i for i in np.arange(1, self.num_output_dimensions + 1 + 1)),
+                dim=tuple(-i for i in np.arange(1, self.num_output_dimensions + 1)),
             ).mean()
 
         else:
@@ -668,7 +668,7 @@ class Frobenius_norm(lossABC):
         reduction : {"mean", "sum"}, optional
             Reduction method applied to the loss.
         num_output_dimensions : int, optional
-            Number of spatial/output dimensions.
+            Number of output dimensions.
         covariance_dim : {"spatial", "channel"}, optional
             Dimension along which covariance is computed.
 
@@ -682,7 +682,7 @@ class Frobenius_norm(lossABC):
         self.covariance_dim = covariance_dim
         self.num_output_dimensions = num_output_dimensions
         self.reduction = reduction
-        self.output_size = np.prod(weights.shape[-self.num_output_dimensions :])
+        self.output_size = np.prod(weights.shape[-self.num_output_dimensions + 1 :])
 
     def forward(
         self,
@@ -745,8 +745,8 @@ class Frobenius_norm(lossABC):
 
         assert data.shape == target.shape
 
-        y = torch.flatten(target, start_dim=-self.num_output_dimensions, end_dim=-1)
-        y_hat = torch.flatten(data, start_dim=-self.num_output_dimensions, end_dim=-1)
+        y = torch.flatten(target, start_dim=-self.num_output_dimensions + 1, end_dim=-1)
+        y_hat = torch.flatten(data, start_dim=-self.num_output_dimensions + 1, end_dim=-1)
 
         if generative_modeling:
             y = torch.flatten(y, start_dim=0, end_dim=1)

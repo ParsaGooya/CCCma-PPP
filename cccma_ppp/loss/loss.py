@@ -241,7 +241,7 @@ class Losspipeline(nn.Module):
             step_arguments = dict()
 
         if not self._checked_dimensionality:
-            expected_ndim = self.num_output_dimensions + 2
+            expected_ndim = self.num_output_dimensions + 1
             if "generative_modeling" in step_arguments:
                 expected_ndim += 1
 
@@ -249,7 +249,7 @@ class Losspipeline(nn.Module):
                 f"Expected target to have {expected_ndim} dims for "
                 f"num_output_dimensions={self.num_output_dimensions}, "
                 f"but got target.shape={target.shape}. "
-                f"If target is flattened as B x C x F, use num_output_dimensions=1."
+                f"If target is flattened as B x C x F, use num_output_dimensions=2."
             )
 
             self._checked_dimensionality = True
