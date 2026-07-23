@@ -887,18 +887,18 @@ class DatasetABC(Dataset, abc.ABC):
             len_names += len(self.config.effective_condition.names)
 
         if any(checklist):
-            return (
-                self.config.effective_input.preprocessing_pipeline.get_preprocessors(
+            in_shape = self.config.effective_input.preprocessing_pipeline.get_preprocessors(
                     "flattener"
-                ).final_locations.size
-                * len_names,
-            )
-
+                ).final_locations.shape
+                
+   
         else:
-            return tuple(
+            in_shape = tuple(
                 self.config.effective_input.info.coords[dim].size 
                 for dim in supported_NN_dimensions_sorted  
                 if dim in self.config.effective_input.info.coords)
+            
+        return tuple([len_names, *in_shape])
         
     @final
     def get_added_features_dim(self):

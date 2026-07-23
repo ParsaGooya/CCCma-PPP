@@ -307,7 +307,7 @@ class DatasetOperator:
                      if dim in self.config.effective_condition.info.coords]:
                 NN_dims.append(dim)           
 
-        metadata['NN_dims'] = NN_dims
+        metadata['NN_dims'] = ['channels'] + NN_dims
 
         return metadata
 
@@ -352,7 +352,7 @@ class DatasetOperator:
                      if dim in self.config_observation.info.coords]:
                 NN_dims.append(dim)
 
-        metadata['NN_dims'] = NN_dims
+        metadata['NN_dims'] = ['channels'] + NN_dims
 
         return metadata
 
