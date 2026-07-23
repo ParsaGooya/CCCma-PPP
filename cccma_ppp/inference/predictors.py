@@ -2,12 +2,11 @@ import torch
 from pathlib import Path
 import dataclasses
 import torch.nn.functional as F
-from typing import Callable
+from typing import Callable, ClassVar
 import warnings
 
 from cccma_ppp.core.trainer import clear_memory
 from cccma_ppp.generic import Distributed, RunningCovariance
-from cccma_ppp.core.selectors import PredictorSelector
 from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.core.cVAE_module import cVAEOutput
 from cccma_ppp.core.deterministic_module import deterministicOutput
@@ -15,14 +14,15 @@ from cccma_ppp.inference.predictor_abc import PredictorABC, save_batch_to_netcdf
 from cccma_ppp.data_modules.dataloader import BatchDataABC
 
 
-@PredictorSelector.register("cvae")
 @dataclasses.dataclass
 class cVAEPredictorConfig:
 
-    num_latent_samples: int = 1
+    num_latent_samples: int
     nstds: float = 1.0
     infer_latent_samples_from_training: bool = False
     save_latent: bool = False
+
+    _type: ClassVar[str] = 'cvae'
 
     def __post_init__(self) -> None:
         if self.num_latent_samples < 1:
@@ -293,11 +293,9 @@ class cVAEPredictor(PredictorABC):
 
 
 
-
-@PredictorSelector.register("default")
-@PredictorSelector.register("deterministic")
 @dataclasses.dataclass
 class DeterministicPredictorConfig:
+    _type: ClassVar[str] = 'deterministic'
 
     def build(
         self,

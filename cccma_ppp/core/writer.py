@@ -15,16 +15,22 @@ from cccma_ppp.data_modules.dataloader import Dataloader
 from cccma_ppp.generic import Distributed, RuntimeContext, RunningCovariance
 from cccma_ppp.train import TrainDataloaderConfig
 from cccma_ppp.core import moduleABC
-from cccma_ppp.core.selectors import PredictorSelector
+
 from cccma_ppp.preprocessing import PreprocessingPipeline
 
+from cccma_ppp.inference.predictors import (DeterministicPredictorConfig,
+                                            cVAEPredictorConfig)
+
 from cccma_ppp.configs import (required_sample_dimensions,
-                               optional_sample_dimensions)
+                               optional_sample_dimensions)                                            
 
 @dataclasses.dataclass
 class WriterConfig:
 
-    predictor: PredictorSelector
+    predictor: DeterministicPredictorConfig | cVAEPredictorConfig = dataclasses.field(
+        default_factory =  DeterministicPredictorConfig
+        )
+    
     num_output_covariance_sampling: int = 0
     saved_model_training_vars_from_validation: bool = False
 
@@ -35,6 +41,7 @@ class WriterConfig:
                 "num_output_covariance_sampling cannot be negative."
             )
 
+
     def build(
         self,
         inference_data_loader: Dataloader,
@@ -44,6 +51,11 @@ class WriterConfig:
         output_dir: Path | str,
     ):
 
+        if self.predictor._type != module.config._type.lower():
+            raise RuntimeError(
+                f"The provided selector config matches {self.predictor._type}" \
+                f" selector but the module is {module.config._type.lower()}"
+            )
 
         return Writer(
             config=self,
@@ -114,10 +126,10 @@ class Writer:
         if self.is_distributed:
             self.distributed.barrier()
 
-        self.predictor = self.config.predictor.build_predictor(self.module,                                              
-                                                               self.distributed,
-                                                               self.output_dir,
-                                                               self.config.num_output_covariance_sampling)
+        self.predictor = self.config.predictor.build(self.module,                                              
+                                                    self.distributed,
+                                                    self.output_dir,
+                                                    self.config.num_output_covariance_sampling)
 
         if self.predictor.extract_training_vars:
             self.log_root(logging.INFO, "Running the model to extract training statistics. \n" \
