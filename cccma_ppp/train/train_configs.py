@@ -492,19 +492,19 @@ def _check_IO(metadata: dict,
             "only checks IO in data vs module."
         )
     
-    if model_dims == 1:
+    if model_dims == 2:
 
-        if len(metadata.get("NN_dims")) != 1:
+        if len(metadata.get("NN_dims")) != 2:
   
             if not any(["flattener" in pipeline for pipeline in metadata.get("preprocessors")]):
                 
                 raise RuntimeError(
-                    f"The selected model supports 1D {which} but the data has {metadata.get('NN_dims')} "\
+                    f"The selected model supports 2D {which} but the data has {metadata.get('NN_dims')} "\
                     f"{which} NN dims. add Flattennanremove as a preprocessing step to flatten the data."
                 )
     else:
 
-        if not any(["flattener" in pipeline for pipeline in metadata.get("preprocessors")]):
+        if any(["flattener" in pipeline for pipeline in metadata.get("preprocessors")]):
             raise RuntimeError(
                 f"For {model_dims}D {which} models, do not add Flattennanremove " \
                 "as a preprocessing step as it flattens the data."
