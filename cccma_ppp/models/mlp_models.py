@@ -11,12 +11,15 @@ from cccma_ppp.models.models_abc import (
     modelConfigABC,
     cVAEmodelConfigABC,
     cVAEPredictRequest,
-    InitMethod,
 )
+from cccma_ppp.models.layers import (InitMethod, 
+                                     ActivationName, 
+                                     _validate_dropout)
+
+from cccma_ppp.models.layers.mlp import build_mlp
 from cccma_ppp.core.selectors import deterministicModelSelector, cVAEModelSelector
 from cccma_ppp.core.cVAE_module import cVAEOutput
 from cccma_ppp.core.deterministic_module import deterministicOutput
-from cccma_ppp.generic import RuntimeContext
 
 
 AppendMode = Literal[1, 2, 3]
@@ -62,9 +65,10 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     batch_normalization: bool = False
     dropout_rate: float = None
     init_method: InitMethod = "trunc_normal"
+    activation: ActivationName = 'relu'
 
-    NUM_INPUT_DIMS: ClassVar[int] = 1
-    NUM_OUTPUT_DIMS: ClassVar[int] = 1
+    NUM_INPUT_DIMS: ClassVar[int] = 2
+    NUM_OUTPUT_DIMS: ClassVar[int] = 2
     GENERATOR: ClassVar[int] = False
 
     def __post_init__(self):
@@ -86,12 +90,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
             If conditioning configuration is inconsistent with latent setup.
         """
 
-        if self.condition_embedding_dims is None:
-            self.condemb_to_decoder = False
-
-        if self.dropout_rate is not None:
-            if not self.dropout_rate <= 1 and self.dropout_rate >= 0:
-                raise ValueError("drop out rate must be between 0 and 1")
+        _validate_dropout(self.dropout_rate)
 
         if self.decoder_hidden_dims is None:
             if len(self.encoder_hidden_dims) == 0:
@@ -101,10 +100,17 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
 
         if not self.condition_dependant_latent:
             if self.condition_embedding_dims is not None:
-                if not self.condemb_to_decoder:
+                if not self.condemb_to_decoder_effective:
                     raise ValueError(
                         "condition embedding has to be passed to decoder for cVAE when latent is not condition dependant."
                     )
+                
+    @property
+    def condemb_to_decoder_effective(self) -> bool:
+        return (
+            self.condemb_to_decoder
+            and self.condition_embedding_dims is not None
+        )
 
     def build(
         self,
@@ -157,8 +163,8 @@ class cVAE_MLP(cVAEmodelsABC):
     def __init__(
         self,
         config: cVAE_MLPConfig,
-        input_shape: np.ndarray,
-        output_shape: np.ndarray | None = None,
+        input_shape: np.ndarray | tuple,
+        output_shape: np.ndarray | tuple | None = None,
         added_features_dim: int = None,
     ):
         """
@@ -191,7 +197,7 @@ class cVAE_MLP(cVAEmodelsABC):
         self.condition_embedding_dims = config.condition_embedding_dims
         self.condition_embedding_size = config.condition_embedding_size
         self.condition_dependant_latent = config.condition_dependant_latent
-        self.condemb_to_decoder = config.condemb_to_decoder
+        self.condemb_to_decoder = config.condemb_to_decoder_effective
         self.init_method = config.init_method
 
         self.batch_normalization = config.batch_normalization
@@ -201,37 +207,18 @@ class cVAE_MLP(cVAEmodelsABC):
             config, "condition_dependant_flow", False
         )
 
+        if output_shape is None:
+            output_shape = input_shape.copy()
+
         if not len(output_shape) == self.config.NUM_OUTPUT_DIMS:
             raise RuntimeError(
                 f"MLP models should create {self.config.NUM_OUTPUT_DIMS}D outputs"
             )
-        if output_shape is None:
-            output_shape = input_shape.copy()
 
-        if self.config.checkpoint_config is not None:
-            if input_shape != self.config.checkpoint_config.checkpoint_input_shape:
-                raise RuntimeError(
-                    f"the requested input shape ({input_shape}) does not match the loaded model : {self.config.checkpoint_config.checkpoint_input_shape}"
-                )
-            if output_shape != self.config.checkpoint_config.checkpoint_output_shape:
-                raise RuntimeError(
-                    f"the requested output shape ({output_shape}) does not match the loaded model : {self.config.checkpoint_config.checkpoint_output_shape}"
-                )
-
-            if (
-                RuntimeContext.INPUT_VAR_METADATA
-                != self.config.checkpoint_config.checkpoint_input_var_metadata
-            ):
-                raise RuntimeError(
-                    "the loaded module was not trained for the consistent input variables or preprocessing steps"
-                )
-            if (
-                RuntimeContext.TARGET_VAR_METADATA
-                != self.config.checkpoint_config.checkpoint_output_var_metadata
-            ):
-                raise RuntimeError(
-                    "the loaded module was not trained for the consistent output variables or preprocessing steps"
-                )
+        self._validate_checkpoint_compatibility(
+            input_shape=input_shape,
+            output_shape=output_shape,
+        )
 
         self.input_shape = np.prod(input_shape)
         self.output_shape = np.prod(output_shape)
@@ -256,19 +243,15 @@ class cVAE_MLP(cVAEmodelsABC):
                 self.input_shape + self.added_features_dim,
                 *self.condition_embedding_dims,
             ]
-            layers = []
-            for i in range(len(condition_embedding_dims) - 1):
-                layers.append(
-                    nn.Linear(
-                        condition_embedding_dims[i], condition_embedding_dims[i + 1]
-                    )
-                )
-                layers.append(nn.ReLU())
-                if self.dropout_rate is not None:
-                    layers.append(nn.Dropout(self.dropout_rate))
-                if self.batch_normalization:
-                    layers.append(nn.BatchNorm1d(condition_embedding_dims[i + 1]))
 
+            self.embedding = build_mlp(
+                    condition_embedding_dims,
+                    activation=self.config.activation,
+                    dropout_rate=self.dropout_rate,
+                    batch_normalization=self.batch_normalization,
+                    activate_final=True,
+                )
+                            
             if self.condition_dependant_latent and not self.condition_dependant_flow:
                 self.condition_mu = nn.Linear(
                     condition_embedding_dims[-1], self.condition_embedding_size
@@ -277,13 +260,11 @@ class cVAE_MLP(cVAEmodelsABC):
                     condition_embedding_dims[-1], self.condition_embedding_size
                 )
             else:
-                layers.append(
+                self.embedding.append(
                     nn.Linear(
                         condition_embedding_dims[-1], self.condition_embedding_size
                     )
                 )
-
-            self.embedding = nn.Sequential(*layers)
 
             self.add_condition_size = self.condition_embedding_size
 
@@ -292,29 +273,24 @@ class cVAE_MLP(cVAEmodelsABC):
             *self.encoder_hidden_dims,
         ]
 
-        layers = []
-        for i in range(len(encoder_dims) - 1):
-            layers.append(nn.Linear(encoder_dims[i], encoder_dims[i + 1]))
-            layers.append(nn.ReLU())
-            if self.dropout_rate is not None:
-                layers.append(nn.Dropout(self.dropout_rate))
-            if self.batch_normalization:
-                layers.append(nn.BatchNorm1d(encoder_dims[i + 1]))
-        self.encoder = nn.Sequential(*layers)
+        self.encoder = build_mlp(
+            encoder_dims,
+            activation=self.config.activation,
+            dropout_rate=self.dropout_rate,
+            batch_normalization=self.batch_normalization,
+            activate_final=True,
+        )
 
         self.mu = nn.Linear(encoder_dims[-1], self.latent_size)
         self.log_var = nn.Linear(encoder_dims[-1], self.latent_size)
 
-        layers = []
-        for i in range(len(decoder_dims) - 1):
-            layers.append(nn.Linear(decoder_dims[i], decoder_dims[i + 1]))
-            if i <= (len(decoder_dims) - 3):
-                layers.append(nn.ReLU())
-                if self.dropout_rate is not None:
-                    layers.append(nn.Dropout(self.dropout_rate))
-                if self.batch_normalization:
-                    layers.append(nn.BatchNorm1d(decoder_dims[i + 1]))
-        self.decoder = nn.Sequential(*layers)
+        self.decoder = build_mlp(
+            decoder_dims,
+            activation=self.config.activation,
+            dropout_rate=self.dropout_rate,
+            batch_normalization=self.batch_normalization,
+            activate_final=False,
+        )
 
         if self.config.checkpoint_config is not None:
             self._load_state_dict(self.config.checkpoint_config)
@@ -695,9 +671,10 @@ class AutoencoderConfig(modelConfigABC):
     dropout_rate: float = None
     append_mode: AppendMode = 1
     init_method: InitMethod = "trunc_normal"
+    activation: ActivationName = 'relu'
 
-    NUM_INPUT_DIMS: ClassVar[int] = 1
-    NUM_OUTPUT_DIMS: ClassVar[int] = 1
+    NUM_INPUT_DIMS: ClassVar[int] = 2
+    NUM_OUTPUT_DIMS: ClassVar[int] = 2
     GENERATOR: ClassVar[int] = False
 
     def __post_init__(self):
@@ -710,6 +687,8 @@ class AutoencoderConfig(modelConfigABC):
         -------
         None
         """
+
+        _validate_dropout(self.dropout_rate)
 
         if self.decoder_hidden_dims is None:
             if len(self.encoder_hidden_dims) == 1:
@@ -771,8 +750,8 @@ class Autoencoder(deterministicmodelsABC):
     def __init__(
         self,
         config: AutoencoderConfig,
-        input_shape: np.ndarray,
-        output_shape: np.ndarray | None = None,
+        input_shape: np.ndarray | tuple,
+        output_shape: np.ndarray | tuple | None = None,
         added_features_dim: int = None,
     ):
         """
@@ -806,38 +785,18 @@ class Autoencoder(deterministicmodelsABC):
         self.encoder_hidden_dims = config.encoder_hidden_dims
         self.decoder_hidden_dims = config.decoder_hidden_dims
 
+        if output_shape is None:
+            output_shape = input_shape.copy()
+
         if not len(output_shape) == self.config.NUM_OUTPUT_DIMS:
             raise RuntimeError(
                 f"MLP models should create {self.config.NUM_OUTPUT_DIMS}D outputs"
             )
 
-        if output_shape is None:
-            output_shape = input_shape.copy()
-
-        if self.config.checkpoint_config is not None:
-            if input_shape != self.config.checkpoint_config.checkpoint_input_shape:
-                raise RuntimeError(
-                    f"the requested input shape ({input_shape}) does not match the loaded model : {self.config.checkpoint_config.checkpoint_input_shape}"
-                )
-            if output_shape != self.config.checkpoint_config.checkpoint_output_shape:
-                raise RuntimeError(
-                    f"the requested output shape ({output_shape}) does not match the loaded model : {self.config.checkpoint_config.checkpoint_output_shape}"
-                )
-
-            if (
-                RuntimeContext.INPUT_VAR_METADATA
-                != self.config.checkpoint_config.checkpoint_input_var_metadata
-            ):
-                raise RuntimeError(
-                    "the loaded module was not trained for the consistent input variables or preprocessing steps"
-                )
-            if (
-                RuntimeContext.TARGET_VAR_METADATA
-                != self.config.checkpoint_config.checkpoint_output_var_metadata
-            ):
-                raise RuntimeError(
-                    "the loaded module was not trained for the consistent output variables or preprocessing steps"
-                )
+        self._validate_checkpoint_compatibility(
+            input_shape=input_shape,
+            output_shape=output_shape,
+        )
 
         self.input_shape = np.prod(input_shape)
         self.output_shape = np.prod(output_shape)
@@ -867,28 +826,21 @@ class Autoencoder(deterministicmodelsABC):
         else:
             encoder_dims = [self.input_shape, *self.encoder_hidden_dims]
 
-        layers = []
-        for i in range(len(encoder_dims) - 1):
-            layers.append(nn.Linear(encoder_dims[i], encoder_dims[i + 1]))
-            layers.append(nn.ReLU())
-            if self.dropout_rate is not None:
-                layers.append(nn.Dropout(self.dropout_rate))
-            if self.batch_normalization:
-                layers.append(nn.BatchNorm1d(encoder_dims[i + 1]))
+        self.encoder = build_mlp(
+            encoder_dims,
+            activation=self.config.activation,
+            dropout_rate=self.dropout_rate,
+            batch_normalization=self.batch_normalization,
+            activate_final=True,
+        )
 
-        self.encoder = nn.Sequential(*layers)
-
-        layers = []
-        for i in range(len(decoder_dims) - 1):
-            layers.append(nn.Linear(decoder_dims[i], decoder_dims[i + 1]))
-            if i <= (len(decoder_dims) - 3):
-                layers.append(nn.ReLU())
-                if self.dropout_rate is not None:
-                    layers.append(nn.Dropout(self.dropout_rate))
-                if self.batch_normalization:
-                    layers.append(nn.BatchNorm1d(decoder_dims[i + 1]))
-
-        self.decoder = nn.Sequential(*layers)
+        self.decoder = build_mlp(
+            decoder_dims,
+            activation=self.config.activation,
+            dropout_rate=self.dropout_rate,
+            batch_normalization=self.batch_normalization,
+            activate_final=False,
+        )
 
         if self.config.checkpoint_config is not None:
             self._load_state_dict(self.config.checkpoint_config)
