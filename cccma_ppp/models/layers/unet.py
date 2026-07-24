@@ -9,9 +9,7 @@ from cccma_ppp.models.layers import (MaskPoolingMode,
                                     PaddingMode)
 
 
-from cccma_ppp.models.layers.utils import (align_to_skip,
-                                           _resize_mask,
-                                           _merge_masks)
+from cccma_ppp.models.layers.utils import align_to_skip
 
 from cccma_ppp.models.layers.conv import (ConvBlockConfig,
                                           ConvBlock,
@@ -28,26 +26,39 @@ def build_conv_block(
     in_channels: int,
     out_channels: int,
     config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig,
+    *,
+    latent_size: int = None,
+    inject_noise: bool = False
+
 ) -> nn.Module:
     if isinstance(config, ConvBlockConfig):
         return ConvBlock(
             in_channels,
             out_channels,
-            config,
+            config.setup_generative(
+                latent_size=latent_size,
+                inject_noise=inject_noise
+            ),
         )
 
     if isinstance(config, PartialConvBlockConfig):
         return PartialConvBlock(
             in_channels,
             out_channels,
-            config,
+            config.setup_generative(
+                latent_size=latent_size,
+                inject_noise=inject_noise
+            ),
         )
 
     if isinstance(config, ConvNeXtBlockConfig):
         return ConvNeXtBlock(
             in_channels,
             out_channels,
-            config,
+            config.setup_generative(
+                latent_size=latent_size,
+                inject_noise=inject_noise
+            ),
         )
 
     raise TypeError(
@@ -142,6 +153,8 @@ class UpBlock(nn.Module):
         self.skip_alignment_mode = skip_alignment_mode
         self.padding_mode = padding_mode
 
+        block_config = _resolve_UpBlock_config(block_config)
+
         if upsampling_method == "transpose_conv":
             self.upsample = nn.ConvTranspose2d(
                 input_channels,
@@ -188,23 +201,23 @@ class UpBlock(nn.Module):
                           self.skip_alignment_mode,
                           self.padding_mode)
 
-        input_mask = _resize_mask(input.mask, target_size)
+        # input_mask = _resize_mask(input.mask, target_size)
 
 
         merged_tensor = torch.cat([skip.tensor, x], dim=1)
-        merged_mask = _merge_masks(
-            input_mask,
-            skip.mask,
-            out_channels=self.out_channels,
-            skip_channels=self.skip_channels,
-            spatial_size=target_size,
-            reference=merged_tensor,
-        )
+        # merged_mask = _merge_masks(
+        #     input_mask,
+        #     skip.mask,
+        #     out_channels=self.out_channels,
+        #     skip_channels=self.skip_channels,
+        #     spatial_size=target_size,
+        #     reference=merged_tensor,
+        # )
 
         return self._block(
             TensorMask(
                 tensor=merged_tensor,
-                mask=merged_mask,
+                mask=None, #merged_mask
             )
         )
 
@@ -256,3 +269,24 @@ class UNetOutput(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.layers(x)
 
+
+
+def _resolve_UpBlock_config(block_config: ConvBlockConfig | ConvNeXtBlockConfig | PartialConvBlockConfig):
+
+    if isinstance(block_config, ConvBlockConfig ):
+        return block_config
+
+    elif isinstance(block_config, ConvNeXtBlockConfig ):
+        block_config.use_partial_conv = False
+        return block_config
+
+    elif isinstance(block_config, PartialConvBlockConfig ):
+        return ConvBlockConfig(name = "standard_conv",
+                                        num_convolutions=block_config.num_convolutions,
+                                        kernel_size=block_config.kernel_size,
+                                        normalization=block_config.normalization,
+                                        activation=block_config.activation,
+                                        dropout_rate=block_config.dropout_rate,
+                                        bias=block_config.bias,
+                                        group_norm_groups=block_config.group_norm_groups
+                                        )

@@ -18,4 +18,6 @@ from cccma_ppp.models.layers.generic import (InitMethod,
 from cccma_ppp.models.layers.utils import (_same_padding,
                                         _resize_mask,
                                         _resize_tensor,
-                                        _broadcast_mask)
+                                        _broadcast_mask,
+                                        _sample,
+                                        _get_normal)

@@ -1,38 +1,43 @@
 import dataclasses
 from dataclasses import field
 from typing import ClassVar
+import numpy as np
 import math
-
 import numpy as np
 import torch
 import torch.nn as nn
 
-from cccma_ppp.core.deterministic_module import deterministicOutput
+
 from cccma_ppp.core.selectors import deterministicModelSelector
+from cccma_ppp.core.deterministic_module import deterministicOutput
+
 from cccma_ppp.models.models_abc import (
     deterministicmodelsABC,
     modelConfigABC,
 )
 
-from cccma_ppp.models.layers.conv import (TensorMask,
-                                          ConvBlockConfig,
-                                          PartialConvBlockConfig,
-                                          ConvNeXtBlockConfig)
+from cccma_ppp.models.layers import ( _broadcast_mask,
+                                    _resize_tensor,
+                                    InitMethod,
+                                    UpsamplingMethod,
+                                    MaskPoolingMode,
+                                    OutputActivation,
+                                    AlignmentMode,
+                                    PaddingMode)
 
 from cccma_ppp.models.layers.unet import (build_conv_block,
                                           UpBlock,
                                           DownBlock,
                                           UNetOutput)
 
-from cccma_ppp.models.layers import (InitMethod,
-                                     UpsamplingMethod,
-                                    MaskPoolingMode,
-                                    OutputActivation,
-                                    AlignmentMode,
-                                    PaddingMode,
-                                    _broadcast_mask,
-                                    _resize_tensor)
 
+from cccma_ppp.models.layers.conv import (ConvBlockConfig,
+                                          PartialConvBlockConfig,
+                                          ConvNeXtBlockConfig,
+                                          TensorMask)
+
+
+from cccma_ppp.models.unet_models.utils import _unet_config_checks
 
 
 @deterministicModelSelector.register("unet")
@@ -323,38 +328,3 @@ class UNet(deterministicmodelsABC):
 
 
 
-
-
-def _unet_config_checks(config : UNetConfig):
-
-        if len(config.channels) < 1:
-            raise ValueError(
-                "channels must contain at least one encoder width."
-            )
-
-        if any(
-            not isinstance(channel, int) or channel <= 0
-            for channel in config.channels
-        ):
-            raise ValueError(
-                "All channel sizes must be positive integers."
-            )
-
-        if (
-            config.bottleneck_dim is not None
-            and config.bottleneck_dim <= 0
-        ):
-            raise ValueError(
-                "bottleneck_dim must be positive."
-            )
-
-        if not 0 <= config.mask_fraction_threshold <= 1:
-            raise ValueError(
-                "mask_fraction_threshold must be between 0 and 1."
-            )
-
-        if config.output_hidden_channels is not None:
-            if config.output_hidden_channels <= 0:
-                raise ValueError(
-                    "output_hidden_channels must be positive."
-                )

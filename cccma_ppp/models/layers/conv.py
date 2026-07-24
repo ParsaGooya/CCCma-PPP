@@ -1,8 +1,7 @@
 import dataclasses
-from dataclasses import field
-from typing import ClassVar, Literal, Protocol
+from typing import Literal, final
+import abc
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -31,9 +30,26 @@ class TensorMask:
 
 
 
+class ConvBlockConfigABC(abc.ABC):
+
+    def __init__(self):
+        self.latent_size: int | None = None
+        self.inject_noise: bool = False
+    
+    @final
+    def setup_generative(self, 
+                         latent_size: int | None = None,
+                         inject_noise: bool = False):
+        
+        self.latent_size = latent_size
+        self.inject_noise = inject_noise
+
+        return self
+
+
 
 @dataclasses.dataclass
-class ConvBlockConfig:
+class ConvBlockConfig(ConvBlockConfigABC):
     """Configuration for a conventional repeated-convolution block."""
 
     name: Literal["standard_conv"] 
@@ -46,6 +62,8 @@ class ConvBlockConfig:
     group_norm_groups: int = 8
 
     def __post_init__(self) -> None:
+        super().__init__()
+
         if self.num_convolutions < 1:
             raise ValueError("num_convolutions must be at least 1.")
         _same_padding(self.kernel_size)
@@ -53,7 +71,7 @@ class ConvBlockConfig:
 
 
 @dataclasses.dataclass
-class PartialConvBlockConfig:
+class PartialConvBlockConfig(ConvBlockConfigABC):
     """Configuration for a repeated partial-convolution block."""
 
     name: Literal["partial_conv"] 
@@ -66,6 +84,8 @@ class PartialConvBlockConfig:
     group_norm_groups: int = 8
 
     def __post_init__(self) -> None:
+        super().__init__()
+
         if self.num_convolutions < 1:
             raise ValueError("num_convolutions must be at least 1.")
         _same_padding(self.kernel_size)
@@ -73,7 +93,7 @@ class PartialConvBlockConfig:
 
 
 @dataclasses.dataclass
-class ConvNeXtBlockConfig:
+class ConvNeXtBlockConfig(ConvBlockConfigABC):
     """Configuration for a repeated ConvNeXt-style residual block."""
 
     name: Literal["convnext"] 
@@ -86,6 +106,8 @@ class ConvNeXtBlockConfig:
     use_partial_conv: bool = True
 
     def __post_init__(self) -> None:
+        super().__init__()
+
         if self.num_blocks < 1:
             raise ValueError("num_blocks must be at least 1.")
         if self.expansion_ratio < 1:
