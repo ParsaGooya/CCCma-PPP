@@ -541,7 +541,7 @@ class TrainDataset(DatasetABC):
         datadict = dict(
             input=torch.as_tensor(input_array, dtype=torch.float32),
             target=torch.as_tensor(target_array, dtype=torch.float32),
-            added_features=torch.as_tensor(time_features_array, dtype=torch.float32)
+            added_features=torch.tensor(time_features_array, dtype=torch.float32)
             if time_features_array is not None
             else None,
         )
