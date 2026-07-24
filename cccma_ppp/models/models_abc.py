@@ -11,7 +11,8 @@ import dataclasses
 from cccma_ppp.core.core_abc import OutputABC
 from cccma_ppp.generic import RuntimeContext
 from cccma_ppp.models.layers import (ActivationName, 
-                                     InitMethod)
+                                     InitMethod,
+                                     _sample)
 
 
 
@@ -200,6 +201,8 @@ class cVAEmodelConfigABC(modelConfigABC):
     latent_size: int
     condition_dependant_latent: bool
     condition_embedding_size: int
+    condition_embedding_dims: list 
+    condemb_to_decoder: bool 
 
     def _resolve_flow_settings(self, condition_dependant_flow: bool = False):
         """
@@ -494,6 +497,29 @@ class cVAEmodelsABC(modelABC):
         """
 
         pass
+    
+    @final
+    def _sample(self, mu, log_var, sample_size=1, std=1):
+        """
+        Sample latent variables from Gaussian distribution.
+
+        Parameters
+        ----------
+        mu : torch.Tensor
+        log_var : torch.Tensor
+        sample_size : int, optional
+        std : float, optional
+
+        Returns
+        -------
+        torch.Tensor
+            Sampled latent variables.
+        """
+
+        var = torch.exp(log_var) + 1e-4
+        return _sample(mu, var, sample_size, std)
+  
+
 
 
 def weights_init(m, method: InitMethod = "xavier"):

@@ -134,7 +134,7 @@ def _broadcast_mask(
 
 
 def _merge_masks(
-    decoder_mask: torch.Tensor | None,
+    input_mask: torch.Tensor | None,
     skip_mask: torch.Tensor | None,
     *,
     out_channels: int,
@@ -144,14 +144,14 @@ def _merge_masks(
 ) -> torch.Tensor | None:
     """Create the mask matching a channel-wise concatenated feature tensor."""
 
-    if decoder_mask is None and skip_mask is None:
+    if input_mask is None and skip_mask is None:
         return None
 
-    decoder_mask = _resize_mask(decoder_mask, spatial_size)
+    input_mask = _resize_mask(input_mask, spatial_size)
     skip_mask = _resize_mask(skip_mask, spatial_size)
 
-    if decoder_mask is None:
-        decoder_mask = torch.ones(
+    if input_mask is None:
+        input_mask = torch.ones(
             reference.shape[0],
             out_channels,
             *spatial_size,
@@ -168,7 +168,7 @@ def _merge_masks(
             dtype=reference.dtype,
         )
 
-    return torch.cat([skip_mask, decoder_mask], dim=1)
+    return torch.cat([skip_mask, input_mask], dim=1)
 
 
 
@@ -190,3 +190,44 @@ def _resize_tensor(
         )
 
     return F.interpolate(x, size=size, mode=mode)
+
+
+def _sample(mu, var, sample_size=1, std=1):
+    """
+    Sample latent variables from Gaussian distribution.
+
+    Parameters
+    ----------
+    mu : torch.Tensor
+    var : torch.Tensor
+    sample_size : int, optional
+    std : float, optional
+
+    Returns
+    -------
+    torch.Tensor
+        Sampled latent variables.
+    """
+
+    out = mu + torch.sqrt(var) * _get_normal(var, std).sample((sample_size,))
+
+    return out
+
+def _get_normal(ref_tensor, std=1):
+    """
+    Create standard normal distribution.
+
+    Parameters
+    ----------
+    ref_tensor : torch.Tensor
+    std : float, optional
+
+    Returns
+    -------
+    torch.distributions.Normal
+    """
+
+    return torch.distributions.Normal(
+        torch.zeros_like(ref_tensor), torch.ones_like(ref_tensor) * std
+    )
+
