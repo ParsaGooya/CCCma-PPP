@@ -9,8 +9,12 @@ from pathlib import Path
 import dataclasses
 
 from cccma_ppp.core.core_abc import OutputABC
+from cccma_ppp.generic import RuntimeContext
+from cccma_ppp.models.layers import (ActivationName, 
+                                     InitMethod,
+                                     _sample)
 
-InitMethod = Literal["trunc_normal", "xavier"]
+
 
 
 @dataclasses.dataclass
@@ -89,7 +93,7 @@ class modelConfigABC(abc.ABC):
     """
     Abstract base class for model configuration.
     """
-
+    activation: ActivationName
     NUM_INPUT_DIMS: ClassVar[int | None]
     NUM_OUTPUT_DIMS: ClassVar[int | None]
     GENERATOR: ClassVar[bool]
@@ -122,6 +126,54 @@ class modelConfigABC(abc.ABC):
 
         self.checkpoint_config = checkpoint_config
 
+    @final
+    def _validate_checkpoint_compatibility(
+        self,
+        *,
+        input_shape: np.ndarray | tuple,
+        output_shape: np.ndarray | tuple,
+    ) -> None:
+        checkpoint = self.config.checkpoint_config
+
+        if checkpoint is None:
+            return
+
+        if not np.array_equal(
+            input_shape,
+            checkpoint.checkpoint_input_shape,
+        ):
+            raise RuntimeError(
+                f"Requested input shape {input_shape} does not match "
+                f"checkpoint input shape {checkpoint.checkpoint_input_shape}."
+            )
+
+        if not np.array_equal(
+            output_shape,
+            checkpoint.checkpoint_output_shape,
+        ):
+            raise RuntimeError(
+                f"Requested output shape {output_shape} does not match "
+                f"checkpoint output shape {checkpoint.checkpoint_output_shape}."
+            )
+
+        if (
+            RuntimeContext.INPUT_VAR_METADATA
+            != checkpoint.checkpoint_input_var_metadata
+        ):
+            raise RuntimeError(
+                "Checkpoint input metadata is incompatible with the "
+                "current input variables or preprocessing pipeline."
+            )
+
+        if (
+            RuntimeContext.TARGET_VAR_METADATA
+            != checkpoint.checkpoint_output_var_metadata
+        ):
+            raise RuntimeError(
+                "Checkpoint target metadata is incompatible with the "
+                "current target variables or preprocessing pipeline."
+        )
+
     @abc.abstractmethod
     def build(
         self,
@@ -149,6 +201,8 @@ class cVAEmodelConfigABC(modelConfigABC):
     latent_size: int
     condition_dependant_latent: bool
     condition_embedding_size: int
+    condition_embedding_dims: list 
+    condemb_to_decoder: bool 
 
     def _resolve_flow_settings(self, condition_dependant_flow: bool = False):
         """
@@ -186,6 +240,54 @@ class modelABC(nn.Module, abc.ABC):
     """
     Abstract base class for all models.
     """
+
+    @final
+    def _validate_checkpoint_compatibility(
+        self,
+        *,
+        input_shape: np.ndarray,
+        output_shape: np.ndarray,
+    ) -> None:
+        checkpoint = self.config.checkpoint_config
+
+        if checkpoint is None:
+            return
+
+        if not np.array_equal(
+            input_shape,
+            checkpoint.checkpoint_input_shape,
+        ):
+            raise RuntimeError(
+                f"Requested input shape {input_shape} does not match "
+                f"checkpoint input shape {checkpoint.checkpoint_input_shape}."
+            )
+
+        if not np.array_equal(
+            output_shape,
+            checkpoint.checkpoint_output_shape,
+        ):
+            raise RuntimeError(
+                f"Requested output shape {output_shape} does not match "
+                f"checkpoint output shape {checkpoint.checkpoint_output_shape}."
+            )
+
+        if (
+            RuntimeContext.INPUT_VAR_METADATA
+            != checkpoint.checkpoint_input_var_metadata
+        ):
+            raise RuntimeError(
+                "Checkpoint input metadata is incompatible with the "
+                "current input variables or preprocessing pipeline."
+            )
+
+        if (
+            RuntimeContext.TARGET_VAR_METADATA
+            != checkpoint.checkpoint_output_var_metadata
+        ):
+            raise RuntimeError(
+                "Checkpoint target metadata is incompatible with the "
+                "current target variables or preprocessing pipeline."
+            )
 
     @abc.abstractmethod
     def forward(self, x):
@@ -307,7 +409,7 @@ class cVAEPredictRequest:
 
     Parameters
     ----------
-    condition : torch.Tensor
+    condition : torch.Tensor 
         Conditioning input.
     added_features : torch.Tensor or None
         Additional features.
@@ -318,7 +420,6 @@ class cVAEPredictRequest:
     sample_size : int, optional
         Number of samples.
     """
-
     condition: torch.Tensor
     condition_mask: torch.Tensor | None = None
     added_features: torch.Tensor | None = None
@@ -326,7 +427,6 @@ class cVAEPredictRequest:
     latent_samples: torch.Tensor | None = None
     nstds: int = 1
     sample_size: int = 1
-
 
 class cVAEmodelsABC(modelABC):
     """
@@ -359,6 +459,7 @@ class cVAEmodelsABC(modelABC):
         """
 
         pass
+
 
     @abc.abstractmethod
     def _recognition(self) -> tuple[torch.Tensor, ...]:
@@ -396,6 +497,29 @@ class cVAEmodelsABC(modelABC):
         """
 
         pass
+    
+    @final
+    def _sample(self, mu, log_var, sample_size=1, std=1):
+        """
+        Sample latent variables from Gaussian distribution.
+
+        Parameters
+        ----------
+        mu : torch.Tensor
+        log_var : torch.Tensor
+        sample_size : int, optional
+        std : float, optional
+
+        Returns
+        -------
+        torch.Tensor
+            Sampled latent variables.
+        """
+
+        var = torch.exp(log_var) + 1e-4
+        return _sample(mu, var, sample_size, std)
+  
+
 
 
 def weights_init(m, method: InitMethod = "xavier"):

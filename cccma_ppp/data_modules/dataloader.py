@@ -9,9 +9,8 @@ from collections.abc import Callable, Iterator
 from itertools import islice
 
 
-from cccma_ppp.data_modules.dataset.config_abc import DatasetConfigABC
-from cccma_ppp.data_modules.dataset.dataset_abc import AddedTimeFeatures
-
+from cccma_ppp.data_modules.dataset import (DatasetConfigABC, 
+                                            AddedTimeFeatures)
 
 class BatchDataABC(abc.ABC):
     """
@@ -68,12 +67,14 @@ class DataloaderConfigABC(abc.ABC):
     dataset_config: DatasetConfigABC
     pin_memory: bool
     time_features: AddedTimeFeatures | list[str] | None
-    prefetch_factor: int | None
+    prefetch_factor: int | None 
+    return_spatial_mask: bool
+    reduce_spatial_mask: bool
 
     def __init__(self):
         self._setup = False
         self.pin_memory = False
-
+        
         if self.num_data_workers == 0:
             self.prefetch_factor = None
 
@@ -89,7 +90,7 @@ class DataloaderConfigABC(abc.ABC):
         Note
         -------
         preprocessors must be fit at this stage.
-
+        
         """
         pass
 
@@ -127,8 +128,7 @@ class Dataloader:
     rank: int = 0
     world_size: int = 1
     shuffle: bool | None = None
-    return_spatial_mask: bool = False
-    reduce_spatial_mask: bool = False
+
 
     def __post_init__(self):
         """
@@ -152,13 +152,14 @@ class Dataloader:
             sampler=self.sampler,
             collate_fn=partial(
                 self.collate_fn,
-                return_spatial_mask=self.return_spatial_mask,
-                reduce_spatial_mask=self.reduce_spatial_mask,
+                return_spatial_mask=self.config.return_spatial_mask,
+                reduce_spatial_mask=self.config.reduce_spatial_mask,
             ),
             num_workers=num_workers,
             prefetch_factor=self.config.prefetch_factor,
-            persistent_workers=num_workers > 0,
+            persistent_workers= num_workers > 0,
             pin_memory=self.config.pin_memory,
+            timeout=60 if num_workers > 0 else 0,
         )
 
     @property
