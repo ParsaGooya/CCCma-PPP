@@ -133,7 +133,6 @@ def test_lead_months_requires_list_or_end():
         lead_months_config()
 
 
-@pytest.mark.pruned
 def test_lead_months_explicit_list():
     value = lead_months_config(list_months=[1, 3, 5])
 
@@ -152,7 +151,6 @@ def test_lead_months_range():
     )
 
 
-@pytest.mark.pruned
 def test_lead_months_single_value_range():
     value = lead_months_config(
         start=3,
@@ -165,7 +163,6 @@ def test_lead_months_single_value_range():
     )
 
 
-@pytest.mark.pruned
 def test_lead_months_empty_list_uses_range():
     value = lead_months_config(
         list_months=[],
@@ -179,7 +176,6 @@ def test_lead_months_empty_list_uses_range():
     )
 
 
-@pytest.mark.pruned
 # Remove test due to no coverage
 def test_abstract_class_cannot_be_instantiated():
     with pytest.raises(TypeError):
@@ -228,7 +224,6 @@ def test_valid_condition_methods_with_explicit_condition(
     assert config.effective_condition is condition
 
 
-@pytest.mark.pruned
 def test_valid_same_member_condition_method():
     condition = make_condition()
 
@@ -300,7 +295,6 @@ def test_invalid_time_features(time_features):
         )
 
 
-@pytest.mark.pruned
 def test_default_lead_months():
     config = ConcreteConfig(
         model=make_data(),
@@ -313,7 +307,6 @@ def test_default_lead_months():
     )
 
 
-@pytest.mark.pruned
 def test_lead_month_config_is_resolved():
     config = ConcreteConfig(
         model=make_data(),
@@ -329,7 +322,6 @@ def test_lead_month_config_is_resolved():
     )
 
 
-@pytest.mark.pruned
 def test_custom_lead_month_builder_is_resolved():
     builder = LeadMonthsBuilder([1, 3])
 
@@ -342,7 +334,6 @@ def test_custom_lead_month_builder_is_resolved():
     assert builder.calls == 1
 
 
-@pytest.mark.pruned
 def test_existing_array_lead_months_is_preserved():
     values = np.asarray([1, 2])
 
@@ -366,7 +357,6 @@ def test_maximum_lead_month_validation():
         )
 
 
-@pytest.mark.pruned
 def test_maximum_available_lead_month_is_accepted():
     config = ConcreteConfig(
         model=make_data(),
@@ -389,7 +379,6 @@ def test_condition_years_must_cover_model_years():
         )
 
 
-@pytest.mark.pruned
 def test_condition_may_cover_additional_years():
     condition = make_condition(years=(1999, 2000, 2001, 2002))
 
@@ -402,7 +391,6 @@ def test_condition_may_cover_additional_years():
     assert config.effective_condition is condition
 
 
-@pytest.mark.pruned
 def test_condition_leads_must_cover_model_leads():
     with pytest.raises(
         ValueError,
@@ -415,7 +403,6 @@ def test_condition_leads_must_cover_model_leads():
         )
 
 
-@pytest.mark.pruned
 def test_condition_may_cover_additional_leads():
     condition = make_condition(leads=(1, 2, 3, 4))
 
@@ -454,7 +441,6 @@ def test_same_member_requires_ensemble_coordinates(
         )
 
 
-@pytest.mark.pruned
 def test_same_member_requires_equal_ensembles():
     with pytest.raises(
         ValueError,
@@ -467,7 +453,6 @@ def test_same_member_requires_equal_ensembles():
         )
 
 
-@pytest.mark.pruned
 def test_same_member_accepts_matching_ensembles():
     config = ConcreteConfig(
         model=make_data(ensembles=("r1", "r2")),
@@ -478,7 +463,6 @@ def test_same_member_accepts_matching_ensembles():
     assert config.effective_condition is config.condition
 
 
-@pytest.mark.pruned
 def test_static_condition_skips_year_and_lead_validation():
     condition = make_condition(
         years=(1990,),
@@ -497,7 +481,6 @@ def test_static_condition_skips_year_and_lead_validation():
     assert config.effective_condition is condition
 
 
-@pytest.mark.pruned
 def test_matching_condition_passes_validation():
     condition = make_condition()
 
@@ -510,7 +493,6 @@ def test_matching_condition_passes_validation():
     assert config.effective_condition is condition
 
 
-@pytest.mark.pruned
 def test_same_files_skip_model_condition_comparison():
     model = make_data()
 
@@ -532,7 +514,6 @@ def test_same_files_skip_model_condition_comparison():
     assert config.effective_condition is condition
 
 
-@pytest.mark.pruned
 def test_check_model_vs_condition_skips_without_condition():
     config = bare_config(
         model=make_data(),
@@ -543,7 +524,6 @@ def test_check_model_vs_condition_skips_without_condition():
     assert config._check_model_vs_condition() is None
 
 
-@pytest.mark.pruned
 def test_check_model_vs_condition_skips_without_model():
     config = bare_config(
         model=None,
@@ -646,7 +626,6 @@ def test_different_condition_source_is_not_model_condition(
     assert config._using_model_data_as_condition is False
 
 
-@pytest.mark.pruned
 def test_identical_condition_source_is_model_condition():
     model = make_data()
     condition = make_data()
@@ -660,7 +639,6 @@ def test_identical_condition_source_is_model_condition():
     assert config._using_model_data_as_condition is True
 
 
-@pytest.mark.pruned
 def test_resolve_explicit_condition():
     condition = make_condition()
 
@@ -681,7 +659,6 @@ def test_resolve_explicit_condition():
     resolver.assert_not_called()
 
 
-@pytest.mark.pruned
 def test_resolve_no_effective_condition():
     config = bare_config(
         model=make_data(),
@@ -771,7 +748,6 @@ def test_resolve_model_as_condition():
     resolver.assert_called_once_with()
 
 
-@pytest.mark.pruned
 def test_observation_requires_condition_spatial_coordinate(
     monkeypatch,
 ):
@@ -796,7 +772,6 @@ def test_observation_requires_condition_spatial_coordinate(
         )
 
 
-@pytest.mark.pruned
 def test_observation_requires_matching_spatial_coordinate(
     monkeypatch,
 ):
@@ -823,7 +798,6 @@ def test_observation_requires_matching_spatial_coordinate(
         )
 
 
-@pytest.mark.pruned
 def test_observation_accepts_matching_spatial_coordinates(
     monkeypatch,
 ):
@@ -857,7 +831,6 @@ def test_observation_accepts_matching_spatial_coordinates(
     assert config.effective_condition is condition
 
 
-@pytest.mark.pruned
 def test_observation_ignores_non_nn_coordinates(
     monkeypatch,
 ):
@@ -883,7 +856,6 @@ def test_observation_ignores_non_nn_coordinates(
     assert config.effective_condition is condition
 
 
-@pytest.mark.pruned
 def test_observation_validation_skipped_without_observation(
     monkeypatch,
 ):
@@ -909,7 +881,6 @@ def test_observation_validation_skipped_without_observation(
     assert config.effective_condition is condition
 
 
-@pytest.mark.pruned
 def test_forced_coordinate_equality_true(monkeypatch):
     monkeypatch.setattr(
         module,
@@ -940,7 +911,6 @@ def test_forced_coordinate_equality_true(monkeypatch):
     assert config.effective_condition is condition
 
 
-@pytest.mark.pruned
 def test_check_methods_return_self():
     config = bare_config(
         model=make_data(),
@@ -954,7 +924,6 @@ def test_check_methods_return_self():
     assert config._check_time_features() is config
 
 
-@pytest.mark.pruned
 def test_resolve_lead_months_returns_none():
     config = bare_config(
         model=make_data(),
@@ -974,7 +943,6 @@ def test_resolve_lead_months_returns_none():
     )
 
 
-@pytest.mark.pruned
 def test_resolve_lead_months_none_is_unchanged():
     config = bare_config(
         model=make_data(),
@@ -987,7 +955,6 @@ def test_resolve_lead_months_none_is_unchanged():
     assert config.lead_months is None
 
 
-@pytest.mark.pruned
 def test_resolve_lead_months_plain_list_is_unchanged():
     values = [1, 2]
 
@@ -1002,7 +969,6 @@ def test_resolve_lead_months_plain_list_is_unchanged():
     assert config.lead_months is values
 
 
-@pytest.mark.pruned
 def test_concrete_abstract_implementations():
     config = ConcreteConfig(model=make_data())
 
@@ -1015,7 +981,6 @@ def test_concrete_abstract_implementations():
     assert config.num_input_lead_months == 3
 
 
-@pytest.mark.pruned
 # Remove test due to no coverage
 def test_abstract_method_bodies_are_callable():
     dummy = MagicMock()
@@ -1027,7 +992,6 @@ def test_abstract_method_bodies_are_callable():
     assert DatasetConfigABC.build_dataset(dummy) is None
 
 
-@pytest.mark.pruned
 # Remove test due to no coverage
 def test_class_is_abstract():
     assert issubclass(

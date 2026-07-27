@@ -191,7 +191,6 @@ def test_cvae_config_rejects_invalid_nstds(value):
         )
 
 
-@pytest.mark.pruned
 def test_cvae_config_defaults():
     config = cVAEPredictorConfig()
 
@@ -201,7 +200,6 @@ def test_cvae_config_defaults():
     assert config.save_latent is False
 
 
-@pytest.mark.pruned
 def test_cvae_config_save_latent_warns():
     with pytest.warns(
         UserWarning,
@@ -214,7 +212,6 @@ def test_cvae_config_save_latent_warns():
     assert config.save_latent is True
 
 
-@pytest.mark.pruned
 def test_cvae_config_without_save_latent_no_warning():
     with warnings.catch_warnings(record=True) as captured:
         warnings.simplefilter("always")
@@ -225,7 +222,6 @@ def test_cvae_config_without_save_latent_no_warning():
     assert captured == []
 
 
-@pytest.mark.pruned
 def test_cvae_config_build(tmp_path):
     config = cVAEPredictorConfig(
         num_latent_samples=3,
@@ -250,7 +246,6 @@ def test_cvae_config_build(tmp_path):
     assert predictor.num_output_covariance_sampling == 4
 
 
-@pytest.mark.pruned
 def test_cvae_predictor_initial_state(tmp_path):
     predictor, module = make_cvae_predictor(tmp_path)
 
@@ -286,7 +281,6 @@ def test_cvae_extract_training_vars_matrix(
     assert predictor.extract_training_vars is expected
 
 
-@pytest.mark.pruned
 def test_cvae_initializes_training_stats_for_latent_sampling(tmp_path):
     predictor, _ = make_cvae_predictor(
         tmp_path,
@@ -299,7 +293,6 @@ def test_cvae_initializes_training_stats_for_latent_sampling(tmp_path):
     }
 
 
-@pytest.mark.pruned
 def test_cvae_initializes_training_stats_for_output_noise(tmp_path):
     predictor, _ = make_cvae_predictor(
         tmp_path,
@@ -312,7 +305,6 @@ def test_cvae_initializes_training_stats_for_output_noise(tmp_path):
     }
 
 
-@pytest.mark.pruned
 def test_cvae_infer_training_stats_requires_target(
     monkeypatch,
     tmp_path,
@@ -437,7 +429,6 @@ def test_cvae_save_latent_branch(
     assert calls == [(output, batch.metadata)]
 
 
-@pytest.mark.pruned
 def test_cvae_standard_prediction_branch(
     monkeypatch,
     tmp_path,
@@ -569,7 +560,6 @@ def test_cvae_prediction_adds_decoder_noise(
     ]
 
 
-@pytest.mark.pruned
 def test_cvae_update_stats_requires_samples(tmp_path):
     predictor, _ = make_cvae_predictor(
         tmp_path,
@@ -629,7 +619,6 @@ def test_cvae_update_train_stats(
     )
 
 
-@pytest.mark.pruned
 def test_cvae_update_train_stats_with_target_mask(
     tmp_path,
 ):
@@ -755,7 +744,6 @@ def test_get_latent_samples_reuses_sampler(tmp_path):
     assert result.shape == (2, 4, 3)
 
 
-@pytest.mark.pruned
 def test_get_latent_samples_with_input_mask(
     tmp_path,
 ):
@@ -1001,7 +989,6 @@ def test_cvae_batch_to_netcdf_predictions_with_noise(
     assert captured["name"] == ("prediction_rank0_00000000.nc")
 
 
-@pytest.mark.pruned
 def test_cvae_batch_to_netcdf_prediction_counter(
     monkeypatch,
     tmp_path,
@@ -1039,7 +1026,6 @@ def test_cvae_batch_to_netcdf_prediction_counter(
     assert predictor._batch_counter == 2
 
 
-@pytest.mark.pruned
 def test_cvae_batch_to_netcdf_no_latent_variables(
     tmp_path,
 ):
@@ -1065,7 +1051,6 @@ def test_cvae_batch_to_netcdf_no_latent_variables(
         )
 
 
-@pytest.mark.pruned
 def test_cvae_batch_to_netcdf_latent_single_variable(
     monkeypatch,
     tmp_path,
@@ -1155,7 +1140,6 @@ def test_cvae_batch_to_netcdf_latent_multiple_variables_padding(
     assert torch.isneginf(prediction[:, 2, 3:]).all()
 
 
-@pytest.mark.pruned
 def test_cvae_batch_to_netcdf_latent_training_sampler_attr(
     monkeypatch,
     tmp_path,
@@ -1192,7 +1176,6 @@ def test_cvae_batch_to_netcdf_latent_training_sampler_attr(
     }
 
 
-@pytest.mark.pruned
 def test_cvae_latent_filename_uses_rank(
     monkeypatch,
     tmp_path,
@@ -1231,7 +1214,6 @@ def test_cvae_latent_filename_uses_rank(
     assert captured["name"] == ("latent_rank7_00000000.nc")
 
 
-@pytest.mark.pruned
 def test_deterministic_config_build(tmp_path):
     config = DeterministicPredictorConfig()
     module = DummyModule()
@@ -1275,7 +1257,6 @@ def test_deterministic_extract_training_vars(
     assert predictor.extract_training_vars is expected
 
 
-@pytest.mark.pruned
 def test_deterministic_initial_state_without_covariance(
     tmp_path,
 ):
@@ -1290,7 +1271,6 @@ def test_deterministic_initial_state_without_covariance(
     assert predictor.extract_training_vars is False
 
 
-@pytest.mark.pruned
 def test_deterministic_initializes_residual_stats(
     tmp_path,
 ):
@@ -1403,7 +1383,6 @@ def test_deterministic_prediction_branch(
     ]
 
 
-@pytest.mark.pruned
 def test_deterministic_prediction_adds_decoder_noise(
     monkeypatch,
     tmp_path,
@@ -1456,7 +1435,6 @@ def test_deterministic_prediction_adds_decoder_noise(
     ]
 
 
-@pytest.mark.pruned
 def test_deterministic_update_train_stats(
     tmp_path,
 ):
@@ -1489,7 +1467,6 @@ def test_deterministic_update_train_stats(
     )
 
 
-@pytest.mark.pruned
 def test_deterministic_update_train_stats_with_target_mask(
     tmp_path,
 ):
@@ -1605,7 +1582,6 @@ def test_deterministic_batch_to_netcdf_with_noise(
     )
 
 
-@pytest.mark.pruned
 def test_deterministic_batch_to_netcdf_uses_rank_and_counter(
     monkeypatch,
     tmp_path,

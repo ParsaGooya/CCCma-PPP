@@ -15,7 +15,6 @@ class DummyDist:
         return True
 
 
-@pytest.mark.pruned
 def test_distributed_false(monkeypatch):
     monkeypatch.delenv("RANK", raising=False)
     monkeypatch.delenv("WORLD_SIZE", raising=False)
@@ -74,7 +73,6 @@ def test_cleanup(monkeypatch):
     assert called.get("destroy", False)
 
 
-@pytest.mark.pruned
 def test_cleanup_not_initialized(monkeypatch):
     monkeypatch.setattr(mod.dist, "is_available", lambda: True)
     monkeypatch.setattr(mod.dist, "is_initialized", lambda: False)
@@ -168,7 +166,6 @@ def test_broadcast_not_called(monkeypatch):
     d.broadcast(t)
 
 
-@pytest.mark.pruned
 def test_is_root():
     d = mod.Distributed()
     d.rank = 0

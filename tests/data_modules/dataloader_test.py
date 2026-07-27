@@ -139,7 +139,6 @@ def make_loader(**kwargs):
     )
 
 
-@pytest.mark.pruned
 # Remove test due to no coverage
 def test_batch_to_device_returns_self_and_moves_tensor():
     batch = ConcreteBatch()
@@ -257,7 +256,6 @@ def test_post_init_worker_persistence_branch(
     assert args["pin_memory"] is False
 
 
-@pytest.mark.pruned
 def test_post_init_forwards_spatial_mask_flags(
     monkeypatch,
 ):
@@ -285,7 +283,6 @@ def test_post_init_forwards_spatial_mask_flags(
     assert loader.reduce_spatial_mask is True
 
 
-@pytest.mark.pruned
 def test_single_process_has_no_sampler(
     monkeypatch,
 ):
@@ -306,7 +303,6 @@ def test_single_process_has_no_sampler(
     assert CapturingSampler.instances == []
 
 
-@pytest.mark.pruned
 def test_distributed_sampler_receives_all_arguments(
     monkeypatch,
 ):
@@ -342,7 +338,6 @@ def test_distributed_sampler_receives_all_arguments(
     }
 
 
-@pytest.mark.pruned
 def test_sampler_helper_forwards_extra_kwargs(
     monkeypatch,
 ):
@@ -405,7 +400,6 @@ def test_set_epoch_distributed_delegates(
     assert loader.sampler.epochs == [7]
 
 
-@pytest.mark.pruned
 def test_shape_and_feature_properties_delegate_to_dataset(
     monkeypatch,
 ):
@@ -431,7 +425,6 @@ def test_shape_and_feature_properties_delegate_to_dataset(
     dataset.get_added_features_dim.assert_called_once_with()
 
 
-@pytest.mark.pruned
 def test_iter_and_len_delegate_to_torch_loader(
     monkeypatch,
 ):

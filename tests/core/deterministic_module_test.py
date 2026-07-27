@@ -30,7 +30,6 @@ def make_module(
     )
 
 
-@pytest.mark.pruned
 def test_raw_deterministic_can_be_constructed():
     cfg = make_config()
 
@@ -45,7 +44,6 @@ def test_config_requires_model_or_load():
         deterministicConfig(ModelConfig=None, load_dir=None)
 
 
-@pytest.mark.pruned
 def test_config_basic_initialization():
     cfg = make_config()
 
@@ -53,7 +51,6 @@ def test_config_basic_initialization():
     assert cfg.model_config is not None
 
 
-@pytest.mark.pruned
 def test_config_build_returns_built_module(monkeypatch):
     import cccma_ppp.core.deterministic_module as mod
 
@@ -69,7 +66,6 @@ def test_config_build_returns_built_module(monkeypatch):
     assert (module.model.last_build_kwargs["output_shape"] == np.array([1])).all()
 
 
-@pytest.mark.pruned
 def test_load_checkpoint_missing_file():
     cfg = make_config()
 
@@ -77,7 +73,6 @@ def test_load_checkpoint_missing_file():
         cfg._load_from_checkpoint("missing_checkpoint.pt")
 
 
-@pytest.mark.pruned
 def test_load_checkpoint_success(monkeypatch, tmp_path):
     import cccma_ppp.core.deterministic_module as mod
 
@@ -106,7 +101,6 @@ def test_load_checkpoint_success(monkeypatch, tmp_path):
     assert cfg.model_config is not None
 
 
-@pytest.mark.pruned
 def test_load_checkpoint_missing_module_config(tmp_path):
     ckpt_path = tmp_path / "checkpoint.pt"
 
@@ -151,7 +145,6 @@ def test_config_load_dir_warns_and_uses_loaded_config(monkeypatch, tmp_path):
     assert cfg.checkpoint_config is not None
 
 
-@pytest.mark.pruned
 def test_module_initial_state():
     module = make_module()
 
@@ -160,7 +153,6 @@ def test_module_initial_state():
     assert module.model.was_built is True
 
 
-@pytest.mark.pruned
 def test_constructor_builds_basic():
     module = make_module(input_shape=np.array([1]))
 
@@ -170,7 +162,6 @@ def test_constructor_builds_basic():
     assert (module.model.last_build_kwargs["output_shape"] == np.array([1])).all()
 
 
-@pytest.mark.pruned
 def test_constructor_default_output_shape_copies_input_shape():
     input_shape = np.array([1, 2, 3])
 
@@ -182,7 +173,6 @@ def test_constructor_default_output_shape_copies_input_shape():
     assert output_shape is not input_shape
 
 
-@pytest.mark.pruned
 def test_constructor_explicit_output_shape():
     module = make_module(
         input_shape=np.array([1]),
@@ -193,7 +183,6 @@ def test_constructor_explicit_output_shape():
     assert (module.model.last_build_kwargs["output_shape"] == np.array([2])).all()
 
 
-@pytest.mark.pruned
 def test_constructor_passes_added_features_dim_to_model():
     module = make_module(
         input_shape=np.array([1]),
@@ -204,7 +193,6 @@ def test_constructor_passes_added_features_dim_to_model():
     assert module.model.last_build_kwargs["added_features_dim"] == 5
 
 
-@pytest.mark.pruned
 def test_constructor_passes_shapes_to_model():
     module = make_module(
         input_shape=np.array([1]),
@@ -238,7 +226,6 @@ def test_load_dir_input_metadata_mismatch(monkeypatch):
         ConcreteDeterministic(cfg, input_shape=np.array([1]))
 
 
-@pytest.mark.pruned
 def test_load_dir_output_metadata_mismatch(monkeypatch):
     import cccma_ppp.core.deterministic_module as mod
 
@@ -330,7 +317,6 @@ def test_load_dir_success_calls_load_state_dict(monkeypatch):
     assert called["load"] is True
 
 
-@pytest.mark.pruned
 def test_load_dir_success_with_explicit_output_shape(monkeypatch):
     import cccma_ppp.core.deterministic_module as mod
 
@@ -360,7 +346,6 @@ def test_load_dir_success_with_explicit_output_shape(monkeypatch):
     assert module.model.was_built is True
 
 
-@pytest.mark.pruned
 def test_init_loss_function_sets_criterion():
     module = make_module()
     loss = DummyLoss()
@@ -370,7 +355,6 @@ def test_init_loss_function_sets_criterion():
     assert module.criterion is loss
 
 
-@pytest.mark.pruned
 def test_forward_returns_deterministic_output():
     module = make_module(input_shape=np.array([1]))
 
@@ -381,7 +365,6 @@ def test_forward_returns_deterministic_output():
     assert out.output.shape == batch.input.shape
 
 
-@pytest.mark.pruned
 def test_forward_passes_added_features():
     module = make_module(input_shape=np.array([1]))
 
@@ -394,7 +377,6 @@ def test_forward_passes_added_features():
     assert module.model.last_call_kwargs["added_features"] is batch.added_features
 
 
-@pytest.mark.pruned
 def test_predict_calls_forward():
     module = make_module(input_shape=np.array([1]))
 
@@ -404,7 +386,6 @@ def test_predict_calls_forward():
     assert isinstance(out, deterministicOutput)
 
 
-@pytest.mark.pruned
 def test_predict_alias_calls_predict():
     module = make_module(input_shape=np.array([1]))
 
@@ -414,7 +395,6 @@ def test_predict_alias_calls_predict():
     assert isinstance(out, deterministicOutput)
 
 
-@pytest.mark.pruned
 def test_compute_loss_requires_criterion():
     module = make_module(input_shape=np.array([1]))
 
@@ -434,7 +414,6 @@ def test_compute_loss_plain_target():
     assert losses["mse"] == 1.0
 
 
-@pytest.mark.pruned
 def test_compute_loss_tuple_target_with_mask():
     module = make_module(input_shape=np.array([1]))
     module.init_loss_function(DummyLoss())
@@ -448,7 +427,6 @@ def test_compute_loss_tuple_target_with_mask():
     assert losses["total_loss"] == 1.0
 
 
-@pytest.mark.pruned
 def test_compute_loss_list_target_with_mask():
     module = make_module(input_shape=np.array([1]))
     module.init_loss_function(DummyLoss())
@@ -462,7 +440,6 @@ def test_compute_loss_list_target_with_mask():
     assert losses["total_loss"] == 1.0
 
 
-@pytest.mark.pruned
 def test_compute_loss_merges_multiple_individual_losses():
     module = make_module(input_shape=np.array([1]))
     module.init_loss_function(MultiLoss())
@@ -475,7 +452,6 @@ def test_compute_loss_merges_multiple_individual_losses():
     assert losses["mae"] == 1.0
 
 
-@pytest.mark.pruned
 def test_compute_loss_empty_individual_losses():
     module = make_module(input_shape=np.array([1]))
     module.init_loss_function(EmptyLoss())
@@ -486,7 +462,6 @@ def test_compute_loss_empty_individual_losses():
     assert losses == {"total_loss": 1.0}
 
 
-@pytest.mark.pruned
 def test_compute_loss_passes_print_loss_false():
     class InspectLoss:
         def __init__(self):
@@ -515,7 +490,6 @@ def test_compute_loss_passes_print_loss_false():
     assert loss.print_loss is False
 
 
-@pytest.mark.pruned
 def test_compute_loss_target_tuple_with_none_mask():
     module = make_module(input_shape=np.array([1]))
     module.init_loss_function(DummyLoss())
