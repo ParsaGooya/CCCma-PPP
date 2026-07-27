@@ -4,14 +4,17 @@ from typing import final, Literal
 
 from cccma_ppp.data_modules.data import DataConfigABC
 from cccma_ppp.preprocessing import PreprocessingPipeline
-from cccma_ppp.configs import (model_data_allowed_dimensions,
-                               model_data_required_dimensions,
-                               observation_data_allowed_dimensions,
-                               observation_data_required_dimensions,
-                               condition_data_allowed_dimensions,
-                               condition_data_required_dimensions)
+from cccma_ppp.configs import (
+    model_data_allowed_dimensions,
+    model_data_required_dimensions,
+    observation_data_allowed_dimensions,
+    observation_data_required_dimensions,
+    condition_data_allowed_dimensions,
+    condition_data_required_dimensions,
+)
 
 spatialmethod = Literal["uniform", "cosine_lat"]
+
 
 @dataclasses.dataclass
 class ModelDataConfig(DataConfigABC):

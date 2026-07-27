@@ -10,11 +10,7 @@ import dataclasses
 
 from cccma_ppp.core.core_abc import OutputABC
 from cccma_ppp.generic import RuntimeContext
-from cccma_ppp.models.layers import (ActivationName, 
-                                     InitMethod,
-                                     _sample)
-
-
+from cccma_ppp.models.layers import ActivationName, InitMethod, _sample
 
 
 @dataclasses.dataclass
@@ -93,6 +89,7 @@ class modelConfigABC(abc.ABC):
     """
     Abstract base class for model configuration.
     """
+
     activation: ActivationName
     NUM_INPUT_DIMS: ClassVar[int | None]
     NUM_OUTPUT_DIMS: ClassVar[int | None]
@@ -172,7 +169,7 @@ class modelConfigABC(abc.ABC):
             raise RuntimeError(
                 "Checkpoint target metadata is incompatible with the "
                 "current target variables or preprocessing pipeline."
-        )
+            )
 
     @abc.abstractmethod
     def build(
@@ -201,8 +198,8 @@ class cVAEmodelConfigABC(modelConfigABC):
     latent_size: int
     condition_dependant_latent: bool
     condition_embedding_size: int
-    condition_embedding_dims: list 
-    condemb_to_decoder: bool 
+    condition_embedding_dims: list
+    condemb_to_decoder: bool
 
     def _resolve_flow_settings(self, condition_dependant_flow: bool = False):
         """
@@ -409,7 +406,7 @@ class cVAEPredictRequest:
 
     Parameters
     ----------
-    condition : torch.Tensor 
+    condition : torch.Tensor
         Conditioning input.
     added_features : torch.Tensor or None
         Additional features.
@@ -420,6 +417,7 @@ class cVAEPredictRequest:
     sample_size : int, optional
         Number of samples.
     """
+
     condition: torch.Tensor
     condition_mask: torch.Tensor | None = None
     added_features: torch.Tensor | None = None
@@ -427,6 +425,7 @@ class cVAEPredictRequest:
     latent_samples: torch.Tensor | None = None
     nstds: int = 1
     sample_size: int = 1
+
 
 class cVAEmodelsABC(modelABC):
     """
@@ -459,7 +458,6 @@ class cVAEmodelsABC(modelABC):
         """
 
         pass
-
 
     @abc.abstractmethod
     def _recognition(self) -> tuple[torch.Tensor, ...]:
@@ -497,7 +495,7 @@ class cVAEmodelsABC(modelABC):
         """
 
         pass
-    
+
     @final
     def _sample(self, mu, log_var, sample_size=1, std=1):
         """
@@ -518,8 +516,6 @@ class cVAEmodelsABC(modelABC):
 
         var = torch.exp(log_var) + 1e-4
         return _sample(mu, var, sample_size, std)
-  
-
 
 
 def weights_init(m, method: InitMethod = "xavier"):

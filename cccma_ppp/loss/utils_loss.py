@@ -746,7 +746,9 @@ class Frobenius_norm(lossABC):
         assert data.shape == target.shape
 
         y = torch.flatten(target, start_dim=-self.num_output_dimensions + 1, end_dim=-1)
-        y_hat = torch.flatten(data, start_dim=-self.num_output_dimensions + 1, end_dim=-1)
+        y_hat = torch.flatten(
+            data, start_dim=-self.num_output_dimensions + 1, end_dim=-1
+        )
 
         if generative_modeling:
             y = torch.flatten(y, start_dim=0, end_dim=1)

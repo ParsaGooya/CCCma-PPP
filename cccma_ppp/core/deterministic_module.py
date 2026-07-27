@@ -11,7 +11,7 @@ from cccma_ppp.core import moduleABC, moduleConfigABC, OutputABC
 from cccma_ppp.core.selectors import (
     ModuleSelector,
     deterministicModelSelector,
-    _load_config_from_checkpoint
+    _load_config_from_checkpoint,
 )
 from cccma_ppp.train import BatchData
 from cccma_ppp.generic import RuntimeContext
@@ -289,7 +289,9 @@ class deterministic(moduleABC):
             Model predictions.
         """
 
-        return self.model(x=data.input, x_mask=data.input_mask, added_features=data.added_features)
+        return self.model(
+            x=data.input, x_mask=data.input_mask, added_features=data.added_features
+        )
 
     def predict(self, data: BatchData) -> deterministicOutput:
         """

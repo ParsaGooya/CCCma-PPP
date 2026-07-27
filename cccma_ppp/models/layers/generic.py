@@ -10,14 +10,14 @@ NormalizationMethod = Literal["batch", "group", "layer", "none"]
 UpsamplingMethod = Literal["transpose_conv", "bilinear"]
 OutputActivation = Literal["identity", "sigmoid", "tanh"]
 MaskPoolingMode = Literal["any", "all", "fraction"]
-AlignmentMode = Literal["interpolation","padd","strict"]
+AlignmentMode = Literal["interpolation", "padd", "strict"]
 PaddingMode = Literal["zeros", "reflect", "replicate", "circular"]
 
 
 def _validate_dropout(value: float | None) -> None:
     if value is not None and not 0 <= value <= 1:
         raise ValueError("Dropout rates must be between 0 and 1.")
-    
+
 
 def _build_activation(name: ActivationName) -> nn.Module:
     if name == "relu":
@@ -53,7 +53,6 @@ def _build_normalization(
     raise ValueError(f"Unsupported normalization: {name!r}")
 
 
-
 class LayerNorm2d(nn.Module):
     """Channel-wise LayerNorm for NCHW tensors."""
 
@@ -71,8 +70,6 @@ class LayerNorm2d(nn.Module):
             self.bias,
             self.eps,
         ).permute(0, 3, 1, 2)
-
-
 
 
 class DropPath(nn.Module):
@@ -95,6 +92,3 @@ class DropPath(nn.Module):
         )
         random_tensor.floor_()
         return x * random_tensor / keep_probability
-    
-
-

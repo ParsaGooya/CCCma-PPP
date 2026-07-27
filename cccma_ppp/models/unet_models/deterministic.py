@@ -16,25 +16,31 @@ from cccma_ppp.models.models_abc import (
     modelConfigABC,
 )
 
-from cccma_ppp.models.layers import ( _broadcast_mask,
-                                    _resize_tensor,
-                                    InitMethod,
-                                    UpsamplingMethod,
-                                    MaskPoolingMode,
-                                    OutputActivation,
-                                    AlignmentMode,
-                                    PaddingMode)
+from cccma_ppp.models.layers import (
+    _broadcast_mask,
+    _resize_tensor,
+    InitMethod,
+    UpsamplingMethod,
+    MaskPoolingMode,
+    OutputActivation,
+    AlignmentMode,
+    PaddingMode,
+)
 
-from cccma_ppp.models.layers.unet import (build_conv_block,
-                                          UpBlock,
-                                          DownBlock,
-                                          UNetOutput)
+from cccma_ppp.models.layers.unet import (
+    build_conv_block,
+    UpBlock,
+    DownBlock,
+    UNetOutput,
+)
 
 
-from cccma_ppp.models.layers.conv import (ConvBlockConfig,
-                                          PartialConvBlockConfig,
-                                          ConvNeXtBlockConfig,
-                                          TensorMask)
+from cccma_ppp.models.layers.conv import (
+    ConvBlockConfig,
+    PartialConvBlockConfig,
+    ConvNeXtBlockConfig,
+    TensorMask,
+)
 
 
 from cccma_ppp.models.unet_models.utils import _unet_config_checks
@@ -52,10 +58,10 @@ class UNetConfig(modelConfigABC):
     bottleneck configured through ``bottleneck_dim``.
     """
 
-    channels: list[int] 
+    channels: list[int]
     bottleneck_dim: int | None = None
-    block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig = field(
-        default_factory=ConvBlockConfig
+    block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig = (
+        field(default_factory=ConvBlockConfig)
     )
 
     upsampling_method: UpsamplingMethod = "bilinear"
@@ -83,14 +89,12 @@ class UNetConfig(modelConfigABC):
 
         n_up_blocks = len(self.channels) - 1
 
-
         if self.transpose_kernel_sizes is None:
             self.transpose_kernel_sizes = [3] * n_up_blocks
 
         elif isinstance(self.transpose_kernel_sizes, int):
             self.transpose_kernel_sizes = [self.transpose_kernel_sizes] * n_up_blocks
 
-        
         if len(self.transpose_kernel_sizes) != n_up_blocks:
             raise ValueError(
                 "transpose_kernel_sizes must contain one value per "
@@ -103,8 +107,7 @@ class UNetConfig(modelConfigABC):
             for kernel in self.transpose_kernel_sizes
         ):
             raise ValueError(
-                "All transpose-convolution kernel sizes must be "
-                "positive integers."
+                "All transpose-convolution kernel sizes must be positive integers."
             )
 
     def build(
@@ -121,10 +124,7 @@ class UNetConfig(modelConfigABC):
         )
 
 
-
-
 class UNet(deterministicmodelsABC):
-
     def __init__(
         self,
         config: UNetConfig,
@@ -137,7 +137,6 @@ class UNet(deterministicmodelsABC):
         self.config = config
         self.init_method = config.init_method
         self.added_features_dim = added_features_dim or 0
-
 
         if len(input_shape) != config.NUM_INPUT_DIMS:
             raise RuntimeError(
@@ -157,7 +156,7 @@ class UNet(deterministicmodelsABC):
         #         f"Input spatial shape {input_shape[-2:]} does not match "
         #         f"output spatial shape {output_shape[-2:]}."
         #     )
-        
+
         min_spatial_size = int(min(input_shape[-2:]))
 
         if min_spatial_size < 1:
@@ -176,9 +175,8 @@ class UNet(deterministicmodelsABC):
                 f"{n_down_blocks} downsampling blocks, but the minimum spatial "
                 f"dimension permits at most {max_down_blocks}. "
                 f"Use no more than {max_down_blocks + 1} channel levels."
-                )       
-        
-        
+            )
+
         self._validate_checkpoint_compatibility(
             input_shape=input_shape,
             output_shape=output_shape,
@@ -203,7 +201,6 @@ class UNet(deterministicmodelsABC):
             config.block_config,
         )
 
-
         self.down_blocks = nn.ModuleList(
             [
                 DownBlock(
@@ -212,7 +209,7 @@ class UNet(deterministicmodelsABC):
                     block_config=config.block_config,
                     process_skip=config.process_skip,
                     mask_pooling=config.mask_pooling,
-                    mask_fraction_threshold=config.mask_fraction_threshold
+                    mask_fraction_threshold=config.mask_fraction_threshold,
                 )
                 for index in range(len(channels) - 1)
             ]
@@ -239,9 +236,7 @@ class UNet(deterministicmodelsABC):
                     upsampling_method=config.upsampling_method,
                     skip_alignment_mode=config.skip_alignment_mode,
                     padding_mode=config.padding_mode,
-                    transpose_kernel_size=(
-                        config.transpose_kernel_sizes[index]
-                    ),
+                    transpose_kernel_size=(config.transpose_kernel_sizes[index]),
                 )
             )
             input_channels = out_channels
@@ -260,7 +255,6 @@ class UNet(deterministicmodelsABC):
         else:
             self._initialize_weights(config.init_method)
 
-
     def _prepare_input(
         self,
         x: torch.Tensor,
@@ -268,16 +262,11 @@ class UNet(deterministicmodelsABC):
         added_features: torch.Tensor | None,
     ) -> TensorMask:
 
-
         x_mask = _broadcast_mask(x_mask, x)
 
-
         if added_features is not None:
-
             feature_mask = (
-                torch.ones_like(added_features)
-                if x_mask is not None
-                else None
+                torch.ones_like(added_features) if x_mask is not None else None
             )
             x = torch.cat([x, added_features], dim=1)
 
@@ -325,6 +314,3 @@ class UNet(deterministicmodelsABC):
         output = self.output(input.tensor)
 
         return deterministicOutput(output=output)
-
-
-
