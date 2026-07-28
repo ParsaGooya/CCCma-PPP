@@ -444,7 +444,7 @@ class cVAE(moduleABC):
                 sample_size: int = 1, 
                 nstds: int = 1,
                 latent_samples: torch.Tensor = None,
-                output_sample_size: int = 1) -> cVAEOutput:
+                output_sample_size: int = 0) -> cVAEOutput:
         """
         Generate predictions using the learned prior.
 
