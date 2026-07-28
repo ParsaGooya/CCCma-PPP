@@ -31,14 +31,14 @@ class WriterConfig:
         default_factory =  DeterministicPredictorConfig
         )
     
-    num_output_covariance_sampling: int = 0
+    num_output_sampling: int | None = None
     saved_model_training_vars_from_validation: bool = False
 
     def __post_init__(self):
 
-        if self.num_output_covariance_sampling < 0:
+        if self.num_output_sampling < 0:
             raise ValueError(
-                "num_output_covariance_sampling cannot be negative."
+                "num_output_sampling cannot be negative."
             )
 
 
@@ -129,7 +129,7 @@ class Writer:
         self.predictor = self.config.predictor.build(self.module,                                              
                                                     self.distributed,
                                                     self.output_dir,
-                                                    self.config.num_output_covariance_sampling)
+                                                    self.config.num_output_sampling)
 
         if self.predictor.extract_training_vars:
             self.log_root(logging.INFO, "Running the model to extract training statistics. \n" \
