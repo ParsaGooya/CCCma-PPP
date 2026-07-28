@@ -9,9 +9,10 @@ ActivationName = Literal["relu", "gelu", "silu"]
 NormalizationMethod = Literal["batch", "group", "layer", "none"]
 UpsamplingMethod = Literal["transpose_conv", "bilinear"]
 OutputActivation = Literal["identity", "sigmoid", "tanh"]
-MaskPoolingMode = Literal["any", "all", "fraction"]
-AlignmentMode = Literal["interpolation","padd","strict"]
-PaddingMode = Literal["zeros", "reflect", "replicate", "circular"]
+MaskPoolingMethod = Literal["any", "all", "fraction"]
+AlignmentMethod = Literal["interpolation","padd","strict"]
+PaddingMethod = Literal["zeros", "reflect", "replicate", "circular"]
+NoiseLevel = Literal["full", "medium", "low"]
 
 
 def _validate_dropout(value: float | None) -> None:

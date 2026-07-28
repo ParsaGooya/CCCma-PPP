@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from cccma_ppp.models.layers.generic import (AlignmentMode,
-                                     PaddingMode)
+from cccma_ppp.models.layers.generic import (AlignmentMethod,
+                                     PaddingMethod)
 
 
 def _same_padding(kernel_size: int) -> int:
@@ -18,8 +18,8 @@ def _same_padding(kernel_size: int) -> int:
 def align_to_skip(
     x: torch.Tensor,
     skip: torch.Tensor,
-    mode: AlignmentMode = 'padd',
-    padding_mode: PaddingMode = "zeros"
+    mode: AlignmentMethod = 'padd',
+    padding_mode: PaddingMethod = "zeros"
 ) -> torch.Tensor:
     target_size = skip.shape[-2:]
 
@@ -54,7 +54,7 @@ def align_to_skip(
 def padd(
     x: torch.Tensor,
     target_size: tuple[int, int],
-    padding_mode: PaddingMode = "zeros"
+    padding_mode: PaddingMethod = "zeros"
 ) -> torch.Tensor:
     target_h, target_w = target_size
     current_h, current_w = x.shape[-2:]
@@ -231,3 +231,30 @@ def _get_normal(ref_tensor, std=1):
         torch.zeros_like(ref_tensor), torch.ones_like(ref_tensor) * std
     )
 
+
+def _noise_injection(ref_tensor: torch.Tensor):
+    noise_ref_tensor = ref_tensor[:,[0],...]
+
+    noise =  _sample(
+    mu = torch.zeros_like(noise_ref_tensor),
+    var = torch.ones_like(noise_ref_tensor)
+            )[0]
+
+    return torch.cat([ref_tensor, noise], dim = 1)
+
+
+def _expand_mask(x: torch.Tensor,
+                 mask: torch.Tensor
+                 ):
+    
+    n = x.shape[1] - mask.shape[1]
+
+    noise_mask = torch.ones(
+        mask.shape[0],
+        n,
+        *mask.shape[2:],
+        dtype=mask.dtype,
+        device=mask.device,
+    )
+
+    return torch.cat([mask, noise_mask], dim=1)
