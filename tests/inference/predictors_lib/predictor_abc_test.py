@@ -65,17 +65,22 @@ def make_output(output=None):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_predictor_abc_cannot_be_instantiated():
     with pytest.raises(TypeError):
         PredictorABC()
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_temp_save_dir_uses_output_directory(tmp_path):
     predictor = ConcretePredictor(tmp_path)
 
     assert predictor.temp_save_dir == tmp_path / "_temp"
 
 
+@pytest.mark.pruned
 def test_stats_returns_none_when_training_variables_disabled(
     tmp_path,
 ):
@@ -87,6 +92,7 @@ def test_stats_returns_none_when_training_variables_disabled(
     assert predictor.stats is None
 
 
+@pytest.mark.pruned
 def test_stats_returns_internal_statistics_when_enabled(
     tmp_path,
 ):
@@ -99,6 +105,8 @@ def test_stats_returns_internal_statistics_when_enabled(
     assert set(predictor.stats) == {"residual"}
 
 
+@pytest.mark.pruned
+# Remove test due to no coverage
 def test_concrete_abstract_method_implementations(tmp_path):
     predictor = ConcretePredictor(tmp_path)
 
@@ -128,6 +136,7 @@ def test_concrete_abstract_method_implementations(tmp_path):
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.pruned
 def test_raw_module_returns_plain_module(tmp_path):
     predictor = ConcretePredictor(tmp_path)
     raw = object()
@@ -225,6 +234,7 @@ def test_add_decoder_noise_builds_sampler_when_missing(
     )
 
 
+@pytest.mark.pruned
 def test_add_decoder_noise_reuses_existing_sampler(
     tmp_path,
 ):
@@ -290,6 +300,7 @@ def test_add_decoder_noise_preserves_prediction_dtype(
     assert output.output.dtype == torch.float32
 
 
+@pytest.mark.pruned
 def test_add_decoder_noise_reshapes_flat_noise(
     tmp_path,
 ):
@@ -333,6 +344,7 @@ def test_build_output_sampler_requires_statistics_file(
         predictor.build_output_sampler()
 
 
+@pytest.mark.pruned
 def test_build_output_sampler_loads_statistics(
     tmp_path,
     monkeypatch,
@@ -444,6 +456,7 @@ def test_get_multinormal_rejects_nonpositive_std(
         )
 
 
+@pytest.mark.pruned
 def test_get_multinormal_returns_distribution(tmp_path):
     predictor = ConcretePredictor(tmp_path)
 
@@ -463,6 +476,7 @@ def test_get_multinormal_returns_distribution(tmp_path):
     )
 
 
+@pytest.mark.pruned
 def test_get_multinormal_converts_input_to_float(
     tmp_path,
 ):
@@ -477,6 +491,7 @@ def test_get_multinormal_converts_input_to_float(
     assert distribution.covariance_matrix.dtype == torch.float32
 
 
+@pytest.mark.pruned
 def test_get_multinormal_scales_covariance_by_std_squared(
     tmp_path,
 ):
@@ -499,6 +514,7 @@ def test_get_multinormal_scales_covariance_by_std_squared(
     )
 
 
+@pytest.mark.pruned
 def test_get_multinormal_retries_after_value_error(
     tmp_path,
     monkeypatch,
@@ -557,6 +573,7 @@ def test_get_multinormal_raises_after_all_retries(
     assert constructor.call_count == 5
 
 
+@pytest.mark.pruned
 def test_get_multinormal_increases_jitter_between_retries(
     tmp_path,
     monkeypatch,
@@ -597,6 +614,7 @@ def test_get_multinormal_increases_jitter_between_retries(
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.pruned
 def test_sample_converts_integer_size_to_tuple(
     tmp_path,
 ):
@@ -723,6 +741,7 @@ def test_save_batch_to_netcdf_rejects_metadata_mismatch(
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_basic_output(tmp_path):
     prediction = torch.arange(
         12,
@@ -798,6 +817,7 @@ def test_save_batch_to_netcdf_with_extra_dimensions(
         )
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_assigns_coordinates(
     tmp_path,
 ):
@@ -831,6 +851,7 @@ def test_save_batch_to_netcdf_assigns_coordinates(
         ]
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_assigns_attributes(
     tmp_path,
 ):
@@ -866,6 +887,7 @@ def test_save_batch_to_netcdf_assigns_attributes(
         }
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_defaults_extra_dimensions(
     tmp_path,
     monkeypatch,
@@ -909,6 +931,7 @@ def test_save_batch_to_netcdf_defaults_extra_dimensions(
     assert captured["path"] == tmp_path / "default.nc"
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_creates_one_based_channel_coordinates(
     tmp_path,
     monkeypatch,
@@ -949,6 +972,7 @@ def test_save_batch_to_netcdf_creates_one_based_channel_coordinates(
     )
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_creates_spatial_coordinates(
     tmp_path,
     monkeypatch,
@@ -996,6 +1020,7 @@ def test_save_batch_to_netcdf_creates_spatial_coordinates(
     )
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_preserves_metadata_index_order(
     tmp_path,
     monkeypatch,

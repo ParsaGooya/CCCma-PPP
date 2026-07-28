@@ -35,12 +35,14 @@ def make_generator(
     )
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_valid_minimal_config():
     config = make_config()
 
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_single_channel_level():
     config = make_config(
         channels=[8],
@@ -49,6 +51,7 @@ def test_unet_config_checks_accepts_single_channel_level():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_multiple_channel_levels():
     config = make_config(
         channels=[4, 8, 16, 32, 64],
@@ -57,6 +60,7 @@ def test_unet_config_checks_accepts_multiple_channel_levels():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_positive_bottleneck_dimension():
     config = make_config(
         bottleneck_dim=64,
@@ -65,6 +69,7 @@ def test_unet_config_checks_accepts_positive_bottleneck_dimension():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_none_bottleneck_dimension():
     config = make_config(
         bottleneck_dim=None,
@@ -133,6 +138,7 @@ def test_unet_config_checks_accepts_valid_generator_sample_counts(
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_generator_none():
     config = make_config(
         generator=None,
@@ -141,6 +147,7 @@ def test_unet_config_checks_accepts_generator_none():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_does_not_mutate_config():
     generator = make_generator(
         num_training_noise_samples=3,
@@ -202,6 +209,7 @@ def test_unet_config_checks_rejects_nonpositive_channels(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_channel_validation_precedes_other_checks():
     config = make_config(
         channels=[],
@@ -220,6 +228,7 @@ def test_unet_config_checks_channel_validation_precedes_other_checks():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_channel_values_checked_before_bottleneck():
     config = make_config(
         channels=[8, 0],
@@ -255,6 +264,7 @@ def test_unet_config_checks_rejects_nonpositive_bottleneck(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_bottleneck_checked_before_mask_threshold():
     config = make_config(
         bottleneck_dim=0,
@@ -293,6 +303,7 @@ def test_unet_config_checks_rejects_invalid_mask_threshold(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_mask_threshold_checked_before_output_hidden_channels():
     config = make_config(
         mask_fraction_threshold=-1,
@@ -328,6 +339,7 @@ def test_unet_config_checks_rejects_nonpositive_output_hidden_channels(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_output_hidden_channels_checked_before_generator():
     config = make_config(
         output_block_hidden_channels=0,
@@ -367,6 +379,7 @@ def test_unet_config_checks_rejects_nonpositive_training_noise_samples(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_generator_error_message():
     config = make_config(
         generator=make_generator(

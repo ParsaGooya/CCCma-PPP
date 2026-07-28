@@ -25,6 +25,9 @@
   "cccma_ppp/inference/predict.py": 0.0,
   "cccma_ppp/inference/predictor_abc.py": 0.9286,
   "cccma_ppp/inference/predictors.py": 0.9118,
+  "cccma_ppp/inference/predictors_lib/cvae.py": 0.9038,
+  "cccma_ppp/inference/predictors_lib/deterministic.py": 0.9375,
+  "cccma_ppp/inference/predictors_lib/predictor_abc.py": 0.9286,
   "cccma_ppp/inference/train.py": 1.0,
   "cccma_ppp/loss/kld.py": 0.9167,
   "cccma_ppp/loss/loss.py": 0.9062,
@@ -50,7 +53,6 @@
   "cccma_ppp/train/__main__.py": 0.0,
   "cccma_ppp/train/dataloader.py": 0.9091,
   "cccma_ppp/train/dataset.py": 0.9211,
-  "cccma_ppp/train/datasets.py": 0.9043,
   "cccma_ppp/train/train.py": 1.0,
   "cccma_ppp/train/train_configs.py": 0.9074
 }

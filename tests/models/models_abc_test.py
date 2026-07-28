@@ -211,6 +211,7 @@ def test_generator_config_defaults():
     assert config.num_validation_noise_samples == 10
 
 
+@pytest.mark.pruned
 def test_generator_config_uses_training_samples_as_validation_default():
     config = GENERATORConfig(
         num_training_noise_samples=7,
@@ -247,6 +248,7 @@ def test_generator_config_preserves_noise_level(noise_level):
     assert config.noise_level == noise_level
 
 
+@pytest.mark.pruned
 def test_validate_checkpoint_compatibility_without_checkpoint():
     model = DummyModel()
     model.config.checkpoint_config = None
@@ -259,6 +261,7 @@ def test_validate_checkpoint_compatibility_without_checkpoint():
     assert result is None
 
 
+@pytest.mark.pruned
 def test_validate_checkpoint_compatibility_matching_values():
     RuntimeContext.INPUT_VAR_METADATA = {
         "input": "metadata",
@@ -286,6 +289,7 @@ def test_validate_checkpoint_compatibility_matching_values():
     assert result is None
 
 
+@pytest.mark.pruned
 def test_validate_checkpoint_compatibility_accepts_tuple_shapes():
     model = DummyModel()
     model.config.checkpoint_config = make_checkpoint_config(
@@ -332,6 +336,7 @@ def test_validate_checkpoint_compatibility_rejects_output_shape():
         )
 
 
+@pytest.mark.pruned
 def test_validate_checkpoint_compatibility_rejects_input_metadata():
     RuntimeContext.INPUT_VAR_METADATA = {
         "current": "input",
@@ -378,6 +383,7 @@ def test_validate_checkpoint_compatibility_rejects_target_metadata():
         )
 
 
+@pytest.mark.pruned
 def test_input_shape_validation_precedes_other_validation():
     RuntimeContext.INPUT_VAR_METADATA = {
         "current": "input",
@@ -408,6 +414,7 @@ def test_input_shape_validation_precedes_other_validation():
         )
 
 
+@pytest.mark.pruned
 def test_output_shape_validation_precedes_metadata_validation():
     RuntimeContext.INPUT_VAR_METADATA = {
         "current": "input",
@@ -438,6 +445,7 @@ def test_output_shape_validation_precedes_metadata_validation():
         )
 
 
+@pytest.mark.pruned
 def test_input_metadata_validation_precedes_target_metadata():
     RuntimeContext.INPUT_VAR_METADATA = {
         "current": "input",
@@ -467,6 +475,7 @@ def test_input_metadata_validation_precedes_target_metadata():
         )
 
 
+@pytest.mark.pruned
 def test_get_device_from_parameter():
     model = DummyModel()
 
@@ -485,6 +494,7 @@ def test_get_device_cpu_when_model_has_no_parameters_or_buffers():
     assert model._get_device() == torch.device("cpu")
 
 
+@pytest.mark.pruned
 def test_get_device_prefers_parameter_over_buffer():
     model = DummyModel()
     model.register_buffer(
@@ -495,6 +505,7 @@ def test_get_device_prefers_parameter_over_buffer():
     assert model._get_device() == model.linear.weight.device
 
 
+@pytest.mark.pruned
 def test_initialize_weights_xavier():
     model = DummyModel()
 
@@ -512,6 +523,7 @@ def test_initialize_weights_xavier():
     )
 
 
+@pytest.mark.pruned
 def test_initialize_weights_truncated_normal():
     model = DummyModel()
 
@@ -581,6 +593,7 @@ def test_load_state_dict_success(tmp_path):
     )
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strips_model_prefix(tmp_path):
     model = DummyModel()
 
@@ -612,6 +625,7 @@ def test_load_state_dict_strips_model_prefix(tmp_path):
     )
 
 
+@pytest.mark.pruned
 def test_load_state_dict_ignores_non_model_keys(tmp_path):
     model = DummyModel()
 
@@ -639,6 +653,7 @@ def test_load_state_dict_ignores_non_model_keys(tmp_path):
     )
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strict_false_allows_missing_keys(tmp_path):
     model = DummyModel()
 
@@ -661,6 +676,7 @@ def test_load_state_dict_strict_false_allows_missing_keys(tmp_path):
     )
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strict_true_rejects_missing_keys(tmp_path):
     model = DummyModel()
 
@@ -684,6 +700,7 @@ def test_load_state_dict_strict_true_rejects_missing_keys(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_load_state_dict_without_model_keys_in_non_strict_mode(tmp_path):
     model = DummyModel()
 
@@ -704,6 +721,7 @@ def test_load_state_dict_without_model_keys_in_non_strict_mode(tmp_path):
     )
 
 
+@pytest.mark.pruned
 def test_load_state_dict_uses_device_and_weights_only(
     monkeypatch,
     tmp_path,
@@ -743,6 +761,7 @@ def test_load_state_dict_uses_device_and_weights_only(
     assert captured["weights_only"] is True
 
 
+@pytest.mark.pruned
 def test_load_state_dict_passes_strict_value(
     monkeypatch,
     tmp_path,
@@ -795,6 +814,7 @@ def test_load_state_dict_passes_strict_value(
     }
 
 
+@pytest.mark.pruned
 def test_load_state_dict_calls_gc_collect(
     monkeypatch,
     tmp_path,
@@ -844,6 +864,7 @@ def test_load_state_dict_freezes_weights(tmp_path):
     assert all(parameter.requires_grad is False for parameter in model.parameters())
 
 
+@pytest.mark.pruned
 def test_load_state_dict_does_not_freeze_weights_by_default(tmp_path):
     model = DummyModel()
 
@@ -984,6 +1005,7 @@ def test_weights_init_truncated_normal_supported_modules(
     assert not torch.all(layer.weight == 0)
 
 
+@pytest.mark.pruned
 def test_weights_init_xavier_calls_initializer(
     monkeypatch,
 ):
@@ -1004,6 +1026,7 @@ def test_weights_init_xavier_calls_initializer(
     initializer.assert_called_once_with(layer.weight)
 
 
+@pytest.mark.pruned
 def test_weights_init_truncated_normal_calls_initializer(
     monkeypatch,
 ):
@@ -1027,6 +1050,7 @@ def test_weights_init_truncated_normal_calls_initializer(
     )
 
 
+@pytest.mark.pruned
 def test_weights_init_ignores_unsupported_module():
     layer = nn.BatchNorm1d(4)
 
@@ -1050,6 +1074,7 @@ def test_weights_init_ignores_unsupported_module():
     )
 
 
+@pytest.mark.pruned
 def test_weights_init_rejects_invalid_method():
     layer = nn.Linear(2, 2)
 
@@ -1063,6 +1088,7 @@ def test_weights_init_rejects_invalid_method():
         )
 
 
+@pytest.mark.pruned
 def test_weights_init_skips_frozen_weight():
     layer = nn.Linear(3, 3)
     layer.weight.requires_grad = False
@@ -1080,6 +1106,7 @@ def test_weights_init_skips_frozen_weight():
     )
 
 
+@pytest.mark.pruned
 def test_weights_init_skips_frozen_bias():
     layer = nn.Linear(3, 3)
     layer.bias.requires_grad = False
@@ -1100,6 +1127,7 @@ def test_weights_init_skips_frozen_bias():
     )
 
 
+@pytest.mark.pruned
 def test_weights_init_zeroes_trainable_bias():
     layer = nn.Linear(3, 3)
 
@@ -1117,6 +1145,7 @@ def test_weights_init_zeroes_trainable_bias():
     )
 
 
+@pytest.mark.pruned
 def test_weights_init_layer_without_bias():
     layer = nn.Linear(
         3,
@@ -1132,6 +1161,7 @@ def test_weights_init_layer_without_bias():
     assert layer.bias is None
 
 
+@pytest.mark.pruned
 def test_weights_init_frozen_weight_still_initializes_bias():
     layer = nn.Linear(3, 3)
     layer.weight.requires_grad = False
@@ -1243,6 +1273,7 @@ def test_config_level_checkpoint_validation_rejects_output_shape():
         )
 
 
+@pytest.mark.pruned
 def test_config_level_checkpoint_validation_rejects_input_metadata():
     RuntimeContext.INPUT_VAR_METADATA = {
         "current": "input",
@@ -1267,6 +1298,7 @@ def test_config_level_checkpoint_validation_rejects_input_metadata():
         )
 
 
+@pytest.mark.pruned
 def test_config_level_checkpoint_validation_rejects_target_metadata():
     RuntimeContext.TARGET_VAR_METADATA = {
         "current": "target",
@@ -1291,6 +1323,7 @@ def test_config_level_checkpoint_validation_rejects_target_metadata():
         )
 
 
+@pytest.mark.pruned
 def test_config_level_input_shape_check_precedes_output_shape_check():
     config = ConfigCompatibilityHarness(
         make_checkpoint_config(
@@ -1310,6 +1343,7 @@ def test_config_level_input_shape_check_precedes_output_shape_check():
         )
 
 
+@pytest.mark.pruned
 def test_config_level_output_shape_check_precedes_metadata_checks():
     RuntimeContext.INPUT_VAR_METADATA = {
         "current": "input",
@@ -1340,6 +1374,7 @@ def test_config_level_output_shape_check_precedes_metadata_checks():
         )
 
 
+@pytest.mark.pruned
 def test_config_level_input_metadata_check_precedes_target_metadata():
     RuntimeContext.INPUT_VAR_METADATA = {
         "current": "input",
@@ -1370,6 +1405,7 @@ def test_config_level_input_metadata_check_precedes_target_metadata():
         )
 
 
+@pytest.mark.pruned
 def test_get_device_parameter_branch_does_not_inspect_buffers(
     monkeypatch,
 ):
@@ -1387,6 +1423,7 @@ def test_get_device_parameter_branch_does_not_inspect_buffers(
     assert model._get_device() == model.linear.weight.device
 
 
+@pytest.mark.pruned
 def test_get_device_buffer_branch_after_empty_parameter_iterator(
     monkeypatch,
 ):
@@ -1407,6 +1444,7 @@ def test_get_device_buffer_branch_after_empty_parameter_iterator(
     assert parameter_calls == [True]
 
 
+@pytest.mark.pruned
 def test_get_device_cpu_branch_after_empty_iterators(
     monkeypatch,
 ):
@@ -1426,6 +1464,7 @@ def test_get_device_cpu_branch_after_empty_iterators(
     assert model._get_device() == torch.device("cpu")
 
 
+@pytest.mark.pruned
 def test_load_state_dict_accepts_string_checkpoint_path(tmp_path):
     model = DummyModel()
     path = tmp_path / "checkpoint.pt"
@@ -1447,6 +1486,7 @@ def test_load_state_dict_accepts_string_checkpoint_path(tmp_path):
     assert isinstance(config.load_path, str)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_filters_mixed_prefixed_keys(
     monkeypatch,
     tmp_path,
@@ -1500,6 +1540,7 @@ def test_load_state_dict_filters_mixed_prefixed_keys(
     )
 
 
+@pytest.mark.pruned
 def test_load_state_dict_freezes_every_parameter(
     monkeypatch,
     tmp_path,
@@ -1538,6 +1579,7 @@ def test_load_state_dict_freezes_every_parameter(
     assert all(parameter.requires_grad is False for parameter in model.parameters())
 
 
+@pytest.mark.pruned
 def test_load_state_dict_freeze_branch_handles_model_without_parameters(
     monkeypatch,
     tmp_path,
@@ -1562,6 +1604,7 @@ def test_load_state_dict_freeze_branch_handles_model_without_parameters(
     )
 
 
+@pytest.mark.pruned
 def test_load_state_dict_propagates_missing_module_key(tmp_path):
     model = DummyModel()
     path = tmp_path / "checkpoint.pt"
@@ -1577,6 +1620,7 @@ def test_load_state_dict_propagates_missing_module_key(tmp_path):
         model._load_state_dict(make_checkpoint_config(path))
 
 
+@pytest.mark.pruned
 def test_load_state_dict_propagates_torch_load_error(
     monkeypatch,
     tmp_path,
@@ -1598,6 +1642,7 @@ def test_load_state_dict_propagates_torch_load_error(
         model._load_state_dict(make_checkpoint_config(path))
 
 
+@pytest.mark.pruned
 def test_load_state_dict_does_not_collect_after_load_failure(
     monkeypatch,
     tmp_path,
@@ -1627,6 +1672,7 @@ def test_load_state_dict_does_not_collect_after_load_failure(
     collect.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_load_state_dict_does_not_freeze_before_successful_load(
     monkeypatch,
     tmp_path,
@@ -1655,6 +1701,7 @@ def test_load_state_dict_does_not_freeze_before_successful_load(
     assert all(parameter.requires_grad is True for parameter in model.parameters())
 
 
+@pytest.mark.pruned
 def test_resolve_flow_settings_default_argument():
     config = DummyCvaeConfig(
         latent_size=4,
@@ -1668,6 +1715,7 @@ def test_resolve_flow_settings_default_argument():
     assert config.condition_dependant_flow is False
 
 
+@pytest.mark.pruned
 def test_resolve_flow_settings_condition_independent_with_flow():
     config = DummyCvaeConfig(
         latent_size=4,
@@ -1683,6 +1731,7 @@ def test_resolve_flow_settings_condition_independent_with_flow():
     assert config.condition_dependant_flow is True
 
 
+@pytest.mark.pruned
 def test_weights_init_default_method_is_xavier(
     monkeypatch,
 ):
@@ -1700,6 +1749,7 @@ def test_weights_init_default_method_is_xavier(
     initializer.assert_called_once_with(layer.weight)
 
 
+@pytest.mark.pruned
 def test_weights_init_unsupported_module_does_not_validate_method():
     module_value = nn.ReLU()
 
@@ -1711,6 +1761,7 @@ def test_weights_init_unsupported_module_does_not_validate_method():
     assert result is None
 
 
+@pytest.mark.pruned
 def test_weights_init_supported_module_with_none_weight():
     class NoWeightLinear(nn.Linear):
         def __init__(self):
@@ -1737,6 +1788,7 @@ def test_weights_init_supported_module_with_none_weight():
     )
 
 
+@pytest.mark.pruned
 def test_weights_init_supported_module_with_none_bias():
     layer = nn.Linear(
         2,
@@ -1758,6 +1810,7 @@ def test_weights_init_supported_module_with_none_bias():
     )
 
 
+@pytest.mark.pruned
 def test_weights_init_frozen_weight_and_trainable_bias(
     monkeypatch,
 ):
@@ -1786,6 +1839,7 @@ def test_weights_init_frozen_weight_and_trainable_bias(
     )
 
 
+@pytest.mark.pruned
 def test_weights_init_trainable_weight_and_frozen_bias(
     monkeypatch,
 ):
@@ -1844,6 +1898,7 @@ def test_weights_init_frozen_weight_and_bias_call_no_initializers(
     constant.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_weights_init_trainable_bias_calls_constant_initializer(
     monkeypatch,
 ):
@@ -1867,6 +1922,7 @@ def test_weights_init_trainable_bias_calls_constant_initializer(
     )
 
 
+@pytest.mark.pruned
 def test_weights_init_no_bias_does_not_call_constant_initializer(
     monkeypatch,
 ):

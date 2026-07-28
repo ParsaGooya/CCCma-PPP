@@ -68,6 +68,7 @@ class RegisteredDummy(DummyPreprocessor):
     pass
 
 
+@pytest.mark.pruned
 def test_selector_get_preprocessor():
     sel = PreprocessingStepSelector(name="dummy", args={"scale": 2})
     proc = sel.get_preprocessor()
@@ -88,6 +89,7 @@ def make_pipeline(scale=2):
     return PreprocessingPipeline([sel])
 
 
+@pytest.mark.pruned
 def test_pipeline_fit_basic(monkeypatch, tmp_path):
     monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
 
@@ -120,6 +122,7 @@ def test_pipeline_transform_inverse(monkeypatch, tmp_path):
     assert np.allclose(restored, data)
 
 
+@pytest.mark.pruned
 def test_transform_invalid_step():
     pipe = make_pipeline()
     pipe.steps = ["dummy"]
@@ -155,6 +158,7 @@ def test_get_all_preprocessors(monkeypatch, tmp_path):
     assert len(procs) == 1
 
 
+@pytest.mark.pruned
 def test_get_named_preprocessor(monkeypatch, tmp_path):
     monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
 
@@ -218,6 +222,7 @@ def test_add_preprocessor_with_index():
     assert pipe.steps[0] == "dummy"
 
 
+@pytest.mark.pruned
 def test_add_preprocessor_not_fitted():
     pipe = make_pipeline()
     proc = DummyPreprocessor()
@@ -244,6 +249,7 @@ def test_pipeline_save(monkeypatch, tmp_path):
     assert len(saved) > 0
 
 
+@pytest.mark.pruned
 def test_custom_save_path_and_name(monkeypatch, tmp_path):
     pipe = make_pipeline()
 
@@ -265,6 +271,7 @@ def test_custom_save_path_and_name(monkeypatch, tmp_path):
     assert (custom_dir / custom_name).exists()
 
 
+@pytest.mark.pruned
 def test_transform_with_step_arguments(monkeypatch, tmp_path):
     monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
 
@@ -282,6 +289,7 @@ def test_transform_with_step_arguments(monkeypatch, tmp_path):
     assert out is not None
 
 
+@pytest.mark.pruned
 def test_multiple_steps_pipeline(monkeypatch, tmp_path):
     monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
 
@@ -299,6 +307,7 @@ def test_multiple_steps_pipeline(monkeypatch, tmp_path):
     assert len(pipe.steps) == 2
 
 
+@pytest.mark.pruned
 def test_add_preprocessor_mid_pipeline():
     pipe = make_pipeline()
     pipe.steps = ["a"]
@@ -330,6 +339,7 @@ def test_save_existing_directory(monkeypatch, tmp_path):
     assert dir_path.exists()
 
 
+@pytest.mark.pruned
 def test_transform_empty_args(monkeypatch, tmp_path):
     monkeypatch.setenv("GLOBAL_EXP_DIR", str(tmp_path))
 
@@ -345,6 +355,7 @@ def test_transform_empty_args(monkeypatch, tmp_path):
     assert out is not None
 
 
+@pytest.mark.pruned
 def test_set_name():
     pipe = make_pipeline()
 
@@ -361,6 +372,7 @@ def test_post_init_with_load_dir(tmp_path):
     assert pipe.reference_var is None
 
 
+@pytest.mark.pruned
 def test_fit_returns_self(monkeypatch, tmp_path):
     monkeypatch.setattr(
         RuntimeContext,
@@ -383,6 +395,7 @@ def test_fit_returns_self(monkeypatch, tmp_path):
     assert result is pipe
 
 
+@pytest.mark.pruned
 def test_fit_with_empty_pipeline(monkeypatch, tmp_path):
     monkeypatch.setattr(
         RuntimeContext,
@@ -407,6 +420,7 @@ def test_fit_with_empty_pipeline(monkeypatch, tmp_path):
     assert pipe.fitted_preprocessors == []
 
 
+@pytest.mark.pruned
 def test_transform_none_step_arguments():
     pipe = make_pipeline()
 
@@ -422,6 +436,7 @@ def test_transform_none_step_arguments():
     assert result is not None
 
 
+@pytest.mark.pruned
 def test_inverse_none_step_arguments():
     pipe = make_pipeline()
 
@@ -437,6 +452,7 @@ def test_inverse_none_step_arguments():
     assert result is not None
 
 
+@pytest.mark.pruned
 def test_add_fitted_preprocessor_append():
     pipe = make_pipeline()
 
@@ -501,6 +517,7 @@ def test_load_from_memory_success(tmp_path):
     assert pipe.name == "loaded_pipe"
 
 
+@pytest.mark.pruned
 def test_fit_creates_save_directory(monkeypatch, tmp_path):
     monkeypatch.setattr(
         RuntimeContext,
@@ -628,6 +645,7 @@ def test_inverse_passes_step_arguments():
     assert proc.kwargs == {"x": 456}
 
 
+@pytest.mark.pruned
 def test_multiple_preprocessors_order(monkeypatch, tmp_path):
     monkeypatch.setattr(
         RuntimeContext,
@@ -658,6 +676,7 @@ def test_multiple_preprocessors_order(monkeypatch, tmp_path):
     ]
 
 
+@pytest.mark.pruned
 def test_get_preprocessors_runtime_error():
     pipe = make_pipeline()
 
@@ -670,6 +689,7 @@ def test_get_preprocessors_runtime_error():
         pipe.get_preprocessors()
 
 
+@pytest.mark.pruned
 def test_load_from_memory_copies_attributes(tmp_path):
     loaded = FakeLoaded(
         name="abc",

@@ -236,6 +236,7 @@ def make_trainer(validation=True, mixed_precision=False, grad_clip=None):
     return trainer, module, optimizer, train_loader, validation_loader
 
 
+@pytest.mark.pruned
 def test_trainer_config_defaults():
     cfg = TrainerConfig()
 
@@ -246,11 +247,13 @@ def test_trainer_config_defaults():
     assert cfg.grad_clip is None
 
 
+@pytest.mark.pruned
 def test_trainer_config_invalid_grad_clip():
     with pytest.raises((AssertionError, ValueError, RuntimeError)):
         TrainerConfig(grad_clip=0)
 
 
+@pytest.mark.pruned
 def test_trainer_config_build_sets_batch_counts():
     module = DummyModule(built=True)
     optimizer = DummyOptimizer(module)
@@ -271,6 +274,7 @@ def test_trainer_config_build_sets_batch_counts():
     assert cfg.num_validation_batches == 2
 
 
+@pytest.mark.pruned
 def test_trainer_config_build_without_validation_loader():
     module = DummyModule(built=True)
     optimizer = DummyOptimizer(module)
@@ -290,6 +294,7 @@ def test_trainer_config_build_without_validation_loader():
     assert not hasattr(cfg, "num_validation_batches")
 
 
+@pytest.mark.pruned
 def test_trainer_config_build_accepts_unbuilt_module_current_behavior():
     module = DummyModule(built=False)
     optimizer = DummyOptimizer(module)
@@ -345,6 +350,7 @@ def test_trainer_config_cvae_builds_beta_finder(monkeypatch):
     assert beta.built_with == 4
 
 
+@pytest.mark.pruned
 def test_setup_distributed_basic(env_dirs):
     trainer, module, _, _, _ = make_trainer(validation=True)
     dist = DummyDistributed(distributed=False)
@@ -368,6 +374,7 @@ def test_setup_distributed_basic(env_dirs):
     assert any("Trainer setup complete" in rec[1] for rec in logger.records)
 
 
+@pytest.mark.pruned
 def test_setup_distributed_without_validation(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
     dist = DummyDistributed(distributed=False)
@@ -377,6 +384,7 @@ def test_setup_distributed_without_validation(env_dirs):
     assert trainer.validation_aggregator is None
 
 
+@pytest.mark.pruned
 def test_setup_distributed_logger_none_prints(env_dirs, capsys):
     trainer, _, _, _, _ = make_trainer(validation=False)
 
@@ -386,6 +394,7 @@ def test_setup_distributed_logger_none_prints(env_dirs, capsys):
     assert "Logger is None" in captured.out
 
 
+@pytest.mark.pruned
 def test_setup_distributed_save_checkpoint_false_logs_warning(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
     logger = DummyLogger()
@@ -410,6 +419,7 @@ def test_setup_distributed_device_mismatch_raises(env_dirs):
         )
 
 
+@pytest.mark.pruned
 def test_setup_distributed_calls_barrier_when_distributed(env_dirs, monkeypatch):
     class FakeDDP:
         def __init__(
@@ -438,6 +448,7 @@ def test_setup_distributed_calls_barrier_when_distributed(env_dirs, monkeypatch)
     assert dist.barrier_calls >= 1
 
 
+@pytest.mark.pruned
 def test_log_root_uses_logger(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
     logger = DummyLogger()
@@ -448,6 +459,7 @@ def test_log_root_uses_logger(env_dirs):
     assert any(rec[1] == "hello" for rec in logger.records)
 
 
+@pytest.mark.pruned
 def test_log_root_prints_when_logger_none(env_dirs, capsys):
     trainer, _, _, _, _ = make_trainer(validation=False)
     trainer.setup_distributed(DummyDistributed(root=True), None)
@@ -457,6 +469,7 @@ def test_log_root_prints_when_logger_none(env_dirs, capsys):
     assert "hello print" in capsys.readouterr().out
 
 
+@pytest.mark.pruned
 def test_log_root_noop_when_not_root(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
     logger = DummyLogger()
@@ -467,6 +480,7 @@ def test_log_root_noop_when_not_root(env_dirs):
     assert not any(rec[1] == "hidden" for rec in logger.records)
 
 
+@pytest.mark.pruned
 def test_is_improved_first_validation_is_true():
     trainer, _, _, _, _ = make_trainer(validation=True)
 
@@ -480,6 +494,7 @@ def test_is_improved_tensor_input():
     assert trainer._is_improved(torch.tensor(5.0)) is True
 
 
+@pytest.mark.pruned
 def test_is_improved_requires_minimum_percentage():
     trainer, _, _, _, _ = make_trainer(validation=True)
     trainer._best_validation_loss = 100.0
@@ -489,6 +504,7 @@ def test_is_improved_requires_minimum_percentage():
     assert trainer._is_improved(97.0) is True
 
 
+@pytest.mark.pruned
 def test_should_stop_early_no_validation():
     trainer, _, _, _, _ = make_trainer(validation=False)
     trainer.earlystopping_counter = 999
@@ -504,6 +520,7 @@ def test_should_stop_early_none_buffer():
     assert trainer._should_stop_early() is False
 
 
+@pytest.mark.pruned
 def test_should_stop_early_inf_buffer():
     trainer, _, _, _, _ = make_trainer(validation=True)
     trainer.config.earlystoppingbuffer = float("inf")
@@ -512,6 +529,7 @@ def test_should_stop_early_inf_buffer():
     assert trainer._should_stop_early() is False
 
 
+@pytest.mark.pruned
 def test_should_stop_early_true():
     trainer, _, _, _, _ = make_trainer(validation=True)
     trainer.config.earlystoppingbuffer = 2
@@ -527,6 +545,7 @@ def test_train_requires_setup():
         trainer.train()
 
 
+@pytest.mark.pruned
 def test_train_on_batch_basic(env_dirs):
     trainer, module, optimizer, _, _ = make_trainer(validation=False)
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -563,6 +582,7 @@ def test_train_on_batch_with_beta(env_dirs):
     assert beta.calls == [0]
 
 
+@pytest.mark.pruned
 def test_train_on_batch_gradient_accumulation_delays_optimizer(env_dirs):
     module = DummyModule()
     optimizer = DummyOptimizer(module)
@@ -589,6 +609,7 @@ def test_train_on_batch_gradient_accumulation_delays_optimizer(env_dirs):
     assert trainer.global_step == 1
 
 
+@pytest.mark.pruned
 def test_train_on_epoch(env_dirs):
     trainer, module, _, train_loader, _ = make_trainer(validation=False)
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -610,6 +631,7 @@ def test_validate_on_epoch_requires_loader(env_dirs):
         trainer._validate_on_epoch()
 
 
+@pytest.mark.pruned
 def test_validate_on_batch_basic(env_dirs):
     trainer, module, _, _, _ = make_trainer(validation=True)
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -621,6 +643,7 @@ def test_validate_on_batch_basic(env_dirs):
     assert logs["total_loss"] == 1.0
 
 
+@pytest.mark.pruned
 def test_validate_on_epoch(env_dirs):
     trainer, module, _, _, validation_loader = make_trainer(validation=True)
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -644,6 +667,7 @@ def test_optimizer_step_with_grad_clip(env_dirs):
     assert optimizer.scheduler_steps == 1
 
 
+@pytest.mark.pruned
 def test_clear_memory_cpu(monkeypatch):
     called = {"gc": False}
 
@@ -663,6 +687,7 @@ def test_clear_memory_cpu(monkeypatch):
     assert called["gc"] is True
 
 
+@pytest.mark.pruned
 def test_save_checkpoint_without_validation(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -677,6 +702,7 @@ def test_save_checkpoint_without_validation(env_dirs):
     assert path.exists()
 
 
+@pytest.mark.pruned
 def test_save_checkpoint_with_validation(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -691,6 +717,7 @@ def test_save_checkpoint_with_validation(env_dirs):
     assert path.exists()
 
 
+@pytest.mark.pruned
 def test_save_checkpoint_distributed_barrier(env_dirs, monkeypatch):
 
     class FakeDDP:
@@ -789,6 +816,7 @@ def test_load_checkpoint_without_scaler_or_histories(env_dirs):
     assert trainer.batch_step == 5
 
 
+@pytest.mark.pruned
 def test_log_epoch_with_validation(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
     logger = DummyLogger()
@@ -804,6 +832,7 @@ def test_log_epoch_with_validation(env_dirs):
     assert any("validation loss" in rec[1] for rec in logger.records)
 
 
+@pytest.mark.pruned
 def test_log_epoch_without_validation(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
     logger = DummyLogger()
@@ -816,6 +845,7 @@ def test_log_epoch_without_validation(env_dirs):
     assert any("train loss" in rec[1] for rec in logger.records)
 
 
+@pytest.mark.pruned
 def test_train_loop_without_validation(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
     trainer.max_epochs = 1
@@ -828,6 +858,7 @@ def test_train_loop_without_validation(env_dirs):
     assert FakeAggregator.plot_calls
 
 
+@pytest.mark.pruned
 def test_train_loop_with_validation_improvement(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
     trainer.max_epochs = 1
@@ -840,6 +871,7 @@ def test_train_loop_with_validation_improvement(env_dirs):
     assert (env_dirs[0] / "best.pt").exists()
 
 
+@pytest.mark.pruned
 def test_train_loop_with_validation_no_improvement(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
     trainer.max_epochs = 1
@@ -851,6 +883,7 @@ def test_train_loop_with_validation_no_improvement(env_dirs):
     assert trainer.earlystopping_counter == 1
 
 
+@pytest.mark.pruned
 def test_train_loop_early_stopping(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
     trainer.max_epochs = 5
@@ -939,6 +972,7 @@ def test_train_loop_final_leftover_validation_improved(env_dirs):
     assert trainer.validation_aggregator.epochs
 
 
+@pytest.mark.pruned
 def test_raw_module_ddp_branch(monkeypatch):
     class FakeDDP:
         def __init__(self, module):
@@ -1018,6 +1052,7 @@ def test_optimizer_step_amp_skipped_does_not_increment(monkeypatch, env_dirs):
     assert optimizer.scheduler_steps == 0
 
 
+@pytest.mark.pruned
 def test_load_checkpoint_without_train_history_key(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -1041,6 +1076,7 @@ def test_load_checkpoint_without_train_history_key(env_dirs):
     assert trainer.batch_step == 4
 
 
+@pytest.mark.pruned
 def test_train_loop_without_validation_no_checkpoint_when_disabled(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
     trainer.max_epochs = 1
@@ -1056,6 +1092,7 @@ def test_train_loop_without_validation_no_checkpoint_when_disabled(env_dirs):
     assert not (env_dirs[0] / "best.pt").exists()
 
 
+@pytest.mark.pruned
 def test_train_loop_validation_no_improvement_checkpoint_disabled(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
     trainer.max_epochs = 1
@@ -1105,6 +1142,7 @@ def test_train_loop_leftover_skipped_due_to_early_stop(env_dirs):
     assert trainer._should_stop_early() is True
 
 
+@pytest.mark.pruned
 def test_log_root_not_root_logger_none(env_dirs, capsys):
     trainer, _, _, _, _ = make_trainer(validation=False)
     trainer.setup_distributed(DummyDistributed(root=False), logger=None)
@@ -1114,6 +1152,7 @@ def test_log_root_not_root_logger_none(env_dirs, capsys):
     assert "should not print" not in capsys.readouterr().out
 
 
+@pytest.mark.pruned
 def test_setup_distributed_non_root_does_not_create_checkpoint_dir(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
 
@@ -1127,6 +1166,7 @@ def test_setup_distributed_non_root_does_not_create_checkpoint_dir(env_dirs):
     assert trainer.is_on_root is False
 
 
+@pytest.mark.pruned
 def test_setup_distributed_existing_dirs_no_crash(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
 
@@ -1143,6 +1183,7 @@ def test_setup_distributed_existing_dirs_no_crash(env_dirs):
     assert fig_dir.exists()
 
 
+@pytest.mark.pruned
 def test_setup_distributed_non_root_logger_none(env_dirs, capsys):
     trainer, _, _, _, _ = make_trainer(validation=False)
 
@@ -1156,6 +1197,7 @@ def test_setup_distributed_non_root_logger_none(env_dirs, capsys):
     assert "Logger is None" in captured.out
 
 
+@pytest.mark.pruned
 def test_is_improved_equal_loss_not_improved():
     trainer, _, _, _, _ = make_trainer(validation=True)
 
@@ -1164,6 +1206,7 @@ def test_is_improved_equal_loss_not_improved():
     assert trainer._is_improved(1.0) is False
 
 
+@pytest.mark.pruned
 def test_should_stop_early_false_when_counter_below_buffer():
     trainer, _, _, _, _ = make_trainer(validation=True)
 
@@ -1173,6 +1216,7 @@ def test_should_stop_early_false_when_counter_below_buffer():
     assert trainer._should_stop_early() is False
 
 
+@pytest.mark.pruned
 def test_train_on_batch_batch_step_increments_only(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
 
@@ -1183,6 +1227,7 @@ def test_train_on_batch_batch_step_increments_only(env_dirs):
     assert trainer.batch_step == 1
 
 
+@pytest.mark.pruned
 def test_validate_on_batch_keeps_module_eval(env_dirs):
     trainer, module, _, _, _ = make_trainer(validation=True)
 
@@ -1193,6 +1238,7 @@ def test_validate_on_batch_keeps_module_eval(env_dirs):
     assert module.training is False
 
 
+@pytest.mark.pruned
 def test_save_checkpoint_non_root_missing_dir_raises(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
 
@@ -1209,6 +1255,7 @@ def test_save_checkpoint_non_root_missing_dir_raises(env_dirs):
         )
 
 
+@pytest.mark.pruned
 def test_load_checkpoint_restores_scaler_state(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
 
@@ -1233,6 +1280,7 @@ def test_load_checkpoint_restores_scaler_state(env_dirs):
     assert trainer.batch_step == 3
 
 
+@pytest.mark.pruned
 def test_optimizer_step_without_grad_clip(env_dirs):
     trainer, module, optimizer, _, _ = make_trainer(
         validation=False,
@@ -1249,6 +1297,7 @@ def test_optimizer_step_without_grad_clip(env_dirs):
     assert trainer.global_step == 1
 
 
+@pytest.mark.pruned
 def test_train_on_epoch_sets_module_train_mode(env_dirs):
     trainer, module, _, _, _ = make_trainer(validation=False)
 
@@ -1259,6 +1308,7 @@ def test_train_on_epoch_sets_module_train_mode(env_dirs):
     assert module.training is True
 
 
+@pytest.mark.pruned
 def test_load_checkpoint_validation_aggregator_none(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
 
@@ -1276,6 +1326,7 @@ def test_load_checkpoint_validation_aggregator_none(env_dirs):
     assert trainer.validation_aggregator is None
 
 
+@pytest.mark.pruned
 def test_setup_distributed_stores_distributed_reference(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
 
@@ -1286,6 +1337,7 @@ def test_setup_distributed_stores_distributed_reference(env_dirs):
     assert trainer.distributed is dist
 
 
+@pytest.mark.pruned
 def test_log_root_accepts_format_args(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
 
@@ -1301,6 +1353,7 @@ def test_log_root_accepts_format_args(env_dirs):
     assert any(rec[2] == (123,) for rec in logger.records)
 
 
+@pytest.mark.pruned
 def test_setup_distributed_save_checkpoint_false_no_warning_non_root(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=False)
 
@@ -1315,6 +1368,7 @@ def test_setup_distributed_save_checkpoint_false_no_warning_non_root(env_dirs):
     assert not any("no checkpoints" in rec[1] for rec in logger.records)
 
 
+@pytest.mark.pruned
 def test_setup_distributed_distributed_existing_dirs(env_dirs, monkeypatch):
     class FakeDDP:
         def __init__(
@@ -1346,6 +1400,7 @@ def test_setup_distributed_distributed_existing_dirs(env_dirs, monkeypatch):
     assert dist.barrier_calls >= 1
 
 
+@pytest.mark.pruned
 def test_optimizer_step_amp_enabled_branch(env_dirs):
     trainer, module, optimizer, _, _ = make_trainer(validation=False)
 
@@ -1422,6 +1477,7 @@ def test_train_loop_no_validation_no_plot_when_non_root(env_dirs):
     assert trainer._epochs_trained == 1
 
 
+@pytest.mark.pruned
 def test_load_checkpoint_restores_histories(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
 
@@ -1445,6 +1501,7 @@ def test_load_checkpoint_restores_histories(env_dirs):
     assert trainer.validation_aggregator.loaded_state is not None
 
 
+@pytest.mark.pruned
 def test_should_stop_early_exact_buffer():
     trainer, _, _, _, _ = make_trainer(validation=True)
 
@@ -1454,6 +1511,7 @@ def test_should_stop_early_exact_buffer():
     assert trainer._should_stop_early() is True
 
 
+@pytest.mark.pruned
 def test_is_improved_worse_loss():
     trainer, _, _, _, _ = make_trainer(validation=True)
 

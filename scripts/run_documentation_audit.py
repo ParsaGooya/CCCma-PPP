@@ -2322,6 +2322,7 @@ class Auditor:
         )
 
     def write_outputs(self) -> None:
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         issue_rows = []
         for issue in self.issues:
             row = asdict(issue)
