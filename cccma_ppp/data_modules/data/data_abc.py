@@ -7,7 +7,7 @@ import xarray as xr
 import numpy as np
 import dataclasses
 
-from cccma_ppp.preprocessing import PreprocessingPipeline
+from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.configs import (
     required_sample_dimensions,
     optional_sample_dimensions,

@@ -11,7 +11,7 @@ import gc
 
 from cccma_ppp.core.selectors import ModuleSelector
 from cccma_ppp.inference.dataloader import InferenceDataloaderConfig
-from cccma_ppp.preprocessing import PreprocessingPipeline
+from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.core.writer import WriterConfig
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext

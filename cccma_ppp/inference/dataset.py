@@ -4,15 +4,17 @@ import numpy as np
 import xarray as xr
 import torch
 
-from cccma_ppp.data_modules.dataset import (
+from cccma_ppp.data_modules.dataset.config_abc import (
     DatasetConfigABC,
-    DatasetABC,
     lead_months_config,
-    DatasetOperator,
+)
+from cccma_ppp.data_modules.dataset.dataset_abc import (
+    DatasetABC,
     AddedTimeFeatures,
 )
+from cccma_ppp.data_modules.dataset.operator import DatasetOperator
 
-from cccma_ppp.data_modules.data import (
+from cccma_ppp.data_modules.data.data_configs import (
     ModelDataConfig,
     ConditionDataConfig,
 )

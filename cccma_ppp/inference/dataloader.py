@@ -11,8 +11,9 @@ from cccma_ppp.data_modules.dataloader import (
     DataloaderConfigABC,
     BatchDataABC,
 )
-from cccma_ppp.data_modules.dataset import AddedTimeFeatures
-from cccma_ppp.generic import Distributed, RuntimeContext
+from cccma_ppp.data_modules.dataset.dataset_abc import AddedTimeFeatures
+from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 @dataclasses.dataclass

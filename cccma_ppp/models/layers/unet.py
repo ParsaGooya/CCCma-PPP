@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import copy
 
-from cccma_ppp.models.layers import (
+from cccma_ppp.models.layers.generic import (
     MaskPoolingMethod,
     UpsamplingMethod,
     OutputActivation,

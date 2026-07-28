@@ -9,8 +9,13 @@ from pathlib import Path
 import dataclasses
 
 from cccma_ppp.core.core_abc import OutputABC
-from cccma_ppp.generic import RuntimeContext
-from cccma_ppp.models.layers import ActivationName, InitMethod, NoiseLevel, _sample
+from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.models.layers.utils import _sample
+from cccma_ppp.models.layers.generic import (
+    ActivationName,
+    InitMethod,
+    NoiseLevel,
+)
 
 
 @dataclasses.dataclass

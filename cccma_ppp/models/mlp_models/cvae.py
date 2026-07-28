@@ -16,7 +16,11 @@ from cccma_ppp.models.layers import _get_normal
 from cccma_ppp.models.layers.mlp import build_mlp
 from cccma_ppp.core.cVAE_module import cVAEOutput
 
-from cccma_ppp.models.layers import InitMethod, ActivationName, _validate_dropout
+from cccma_ppp.models.layers.generic import (
+    InitMethod,
+    ActivationName,
+    _validate_dropout,
+)
 
 from cccma_ppp.core.selectors import cVAEModelSelector
 

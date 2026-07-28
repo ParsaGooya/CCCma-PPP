@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from cccma_ppp.models.layers import ActivationName, _build_activation
+from cccma_ppp.models.layers.generic import ActivationName, _build_activation
 
 
 def build_mlp(

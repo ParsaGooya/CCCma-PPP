@@ -7,8 +7,9 @@ from typing import Literal
 import contextlib
 from collections.abc import Iterator
 
-from cccma_ppp.preprocessing import PreprocessingPipeline, Flattennanremove
-from cccma_ppp.generic import RuntimeContext
+from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
+from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
+from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.configs import supported_NN_dimensions_sorted, required_sample_dimensions
 
 spatialmethod = Literal["uniform", "cosine_lat"]

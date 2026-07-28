@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 import xarray as xr
 import dask
 
-from cccma_ppp.data_modules.data import (
+from cccma_ppp.data_modules.data.data_configs import (
     ModelDataConfig,
     ConditionDataConfig,
     DataConfigABC,
@@ -17,7 +17,7 @@ from cccma_ppp.configs import (
     optional_sample_dimensions,
 )
 
-from cccma_ppp.data_modules import (
+from cccma_ppp.data_modules.utils import (
     _unwrap_data_variables,
     _load_xarray_data,
     _create_train_mask,

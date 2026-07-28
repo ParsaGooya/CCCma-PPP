@@ -8,9 +8,9 @@ import gc
 import warnings
 
 from cccma_ppp.core.registery import Registery
-from cccma_ppp.core import moduleABC
+from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.models.models_abc import modelABC, flowABC, CheckpointConfig
-from cccma_ppp.generic import Distributed
+from cccma_ppp.generic.distributed import Distributed
 
 
 @dataclasses.dataclass

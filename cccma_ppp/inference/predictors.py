@@ -6,7 +6,8 @@ from typing import Callable, ClassVar
 import warnings
 
 from cccma_ppp.core.trainer import clear_memory
-from cccma_ppp.generic import Distributed, RunningCovariance
+from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic.aggregator import RunningCovariance
 from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.core.cVAE_module import cVAEOutput
 from cccma_ppp.core.deterministic_module import deterministicOutput

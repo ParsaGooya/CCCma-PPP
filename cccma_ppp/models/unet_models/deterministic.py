@@ -17,9 +17,11 @@ from cccma_ppp.models.models_abc import (
     GENERATORConfig,
 )
 
-from cccma_ppp.models.layers import (
+from cccma_ppp.models.layers.utils import (
     _broadcast_mask,
     _resize_tensor,
+)
+from cccma_ppp.models.layers.generic import (
     InitMethod,
     UpsamplingMethod,
     MaskPoolingMethod,

@@ -9,7 +9,8 @@ from collections.abc import Callable, Iterator
 from itertools import islice
 
 
-from cccma_ppp.data_modules.dataset import DatasetConfigABC, AddedTimeFeatures
+from cccma_ppp.data_modules.dataset.config_abc import DatasetConfigABC
+from cccma_ppp.data_modules.dataset.dataset_abc import AddedTimeFeatures
 
 
 class BatchDataABC(abc.ABC):

@@ -21,7 +21,11 @@ from typing import Literal
 from cccma_ppp.models.models_abc import modelConfigABC
 from cccma_ppp.core.selectors import deterministicModelSelector
 
-from cccma_ppp.models.layers import InitMethod, ActivationName, _validate_dropout
+from cccma_ppp.models.layers.generic import (
+    InitMethod,
+    ActivationName,
+    _validate_dropout,
+)
 
 
 AppendMode = Literal[1, 2, 3]
