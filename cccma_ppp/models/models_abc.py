@@ -374,7 +374,7 @@ class DeterministicRequest:
     input: torch.Tensor
     input_mask: torch.Tensor | None = None
     added_features: torch.Tensor | None = None
-    output_sample_size: int = 1
+    output_sample_size: int = 0
 
 
 class deterministicmodelsABC(modelABC):
@@ -483,7 +483,7 @@ class cVAEForwardRequest:
     condition_mask: torch.Tensor | None = None
     added_features: torch.Tensor | None = None
     sample_size: int = 1
-    output_sample_size: int = 1
+    output_sample_size: int = 0
     min_posterior_variance: torch.Tensor | None = None
 
 
@@ -522,7 +522,7 @@ class cVAEPredictRequest:
     latent_samples: torch.Tensor | None = None
     nstds: int = 1
     sample_size: int = 1
-    output_sample_size: int = 1
+    output_sample_size: int = 0
 
 
 class cVAEmodelsABC(modelABC):
