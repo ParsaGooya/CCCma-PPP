@@ -189,7 +189,7 @@ def save_batch_to_netcdf(
     channel_size = prediction.shape[len(extra_dims_sorted) + 1]
     spatial_shape = prediction.shape[len(extra_dims_sorted) + 2:]
 
-    expected_dims = num_output_dims + 2 + len(extra_dims_sorted)
+    expected_dims = num_output_dims + 1 + len(extra_dims_sorted)
 
     if prediction.ndim != expected_dims:
         raise ValueError(
@@ -204,9 +204,8 @@ def save_batch_to_netcdf(
     dims = (
         extra_dims_sorted
         + ["batch", "channels"]
-        + [f"output_dim_{i}" for i in range(num_output_dims)]
+        + [f"output_dim_{i}" for i in range(num_output_dims - 1)]
     )
-
 
     index_keys = list(metadata[0].keys())
 
