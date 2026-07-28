@@ -145,7 +145,7 @@ class InferenceDataset(DatasetABC):
                                            selection, 
                                            input)
 
-        input_array = self._compute(input.data)
+        input_array, = self._compute(input.data)
 
         datadict = dict(
             input=torch.as_tensor(input_array, dtype=torch.float32),
