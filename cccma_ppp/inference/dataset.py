@@ -11,8 +11,9 @@ from cccma_ppp.data_modules.dataset import (
     DatasetOperator,
     AddedTimeFeatures,
 )
+from cccma_ppp.data_modules.dataset.operator import DatasetOperator
 
-from cccma_ppp.data_modules.data import (
+from cccma_ppp.data_modules.data.data_configs import (
     ModelDataConfig,
     ConditionDataConfig,
 )

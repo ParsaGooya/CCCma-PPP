@@ -3,9 +3,9 @@ from pathlib import Path
 import xarray as xr
 import dataclasses
 
-from cccma_ppp.data_modules.data import DataConfigABC
-from cccma_ppp.data_modules.dataset import DatasetConfigABC
-from cccma_ppp.data_modules import WeightsConfig
+from cccma_ppp.data_modules.data.data_abc import DataConfigABC
+from cccma_ppp.data_modules.dataset.config_abc import DatasetConfigABC
+from cccma_ppp.data_modules.utils import WeightsConfig
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 from cccma_ppp.configs import (supported_NN_dimensions_sorted,
                                 required_sample_dimensions,

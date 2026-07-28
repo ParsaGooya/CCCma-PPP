@@ -11,7 +11,7 @@ from cccma_ppp.configs import (supported_NN_dimensions_sorted,
                                required_sample_dimensions,
                                optional_sample_dimensions)
 
-from cccma_ppp.data_modules import (
+from cccma_ppp.data_modules.utils import (
     _unwrap_data_variables,
     _load_xarray_data,
     _create_train_mask,

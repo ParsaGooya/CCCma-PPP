@@ -8,7 +8,7 @@ import gc
 
 from cccma_ppp.loss.loss import Losspipeline
 from cccma_ppp.loss.kld import KLD
-from cccma_ppp.core import moduleABC, moduleConfigABC, OutputABC
+from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC, OutputABC
 from cccma_ppp.core.selectors import (
     ModuleSelector,
     cVAEModelSelector,
@@ -16,8 +16,8 @@ from cccma_ppp.core.selectors import (
 )
 from cccma_ppp.models.normalized_flows import NormalizedFlowConfig
 from cccma_ppp.models.models_abc import cVAEPredictRequest, cVAEForwardRequest
-from cccma_ppp.train import BatchData
-from cccma_ppp.generic import RuntimeContext
+from cccma_ppp.train.dataloader import BatchData
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 @dataclasses.dataclass
