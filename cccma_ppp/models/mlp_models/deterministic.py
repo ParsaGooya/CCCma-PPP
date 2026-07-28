@@ -6,6 +6,7 @@ import numpy as np
 from cccma_ppp.models.models_abc import (
     modelConfigABC,
     deterministicmodelsABC,
+    DeterministicRequest
 )
 
 from cccma_ppp.models.layers.mlp import build_mlp
@@ -66,7 +67,7 @@ class AutoencoderConfig(modelConfigABC):
 
     NUM_INPUT_DIMS: ClassVar[int] = 2
     NUM_OUTPUT_DIMS: ClassVar[int] = 2
-    GENERATOR: ClassVar[int] = False
+    GENERATOR: ClassVar[None] = None
 
     def __post_init__(self):
         """
@@ -238,22 +239,25 @@ class Autoencoder(deterministicmodelsABC):
         else:
             self._initialize_weights(self.init_method)
 
-    def forward(self, x: torch.Tensor, x_mask: torch.Tensor, added_features=None) -> deterministicOutput:
+    def forward(self, 
+                request: DeterministicRequest) -> deterministicOutput:
+                
         """
         Forward pass through the encoder/decoder.
 
         Parameters
         ----------
-        x : torch.Tensor
-            Input tensor.
-        added_features : torch.Tensor or None, optional
-            Additional features appended depending on append mode.
+        request : DeterministicRequest
+            Input request object.
 
         Returns
         -------
         deterministicOutput
             Reconstructed output tensor.
         """
+        x = request.input
+        x_mask = request.input_mask
+        added_features = request.added_features 
 
         if x_mask is not None:
             x = x * x_mask

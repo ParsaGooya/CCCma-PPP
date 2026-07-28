@@ -9,6 +9,7 @@ from typing import Literal
 from cccma_ppp.models.models_abc import (
     cVAEmodelsABC,
     cVAEmodelConfigABC,
+    cVAEForwardRequest,
     cVAEPredictRequest,
 )
 from cccma_ppp.models.layers import _get_normal
@@ -67,7 +68,8 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
 
     NUM_INPUT_DIMS: ClassVar[int] = 2
     NUM_OUTPUT_DIMS: ClassVar[int] = 2
-    GENERATOR: ClassVar[int] = False
+
+    GENERATOR: ClassVar[None] = None
 
     def __post_init__(self):
         """
@@ -299,29 +301,23 @@ class cVAE_MLP(cVAEmodelsABC):
 
     def forward(
         self,
-        x: torch.Tensor,
-        x_mask: torch.Tensor | None = None,
-        added_features: torch.Tensor | None = None,
-        condition: torch.Tensor | None = None,
-        condition_mask: torch.Tensor | None = None,
-        sample_size: int =1,
-        min_posterior_variance: torch.Tensor | None = None,
-    ) -> cVAEOutput:
+        request: cVAEForwardRequest) -> cVAEOutput:
+
+        x =  request.target
+        x_mask = request.target_mask
+        condition = request.condition
+        condition_mask = request.condition_mask
+        added_features = request.added_features
+        sample_size = request.sample_size
+        min_posterior_variance = request.min_posterior_variance
+    
         """
         Perform forward pass through cVAE.
 
         Parameters
         ----------
-        x : torch.Tensor
-            Input tensor.
-        added_features : torch.Tensor or None, optional
-            Additional conditioning features.
-        condition : torch.Tensor or None, optional
-            Conditioning input.
-        sample_size : int, optional
-            Number of latent samples.
-        min_posterior_variance : torch.Tensor or None, optional
-            Minimum variance constraint.
+        request
+            cVAEForwardRequest object
 
         Returns
         -------
