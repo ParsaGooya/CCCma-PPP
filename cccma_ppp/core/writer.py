@@ -335,7 +335,7 @@ def aggregate_predictions(
     if logger_function is not None:
         logger_function(
             logging.INFO,
-            f"Aggregating temporary prediction files year-by-year: ",
+            "Aggregating temporary prediction files year-by-year: ",
         )
 
     sample_coords = (*required_sample_dimensions, *optional_sample_dimensions)

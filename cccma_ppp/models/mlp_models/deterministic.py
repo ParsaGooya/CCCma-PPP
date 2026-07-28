@@ -1,5 +1,4 @@
 import torch
-import torch.nn as nn
 import numpy as np
 
 
@@ -13,12 +12,10 @@ from cccma_ppp.models.layers.mlp import build_mlp
 from cccma_ppp.core.deterministic_module import deterministicOutput
 
 
-import numpy as np
 from typing import ClassVar
 import dataclasses
 from typing import Literal
 
-from cccma_ppp.models.models_abc import modelConfigABC
 from cccma_ppp.core.selectors import deterministicModelSelector
 
 from cccma_ppp.models.layers.generic import (

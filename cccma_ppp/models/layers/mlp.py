@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 
 from cccma_ppp.models.layers.generic import ActivationName, _build_activation

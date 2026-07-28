@@ -1,7 +1,6 @@
 import numpy as np
 from pathlib import Path
 import xarray as xr
-import dataclasses
 
 from cccma_ppp.data_modules.data.data_abc import DataConfigABC
 from cccma_ppp.data_modules.dataset.config_abc import DatasetConfigABC

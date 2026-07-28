@@ -1,7 +1,5 @@
-import dataclasses
-from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
@@ -12,12 +10,9 @@ import cccma_ppp.models.models_abc as module
 from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.models.models_abc import (
     CheckpointConfig,
-    DeterministicRequest,
     GENERATORConfig,
-    cVAEForwardRequest,
     cVAEmodelConfigABC,
     cVAEmodelsABC,
-    cVAEPredictRequest,
     deterministicmodelsABC,
     flowABC,
     modelABC,

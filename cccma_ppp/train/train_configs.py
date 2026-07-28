@@ -22,7 +22,6 @@ from cccma_ppp.core.trainer import TrainerConfig
 from cccma_ppp.core.optimization import OptimizerConfig
 from cccma_ppp.core.core_abc import GenerativeContext
 
-from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 
 
 def set_seed(seed):

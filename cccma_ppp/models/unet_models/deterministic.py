@@ -27,7 +27,6 @@ from cccma_ppp.models.layers.generic import (
     MaskPoolingMethod,
     OutputActivation,
     AlignmentMethod,
-    NoiseLevel,
 )
 
 from cccma_ppp.models.layers.unet import (

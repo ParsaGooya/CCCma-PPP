@@ -1,6 +1,5 @@
 from types import SimpleNamespace
 
-import numpy as np
 import pytest
 import os
 from pathlib import Path
@@ -12,8 +11,6 @@ from cccma_ppp.train.train_configs import (
     _check_IO,
     build_trainer,
     RuntimeContext,
-    prepare_config,
-    set_seed,
 )
 
 

@@ -7,8 +7,6 @@ import torch
 import xarray as xr
 
 import cccma_ppp.inference.dataset as module
-from cccma_ppp.data_modules.dataset.config_abc import DatasetConfigABC
-from cccma_ppp.data_modules.dataset.dataset_abc import DatasetABC
 from cccma_ppp.inference.dataset import (
     InferenceDataset,
     InferenceDatasetConfig,

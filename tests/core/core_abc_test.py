@@ -7,7 +7,6 @@ from cccma_ppp.core.core_abc import (
     GenerativeContext,
     moduleABC,
     moduleConfigABC,
-    OutputABC,
 )
 
 

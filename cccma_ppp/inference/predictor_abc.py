@@ -9,9 +9,7 @@ from typing import Callable
 
 from cccma_ppp.data_modules.dataloader import BatchDataABC
 from cccma_ppp.core.core_abc import OutputABC
-from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.aggregator import RunningCovariance
-from cccma_ppp.core.core_abc import moduleABC
 
 
 class PredictorABC(abc.ABC):

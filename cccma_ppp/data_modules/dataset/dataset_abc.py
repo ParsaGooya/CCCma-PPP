@@ -184,7 +184,7 @@ class DatasetConfigABC(abc.ABC):
                     if self.condition.info.coords.get(dim) is None:
                         raise ValueError(
                             "Condition data should be available"
-                            f" on the same dimestions as model data."
+                            " on the same dimestions as model data."
                         )
 
                     if not set(self.model.info.coords[dim].values).issubset(
@@ -223,7 +223,7 @@ class DatasetConfigABC(abc.ABC):
                 ]:
                     if self.condition.info.coords.get(dim, None) is None:
                         raise ValueError(
-                            f"model and condition data must have the same NN dims."
+                            "model and condition data must have the same NN dims."
                             / "when bias correcting to observations"
                         )
 
@@ -284,7 +284,7 @@ class DatasetConfigABC(abc.ABC):
                         "For cross_ensemble or same_member conditioning an ensembles dim must exist in the condition."
                     )
             elif self.condition_method.lower() == "ensemble_mean":
-                if not self.effective_condition.ensemble_mean is True:
+                if self.effective_condition.ensemble_mean is not True:
                     raise ValueError(
                         "Ensemble mean must be True for ensemble_mean conditioning."
                     )

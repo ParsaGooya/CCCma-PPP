@@ -8,7 +8,6 @@ from cccma_ppp.models.layers.utils import (
     _expand_mask,
     _get_normal,
     _merge_masks,
-    _noise_injection,
     _resize_mask,
     _resize_tensor,
     _same_padding,

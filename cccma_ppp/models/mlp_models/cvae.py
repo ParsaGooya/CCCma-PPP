@@ -1,10 +1,8 @@
 import torch
 import torch.nn as nn
 import numpy as np
-import numpy as np
 from typing import ClassVar
 import dataclasses
-from typing import Literal
 
 from cccma_ppp.models.models_abc import (
     cVAEmodelsABC,

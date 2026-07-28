@@ -8,8 +8,7 @@
 
 import torch
 import torch.nn.functional as F
-from torch import nn, cuda
-from torch.autograd import Variable
+from torch import nn
 # from timm.models.layers import trunc_normal_
 
 

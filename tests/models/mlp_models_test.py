@@ -15,7 +15,6 @@ from cccma_ppp.models.mlp_model import (
     cVAE_MLP,
     cVAE_MLPConfig,
 )
-from cccma_ppp.models.models_abc import cVAEPredictRequest
 
 
 torch.manual_seed(0)

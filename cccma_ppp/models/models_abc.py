@@ -2,7 +2,7 @@ import abc
 import numpy as np
 import torch
 import torch.nn as nn
-from typing import final, Literal, ClassVar
+from typing import final, ClassVar
 from timm.models.layers import trunc_normal_
 import gc
 from pathlib import Path

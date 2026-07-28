@@ -4,7 +4,6 @@ import torch
 import dataclasses
 import warnings
 from pathlib import Path
-import dask
 
 from cccma_ppp.data_modules.dataset.config_abc import (
     DatasetConfigABC,
@@ -23,7 +22,6 @@ from cccma_ppp.data_modules.data.data_configs import (
 
 from cccma_ppp.data_modules.utils import _unwrap_data_variables
 
-from torch.utils.data import get_worker_info
 
 from cccma_ppp.configs import supported_NN_dimensions_sorted, required_sample_dimensions
 
