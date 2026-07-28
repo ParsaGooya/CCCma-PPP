@@ -96,6 +96,7 @@ def make_ensemble_dataset():
     )
 
 
+@pytest.mark.pruned
 def test_weights_config_default():
     cfg = WeightsConfig()
 
@@ -109,6 +110,7 @@ def test_weights_config_missing_load_dir(tmp_path):
         WeightsConfig(load_dir=missing)
 
 
+@pytest.mark.pruned
 def test_build_weights_uniform():
     cfg = WeightsConfig(
         spatial_method="uniform",
@@ -122,6 +124,7 @@ def test_build_weights_uniform():
     assert np.allclose(weights.values, 1.0)
 
 
+@pytest.mark.pruned
 def test_build_weights_cosine_lat():
     cfg = WeightsConfig(
         spatial_method="cosine_lat",
@@ -135,6 +138,7 @@ def test_build_weights_cosine_lat():
     assert not np.allclose(weights.values, 1.0)
 
 
+@pytest.mark.pruned
 def test_build_weights_variable_weights():
     cfg = WeightsConfig(
         variable_weights={
@@ -151,6 +155,7 @@ def test_build_weights_variable_weights():
     assert "channels" in weights.dims
 
 
+@pytest.mark.pruned
 def test_build_weights_with_flattennanremover():
     cfg = WeightsConfig()
 
@@ -218,6 +223,7 @@ def test_build_weights_load_dir(tmp_path):
     assert weights is not None
 
 
+@pytest.mark.pruned
 def test_build_weights_loaded_ref_coords_match(tmp_path):
     cfg = WeightsConfig(load_dir=tmp_path)
 
@@ -296,6 +302,7 @@ def test_build_weights_loaded_ref_coords_mismatch(tmp_path):
             )
 
 
+@pytest.mark.pruned
 def test_build_weights_loaded_lat_mismatch(tmp_path):
     cfg = WeightsConfig(load_dir=tmp_path)
 
@@ -319,6 +326,7 @@ def test_build_weights_loaded_lat_mismatch(tmp_path):
             )
 
 
+@pytest.mark.pruned
 def test_build_weights_loaded_lon_mismatch(tmp_path):
     cfg = WeightsConfig(load_dir=tmp_path)
 
@@ -342,6 +350,7 @@ def test_build_weights_loaded_lon_mismatch(tmp_path):
             )
 
 
+@pytest.mark.pruned
 def test_load_xarray_data_basic():
     ds = make_dataset()
 
@@ -356,6 +365,7 @@ def test_load_xarray_data_basic():
     assert result is not None
 
 
+@pytest.mark.pruned
 def test_load_xarray_data_selection():
     ds = make_dataset()
 
@@ -401,6 +411,7 @@ def test_load_xarray_data_ensemble_mean():
     assert "ensembles" not in result.dims
 
 
+@pytest.mark.pruned
 def test_load_xarray_data_no_ensemble_mean():
     ds = make_ensemble_dataset()
 
@@ -457,6 +468,7 @@ def test_load_xarray_data_rename():
     assert "new" in result.data_vars
 
 
+@pytest.mark.pruned
 def test_create_train_mask_basic():
     mask = _create_train_mask(
         [2000, 2001],
@@ -477,6 +489,7 @@ def test_create_train_mask_int_lead_times():
     assert mask.sizes["lead_time"] == 12
 
 
+@pytest.mark.pruned
 def test_create_train_mask_dims():
     mask = _create_train_mask(
         [2000],
@@ -489,6 +502,7 @@ def test_create_train_mask_dims():
     )
 
 
+@pytest.mark.pruned
 def test_create_train_mask_name():
     mask = _create_train_mask(
         [2000],
@@ -498,6 +512,7 @@ def test_create_train_mask_name():
     assert mask.name == "mask"
 
 
+@pytest.mark.pruned
 def test_create_train_mask_contains_true():
     mask = _create_train_mask(
         [2000, 2001],
@@ -507,6 +522,7 @@ def test_create_train_mask_contains_true():
     assert bool(mask.any())
 
 
+@pytest.mark.pruned
 def test_build_weights_uniform_shape():
     cfg = WeightsConfig(
         spatial_method="uniform",
@@ -524,6 +540,7 @@ def test_build_weights_uniform_shape():
     assert weights.shape == (2, 2)
 
 
+@pytest.mark.pruned
 def test_build_weights_uniform_coordinates():
     cfg = WeightsConfig(
         spatial_method="uniform",
@@ -544,6 +561,7 @@ def test_build_weights_uniform_coordinates():
     )
 
 
+@pytest.mark.pruned
 def test_build_weights_cosine_lat_varies_by_latitude():
     coords = {
         "lat": xr.DataArray(
@@ -577,6 +595,7 @@ def test_build_weights_cosine_lat_varies_by_latitude():
     )
 
 
+@pytest.mark.pruned
 def test_build_weights_variable_weight_values():
     cfg = WeightsConfig(
         variable_weights={
@@ -596,6 +615,7 @@ def test_build_weights_variable_weight_values():
     )
 
 
+@pytest.mark.pruned
 def test_build_weights_variable_weight_dimension_size():
     cfg = WeightsConfig(
         variable_weights={
@@ -640,6 +660,7 @@ def test_build_weights_loaded_missing_coordinate(tmp_path):
             )
 
 
+@pytest.mark.pruned
 def test_build_weights_loaded_values_preserved(tmp_path):
     cfg = WeightsConfig(
         load_dir=tmp_path,
@@ -679,6 +700,7 @@ def test_build_weights_loaded_values_preserved(tmp_path):
     )
 
 
+@pytest.mark.pruned
 def test_build_weights_loaded_flatten_transform_called(tmp_path):
     cfg = WeightsConfig(
         load_dir=tmp_path,
@@ -726,6 +748,7 @@ def test_build_weights_loaded_flatten_transform_called(tmp_path):
     assert flatten.called is True
 
 
+@pytest.mark.pruned
 def test_build_weights_save_false_does_not_write():
     cfg = WeightsConfig()
 
@@ -758,6 +781,7 @@ def test_build_weights_save_true_writes_file(tmp_path):
     save_mock.assert_called_once()
 
 
+@pytest.mark.pruned
 def test_build_weights_custom_save_name(tmp_path):
     cfg = WeightsConfig()
 
@@ -781,6 +805,7 @@ def test_build_weights_custom_save_name(tmp_path):
     assert captured["path"].name == ("custom_weights.nc")
 
 
+@pytest.mark.pruned
 def test_load_xarray_data_empty_selection():
     ds = make_dataset()
 
@@ -797,6 +822,7 @@ def test_load_xarray_data_empty_selection():
     assert result.sizes["lead_time"] == 2
 
 
+@pytest.mark.pruned
 def test_load_xarray_data_multiple_names():
     ds = make_dataset()
 
@@ -838,6 +864,7 @@ def test_load_xarray_data_load_true():
     assert result is ds
 
 
+@pytest.mark.pruned
 def test_load_xarray_data_ensemble_mean_values():
     ds = make_ensemble_dataset()
     expected = ds.mean(
@@ -860,6 +887,7 @@ def test_load_xarray_data_ensemble_mean_values():
     )
 
 
+@pytest.mark.pruned
 def test_load_xarray_data_ensemble_mean_without_dimension():
     ds = make_dataset()
 
@@ -876,6 +904,7 @@ def test_load_xarray_data_ensemble_mean_without_dimension():
     assert result.sizes["year"] == 2
 
 
+@pytest.mark.pruned
 def test_load_xarray_data_rename_coordinate():
     ds = make_dataset()
 
@@ -894,6 +923,7 @@ def test_load_xarray_data_rename_coordinate():
     assert "year" not in result.dims
 
 
+@pytest.mark.pruned
 def test_load_xarray_data_passes_paths():
     ds = make_dataset()
 

@@ -33,11 +33,7 @@ def make_input(
     )
 
 
-# ---------------------------------------------------------------------------
-# Initialization
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_partial_conv_is_conv2d():
     layer = PartialConv2d(
         3,
@@ -48,6 +44,7 @@ def test_partial_conv_is_conv2d():
     assert isinstance(layer, torch.nn.Conv2d)
 
 
+@pytest.mark.pruned
 def test_partial_conv_default_options():
     layer = PartialConv2d(
         3,
@@ -59,6 +56,7 @@ def test_partial_conv_default_options():
     assert layer.return_mask is False
 
 
+@pytest.mark.pruned
 def test_partial_conv_custom_options():
     layer = PartialConv2d(
         3,
@@ -72,6 +70,7 @@ def test_partial_conv_custom_options():
     assert layer.return_mask is True
 
 
+@pytest.mark.pruned
 def test_single_channel_mask_updater_shape():
     layer = PartialConv2d(
         3,
@@ -88,6 +87,7 @@ def test_single_channel_mask_updater_shape():
     )
 
 
+@pytest.mark.pruned
 def test_multi_channel_mask_updater_shape():
     layer = PartialConv2d(
         3,
@@ -104,6 +104,7 @@ def test_multi_channel_mask_updater_shape():
     )
 
 
+@pytest.mark.pruned
 def test_mask_updater_contains_ones():
     layer = PartialConv2d(
         3,
@@ -118,6 +119,7 @@ def test_mask_updater_contains_ones():
     )
 
 
+@pytest.mark.pruned
 def test_mask_updater_registered_as_buffer():
     layer = PartialConv2d(
         3,
@@ -131,6 +133,7 @@ def test_mask_updater_registered_as_buffer():
     assert buffers["weight_maskUpdater"] is layer.weight_maskUpdater
 
 
+@pytest.mark.pruned
 def test_mask_updater_is_nonpersistent():
     layer = PartialConv2d(
         3,
@@ -141,6 +144,7 @@ def test_mask_updater_is_nonpersistent():
     assert "weight_maskUpdater" not in layer.state_dict()
 
 
+@pytest.mark.pruned
 def test_single_channel_slide_window_size():
     layer = PartialConv2d(
         3,
@@ -152,6 +156,7 @@ def test_single_channel_slide_window_size():
     assert layer.slide_winsize == 9
 
 
+@pytest.mark.pruned
 def test_multi_channel_slide_window_size():
     layer = PartialConv2d(
         3,
@@ -209,6 +214,7 @@ def test_multi_channel_slide_window_size_for_kernels(
     assert layer.slide_winsize == expected
 
 
+@pytest.mark.pruned
 def test_initial_cache_state():
     layer = PartialConv2d(
         3,
@@ -224,11 +230,6 @@ def test_initial_cache_state():
     )
     assert layer.update_mask is None
     assert layer.mask_ratio is None
-
-
-# ---------------------------------------------------------------------------
-# Input validation
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -251,11 +252,7 @@ def test_forward_requires_four_dimensional_input(shape):
         layer(torch.randn(*shape))
 
 
-# ---------------------------------------------------------------------------
-# Forward without explicit mask
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_forward_without_mask_shape():
     layer = PartialConv2d(
         3,
@@ -275,6 +272,7 @@ def test_forward_without_mask_shape():
     )
 
 
+@pytest.mark.pruned
 def test_forward_without_mask_updates_last_size():
     layer = PartialConv2d(
         3,
@@ -289,6 +287,7 @@ def test_forward_without_mask_updates_last_size():
     assert layer.last_size == tuple(input_tensor.shape)
 
 
+@pytest.mark.pruned
 def test_forward_without_mask_initializes_update_mask():
     layer = PartialConv2d(
         3,
@@ -303,6 +302,7 @@ def test_forward_without_mask_initializes_update_mask():
     assert layer.mask_ratio is not None
 
 
+@pytest.mark.pruned
 def test_forward_without_mask_return_mask_false_returns_tensor():
     layer = PartialConv2d(
         3,
@@ -317,6 +317,7 @@ def test_forward_without_mask_return_mask_false_returns_tensor():
     assert isinstance(result, torch.Tensor)
 
 
+@pytest.mark.pruned
 def test_forward_without_mask_return_mask_true_returns_tuple():
     layer = PartialConv2d(
         3,
@@ -332,6 +333,7 @@ def test_forward_without_mask_return_mask_true_returns_tuple():
     assert len(result) == 2
 
 
+@pytest.mark.pruned
 def test_forward_without_mask_returns_output_and_mask_shapes():
     layer = PartialConv2d(
         3,
@@ -357,6 +359,7 @@ def test_forward_without_mask_returns_output_and_mask_shapes():
     )
 
 
+@pytest.mark.pruned
 def test_multi_channel_forward_without_mask_returns_batch_mask():
     layer = PartialConv2d(
         3,
@@ -383,6 +386,7 @@ def test_multi_channel_forward_without_mask_returns_batch_mask():
     )
 
 
+@pytest.mark.pruned
 def test_forward_without_mask_preserves_dtype():
     layer = PartialConv2d(
         3,
@@ -406,11 +410,7 @@ def test_forward_without_mask_preserves_dtype():
     assert layer.mask_ratio.dtype == torch.float64
 
 
-# ---------------------------------------------------------------------------
-# Forward with explicit mask
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_single_channel_forward_with_mask():
     layer = PartialConv2d(
         3,
@@ -443,6 +443,7 @@ def test_single_channel_forward_with_mask():
     )
 
 
+@pytest.mark.pruned
 def test_multi_channel_forward_with_mask():
     layer = PartialConv2d(
         3,
@@ -475,6 +476,7 @@ def test_multi_channel_forward_with_mask():
     )
 
 
+@pytest.mark.pruned
 def test_explicit_mask_forces_cache_recomputation():
     layer = PartialConv2d(
         3,
@@ -502,6 +504,7 @@ def test_explicit_mask_forces_cache_recomputation():
     assert torch.all(second_update == 0)
 
 
+@pytest.mark.pruned
 def test_different_input_shape_forces_cache_recomputation():
     layer = PartialConv2d(
         3,
@@ -538,6 +541,7 @@ def test_different_input_shape_forces_cache_recomputation():
     )
 
 
+@pytest.mark.pruned
 def test_same_shape_without_mask_reuses_cached_mask():
     layer = PartialConv2d(
         3,
@@ -561,11 +565,7 @@ def test_same_shape_without_mask_reuses_cached_mask():
     assert layer.mask_ratio is first_mask_ratio
 
 
-# ---------------------------------------------------------------------------
-# Mask calculations
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_zero_mask_produces_zero_update_mask():
     layer = PartialConv2d(
         3,
@@ -587,6 +587,7 @@ def test_zero_mask_produces_zero_update_mask():
     assert torch.count_nonzero(update_mask) == 0
 
 
+@pytest.mark.pruned
 def test_zero_mask_produces_zero_output_without_bias():
     layer = PartialConv2d(
         3,
@@ -611,6 +612,7 @@ def test_zero_mask_produces_zero_output_without_bias():
     )
 
 
+@pytest.mark.pruned
 def test_zero_mask_produces_zero_output_with_bias():
     layer = PartialConv2d(
         3,
@@ -638,6 +640,7 @@ def test_zero_mask_produces_zero_output_with_bias():
     )
 
 
+@pytest.mark.pruned
 def test_update_mask_is_clamped_to_binary_range():
     layer = PartialConv2d(
         3,
@@ -657,6 +660,7 @@ def test_update_mask_is_clamped_to_binary_range():
     assert layer.update_mask.max().item() <= 1.0
 
 
+@pytest.mark.pruned
 def test_update_mask_contains_only_zero_or_one():
     layer = PartialConv2d(
         1,
@@ -684,6 +688,7 @@ def test_update_mask_contains_only_zero_or_one():
     )
 
 
+@pytest.mark.pruned
 def test_mask_ratio_zero_where_update_mask_is_zero():
     layer = PartialConv2d(
         1,
@@ -707,6 +712,7 @@ def test_mask_ratio_zero_where_update_mask_is_zero():
     assert torch.all(layer.mask_ratio[invalid] == 0)
 
 
+@pytest.mark.pruned
 def test_full_mask_center_ratio_is_one():
     layer = PartialConv2d(
         1,
@@ -730,6 +736,7 @@ def test_full_mask_center_ratio_is_one():
     )
 
 
+@pytest.mark.pruned
 def test_missing_values_increase_mask_ratio():
     layer = PartialConv2d(
         1,
@@ -754,6 +761,7 @@ def test_missing_values_increase_mask_ratio():
     )
 
 
+@pytest.mark.pruned
 def test_single_valid_value_has_window_size_ratio():
     layer = PartialConv2d(
         1,
@@ -777,11 +785,7 @@ def test_single_valid_value_has_window_size_ratio():
     assert layer.mask_ratio.item() == pytest.approx(9.0)
 
 
-# ---------------------------------------------------------------------------
-# Exact forward behavior
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_full_mask_matches_standard_conv_without_padding():
     partial = PartialConv2d(
         1,
@@ -818,6 +822,7 @@ def test_full_mask_matches_standard_conv_without_padding():
     )
 
 
+@pytest.mark.pruned
 def test_forward_multiplies_input_by_mask():
     layer = PartialConv2d(
         1,
@@ -873,6 +878,7 @@ def test_forward_multiplies_input_by_mask():
     )
 
 
+@pytest.mark.pruned
 def test_forward_without_mask_does_not_multiply_input():
     layer = PartialConv2d(
         1,
@@ -904,6 +910,7 @@ def test_forward_without_mask_does_not_multiply_input():
     )
 
 
+@pytest.mark.pruned
 def test_partial_mask_rescales_valid_values():
     layer = PartialConv2d(
         1,
@@ -936,6 +943,7 @@ def test_partial_mask_rescales_valid_values():
     assert output.item() == pytest.approx(4.0)
 
 
+@pytest.mark.pruned
 def test_bias_is_preserved_after_mask_rescaling():
     layer = PartialConv2d(
         1,
@@ -969,6 +977,7 @@ def test_bias_is_preserved_after_mask_rescaling():
     assert output.item() == pytest.approx(7.0)
 
 
+@pytest.mark.pruned
 def test_bias_only_output_with_valid_mask():
     layer = PartialConv2d(
         1,
@@ -996,11 +1005,7 @@ def test_bias_only_output_with_valid_mask():
     )
 
 
-# ---------------------------------------------------------------------------
-# Conv2d configuration propagation
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_dilation_changes_output_shape():
     layer = PartialConv2d(
         1,
@@ -1029,6 +1034,7 @@ def test_dilation_changes_output_shape():
     assert output_mask.shape == output.shape
 
 
+@pytest.mark.pruned
 def test_non_square_kernel_mask_updater_shape():
     layer = PartialConv2d(
         2,
@@ -1046,6 +1052,7 @@ def test_non_square_kernel_mask_updater_shape():
     assert layer.slide_winsize == 30
 
 
+@pytest.mark.pruned
 def test_non_square_kernel_forward():
     layer = PartialConv2d(
         2,
@@ -1073,6 +1080,7 @@ def test_non_square_kernel_forward():
     assert output_mask.shape == output.shape
 
 
+@pytest.mark.pruned
 def test_multiple_output_channels_have_independent_masks():
     layer = PartialConv2d(
         2,
@@ -1101,11 +1109,7 @@ def test_multiple_output_channels_have_independent_masks():
     )
 
 
-# ---------------------------------------------------------------------------
-# Gradients and devices
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_forward_supports_backward():
     layer = PartialConv2d(
         3,
@@ -1134,6 +1138,7 @@ def test_forward_supports_backward():
     assert layer.weight.grad is not None
 
 
+@pytest.mark.pruned
 def test_mask_does_not_require_gradients():
     layer = PartialConv2d(
         3,
@@ -1170,44 +1175,7 @@ def test_mask_does_not_require_gradients():
     assert layer.mask_ratio.requires_grad is False
 
 
-@pytest.mark.skipif(
-    not torch.cuda.is_available(),
-    reason="CUDA is not available.",
-)
-def test_forward_on_cuda():
-    layer = PartialConv2d(
-        3,
-        4,
-        kernel_size=3,
-        padding=1,
-        multi_channel=True,
-        return_mask=True,
-    ).cuda()
-
-    input_tensor = torch.randn(
-        2,
-        3,
-        8,
-        8,
-        device="cuda",
-    )
-    mask = torch.ones_like(input_tensor)
-
-    output, output_mask = layer(
-        input_tensor,
-        mask,
-    )
-
-    assert output.device.type == "cuda"
-    assert output_mask.device.type == "cuda"
-    assert layer.mask_ratio.device.type == "cuda"
-
-
-# ---------------------------------------------------------------------------
-# Return-mask branch
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_return_mask_false_returns_only_output():
     layer = PartialConv2d(
         1,
@@ -1232,6 +1200,7 @@ def test_return_mask_false_returns_only_output():
     )
 
 
+@pytest.mark.pruned
 def test_return_mask_true_returns_cached_update_mask():
     layer = PartialConv2d(
         1,

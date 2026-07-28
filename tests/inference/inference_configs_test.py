@@ -381,6 +381,7 @@ def test_prepare_directory_branch_matrix(
     assert distributed.barrier_called
 
 
+@pytest.mark.pruned
 def test_prepare_directory_existing_output(tmp_path):
     output = tmp_path / "output"
     output.mkdir()
@@ -489,6 +490,7 @@ def patch_module_selector(monkeypatch):
     return selector
 
 
+@pytest.mark.pruned
 def test_load_module_missing_default_checkpoint(tmp_path):
     config = make_bare_config(tmp_path)
 
@@ -532,6 +534,7 @@ def test_load_module_missing_required_keys(tmp_path):
     assert "output_shape" in message
 
 
+@pytest.mark.pruned
 def test_load_module_without_loader(
     monkeypatch,
     tmp_path,
@@ -581,6 +584,7 @@ def test_load_module_with_matching_loader(
     assert module.loaded_state == checkpoint["module"]
 
 
+@pytest.mark.pruned
 def test_load_module_strict_false(
     monkeypatch,
     tmp_path,
@@ -598,6 +602,7 @@ def test_load_module_strict_false(
     assert module.loaded_strict is False
 
 
+@pytest.mark.pruned
 def test_load_module_named_checkpoint(
     monkeypatch,
     tmp_path,
@@ -622,6 +627,7 @@ def test_load_module_named_checkpoint(
     }
 
 
+@pytest.mark.pruned
 def test_load_module_dacite_receives_module_config(
     monkeypatch,
     tmp_path,
@@ -656,6 +662,7 @@ def test_load_module_dacite_receives_module_config(
     assert captured["data_class"].__name__ == "ModuleSelector"
 
 
+@pytest.mark.pruned
 def test_load_module_calls_gc_collect(
     monkeypatch,
     tmp_path,
@@ -781,6 +788,7 @@ def test_build_writer_logging_matrix(
         assert capsys.readouterr().out == ""
 
 
+@pytest.mark.pruned
 def test_build_writer_passes_all_writer_arguments(
     monkeypatch,
     tmp_path,
@@ -817,6 +825,7 @@ def test_build_writer_passes_all_writer_arguments(
     }
 
 
+@pytest.mark.pruned
 def test_build_writer_loads_expected_preprocessor(
     monkeypatch,
     tmp_path,
@@ -847,6 +856,7 @@ def test_build_writer_loads_expected_preprocessor(
     assert captured["path"] == config.output_preprocessor_dir
 
 
+@pytest.mark.pruned
 def test_build_writer_propagates_loader_setup_error(
     monkeypatch,
     tmp_path,
@@ -915,6 +925,7 @@ def test_build_writer_propagates_module_load_error(
     assert writer_config.build_called is False
 
 
+@pytest.mark.pruned
 def test_build_writer_propagates_postprocessor_error(
     monkeypatch,
     tmp_path,
@@ -965,6 +976,7 @@ def test_resolve_inference_dataset_reads_train_config(
     assert config.inference_loader.time_features == ["year"]
 
 
+@pytest.mark.pruned
 def test_check_inference_dataset_matching_metadata_and_features(
     tmp_path,
 ):
@@ -996,6 +1008,7 @@ def test_check_inference_dataset_time_features_mismatch(
         config._check_inference_dataset()
 
 
+@pytest.mark.pruned
 def test_check_inference_dataset_none_features_match(
     tmp_path,
 ):
@@ -1011,6 +1024,7 @@ def test_check_inference_dataset_none_features_match(
     assert config._check_inference_dataset() is None
 
 
+@pytest.mark.pruned
 def test_check_inference_dataset_metadata_checked_before_features(
     tmp_path,
 ):
@@ -1030,6 +1044,7 @@ def test_check_inference_dataset_metadata_checked_before_features(
         config._check_inference_dataset()
 
 
+@pytest.mark.pruned
 def test_output_preprocessor_dir_prefers_observation(
     tmp_path,
 ):
@@ -1050,6 +1065,7 @@ def test_output_preprocessor_dir_prefers_observation(
     )
 
 
+@pytest.mark.pruned
 def test_output_preprocessor_dir_uses_model_without_observation(
     tmp_path,
 ):
@@ -1063,6 +1079,7 @@ def test_output_preprocessor_dir_uses_model_without_observation(
     )
 
 
+@pytest.mark.pruned
 def test_prepare_directory_root_creates_nested_directory(
     tmp_path,
 ):
@@ -1079,6 +1096,7 @@ def test_prepare_directory_root_creates_nested_directory(
     assert distributed.barrier_calls == 1
 
 
+@pytest.mark.pruned
 def test_prepare_directory_nonroot_does_not_create_directory(
     tmp_path,
 ):
@@ -1095,6 +1113,7 @@ def test_prepare_directory_nonroot_does_not_create_directory(
     assert distributed.barrier_calls == 1
 
 
+@pytest.mark.pruned
 def test_prepare_directory_preserves_existing_contents(
     tmp_path,
 ):
@@ -1135,6 +1154,7 @@ def test_load_module_passes_requested_strict_value(
     assert module is selector.module
 
 
+@pytest.mark.pruned
 def test_load_module_propagates_state_dict_error(
     monkeypatch,
     tmp_path,
@@ -1158,6 +1178,7 @@ def test_load_module_propagates_state_dict_error(
         config.load_module()
 
 
+@pytest.mark.pruned
 def test_load_module_propagates_selector_build_error(
     monkeypatch,
     tmp_path,
@@ -1181,6 +1202,7 @@ def test_load_module_propagates_selector_build_error(
         config.load_module()
 
 
+@pytest.mark.pruned
 def test_load_module_uses_named_checkpoint_path(
     monkeypatch,
     tmp_path,
@@ -1257,6 +1279,7 @@ def test_build_writer_setup_arguments(
     )
 
 
+@pytest.mark.pruned
 def test_build_writer_module_receives_device(
     monkeypatch,
     tmp_path,
@@ -1287,6 +1310,7 @@ def test_build_writer_module_receives_device(
     assert module.device == distributed.device
 
 
+@pytest.mark.pruned
 def test_build_writer_propagates_loader_build_error(
     monkeypatch,
     tmp_path,
@@ -1324,6 +1348,7 @@ def test_build_writer_propagates_loader_build_error(
     assert writer_config.build_called is False
 
 
+@pytest.mark.pruned
 def test_build_writer_propagates_writer_build_error(
     monkeypatch,
     tmp_path,

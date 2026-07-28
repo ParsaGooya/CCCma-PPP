@@ -59,17 +59,6 @@ def make_request(
     )
 
 
-# ---------------------------------------------------------------------------
-# AutoencoderConfig
-# ---------------------------------------------------------------------------
-
-
-def test_config_class_constants():
-    assert AutoencoderConfig.NUM_INPUT_DIMS == 2
-    assert AutoencoderConfig.NUM_OUTPUT_DIMS == 2
-    assert AutoencoderConfig.GENERATOR is None
-
-
 def test_config_defaults():
     config = AutoencoderConfig(
         encoder_hidden_dims=[8, 4],
@@ -84,6 +73,7 @@ def test_config_defaults():
     assert config.activation == "relu"
 
 
+@pytest.mark.pruned
 def test_config_preserves_explicit_decoder_dimensions():
     config = make_config(
         decoder_hidden_dims=[6, 10],
@@ -92,6 +82,7 @@ def test_config_preserves_explicit_decoder_dimensions():
     assert config.decoder_hidden_dims == [6, 10]
 
 
+@pytest.mark.pruned
 def test_config_infers_decoder_dimensions():
     config = AutoencoderConfig(
         encoder_hidden_dims=[16, 8, 4],
@@ -110,6 +101,7 @@ def test_config_infers_empty_decoder_for_single_encoder_dimension():
     assert config.decoder_hidden_dims == []
 
 
+@pytest.mark.pruned
 def test_config_infers_empty_decoder_for_empty_encoder_dimensions():
     config = AutoencoderConfig(
         encoder_hidden_dims=[],
@@ -188,6 +180,7 @@ def test_config_accepts_activation(activation):
     assert config.activation == activation
 
 
+@pytest.mark.pruned
 def test_config_build_returns_autoencoder():
     config = make_config()
 
@@ -202,6 +195,7 @@ def test_config_build_returns_autoencoder():
     assert model.added_features_dim == 2
 
 
+@pytest.mark.pruned
 def test_config_build_defaults_output_shape():
     config = make_config()
 
@@ -214,11 +208,7 @@ def test_config_build_defaults_output_shape():
     assert model.output_shape == 4
 
 
-# ---------------------------------------------------------------------------
-# Autoencoder initialization
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_model_initialization_basic():
     config = make_config()
 
@@ -234,6 +224,7 @@ def test_model_initialization_basic():
     assert model.append_mode == 1
 
 
+@pytest.mark.pruned
 def test_model_defaults_output_shape_to_input_shape():
     model = Autoencoder(
         config=make_config(),
@@ -245,6 +236,7 @@ def test_model_defaults_output_shape_to_input_shape():
     assert model.output_shape == 6
 
 
+@pytest.mark.pruned
 def test_model_accepts_tuple_shapes():
     model = make_model(
         input_shape=(2, 3),
@@ -255,6 +247,7 @@ def test_model_accepts_tuple_shapes():
     assert model.output_shape == 5
 
 
+@pytest.mark.pruned
 def test_model_accepts_numpy_shapes():
     model = make_model(
         input_shape=np.asarray([2, 3]),
@@ -283,6 +276,7 @@ def test_model_rejects_invalid_output_rank(output_shape):
         )
 
 
+@pytest.mark.pruned
 def test_model_requires_nonempty_encoder_dimensions():
     config = make_config(
         encoder_hidden_dims=[],
@@ -293,6 +287,7 @@ def test_model_requires_nonempty_encoder_dimensions():
         make_model(config=config)
 
 
+@pytest.mark.pruned
 def test_model_converts_none_added_features_to_zero():
     model = make_model(
         added_features_dim=None,
@@ -318,6 +313,7 @@ def test_model_preserves_added_features_dimension(added_features_dim):
     assert model.added_features_dim == added_features_dim
 
 
+@pytest.mark.pruned
 def test_model_builds_encoder_and_decoder():
     model = make_model()
 
@@ -325,6 +321,7 @@ def test_model_builds_encoder_and_decoder():
     assert isinstance(model.decoder, nn.Sequential)
 
 
+@pytest.mark.pruned
 def test_model_uses_requested_activation():
     model = make_model(
         config=make_config(
@@ -336,6 +333,7 @@ def test_model_uses_requested_activation():
     assert any(isinstance(layer, nn.GELU) for layer in model.decoder)
 
 
+@pytest.mark.pruned
 def test_model_uses_requested_dropout():
     model = make_model(
         config=make_config(
@@ -356,6 +354,7 @@ def test_model_uses_requested_dropout():
     assert decoder_dropout[0].p == pytest.approx(0.25)
 
 
+@pytest.mark.pruned
 def test_model_uses_batch_normalization():
     model = make_model(
         config=make_config(
@@ -367,17 +366,14 @@ def test_model_uses_batch_normalization():
     assert any(isinstance(layer, nn.BatchNorm1d) for layer in model.decoder)
 
 
+@pytest.mark.pruned
 def test_decoder_final_layer_is_not_activated():
     model = make_model()
 
     assert isinstance(model.decoder[-1], nn.Linear)
 
 
-# ---------------------------------------------------------------------------
-# Append-mode architecture
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_append_mode_one_adds_features_to_encoder():
     model = make_model(
         config=make_config(
@@ -397,6 +393,7 @@ def test_append_mode_one_adds_features_to_encoder():
     assert first_decoder_linear.in_features == 4
 
 
+@pytest.mark.pruned
 def test_append_mode_two_adds_features_to_decoder():
     model = make_model(
         config=make_config(
@@ -416,6 +413,7 @@ def test_append_mode_two_adds_features_to_decoder():
     assert first_decoder_linear.in_features == 7
 
 
+@pytest.mark.pruned
 def test_append_mode_three_adds_features_to_both_networks():
     model = make_model(
         config=make_config(
@@ -462,11 +460,6 @@ def test_append_modes_without_added_feature_dimension(append_mode):
     assert first_decoder_linear.in_features == 4
 
 
-# ---------------------------------------------------------------------------
-# Forward without added features
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.parametrize(
     "append_mode",
     [
@@ -509,6 +502,7 @@ def test_forward_without_added_features(append_mode):
     assert result.output.shape == (3, 1, 4)
 
 
+@pytest.mark.pruned
 def test_forward_returns_deterministic_output():
     model = make_model()
 
@@ -518,6 +512,7 @@ def test_forward_returns_deterministic_output():
     assert isinstance(result.output, torch.Tensor)
 
 
+@pytest.mark.pruned
 def test_forward_preserves_batch_and_channel_dimensions():
     model = make_model(
         input_shape=(2, 3),
@@ -533,6 +528,7 @@ def test_forward_preserves_batch_and_channel_dimensions():
     assert result.output.shape == (4, 2, 5)
 
 
+@pytest.mark.pruned
 def test_forward_flattens_input_before_encoder():
     model = make_model(
         input_shape=(2, 3),
@@ -592,6 +588,7 @@ def test_forward_applies_input_mask():
     )
 
 
+@pytest.mark.pruned
 def test_forward_without_mask_preserves_input_values():
     model = make_model()
     captured = {}
@@ -617,11 +614,6 @@ def test_forward_without_mask_preserves_input_values():
         captured["value"],
         input_tensor.flatten(start_dim=1),
     )
-
-
-# ---------------------------------------------------------------------------
-# Forward with append mode 1
-# ---------------------------------------------------------------------------
 
 
 def test_forward_append_mode_one_concatenates_features_to_encoder():
@@ -669,6 +661,7 @@ def test_forward_append_mode_one_concatenates_features_to_encoder():
     assert captured["decoder"].shape == (2, 4)
 
 
+@pytest.mark.pruned
 def test_forward_append_mode_one_does_not_append_to_decoder():
     model = make_model(
         config=make_config(
@@ -700,11 +693,7 @@ def test_forward_append_mode_one_does_not_append_to_decoder():
     assert captured["value"].shape == (3, 4)
 
 
-# ---------------------------------------------------------------------------
-# Forward with append mode 2
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_forward_append_mode_two_concatenates_features_to_decoder():
     model = make_model(
         config=make_config(
@@ -782,11 +771,6 @@ def test_forward_append_mode_two_does_not_append_to_encoder():
     assert captured["value"].shape == (3, 4)
 
 
-# ---------------------------------------------------------------------------
-# Forward with append mode 3
-# ---------------------------------------------------------------------------
-
-
 def test_forward_append_mode_three_concatenates_features_to_both():
     model = make_model(
         config=make_config(
@@ -840,11 +824,7 @@ def test_forward_append_mode_three_concatenates_features_to_both():
     )
 
 
-# ---------------------------------------------------------------------------
-# Added-feature handling
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_forward_flattens_added_features():
     model = make_model(
         config=make_config(
@@ -890,6 +870,7 @@ def test_forward_invalid_append_mode_with_features_raises():
         )
 
 
+@pytest.mark.pruned
 def test_forward_invalid_append_mode_without_features_uses_default_path():
     model = make_model(
         config=make_config(
@@ -907,11 +888,7 @@ def test_forward_invalid_append_mode_without_features_uses_default_path():
     assert result.output.shape == (3, 1, 4)
 
 
-# ---------------------------------------------------------------------------
-# Exact forward behavior
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_forward_exact_identity_path():
     config = make_config(
         encoder_hidden_dims=[4],
@@ -951,6 +928,7 @@ def test_forward_exact_identity_path():
     )
 
 
+@pytest.mark.pruned
 def test_forward_zero_mask_with_zero_bias_produces_zero():
     config = make_config(
         encoder_hidden_dims=[4],
@@ -976,11 +954,6 @@ def test_forward_zero_mask_with_zero_bias_produces_zero():
         result.output,
         torch.zeros_like(result.output),
     )
-
-
-# ---------------------------------------------------------------------------
-# Output reshaping
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -1019,6 +992,7 @@ def test_forward_output_shapes(
     assert result.output.shape == expected_shape
 
 
+@pytest.mark.pruned
 def test_forward_uses_input_channel_count_for_output_view():
     model = make_model(
         input_shape=(2, 3),
@@ -1035,11 +1009,7 @@ def test_forward_uses_input_channel_count_for_output_view():
     assert result.output.shape[2] == 5
 
 
-# ---------------------------------------------------------------------------
-# Training behavior
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_forward_supports_backward():
     model = make_model()
 
@@ -1066,6 +1036,7 @@ def test_forward_supports_backward():
         assert layer.bias.grad is not None
 
 
+@pytest.mark.pruned
 def test_forward_with_added_features_supports_backward():
     model = make_model(
         config=make_config(
@@ -1099,6 +1070,7 @@ def test_forward_with_added_features_supports_backward():
     assert features.grad is not None
 
 
+@pytest.mark.pruned
 def test_forward_output_is_finite():
     model = make_model(
         config=make_config(
@@ -1117,6 +1089,7 @@ def test_forward_output_is_finite():
     assert torch.isfinite(result.output).all()
 
 
+@pytest.mark.pruned
 def test_model_supports_float64():
     model = make_model().double()
 

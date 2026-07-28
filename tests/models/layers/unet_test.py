@@ -97,11 +97,7 @@ def make_mask(
     )
 
 
-# ---------------------------------------------------------------------------
-# build_conv_block
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_build_conv_block_standard():
     config = make_conv_config()
 
@@ -115,6 +111,7 @@ def test_build_conv_block_standard():
     assert block.out_channels == 5
 
 
+@pytest.mark.pruned
 def test_build_conv_block_partial():
     config = make_partial_config()
 
@@ -128,6 +125,7 @@ def test_build_conv_block_partial():
     assert block.out_channels == 5
 
 
+@pytest.mark.pruned
 def test_build_conv_block_convnext():
     config = make_convnext_config()
 
@@ -165,6 +163,7 @@ def test_build_conv_block_all_supported_types(
     assert isinstance(block, expected_type)
 
 
+@pytest.mark.pruned
 def test_build_conv_block_does_not_mutate_original_config():
     config = make_conv_config()
 
@@ -181,6 +180,7 @@ def test_build_conv_block_does_not_mutate_original_config():
     assert config.inject_noise is False
 
 
+@pytest.mark.pruned
 def test_build_conv_block_passes_generative_settings():
     config = make_conv_config()
 
@@ -196,6 +196,7 @@ def test_build_conv_block_passes_generative_settings():
     assert block.stages[0].conv.in_channels == 4
 
 
+@pytest.mark.pruned
 def test_build_conv_block_partial_passes_noise_setting():
     config = make_partial_config()
 
@@ -210,6 +211,7 @@ def test_build_conv_block_partial_passes_noise_setting():
     assert block.stages[0].conv.in_channels == 4
 
 
+@pytest.mark.pruned
 def test_build_conv_block_convnext_passes_noise_setting():
     config = make_convnext_config()
 
@@ -223,6 +225,7 @@ def test_build_conv_block_convnext_passes_noise_setting():
     assert block.blocks[0].inject_noise is True
 
 
+@pytest.mark.pruned
 def test_build_conv_block_rejects_unsupported_config():
     class UnsupportedConfig:
         latent_size = None
@@ -268,11 +271,7 @@ def test_build_conv_block_error_reports_config_name():
         )
 
 
-# ---------------------------------------------------------------------------
-# DownBlock initialization
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_down_block_without_skip_processor():
     block = DownBlock(
         3,
@@ -288,6 +287,7 @@ def test_down_block_without_skip_processor():
     assert isinstance(block.tensor_pool, nn.MaxPool2d)
 
 
+@pytest.mark.pruned
 def test_down_block_with_skip_processor():
     block = DownBlock(
         3,
@@ -302,6 +302,7 @@ def test_down_block_with_skip_processor():
     assert isinstance(block.skip_processor, ConvBlock)
 
 
+@pytest.mark.pruned
 def test_down_block_skip_processor_uses_output_channels():
     block = DownBlock(
         3,
@@ -338,6 +339,7 @@ def test_down_block_passes_mask_pooling_method(method):
     assert block.mask_pool.fraction_threshold == pytest.approx(0.75)
 
 
+@pytest.mark.pruned
 def test_down_block_rejects_invalid_fraction_threshold():
     with pytest.raises(
         ValueError,
@@ -353,11 +355,7 @@ def test_down_block_rejects_invalid_fraction_threshold():
         )
 
 
-# ---------------------------------------------------------------------------
-# DownBlock forward
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_down_block_forward_without_mask():
     block = DownBlock(
         3,
@@ -381,6 +379,7 @@ def test_down_block_forward_without_mask():
     assert downsampled.mask is None
 
 
+@pytest.mark.pruned
 def test_down_block_processes_skip_when_enabled(
     monkeypatch,
 ):
@@ -424,6 +423,7 @@ def test_down_block_processes_skip_when_enabled(
     )
 
 
+@pytest.mark.pruned
 def test_down_block_does_not_process_skip_when_disabled():
     block = DownBlock(
         3,
@@ -437,6 +437,7 @@ def test_down_block_does_not_process_skip_when_disabled():
     assert block.skip_processor is None
 
 
+@pytest.mark.pruned
 def test_down_block_applies_max_pool_to_tensor():
     block = DownBlock(
         1,
@@ -474,6 +475,7 @@ def test_down_block_applies_max_pool_to_tensor():
     assert downsampled.tensor.item() == pytest.approx(4.0)
 
 
+@pytest.mark.pruned
 def test_down_block_pools_mask_when_present():
     block = DownBlock(
         1,
@@ -507,6 +509,7 @@ def test_down_block_pools_mask_when_present():
     assert downsampled.mask.item() == pytest.approx(1.0)
 
 
+@pytest.mark.pruned
 def test_down_block_skips_mask_pooling_when_mask_is_none(
     monkeypatch,
 ):
@@ -541,11 +544,7 @@ def test_down_block_skips_mask_pooling_when_mask_is_none(
     assert skip.mask is None
 
 
-# ---------------------------------------------------------------------------
-# UpBlock initialization
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_up_block_transpose_convolution():
     block = UpBlock(
         input_channels=4,
@@ -565,6 +564,7 @@ def test_up_block_transpose_convolution():
     assert block.upsample.stride == (2, 2)
 
 
+@pytest.mark.pruned
 def test_up_block_bilinear_standard_projection():
     block = UpBlock(
         input_channels=4,
@@ -599,6 +599,7 @@ def test_up_block_bilinear_partial_projection():
     assert block.channel_projection.return_mask is False
 
 
+@pytest.mark.pruned
 def test_up_block_bilinear_convnext_partial_projection():
     block = UpBlock(
         input_channels=4,
@@ -632,6 +633,7 @@ def test_up_block_bilinear_convnext_standard_projection():
     assert not isinstance(block.channel_projection, PartialConv2d)
 
 
+@pytest.mark.pruned
 def test_up_block_rejects_unsupported_upsampling_method():
     with pytest.raises(
         ValueError,
@@ -648,6 +650,7 @@ def test_up_block_rejects_unsupported_upsampling_method():
         )
 
 
+@pytest.mark.pruned
 def test_up_block_stores_configuration():
     block = UpBlock(
         input_channels=4,
@@ -673,6 +676,7 @@ def test_up_block_stores_configuration():
     assert block.inject_noise_in_block is True
 
 
+@pytest.mark.pruned
 def test_up_block_noise_adds_transpose_input_channel():
     block = UpBlock(
         input_channels=4,
@@ -688,6 +692,7 @@ def test_up_block_noise_adds_transpose_input_channel():
     assert block.upsample.in_channels == 5
 
 
+@pytest.mark.pruned
 def test_up_block_noise_adds_bilinear_projection_channel():
     block = UpBlock(
         input_channels=4,
@@ -703,6 +708,7 @@ def test_up_block_noise_adds_bilinear_projection_channel():
     assert block.channel_projection.in_channels == 5
 
 
+@pytest.mark.pruned
 def test_up_block_merged_block_input_channels():
     block = UpBlock(
         input_channels=4,
@@ -718,6 +724,7 @@ def test_up_block_merged_block_input_channels():
     assert block._block.stages[0].conv.out_channels == 2
 
 
+@pytest.mark.pruned
 def test_up_block_does_not_mutate_partial_config():
     config = make_partial_config()
 
@@ -737,6 +744,7 @@ def test_up_block_does_not_mutate_partial_config():
     assert block._block.stages[0].return_mask is False
 
 
+@pytest.mark.pruned
 def test_up_block_disables_partial_mask_return_in_merged_block():
     config = make_partial_config()
 
@@ -754,6 +762,7 @@ def test_up_block_disables_partial_mask_return_in_merged_block():
     assert block._block.stages[0].return_mask is False
 
 
+@pytest.mark.pruned
 def test_up_block_noise_in_block_enabled_only_when_both_flags_true():
     block = UpBlock(
         input_channels=4,
@@ -800,11 +809,7 @@ def test_up_block_noise_in_block_disabled_unless_both_flags_true(
     assert block._block.stages[0].inject_noise is False
 
 
-# ---------------------------------------------------------------------------
-# UpBlock forward
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_up_block_transpose_forward_shape():
     block = UpBlock(
         input_channels=4,
@@ -842,6 +847,7 @@ def test_up_block_transpose_forward_shape():
     assert result.mask is None
 
 
+@pytest.mark.pruned
 def test_up_block_bilinear_forward_shape():
     block = UpBlock(
         input_channels=4,
@@ -876,6 +882,7 @@ def test_up_block_bilinear_forward_shape():
     assert result.mask is None
 
 
+@pytest.mark.pruned
 def test_up_block_ignores_input_and_skip_masks():
     block = UpBlock(
         input_channels=4,
@@ -917,6 +924,7 @@ def test_up_block_ignores_input_and_skip_masks():
     assert result.mask is None
 
 
+@pytest.mark.pruned
 def test_up_block_concatenates_skip_before_upsampled_tensor():
     block = UpBlock(
         input_channels=1,
@@ -973,6 +981,7 @@ def test_up_block_concatenates_skip_before_upsampled_tensor():
     assert result is capture.value
 
 
+@pytest.mark.pruned
 def test_up_block_calls_align_to_skip(
     monkeypatch,
 ):
@@ -1109,6 +1118,7 @@ def test_up_block_transpose_noise_injected_before_upsampling(
     assert result.tensor.shape == (2, 2, 8, 8)
 
 
+@pytest.mark.pruned
 def test_up_block_bilinear_noise_injected_after_upsampling(
     monkeypatch,
 ):
@@ -1172,6 +1182,7 @@ def test_up_block_bilinear_noise_injected_after_upsampling(
     assert result.tensor.shape == (2, 2, 8, 8)
 
 
+@pytest.mark.pruned
 def test_up_block_without_noise_does_not_call_noise_injection(
     monkeypatch,
 ):
@@ -1217,11 +1228,6 @@ def test_up_block_without_noise_does_not_call_noise_injection(
     assert result.tensor.shape == (2, 2, 8, 8)
 
 
-# ---------------------------------------------------------------------------
-# UNetOutput initialization
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.parametrize(
     "activation",
     [
@@ -1244,6 +1250,7 @@ def test_unet_output_direct_projection(activation):
     assert layer.layers[0].kernel_size == (1, 1)
 
 
+@pytest.mark.pruned
 def test_unet_output_identity_has_only_projection():
     layer = UNetOutput(
         4,
@@ -1256,6 +1263,7 @@ def test_unet_output_identity_has_only_projection():
     assert isinstance(layer.layers[0], nn.Conv2d)
 
 
+@pytest.mark.pruned
 def test_unet_output_sigmoid_activation():
     layer = UNetOutput(
         4,
@@ -1268,6 +1276,7 @@ def test_unet_output_sigmoid_activation():
     assert isinstance(layer.layers[-1], nn.Sigmoid)
 
 
+@pytest.mark.pruned
 def test_unet_output_tanh_activation():
     layer = UNetOutput(
         4,
@@ -1280,6 +1289,7 @@ def test_unet_output_tanh_activation():
     assert isinstance(layer.layers[-1], nn.Tanh)
 
 
+@pytest.mark.pruned
 def test_unet_output_rejects_unsupported_activation():
     with pytest.raises(
         ValueError,
@@ -1293,6 +1303,7 @@ def test_unet_output_rejects_unsupported_activation():
         )
 
 
+@pytest.mark.pruned
 def test_unet_output_hidden_structure():
     layer = UNetOutput(
         4,
@@ -1323,6 +1334,7 @@ def test_unet_output_hidden_structure():
     assert layer.layers[3].out_channels == 2
 
 
+@pytest.mark.pruned
 def test_unet_output_hidden_sigmoid_structure():
     layer = UNetOutput(
         4,
@@ -1335,6 +1347,7 @@ def test_unet_output_hidden_sigmoid_structure():
     assert isinstance(layer.layers[-1], nn.Sigmoid)
 
 
+@pytest.mark.pruned
 def test_unet_output_hidden_tanh_structure():
     layer = UNetOutput(
         4,
@@ -1345,11 +1358,6 @@ def test_unet_output_hidden_tanh_structure():
 
     assert len(layer.layers) == 5
     assert isinstance(layer.layers[-1], nn.Tanh)
-
-
-# ---------------------------------------------------------------------------
-# UNetOutput forward
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -1382,6 +1390,7 @@ def test_unet_output_forward_shape(
     assert result.shape == (2, 2, 8, 8)
 
 
+@pytest.mark.pruned
 def test_unet_output_sigmoid_range():
     layer = UNetOutput(
         4,
@@ -1396,6 +1405,7 @@ def test_unet_output_sigmoid_range():
     assert torch.all(result <= 1)
 
 
+@pytest.mark.pruned
 def test_unet_output_tanh_range():
     layer = UNetOutput(
         4,
@@ -1410,6 +1420,7 @@ def test_unet_output_tanh_range():
     assert torch.all(result <= 1)
 
 
+@pytest.mark.pruned
 def test_unet_output_identity_preserves_negative_values():
     layer = UNetOutput(
         1,
@@ -1430,6 +1441,7 @@ def test_unet_output_identity_preserves_negative_values():
     )
 
 
+@pytest.mark.pruned
 def test_unet_output_sigmoid_exact_zero_input():
     layer = UNetOutput(
         1,
@@ -1450,6 +1462,7 @@ def test_unet_output_sigmoid_exact_zero_input():
     )
 
 
+@pytest.mark.pruned
 def test_unet_output_tanh_exact_zero_input():
     layer = UNetOutput(
         1,
@@ -1470,6 +1483,7 @@ def test_unet_output_tanh_exact_zero_input():
     )
 
 
+@pytest.mark.pruned
 def test_unet_output_supports_backward():
     layer = UNetOutput(
         4,
@@ -1495,6 +1509,7 @@ def test_unet_output_supports_backward():
         assert parameter.grad is not None
 
 
+@pytest.mark.pruned
 def test_unet_output_preserves_float64():
     layer = UNetOutput(
         4,

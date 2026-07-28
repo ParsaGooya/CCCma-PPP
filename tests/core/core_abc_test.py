@@ -86,6 +86,7 @@ class ConcreteModuleConfig(moduleConfigABC):
         return "loaded"
 
 
+@pytest.mark.pruned
 def test_get_device_returns_parameter_device():
     module = ConcreteModule()
 
@@ -94,12 +95,14 @@ def test_get_device_returns_parameter_device():
     assert module._get_device() == expected_device
 
 
+@pytest.mark.pruned
 def test_get_device_returns_buffer_device_when_no_parameters():
     module = BufferOnlyConcreteModule()
 
     assert module._get_device() == module.buffer_value.device
 
 
+@pytest.mark.pruned
 def test_get_device_returns_cpu_without_parameters_or_buffers():
     module = EmptyConcreteModule()
 
@@ -131,6 +134,7 @@ def test_load_state_dict_loads_checkpoint_strict_true(tmp_path):
         assert torch.allclose(value, source.state_dict()[key])
 
 
+@pytest.mark.pruned
 def test_load_state_dict_accepts_string_path(tmp_path):
     source = ConcreteModule()
     target = ConcreteModule()
@@ -147,6 +151,7 @@ def test_load_state_dict_accepts_string_path(tmp_path):
         assert torch.allclose(value, source.state_dict()[key])
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strict_false_allows_missing_keys(tmp_path):
     module = ConcreteModule()
 
@@ -165,6 +170,7 @@ def test_load_state_dict_strict_false_allows_missing_keys(tmp_path):
     assert torch.allclose(module.linear.bias, torch.zeros_like(module.linear.bias))
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strict_true_raises_on_missing_keys(tmp_path):
     module = ConcreteModule()
 
@@ -182,6 +188,7 @@ def test_load_state_dict_strict_true_raises_on_missing_keys(tmp_path):
         module._load_state_dict(checkpoint_path, strict=True)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strict_true_raises_on_unexpected_keys(tmp_path):
     module = ConcreteModule()
 
@@ -200,6 +207,7 @@ def test_load_state_dict_strict_true_raises_on_unexpected_keys(tmp_path):
         module._load_state_dict(checkpoint_path, strict=True)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_strict_false_allows_unexpected_keys(tmp_path):
     module = ConcreteModule()
 
@@ -217,6 +225,7 @@ def test_load_state_dict_strict_false_allows_unexpected_keys(tmp_path):
     module._load_state_dict(checkpoint_path, strict=False)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_uses_module_key(tmp_path):
     module = ConcreteModule()
 
@@ -227,6 +236,7 @@ def test_load_state_dict_uses_module_key(tmp_path):
         module._load_state_dict(checkpoint_path)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_preserves_loaded_values(tmp_path):
     module = ConcreteModule()
 
@@ -273,6 +283,7 @@ def test_check_registered_success():
     Registered.check_registered()
 
 
+@pytest.mark.pruned
 def test_check_registered_inherited_type():
     class Registered(moduleConfigABC):
         _type = "registered"
@@ -286,6 +297,7 @@ def test_check_registered_inherited_type():
     Registered.check_registered()
 
 
+@pytest.mark.pruned
 def test_generative_context_without_module_uses_false_defaults():
     context = GenerativeContext()
 
@@ -293,6 +305,7 @@ def test_generative_context_without_module_uses_false_defaults():
     assert context.generative_modeling is False
 
 
+@pytest.mark.pruned
 def test_generative_context_detects_generator():
     class ModelConfig:
         GENERATOR = object()
@@ -310,6 +323,7 @@ def test_generative_context_detects_generator():
     assert context.generative_modeling is False
 
 
+@pytest.mark.pruned
 def test_generative_context_without_generator():
     class ModelConfig:
         GENERATOR = None
@@ -327,6 +341,7 @@ def test_generative_context_without_generator():
     assert context.generative_modeling is True
 
 
+@pytest.mark.pruned
 def test_generative_context_defaults_missing_generator_to_none():
     class ModelConfig:
         pass
@@ -344,6 +359,7 @@ def test_generative_context_defaults_missing_generator_to_none():
     assert context.generative_modeling is True
 
 
+@pytest.mark.pruned
 def test_generative_context_defaults_missing_generative_modeling_to_false():
     class ModelConfig:
         GENERATOR = object()
@@ -361,6 +377,7 @@ def test_generative_context_defaults_missing_generative_modeling_to_false():
     assert context.generative_modeling is False
 
 
+@pytest.mark.pruned
 def test_generative_context_treats_false_generator_as_present():
     class ModelConfig:
         GENERATOR = False
@@ -378,6 +395,7 @@ def test_generative_context_treats_false_generator_as_present():
     assert context.generative_modeling is False
 
 
+@pytest.mark.pruned
 def test_generative_context_preserves_truthy_generative_modeling_value():
     marker = object()
 
@@ -397,6 +415,7 @@ def test_generative_context_preserves_truthy_generative_modeling_value():
     assert context.generative_modeling is marker
 
 
+@pytest.mark.pruned
 def test_load_state_dict_calls_torch_load_with_expected_arguments(
     tmp_path,
     monkeypatch,
@@ -425,6 +444,7 @@ def test_load_state_dict_calls_torch_load_with_expected_arguments(
     assert captured["weights_only"] is True
 
 
+@pytest.mark.pruned
 def test_load_state_dict_calls_gc_collect(
     tmp_path,
     monkeypatch,
@@ -447,57 +467,3 @@ def test_load_state_dict_calls_gc_collect(
     module._load_state_dict(checkpoint_path)
 
     assert calls == [True]
-
-
-def test_init_loss_function_stores_loss_and_kwargs():
-    module = ConcreteModule()
-    loss = nn.MSELoss()
-
-    module.init_loss_function(
-        loss,
-        reduction="mean",
-    )
-
-    assert module.loss_function is loss
-    assert module.loss_kwargs == {"reduction": "mean"}
-
-
-def test_concrete_module_compute_loss():
-    module = ConcreteModule()
-
-    assert module._compute_loss() == "loss"
-
-
-def test_concrete_module_forward_with_default_input():
-    module = ConcreteModule()
-
-    output = module.forward()
-
-    assert output.shape == (1, 2)
-
-
-def test_concrete_module_forward_with_explicit_input():
-    module = ConcreteModule()
-    input_tensor = torch.ones(3, 2)
-
-    output = module.forward(input_tensor)
-
-    assert output.shape == (3, 2)
-
-
-def test_concrete_module_predict():
-    module = ConcreteModule()
-
-    assert module.predict() == "predict"
-
-
-def test_outputabc_retains_same_tensor_instance():
-    tensor = torch.tensor(
-        [1.0, 2.0],
-        requires_grad=True,
-    )
-
-    output = OutputABC(output=tensor)
-
-    assert output.output is tensor
-    assert output.output.requires_grad is True

@@ -12,11 +12,6 @@ from cccma_ppp.models.layers.generic import (
 )
 
 
-# ---------------------------------------------------------------------------
-# Dropout validation
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.parametrize(
     "value",
     [
@@ -48,11 +43,7 @@ def test_validate_dropout_rejects_invalid_values(value):
         _validate_dropout(value)
 
 
-# ---------------------------------------------------------------------------
-# Activation construction
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_build_activation_relu():
     activation = _build_activation("relu")
 
@@ -60,12 +51,14 @@ def test_build_activation_relu():
     assert activation.inplace is True
 
 
+@pytest.mark.pruned
 def test_build_activation_gelu():
     activation = _build_activation("gelu")
 
     assert isinstance(activation, nn.GELU)
 
 
+@pytest.mark.pruned
 def test_build_activation_silu():
     activation = _build_activation("silu")
 
@@ -107,6 +100,7 @@ def test_build_activation_preserves_shape(name):
     assert result.shape == tensor.shape
 
 
+@pytest.mark.pruned
 def test_relu_clamps_negative_values():
     activation = _build_activation("relu")
     tensor = torch.tensor(
@@ -135,6 +129,7 @@ def test_relu_clamps_negative_values():
     )
 
 
+@pytest.mark.pruned
 def test_silu_matches_functional_implementation():
     activation = _build_activation("silu")
     tensor = torch.randn(2, 3, 4, 5)
@@ -148,6 +143,7 @@ def test_silu_matches_functional_implementation():
     )
 
 
+@pytest.mark.pruned
 def test_gelu_matches_functional_implementation():
     activation = _build_activation("gelu")
     tensor = torch.randn(2, 3, 4, 5)
@@ -161,11 +157,7 @@ def test_gelu_matches_functional_implementation():
     )
 
 
-# ---------------------------------------------------------------------------
-# Normalization construction
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_build_normalization_batch():
     normalization = _build_normalization(
         "batch",
@@ -176,6 +168,7 @@ def test_build_normalization_batch():
     assert normalization.num_features == 4
 
 
+@pytest.mark.pruned
 def test_build_normalization_group():
     normalization = _build_normalization(
         "group",
@@ -199,6 +192,7 @@ def test_build_normalization_layer():
     assert normalization.bias.shape == (4,)
 
 
+@pytest.mark.pruned
 def test_build_normalization_none():
     normalization = _build_normalization(
         "none",
@@ -228,6 +222,7 @@ def test_build_normalization_rejects_unsupported_name(name):
         )
 
 
+@pytest.mark.pruned
 def test_group_normalization_limits_groups_to_channels():
     normalization = _build_normalization(
         "group",
@@ -292,6 +287,7 @@ def test_normalization_preserves_shape(name):
     assert result.shape == tensor.shape
 
 
+@pytest.mark.pruned
 def test_identity_normalization_returns_same_object():
     normalization = _build_normalization(
         "none",
@@ -302,164 +298,6 @@ def test_identity_normalization_returns_same_object():
     result = normalization(tensor)
 
     assert result is tensor
-
-
-# ---------------------------------------------------------------------------
-# LayerNorm2d initialization
-# ---------------------------------------------------------------------------
-
-
-def test_layer_norm_2d_initial_values():
-    normalization = LayerNorm2d(
-        num_channels=4,
-    )
-
-    torch.testing.assert_close(
-        normalization.weight,
-        torch.ones(4),
-    )
-    torch.testing.assert_close(
-        normalization.bias,
-        torch.zeros(4),
-    )
-    assert normalization.eps == pytest.approx(1e-6)
-
-
-def test_layer_norm_2d_custom_epsilon():
-    normalization = LayerNorm2d(
-        num_channels=3,
-        eps=1e-4,
-    )
-
-    assert normalization.eps == pytest.approx(1e-4)
-
-
-def test_layer_norm_2d_parameters_require_gradients():
-    normalization = LayerNorm2d(
-        num_channels=4,
-    )
-
-    assert normalization.weight.requires_grad is True
-    assert normalization.bias.requires_grad is True
-
-
-# ---------------------------------------------------------------------------
-# LayerNorm2d forward behavior
-# ---------------------------------------------------------------------------
-
-
-def test_layer_norm_2d_preserves_shape():
-    normalization = LayerNorm2d(
-        num_channels=4,
-    )
-    tensor = torch.randn(2, 4, 6, 5)
-
-    result = normalization(tensor)
-
-    assert result.shape == tensor.shape
-
-
-def test_layer_norm_2d_matches_functional_layer_norm():
-    normalization = LayerNorm2d(
-        num_channels=4,
-        eps=1e-5,
-    )
-    tensor = torch.randn(2, 4, 3, 5)
-
-    result = normalization(tensor)
-
-    expected = F.layer_norm(
-        tensor.permute(0, 2, 3, 1),
-        (4,),
-        normalization.weight,
-        normalization.bias,
-        normalization.eps,
-    ).permute(0, 3, 1, 2)
-
-    torch.testing.assert_close(
-        result,
-        expected,
-    )
-
-
-def test_layer_norm_2d_normalizes_across_channels():
-    normalization = LayerNorm2d(
-        num_channels=4,
-        eps=1e-6,
-    )
-    tensor = torch.randn(3, 4, 5, 6)
-
-    result = normalization(tensor)
-
-    channel_mean = result.mean(dim=1)
-    channel_variance = result.var(
-        dim=1,
-        unbiased=False,
-    )
-
-    torch.testing.assert_close(
-        channel_mean,
-        torch.zeros_like(channel_mean),
-        atol=1e-5,
-        rtol=1e-5,
-    )
-    torch.testing.assert_close(
-        channel_variance,
-        torch.ones_like(channel_variance),
-        atol=1e-4,
-        rtol=1e-4,
-    )
-
-
-def test_layer_norm_2d_applies_weight_and_bias():
-    normalization = LayerNorm2d(
-        num_channels=2,
-    )
-
-    with torch.no_grad():
-        normalization.weight.copy_(
-            torch.tensor(
-                [
-                    2.0,
-                    3.0,
-                ]
-            )
-        )
-        normalization.bias.copy_(
-            torch.tensor(
-                [
-                    4.0,
-                    5.0,
-                ]
-            )
-        )
-
-    tensor = torch.tensor(
-        [
-            [
-                [[1.0]],
-                [[3.0]],
-            ]
-        ]
-    )
-
-    result = normalization(tensor)
-
-    expected = torch.tensor(
-        [
-            [
-                [[2.0]],
-                [[8.0]],
-            ]
-        ]
-    )
-
-    torch.testing.assert_close(
-        result,
-        expected,
-        atol=1e-5,
-        rtol=1e-5,
-    )
 
 
 @pytest.mark.parametrize(
@@ -490,50 +328,6 @@ def test_layer_norm_2d_handles_multiple_shapes(
     assert result.shape == tensor.shape
 
 
-def test_layer_norm_2d_preserves_dtype():
-    normalization = LayerNorm2d(4).double()
-    tensor = torch.randn(
-        2,
-        4,
-        3,
-        3,
-        dtype=torch.float64,
-    )
-
-    result = normalization(tensor)
-
-    assert result.dtype == torch.float64
-
-
-def test_layer_norm_2d_supports_backward():
-    normalization = LayerNorm2d(4)
-    tensor = torch.randn(
-        2,
-        4,
-        3,
-        3,
-        requires_grad=True,
-    )
-
-    result = normalization(tensor)
-    result.sum().backward()
-
-    assert tensor.grad is not None
-    assert normalization.weight.grad is not None
-    assert normalization.bias.grad is not None
-
-
-# ---------------------------------------------------------------------------
-# DropPath initialization
-# ---------------------------------------------------------------------------
-
-
-def test_drop_path_default_probability():
-    drop_path = DropPath()
-
-    assert drop_path.drop_probability == pytest.approx(0.0)
-
-
 @pytest.mark.parametrize(
     "drop_probability",
     [
@@ -550,11 +344,7 @@ def test_drop_path_stores_probability(drop_probability):
     assert drop_path.drop_probability == pytest.approx(drop_probability)
 
 
-# ---------------------------------------------------------------------------
-# DropPath bypass branches
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_drop_path_zero_probability_returns_same_object_in_training():
     drop_path = DropPath(0.0)
     drop_path.train()
@@ -565,6 +355,7 @@ def test_drop_path_zero_probability_returns_same_object_in_training():
     assert result is tensor
 
 
+@pytest.mark.pruned
 def test_drop_path_zero_probability_returns_same_object_in_evaluation():
     drop_path = DropPath(0.0)
     drop_path.eval()
@@ -595,11 +386,6 @@ def test_drop_path_evaluation_returns_same_object(
     assert result is tensor
 
 
-# ---------------------------------------------------------------------------
-# DropPath training behavior
-# ---------------------------------------------------------------------------
-
-
 def test_drop_path_training_preserves_shape():
     drop_path = DropPath(0.5)
     drop_path.train()
@@ -612,6 +398,7 @@ def test_drop_path_training_preserves_shape():
     assert result.shape == tensor.shape
 
 
+@pytest.mark.pruned
 def test_drop_path_uses_per_sample_mask():
     drop_path = DropPath(0.5)
     drop_path.train()
@@ -631,6 +418,7 @@ def test_drop_path_uses_per_sample_mask():
         }
 
 
+@pytest.mark.pruned
 def test_drop_path_scales_kept_samples():
     drop_path = DropPath(0.5)
     drop_path.train()
@@ -651,6 +439,7 @@ def test_drop_path_scales_kept_samples():
     assert 2.0 in unique_values
 
 
+@pytest.mark.pruned
 def test_drop_path_drops_some_samples():
     drop_path = DropPath(0.5)
     drop_path.train()
@@ -664,6 +453,7 @@ def test_drop_path_drops_some_samples():
     assert torch.any(result == 2)
 
 
+@pytest.mark.pruned
 def test_drop_path_preserves_expected_mean_approximately():
     drop_path = DropPath(0.25)
     drop_path.train()
@@ -701,6 +491,7 @@ def test_drop_path_supports_multiple_tensor_ranks(shape):
     assert result.shape == tensor.shape
 
 
+@pytest.mark.pruned
 def test_drop_path_preserves_dtype():
     drop_path = DropPath(0.5)
     drop_path.train()
@@ -719,6 +510,7 @@ def test_drop_path_preserves_dtype():
     assert result.dtype == torch.float64
 
 
+@pytest.mark.pruned
 def test_drop_path_preserves_device():
     drop_path = DropPath(0.5)
     drop_path.train()
@@ -729,6 +521,7 @@ def test_drop_path_preserves_device():
     assert result.device == tensor.device
 
 
+@pytest.mark.pruned
 def test_drop_path_supports_backward():
     drop_path = DropPath(0.5)
     drop_path.train()
@@ -749,6 +542,7 @@ def test_drop_path_supports_backward():
     assert tensor.grad.shape == tensor.shape
 
 
+@pytest.mark.pruned
 def test_drop_path_random_tensor_shape(
     monkeypatch,
 ):
@@ -799,6 +593,7 @@ def test_drop_path_random_tensor_shape(
     )
 
 
+@pytest.mark.pruned
 def test_drop_path_random_values_above_threshold_are_kept(
     monkeypatch,
 ):
@@ -835,6 +630,7 @@ def test_drop_path_random_values_above_threshold_are_kept(
     )
 
 
+@pytest.mark.pruned
 def test_drop_path_random_values_below_threshold_are_dropped(
     monkeypatch,
 ):

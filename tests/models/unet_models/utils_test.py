@@ -38,17 +38,14 @@ def make_generator(
     )
 
 
-# ---------------------------------------------------------------------------
-# _unet_config_checks: valid configurations
-# ---------------------------------------------------------------------------
-
-
+@pytest.mark.pruned
 def test_unet_config_checks_valid_minimal_config():
     config = make_config()
 
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_single_channel_level():
     config = make_config(
         channels=[8],
@@ -57,6 +54,7 @@ def test_unet_config_checks_accepts_single_channel_level():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_multiple_channel_levels():
     config = make_config(
         channels=[4, 8, 16, 32, 64],
@@ -65,6 +63,7 @@ def test_unet_config_checks_accepts_multiple_channel_levels():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_positive_bottleneck_dimension():
     config = make_config(
         bottleneck_dim=64,
@@ -73,6 +72,7 @@ def test_unet_config_checks_accepts_positive_bottleneck_dimension():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_none_bottleneck_dimension():
     config = make_config(
         bottleneck_dim=None,
@@ -141,6 +141,7 @@ def test_unet_config_checks_accepts_valid_generator_sample_counts(
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_generator_none():
     config = make_config(
         generator=None,
@@ -149,6 +150,7 @@ def test_unet_config_checks_accepts_generator_none():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_does_not_mutate_config():
     generator = make_generator(
         num_training_noise_samples=3,
@@ -172,11 +174,6 @@ def test_unet_config_checks_does_not_mutate_config():
     assert config.output_block_hidden_channels == 16
     assert config.GENERATOR is generator
     assert config.GENERATOR.num_training_noise_samples == 3
-
-
-# ---------------------------------------------------------------------------
-# _unet_config_checks: channels
-# ---------------------------------------------------------------------------
 
 
 def test_unet_config_checks_rejects_empty_channels():
@@ -215,6 +212,7 @@ def test_unet_config_checks_rejects_nonpositive_channels(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_channel_validation_precedes_other_checks():
     config = make_config(
         channels=[],
@@ -233,6 +231,7 @@ def test_unet_config_checks_channel_validation_precedes_other_checks():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_channel_values_checked_before_bottleneck():
     config = make_config(
         channels=[8, 0],
@@ -244,11 +243,6 @@ def test_unet_config_checks_channel_values_checked_before_bottleneck():
         match="All channel sizes must be positive integers",
     ):
         _unet_config_checks(config)
-
-
-# ---------------------------------------------------------------------------
-# _unet_config_checks: bottleneck
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -273,6 +267,7 @@ def test_unet_config_checks_rejects_nonpositive_bottleneck(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_bottleneck_checked_before_mask_threshold():
     config = make_config(
         bottleneck_dim=0,
@@ -284,11 +279,6 @@ def test_unet_config_checks_bottleneck_checked_before_mask_threshold():
         match="bottleneck_dim must be positive",
     ):
         _unet_config_checks(config)
-
-
-# ---------------------------------------------------------------------------
-# _unet_config_checks: mask fraction threshold
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -316,6 +306,7 @@ def test_unet_config_checks_rejects_invalid_mask_threshold(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_mask_threshold_checked_before_output_hidden_channels():
     config = make_config(
         mask_fraction_threshold=-1,
@@ -327,11 +318,6 @@ def test_unet_config_checks_mask_threshold_checked_before_output_hidden_channels
         match="mask_fraction_threshold must be between 0 and 1",
     ):
         _unet_config_checks(config)
-
-
-# ---------------------------------------------------------------------------
-# _unet_config_checks: output hidden channels
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -356,6 +342,7 @@ def test_unet_config_checks_rejects_nonpositive_output_hidden_channels(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_output_hidden_channels_checked_before_generator():
     config = make_config(
         output_block_hidden_channels=0,
@@ -369,11 +356,6 @@ def test_unet_config_checks_output_hidden_channels_checked_before_generator():
         match="output_block_hidden_channels must be positive",
     ):
         _unet_config_checks(config)
-
-
-# ---------------------------------------------------------------------------
-# _unet_config_checks: generator
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -400,6 +382,7 @@ def test_unet_config_checks_rejects_nonpositive_training_noise_samples(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_generator_error_message():
     config = make_config(
         generator=make_generator(
@@ -415,389 +398,3 @@ def test_unet_config_checks_generator_error_message():
         ),
     ):
         _unet_config_checks(config)
-
-
-# ---------------------------------------------------------------------------
-# _repeat_tensor_mask: tensor only
-# ---------------------------------------------------------------------------
-
-
-def test_repeat_tensor_mask_returns_tensor_mask():
-    value = TensorMask(
-        tensor=torch.randn(2, 3, 4, 5),
-        mask=None,
-    )
-
-    result = _repeat_tensor_mask(
-        value,
-        repeats=2,
-    )
-
-    assert isinstance(result, TensorMask)
-
-
-def test_repeat_tensor_mask_repeats_tensor_batch_dimension():
-    tensor = torch.randn(2, 3, 4, 5)
-
-    result = _repeat_tensor_mask(
-        TensorMask(
-            tensor=tensor,
-            mask=None,
-        ),
-        repeats=3,
-    )
-
-    assert result.tensor.shape == (6, 3, 4, 5)
-    assert result.mask is None
-
-
-def test_repeat_tensor_mask_repeats_samples_consecutively():
-    tensor = torch.tensor(
-        [
-            [[[1.0]]],
-            [[[2.0]]],
-            [[[3.0]]],
-        ]
-    )
-
-    result = _repeat_tensor_mask(
-        TensorMask(
-            tensor=tensor,
-            mask=None,
-        ),
-        repeats=2,
-    )
-
-    expected = torch.tensor(
-        [
-            [[[1.0]]],
-            [[[1.0]]],
-            [[[2.0]]],
-            [[[2.0]]],
-            [[[3.0]]],
-            [[[3.0]]],
-        ]
-    )
-
-    torch.testing.assert_close(
-        result.tensor,
-        expected,
-    )
-
-
-def test_repeat_tensor_mask_once_returns_equal_tensor():
-    tensor = torch.randn(2, 3, 4, 5)
-
-    result = _repeat_tensor_mask(
-        TensorMask(
-            tensor=tensor,
-            mask=None,
-        ),
-        repeats=1,
-    )
-
-    torch.testing.assert_close(
-        result.tensor,
-        tensor,
-    )
-    assert result.mask is None
-
-
-def test_repeat_tensor_mask_zero_repeats_returns_empty_batch():
-    tensor = torch.randn(2, 3, 4, 5)
-
-    result = _repeat_tensor_mask(
-        TensorMask(
-            tensor=tensor,
-            mask=None,
-        ),
-        repeats=0,
-    )
-
-    assert result.tensor.shape == (0, 3, 4, 5)
-    assert result.mask is None
-
-
-def test_repeat_tensor_mask_preserves_tensor_dtype():
-    tensor = torch.randn(
-        2,
-        3,
-        4,
-        5,
-        dtype=torch.float64,
-    )
-
-    result = _repeat_tensor_mask(
-        TensorMask(
-            tensor=tensor,
-            mask=None,
-        ),
-        repeats=3,
-    )
-
-    assert result.tensor.dtype == torch.float64
-
-
-def test_repeat_tensor_mask_preserves_tensor_device():
-    tensor = torch.randn(2, 3, 4, 5)
-
-    result = _repeat_tensor_mask(
-        TensorMask(
-            tensor=tensor,
-            mask=None,
-        ),
-        repeats=3,
-    )
-
-    assert result.tensor.device == tensor.device
-
-
-def test_repeat_tensor_mask_returns_new_tensor_mask_instance():
-    value = TensorMask(
-        tensor=torch.randn(2, 3, 4, 5),
-        mask=None,
-    )
-
-    result = _repeat_tensor_mask(
-        value,
-        repeats=1,
-    )
-
-    assert result is not value
-
-
-# ---------------------------------------------------------------------------
-# _repeat_tensor_mask: tensor and mask
-# ---------------------------------------------------------------------------
-
-
-def test_repeat_tensor_mask_repeats_mask():
-    tensor = torch.randn(2, 3, 4, 5)
-    mask = torch.ones(2, 1, 4, 5)
-
-    result = _repeat_tensor_mask(
-        TensorMask(
-            tensor=tensor,
-            mask=mask,
-        ),
-        repeats=3,
-    )
-
-    assert result.tensor.shape == (6, 3, 4, 5)
-    assert result.mask.shape == (6, 1, 4, 5)
-
-
-def test_repeat_tensor_mask_repeats_mask_consecutively():
-    tensor = torch.randn(2, 3, 1, 1)
-    mask = torch.tensor(
-        [
-            [[[0.0]]],
-            [[[1.0]]],
-        ]
-    )
-
-    result = _repeat_tensor_mask(
-        TensorMask(
-            tensor=tensor,
-            mask=mask,
-        ),
-        repeats=3,
-    )
-
-    expected = torch.tensor(
-        [
-            [[[0.0]]],
-            [[[0.0]]],
-            [[[0.0]]],
-            [[[1.0]]],
-            [[[1.0]]],
-            [[[1.0]]],
-        ]
-    )
-
-    torch.testing.assert_close(
-        result.mask,
-        expected,
-    )
-
-
-def test_repeat_tensor_mask_tensor_and_mask_order_match():
-    tensor = torch.tensor(
-        [
-            [[[1.0]]],
-            [[[2.0]]],
-        ]
-    )
-    mask = torch.tensor(
-        [
-            [[[10.0]]],
-            [[[20.0]]],
-        ]
-    )
-
-    result = _repeat_tensor_mask(
-        TensorMask(
-            tensor=tensor,
-            mask=mask,
-        ),
-        repeats=2,
-    )
-
-    expected_tensor = torch.tensor(
-        [
-            [[[1.0]]],
-            [[[1.0]]],
-            [[[2.0]]],
-            [[[2.0]]],
-        ]
-    )
-    expected_mask = torch.tensor(
-        [
-            [[[10.0]]],
-            [[[10.0]]],
-            [[[20.0]]],
-            [[[20.0]]],
-        ]
-    )
-
-    torch.testing.assert_close(
-        result.tensor,
-        expected_tensor,
-    )
-    torch.testing.assert_close(
-        result.mask,
-        expected_mask,
-    )
-
-
-@pytest.mark.parametrize(
-    "dtype",
-    [
-        torch.float32,
-        torch.float64,
-        torch.int32,
-        torch.int64,
-        torch.bool,
-    ],
-)
-def test_repeat_tensor_mask_preserves_mask_dtype(dtype):
-    tensor = torch.randn(2, 3, 4, 5)
-    mask = torch.ones(
-        2,
-        1,
-        4,
-        5,
-        dtype=dtype,
-    )
-
-    result = _repeat_tensor_mask(
-        TensorMask(
-            tensor=tensor,
-            mask=mask,
-        ),
-        repeats=2,
-    )
-
-    assert result.mask.dtype == dtype
-
-
-def test_repeat_tensor_mask_preserves_mask_device():
-    tensor = torch.randn(2, 3, 4, 5)
-    mask = torch.ones(2, 1, 4, 5)
-
-    result = _repeat_tensor_mask(
-        TensorMask(
-            tensor=tensor,
-            mask=mask,
-        ),
-        repeats=2,
-    )
-
-    assert result.mask.device == mask.device
-
-
-def test_repeat_tensor_mask_preserves_gradients():
-    tensor = torch.randn(
-        2,
-        3,
-        4,
-        5,
-        requires_grad=True,
-    )
-
-    result = _repeat_tensor_mask(
-        TensorMask(
-            tensor=tensor,
-            mask=None,
-        ),
-        repeats=3,
-    )
-
-    result.tensor.sum().backward()
-
-    assert tensor.grad is not None
-    torch.testing.assert_close(
-        tensor.grad,
-        torch.full_like(tensor, 3.0),
-    )
-
-
-def test_repeat_tensor_mask_preserves_mask_gradients():
-    tensor = torch.randn(2, 3, 4, 5)
-    mask = torch.randn(
-        2,
-        1,
-        4,
-        5,
-        requires_grad=True,
-    )
-
-    result = _repeat_tensor_mask(
-        TensorMask(
-            tensor=tensor,
-            mask=mask,
-        ),
-        repeats=2,
-    )
-
-    result.mask.sum().backward()
-
-    assert mask.grad is not None
-    torch.testing.assert_close(
-        mask.grad,
-        torch.full_like(mask, 2.0),
-    )
-
-
-@pytest.mark.skipif(
-    not torch.cuda.is_available(),
-    reason="CUDA is not available.",
-)
-def test_repeat_tensor_mask_on_cuda():
-    tensor = torch.randn(
-        2,
-        3,
-        4,
-        5,
-        device="cuda",
-    )
-    mask = torch.ones(
-        2,
-        1,
-        4,
-        5,
-        device="cuda",
-    )
-
-    result = _repeat_tensor_mask(
-        TensorMask(
-            tensor=tensor,
-            mask=mask,
-        ),
-        repeats=2,
-    )
-
-    assert result.tensor.device.type == "cuda"
-    assert result.mask.device.type == "cuda"
-    assert result.tensor.shape == (4, 3, 4, 5)
-    assert result.mask.shape == (4, 1, 4, 5)

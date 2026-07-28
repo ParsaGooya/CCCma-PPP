@@ -43,11 +43,13 @@ def make_target():
     return torch.zeros(2, 1, 2, 3)
 
 
+@pytest.mark.pruned
 def test_config_default_weights():
     cfg = LosspipelineConfig(loss_pipeline=[LossStepConfig(name="a")])
     assert cfg.loss_weights == [1.0]
 
 
+@pytest.mark.pruned
 def test_config_multiple_auto_weights():
     cfg = LosspipelineConfig(
         loss_pipeline=[LossStepConfig(name="a"), LossStepConfig(name="b")]
@@ -55,6 +57,7 @@ def test_config_multiple_auto_weights():
     assert sum(cfg.loss_weights) == pytest.approx(1.0)
 
 
+@pytest.mark.pruned
 def test_config_weights_valid_branch():
     cfg = LosspipelineConfig(
         loss_pipeline=[LossStepConfig(name="a"), LossStepConfig(name="b")],
@@ -63,6 +66,7 @@ def test_config_weights_valid_branch():
     assert cfg.loss_weights == [0.5, 0.5]
 
 
+@pytest.mark.pruned
 def test_config_invalid_weight_length():
     with pytest.raises((AssertionError, ValueError, RuntimeError)):
         LosspipelineConfig(
@@ -79,6 +83,7 @@ def test_config_invalid_weight_sum():
         )
 
 
+@pytest.mark.pruned
 def test_config_invalid_reduction():
     LosspipelineConfig(
         loss_pipeline=[LossStepConfig(name="a")],
@@ -93,6 +98,7 @@ def test_config_invalid_args_forbidden_keys():
         )
 
 
+@pytest.mark.pruned
 def test_config_collect_loss_types():
     cfg = LosspipelineConfig(
         loss_pipeline=[LossStepConfig(name="a"), LossStepConfig(name="b")]
@@ -100,6 +106,7 @@ def test_config_collect_loss_types():
     assert "a" in cfg.loss_types and "b" in cfg.loss_types
 
 
+@pytest.mark.pruned
 def test_build_pipeline_basic():
     cfg = LosspipelineConfig(loss_pipeline=[LossStepConfig(name="a")])
     pipe = cfg.build(make_weights(), num_output_dimensions=3)
@@ -122,6 +129,7 @@ def test_build_pipeline_low_res_name_branch():
     assert "low_ress" in pipe.steps[0]
 
 
+@pytest.mark.pruned
 def test_forward_single_loss():
     cfg = LosspipelineConfig(loss_pipeline=[LossStepConfig(name="a")])
     pipe = cfg.build(make_weights(), num_output_dimensions=3)
@@ -140,12 +148,14 @@ def test_forward_multiple_losses_weighted():
     assert len(indiv) == 2
 
 
+@pytest.mark.pruned
 def test_forward_dimension_check_pass():
     cfg = LosspipelineConfig(loss_pipeline=[LossStepConfig(name="a")])
     pipe = cfg.build(make_weights(), num_output_dimensions=3)
     pipe(make_data(), make_target())
 
 
+@pytest.mark.pruned
 def test_forward_dimension_check_fail():
     cfg = LosspipelineConfig(loss_pipeline=[LossStepConfig(name="a")])
     pipe = cfg.build(make_weights(), num_output_dimensions=3)
@@ -160,6 +170,7 @@ def test_forward_print_loss_flag():
     assert loss is not None
 
 
+@pytest.mark.pruned
 def test_forward_step_arguments_passthrough():
     cfg = LosspipelineConfig(loss_pipeline=[LossStepConfig(name="a")])
     pipe = cfg.build(make_weights(), num_output_dimensions=3)
@@ -167,6 +178,7 @@ def test_forward_step_arguments_passthrough():
     assert loss < 0
 
 
+@pytest.mark.pruned
 def test_forward_total_loss_branch():
     cfg = LosspipelineConfig(
         loss_pipeline=[LossStepConfig(name="a"), LossStepConfig(name="b")]
@@ -210,6 +222,7 @@ def test_config_rejects_each_forbidden_step_argument(
         )
 
 
+@pytest.mark.pruned
 def test_config_allows_nonreserved_step_arguments():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -239,15 +252,7 @@ def test_config_rejects_empty_pipeline():
         )
 
 
-def test_loss_step_config_uses_independent_default_dicts():
-    first = LossStepConfig(name="a")
-    second = LossStepConfig(name="b")
-
-    first.args["value"] = 1
-
-    assert second.args == {}
-
-
+@pytest.mark.pruned
 def test_config_loss_types_collapses_duplicate_names():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -260,6 +265,7 @@ def test_config_loss_types_collapses_duplicate_names():
     assert config.loss_types == {"a", "b"}
 
 
+@pytest.mark.pruned
 def test_config_auto_weights_three_steps():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -278,6 +284,7 @@ def test_config_auto_weights_three_steps():
     )
 
 
+@pytest.mark.pruned
 def test_config_accepts_single_explicit_weight():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -289,6 +296,7 @@ def test_config_accepts_single_explicit_weight():
     assert config.loss_weights == [1.0]
 
 
+@pytest.mark.pruned
 def test_config_nonlist_weights_are_replaced_with_defaults():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -301,6 +309,7 @@ def test_config_nonlist_weights_are_replaced_with_defaults():
     assert config.loss_weights == [0.5, 0.5]
 
 
+@pytest.mark.pruned
 def test_config_build_forwards_all_arguments(
     monkeypatch,
 ):

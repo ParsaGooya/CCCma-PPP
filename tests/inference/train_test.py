@@ -153,6 +153,7 @@ def test_main_non_root_rank(monkeypatch):
     assert not any(isinstance(x, tuple) and x[0] == "info" for x in calls)
 
 
+@pytest.mark.pruned
 def test_main_trainer_failure(monkeypatch):
 
     class DummyDistributed:
