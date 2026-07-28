@@ -17,6 +17,7 @@ from cccma_ppp.core.core_abc import moduleABC
 class PredictorABC(abc.ABC):
     output_dir: str | Path
     output_sampler: Callable[..., torch.Tensor] | None
+    num_output_covariance_sampling: int | None
 
     @property
     def temp_save_dir(self):

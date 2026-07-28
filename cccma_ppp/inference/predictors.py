@@ -43,14 +43,14 @@ class cVAEPredictorConfig:
         module: moduleABC,
         distributed: Distributed,
         output_dir: Path | str,
-        num_output_covariance_sampling: int = 0,
+        num_output_sampling: int | None = None,
     ):
 
         return cVAEPredictor(self, 
                              module, 
                              distributed,
                              output_dir,
-                             num_output_covariance_sampling)
+                             num_output_sampling)
 
 
 
@@ -61,12 +61,22 @@ class cVAEPredictor(PredictorABC):
                 module: moduleABC,
                 distributed: Distributed,
                 output_dir: Path | str,
-                num_output_covariance_sampling: int = 0):
+                num_output_sampling: int | None = None):
         
         self.config = config
         self.module = module
-        self.num_output_covariance_sampling = num_output_covariance_sampling
+        self.num_output_sampling = num_output_sampling
+        self.num_output_covariance_sampling = None
         self.output_dir = Path(output_dir)
+
+        if num_output_sampling <= 0:
+            raise ValueError(
+                "num_output_sampling must be larger than 1."
+            )
+
+        if module.config.GENERATOR is None:
+            self.num_output_covariance_sampling = num_output_sampling or 0
+
 
         self.num_latent_samples = config.num_latent_samples
         self.infer_latent_samples_from_training = config.infer_latent_samples_from_training
@@ -77,10 +87,11 @@ class cVAEPredictor(PredictorABC):
         self.device = distributed.device
 
         if self.extract_training_vars:
-            self._stats = {
-                "samples": RunningCovariance(self.distributed),
-                "residual": RunningCovariance(self.distributed),
-            }
+            self._stats = {}
+            if self.extract_training_residuals:
+                self._stats["residual"] = RunningCovariance(self.distributed)
+            if self.extract_posterior_samples:
+                self._stats["samples"] = RunningCovariance(self.distributed)
 
         self.latent_sampler = None
         self.output_sampler = None
@@ -88,7 +99,15 @@ class cVAEPredictor(PredictorABC):
 
     @property
     def extract_training_vars(self):
-        return any([self.infer_latent_samples_from_training, self.num_output_covariance_sampling > 0])
+        return any([self.extract_posterior_samples, self.extract_training_residuals])
+
+    @property
+    def extract_posterior_samples(self):
+        return self.infer_latent_samples_from_training
+
+    @property
+    def extract_training_residuals(self):
+        return self.num_output_covariance_sampling > 0
 
     @torch.no_grad()
     def _infer_on_batch(
@@ -126,7 +145,8 @@ class cVAEPredictor(PredictorABC):
             output = self.raw_module.predict(data=batch,
                                                 sample_size = self.num_latent_samples,
                                                 nstds = self.nstds,
-                                                latent_samples = latent_samples)
+                                                latent_samples = latent_samples,
+                                                output_sample_size = self.num_output_sampling)
             
             if self.num_output_covariance_sampling > 0:
                 sample_size = output.output.shape[:2] # N x B 
@@ -146,18 +166,22 @@ class cVAEPredictor(PredictorABC):
         data: BatchDataABC,
     ) -> dict[str, RunningCovariance]:
 
-        if output.samples is None:
-            raise RuntimeError("cVAEOutput.samples is required for training latent stats.")
-        
-        samples = output.samples.reshape(-1, output.samples.shape[-1])
-        self.stats["samples"].update(samples)
+        if self.extract_posterior_samples:
 
-        prediction = output.output
-        target = data.target
-        residual = target - prediction[0]
-        residual = residual.reshape(residual.shape[0], -1)
+            if output.samples is None:
+                raise RuntimeError("cVAEOutput.samples is required for training latent stats.")
+            
+            samples = output.samples.reshape(-1, output.samples.shape[-1])
+            self.stats["samples"].update(samples)
 
-        self.stats["residual"].update(residual)
+        if self.extract_training_residuals:
+
+            prediction = output.output
+            target = data.target
+            residual = target - prediction[0]
+            residual = residual.reshape(residual.shape[0], -1)
+
+            self.stats["residual"].update(residual)
 
         return self.stats
 
@@ -269,7 +293,7 @@ class cVAEPredictor(PredictorABC):
         else:
             prediction = output.output.detach().cpu()
             
-            if self.num_output_covariance_sampling == 0:
+            if self.num_output_sampling is None:
                 prediction = prediction.unsqueeze(0)
 
             num_output_dims = self.raw_module.model_config.NUM_OUTPUT_DIMS
@@ -295,21 +319,22 @@ class cVAEPredictor(PredictorABC):
 
 @dataclasses.dataclass
 class DeterministicPredictorConfig:
-    _type: ClassVar[str] = 'deterministic'
 
+    _type: ClassVar[str] = 'deterministic'
+        
     def build(
         self,
         module: moduleABC,
         distributed: Distributed,
         output_dir: Path | str,
-        num_output_covariance_sampling: int = 0,
+        num_output_sampling: int | None = None,
     ):
-
+        
         return DetermninisticPredictor(self, 
                              module, 
                              distributed,
                              output_dir,
-                             num_output_covariance_sampling)
+                             num_output_sampling)
 
 
 
@@ -320,12 +345,21 @@ class DetermninisticPredictor(PredictorABC):
                 module: moduleABC,
                 distributed: Distributed,
                 output_dir: Path | str,
-                num_output_covariance_sampling: int = 0):
+                num_output_sampling: int | None = None):
         
         self.config = config
         self.module = module
-        self.num_output_covariance_sampling = num_output_covariance_sampling
+        self.num_output_sampling = num_output_sampling
+        self.num_output_covariance_sampling = None
         self.output_dir = Path(output_dir)
+
+        if num_output_sampling <= 0:
+            raise ValueError(
+                "num_output_sampling must be larger than 1."
+            )
+        
+        if module.config.GENERATOR is None:
+            self.num_output_covariance_sampling = num_output_sampling or 0
 
         self.distributed = distributed
         self.device = distributed.device
@@ -369,7 +403,8 @@ class DetermninisticPredictor(PredictorABC):
                 return stats
 
 
-            output = self.raw_module.predict(data=batch)
+            output = self.raw_module.predict(data=batch, 
+                                             output_sample_size = self.num_output_sampling)
             
             if self.num_output_covariance_sampling > 0:
                 sample_size = (output.output.shape[0],)
@@ -409,7 +444,7 @@ class DetermninisticPredictor(PredictorABC):
  
         prediction = output.output.detach().cpu()
         
-        if self.num_output_covariance_sampling == 0:
+        if self.num_output_sampling is None:
             prediction = prediction.unsqueeze(0)
 
         num_output_dims = self.raw_module.config.NUM_OUTPUT_DIMS
