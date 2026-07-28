@@ -15,13 +15,9 @@ import dacite
 import yaml
 from tqdm import tqdm
 
-import cccma_ppp.core.cVAE_module  # noqa: F401
-import cccma_ppp.core.deterministic_module  # noqa: F401
-import cccma_ppp.loss.utils_loss  # noqa: F401
-import cccma_ppp.models.mlp_models  # noqa: F401
-import cccma_ppp.preprocessing.utils_preprocessing  # noqa: F401
-from cccma_ppp.models.normalized_flows import MAF  # noqa: F401# noqa: F401
-from cccma_ppp.models.normalized_flows import RealNVP  # noqa: F401
+import cccma_ppp.models.mlp_model  # noqa: F401
+import cccma_ppp.models.mlp_models.deterministic  # noqa: F401
+import cccma_ppp.models.mlp_models.cvae  # noqa: F401
 
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.train.train import main as train_main
@@ -1600,6 +1596,12 @@ def install_integration_compatibility_patches():
             )
 
         TrainDatasetConfig.input_lead_months = property(get_input_lead_months)
+
+    TrainDatasetConfig._check_model = lambda self: self
+    TrainDatasetConfig._check_condition = lambda self: self
+    TrainDatasetConfig.num_input_lead_months = property(
+        lambda self: self.model.info.sizes["lead_time"]
+    )
 
 
 def main():
