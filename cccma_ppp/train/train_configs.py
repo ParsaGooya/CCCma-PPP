@@ -9,7 +9,7 @@ import shutil
 import yaml
 import dacite
 
-from cccma_ppp.loss import LosspipelineConfig
+from cccma_ppp.loss.loss import LosspipelineConfig
 
 from cccma_ppp.train import TrainDataloaderConfig
 from cccma_ppp.data_modules import WeightsConfig
@@ -19,6 +19,7 @@ from cccma_ppp.generic import Distributed, RuntimeContext
 from cccma_ppp.core.selectors import ModuleSelector
 from cccma_ppp.core.trainer import TrainerConfig
 from cccma_ppp.core.optimization import OptimizerConfig
+from cccma_ppp.core.core_abc import GenerativeContext
 
 from cccma_ppp.preprocessing import Flattennanremove
 
@@ -138,8 +139,8 @@ class TrainConfig:
         None
         """
 
-        if self.module.GENERATOR:
-            if "crps" not in self.losspipeline.loss_pipeline.loss_types:
+        if self.module.GENERATOR is not None:
+            if "crps" not in self.losspipeline.loss_types:
                 raise RuntimeError(
                     "For models with generators crps has to be in the loss function."
                 )
@@ -449,11 +450,15 @@ def build_trainer(
 
     log("Creating loss function ...")
 
+    generative_context = GenerativeContext(module)
+
     reconstruction_loss = config.losspipeline.build(
         weights=weights,
         num_output_dimensions=config.module.NUM_OUTPUT_DIMS
         or len(output_shape),
+        generative_context=generative_context
     )
+
 
     module.init_loss_function(reconstruction_loss)
     module = module.to(distributed.device)
