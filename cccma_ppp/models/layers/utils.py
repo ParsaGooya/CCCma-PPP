@@ -1,20 +1,25 @@
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 
-from cccma_ppp.models.layers.generic import AlignmentMethod, PaddingMethod
+from cccma_ppp.models.layers.generic import (AlignmentMethod,
+                                     PaddingMethod)
 
 
 def _same_padding(kernel_size: int) -> int:
     if kernel_size <= 0 or kernel_size % 2 == 0:
-        raise ValueError("Feature-block kernel sizes must be positive odd integers.")
+        raise ValueError(
+            "Feature-block kernel sizes must be positive odd integers."
+        )
     return kernel_size // 2
+
 
 
 def align_to_skip(
     x: torch.Tensor,
     skip: torch.Tensor,
-    mode: AlignmentMethod = "padd",
-    padding_mode: PaddingMethod = "zeros",
+    mode: AlignmentMethod = 'padd',
+    padding_mode: PaddingMethod = "zeros"
 ) -> torch.Tensor:
     target_size = skip.shape[-2:]
 
@@ -30,7 +35,11 @@ def align_to_skip(
         )
 
     if mode == "padd":
-        return padd(x, target_size, padding_mode)
+        return padd(
+            x,
+            target_size,
+            padding_mode
+        )
 
     if mode == "strict":
         raise RuntimeError(
@@ -41,11 +50,15 @@ def align_to_skip(
     raise ValueError(f"Unknown alignment mode: {mode}")
 
 
+
 def padd(
-    x: torch.Tensor, target_size: tuple[int, int], padding_mode: PaddingMethod = "zeros"
+    x: torch.Tensor,
+    target_size: tuple[int, int],
+    padding_mode: PaddingMethod = "zeros"
 ) -> torch.Tensor:
     target_h, target_w = target_size
     current_h, current_w = x.shape[-2:]
+
 
     pad_h = target_h - current_h
     pad_w = target_w - current_w
@@ -58,8 +71,9 @@ def padd(
             pad_h // 2,
             pad_h - pad_h // 2,
         ],
-        mode=padding_mode,
+        mode = padding_mode
     )
+
 
 
 def _resize_mask(
@@ -100,8 +114,8 @@ def _broadcast_mask(
     if mask.ndim != 4:
         raise ValueError(
             f"Expected a 2D, 3D, or 4D mask, got shape {tuple(mask.shape)}."
-        )
-
+        ) 
+    
     if mask.shape[0] == 1 and reference.shape[0] > 1:
         mask = mask.expand(reference.shape[0], -1, -1, -1)
 
@@ -114,7 +128,9 @@ def _broadcast_mask(
     if mask.shape[-2:] != reference.shape[-2:]:
         mask = _resize_mask(mask, reference.shape[-2:])
 
-    return mask.to(device=reference.device, dtype=reference.dtype)
+    return mask.to(device=reference.device, dtype=reference.dtype)        
+
+
 
 
 def _merge_masks(
@@ -153,6 +169,7 @@ def _merge_masks(
         )
 
     return torch.cat([skip_mask, input_mask], dim=1)
+
 
 
 def _resize_tensor(
@@ -196,7 +213,6 @@ def _sample(mu, var, sample_size=1, std=1):
 
     return out
 
-
 def _get_normal(ref_tensor, std=1):
     """
     Create standard normal distribution.
@@ -217,17 +233,20 @@ def _get_normal(ref_tensor, std=1):
 
 
 def _noise_injection(ref_tensor: torch.Tensor):
-    noise_ref_tensor = ref_tensor[:, [0], ...]
+    noise_ref_tensor = ref_tensor[:,[0],...]
 
-    noise = _sample(
-        mu=torch.zeros_like(noise_ref_tensor), var=torch.ones_like(noise_ref_tensor)
-    )[0]
+    noise =  _sample(
+    mu = torch.zeros_like(noise_ref_tensor),
+    var = torch.ones_like(noise_ref_tensor)
+            )[0]
 
-    return torch.cat([ref_tensor, noise], dim=1)
+    return torch.cat([ref_tensor, noise], dim = 1)
 
 
-def _expand_mask(x: torch.Tensor, mask: torch.Tensor):
-
+def _expand_mask(x: torch.Tensor,
+                 mask: torch.Tensor
+                 ):
+    
     n = x.shape[1] - mask.shape[1]
 
     noise_mask = torch.ones(

@@ -249,12 +249,13 @@ class MAF(flowABC):
             self.register_parameter(
                 "initial_param", param=nn.Parameter(torch.Tensor(1, 2))
             )
-
+            
             self.reset_parameters()
         else:
             self.initial_param = self.base_network(added_features, 2, self.hidden_dim)
 
-        if added_features > 0:
+
+        if added_features > 0 :
             self._conditional = True
 
         return self
@@ -289,10 +290,10 @@ class MAF(flowABC):
         if self._conditional:
             if condition is None:
                 raise ValueError(
-                    "The flow model is build as condition dependant but no condition "
+                    "The flow model is build as condition dependant but no condition " \
                     "was provided in forward."
                 )
-
+            
         z = torch.zeros_like(x)
         log_det = torch.zeros(z.shape[0], device=x.device)
         for i in range(self.dim):
@@ -331,7 +332,7 @@ class MAF(flowABC):
         if self._conditional:
             if condition is None:
                 raise ValueError(
-                    "The flow model is build as condition dependant but no condition "
+                    "The flow model is build as condition dependant but no condition " \
                     "was provided in forward."
                 )
 
@@ -406,7 +407,7 @@ class RealNVP(flowABC):
             added_features + self.dim // 2, self.dim // 2, self.hidden_dim
         )
 
-        if added_features > 0:
+        if added_features > 0 :
             self._conditional = True
 
         return self
@@ -428,9 +429,10 @@ class RealNVP(flowABC):
         if self._conditional:
             if condition is None:
                 raise ValueError(
-                    "The flow model is build as condition dependant but no condition "
+                    "The flow model is build as condition dependant but no condition " \
                     "was provided in forward."
                 )
+            
 
         lower, upper = x[:, : self.dim // 2].clone(), x[:, self.dim // 2 :].clone()
         if self._conditional:
@@ -470,7 +472,7 @@ class RealNVP(flowABC):
         if self._conditional:
             if condition is None:
                 raise ValueError(
-                    "The flow model is build as condition dependant but no condition "
+                    "The flow model is build as condition dependant but no condition " \
                     "was provided in forward."
                 )
 

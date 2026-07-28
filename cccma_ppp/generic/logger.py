@@ -11,7 +11,7 @@ def setup_logger(
     level: int = logging.INFO,
 ) -> logging.Logger:
     """
-    Create and configure a logger for training.
+    Create and configure a logger for training/inference.
 
     Parameters
     ----------
@@ -52,7 +52,7 @@ def setup_logger(
         log_dir = Path(log_dir) or Path(os.environ["GLOBAL_LOG_DIR"])
         log_dir.mkdir(parents=True, exist_ok=True)
 
-        file_handler = logging.FileHandler(log_dir / "training.log")
+        file_handler = logging.FileHandler(log_dir / f"{name}.log")
         file_handler.setLevel(level)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)

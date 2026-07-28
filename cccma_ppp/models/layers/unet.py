@@ -1,30 +1,27 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import copy
 
-from cccma_ppp.models.layers.generic import (
-    MaskPoolingMethod,
-    UpsamplingMethod,
-    OutputActivation,
-    AlignmentMethod,
-)
+from cccma_ppp.models.layers import (MaskPoolingMethod,
+                                    UpsamplingMethod,
+                                    OutputActivation,
+                                    AlignmentMethod)
 
 
-from cccma_ppp.models.layers.utils import align_to_skip, _noise_injection
+from cccma_ppp.models.layers.utils import (align_to_skip,
+                                        _noise_injection)
 
-from cccma_ppp.models.layers.conv import (
-    ConvBlockConfig,
-    ConvBlock,
-    PartialConvBlockConfig,
-    PartialConvBlock,
-    ConvNeXtBlockConfig,
-    ConvNeXtBlock,
-    MaskPool2d,
-    TensorMask,
-)
+from cccma_ppp.models.layers.conv import (ConvBlockConfig,
+                                          ConvBlock,
+                                          PartialConvBlockConfig,
+                                          PartialConvBlock,
+                                          ConvNeXtBlockConfig,
+                                          ConvNeXtBlock,
+                                          MaskPool2d,
+                                          TensorMask)
 
 from cccma_ppp.models.layers.partialconv2d import PartialConv2d
-
 
 def build_conv_block(
     in_channels: int,
@@ -32,15 +29,16 @@ def build_conv_block(
     config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig,
     *,
     latent_size: int = None,
-    inject_noise: bool = False,
+    inject_noise: bool = False
 ) -> nn.Module:
-
+    
     effective_config = copy.copy(config)
 
     effective_config = effective_config.setup_generative(
-        latent_size=latent_size, inject_noise=inject_noise
-    )
-
+                latent_size=latent_size,
+                inject_noise=inject_noise
+            )
+    
     if isinstance(config, ConvBlockConfig):
         return ConvBlock(
             in_channels,
@@ -65,6 +63,8 @@ def build_conv_block(
     raise TypeError(
         f"Unsupported UNet block configuration: {type(effective_config).__name__}."
     )
+
+
 
 
 class DownBlock(nn.Module):
@@ -112,7 +112,11 @@ class DownBlock(nn.Module):
         if self.skip_processor is not None:
             skip = self.skip_processor(skip)
 
-        pooled_mask = self.mask_pool(skip.mask) if skip.mask is not None else None
+        pooled_mask = (
+            self.mask_pool(skip.mask)
+            if skip.mask is not None
+            else None
+        )
 
         downsampled = TensorMask(
             tensor=self.tensor_pool(skip.tensor),
@@ -120,6 +124,8 @@ class DownBlock(nn.Module):
         )
 
         return downsampled, skip
+
+
 
 
 class UpBlock(nn.Module):
@@ -148,10 +154,11 @@ class UpBlock(nn.Module):
         self.skip_padding_method = block_config.padding_method
         self.inject_noise = inject_noise
         self.inject_noise_in_block = inject_noise_in_block
-
+        
         added_upsampling_channels = 0
         if self.inject_noise:
             added_upsampling_channels += 1
+
 
         if upsampling_method == "transpose_conv":
             self.upsample = nn.ConvTranspose2d(
@@ -169,42 +176,49 @@ class UpBlock(nn.Module):
                 align_corners=False,
             )
 
-            if isinstance(block_config, PartialConvBlockConfig) or getattr(
-                block_config, "use_partial_conv", False
+            if (isinstance(block_config, PartialConvBlockConfig) or
+                getattr(block_config, "use_partial_conv", False)
             ):
+                
                 self.channel_projection = PartialConv2d(
                     input_channels + added_upsampling_channels,
                     out_channels,
                     kernel_size=3,
                     multi_channel=False,
                     return_mask=False,
-                    padding=1,
+                    padding=1 
                 )
 
             else:
+
                 self.channel_projection = nn.Conv2d(
                     input_channels + added_upsampling_channels,
                     out_channels,
                     kernel_size=3,
-                    padding=1,
-                    padding_mode=block_config.padding_method,
-                )
+                    padding=1, 
+                    padding_mode=block_config.padding_method
+                )                
 
         else:
-            raise ValueError(f"Unsupported upsampling mode: {upsampling_method!r}.")
+            raise ValueError(
+                f"Unsupported upsampling mode: {upsampling_method!r}."
+            )
 
         effective_block_config = copy.copy(block_config)
-        if getattr(effective_block_config, "multi_channel", False) and getattr(
-            effective_block_config, "return_mask", False
+        if ( getattr( effective_block_config, "multi_channel", False) and
+            getattr( effective_block_config, "return_mask", False)
         ):
+
             effective_block_config.multi_channel = False
             effective_block_config.return_mask = False
+
 
         self._block = build_conv_block(
             skip_channels + out_channels,
             out_channels,
             effective_block_config,
-            inject_noise=(self.inject_noise and self.inject_noise_in_block),
+            inject_noise= (self.inject_noise 
+                            and self.inject_noise_in_block)               
         )
 
     def forward(
@@ -214,10 +228,11 @@ class UpBlock(nn.Module):
     ) -> TensorMask:
         if self.inject_noise:
             if self.upsampling_method == "transpose_conv":
+
                 x = _noise_injection(input.tensor)
                 x = self.upsample(x)
                 x = self.channel_projection(x)
-
+            
             else:
                 x = self.upsample(input.tensor)
                 x = _noise_injection(x)
@@ -226,18 +241,22 @@ class UpBlock(nn.Module):
             x = self.upsample(input.tensor)
             x = self.channel_projection(x)
 
-        x = align_to_skip(
-            x, skip.tensor, self.skip_alignment_method, self.skip_padding_method
-        )
+        x = align_to_skip(x, 
+                          skip.tensor,
+                          self.skip_alignment_method,
+                          self.skip_padding_method)
 
         merged_tensor = torch.cat([skip.tensor, x], dim=1)
 
         return self._block(
             TensorMask(
                 tensor=merged_tensor,
-                mask=None,
+                mask=None, 
             )
         )
+
+
+
 
 
 class UNetOutput(nn.Module):
@@ -278,9 +297,13 @@ class UNetOutput(nn.Module):
         elif activation == "tanh":
             layers.append(nn.Tanh())
         elif activation != "identity":
-            raise ValueError(f"Unsupported output activation: {activation!r}.")
+            raise ValueError(
+                f"Unsupported output activation: {activation!r}."
+            )
 
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.layers(x)
+
+

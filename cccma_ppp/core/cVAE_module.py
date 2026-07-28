@@ -8,16 +8,16 @@ import gc
 
 from cccma_ppp.loss.loss import Losspipeline
 from cccma_ppp.loss.kld import KLD
-from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC, OutputABC
+from cccma_ppp.core import moduleABC, moduleConfigABC, OutputABC
 from cccma_ppp.core.selectors import (
     ModuleSelector,
     cVAEModelSelector,
-    _load_config_from_checkpoint,
+    _load_config_from_checkpoint
 )
 from cccma_ppp.models.normalized_flows import NormalizedFlowConfig
 from cccma_ppp.models.models_abc import cVAEPredictRequest, cVAEForwardRequest
-from cccma_ppp.train.dataloader import BatchData
-from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.train import BatchData
+from cccma_ppp.generic import RuntimeContext
 
 
 @dataclasses.dataclass
@@ -364,6 +364,7 @@ class cVAE(moduleABC):
 
         target = target.unsqueeze(0).expand_as(output.output)
 
+
         reconstruction_loss, indiv_losses = self.criterion(
             output.output,
             target,
@@ -403,7 +404,8 @@ class cVAE(moduleABC):
 
         return total_loss, losses_dict
 
-    def forward(self, data: BatchData, sample_size=1) -> cVAEOutput:
+    def forward(self, data: BatchData, 
+                sample_size=1) -> cVAEOutput:
         """
         Perform forward pass.
 
@@ -425,27 +427,24 @@ class cVAE(moduleABC):
         if not self.training and generator is not None:
             output_sample_size = generator.num_validation_noise_samples
 
-        return self.model(
-            cVAEForwardRequest(
-                target=data.target,
-                target_mask=data.target_mask,
-                added_features=data.added_features,
-                condition=data.input,
-                condition_mask=data.input_mask,
-                min_posterior_variance=self.min_posterior_variance,
-                sample_size=sample_size,
-                output_sample_size=output_sample_size,
-            )
+
+        return self.model( cVAEForwardRequest(
+            target=data.target,
+            target_mask=data.target_mask,
+            added_features=data.added_features,
+            condition=data.input,
+            condition_mask=data.input_mask,
+            min_posterior_variance=self.min_posterior_variance,
+            sample_size=sample_size,
+            output_sample_size=output_sample_size)
         )
 
-    def predict(
-        self,
-        data: BatchData,
-        sample_size: int = 1,
-        nstds: int = 1,
-        latent_samples: torch.Tensor = None,
-        output_sample_size: int = 1,
-    ) -> cVAEOutput:
+    def predict(self, 
+                data: BatchData, 
+                sample_size: int = 1, 
+                nstds: int = 1,
+                latent_samples: torch.Tensor = None,
+                output_sample_size: int = 0) -> cVAEOutput:
         """
         Generate predictions using the learned prior.
 
@@ -465,15 +464,14 @@ class cVAE(moduleABC):
         if self.training and generator is not None:
             output_sample_size = generator.num_training_noise_samples
 
-        return self.model.predict(
-            cVAEPredictRequest(
-                condition=data.input,
-                condition_mask=data.input_mask,
-                added_features=data.added_features,
-                prior_flow=self.prior_flow,
-                sample_size=sample_size,
-                nstds=nstds,
-                latent_samples=latent_samples,
-                output_sample_size=output_sample_size,
-            )
+
+        return self.model.predict( cVAEPredictRequest(
+            condition=data.input,
+            condition_mask=data.input_mask,
+            added_features=data.added_features,
+            prior_flow=self.prior_flow,
+            sample_size=sample_size,
+            nstds=nstds,
+            latent_samples = latent_samples,
+            output_sample_size = output_sample_size)
         )
