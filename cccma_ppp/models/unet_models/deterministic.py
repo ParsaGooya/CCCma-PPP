@@ -299,6 +299,7 @@ class UNet(deterministicmodelsABC):
                 if x_mask is not None
                 else None
             )
+
             x = torch.cat([x, added_features], dim=1)
 
             if x_mask is not None:
@@ -342,7 +343,7 @@ class UNet(deterministicmodelsABC):
         batch_size = input.tensor.shape[0]
 
         if (self.config.GENERATOR is not None 
-            and num_output_samples is not None):
+            and num_output_samples > 0):
 
             input = _repeat_tensor_mask(
                 input,
@@ -368,7 +369,8 @@ class UNet(deterministicmodelsABC):
 
         output = self.output(output_tensor)
 
-        if self.config.GENERATOR is not None:
+        if (self.config.GENERATOR is not None 
+            and num_output_samples > 0):
 
             output = output.reshape(
                 batch_size,
