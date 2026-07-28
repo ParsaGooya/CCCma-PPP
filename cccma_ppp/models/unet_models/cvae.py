@@ -14,6 +14,7 @@ from cccma_ppp.core.cVAE_module import cVAEOutput
 from cccma_ppp.models.models_abc import (
     cVAEmodelConfigABC,
     cVAEmodelsABC,
+    GENERATORConfig
 )
 
 from cccma_ppp.models.layers import ( _broadcast_mask,
@@ -75,10 +76,10 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
     output_hidden_channels: int | None = None
 
     init_method: InitMethod = "trunc_normal"
+    GENERATOR: GENERATORConfig | None = None
 
     NUM_INPUT_DIMS: ClassVar[int] = 3
     NUM_OUTPUT_DIMS: ClassVar[int] = 3
-    GENERATOR: ClassVar[bool] = False
 
     def __post_init__(self) -> None:
 
