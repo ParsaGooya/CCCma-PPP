@@ -255,7 +255,7 @@ class Trainer:
         if not self.save_checkpoint:
             self.log_root(
                 logging.warning,
-                "Configured value of save_checkpoint is false, no checkpoints whatsoever will be saved!",
+                "Configured value of save_checkpoint is false, no checkpoints whatsoever will be saved!" 
             )
 
         self.checkpoint_dir = Path(RuntimeContext.GLOBAL_CHECKPOINT_DIR)
@@ -264,8 +264,8 @@ class Trainer:
         if resuming:
             self.log_root(
                 logging.INFO,
-                f"Resuming training from \n {self.checkpoint_dir / 'best.pt'}.\n"
-                "Warning: If all configurations don't match you will get RuntimeError!",
+                f"Resuming training from \n {self.checkpoint_dir / 'best.pt'}.\n" \
+                 "Warning: If all configurations don't match you will get RuntimeError!",
             )
             self._load_checkpoint(self.checkpoint_dir / "best.pt")
             if self._epochs_trained == self.max_epochs:
@@ -303,8 +303,10 @@ class Trainer:
         """
 
         if not self._setup:
-            raise RuntimeError("Call setup_distributed() before predict().")
-
+            raise RuntimeError(
+                "Call setup_distributed() before predict()."
+            )
+        
         self.log_root(logging.INFO, "Starting Training Loop...")
         self.start_time_train = time.time()
         clear_memory()
@@ -431,14 +433,16 @@ class Trainer:
 
         start_time = time.time()
         for batch_id, batch in tqdm(
-            enumerate(self.TrainLoader),
-            disable=not self.is_on_root,
-            desc="Train",
-        ):
+                enumerate(self.TrainLoader),
+                disable=not self.is_on_root,
+                desc="Train",
+            ):
             current_lr = self.optimizer.learning_rate
             batch_loss_dict, kwargs = self._train_on_batch(batch)
 
-            self.train_aggregator.record(batch_loss_dict, current_lr, kwargs)
+            self.train_aggregator.record(batch_loss_dict,
+                                         current_lr,
+                                         kwargs)
 
         self._epochs_trained += 1
 
@@ -467,6 +471,7 @@ class Trainer:
         if hasattr(self, "beta_finder"):
             beta = self.beta_finder(self.global_step)
             kwargs = dict(beta=beta)
+
 
         with torch.cuda.amp.autocast(
             enabled=self.scaler.is_enabled() and self.device.type == "cuda"
@@ -506,10 +511,10 @@ class Trainer:
         self.module.eval()
 
         for batch_id, batch in tqdm(
-            enumerate(self.ValidationLoader),
-            disable=not self.is_on_root,
-            desc="Validate",
-        ):
+                enumerate(self.ValidationLoader),
+                disable=not self.is_on_root,
+                desc="Validate",
+            ): 
             batch_loss_dict = self._validate_on_batch(batch)
 
             self.validation_aggregator.record(batch_loss_dict)
@@ -539,7 +544,7 @@ class Trainer:
         with torch.cuda.amp.autocast(
             enabled=self.scaler.is_enabled() and self.device.type == "cuda"
         ):
-            _, loss_dict = self.raw_module._compute_loss(data=batch, **kwargs)
+            _, loss_dict = self.raw_module._compute_loss(data=batch)
 
         return loss_dict
 
@@ -797,6 +802,8 @@ class Trainer:
                 self.logger.log(level, msg, *args)
             else:
                 print(msg)
+
+
 
 
 def clear_memory():

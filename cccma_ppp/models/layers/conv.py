@@ -8,19 +8,21 @@ import torch.nn.functional as F
 
 
 from cccma_ppp.models.layers.partialconv2d import PartialConv2d
-from cccma_ppp.models.layers import (
-    MaskPoolingMode,
-    NormalizationMethod,
-    ActivationName,
-    _build_normalization,
-    _build_activation,
-    _same_padding,
-    _broadcast_mask,
-    _validate_dropout,
-    LayerNorm2d,
-    DropPath,
-)
+from cccma_ppp.models.layers import (MaskPoolingMethod,
+                                     NormalizationMethod,
+                                     ActivationName,
+                                     PaddingMethod,
+                                     _build_normalization,
+                                     _build_activation,
+                                     _same_padding,
+                                     _broadcast_mask,
+                                     _validate_dropout,
+                                     LayerNorm2d,
+                                     DropPath,)
 
+from cccma_ppp.models.layers.utils import (_noise_injection,
+                                            _expand_mask)
+                        
 
 @dataclasses.dataclass
 class TensorMask:
@@ -30,30 +32,34 @@ class TensorMask:
     mask: torch.Tensor | None = None
 
 
+
 class ConvBlockConfigABC(abc.ABC):
+
     def __init__(self):
         self.latent_size: int | None = None
         self.inject_noise: bool = False
-
+    
     @final
-    def setup_generative(
-        self, latent_size: int | None = None, inject_noise: bool = False
-    ):
-
+    def setup_generative(self, 
+                         latent_size: int | None = None,
+                         inject_noise: bool = False):
+        
         self.latent_size = latent_size
         self.inject_noise = inject_noise
 
         return self
 
 
+
 @dataclasses.dataclass
 class ConvBlockConfig(ConvBlockConfigABC):
     """Configuration for a conventional repeated-convolution block."""
 
-    name: Literal["standard_conv"]
+    name: Literal["standard_conv"] 
     num_convolutions: int = 2
     kernel_size: int = 3
     normalization: NormalizationMethod = "batch"
+    padding_method: PaddingMethod = "circular"
     activation: ActivationName = "relu"
     dropout_rate: float | None = None
     bias: bool = False
@@ -72,14 +78,18 @@ class ConvBlockConfig(ConvBlockConfigABC):
 class PartialConvBlockConfig(ConvBlockConfigABC):
     """Configuration for a repeated partial-convolution block."""
 
-    name: Literal["partial_conv"]
+    name: Literal["partial_conv"] 
     num_convolutions: int = 2
     kernel_size: int = 3
     normalization: NormalizationMethod = "batch"
+    padding_method: PaddingMethod = "circular"
     activation: ActivationName = "relu"
     dropout_rate: float | None = None
     bias: bool = False
     group_norm_groups: int = 8
+
+    multi_channel: bool = dataclasses.field(init=False, default=True)
+    return_mask: bool = dataclasses.field(init=False, default=True)
 
     def __post_init__(self) -> None:
         super().__init__()
@@ -94,14 +104,18 @@ class PartialConvBlockConfig(ConvBlockConfigABC):
 class ConvNeXtBlockConfig(ConvBlockConfigABC):
     """Configuration for a repeated ConvNeXt-style residual block."""
 
-    name: Literal["convnext"]
+    name: Literal["convnext"] 
     num_blocks: int = 2
     kernel_size: int = 7
     expansion_ratio: int = 4
+    padding_method: PaddingMethod = "circular"
     layer_scale_init: float = 1e-6
     dropout_rate: float = 0.0
     drop_path_rate: float = 0.0
     use_partial_conv: bool = True
+
+    multi_channel: bool = dataclasses.field(init=False, default=True)
+    return_mask: bool = dataclasses.field(init=False, default=True)
 
     def __post_init__(self) -> None:
         super().__init__()
@@ -115,6 +129,52 @@ class ConvNeXtBlockConfig(ConvBlockConfigABC):
         _validate_dropout(self.drop_path_rate)
 
 
+class ConvSingle(nn.Module):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        config: ConvBlockConfig,
+    ):
+        super().__init__()
+
+        self.inject_noise = config.inject_noise
+        added_noise_channel = 0
+        if self.inject_noise:
+            added_noise_channel += 1
+
+        self.conv = nn.Conv2d(
+            in_channels + added_noise_channel,
+            out_channels,
+            kernel_size=config.kernel_size,
+            padding=_same_padding(config.kernel_size),
+            bias=config.bias,
+            padding_mode=config.padding_method,
+        )
+
+        self.normalization = _build_normalization(
+            config.normalization,
+            out_channels,
+            group_norm_groups=config.group_norm_groups,
+        )
+        self.activation = _build_activation(config.activation)
+        self.dropout = (
+            nn.Dropout2d(config.dropout_rate)
+            if config.dropout_rate is not None
+            and config.dropout_rate > 0
+            else nn.Identity()
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if self.inject_noise:
+            x = _noise_injection(x)
+
+        x = self.conv(x)
+        x = self.normalization(x)
+        x = self.activation(x)
+        return self.dropout(x)
+
+
 class PartialConvSingle(nn.Module):
     """One PartialConv2d + normalization + activation stage."""
 
@@ -125,14 +185,23 @@ class PartialConvSingle(nn.Module):
         config: PartialConvBlockConfig,
     ):
         super().__init__()
+        self.multi_channel = config.multi_channel
+        self.return_mask = config.return_mask
+        self.inject_noise = config.inject_noise
+
+        added_noise_channel = 0
+        if self.inject_noise:
+            added_noise_channel += 1
+
         self.conv = PartialConv2d(
-            in_channels,
+            in_channels + added_noise_channel,
             out_channels,
             kernel_size=config.kernel_size,
             padding=_same_padding(config.kernel_size),
             bias=config.bias,
-            multi_channel=True,
-            return_mask=True,
+            multi_channel=config.multi_channel,
+            return_mask=config.return_mask,
+            padding_mode=config.padding_method,
         )
         self.normalization = _build_normalization(
             config.normalization,
@@ -146,16 +215,29 @@ class PartialConvSingle(nn.Module):
             else nn.Identity()
         )
 
+
     def forward(
         self,
         x: torch.Tensor,
-        mask: torch.Tensor,
+        mask: torch.Tensor | None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        x, mask = self.conv(x, mask)
+        
+        if self.inject_noise:
+            x = _noise_injection(x)
+            if self.multi_channel:
+                mask = _expand_mask(x, mask)
+
+        if self.return_mask:
+            x, mask = self.conv(x, mask)
+        else:
+            x = self.conv(x, mask)
+            
         x = self.normalization(x)
         x = self.activation(x)
         x = self.dropout(x)
         return x, mask
+
+
 
 
 class ConvNeXtSingle(nn.Module):
@@ -170,16 +252,24 @@ class ConvNeXtSingle(nn.Module):
         super().__init__()
         hidden_channels = channels * config.expansion_ratio
         self.use_partial_conv = config.use_partial_conv
+        self.inject_noise = config.inject_noise
+        self.multi_channel = config.multi_channel
+        self.return_mask = config.return_mask
+
+        added_noise_channel = 0
+        if self.inject_noise:
+            added_noise_channel += 1
 
         if config.use_partial_conv:
             self.depthwise = PartialConv2d(
-                channels,
-                channels,
-                kernel_size=config.kernel_size,
-                padding=_same_padding(config.kernel_size),
-                groups=channels,
-                multi_channel=True,
-                return_mask=True,
+                            channels,
+                            channels,
+                            kernel_size=config.kernel_size,
+                            padding=_same_padding(config.kernel_size),
+                            groups=channels,
+                            multi_channel=config.multi_channel,
+                            return_mask=config.return_mask,
+                            padding_mode=config.padding_method,
             )
 
         else:
@@ -189,17 +279,18 @@ class ConvNeXtSingle(nn.Module):
                 kernel_size=config.kernel_size,
                 padding=_same_padding(config.kernel_size),
                 groups=channels,
+                padding_mode=config.padding_method,
             )
 
         self.normalization = LayerNorm2d(channels)
-        self.pointwise_1 = nn.Conv2d(channels, hidden_channels, kernel_size=1)
+        self.pointwise_1 = nn.Conv2d(channels + added_noise_channel, hidden_channels, kernel_size=1)
         self.activation = nn.GELU()
         self.dropout = (
             nn.Dropout2d(config.dropout_rate)
             if config.dropout_rate > 0
             else nn.Identity()
         )
-        self.pointwise_2 = nn.Conv2d(hidden_channels, channels, kernel_size=1)
+        self.pointwise_2 = nn.Conv2d(hidden_channels + added_noise_channel, channels, kernel_size=1)
 
         if config.layer_scale_init > 0:
             self.layer_scale = nn.Parameter(
@@ -215,28 +306,38 @@ class ConvNeXtSingle(nn.Module):
         x: torch.Tensor,
         mask: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-
+        
         residual = x
+
         if self.use_partial_conv:
-            x, mask = self.depthwise(x, mask)
+            if self.return_mask:
+                x, mask = self.depthwise(x, mask)
+            else:
+                x = self.depthwise(x, mask)
         else:
             x = self.depthwise(x)
 
         x = self.normalization(x)
+
+        if self.inject_noise:
+            x = _noise_injection(x)
         x = self.pointwise_1(x)
         x = self.activation(x)
         x = self.dropout(x)
+
+        if self.inject_noise:
+            x = _noise_injection(x)
         x = self.pointwise_2(x)
 
         if self.layer_scale is not None:
             x = x * self.layer_scale.view(1, -1, 1, 1)
-
+        
         return residual + self.drop_path(x), mask
+
+    
 
 
 class ConvBlock(nn.Module):
-    """Conventional convolution block with optional normalization/dropout."""
-
     def __init__(
         self,
         in_channels: int,
@@ -246,41 +347,32 @@ class ConvBlock(nn.Module):
         super().__init__()
         self.out_channels = out_channels
 
-        layers: list[nn.Module] = []
+        stages = []
         current_channels = in_channels
-        padding = _same_padding(config.kernel_size)
 
         for _ in range(config.num_convolutions):
-            layers.append(
-                nn.Conv2d(
+            stages.append(
+                ConvSingle(
                     current_channels,
                     out_channels,
-                    kernel_size=config.kernel_size,
-                    padding=padding,
-                    bias=config.bias,
+                    config,
                 )
             )
-            layers.append(
-                _build_normalization(
-                    config.normalization,
-                    out_channels,
-                    group_norm_groups=config.group_norm_groups,
-                )
-            )
-            layers.append(_build_activation(config.activation))
-
-            if config.dropout_rate is not None and config.dropout_rate > 0:
-                layers.append(nn.Dropout2d(config.dropout_rate))
-
             current_channels = out_channels
 
-        self.layers = nn.Sequential(*layers)
+        self.stages = nn.ModuleList(stages)
 
     def forward(self, input: TensorMask) -> TensorMask:
+        x = input.tensor
+
+        for stage in self.stages:
+            x = stage(x)
+
         return TensorMask(
-            tensor=self.layers(input.tensor),
+            tensor=x,
             mask=input.mask,
         )
+
 
 
 class PartialConvBlock(nn.Module):
@@ -312,9 +404,6 @@ class PartialConvBlock(nn.Module):
 
     def forward(self, input: TensorMask) -> TensorMask:
         mask = _broadcast_mask(input.mask, input.tensor)
-
-        if mask is None:
-            mask = torch.ones_like(input.tensor)
 
         x = input.tensor
         for stage in self.stages:
@@ -380,7 +469,7 @@ class ConvNeXtBlock(nn.Module):
             ]
         )
 
-    def forward(self, input: TensorMask) -> TensorMask:
+    def forward(self, input: TensorMask ) -> TensorMask:
         x = input.tensor
         mask = input.mask
 
@@ -406,21 +495,23 @@ class MaskPool2d(nn.Module):
 
     def __init__(
         self,
-        mode: MaskPoolingMode = "any",
+        method: MaskPoolingMethod = "any",
         fraction_threshold: float = 0.5,
     ):
         super().__init__()
-        self.mode = mode
+        self.method = method
         self.fraction_threshold = fraction_threshold
 
         if not 0 <= fraction_threshold <= 1:
-            raise ValueError("fraction_threshold must be between 0 and 1.")
+            raise ValueError(
+                "fraction_threshold must be between 0 and 1."
+            )
 
     def forward(self, mask: torch.Tensor) -> torch.Tensor:
-        if self.mode == "any":
+        if self.method == "any":
             return F.max_pool2d(mask, kernel_size=2, stride=2)
 
-        if self.mode == "all":
+        if self.method == "all":
             invalid = F.max_pool2d(
                 1.0 - mask,
                 kernel_size=2,
@@ -428,8 +519,8 @@ class MaskPool2d(nn.Module):
             )
             return 1.0 - invalid
 
-        if self.mode == "fraction":
+        if self.method == "fraction":
             fraction = F.avg_pool2d(mask, kernel_size=2, stride=2)
             return (fraction >= self.fraction_threshold).to(mask.dtype)
 
-        raise ValueError(f"Unsupported mask pooling mode: {self.mode!r}")
+        raise ValueError(f"Unsupported mask pooling method: {self.method!r}")

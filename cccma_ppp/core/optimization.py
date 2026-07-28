@@ -38,12 +38,10 @@ class LRSchedulerConfig:
         assert self.min_lr >= 0
         assert self.warmup_epochs >= 0
 
-    def build(
-        self,
-        optimizer: torch.optim.Optimizer,
-        num_batches: int,
-        gradient_accumulation_steps: int = 1,
-    ):
+    def build(self, 
+              optimizer: torch.optim.Optimizer, 
+              num_batches: int, 
+              gradient_accumulation_steps: int = 1):
         """
         Construct learning rate scheduler.
 
@@ -75,12 +73,8 @@ class LRSchedulerConfig:
                 "number of warmup epochs must be smaller than total epochs."
             )
 
-        self.total_steps = (
-            math.ceil(num_batches / gradient_accumulation_steps) * self.total_epochs
-        )
-        self.warmup_steps = (
-            math.ceil(num_batches / gradient_accumulation_steps) * self.warmup_epochs
-        )
+        self.total_steps = math.ceil(num_batches / gradient_accumulation_steps) * self.total_epochs
+        self.warmup_steps = math.ceil(num_batches / gradient_accumulation_steps) * self.warmup_epochs
 
         return CosineAnnealingLRScheduler(self, optimizer)
 
@@ -126,13 +120,11 @@ class OptimizerConfig:
             raise ValueError("weight_decay has to be positive")
         self.optimizer = None
 
-    def build(
-        self,
-        module: moduleABC,
-        num_batches: int = None,
-        max_epochs: int = None,
-        gradient_accumulation_steps: int = 1,
-    ):
+    def build(self, 
+              module: moduleABC, 
+              num_batches: int = None, 
+              max_epochs: int = None,
+              gradient_accumulation_steps: int = 1):
         """
         Construct optimizer wrapper.
 
@@ -169,9 +161,11 @@ class OptimizerConfig:
                     "num_batches must be specified to set up learning rate scheduler."
                 )
 
-        return OptimizerWrapper(
-            self, module, num_batches, max_epochs, gradient_accumulation_steps
-        )
+        return OptimizerWrapper(self, 
+                                module, 
+                                num_batches, 
+                                max_epochs,
+                                gradient_accumulation_steps)
 
 
 class OptimizerWrapper:
@@ -196,7 +190,7 @@ class OptimizerWrapper:
         module: moduleABC,
         num_batches: int = None,
         max_epochs: int = None,
-        gradient_accumulation_steps: int = 1,
+        gradient_accumulation_steps: int = 1
     ):
         """
         Initialize optimizer and optional scheduler.

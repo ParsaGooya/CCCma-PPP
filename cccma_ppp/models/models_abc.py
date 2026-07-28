@@ -10,7 +10,22 @@ import dataclasses
 
 from cccma_ppp.core.core_abc import OutputABC
 from cccma_ppp.generic import RuntimeContext
-from cccma_ppp.models.layers import ActivationName, InitMethod, _sample
+from cccma_ppp.models.layers import (ActivationName, 
+                                     InitMethod,
+                                     NoiseLevel,
+                                     _sample)
+
+
+
+@dataclasses.dataclass
+class GENERATORConfig:
+    noise_level: NoiseLevel = "full"
+    num_training_noise_samples: int = 10
+    num_validation_noise_samples: int | None = None
+
+    def __post_init__(self):
+        if self.num_validation_noise_samples is None:
+            self.num_validation_noise_samples = self.num_training_noise_samples
 
 
 @dataclasses.dataclass
@@ -89,11 +104,10 @@ class modelConfigABC(abc.ABC):
     """
     Abstract base class for model configuration.
     """
-
     activation: ActivationName
     NUM_INPUT_DIMS: ClassVar[int | None]
     NUM_OUTPUT_DIMS: ClassVar[int | None]
-    GENERATOR: ClassVar[bool]
+    GENERATOR: GENERATORConfig | None
 
     def __init_subclass__(cls):
         """
@@ -169,7 +183,7 @@ class modelConfigABC(abc.ABC):
             raise RuntimeError(
                 "Checkpoint target metadata is incompatible with the "
                 "current target variables or preprocessing pipeline."
-            )
+        )
 
     @abc.abstractmethod
     def build(
@@ -190,53 +204,11 @@ class modelConfigABC(abc.ABC):
         pass
 
 
-class cVAEmodelConfigABC(modelConfigABC):
-    """
-    Abstract base class for cVAE model configurations.
-    """
-
-    latent_size: int
-    condition_dependant_latent: bool
-    condition_embedding_size: int
-    condition_embedding_dims: list
-    condemb_to_decoder: bool
-
-    def _resolve_flow_settings(self, condition_dependant_flow: bool = False):
-        """
-        Configure flow-related settings.
-
-        Parameters
-        ----------
-        condition_dependant_flow : bool, optional
-
-        Returns
-        -------
-        self
-
-        Raises
-        ------
-        ValueError
-            If configuration is inconsistent.
-        """
-
-        self.condition_dependant_flow = condition_dependant_flow
-
-        if self.condition_dependant_latent:
-            if not self.condition_dependant_flow:
-                if self.latent_size != self.condition_embedding_size:
-                    raise ValueError(
-                        f"for condition dependent latent when prior flow is off, "
-                        f"condition embedding size ({self.condition_embedding_size}) "
-                        f"must equal latent size ({self.latent_size})."
-                    )
-
-        return self
-
-
 class modelABC(nn.Module, abc.ABC):
     """
     Abstract base class for all models.
     """
+    generative_modeling: bool 
 
     @final
     def _validate_checkpoint_compatibility(
@@ -287,7 +259,7 @@ class modelABC(nn.Module, abc.ABC):
             )
 
     @abc.abstractmethod
-    def forward(self, x):
+    def forward(self):
         """
         Perform forward pass.
 
@@ -381,6 +353,30 @@ class modelABC(nn.Module, abc.ABC):
                 param.requires_grad = False
 
 
+
+
+@dataclasses.dataclass
+class DeterministicRequest:
+    """
+    Deterministic forward method arguments.
+
+    Parameters
+    ----------
+    input : torch.Tensor 
+        Model input.
+    input_mask : torch.Tensor 
+        Model input mask.
+    added_features : torch.Tensor or None
+        Additional features.
+    output_sample_size : int, optional
+        Number of output samples for models with GENERATOR.
+    """
+    input: torch.Tensor
+    input_mask: torch.Tensor | None = None
+    added_features: torch.Tensor | None = None
+    output_sample_size: int = 1
+
+
 class deterministicmodelsABC(modelABC):
     """
     Base class for deterministic models.
@@ -398,26 +394,127 @@ class deterministicmodelsABC(modelABC):
         super().__init__()
         self.generative_modeling = False
 
+    @abc.abstractmethod
+    def forward(
+        self,
+        request: DeterministicRequest,
+    ) -> OutputABC:
+        """
+        Generate samples.
+
+        Returns
+        -------
+        torch.Tensor
+        """
+
+        pass
+
+
+class cVAEmodelConfigABC(modelConfigABC):
+    """
+    Abstract base class for cVAE model configurations.
+    """
+
+    latent_size: int
+    condition_dependant_latent: bool
+    condition_embedding_size: int
+    condition_embedding_dims: list 
+    condemb_to_decoder: bool 
+
+    def _resolve_flow_settings(self, condition_dependant_flow: bool = False):
+        """
+        Configure flow-related settings.
+
+        Parameters
+        ----------
+        condition_dependant_flow : bool, optional
+
+        Returns
+        -------
+        self
+
+        Raises
+        ------
+        ValueError
+            If configuration is inconsistent.
+        """
+
+        self.condition_dependant_flow = condition_dependant_flow
+
+        if self.condition_dependant_latent:
+            if not self.condition_dependant_flow:
+                if self.latent_size != self.condition_embedding_size:
+                    raise ValueError(
+                        f"for condition dependent latent when prior flow is off, "
+                        f"condition embedding size ({self.condition_embedding_size}) "
+                        f"must equal latent size ({self.latent_size})."
+                    )
+
+        return self
+
+
+@dataclasses.dataclass
+class cVAEForwardRequest:
+    """
+    cVAE forward arguments.
+
+    Parameters
+    ----------
+    target : torch.Tensor 
+        Target to reconstruct.
+    condition : torch.Tensor 
+        Conditioning input.
+    target_mask : torch.Tensor 
+        Mask for target to reconstruct.
+    condition_mask : torch.Tensor 
+        Conditioning input mask.
+    added_features : torch.Tensor or None
+        Additional features.
+    sample_size : int, optional
+        Number of latent samples.
+    output_sample_size : int, optional
+        Number of output samples for models with GENERATOR.
+    min_posterior_variance : torch.Tensor or None, optional
+        Minimum variance constraint.
+    """
+    target: torch.Tensor 
+    condition: torch.Tensor
+    target_mask: torch.Tensor | None = None
+    condition_mask: torch.Tensor | None = None
+    added_features: torch.Tensor | None = None
+    sample_size: int = 1
+    output_sample_size: int = 1
+    min_posterior_variance: torch.Tensor | None = None
+
 
 @dataclasses.dataclass
 class cVAEPredictRequest:
     """
-    cVAE predict method arguments.
+    cVAE predict arguments.
 
     Parameters
     ----------
-    condition : torch.Tensor
+    condition : torch.Tensor 
         Conditioning input.
+    condition_mask : torch.Tensor 
+        Conditioning input mask.
+    target : torch.Tensor 
+        Target to reconstruct.
+    target_mask : torch.Tensor 
+        Mask for target to reconstruct.
     added_features : torch.Tensor or None
         Additional features.
     prior_flow : NormalizedFlowModel or None
         Optional flow-based prior.
     latent_samples: torch.Tensor or None
         latent_samples pre-specified by user
+    nstds: int
+        Adjust the spread in prior samples.
     sample_size : int, optional
         Number of samples.
+    output_sample_size : int, optional
+        Number of output samples for models with GENERATOR.
     """
-
     condition: torch.Tensor
     condition_mask: torch.Tensor | None = None
     added_features: torch.Tensor | None = None
@@ -425,6 +522,7 @@ class cVAEPredictRequest:
     latent_samples: torch.Tensor | None = None
     nstds: int = 1
     sample_size: int = 1
+    output_sample_size: int = 1
 
 
 class cVAEmodelsABC(modelABC):
@@ -445,6 +543,21 @@ class cVAEmodelsABC(modelABC):
         self.generative_modeling = True
 
     @abc.abstractmethod
+    def forward(
+        self,
+        request: cVAEForwardRequest,
+    ) -> OutputABC:
+        """
+        Generate samples.
+
+        Returns
+        -------
+        torch.Tensor
+        """
+
+        pass
+
+    @abc.abstractmethod
     def predict(
         self,
         request: cVAEPredictRequest,
@@ -458,6 +571,7 @@ class cVAEmodelsABC(modelABC):
         """
 
         pass
+
 
     @abc.abstractmethod
     def _recognition(self) -> tuple[torch.Tensor, ...]:
@@ -495,7 +609,7 @@ class cVAEmodelsABC(modelABC):
         """
 
         pass
-
+    
     @final
     def _sample(self, mu, log_var, sample_size=1, std=1):
         """
@@ -516,6 +630,8 @@ class cVAEmodelsABC(modelABC):
 
         var = torch.exp(log_var) + 1e-4
         return _sample(mu, var, sample_size, std)
+  
+
 
 
 def weights_init(m, method: InitMethod = "xavier"):

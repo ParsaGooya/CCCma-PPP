@@ -43,6 +43,7 @@ def main(yaml_config: str):
     distributed = Distributed.get_instance()
 
     try:
+
         config_data = prepare_config(yaml_config)
 
         config = dacite.from_dict(
@@ -70,6 +71,7 @@ def main(yaml_config: str):
         )
 
         trainer.train()
-
+    
     finally:
+
         distributed.cleanup()
