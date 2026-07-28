@@ -1,35 +1,31 @@
 import torch
-import torch.nn as nn
 import numpy as np
 
 
 from cccma_ppp.models.models_abc import (
     modelConfigABC,
     deterministicmodelsABC,
-    DeterministicRequest
+    DeterministicRequest,
 )
 
 from cccma_ppp.models.layers.mlp import build_mlp
 from cccma_ppp.core.deterministic_module import deterministicOutput
 
 
-
-import numpy as np
 from typing import ClassVar
 import dataclasses
 from typing import Literal
 
-from cccma_ppp.models.models_abc import modelConfigABC
 from cccma_ppp.core.selectors import deterministicModelSelector
 
-from cccma_ppp.models.layers import (InitMethod, 
-                                     ActivationName, 
-                                     _validate_dropout)
-
+from cccma_ppp.models.layers.generic import (
+    InitMethod,
+    ActivationName,
+    _validate_dropout,
+)
 
 
 AppendMode = Literal[1, 2, 3]
-
 
 
 @deterministicModelSelector.register("mlp")
@@ -63,7 +59,7 @@ class AutoencoderConfig(modelConfigABC):
     dropout_rate: float = None
     append_mode: AppendMode = 1
     init_method: InitMethod = "trunc_normal"
-    activation: ActivationName = 'relu'
+    activation: ActivationName = "relu"
 
     NUM_INPUT_DIMS: ClassVar[int] = 2
     NUM_OUTPUT_DIMS: ClassVar[int] = 2
@@ -239,9 +235,7 @@ class Autoencoder(deterministicmodelsABC):
         else:
             self._initialize_weights(self.init_method)
 
-    def forward(self, 
-                request: DeterministicRequest) -> deterministicOutput:
-                
+    def forward(self, request: DeterministicRequest) -> deterministicOutput:
         """
         Forward pass through the encoder/decoder.
 
@@ -257,7 +251,7 @@ class Autoencoder(deterministicmodelsABC):
         """
         x = request.input
         x_mask = request.input_mask
-        added_features = request.added_features 
+        added_features = request.added_features
 
         if x_mask is not None:
             x = x * x_mask
