@@ -228,29 +228,6 @@ def config_file(tmp_path):
     return path
 
 
-# Remove test due to no coverage
-def test_prepare_config_reads_yaml(config_file):
-    result = prepare_config(config_file)
-
-    assert result["module"]["type"] == "deterministic"
-    assert result["train_loader"]["dataset_config"]["model"]["names"] == ["tas"]
-
-
-# Remove test due to no coverage
-def test_prepare_config_accepts_string_path(config_file):
-    result = prepare_config(str(config_file))
-
-    assert isinstance(result, dict)
-
-
-# Remove test due to no coverage
-def test_prepare_config_empty_yaml(tmp_path):
-    path = tmp_path / "empty.yaml"
-    path.write_text("")
-
-    assert prepare_config(path) is None
-
-
 def test_post_init_converts_paths_and_loads_dependencies(
     monkeypatch,
     tmp_path,
@@ -380,66 +357,6 @@ def test_output_preprocessor_dir_model_branch(tmp_path):
     )
 
 
-# Remove test due to no coverage
-def test_output_dir_uses_custom_save_path(tmp_path):
-    save_path = tmp_path / "custom-output"
-    config = make_bare_config(
-        tmp_path,
-        save_path=save_path,
-    )
-
-    assert config.output_dir == save_path
-
-
-# Remove test due to no coverage
-def test_output_dir_defaults_to_inference_directory(tmp_path):
-    config = make_bare_config(
-        tmp_path,
-        save_path=None,
-    )
-
-    assert config.output_dir == tmp_path / "inference"
-
-
-# Remove test due to no coverage
-def test_log_dir(tmp_path):
-    config = make_bare_config(tmp_path)
-
-    assert config.log_dir == tmp_path / "logs"
-
-
-# Remove test due to no coverage
-def test_prepare_runtime_variables_default_output(tmp_path):
-    config = make_bare_config(
-        tmp_path,
-        inference_metadata={"tas": {"units": "K"}},
-    )
-
-    config._prepare_runtime_variables()
-
-    assert RuntimeContext.GLOBAL_EXP_DIR == str(tmp_path)
-    assert RuntimeContext.GLOBAL_OUTPUT_DIR == str(tmp_path / "inference")
-    assert RuntimeContext.GLOBAL_LOG_DIR == str(tmp_path / "logs")
-    assert RuntimeContext.INPUT_VAR_METADATA == {
-        "tas": {
-            "units": "K",
-        }
-    }
-
-
-# Remove test due to no coverage
-def test_prepare_runtime_variables_custom_output(tmp_path):
-    output = tmp_path / "results"
-    config = make_bare_config(
-        tmp_path,
-        save_path=output,
-    )
-
-    config._prepare_runtime_variables()
-
-    assert RuntimeContext.GLOBAL_OUTPUT_DIR == str(output)
-
-
 @pytest.mark.parametrize(
     "root",
     [
@@ -530,59 +447,6 @@ def test_set_random_seed_uses_rank_offset(
     config.set_random_seed(rank)
 
     assert called == [expected]
-
-
-# Remove test due to no coverage
-def test_load_train_config_calls_prepare_config(
-    monkeypatch,
-    tmp_path,
-):
-    config = make_bare_config(tmp_path)
-    captured = {}
-
-    def fake_prepare(path):
-        captured["path"] = path
-        return {"loaded": True}
-
-    monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.prepare_config",
-        fake_prepare,
-    )
-
-    result = config.load_train_config()
-
-    assert result == {"loaded": True}
-    assert captured["path"] == tmp_path / "config.yaml"
-
-
-# Remove test due to no coverage
-def test_load_train_dataloader_config_calls_dacite(
-    monkeypatch,
-    tmp_path,
-):
-    config = make_bare_config(tmp_path)
-    config.train_config = {
-        "train_loader": {
-            "batch_size": 8,
-        }
-    }
-    expected = object()
-    captured = {}
-
-    def fake_from_dict(**kwargs):
-        captured.update(kwargs)
-        return expected
-
-    monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.dacite.from_dict",
-        fake_from_dict,
-    )
-
-    result = config.load_train_dataloader_config()
-
-    assert result is expected
-    assert captured["data"] == {"batch_size": 8}
-    assert captured["data_class"].__name__ == "TrainDataloaderConfig"
 
 
 def save_checkpoint(
@@ -1101,34 +965,6 @@ def test_resolve_inference_dataset_reads_train_config(
     assert config.inference_loader.time_features == ["year"]
 
 
-# Remove test due to no coverage
-def test_resolve_existing_inference_dataset_checks_config(
-    monkeypatch,
-    tmp_path,
-):
-    config = make_bare_config(
-        tmp_path,
-        inference_dataset_config=object(),
-        inference_metadata={"tas": {"units": "K"}},
-        train_metadata={"tas": {"units": "K"}},
-        inference_time_features=["year"],
-        train_time_features=["year"],
-    )
-    calls = []
-
-    monkeypatch.setattr(
-        config,
-        "_check_inference_dataset",
-        lambda: calls.append(True),
-    )
-
-    config._resolve_inference_dataset_config()
-
-    assert config.inference_loader.read_called is True
-    assert config.inference_loader.read_arg is config.train_loader
-    assert calls == [True]
-
-
 def test_check_inference_dataset_matching_metadata_and_features(
     tmp_path,
 ):
@@ -1227,63 +1063,6 @@ def test_output_preprocessor_dir_uses_model_without_observation(
     )
 
 
-# Remove test due to no coverage
-def test_output_dir_returns_path(
-    tmp_path,
-):
-    config = make_bare_config(tmp_path)
-
-    assert isinstance(config.output_dir, Path)
-
-
-# Remove test due to no coverage
-def test_log_dir_returns_path(
-    tmp_path,
-):
-    config = make_bare_config(tmp_path)
-
-    assert isinstance(config.log_dir, Path)
-
-
-# Remove test due to no coverage
-def test_prepare_runtime_variables_sets_all_values(
-    tmp_path,
-):
-    output = tmp_path / "custom"
-    metadata = {
-        "tas": {
-            "units": "K",
-            "long_name": "temperature",
-        }
-    }
-    config = make_bare_config(
-        tmp_path,
-        save_path=output,
-        inference_metadata=metadata,
-    )
-
-    config._prepare_runtime_variables()
-
-    assert RuntimeContext.GLOBAL_EXP_DIR == str(tmp_path)
-    assert RuntimeContext.GLOBAL_OUTPUT_DIR == str(output)
-    assert RuntimeContext.GLOBAL_LOG_DIR == str(tmp_path / "logs")
-    assert RuntimeContext.INPUT_VAR_METADATA == metadata
-
-
-# Remove test due to no coverage
-def test_prepare_runtime_variables_empty_metadata(
-    tmp_path,
-):
-    config = make_bare_config(
-        tmp_path,
-        inference_metadata={},
-    )
-
-    config._prepare_runtime_variables()
-
-    assert RuntimeContext.INPUT_VAR_METADATA == {}
-
-
 def test_prepare_directory_root_creates_nested_directory(
     tmp_path,
 ):
@@ -1335,61 +1114,6 @@ def test_prepare_directory_preserves_existing_contents(
 
     assert existing.read_text() == "keep"
     assert distributed.barrier_calls == 1
-
-
-# Remove test due to no coverage
-def test_load_train_config_propagates_prepare_error(
-    monkeypatch,
-    tmp_path,
-):
-    config = make_bare_config(tmp_path)
-
-    def fail_prepare(path):
-        raise FileNotFoundError("missing config")
-
-    monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.prepare_config",
-        fail_prepare,
-    )
-
-    with pytest.raises(
-        FileNotFoundError,
-        match="missing config",
-    ):
-        config.load_train_config()
-
-
-# Remove test due to no coverage
-def test_load_train_dataloader_config_passes_time_features(
-    monkeypatch,
-    tmp_path,
-):
-    config = make_bare_config(tmp_path)
-    config.train_config = {
-        "train_loader": {
-            "batch_size": 16,
-            "time_features": ["year"],
-        }
-    }
-    captured = {}
-
-    def fake_from_dict(**kwargs):
-        captured.update(kwargs)
-        return object()
-
-    monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.dacite.from_dict",
-        fake_from_dict,
-    )
-
-    config.load_train_dataloader_config()
-
-    assert captured["data"] == {
-        "batch_size": 16,
-        "time_features": ["year"],
-    }
-    assert captured["data_class"].__name__ == ("TrainDataloaderConfig")
-    assert captured["config"].strict is False
 
 
 @pytest.mark.parametrize(

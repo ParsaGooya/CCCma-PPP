@@ -24,12 +24,13 @@ class DummyLoader:
         yield DummyBatch()
 
 
+class DummyModuleConfig:
+    _type = "dummy"
+
+
 class DummyModule:
     def __init__(self):
-        self.eval_called = False
-
-    def eval(self):
-        self.eval_called = True
+        self.config = DummyModuleConfig()
 
     def _get_device(self):
         return torch.device("cpu")
@@ -57,16 +58,26 @@ class DummyPredictor:
 
 
 class DummyPredictorConfig:
+    _type = "dummy"
+
     def __init__(self, predictor):
         self.predictor = predictor
+        self.build_args = None
 
-    def build_predictor(
+    def build(
         self,
         module,
         distributed,
         output_dir,
-        covariance_sampling,
+        num_output_sampling,
     ):
+        self.build_args = {
+            "module": module,
+            "distributed": distributed,
+            "output_dir": output_dir,
+            "num_output_sampling": num_output_sampling,
+        }
+
         return self.predictor
 
 
@@ -138,19 +149,22 @@ def test_writer_config_negative_sampling():
     ):
         WriterConfig(
             predictor=object(),
-            num_output_covariance_sampling=-1,
+            num_output_sampling=-1,
         )
 
 
 def test_writer_config_build(tmp_path):
+    predictor = DummyPredictor()
+
     cfg = WriterConfig(
-        predictor=object(),
+        predictor=DummyPredictorConfig(predictor),
+        num_output_sampling=0,
     )
 
     writer = cfg.build(
-        inference_data_loader=object(),
-        train_dataloader_config=object(),
-        module=object(),
+        inference_data_loader=DummyLoader(),
+        train_dataloader_config=DummyTrainLoaderConfig(),
+        module=DummyModule(),
         post_processor=object(),
         output_dir=tmp_path,
     )
@@ -204,7 +218,10 @@ def test_raw_module_normal():
 def test_setup_distributed_success(tmp_path):
     predictor = DummyPredictor()
 
-    cfg = WriterConfig(predictor=DummyPredictorConfig(predictor))
+    cfg = WriterConfig(
+        predictor=DummyPredictorConfig(predictor),
+        num_output_sampling=0,
+    )
 
     writer = Writer(
         cfg,
@@ -227,7 +244,10 @@ def test_setup_distributed_success(tmp_path):
 def test_setup_distributed_logger_none(tmp_path):
     predictor = DummyPredictor()
 
-    cfg = WriterConfig(predictor=DummyPredictorConfig(predictor))
+    cfg = WriterConfig(
+        predictor=DummyPredictorConfig(predictor),
+        num_output_sampling=0,
+    )
 
     writer = Writer(
         cfg,
@@ -253,7 +273,10 @@ def test_setup_distributed_device_mismatch(tmp_path):
 
     module._get_device = lambda: torch.device("cuda")
 
-    cfg = WriterConfig(predictor=DummyPredictorConfig(predictor))
+    cfg = WriterConfig(
+        predictor=DummyPredictorConfig(predictor),
+        num_output_sampling=0,
+    )
 
     writer = Writer(
         cfg,
@@ -277,7 +300,10 @@ def test_setup_distributed_device_mismatch(tmp_path):
 def test_setup_distributed_barrier_called(tmp_path):
     predictor = DummyPredictor()
 
-    cfg = WriterConfig(predictor=DummyPredictorConfig(predictor))
+    cfg = WriterConfig(
+        predictor=DummyPredictorConfig(predictor),
+        num_output_sampling=0,
+    )
 
     dist = DummyDistributed(
         distributed=True,
@@ -342,62 +368,6 @@ def test_predict_runs(
     assert called["predict"]
 
 
-def test_predict_internal_normal():
-    predictor = DummyPredictor()
-
-    writer = object.__new__(Writer)
-
-    writer.module = DummyModule()
-    writer.device = torch.device("cpu")
-    writer.is_on_root = True
-
-    writer.predictor = predictor
-    writer.InferenceLoader = DummyLoader()
-
-    called = {}
-
-    writer.aggregate_predictions_to_netcdf = lambda do_post_process=True: (
-        called.setdefault(
-            "post",
-            do_post_process,
-        )
-    )
-
-    writer._predict()
-
-    assert predictor.infer_calls == [False]
-    assert called["post"] is True
-
-
-def test_predict_internal_save_latent():
-    predictor = DummyPredictor(
-        save_latent=True,
-    )
-
-    writer = object.__new__(Writer)
-
-    writer.module = DummyModule()
-    writer.device = torch.device("cpu")
-    writer.is_on_root = True
-    writer.InferenceLoader = DummyLoader()
-    writer.predictor = predictor
-
-    writer.build_train_loader = lambda **kwargs: DummyLoader()
-
-    called = {}
-
-    writer.aggregate_predictions_to_netcdf = lambda do_post_process=True: (
-        called.setdefault(
-            "post",
-            do_post_process,
-        )
-    )
-
-    writer._predict()
-
-    assert called["post"] is False
-
-
 def test_build_train_loader_train(tmp_path):
     from cccma_ppp.generic.runtime import RuntimeContext
 
@@ -415,21 +385,6 @@ def test_build_train_loader_train(tmp_path):
     assert cfg.train_called
 
 
-# Remove test due to no coverage
-def test_build_train_loader_validation():
-    writer = object.__new__(Writer)
-
-    cfg = DummyTrainLoaderConfig
-
-
-# Remove test due to no coverage
-def test_train_stats_save_dir_property(tmp_path):
-    writer = object.__new__(Writer)
-    writer.output_dir = tmp_path
-
-    assert writer.train_stats_save_dir == tmp_path / "training_variable_stats.pt"
-
-
 def test_setup_distributed_extract_training_vars(
     tmp_path,
     monkeypatch,
@@ -444,7 +399,10 @@ def test_setup_distributed_extract_training_vars(
         lambda self: called.__setitem__("save", True),
     )
 
-    cfg = WriterConfig(predictor=DummyPredictorConfig(predictor))
+    cfg = WriterConfig(
+        predictor=DummyPredictorConfig(predictor),
+        num_output_sampling=0,
+    )
 
     writer = Writer(
         cfg,
@@ -1274,3 +1232,532 @@ def test_aggregate_predictions_year_missing_from_one_file(
     assert (tmp_path / "prediction_2000.nc").exists()
 
     assert (tmp_path / "prediction_2001.nc").exists()
+
+
+def test_writer_config_build_rejects_predictor_module_type_mismatch(
+    tmp_path,
+):
+    predictor = DummyPredictor()
+
+    config = WriterConfig(
+        predictor=DummyPredictorConfig(predictor),
+        num_output_sampling=0,
+    )
+    config.predictor._type = "cvae"
+
+    with pytest.raises(
+        RuntimeError,
+        match="provided selector config",
+    ):
+        config.build(
+            inference_data_loader=DummyLoader(),
+            train_dataloader_config=DummyTrainLoaderConfig(),
+            module=DummyModule(),
+            post_processor=object(),
+            output_dir=tmp_path,
+        )
+
+
+def test_writer_config_build_is_case_insensitive_for_module_type(
+    tmp_path,
+):
+    predictor = DummyPredictor()
+    predictor_config = DummyPredictorConfig(predictor)
+    predictor_config._type = "dummy"
+
+    module = DummyModule()
+    module.config._type = "DUMMY"
+
+    config = WriterConfig(
+        predictor=predictor_config,
+        num_output_sampling=0,
+    )
+
+    writer = config.build(
+        inference_data_loader=DummyLoader(),
+        train_dataloader_config=DummyTrainLoaderConfig(),
+        module=module,
+        post_processor=object(),
+        output_dir=tmp_path,
+    )
+
+    assert isinstance(writer, Writer)
+
+
+def test_writer_initialization_converts_output_dir_to_path(
+    tmp_path,
+):
+    writer = Writer(
+        WriterConfig(
+            predictor=DummyPredictorConfig(DummyPredictor()),
+            num_output_sampling=0,
+        ),
+        DummyLoader(),
+        DummyTrainLoaderConfig(),
+        DummyModule(),
+        object(),
+        str(tmp_path),
+    )
+
+    assert writer.output_dir == tmp_path
+    assert isinstance(writer.output_dir, Path)
+    assert writer._setup is False
+
+
+def test_setup_distributed_passes_build_arguments(
+    tmp_path,
+):
+    predictor = DummyPredictor()
+    predictor_config = DummyPredictorConfig(predictor)
+
+    config = WriterConfig(
+        predictor=predictor_config,
+        num_output_sampling=12,
+    )
+    module = DummyModule()
+    distributed = DummyDistributed()
+
+    writer = Writer(
+        config,
+        DummyLoader(),
+        DummyTrainLoaderConfig(),
+        module,
+        object(),
+        tmp_path,
+    )
+
+    writer.setup_distributed(
+        distributed,
+        DummyLogger(),
+    )
+
+    assert predictor_config.build_args == {
+        "module": module,
+        "distributed": distributed,
+        "output_dir": tmp_path,
+        "num_output_sampling": 12,
+    }
+
+
+def test_setup_distributed_creates_temp_directory_on_root(
+    tmp_path,
+):
+    writer = Writer(
+        WriterConfig(
+            predictor=DummyPredictorConfig(DummyPredictor()),
+            num_output_sampling=0,
+        ),
+        DummyLoader(),
+        DummyTrainLoaderConfig(),
+        DummyModule(),
+        object(),
+        tmp_path,
+    )
+
+    writer.setup_distributed(
+        DummyDistributed(root=True),
+        DummyLogger(),
+    )
+
+    assert writer.temp_save_dir == tmp_path / "_temp"
+    assert writer.temp_save_dir.is_dir()
+
+
+def test_setup_distributed_non_root_does_not_create_temp_directory(
+    tmp_path,
+):
+    writer = Writer(
+        WriterConfig(
+            predictor=DummyPredictorConfig(DummyPredictor()),
+            num_output_sampling=0,
+        ),
+        DummyLoader(),
+        DummyTrainLoaderConfig(),
+        DummyModule(),
+        object(),
+        tmp_path,
+    )
+
+    writer.setup_distributed(
+        DummyDistributed(root=False),
+        DummyLogger(),
+    )
+
+    assert writer.temp_save_dir == tmp_path / "_temp"
+    assert not writer.temp_save_dir.exists()
+
+
+def test_setup_distributed_records_distributed_properties(
+    tmp_path,
+):
+    distributed = DummyDistributed(
+        distributed=True,
+        root=False,
+    )
+    distributed.rank = 2
+    distributed.local_rank = 1
+    distributed.world_size = 4
+
+    writer = Writer(
+        WriterConfig(
+            predictor=DummyPredictorConfig(DummyPredictor()),
+            num_output_sampling=0,
+        ),
+        DummyLoader(),
+        DummyTrainLoaderConfig(),
+        DummyModule(),
+        object(),
+        tmp_path,
+    )
+
+    writer.setup_distributed(
+        distributed,
+        DummyLogger(),
+    )
+
+    assert writer.device == torch.device("cpu")
+    assert writer.rank == 2
+    assert writer.local_rank == 1
+    assert writer.world_size == 4
+    assert writer.is_distributed is True
+    assert writer.is_on_root is False
+
+
+def test_predict_logs_elapsed_time(
+    monkeypatch,
+):
+    writer = object.__new__(Writer)
+    writer._setup = True
+
+    messages = []
+    writer.log_root = lambda level, message: messages.append(message)
+    writer._predict = lambda: None
+
+    times = iter([100.0, 102.5])
+
+    monkeypatch.setattr(
+        "cccma_ppp.core.writer.time.time",
+        lambda: next(times),
+    )
+    monkeypatch.setattr(
+        "cccma_ppp.core.writer.clear_memory",
+        lambda: None,
+    )
+
+    writer.predict()
+
+    assert messages[0] == "Starting Inference Loop..."
+    assert messages[-1] == "Inference finished in 2.50s"
+
+
+def test_save_train_stats_moves_batch_and_requests_training_stats(
+    tmp_path,
+):
+    batch = DummyBatch()
+
+    class RecordingPredictor:
+        def __init__(self):
+            self.stats = {}
+            self.calls = []
+
+        def _infer_on_batch(
+            self,
+            received_batch,
+            _getting_train_stats=False,
+        ):
+            self.calls.append(
+                {
+                    "batch": received_batch,
+                    "getting_stats": _getting_train_stats,
+                }
+            )
+            return self.stats
+
+    predictor = RecordingPredictor()
+    writer = object.__new__(Writer)
+
+    writer.output_dir = tmp_path
+    writer.device = torch.device("cpu")
+    writer.is_on_root = True
+    writer.is_distributed = False
+    writer.predictor = predictor
+    writer.config = SimpleNamespace(
+        saved_model_training_vars_from_validation=False,
+    )
+    writer.build_train_loader = lambda **kwargs: [batch]
+
+    captured = {}
+    writer.aggregate_train_stats = lambda stats: captured.setdefault(
+        "stats",
+        stats,
+    )
+
+    writer._save_train_stats()
+
+    assert batch.device == torch.device("cpu")
+    assert predictor.calls == [
+        {
+            "batch": batch,
+            "getting_stats": True,
+        }
+    ]
+    assert captured["stats"] is predictor.stats
+
+
+def test_save_train_stats_calls_gc_collect(
+    tmp_path,
+    monkeypatch,
+):
+    writer = object.__new__(Writer)
+
+    writer.output_dir = tmp_path
+    writer.device = torch.device("cpu")
+    writer.is_on_root = True
+    writer.is_distributed = False
+    writer.predictor = DummyPredictor()
+    writer.config = SimpleNamespace(
+        saved_model_training_vars_from_validation=False,
+    )
+    writer.build_train_loader = lambda **kwargs: []
+    writer.aggregate_train_stats = lambda stats: None
+
+    calls = []
+
+    monkeypatch.setattr(
+        "cccma_ppp.core.writer.gc.collect",
+        lambda: calls.append(True),
+    )
+
+    writer._save_train_stats()
+
+    assert calls == [True]
+
+
+def test_aggregate_train_stats_saves_expected_values(
+    tmp_path,
+):
+    active = DummyStat(active=True)
+    inactive = DummyStat(active=False)
+
+    writer = object.__new__(Writer)
+    writer.output_dir = tmp_path
+    writer.is_on_root = True
+    writer.is_distributed = False
+
+    writer.aggregate_train_stats(
+        {
+            "active": active,
+            "inactive": inactive,
+        }
+    )
+
+    saved = torch.load(
+        writer.train_stats_save_dir,
+        weights_only=True,
+    )
+
+    assert active.reduced is True
+    assert inactive.reduced is False
+    assert torch.equal(
+        saved["active_mean"],
+        torch.tensor([1.0]),
+    )
+    assert torch.equal(
+        saved["active_cov"],
+        torch.tensor([[1.0]]),
+    )
+    assert "inactive_mean" not in saved
+    assert "inactive_cov" not in saved
+
+
+def test_aggregate_train_stats_non_root_does_not_save(
+    tmp_path,
+):
+    writer = object.__new__(Writer)
+    writer.output_dir = tmp_path
+    writer.is_on_root = False
+    writer.is_distributed = False
+
+    stat = DummyStat(active=True)
+
+    writer.aggregate_train_stats(
+        {"value": stat},
+    )
+
+    assert stat.reduced is True
+    assert not writer.train_stats_save_dir.exists()
+
+
+def test_aggregate_train_stats_distributed_barrier(
+    tmp_path,
+):
+    distributed = DummyDistributed(
+        distributed=True,
+    )
+
+    writer = object.__new__(Writer)
+    writer.output_dir = tmp_path
+    writer.is_on_root = False
+    writer.is_distributed = True
+    writer.distributed = distributed
+
+    writer.aggregate_train_stats({})
+
+    assert distributed.barrier_called == 1
+
+
+def test_log_root_passes_formatting_arguments():
+    writer = object.__new__(Writer)
+    writer.is_on_root = True
+
+    class RecordingLogger:
+        def __init__(self):
+            self.call = None
+
+        def log(self, level, msg, *args):
+            self.call = (level, msg, args)
+
+    writer.logger = RecordingLogger()
+
+    writer.log_root(
+        logging.INFO,
+        "value=%s",
+        42,
+    )
+
+    assert writer.logger.call == (
+        logging.INFO,
+        "value=%s",
+        (42,),
+    )
+
+
+def test_aggregate_predictions_cleanup_removes_temp_files_and_directory(
+    tmp_path,
+):
+    temp_dir = tmp_path / "_temp"
+    temp_dir.mkdir()
+
+    temp_file = temp_dir / "prediction_rank0_0.nc"
+
+    xr.DataArray(
+        [[1.0]],
+        dims=("year", "channels"),
+        coords={
+            "year": [2000],
+            "channels": ["prediction"],
+        },
+        name="prediction",
+    ).to_netcdf(temp_file)
+
+    aggregate_predictions(
+        None,
+        tmp_path,
+        cleanup_temp=True,
+    )
+
+    assert (tmp_path / "prediction_2000.nc").exists()
+    assert not temp_file.exists()
+    assert not temp_dir.exists()
+
+
+def test_aggregate_predictions_custom_naming_convention(
+    tmp_path,
+):
+    temp_dir = tmp_path / "_temp"
+    temp_dir.mkdir()
+
+    xr.DataArray(
+        [[1.0]],
+        dims=("year", "channels"),
+        coords={
+            "year": [2000],
+            "channels": ["latent"],
+        },
+        name="latent",
+    ).to_netcdf(
+        temp_dir / "latent_rank0_0.nc",
+    )
+
+    aggregate_predictions(
+        None,
+        tmp_path,
+        naming_convention="latent",
+        cleanup_temp=False,
+    )
+
+    assert (tmp_path / "latent_2000.nc").exists()
+
+
+def test_aggregate_predictions_ignores_unrelated_temp_files(
+    tmp_path,
+):
+    temp_dir = tmp_path / "_temp"
+    temp_dir.mkdir()
+
+    xr.DataArray(
+        [[1.0]],
+        dims=("year", "channels"),
+        coords={
+            "year": [2000],
+            "channels": ["prediction"],
+        },
+        name="prediction",
+    ).to_netcdf(
+        temp_dir / "prediction_rank0_0.nc",
+    )
+
+    unrelated = temp_dir / "other_rank0_0.nc"
+
+    xr.DataArray(
+        [[2.0]],
+        dims=("year", "channels"),
+        coords={
+            "year": [2001],
+            "channels": ["other"],
+        },
+        name="other",
+    ).to_netcdf(unrelated)
+
+    aggregate_predictions(
+        None,
+        tmp_path,
+        cleanup_temp=False,
+    )
+
+    assert (tmp_path / "prediction_2000.nc").exists()
+    assert not (tmp_path / "prediction_2001.nc").exists()
+    assert unrelated.exists()
+
+
+def test_aggregate_predictions_logger_receives_expected_messages(
+    tmp_path,
+):
+    temp_dir = tmp_path / "_temp"
+    temp_dir.mkdir()
+
+    xr.DataArray(
+        [[1.0]],
+        dims=("year", "channels"),
+        coords={
+            "year": [2000],
+            "channels": ["prediction"],
+        },
+        name="prediction",
+    ).to_netcdf(
+        temp_dir / "prediction_rank0_0.nc",
+    )
+
+    calls = []
+
+    aggregate_predictions(
+        None,
+        tmp_path,
+        logger_function=lambda level, message: calls.append((level, message)),
+        cleanup_temp=False,
+    )
+
+    assert calls[0][0] == logging.INFO
+    assert "Aggregating temporary prediction files" in calls[0][1]
+    assert calls[-1][0] == logging.INFO
+    assert "Saved aggregated predictions for year 2000" in calls[-1][1]

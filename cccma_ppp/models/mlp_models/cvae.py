@@ -12,7 +12,7 @@ from cccma_ppp.models.models_abc import (
     cVAEForwardRequest,
     cVAEPredictRequest,
 )
-from cccma_ppp.models.layers import _get_normal
+from cccma_ppp.models.layers.utils import _get_normal
 from cccma_ppp.models.layers.mlp import build_mlp
 from cccma_ppp.core.cVAE_module import cVAEOutput
 

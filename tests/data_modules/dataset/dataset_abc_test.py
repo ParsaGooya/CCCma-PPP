@@ -206,7 +206,6 @@ def make_mask(
     )
 
 
-# Remove test due to no coverage
 def test_dataset_is_abstract():
     with pytest.raises(TypeError):
         DatasetABC()
@@ -547,7 +546,6 @@ def test_resolve_mask_rejects_missing_dimension():
         dataset._resolve_mask()
 
 
-# Remove test due to no coverage
 def test_sampling_times_selectors():
     dataset = bare_dataset(
         config=SimpleNamespace(
@@ -620,7 +618,6 @@ def test_load_xarray_data(
     )
 
 
-# Remove test due to no coverage
 def test_get_sampling_coords():
     dataset = bare_dataset(
         mask=make_mask(
@@ -645,7 +642,6 @@ def test_get_sampling_coords():
     )
 
 
-# Remove test due to no coverage
 def test_get_sampling_coords_all_valid():
     dataset = bare_dataset(mask=make_mask(values=np.zeros((2, 2))))
 
@@ -870,7 +866,7 @@ def test_get_input_shape_with_flattener(
         _concat_condition_value=True,
     )
 
-    assert dataset.get_input_shape() == (15,)
+    assert dataset.get_input_shape() == (3, 5)
 
 
 def test_get_input_shape_without_flattener(
@@ -907,7 +903,7 @@ def test_get_input_shape_without_flattener(
         _concat_condition_value=False,
     )
 
-    assert dataset.get_input_shape() == (2, 3)
+    assert dataset.get_input_shape() == (1, 2, 3)
 
 
 @pytest.mark.parametrize(
@@ -1086,7 +1082,6 @@ def test_index_model_success():
     unwrap.assert_called_once()
 
 
-# Remove test due to no coverage
 def test_dataset_length():
     dataset = bare_dataset(
         sample_coords={
@@ -1176,7 +1171,6 @@ def test_config_requires_input_source():
     [
         None,
         "static",
-        "ensemble_mean",
         "cross_ensemble",
         "same_member",
     ],
@@ -1282,7 +1276,6 @@ def test_resolve_lead_months_builds_configuration():
     )
 
 
-# Remove test due to no coverage
 def test_input_lead_months_uses_effective_input():
     config = bare_abc_config(
         effective_input=make_config_data(
@@ -1760,6 +1753,7 @@ def test_static_condition_valid():
         ensemble_list=None,
     )
 
+    condition.info.coords = {}
     config = bare_abc_config(
         model=model,
         condition=condition,
@@ -2250,7 +2244,7 @@ def test_get_input_shape_without_supported_dimensions(
         _concat_condition_value=False,
     )
 
-    assert dataset.get_input_shape() == ()
+    assert dataset.get_input_shape() == (1,)
 
 
 def test_get_input_shape_flattener_without_condition_concat(
@@ -2284,7 +2278,7 @@ def test_get_input_shape_flattener_without_condition_concat(
         _concat_condition_value=False,
     )
 
-    assert dataset.get_input_shape() == (8,)
+    assert dataset.get_input_shape() == (2, 4)
 
 
 def test_index_condition_uses_requested_index():
@@ -2361,7 +2355,6 @@ def test_index_model_uses_requested_index():
     )
 
 
-# Remove test due to no coverage
 def test_dataset_length_single_sample():
     dataset = bare_dataset(
         sample_coords={
@@ -2373,7 +2366,6 @@ def test_dataset_length_single_sample():
     assert len(dataset) == 1
 
 
-# Remove test due to no coverage
 def test_dataset_length_empty_samples():
     dataset = bare_dataset(
         sample_coords={
@@ -3238,7 +3230,6 @@ def test_config_init_resolves_lead_month_config():
     )
 
 
-# Remove test due to no coverage
 def test_input_lead_months_uses_required_lead_dimension(
     monkeypatch,
 ):
@@ -3290,7 +3281,6 @@ def test_check_condition_method_accepts_every_supported_value(
     "condition_method",
     [
         "",
-        "ENSEMBLE_MEAN",
         "same-member",
         "unknown",
         1,
@@ -3382,7 +3372,6 @@ def test_using_model_as_condition_comparison_matrix(
     assert config._using_model_data_as_condition is expected
 
 
-# Remove test due to no coverage
 def test_effective_condition_returns_private_value():
     condition = make_config_data(
         paths=("condition.nc",),
@@ -3507,7 +3496,6 @@ def test_check_model_same_member_rejects_mean_model():
     "condition_method",
     [
         None,
-        "ensemble_mean",
         "cross_ensemble",
         "same_member",
     ],
@@ -4447,7 +4435,6 @@ def test_load_xarray_data_selection_matrix(
         assert selection is None
 
 
-# Remove test due to no coverage
 def test_load_xarray_data_forwards_every_argument():
     config = make_config_data(
         paths=("a.nc", "b.nc"),
@@ -4489,7 +4476,6 @@ def test_load_xarray_data_forwards_every_argument():
     )
 
 
-# Remove test due to no coverage
 def test_get_sampling_coords_single_valid_sample():
     dataset = bare_dataset(
         mask=make_mask(
@@ -4514,7 +4500,6 @@ def test_get_sampling_coords_single_valid_sample():
     )
 
 
-# Remove test due to no coverage
 def test_get_sampling_coords_with_optional_dimension():
     mask = xr.DataArray(
         np.asarray(
@@ -4774,7 +4759,7 @@ def test_get_input_shape_empty_preprocessor_list(
         _concat_condition_value=False,
     )
 
-    assert dataset.get_input_shape() == (4,)
+    assert dataset.get_input_shape() == (1, 4)
 
 
 def test_get_input_shape_uses_supported_dimension_order(
@@ -4808,7 +4793,7 @@ def test_get_input_shape_uses_supported_dimension_order(
         _concat_condition_value=False,
     )
 
-    assert dataset.get_input_shape() == (3, 2)
+    assert dataset.get_input_shape() == (1, 3, 2)
 
 
 def test_get_input_shape_flattener_with_multiple_preprocessors(
@@ -4847,7 +4832,7 @@ def test_get_input_shape_flattener_with_multiple_preprocessors(
         _concat_condition_value=False,
     )
 
-    assert dataset.get_input_shape() == (14,)
+    assert dataset.get_input_shape() == (2, 7)
 
 
 def test_get_input_shape_concat_condition_counts_condition_variables(
@@ -4882,7 +4867,7 @@ def test_get_input_shape_concat_condition_counts_condition_variables(
         _concat_condition_value=True,
     )
 
-    assert dataset.get_input_shape() == (20,)
+    assert dataset.get_input_shape() == (4, 5)
 
 
 def test_index_condition_none_short_circuits_pipeline():

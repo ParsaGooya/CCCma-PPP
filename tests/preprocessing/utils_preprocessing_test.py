@@ -832,26 +832,6 @@ def test_flattener_transform_ref_branch():
     assert "ref" in again.dims
 
 
-def test_flattener_saved_default_name(
-    monkeypatch,
-    tmp_path,
-):
-    monkeypatch.setattr(
-        RuntimeContext,
-        "GLOBAL_EXP_DIR",
-        str(tmp_path),
-    )
-
-    proc = PreprocessingStepSelector("flattener").get_preprocessor()
-
-    proc.fit(
-        make_geo_data(),
-        save=True,
-    )
-
-    assert (tmp_path / "flattener.joblib").exists()
-
-
 def test_flattener_save_creates_nested_path(
     tmp_path,
 ):

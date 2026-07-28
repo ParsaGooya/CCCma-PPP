@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 import os
@@ -44,12 +46,12 @@ class DummyTrainLoader:
 
         self.input_var_metadata = {
             "NN_dims": [10, 10, 10, 10],
-            "preprocessors": ["flattener"],
+            "preprocessors": [],
         }
 
         self.target_var_metadata = {
-            "NN_dims": [10, 10],
-            "preprocessors": ["flattener"],
+            "NN_dims": [10],
+            "preprocessors": [],
         }
 
     def setup_distributed(self, d):
@@ -74,39 +76,39 @@ class DummyTrainLoader:
 
 
 class DummyModuleSelector:
-    def __init__(self):
-        self.type = "cVAE"
-
-        self._module_config = type(
-            "cfg",
-            (),
-            {
-                "model_config": type(
-                    "mc", (), {"GENERATOR": False, "NUM_OUTPUT_DIMS": 1}
-                )()
-            },
-        )
-
-        self.GENERATOR = False
-        self.NUM_INPUT_DIMS = 4
-        self.NUM_OUTPUT_DIMS = 1
+    type = "cvae"
+    NUM_INPUT_DIMS = 4
+    NUM_OUTPUT_DIMS = 1
+    GENERATOR = None
 
     def build_module(self, **kwargs):
         class M:
-            def to(self, d):
+            model_config = SimpleNamespace(GENERATOR=None)
+            model = SimpleNamespace(
+                generative_modeling=False, config=SimpleNamespace(NUM_OUTPUT_DIMS=1)
+            )
+
+            def __init__(self):
+                self.model_config = SimpleNamespace(
+                    GENERATOR=None,
+                )
+                self.model = SimpleNamespace(
+                    generative_modeling=False,
+                    config=SimpleNamespace(),
+                )
+
+            def to(self, device):
+                self.device = device
                 return self
 
-            def init_loss_function(self, x):
-                pass
-
-            model = type("X", (), {"config": type("C", (), {"NUM_OUTPUT_DIMS": 1})()})
+            def init_loss_function(self, loss):
+                self.loss = loss
 
         return M()
 
 
 class DummyLossPipeline:
-    def __init__(self):
-        self.loss_pipeline = type("L", (), {"loss_types": ["mse"]})
+    loss_types = []
 
     def build(self, **kwargs):
         return "loss"
@@ -213,7 +215,7 @@ def test_generator_requires_crps(tmp_path):
     module.GENERATOR = True
 
     loss = DummyLossPipeline()
-    loss.loss_pipeline.loss_types = ["mse"]
+    loss.loss_types = ["mse"]
 
     with pytest.raises(RuntimeError):
         TrainConfig(tmp_path, 1, loader, module, loss, DummyTrainer())
@@ -412,7 +414,7 @@ def test_generator_with_crps_valid(tmp_path):
     module.GENERATOR = True
 
     loss = DummyLossPipeline()
-    loss.loss_pipeline.loss_types = ["crps"]
+    loss.loss_types = ["crps"]
 
     cfg = TrainConfig(
         tmp_path,
@@ -689,25 +691,29 @@ def test_non_mlp_with_flattener_raises(tmp_path):
     loader = DummyTrainLoader()
 
     module = DummyModuleSelector()
-    module.NUM_OUTPUT_DIMS = 2
+    module.NUM_OUTPUT_DIMS = 3
 
-    cfg = TrainConfig(
-        experiment_dir=tmp_path,
-        max_epochs=1,
-        train_loader=loader,
-        module=module,
-        losspipeline=DummyLossPipeline(),
-        trainer=DummyTrainer(),
-    )
-    assert cfg is not None
+    with pytest.raises(RuntimeError):
+        TrainConfig(
+            experiment_dir=tmp_path,
+            max_epochs=1,
+            train_loader=loader,
+            module=module,
+            losspipeline=DummyLossPipeline(),
+            trainer=DummyTrainer(),
+        )
 
 
 def test_non_mlp_without_flattener_valid(tmp_path):
     loader = DummyTrainLoader()
 
-    loader.dataset_config.observation.preprocessing_pipeline.pipeline = []
+    loader.input_var_metadata["preprocessors"] = []
+    loader.target_var_metadata["preprocessors"] = []
+    loader.input_var_metadata["NN_dims"] = [10, 10]
+    loader.target_var_metadata["NN_dims"] = [10, 10]
 
     module = DummyModuleSelector()
+    module.NUM_INPUT_DIMS = 2
     module.NUM_OUTPUT_DIMS = 2
 
     cfg = TrainConfig(
@@ -845,6 +851,7 @@ def test_module_to_called(tmp_path):
     called = {"x": False}
 
     class M:
+        model_config = SimpleNamespace(GENERATOR=None)
         model = type(
             "X",
             (),
@@ -876,6 +883,7 @@ def test_module_init_loss_called(tmp_path):
     called = {"x": False}
 
     class M:
+        model_config = SimpleNamespace(GENERATOR=None)
         model = type(
             "X",
             (),
@@ -906,6 +914,7 @@ def test_build_trainer_num_output_dims_fallback(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     class M:
+        model_config = SimpleNamespace(GENERATOR=None)
         model = type("X", (), {"config": type("C", (), {})()})
 
         def to(self, d):
@@ -978,6 +987,7 @@ def test_missing_flattener_for_mlp(tmp_path):
 
     cfg.train_loader.dataset_config.observation.preprocessing_pipeline.pipeline = []
     cfg.train_loader.input_var_metadata["preprocessors"] = []
+    cfg.train_loader.input_var_metadata["NN_dims"] = [10, 10, 10]
 
     with pytest.raises(RuntimeError):
         cfg.__post_init__()
@@ -1462,6 +1472,7 @@ def test_module_to_executes(tmp_path):
     called = {"x": False}
 
     class M:
+        model_config = SimpleNamespace(GENERATOR=None)
         model = type(
             "X",
             (),
@@ -1494,6 +1505,7 @@ def test_init_loss_function_executes(tmp_path):
     called = {"x": False}
 
     class M:
+        model_config = SimpleNamespace(GENERATOR=None)
         model = type(
             "X",
             (),
@@ -1586,9 +1598,13 @@ def test_prepare_directory_copytree_branch_real(tmp_path):
 def test_non_mlp_without_flatten_branch(tmp_path):
     loader = DummyTrainLoader()
 
-    loader.dataset_config.observation.preprocessing_pipeline.pipeline = []
+    loader.input_var_metadata["preprocessors"] = []
+    loader.target_var_metadata["preprocessors"] = []
+    loader.input_var_metadata["NN_dims"] = [10, 10]
+    loader.target_var_metadata["NN_dims"] = [10, 10]
 
     module = DummyModuleSelector()
+    module.NUM_INPUT_DIMS = 2
     module.NUM_OUTPUT_DIMS = 2
 
     cfg = TrainConfig(
@@ -1609,20 +1625,20 @@ def test_non_mlp_with_flatten_branch(tmp_path):
     module = DummyModuleSelector()
     module.NUM_OUTPUT_DIMS = 2
 
-    cfg = TrainConfig(
-        experiment_dir=tmp_path,
-        max_epochs=1,
-        train_loader=loader,
-        module=module,
-        losspipeline=DummyLossPipeline(),
-        trainer=DummyTrainer(),
-    )
-    assert cfg is not None
+    with pytest.raises(RuntimeError):
+        TrainConfig(
+            experiment_dir=tmp_path,
+            max_epochs=1,
+            train_loader=loader,
+            module=module,
+            losspipeline=DummyLossPipeline(),
+            trainer=DummyTrainer(),
+        )
 
 
 def test_generator_false_branch(tmp_path):
     module = DummyModuleSelector()
-    module.GENERATOR = False
+    module.GENERATOR = None
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -1988,12 +2004,18 @@ def test_build_trainer_num_output_dims_fallback_len(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     class M:
-        model = type("X", (), {"config": type("C", (), {})()})
+        model_config = SimpleNamespace(
+            GENERATOR=None,
+        )
+        model = SimpleNamespace(
+            generative_modeling=False,
+            config=SimpleNamespace(),
+        )
 
         def to(self, device):
             return self
 
-        def init_loss_function(self, x):
+        def init_loss_function(self, loss):
             pass
 
     class Module(DummyModuleSelector):
@@ -2145,7 +2167,7 @@ def test_generator_true_with_crps_valid(tmp_path):
     module.GENERATOR = True
 
     loss = DummyLossPipeline()
-    loss.loss_pipeline.loss_types = ["crps"]
+    loss.loss_types = ["crps"]
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -2161,7 +2183,7 @@ def test_generator_true_with_crps_valid(tmp_path):
 
 def test_generator_false_valid(tmp_path):
     module = DummyModuleSelector()
-    module.GENERATOR = False
+    module.GENERATOR = None
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -2331,7 +2353,12 @@ def test_num_output_dims_not_one_branch(tmp_path):
     loader.dataset_config.observation.preprocessing_pipeline.pipeline = []
 
     module = DummyModuleSelector()
+    module.NUM_INPUT_DIMS = 2
     module.NUM_OUTPUT_DIMS = 2
+    loader.input_var_metadata["NN_dims"] = [10, 10]
+    loader.target_var_metadata["NN_dims"] = [10, 10]
+    loader.input_var_metadata["preprocessors"] = []
+    loader.target_var_metadata["preprocessors"] = []
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -2348,7 +2375,7 @@ def test_num_output_dims_not_one_branch(tmp_path):
 def test_generator_branch_false(tmp_path):
     module = DummyModuleSelector()
 
-    module.GENERATOR = False
+    module.GENERATOR = None
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -2368,7 +2395,7 @@ def test_generator_branch_true_valid(tmp_path):
     module.GENERATOR = True
 
     loss = DummyLossPipeline()
-    loss.loss_pipeline.loss_types = ["crps"]
+    loss.loss_types = ["crps"]
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -2450,9 +2477,13 @@ def test_mlp_with_flattener_valid(tmp_path):
 def test_non_mlp_without_flattener_valid_again(tmp_path):
     loader = DummyTrainLoader()
 
-    loader.dataset_config.observation.preprocessing_pipeline.pipeline = []
+    loader.input_var_metadata["preprocessors"] = []
+    loader.target_var_metadata["preprocessors"] = []
+    loader.input_var_metadata["NN_dims"] = [10, 10]
+    loader.target_var_metadata["NN_dims"] = [10, 10]
 
     module = DummyModuleSelector()
+    module.NUM_INPUT_DIMS = 2
     module.NUM_OUTPUT_DIMS = 2
 
     cfg = TrainConfig(
@@ -2469,7 +2500,7 @@ def test_non_mlp_without_flattener_valid_again(tmp_path):
 
 def test_generator_false_edge(tmp_path):
     module = DummyModuleSelector()
-    module.GENERATOR = False
+    module.GENERATOR = None
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -2488,7 +2519,7 @@ def test_generator_true_edge(tmp_path):
     module.GENERATOR = True
 
     loss = DummyLossPipeline()
-    loss.loss_pipeline.loss_types = ["crps"]
+    loss.loss_types = ["crps"]
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -2528,7 +2559,7 @@ def test_check_io_1d_with_single_dim_no_flattener():
 def test_check_io_multid_with_flattener_wrong_dims():
     with pytest.raises(
         RuntimeError,
-        match="supports 3D",
+        match="do not add Flattennanremove",
     ):
         _check_IO(
             {
@@ -2541,17 +2572,20 @@ def test_check_io_multid_with_flattener_wrong_dims():
 
 
 def test_check_io_multid_with_flattener_correct_dims():
-    _check_IO(
-        {
-            "NN_dims": [10, 10],
-            "preprocessors": ["flattener"],
-        },
-        2,
-        "output",
-    )
+    with pytest.raises(
+        RuntimeError,
+        match="do not add Flattennanremove",
+    ):
+        _check_IO(
+            {
+                "NN_dims": [10, 10, 10],
+                "preprocessors": ["flattener"],
+            },
+            3,
+            "input",
+        )
 
 
-# Remove test due to no coverage
 def test_prepare_config(tmp_path):
     yaml_file = tmp_path / "cfg.yaml"
 
@@ -2569,7 +2603,6 @@ b:
     assert cfg["b"]["c"] == 2
 
 
-# Remove test due to no coverage
 def test_set_seed_changes_torch_state():
     set_seed(123)
 
@@ -2582,7 +2615,6 @@ def test_set_seed_changes_torch_state():
     assert torch.equal(a, b)
 
 
-# Remove test due to no coverage
 def test_set_seed_changes_numpy_state():
     set_seed(456)
 

@@ -176,12 +176,6 @@ def test_lead_months_empty_list_uses_range():
     )
 
 
-# Remove test due to no coverage
-def test_abstract_class_cannot_be_instantiated():
-    with pytest.raises(TypeError):
-        DatasetConfigABC()
-
-
 def test_requires_model_or_condition():
     with pytest.raises(
         ValueError,
@@ -979,30 +973,3 @@ def test_concrete_abstract_implementations():
     assert config.ds_operator == "operator"
     assert config.build_dataset() == "dataset"
     assert config.num_input_lead_months == 3
-
-
-# Remove test due to no coverage
-def test_abstract_method_bodies_are_callable():
-    dummy = MagicMock()
-
-    assert DatasetConfigABC._check_model(dummy) is None
-    assert DatasetConfigABC._check_condition(dummy) is None
-    assert DatasetConfigABC.ds_operator.fget(dummy) is None
-    assert DatasetConfigABC.num_input_lead_months.fget(dummy) is None
-    assert DatasetConfigABC.build_dataset(dummy) is None
-
-
-# Remove test due to no coverage
-def test_class_is_abstract():
-    assert issubclass(
-        DatasetConfigABC,
-        abc.ABC,
-    )
-
-    assert {
-        "_check_model",
-        "_check_condition",
-        "ds_operator",
-        "num_input_lead_months",
-        "build_dataset",
-    }.issubset(DatasetConfigABC.__abstractmethods__)

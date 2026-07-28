@@ -23,6 +23,7 @@ class DummyDistributed:
 
 
 class DummyModelConfig:
+    GENERATOR = None
     NUM_OUTPUT_DIMS = 1
 
 
@@ -130,8 +131,14 @@ def make_cvae_predictor(
         module=module,
         distributed=distributed,
         output_dir=tmp_path,
-        num_output_covariance_sampling=covariance_samples,
+        num_output_sampling=max(covariance_samples, 1),
     )
+    predictor.num_output_covariance_sampling = covariance_samples
+    predictor._stats = {}
+    if predictor.extract_posterior_samples:
+        predictor._stats["samples"] = DummyRunningCovariance()
+    if predictor.extract_training_residuals:
+        predictor._stats["residual"] = DummyRunningCovariance()
 
     return predictor, module
 
@@ -149,8 +156,13 @@ def make_deterministic_predictor(
         module=module,
         distributed=distributed,
         output_dir=tmp_path,
-        num_output_covariance_sampling=covariance_samples,
+        num_output_sampling=max(covariance_samples, 1),
     )
+    predictor.num_output_covariance_sampling = covariance_samples
+    predictor._stats = {}
+
+    if predictor.extract_training_vars:
+        predictor._stats["residual"] = DummyRunningCovariance()
 
     return predictor, module
 
@@ -187,12 +199,13 @@ def test_cvae_config_rejects_invalid_nstds(value):
         match="nstds must be positive",
     ):
         cVAEPredictorConfig(
+            num_latent_samples=1,
             nstds=value,
         )
 
 
 def test_cvae_config_defaults():
-    config = cVAEPredictorConfig()
+    config = cVAEPredictorConfig(num_latent_samples=1)
 
     assert config.num_latent_samples == 1
     assert config.nstds == 1.0
@@ -206,6 +219,7 @@ def test_cvae_config_save_latent_warns():
         match="No predictions will be saved",
     ):
         config = cVAEPredictorConfig(
+            num_latent_samples=1,
             save_latent=True,
         )
 
@@ -216,6 +230,7 @@ def test_cvae_config_without_save_latent_no_warning():
     with warnings.catch_warnings(record=True) as captured:
         warnings.simplefilter("always")
         cVAEPredictorConfig(
+            num_latent_samples=1,
             save_latent=False,
         )
 
@@ -234,7 +249,7 @@ def test_cvae_config_build(tmp_path):
         module=module,
         distributed=distributed,
         output_dir=tmp_path,
-        num_output_covariance_sampling=4,
+        num_output_sampling=4,
     )
 
     assert isinstance(predictor, cVAEPredictor)
@@ -289,7 +304,6 @@ def test_cvae_initializes_training_stats_for_latent_sampling(tmp_path):
 
     assert set(predictor.stats) == {
         "samples",
-        "residual",
     }
 
 
@@ -300,7 +314,6 @@ def test_cvae_initializes_training_stats_for_output_noise(tmp_path):
     )
 
     assert set(predictor.stats) == {
-        "samples",
         "residual",
     }
 
@@ -437,6 +450,7 @@ def test_cvae_standard_prediction_branch(
         tmp_path,
         num_latent_samples=4,
         nstds=1.5,
+        covariance_samples=0,
     )
     batch = DummyBatch()
     output = make_cvae_output()
@@ -471,6 +485,7 @@ def test_cvae_prediction_uses_training_latent_samples(
     predictor, module = make_cvae_predictor(
         tmp_path,
         infer_latent_samples_from_training=True,
+        covariance_samples=0,
     )
     batch = DummyBatch()
     output = make_cvae_output()
@@ -563,7 +578,7 @@ def test_cvae_prediction_adds_decoder_noise(
 def test_cvae_update_stats_requires_samples(tmp_path):
     predictor, _ = make_cvae_predictor(
         tmp_path,
-        covariance_samples=1,
+        infer_latent_samples_from_training=True,
     )
     output = make_cvae_output(samples=None)
     batch = DummyBatch(
@@ -586,6 +601,7 @@ def test_cvae_update_train_stats(
     predictor, _ = make_cvae_predictor(
         tmp_path,
         covariance_samples=1,
+        infer_latent_samples_from_training=True,
     )
     sample_stats = DummyRunningCovariance()
     residual_stats = DummyRunningCovariance()
@@ -625,6 +641,7 @@ def test_cvae_update_train_stats_with_target_mask(
     predictor, _ = make_cvae_predictor(
         tmp_path,
         covariance_samples=1,
+        infer_latent_samples_from_training=True,
     )
     predictor._stats = {
         "samples": DummyRunningCovariance(),
@@ -907,7 +924,7 @@ def test_cvae_batch_to_netcdf_predictions_no_noise(
 ):
     predictor, module = make_cvae_predictor(
         tmp_path,
-        covariance_samples=0,
+        covariance_samples=1,
     )
     module.model_config.NUM_OUTPUT_DIMS = 1
     output = make_cvae_output(
@@ -935,7 +952,7 @@ def test_cvae_batch_to_netcdf_predictions_no_noise(
 
     args = captured["args"]
 
-    assert args[0].shape == (1, 2, 2, 1, 3)
+    assert args[0].shape == (2, 2, 1, 3)
     assert args[1] is metadata
     assert args[2] == 1
     assert args[3] == "prediction_rank0_00000000.nc"
@@ -1181,6 +1198,7 @@ def test_cvae_latent_filename_uses_rank(
     tmp_path,
 ):
     config = cVAEPredictorConfig(
+        num_latent_samples=1,
         save_latent=True,
     )
     predictor = cVAEPredictor(
@@ -1188,6 +1206,7 @@ def test_cvae_latent_filename_uses_rank(
         module=DummyModule(),
         distributed=DummyDistributed(rank=7),
         output_dir=tmp_path,
+        num_output_sampling=1,
     )
     output = make_cvae_output(
         mu=torch.ones(2, 4),
@@ -1223,7 +1242,7 @@ def test_deterministic_config_build(tmp_path):
         module=module,
         distributed=distributed,
         output_dir=tmp_path,
-        num_output_covariance_sampling=4,
+        num_output_sampling=4,
     )
 
     assert isinstance(
@@ -1509,7 +1528,7 @@ def test_deterministic_batch_to_netcdf_without_noise(
 ):
     predictor, module = make_deterministic_predictor(
         tmp_path,
-        covariance_samples=0,
+        covariance_samples=1,
     )
     module.config.NUM_OUTPUT_DIMS = 1
     output = make_deterministic_output(torch.ones(2, 1, 3))
@@ -1534,7 +1553,7 @@ def test_deterministic_batch_to_netcdf_without_noise(
 
     args = captured["args"]
 
-    assert args[0].shape == (1, 2, 1, 3)
+    assert args[0].shape == (2, 1, 3)
     assert args[2] == 1
     assert args[3] == "prediction_rank0_00000000.nc"
     assert args[4] == tmp_path / "_temp"
@@ -1592,6 +1611,7 @@ def test_deterministic_batch_to_netcdf_uses_rank_and_counter(
         module=DummyModule(),
         distributed=DummyDistributed(rank=9),
         output_dir=tmp_path,
+        num_output_sampling=1,
     )
     output = make_deterministic_output()
     names = []
@@ -1621,3 +1641,531 @@ def test_deterministic_batch_to_netcdf_uses_rank_and_counter(
         "prediction_rank9_00000001.nc",
     ]
     assert predictor._batch_counter == 2
+
+
+@pytest.mark.parametrize("value", [0, -1, -5])
+def test_cvae_predictor_rejects_nonpositive_output_sampling(tmp_path, value):
+    with pytest.raises(ValueError, match="num_output_sampling must be larger than 1"):
+        cVAEPredictor(
+            config=cVAEPredictorConfig(num_latent_samples=1),
+            module=DummyModule(),
+            distributed=DummyDistributed(),
+            output_dir=tmp_path,
+            num_output_sampling=value,
+        )
+
+
+@pytest.mark.parametrize("value", [0, -1, -5])
+def test_deterministic_predictor_rejects_nonpositive_output_sampling(
+    tmp_path,
+    value,
+):
+    with pytest.raises(ValueError, match="num_output_sampling must be larger than 1"):
+        DetermninisticPredictor(
+            config=DeterministicPredictorConfig(),
+            module=DummyModule(),
+            distributed=DummyDistributed(),
+            output_dir=tmp_path,
+            num_output_sampling=value,
+        )
+
+
+def test_cvae_generator_module_disables_output_covariance_sampling(tmp_path):
+    module = DummyModule()
+    module.config.GENERATOR = True
+
+    predictor = cVAEPredictor(
+        config=cVAEPredictorConfig(num_latent_samples=1),
+        module=module,
+        distributed=DummyDistributed(),
+        output_dir=tmp_path,
+        num_output_sampling=3,
+    )
+
+    assert predictor.num_output_covariance_sampling is None
+    assert predictor.extract_training_residuals is False
+
+
+def test_deterministic_generator_module_disables_output_covariance_sampling(
+    tmp_path,
+):
+    module = DummyModule()
+    module.config.GENERATOR = True
+
+    predictor = DetermninisticPredictor(
+        config=DeterministicPredictorConfig(),
+        module=module,
+        distributed=DummyDistributed(),
+        output_dir=tmp_path,
+        num_output_sampling=3,
+    )
+
+    assert predictor.num_output_covariance_sampling is None
+    assert predictor.extract_training_vars is False
+
+
+def test_cvae_extract_posterior_samples_false(tmp_path):
+    predictor, _ = make_cvae_predictor(
+        tmp_path,
+        infer_latent_samples_from_training=False,
+        covariance_samples=0,
+    )
+
+    assert predictor.extract_posterior_samples is False
+
+
+def test_cvae_extract_posterior_samples_true(tmp_path):
+    predictor, _ = make_cvae_predictor(
+        tmp_path,
+        infer_latent_samples_from_training=True,
+        covariance_samples=0,
+    )
+
+    assert predictor.extract_posterior_samples is True
+
+
+def test_cvae_extract_training_residuals_false(tmp_path):
+    predictor, _ = make_cvae_predictor(
+        tmp_path,
+        covariance_samples=0,
+    )
+
+    assert predictor.extract_training_residuals is False
+
+
+def test_cvae_extract_training_residuals_true(tmp_path):
+    predictor, _ = make_cvae_predictor(
+        tmp_path,
+        covariance_samples=2,
+    )
+
+    assert predictor.extract_training_residuals is True
+
+
+def test_cvae_update_stats_samples_only(tmp_path):
+    predictor, _ = make_cvae_predictor(
+        tmp_path,
+        infer_latent_samples_from_training=True,
+        covariance_samples=0,
+    )
+    samples_stats = DummyRunningCovariance()
+    predictor._stats = {"samples": samples_stats}
+
+    output = make_cvae_output(
+        samples=torch.ones(2, 3, 4),
+    )
+    batch = DummyBatch(target=torch.ones(3, 1, 3))
+
+    result = predictor._update_train_stats(output, batch)
+
+    assert result is predictor.stats
+    assert samples_stats.updates[0].shape == (6, 4)
+
+
+def test_cvae_update_stats_residual_only(tmp_path):
+    predictor, _ = make_cvae_predictor(
+        tmp_path,
+        covariance_samples=2,
+    )
+    residual_stats = DummyRunningCovariance()
+    predictor._stats = {"residual": residual_stats}
+
+    output = make_cvae_output(
+        output=torch.zeros(1, 2, 1, 3),
+    )
+    batch = DummyBatch(target=torch.ones(2, 1, 3))
+
+    result = predictor._update_train_stats(output, batch)
+
+    assert result is predictor.stats
+    torch.testing.assert_close(
+        residual_stats.updates[0],
+        torch.ones(2, 3),
+    )
+
+
+def test_cvae_latent_save_ignores_none_variables(monkeypatch, tmp_path):
+    predictor, _ = make_cvae_predictor(
+        tmp_path,
+        save_latent=True,
+    )
+    output = make_cvae_output(
+        mu=torch.ones(2, 4),
+        log_var=None,
+        samples=None,
+        cond_mu=torch.ones(2, 4),
+        cond_log_var=None,
+    )
+    captured = {}
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.predictors.save_batch_to_netcdf",
+        lambda *args: captured.update(args=args),
+    )
+
+    predictor._batch_to_netcdf(
+        output,
+        [{"year": 2000}, {"year": 2001}],
+    )
+
+    assert captured["args"][6] == {
+        "channels": ["mu", "cond_mu"],
+    }
+    assert captured["args"][0].shape == (2, 2, 4)
+
+
+def test_cvae_latent_save_without_padding(monkeypatch, tmp_path):
+    predictor, _ = make_cvae_predictor(
+        tmp_path,
+        save_latent=True,
+    )
+    output = make_cvae_output(
+        mu=torch.ones(2, 4),
+        log_var=torch.full((2, 4), 2.0),
+    )
+    captured = {}
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.predictors.save_batch_to_netcdf",
+        lambda *args: captured.update(prediction=args[0]),
+    )
+
+    predictor._batch_to_netcdf(
+        output,
+        [{"year": 2000}, {"year": 2001}],
+    )
+
+    assert captured["prediction"].shape == (2, 2, 4)
+    assert not torch.isneginf(captured["prediction"]).any()
+
+
+def test_cvae_prediction_save_with_none_output_sampling(monkeypatch, tmp_path):
+    module = DummyModule()
+    module.config.GENERATOR = True
+    predictor = cVAEPredictor(
+        config=cVAEPredictorConfig(num_latent_samples=1),
+        module=module,
+        distributed=DummyDistributed(),
+        output_dir=tmp_path,
+        num_output_sampling=1,
+    )
+    predictor.num_output_sampling = None
+    captured = {}
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.predictors.save_batch_to_netcdf",
+        lambda *args: captured.update(prediction=args[0]),
+    )
+
+    predictor._batch_to_netcdf(
+        make_cvae_output(output=torch.ones(2, 2, 1, 3)),
+        [{"year": 2000}, {"year": 2001}],
+    )
+
+    assert captured["prediction"].shape == (1, 2, 2, 1, 3)
+
+
+def test_deterministic_prediction_save_with_none_output_sampling(
+    monkeypatch,
+    tmp_path,
+):
+    module = DummyModule()
+    module.config.GENERATOR = True
+    predictor = DetermninisticPredictor(
+        config=DeterministicPredictorConfig(),
+        module=module,
+        distributed=DummyDistributed(),
+        output_dir=tmp_path,
+        num_output_sampling=1,
+    )
+    predictor.num_output_sampling = None
+    captured = {}
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.predictors.save_batch_to_netcdf",
+        lambda *args: captured.update(prediction=args[0]),
+    )
+
+    predictor._batch_to_netcdf(
+        make_deterministic_output(torch.ones(2, 1, 3)),
+        [{"year": 2000}, {"year": 2001}],
+    )
+
+    assert captured["prediction"].shape == (1, 2, 1, 3)
+
+
+def test_cvae_initializes_both_training_stats(tmp_path):
+    predictor, _ = make_cvae_predictor(
+        tmp_path,
+        infer_latent_samples_from_training=True,
+        covariance_samples=2,
+    )
+
+    assert set(predictor.stats) == {"samples", "residual"}
+
+
+def test_cvae_config_type():
+    assert cVAEPredictorConfig._type == "cvae"
+
+
+def test_deterministic_config_type():
+    assert DeterministicPredictorConfig._type == "deterministic"
+
+
+def test_cvae_config_build_passes_output_sampling(tmp_path):
+    config = cVAEPredictorConfig(num_latent_samples=1)
+    module = DummyModule()
+
+    predictor = config.build(
+        module=module,
+        distributed=DummyDistributed(),
+        output_dir=tmp_path,
+        num_output_sampling=6,
+    )
+
+    assert predictor.num_output_sampling == 6
+    assert predictor.num_output_covariance_sampling == 6
+
+
+def test_deterministic_config_build_passes_output_sampling(tmp_path):
+    config = DeterministicPredictorConfig()
+    module = DummyModule()
+
+    predictor = config.build(
+        module=module,
+        distributed=DummyDistributed(),
+        output_dir=tmp_path,
+        num_output_sampling=6,
+    )
+
+    assert predictor.num_output_sampling == 6
+    assert predictor.num_output_covariance_sampling == 6
+
+
+def test_cvae_infer_batch_calls_eval(monkeypatch, tmp_path):
+    predictor, module = make_cvae_predictor(
+        tmp_path,
+        covariance_samples=0,
+    )
+    module.predict_output = make_cvae_output()
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.predictors.clear_memory",
+        lambda: None,
+    )
+    monkeypatch.setattr(
+        predictor,
+        "_batch_to_netcdf",
+        lambda *args: None,
+    )
+
+    predictor._infer_on_batch(DummyBatch())
+
+    assert module.eval_called is True
+
+
+def test_deterministic_infer_batch_calls_eval(monkeypatch, tmp_path):
+    predictor, module = make_deterministic_predictor(
+        tmp_path,
+        covariance_samples=0,
+    )
+    module.predict_output = make_deterministic_output()
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.predictors.clear_memory",
+        lambda: None,
+    )
+    monkeypatch.setattr(
+        predictor,
+        "_batch_to_netcdf",
+        lambda *args: None,
+    )
+
+    predictor._infer_on_batch(DummyBatch())
+
+    assert module.eval_called is True
+
+
+def test_cvae_prediction_passes_output_sample_size(monkeypatch, tmp_path):
+    predictor, module = make_cvae_predictor(
+        tmp_path,
+        covariance_samples=0,
+    )
+    predictor.num_output_sampling = 7
+    module.predict_output = make_cvae_output()
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.predictors.clear_memory",
+        lambda: None,
+    )
+    monkeypatch.setattr(
+        predictor,
+        "_batch_to_netcdf",
+        lambda *args: None,
+    )
+
+    predictor._infer_on_batch(DummyBatch())
+
+    assert module.predict_kwargs["output_sample_size"] == 7
+
+
+def test_deterministic_prediction_passes_output_sample_size(
+    monkeypatch,
+    tmp_path,
+):
+    predictor, module = make_deterministic_predictor(
+        tmp_path,
+        covariance_samples=0,
+    )
+    predictor.num_output_sampling = 7
+    module.predict_output = make_deterministic_output()
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.predictors.clear_memory",
+        lambda: None,
+    )
+    monkeypatch.setattr(
+        predictor,
+        "_batch_to_netcdf",
+        lambda *args: None,
+    )
+
+    predictor._infer_on_batch(DummyBatch())
+
+    assert module.predict_kwargs["output_sample_size"] == 7
+
+
+def test_cvae_training_stats_forward_receives_sample_size(
+    monkeypatch,
+    tmp_path,
+):
+    predictor, module = make_cvae_predictor(
+        tmp_path,
+        infer_latent_samples_from_training=True,
+        covariance_samples=0,
+    )
+    module.forward_output = make_cvae_output(samples=torch.ones(1, 2, 3))
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.predictors.clear_memory",
+        lambda: None,
+    )
+    monkeypatch.setattr(
+        predictor,
+        "_update_train_stats",
+        lambda output, batch: {},
+    )
+
+    predictor._infer_on_batch(
+        DummyBatch(target=torch.ones(2, 1, 3)),
+        _getting_train_stats=True,
+    )
+
+    assert module.forward_kwargs["sample_size"] == 1
+
+
+def test_deterministic_training_stats_forward_receives_batch(
+    monkeypatch,
+    tmp_path,
+):
+    predictor, module = make_deterministic_predictor(
+        tmp_path,
+        covariance_samples=1,
+    )
+    batch = DummyBatch(target=torch.ones(2, 1, 3))
+    module.forward_output = make_deterministic_output()
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.predictors.clear_memory",
+        lambda: None,
+    )
+    monkeypatch.setattr(
+        predictor,
+        "_update_train_stats",
+        lambda output, data: {},
+    )
+
+    predictor._infer_on_batch(
+        batch,
+        _getting_train_stats=True,
+    )
+
+    assert module.forward_kwargs == {"data": batch}
+
+
+def test_cvae_latent_save_all_variable_names(monkeypatch, tmp_path):
+    predictor, _ = make_cvae_predictor(
+        tmp_path,
+        save_latent=True,
+    )
+    output = make_cvae_output(
+        mu=torch.ones(2, 4),
+        log_var=torch.ones(2, 4),
+        samples=torch.ones(2, 4),
+        cond_mu=torch.ones(2, 4),
+        cond_log_var=torch.ones(2, 4),
+    )
+    captured = {}
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.predictors.save_batch_to_netcdf",
+        lambda *args: captured.update(coords=args[6]),
+    )
+
+    predictor._batch_to_netcdf(
+        output,
+        [{"year": 2000}, {"year": 2001}],
+    )
+
+    assert captured["coords"] == {
+        "channels": [
+            "mu",
+            "log_var",
+            "samples",
+            "cond_mu",
+            "cond_log_var",
+        ]
+    }
+
+
+def test_cvae_prediction_attrs_are_none(monkeypatch, tmp_path):
+    predictor, _ = make_cvae_predictor(
+        tmp_path,
+        covariance_samples=0,
+    )
+    captured = {}
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.predictors.save_batch_to_netcdf",
+        lambda *args: captured.update(attrs=args[7]),
+    )
+
+    predictor._batch_to_netcdf(
+        make_cvae_output(),
+        [{"year": 2000}, {"year": 2001}],
+    )
+
+    assert captured["attrs"] is None
+
+
+def test_deterministic_batch_to_netcdf_assign_coords_none(
+    monkeypatch,
+    tmp_path,
+):
+    predictor, _ = make_deterministic_predictor(
+        tmp_path,
+        covariance_samples=0,
+    )
+    captured = {}
+
+    monkeypatch.setattr(
+        "cccma_ppp.inference.predictors.save_batch_to_netcdf",
+        lambda *args: captured.update(coords=args[6]),
+    )
+
+    predictor._batch_to_netcdf(
+        make_deterministic_output(),
+        [{"year": 2000}, {"year": 2001}],
+    )
+
+    assert captured["coords"] is None

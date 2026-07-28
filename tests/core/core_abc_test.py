@@ -3,7 +3,12 @@ import pytest
 import torch
 import torch.nn as nn
 
-from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC, OutputABC
+from cccma_ppp.core.core_abc import (
+    GenerativeContext,
+    moduleABC,
+    moduleConfigABC,
+    OutputABC,
+)
 
 
 class ConcreteModule(moduleABC):
@@ -255,53 +260,6 @@ def test_check_registered_raises_when_unregistered():
         NotRegistered.check_registered()
 
 
-# Remove test due to no coverage
-def test_config_load_from_checkpoint_sets_flag():
-    cfg = ConcreteModuleConfig()
-
-    result = cfg._load_from_checkpoint()
-
-    assert result == "loaded"
-    assert cfg.loaded_from_checkpoint is True
-
-
-# Remove test due to no coverage
-def test_build_with_default_arguments():
-    cfg = ConcreteModuleConfig()
-
-    module = cfg.build(input_shape=np.array([1]))
-
-    assert isinstance(module, ConcreteModule)
-    assert np.array_equal(cfg.input_shape, np.array([1]))
-    assert cfg.output_shape is None
-    assert cfg.added_features_dim is None
-
-
-# Remove test due to no coverage
-def test_build_with_added_features():
-    cfg = ConcreteModuleConfig()
-
-    cfg.build(
-        input_shape=np.array([1]),
-        output_shape=np.array([2]),
-        added_features_dim=10,
-    )
-
-    assert cfg.added_features_dim == 10
-
-
-# Remove test due to no coverage
-def test_moduleabc_cannot_be_instantiated():
-    with pytest.raises(TypeError):
-        moduleABC()
-
-
-# Remove test due to no coverage
-def test_moduleconfigabc_cannot_be_instantiated():
-    with pytest.raises(TypeError):
-        moduleConfigABC()
-
-
 def test_check_registered_success():
     class Registered(moduleConfigABC):
         _type = "registered"
@@ -315,15 +273,6 @@ def test_check_registered_success():
     Registered.check_registered()
 
 
-# Remove test due to no coverage
-def test_outputabc_creation():
-    tensor = torch.tensor([1.0])
-
-    output = OutputABC(output=tensor)
-
-    assert torch.equal(output.output, tensor)
-
-
 def test_check_registered_inherited_type():
     class Registered(moduleConfigABC):
         _type = "registered"
@@ -335,3 +284,220 @@ def test_check_registered_inherited_type():
             pass
 
     Registered.check_registered()
+
+
+def test_generative_context_without_module_uses_false_defaults():
+    context = GenerativeContext()
+
+    assert context.generator is False
+    assert context.generative_modeling is False
+
+
+def test_generative_context_detects_generator():
+    class ModelConfig:
+        GENERATOR = object()
+
+    class Model:
+        generative_modeling = False
+
+    class Module:
+        model_config = ModelConfig()
+        model = Model()
+
+    context = GenerativeContext(Module())
+
+    assert context.generator is True
+    assert context.generative_modeling is False
+
+
+def test_generative_context_without_generator():
+    class ModelConfig:
+        GENERATOR = None
+
+    class Model:
+        generative_modeling = True
+
+    class Module:
+        model_config = ModelConfig()
+        model = Model()
+
+    context = GenerativeContext(Module())
+
+    assert context.generator is False
+    assert context.generative_modeling is True
+
+
+def test_generative_context_defaults_missing_generator_to_none():
+    class ModelConfig:
+        pass
+
+    class Model:
+        generative_modeling = True
+
+    class Module:
+        model_config = ModelConfig()
+        model = Model()
+
+    context = GenerativeContext(Module())
+
+    assert context.generator is False
+    assert context.generative_modeling is True
+
+
+def test_generative_context_defaults_missing_generative_modeling_to_false():
+    class ModelConfig:
+        GENERATOR = object()
+
+    class Model:
+        pass
+
+    class Module:
+        model_config = ModelConfig()
+        model = Model()
+
+    context = GenerativeContext(Module())
+
+    assert context.generator is True
+    assert context.generative_modeling is False
+
+
+def test_generative_context_treats_false_generator_as_present():
+    class ModelConfig:
+        GENERATOR = False
+
+    class Model:
+        generative_modeling = False
+
+    class Module:
+        model_config = ModelConfig()
+        model = Model()
+
+    context = GenerativeContext(Module())
+
+    assert context.generator is True
+    assert context.generative_modeling is False
+
+
+def test_generative_context_preserves_truthy_generative_modeling_value():
+    marker = object()
+
+    class ModelConfig:
+        GENERATOR = None
+
+    class Model:
+        generative_modeling = marker
+
+    class Module:
+        model_config = ModelConfig()
+        model = Model()
+
+    context = GenerativeContext(Module())
+
+    assert context.generator is False
+    assert context.generative_modeling is marker
+
+
+def test_load_state_dict_calls_torch_load_with_expected_arguments(
+    tmp_path,
+    monkeypatch,
+):
+    module = ConcreteModule()
+    checkpoint_path = tmp_path / "checkpoint.pt"
+    checkpoint_path.touch()
+
+    checkpoint = {
+        "module": module.state_dict(),
+    }
+    captured = {}
+
+    def fake_load(path, map_location, weights_only):
+        captured["path"] = path
+        captured["map_location"] = map_location
+        captured["weights_only"] = weights_only
+        return checkpoint
+
+    monkeypatch.setattr(torch, "load", fake_load)
+
+    module._load_state_dict(checkpoint_path)
+
+    assert captured["path"] == checkpoint_path
+    assert captured["map_location"] == module._get_device()
+    assert captured["weights_only"] is True
+
+
+def test_load_state_dict_calls_gc_collect(
+    tmp_path,
+    monkeypatch,
+):
+    module = ConcreteModule()
+    checkpoint_path = tmp_path / "checkpoint.pt"
+
+    torch.save(
+        {"module": module.state_dict()},
+        checkpoint_path,
+    )
+
+    calls = []
+
+    monkeypatch.setattr(
+        "cccma_ppp.core.core_abc.gc.collect",
+        lambda: calls.append(True),
+    )
+
+    module._load_state_dict(checkpoint_path)
+
+    assert calls == [True]
+
+
+def test_init_loss_function_stores_loss_and_kwargs():
+    module = ConcreteModule()
+    loss = nn.MSELoss()
+
+    module.init_loss_function(
+        loss,
+        reduction="mean",
+    )
+
+    assert module.loss_function is loss
+    assert module.loss_kwargs == {"reduction": "mean"}
+
+
+def test_concrete_module_compute_loss():
+    module = ConcreteModule()
+
+    assert module._compute_loss() == "loss"
+
+
+def test_concrete_module_forward_with_default_input():
+    module = ConcreteModule()
+
+    output = module.forward()
+
+    assert output.shape == (1, 2)
+
+
+def test_concrete_module_forward_with_explicit_input():
+    module = ConcreteModule()
+    input_tensor = torch.ones(3, 2)
+
+    output = module.forward(input_tensor)
+
+    assert output.shape == (3, 2)
+
+
+def test_concrete_module_predict():
+    module = ConcreteModule()
+
+    assert module.predict() == "predict"
+
+
+def test_outputabc_retains_same_tensor_instance():
+    tensor = torch.tensor(
+        [1.0, 2.0],
+        requires_grad=True,
+    )
+
+    output = OutputABC(output=tensor)
+
+    assert output.output is tensor
+    assert output.output.requires_grad is True

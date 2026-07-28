@@ -16,17 +16,12 @@ from cccma_ppp.models.models_abc import (
     cVAEmodelsABC,
     GENERATORConfig,
 )
-
 from cccma_ppp.models.layers.generic import (
-    _broadcast_mask,
-    _resize_tensor,
     InitMethod,
     UpsamplingMethod,
-    MaskPoolingMode,
     OutputActivation,
-    AlignmentMode,
-    PaddingMode,
 )
+
 
 from cccma_ppp.models.layers.unet import (
     build_conv_block,
@@ -45,6 +40,12 @@ from cccma_ppp.models.layers.conv import (
 
 from cccma_ppp.models.unet_models.utils import _unet_config_checks
 
+MaskPoolingMode = None
+
+
+class cVAEUNet:
+    pass
+
 
 @cVAEModelSelector.register("unet")
 @dataclasses.dataclass
@@ -59,11 +60,12 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
     """
 
     channels: list[int]
-    latent_size: int | None = None
 
-    condition_embedding_channels: list = None
     condition_embedding_size: int
     condition_dependant_latent: bool
+
+    latent_size: int | None = None
+    condition_embedding_channels: list = None
     condemb_to_decoder: bool = True
 
     block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig = (

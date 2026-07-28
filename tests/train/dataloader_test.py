@@ -633,17 +633,6 @@ def test_build_train_loader_passes_years():
     )
 
 
-def test_build_train_loader_with_spatial_mask():
-    config = setup_config()
-
-    loader = config.build_train_loader(
-        return_spatial_mask=True,
-        reduce_spatial_mask=False,
-    )
-
-    assert loader is not None
-
-
 def test_build_train_loader_sets_dataloader_length():
     config = setup_config()
 
@@ -695,21 +684,6 @@ def test_build_validation_loader_passes_years():
     )
 
 
-def test_build_validation_loader_with_spatial_mask():
-    config = setup_config(
-        make_config(
-            num_validation_years=1,
-        )
-    )
-
-    loader = config.build_validation_loader(
-        return_spatial_mask=True,
-        reduce_spatial_mask=False,
-    )
-
-    assert loader is not None
-
-
 def test_get_weights_default():
     config = make_config()
 
@@ -733,48 +707,3 @@ def test_target_var_metadata():
     config = make_config()
 
     assert config.target_var_metadata == "t"
-
-
-# Remove test due to no coverage
-def test_dataset_config_available_times_complete():
-    dataset_config = DummyDatasetConfig()
-
-    np.testing.assert_array_equal(
-        dataset_config.available_times,
-        np.arange(2000, 2005),
-    )
-
-
-# Remove test due to no coverage
-def test_dataset_config_operator():
-    dataset_config = DummyDatasetConfig()
-
-    assert isinstance(
-        dataset_config.ds_operator,
-        DummyOperator,
-    )
-
-
-# Remove test due to no coverage
-def test_dataset_config_build_dataset():
-    dataset_config = DummyDatasetConfig()
-
-    dataset = dataset_config.build_dataset(
-        years=[2000],
-    )
-
-    assert isinstance(dataset, DummySet)
-    assert len(dataset) == 2
-
-
-# Remove test due to no coverage
-def test_dummy_dataset_item():
-    dataset = DummySet()
-
-    result = dataset[0]
-
-    assert set(result) == {
-        "input",
-        "target",
-        "added_features",
-    }

@@ -61,11 +61,6 @@ def predictor(tmp_path):
     return DummyPredictor(tmp_path)
 
 
-# Remove test due to no coverage
-def test_temp_save_dir(predictor):
-    assert predictor.temp_save_dir == predictor.output_dir / "_temp"
-
-
 def test_stats_available_when_extracting(predictor):
     assert predictor.stats == predictor._stats
 

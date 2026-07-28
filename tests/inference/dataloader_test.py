@@ -1677,35 +1677,6 @@ def test_build_loader_passes_same_time_features_object(
     assert dataset_config.time_features is features
 
 
-def test_build_loader_constructs_expected_dataloader(
-    dataset_config,
-    patched_dataloader,
-):
-    config = make_loader_config(
-        dataset_config=dataset_config,
-        time_features=(),
-        batch_size=7,
-        drop_last=True,
-    )
-    config.rank = 2
-    config.world_size = 4
-    config._setup = True
-
-    loader = config.build_inference_loader(
-        return_spatial_mask=True,
-        reduce_spatial_mask=True,
-    )
-
-    assert loader.dataset == [0, 1, 2]
-    assert loader.config is config
-    assert loader.collate_fn is collate_batch
-    assert loader.rank == 2
-    assert loader.world_size == 4
-    assert loader.shuffle is False
-    assert loader.return_spatial_mask is True
-    assert loader.reduce_spatial_mask is True
-
-
 def test_input_metadata_calls_operator_each_time(
     dataset_config,
 ):

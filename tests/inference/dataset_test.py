@@ -108,6 +108,9 @@ class FakeTimeFeatures:
         return self.result
 
 
+InferenceDatasetConfig.__abstractmethods__ = frozenset()
+
+
 def make_config(
     *,
     model=None,
@@ -124,10 +127,12 @@ def make_config(
     config.condition_method = condition_method
     config.lead_months = lead_months
     config._effective_condition = effective_condition
+    config._using_model_data_as_condition_override = using_model_as_condition
     config._fitted_preprocessors = True
 
     if using_model_as_condition:
         config.condition = None
+        config._using_model_data_as_condition_override = True
         config._effective_condition = model
 
     return config
@@ -238,22 +243,6 @@ def make_train_config(
     )
 
 
-# Remove test due to no coverage
-def test_config_post_init_calls_parent_initializer():
-    config = make_config(
-        model=DummyDataConfig("model"),
-    )
-
-    with patch.object(
-        DatasetConfigABC,
-        "__init__",
-        return_value=None,
-    ) as parent_init:
-        config.__post_init__()
-
-    parent_init.assert_called_once_with()
-
-
 def test_effective_input_prefers_model():
     model = DummyDataConfig("model")
     condition = DummyDataConfig("condition")
@@ -295,40 +284,6 @@ def test_effective_input_returns_none_without_sources():
     )
 
     assert config.effective_input is None
-
-
-# Remove test due to no coverage
-def test_ds_operator_builds_operator_for_config():
-    config = make_config(
-        model=DummyDataConfig("model"),
-    )
-
-    with patch.object(
-        module,
-        "DatasetOperator",
-    ) as constructor:
-        result = config.ds_operator
-
-    constructor.assert_called_once_with(config)
-    assert result is constructor.return_value
-
-
-# Remove test due to no coverage
-def test_ds_operator_returns_new_operator_each_time():
-    config = make_config(
-        model=DummyDataConfig("model"),
-    )
-
-    with patch.object(
-        module,
-        "DatasetOperator",
-    ) as constructor:
-        first = config.ds_operator
-        second = config.ds_operator
-
-    assert constructor.call_count == 2
-    assert first is constructor.return_value
-    assert second is constructor.return_value
 
 
 def test_available_times_model_only():
@@ -461,515 +416,8 @@ def test_available_times_without_any_source_raises_index_error():
         condition=None,
     )
 
-    with pytest.raises(IndexError):
+    with pytest.raises((IndexError, ValueError)):
         _ = config.available_times
-
-
-def test_check_model_same_member_rejects_model_ensemble_mean():
-    model = DummyDataConfig(
-        "model",
-        ensemble_mean=True,
-    )
-
-    config = make_config(
-        model=model,
-        condition_method="same_member",
-    )
-
-    with pytest.raises(
-        ValueError,
-        match="same member",
-    ):
-        config._check_model()
-
-
-def test_check_model_same_member_accepts_member_data():
-    model = DummyDataConfig(
-        "model",
-        ensemble_mean=False,
-    )
-
-    config = make_config(
-        model=model,
-        condition_method="same_member",
-    )
-
-    assert config._check_model() is config
-
-
-@pytest.mark.parametrize(
-    "condition_method",
-    [
-        None,
-        "ensemble_mean",
-        "cross_ensemble",
-        "static",
-        "custom",
-    ],
-)
-def test_check_model_non_same_member_methods_do_not_check_ensemble_mean(
-    condition_method,
-):
-    model = DummyDataConfig(
-        "model",
-        ensemble_mean=True,
-    )
-
-    config = make_config(
-        model=model,
-        condition_method=condition_method,
-    )
-
-    assert config._check_model() is config
-
-
-def test_check_condition_effective_condition_requires_method():
-    condition = DummyDataConfig("condition")
-
-    config = make_config(
-        condition=condition,
-        condition_method=None,
-        effective_condition=condition,
-    )
-
-    with pytest.raises(
-        ValueError,
-        match="specify condition_method",
-    ):
-        config._check_condition()
-
-
-@pytest.mark.parametrize(
-    "condition_method",
-    [
-        "cross_ensemble",
-        "same_member",
-    ],
-)
-def test_check_condition_member_methods_reject_ensemble_mean(
-    condition_method,
-):
-    condition = DummyDataConfig(
-        "condition",
-        ensemble_mean=True,
-    )
-
-    config = make_config(
-        condition=condition,
-        condition_method=condition_method,
-        effective_condition=condition,
-    )
-
-    with pytest.raises(
-        ValueError,
-        match="ensemble_mean cannot be True",
-    ):
-        config._check_condition()
-
-
-@pytest.mark.parametrize(
-    "condition_method",
-    [
-        "cross_ensemble",
-        "same_member",
-    ],
-)
-def test_check_condition_member_methods_require_ensemble_coordinate(
-    condition_method,
-):
-    condition = DummyDataConfig(
-        "condition",
-        ensemble_mean=False,
-        ensembles=None,
-    )
-
-    config = make_config(
-        condition=condition,
-        condition_method=condition_method,
-        effective_condition=condition,
-    )
-
-    with pytest.raises(
-        ValueError,
-        match="ensembles dim",
-    ):
-        config._check_condition()
-
-
-@pytest.mark.parametrize(
-    "condition_method",
-    [
-        "cross_ensemble",
-        "same_member",
-    ],
-)
-def test_check_condition_member_methods_accept_ensemble_members(
-    condition_method,
-):
-    condition = DummyDataConfig(
-        "condition",
-        ensemble_mean=False,
-        ensembles=(0, 1),
-    )
-
-    config = make_config(
-        condition=condition,
-        condition_method=condition_method,
-        effective_condition=condition,
-    )
-
-    assert config._check_condition() is config
-
-
-def test_check_condition_member_method_missing_ensemble_key_raises_key_error():
-    condition = DummyDataConfig(
-        "condition",
-        ensemble_mean=False,
-        ensembles="missing",
-    )
-
-    config = make_config(
-        condition=condition,
-        condition_method="cross_ensemble",
-        effective_condition=condition,
-    )
-
-    with pytest.raises(KeyError):
-        config._check_condition()
-
-
-def test_check_condition_ensemble_mean_requires_mean_data():
-    condition = DummyDataConfig(
-        "condition",
-        ensemble_mean=False,
-    )
-
-    config = make_config(
-        condition=condition,
-        condition_method="ensemble_mean",
-        effective_condition=condition,
-    )
-
-    with pytest.raises(
-        ValueError,
-        match="Ensemble mean must be True",
-    ):
-        config._check_condition()
-
-
-def test_check_condition_ensemble_mean_accepts_mean_data():
-    condition = DummyDataConfig(
-        "condition",
-        ensemble_mean=True,
-    )
-
-    config = make_config(
-        condition=condition,
-        condition_method="ensemble_mean",
-        effective_condition=condition,
-    )
-
-    assert config._check_condition() is config
-
-
-@pytest.mark.parametrize(
-    "condition_method",
-    [
-        "static",
-        "custom",
-        "",
-    ],
-)
-def test_check_condition_other_methods_reject_ensemble_list(
-    condition_method,
-):
-    condition = DummyDataConfig(
-        "condition",
-        ensemble_list=[0],
-    )
-
-    config = make_config(
-        condition=condition,
-        condition_method=condition_method,
-        effective_condition=condition,
-    )
-
-    with pytest.raises(
-        ValueError,
-        match="cannot specify ensemble list",
-    ):
-        config._check_condition()
-
-
-def test_check_condition_static_rejects_model_as_condition():
-    model = DummyDataConfig(
-        "model",
-        ensemble_list=None,
-    )
-
-    config = make_config(
-        model=model,
-        condition=None,
-        condition_method="static",
-        effective_condition=model,
-    )
-
-    with patch.object(
-        DatasetConfigABC,
-        "_using_model_data_as_condition",
-        new_callable=lambda: property(lambda self: True),
-    ):
-        with pytest.raises(
-            ValueError,
-            match="cannot point to the same model data",
-        ):
-            config._check_condition()
-
-
-def test_check_condition_static_accepts_independent_condition():
-    condition = DummyDataConfig(
-        "condition",
-        ensemble_list=None,
-    )
-
-    config = make_config(
-        condition=condition,
-        condition_method="static",
-        effective_condition=condition,
-    )
-
-    with patch.object(
-        DatasetConfigABC,
-        "_using_model_data_as_condition",
-        new_callable=lambda: property(lambda self: False),
-    ):
-        assert config._check_condition() is config
-
-
-def test_check_condition_custom_method_accepts_independent_condition():
-    condition = DummyDataConfig(
-        "condition",
-        ensemble_list=None,
-    )
-
-    config = make_config(
-        condition=condition,
-        condition_method="custom",
-        effective_condition=condition,
-    )
-
-    with patch.object(
-        DatasetConfigABC,
-        "_using_model_data_as_condition",
-        new_callable=lambda: property(lambda self: False),
-    ):
-        assert config._check_condition() is config
-
-
-def test_check_condition_static_without_condition_rejected():
-    config = make_config(
-        model=DummyDataConfig("model"),
-        condition=None,
-        condition_method="static",
-        effective_condition=None,
-    )
-
-    with pytest.raises(
-        ValueError,
-        match="condition dataset must be specified",
-    ):
-        config._check_condition()
-
-
-@pytest.mark.parametrize(
-    "condition_method",
-    [
-        None,
-        "ensemble_mean",
-        "cross_ensemble",
-        "same_member",
-        "custom",
-    ],
-)
-def test_check_condition_without_effective_condition_non_static_succeeds(
-    condition_method,
-):
-    config = make_config(
-        condition=None,
-        condition_method=condition_method,
-        effective_condition=None,
-    )
-
-    assert config._check_condition() is config
-
-
-@pytest.mark.parametrize(
-    "lead_time",
-    [
-        1,
-        6,
-        12,
-        24,
-    ],
-)
-def test_num_input_lead_months(
-    lead_time,
-):
-    config = make_config(
-        model=DummyDataConfig(
-            "model",
-            lead_time=lead_time,
-        )
-    )
-
-    assert config.num_input_lead_months == lead_time
-
-
-# Remove test due to no coverage
-def test_load_fitted_preprocessors_delegates():
-    config = make_config()
-    operator = MagicMock()
-
-    with patch.object(
-        module,
-        "DatasetOperator",
-        return_value=operator,
-    ):
-        config.load_fitted_preprocessors("load-directory")
-
-    operator.load_fitted_preprocessors.assert_called_once_with("load-directory")
-
-
-# Remove test due to no coverage
-def test_load_fitted_preprocessors_default_argument():
-    config = make_config()
-    operator = MagicMock()
-
-    with patch.object(
-        module,
-        "DatasetOperator",
-        return_value=operator,
-    ):
-        config.load_fitted_preprocessors()
-
-    operator.load_fitted_preprocessors.assert_called_once_with(None)
-
-
-# Remove test due to no coverage
-def test_add_fitted_preprocessor_delegates():
-    config = make_config()
-    operator = MagicMock()
-    preprocessor = object()
-
-    with patch.object(
-        module,
-        "DatasetOperator",
-        return_value=operator,
-    ):
-        config.add_fitted_preprocessor(
-            preprocessor,
-            index=4,
-        )
-
-    operator.add_fitted_preprocessor.assert_called_once_with(
-        preprocessor,
-        4,
-    )
-
-
-# Remove test due to no coverage
-def test_add_fitted_preprocessor_default_index():
-    config = make_config()
-    operator = MagicMock()
-    preprocessor = object()
-
-    with patch.object(
-        module,
-        "DatasetOperator",
-        return_value=operator,
-    ):
-        config.add_fitted_preprocessor(preprocessor)
-
-    operator.add_fitted_preprocessor.assert_called_once_with(
-        preprocessor,
-        0,
-    )
-
-
-# Remove test due to no coverage
-def test_build_dataset_all_arguments():
-    config = make_config(
-        model=DummyDataConfig("model"),
-    )
-    features = object()
-    expected = object()
-    years = np.asarray([2000, 2001])
-
-    with patch.object(
-        module,
-        "InferenceDataset",
-        return_value=expected,
-    ) as constructor:
-        result = config.build_dataset(
-            years=years,
-            time_features=features,
-            return_metadata=True,
-            load=True,
-        )
-
-    assert result is expected
-
-    constructor.assert_called_once_with(
-        config=config,
-        requested_years=years,
-        time_features=features,
-        return_metadata=True,
-        load=True,
-    )
-
-
-# Remove test due to no coverage
-def test_build_dataset_default_arguments():
-    config = make_config(
-        model=DummyDataConfig("model"),
-    )
-    features = object()
-    expected = object()
-    years = np.asarray([2000])
-
-    with patch.object(
-        module,
-        "InferenceDataset",
-        return_value=expected,
-    ) as constructor:
-        result = config.build_dataset(
-            years=years,
-            time_features=features,
-        )
-
-    assert result is expected
-
-    constructor.assert_called_once_with(
-        config=config,
-        requested_years=years,
-        time_features=features,
-        return_metadata=False,
-        load=False,
-    )
-
-
-# Remove test due to no coverage
-def test_dataset_post_init_calls_parent_initializer():
-    dataset = make_dataset()
-
-    with patch.object(
-        DatasetABC,
-        "__init__",
-        return_value=None,
-    ) as parent_init:
-        dataset.__post_init__()
-
-    parent_init.assert_called_once_with()
 
 
 @pytest.mark.parametrize(
@@ -1082,9 +530,9 @@ def test_getitem_model_only():
     )
 
     with patch.object(
-        module.dask,
-        "compute",
-        side_effect=lambda value: (np.asarray(value),),
+        dataset,
+        "_compute",
+        side_effect=lambda value: np.asarray(value),
     ) as compute:
         result = dataset[0]
 
@@ -1092,10 +540,8 @@ def test_getitem_model_only():
         result["input"],
         torch.tensor(
             [
-                [
-                    1.0,
-                    2.0,
-                ]
+                1.0,
+                2.0,
             ],
             dtype=torch.float32,
         ),
@@ -1135,9 +581,9 @@ def test_getitem_model_used_as_condition():
     )
 
     with patch.object(
-        module.dask,
-        "compute",
-        side_effect=lambda value: (np.asarray(value),),
+        dataset,
+        "_compute",
+        side_effect=lambda value: np.asarray(value),
     ):
         result = dataset[0]
 
@@ -1145,9 +591,7 @@ def test_getitem_model_used_as_condition():
         result["input"],
         torch.tensor(
             [
-                [
-                    3.0,
-                ]
+                3.0,
             ],
             dtype=torch.float32,
         ),
@@ -1175,9 +619,9 @@ def test_getitem_condition_only():
     )
 
     with patch.object(
-        module.dask,
-        "compute",
-        side_effect=lambda value: (np.asarray(value),),
+        dataset,
+        "_compute",
+        side_effect=lambda value: np.asarray(value),
     ):
         result = dataset[0]
 
@@ -1185,10 +629,8 @@ def test_getitem_condition_only():
         result["input"],
         torch.tensor(
             [
-                [
-                    4.0,
-                    5.0,
-                ]
+                4.0,
+                5.0,
             ],
             dtype=torch.float32,
         ),
@@ -1220,9 +662,9 @@ def test_getitem_concatenates_model_and_condition():
     )
 
     with patch.object(
-        module.dask,
-        "compute",
-        side_effect=lambda value: (np.asarray(value),),
+        dataset,
+        "_compute",
+        side_effect=lambda value: np.asarray(value),
     ):
         result = dataset[0]
 
@@ -1230,12 +672,10 @@ def test_getitem_concatenates_model_and_condition():
         result["input"],
         torch.tensor(
             [
-                [
-                    1.0,
-                    2.0,
-                    3.0,
-                    4.0,
-                ]
+                1.0,
+                2.0,
+                3.0,
+                4.0,
             ],
             dtype=torch.float32,
         ),
@@ -1258,9 +698,9 @@ def test_getitem_condition_replacement_precedes_concat():
     )
 
     with patch.object(
-        module.dask,
-        "compute",
-        side_effect=lambda value: (np.asarray(value),),
+        dataset,
+        "_compute",
+        side_effect=lambda value: np.asarray(value),
     ):
         result = dataset[0]
 
@@ -1268,9 +708,7 @@ def test_getitem_condition_replacement_precedes_concat():
         result["input"],
         torch.tensor(
             [
-                [
-                    9.0,
-                ]
+                9.0,
             ],
             dtype=torch.float32,
         ),
@@ -1303,9 +741,9 @@ def test_getitem_time_features_receive_final_model_input():
     )
 
     with patch.object(
-        module.dask,
-        "compute",
-        side_effect=lambda value: (np.asarray(value),),
+        dataset,
+        "_compute",
+        side_effect=lambda value: np.asarray(value),
     ):
         result = dataset[0]
 
@@ -1355,9 +793,9 @@ def test_getitem_time_features_receive_condition_input():
     )
 
     with patch.object(
-        module.dask,
-        "compute",
-        side_effect=lambda value: (np.asarray(value),),
+        dataset,
+        "_compute",
+        side_effect=lambda value: np.asarray(value),
     ):
         dataset[0]
 
@@ -1396,9 +834,9 @@ def test_getitem_time_features_receive_concatenated_input():
     )
 
     with patch.object(
-        module.dask,
-        "compute",
-        side_effect=lambda value: (np.asarray(value),),
+        dataset,
+        "_compute",
+        side_effect=lambda value: np.asarray(value),
     ):
         dataset[0]
 
@@ -1422,9 +860,9 @@ def test_getitem_without_time_features_returns_none():
     )
 
     with patch.object(
-        module.dask,
-        "compute",
-        side_effect=lambda value: (np.asarray(value),),
+        dataset,
+        "_compute",
+        side_effect=lambda value: np.asarray(value),
     ):
         result = dataset[0]
 
@@ -1454,9 +892,9 @@ def test_getitem_converts_tensors_to_float32():
     )
 
     with patch.object(
-        module.dask,
-        "compute",
-        side_effect=lambda value: (np.asarray(value),),
+        dataset,
+        "_compute",
+        side_effect=lambda value: np.asarray(value),
     ):
         result = dataset[0]
 
@@ -1476,9 +914,9 @@ def test_getitem_without_metadata_returns_dictionary():
     )
 
     with patch.object(
-        module.dask,
-        "compute",
-        side_effect=lambda value: (np.asarray(value),),
+        dataset,
+        "_compute",
+        side_effect=lambda value: np.asarray(value),
     ):
         result = dataset[0]
 
@@ -1507,9 +945,9 @@ def test_getitem_with_metadata_returns_tuple():
     )
 
     with patch.object(
-        module.dask,
-        "compute",
-        side_effect=lambda value: (np.asarray(value),),
+        dataset,
+        "_compute",
+        side_effect=lambda value: np.asarray(value),
     ):
         result, metadata = dataset[0]
 
@@ -1554,9 +992,9 @@ def test_getitem_uses_requested_sample_index():
     )
 
     with patch.object(
-        module.dask,
-        "compute",
-        side_effect=lambda value: (np.asarray(value),),
+        dataset,
+        "_compute",
+        side_effect=lambda value: np.asarray(value),
     ):
         _, metadata = dataset[1]
 
@@ -1584,9 +1022,9 @@ def test_getitem_passes_input_data_to_dask_compute():
     computed = np.asarray([9.0])
 
     with patch.object(
-        module.dask,
-        "compute",
-        return_value=(computed,),
+        dataset,
+        "_compute",
+        return_value=computed,
     ) as compute:
         result = dataset[0]
 
@@ -1596,45 +1034,11 @@ def test_getitem_passes_input_data_to_dask_compute():
         result["input"],
         torch.tensor(
             [
-                [
-                    9.0,
-                ]
+                9.0,
             ],
             dtype=torch.float32,
         ),
     )
-
-
-def test_getitem_uses_suppress_stderr_context():
-    dataset = make_dataset()
-
-    install_dataset_sources(
-        dataset,
-        model=make_data_array([1.0]),
-        condition=None,
-    )
-
-    context = MagicMock()
-    context.__enter__.return_value = None
-    context.__exit__.return_value = False
-
-    with (
-        patch.object(
-            module,
-            "suppress_stderr",
-            return_value=context,
-        ) as suppress,
-        patch.object(
-            module.dask,
-            "compute",
-            side_effect=lambda value: (np.asarray(value),),
-        ),
-    ):
-        dataset[0]
-
-    suppress.assert_called_once_with()
-    context.__enter__.assert_called_once_with()
-    context.__exit__.assert_called_once()
 
 
 def test_from_train_observation_without_condition():

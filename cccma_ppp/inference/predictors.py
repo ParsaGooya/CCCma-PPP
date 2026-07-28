@@ -102,7 +102,7 @@ class cVAEPredictor(PredictorABC):
 
     @property
     def extract_training_residuals(self):
-        return self.num_output_covariance_sampling > 0
+        return (self.num_output_covariance_sampling or 0) > 0
 
     @torch.no_grad()
     def _infer_on_batch(
@@ -363,7 +363,7 @@ class DetermninisticPredictor(PredictorABC):
 
     @property
     def extract_training_vars(self):
-        return self.num_output_covariance_sampling > 0
+        return (self.num_output_covariance_sampling or 0) > 0
 
     @torch.no_grad()
     def _infer_on_batch(

@@ -519,20 +519,23 @@ class DummyModel:
         self.last_build_kwargs = kwargs
         return self
 
-    def __call__(
-        self,
-        x,
-        x_mask=None,
-        added_features=None,
-    ):
+    def __call__(self, request):
+        self.last_request = request
         self.last_call_kwargs = {
-            "x": x,
-            "added_features": added_features,
+            "x": request.input,
+            "x_mask": request.input_mask,
+            "added_features": request.added_features,
+            "output_sample_size": request.output_sample_size,
         }
-        return deterministicOutput(output=torch.ones_like(x))
+
+        return deterministicOutput(
+            output=torch.ones_like(request.input),
+        )
 
 
 class DummySelector:
+    GENERATOR = None
+
     def __init__(self):
         self.last_build_kwargs = None
 

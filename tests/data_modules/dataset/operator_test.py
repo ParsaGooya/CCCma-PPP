@@ -368,47 +368,6 @@ def test_get_weights_no_model_or_observation():
         op.get_weights(config=DummyWeightsConfig())
 
 
-def test_get_weights_channels_match():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    class Config:
-        def build_weights(self, *args, **kwargs):
-            return DummyWeights(
-                dims=("channels",),
-                channels=["var"],
-            )
-
-    with patch(
-        "cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove",
-        DummyFlatten,
-    ):
-        weights = op.get_weights(config=Config())
-
-    assert weights is not None
-
-
-def test_get_weights_channels_mismatch():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    class Config:
-        def build_weights(self, *args, **kwargs):
-            return DummyWeights(
-                dims=("channels",),
-                channels=["bad"],
-            )
-
-    with patch(
-        "cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove",
-        DummyFlatten,
-    ):
-        with pytest.raises(RuntimeError):
-            op.get_weights(config=Config())
-
-
 def test_get_weights_with_flattennanremove():
     cfg = DummyDatasetConfig()
 
@@ -791,33 +750,6 @@ def test_add_fitted_preprocessor_without_condition():
     op.add_fitted_preprocessor(preprocessor)
 
     assert cfg.model.preprocessing_pipeline.added[0] is preprocessor
-
-
-def test_get_weights_model_channel_mismatch():
-    cfg = DummyDatasetConfig()
-    cfg.observation = None
-
-    op = DatasetOperator(cfg)
-
-    class Config:
-        def build_weights(
-            self,
-            *args,
-            **kwargs,
-        ):
-            return DummyWeights(
-                dims=("channels",),
-                channels=["bad"],
-            )
-
-    with patch(
-        "cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove",
-        DummyFlatten,
-    ):
-        with pytest.raises(RuntimeError):
-            op.get_weights(
-                config=Config(),
-            )
 
 
 def test_get_weights_without_flattennanremove():

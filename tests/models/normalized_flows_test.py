@@ -469,29 +469,6 @@ class ZeroNetwork(nn.Module):
         )
 
 
-# Remove test due to no coverage
-def test_flow_output_fields():
-    samples = x()
-    log_det = torch.ones(samples.shape[0])
-
-    result = flowOutput(
-        e_samples=samples,
-        log_det=log_det,
-    )
-
-    assert result.e_samples is samples
-    assert result.log_det is log_det
-
-
-# Remove test due to no coverage
-def test_normalized_flow_config_default_sample_size():
-    config = NormalizedFlowConfig(
-        list_flows=[],
-    )
-
-    assert config.flow_sample_size == 5000
-
-
 def test_normalized_flow_config_build_returns_model():
     config = NormalizedFlowConfig(
         list_flows=[],
@@ -748,60 +725,6 @@ def test_normalized_flow_forward_inverse_identity_roundtrip():
         transformed.log_det + reconstructed.log_det,
         torch.zeros(data.shape[0]),
     )
-
-
-# Remove test due to no coverage
-def test_fcnn_output_shape():
-    network = FCNN(
-        in_dim=4,
-        out_dim=2,
-        hidden_dim=8,
-    )
-
-    output = network(torch.randn(7, 4))
-
-    assert output.shape == (7, 2)
-
-
-# Remove test due to no coverage
-def test_fcnn_contains_expected_layers():
-    network = FCNN(
-        in_dim=4,
-        out_dim=2,
-        hidden_dim=8,
-    )
-
-    layers = list(network.network)
-
-    assert len(layers) == 5
-    assert isinstance(layers[0], nn.Linear)
-    assert isinstance(layers[1], nn.Tanh)
-    assert isinstance(layers[2], nn.Linear)
-    assert isinstance(layers[3], nn.Tanh)
-    assert isinstance(layers[4], nn.Linear)
-
-
-# Remove test due to no coverage
-def test_fcnn_supports_backpropagation():
-    network = FCNN(
-        in_dim=4,
-        out_dim=2,
-        hidden_dim=8,
-    )
-
-    data = torch.randn(
-        5,
-        4,
-        requires_grad=True,
-    )
-
-    output = network(data)
-    output.sum().backward()
-
-    assert data.grad is not None
-
-    for parameter in network.parameters():
-        assert parameter.grad is not None
 
 
 def test_maf_build_dimension_one_without_condition():

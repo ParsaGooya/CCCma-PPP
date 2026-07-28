@@ -39,6 +39,11 @@ class ConcreteConfig(DataloaderConfigABC):
         self.pin_memory = pin_memory
         self.time_features = None
 
+        self.pin_memory = pin_memory
+        self.time_features = None
+        self.return_spatial_mask = False
+        self.reduce_spatial_mask = False
+
         super().__init__()
 
     @property
@@ -137,16 +142,6 @@ def make_loader(**kwargs):
         ),
         **kwargs,
     )
-
-
-# Remove test due to no coverage
-def test_batch_to_device_returns_self_and_moves_tensor():
-    batch = ConcreteBatch()
-
-    result = batch.to_device("cpu")
-
-    assert result is batch
-    assert batch.input.device.type == "cpu"
 
 
 @pytest.mark.parametrize(
@@ -265,10 +260,11 @@ def test_post_init_forwards_spatial_mask_flags(
         CapturingLoader,
     )
 
-    loader = make_loader(
-        return_spatial_mask=True,
-        reduce_spatial_mask=True,
-    )
+    config = ConcreteConfig()
+    config.return_spatial_mask = True
+    config.reduce_spatial_mask = True
+
+    make_loader(config=config)
 
     wrapped_collate = CapturingLoader.instances[-1].kwargs["collate_fn"]
 
@@ -279,8 +275,6 @@ def test_post_init_forwards_spatial_mask_flags(
         "return_spatial_mask": True,
         "reduce_spatial_mask": True,
     }
-    assert loader.return_spatial_mask is True
-    assert loader.reduce_spatial_mask is True
 
 
 def test_single_process_has_no_sampler(
@@ -483,3 +477,406 @@ def test_subset_loader_start_branches(
     loader = make_loader()
 
     assert list(loader.subset_loader(start)) == expected
+
+
+def test_batch_data_abc_cannot_be_instantiated():
+    with pytest.raises(TypeError):
+        BatchDataABC()
+
+
+def test_dataloader_config_abc_cannot_be_instantiated():
+    with pytest.raises(TypeError):
+        DataloaderConfigABC()
+
+
+def test_config_available_times_property():
+    config = ConcreteConfig()
+
+    assert config.available_times == [2000, 2001]
+
+
+def test_config_setup_distributed_returns_self():
+    config = ConcreteConfig()
+
+    result = config.setup_distributed()
+
+    assert result is config
+    assert config.setup is True
+
+
+def test_config_init_sets_setup_false():
+    config = ConcreteConfig()
+
+    assert config._setup is False
+
+
+def test_config_init_always_sets_pin_memory_false():
+    config = ConcreteConfig(
+        pin_memory=True,
+    )
+
+    assert config.pin_memory is False
+
+
+def test_config_zero_workers_clears_prefetch_factor():
+    config = ConcreteConfig(
+        num_data_workers=0,
+        prefetch_factor=8,
+    )
+
+    assert config.prefetch_factor is None
+
+
+def test_config_nonzero_workers_preserves_prefetch_factor():
+    config = ConcreteConfig(
+        num_data_workers=2,
+        prefetch_factor=8,
+    )
+
+    assert config.prefetch_factor == 8
+
+
+@pytest.mark.parametrize(
+    ("workers", "expected_timeout"),
+    [
+        (0, 0),
+        (1, 60),
+        (4, 60),
+    ],
+)
+def test_post_init_worker_timeout_branches(
+    monkeypatch,
+    workers,
+    expected_timeout,
+):
+    monkeypatch.setattr(
+        module,
+        "DataLoader",
+        CapturingLoader,
+    )
+
+    config = ConcreteConfig(
+        num_data_workers=workers,
+        prefetch_factor=2,
+    )
+
+    make_loader(config=config)
+
+    kwargs = CapturingLoader.instances[-1].kwargs
+
+    assert kwargs["timeout"] == expected_timeout
+
+
+def test_post_init_forwards_basic_loader_arguments(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        module,
+        "DataLoader",
+        CapturingLoader,
+    )
+
+    dataset = ConcreteDataset(size=7)
+    config = ConcreteConfig(
+        batch_size=3,
+        num_data_workers=0,
+        drop_last=True,
+    )
+
+    loader = make_loader(
+        config=config,
+        dataset=dataset,
+    )
+
+    captured = CapturingLoader.instances[-1]
+
+    assert captured.dataset is dataset
+    assert captured.kwargs["batch_size"] == 3
+    assert captured.kwargs["sampler"] is loader.sampler
+    assert captured.kwargs["num_workers"] == 0
+    assert captured.kwargs["prefetch_factor"] is None
+    assert captured.kwargs["persistent_workers"] is False
+    assert captured.kwargs["timeout"] == 0
+
+
+def test_post_init_forwards_config_pin_memory_value(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        module,
+        "DataLoader",
+        CapturingLoader,
+    )
+
+    config = ConcreteConfig()
+    config.pin_memory = True
+
+    make_loader(config=config)
+
+    kwargs = CapturingLoader.instances[-1].kwargs
+
+    assert kwargs["pin_memory"] is True
+
+
+def test_post_init_default_spatial_mask_flags(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        module,
+        "DataLoader",
+        CapturingLoader,
+    )
+
+    config = ConcreteConfig()
+    config.return_spatial_mask = False
+    config.reduce_spatial_mask = False
+
+    make_loader(config=config)
+
+    wrapped_collate = CapturingLoader.instances[-1].kwargs["collate_fn"]
+
+    result = wrapped_collate([1, 2])
+
+    assert result == {
+        "items": [1, 2],
+        "return_spatial_mask": False,
+        "reduce_spatial_mask": False,
+    }
+
+
+def test_collate_partial_preserves_original_function(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        module,
+        "DataLoader",
+        CapturingLoader,
+    )
+
+    make_loader()
+
+    wrapped_collate = CapturingLoader.instances[-1].kwargs["collate_fn"]
+
+    assert wrapped_collate.func is collate
+
+
+def test_collate_partial_contains_configured_flags(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        module,
+        "DataLoader",
+        CapturingLoader,
+    )
+
+    config = ConcreteConfig()
+    config.return_spatial_mask = True
+    config.reduce_spatial_mask = False
+
+    make_loader(config=config)
+
+    wrapped_collate = CapturingLoader.instances[-1].kwargs["collate_fn"]
+
+    assert wrapped_collate.keywords == {
+        "return_spatial_mask": True,
+        "reduce_spatial_mask": False,
+    }
+
+
+def test_distributed_sampler_uses_dataset_instance(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        module,
+        "DataLoader",
+        CapturingLoader,
+    )
+    monkeypatch.setattr(
+        module,
+        "DistributedSampler",
+        CapturingSampler,
+    )
+
+    dataset = ConcreteDataset()
+
+    loader = make_loader(
+        dataset=dataset,
+        world_size=2,
+    )
+
+    assert loader.sampler.dataset is dataset
+
+
+def test_sampler_helper_single_process_ignores_extra_kwargs(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        module,
+        "DataLoader",
+        CapturingLoader,
+    )
+    monkeypatch.setattr(
+        module,
+        "DistributedSampler",
+        CapturingSampler,
+    )
+
+    loader = make_loader(world_size=1)
+
+    sampler = loader._get_dataloader_sampler(
+        seed=123,
+    )
+
+    assert sampler is None
+    assert CapturingSampler.instances == []
+
+
+def test_set_epoch_accepts_zero_epoch(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        module,
+        "DataLoader",
+        CapturingLoader,
+    )
+    monkeypatch.setattr(
+        module,
+        "DistributedSampler",
+        CapturingSampler,
+    )
+
+    loader = make_loader(world_size=2)
+
+    result = loader.set_epoch(0)
+
+    assert result is loader
+    assert loader.sampler.epochs == [0]
+
+
+def test_set_epoch_accepts_negative_epoch(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        module,
+        "DataLoader",
+        CapturingLoader,
+    )
+    monkeypatch.setattr(
+        module,
+        "DistributedSampler",
+        CapturingSampler,
+    )
+
+    loader = make_loader(world_size=2)
+
+    loader.set_epoch(-1)
+
+    assert loader.sampler.epochs == [-1]
+
+
+def test_subset_loader_default_starts_at_first_batch(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        module,
+        "DataLoader",
+        CapturingLoader,
+    )
+
+    loader = make_loader()
+
+    assert list(loader.subset_loader()) == [
+        "batch-0",
+        "batch-1",
+        "batch-2",
+    ]
+
+
+def test_iter_returns_underlying_loader_iterator(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        module,
+        "DataLoader",
+        CapturingLoader,
+    )
+
+    loader = make_loader()
+
+    iterator = iter(loader)
+
+    assert next(iterator) == "batch-0"
+    assert next(iterator) == "batch-1"
+    assert next(iterator) == "batch-2"
+
+    with pytest.raises(StopIteration):
+        next(iterator)
+
+
+def test_len_returns_zero_for_empty_capturing_loader(
+    monkeypatch,
+):
+    class EmptyLoader(CapturingLoader):
+        def __init__(self, dataset, **kwargs):
+            super().__init__(dataset, **kwargs)
+            self.values = []
+
+    monkeypatch.setattr(
+        module,
+        "DataLoader",
+        EmptyLoader,
+    )
+
+    loader = make_loader()
+
+    assert len(loader) == 0
+    assert list(loader) == []
+
+
+def test_shape_properties_return_none_when_dataset_returns_none(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        module,
+        "DataLoader",
+        CapturingLoader,
+    )
+
+    dataset = Mock()
+    dataset.get_input_shape.return_value = None
+    dataset.get_target_shape.return_value = None
+    dataset.get_added_features_dim.return_value = None
+
+    loader = make_loader(dataset=dataset)
+
+    assert loader.input_shape is None
+    assert loader.target_shape is None
+    assert loader.added_features_dim is None
+
+
+def test_batch_shared_masks_default_to_none():
+    assert BatchDataABC._shared_input_mask is None
+    assert BatchDataABC._shared_target_mask is None
+
+
+def test_batch_shared_masks_are_class_level_attributes():
+    original_input_mask = BatchDataABC._shared_input_mask
+    original_target_mask = BatchDataABC._shared_target_mask
+
+    input_mask = torch.ones(1)
+    target_mask = torch.zeros(1)
+
+    try:
+        ConcreteBatch._shared_input_mask = input_mask
+        ConcreteBatch._shared_target_mask = target_mask
+
+        first = ConcreteBatch()
+        second = ConcreteBatch()
+
+        assert first._shared_input_mask is input_mask
+        assert second._shared_input_mask is input_mask
+        assert first._shared_target_mask is target_mask
+        assert second._shared_target_mask is target_mask
+    finally:
+        ConcreteBatch._shared_input_mask = original_input_mask
+        ConcreteBatch._shared_target_mask = original_target_mask

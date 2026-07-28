@@ -172,13 +172,6 @@ def test_missing_preprocessing_pipeline():
         BadConfig()
 
 
-# Remove test due to no coverage
-def test_pipeline_name_set(tmp_path):
-    cfg = DummyDataConfig(tmp_path)
-
-    assert cfg.preprocessing_pipeline.name == "dummy"
-
-
 def test_resolve_data_missing_path(tmp_path):
     cfg = DummyDataConfig(
         tmp_path / "missing",
@@ -522,30 +515,6 @@ def test_load_preprocessor_pipeline_not_fitted(tmp_path):
         )
 
 
-# Remove test due to no coverage
-def test_method_wrapper_resolve_data(tmp_path):
-    cfg = DummyDataConfig(tmp_path)
-
-    with patch("cccma_ppp.data_modules.data.data_abc._resolve_data") as mock_resolve:
-        cfg._resolve_data()
-
-    mock_resolve.assert_called_once_with(cfg)
-
-
-# Remove test due to no coverage
-def test_method_wrapper_get_ds_info(tmp_path):
-    cfg = DummyDataConfig(tmp_path)
-
-    with patch(
-        "cccma_ppp.data_modules.data.data_abc._get_ds_info",
-        return_value="info",
-    ) as mock_info:
-        result = cfg._get_ds_info()
-
-    assert result == "info"
-    mock_info.assert_called_once_with(cfg)
-
-
 def test_resolve_data_skip_checks_branch(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -669,107 +638,6 @@ def test_get_ds_info_coord_contents(tmp_path):
         "year",
         "lead_time",
     }
-
-
-# Remove test due to no coverage
-def test_fit_preprocessor_pipeline_no_mask(
-    tmp_path,
-):
-    cfg = DummyDataConfig(tmp_path)
-
-    class DummyDS:
-        year = np.array([2000, 2001])
-        lead_time = np.array([1, 2])
-
-        def load(self):
-            return self
-
-        def close(self):
-            return None
-
-    with patch(
-        "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
-        return_value=DummyDS(),
-    ):
-        cfg.fit_preprocessor_pipeline(
-            selection={},
-        )
-
-    assert cfg.preprocessing_pipeline.fit_called is True
-
-
-# Remove test due to no coverage
-def test_fit_preprocessor_pipeline_with_mask(
-    tmp_path,
-):
-    cfg = DummyDataConfig(tmp_path)
-
-    class DummyDS:
-        year = np.array([2000, 2001])
-        lead_time = np.array([1, 2])
-
-        def load(self):
-            return self
-
-        def close(self):
-            return None
-
-    with (
-        patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
-            return_value=DummyDS(),
-        ),
-        patch(
-            "cccma_ppp.data_modules.data.data_abc._create_train_mask",
-            return_value="MASK",
-        ) as mask_mock,
-    ):
-        cfg.fit_preprocessor_pipeline(
-            selection={},
-            mask=True,
-        )
-
-    mask_mock.assert_called_once()
-    assert cfg.preprocessing_pipeline.fit_called is True
-
-
-# Remove test due to no coverage
-def test_fit_preprocessor_pipeline_save_args(
-    tmp_path,
-):
-    cfg = DummyDataConfig(tmp_path)
-    captured = {}
-
-    class DummyDS:
-        year = np.array([1, 2])
-        lead_time = np.array([1, 2])
-
-        def load(self):
-            return self
-
-        def close(self):
-            return None
-
-    def fake_fit(*args, **kwargs):
-        captured["args"] = args
-        captured.update(kwargs)
-
-    cfg.preprocessing_pipeline.fit = fake_fit
-
-    with patch(
-        "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
-        return_value=DummyDS(),
-    ):
-        cfg.fit_preprocessor_pipeline(
-            selection={},
-            save=False,
-            save_path="abc",
-            save_name="xyz",
-        )
-
-    assert captured["save"] is False
-    assert captured["save_path"] == "abc"
-    assert captured["save_name"] == "xyz"
 
 
 def test_load_preprocessor_pipeline_default_path(
