@@ -6,7 +6,7 @@ from pathlib import Path
 import os
 import xarray as xr
 
-from cccma_ppp.generic import RuntimeContext
+from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
 from cccma_ppp.configs import supported_NN_dimensions_sorted
                                 

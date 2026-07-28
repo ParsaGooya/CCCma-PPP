@@ -7,15 +7,15 @@ import gc
 import warnings
 
 from cccma_ppp.loss.loss import Losspipeline
-from cccma_ppp.core import moduleABC, moduleConfigABC, OutputABC
+from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC, OutputABC
 from cccma_ppp.models.models_abc import DeterministicRequest
 from cccma_ppp.core.selectors import (
     ModuleSelector,
     deterministicModelSelector,
     _load_config_from_checkpoint
 )
-from cccma_ppp.train import BatchData
-from cccma_ppp.generic import RuntimeContext
+from cccma_ppp.train.dataloader import BatchData
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 @dataclasses.dataclass

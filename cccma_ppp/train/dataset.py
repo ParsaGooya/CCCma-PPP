@@ -6,22 +6,22 @@ import warnings
 from pathlib import Path
 import dask
 
-from cccma_ppp.data_modules.dataset import (
+from cccma_ppp.data_modules.dataset.config_abc import (
     DatasetConfigABC,
-    DatasetABC,
-    DatasetOperator,
     lead_months_config,
+)
+from cccma_ppp.data_modules.dataset.dataset_abc import (
+    DatasetABC,
     AddedTimeFeatures,
 )
-from cccma_ppp.data_modules.data import (
+from cccma_ppp.data_modules.dataset.operator import DatasetOperator
+from cccma_ppp.data_modules.data.data_configs import (
     ModelDataConfig,
     ObsDataConfig,
     ConditionDataConfig,
 )
 
-from cccma_ppp.data_modules import (
-    _unwrap_data_variables,
-)
+from cccma_ppp.data_modules.utils import _unwrap_data_variables
 
 from torch.utils.data import get_worker_info
 
