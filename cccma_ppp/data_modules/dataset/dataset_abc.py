@@ -992,7 +992,7 @@ class DatasetABC(Dataset, abc.ABC):
 
 
     @staticmethod
-    def _compute(*arrays):
+    def _compute(*arrays) -> tuple:
         with suppress_stderr(), dask.config.set(scheduler="synchronous"):
             return dask.compute(*arrays)
 
