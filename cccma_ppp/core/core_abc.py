@@ -8,8 +8,74 @@ from pathlib import Path
 from typing import ClassVar
 import dataclasses
 
-from cccma_ppp.loss import Losspipeline
 
+
+
+
+class moduleConfigABC(abc.ABC):
+    """
+    Abstract base class for module configuration objects.
+
+    Methods
+    -------
+    build(input_shape, output_shape=None, added_features_dim=None)
+        Construct module instance.
+    _load_from_checkpoint()
+        Load configuration from checkpoint.
+    """
+    _type: ClassVar[str | None] = None
+
+
+    @classmethod
+    def check_registered(cls):
+        '''
+        Class attribute _type will only be set if the class is registered.
+        '''
+        if cls._type is None:
+            raise RuntimeError(
+                f"{cls.__name__} has not been registered."
+            )
+
+    @abc.abstractmethod
+    def build(
+        self,
+        input_shape: np.ndarray,
+        output_shape: np.ndarray | None = None,
+        added_features_dim: int = None,
+    ):
+        """
+        Construct and return a module instance.
+
+        Parameters
+        ----------
+        input_shape : np.ndarray
+            Shape of the input data expected by the module.
+        output_shape : np.ndarray or None, optional
+            Shape of the target/output data. If None, the module may assume
+            the same shape as the input or infer it internally.
+        added_features_dim : int, optional
+            Number of additional feature dimensions provided alongside the input.
+
+        Returns
+        -------
+        moduleABC
+            Instantiated and optionally initialized module ready for training
+            or inference.
+        """
+
+        pass
+
+    @abc.abstractmethod
+    def _load_from_checkpoint(self):
+        """
+        Load configuration from a saved checkpoint.
+
+        Returns
+        -------
+        None
+        """
+
+        pass
 
 class moduleABC(nn.Module, abc.ABC):
     """
@@ -39,7 +105,7 @@ class moduleABC(nn.Module, abc.ABC):
         super().__init__()
 
     @abc.abstractmethod
-    def init_loss_function(self, reconstruction_loss: Losspipeline, **kwargs):
+    def init_loss_function(self, reconstruction_loss: nn.Module, **kwargs):
         """
         Initialize loss function for training.
 
@@ -152,70 +218,34 @@ class moduleABC(nn.Module, abc.ABC):
         gc.collect()
 
 
-class moduleConfigABC(abc.ABC):
+
+
+class GenerativeContext:
     """
-    Abstract base class for module configuration objects.
+    Determining if the module for which the loss fucntion will 
+    be used is a generative model or not and if it has a generator
+    or not.
 
-    Methods
-    -------
-    build(input_shape, output_shape=None, added_features_dim=None)
-        Construct module instance.
-    _load_from_checkpoint()
-        Load configuration from checkpoint.
+    Note
+    ----
+    - If the module is generative (generative_modeling = True),
+    there would be a latent_samples dimension in the module predictions.
+
+    - If the module has a generator (generator = True),
+    there would be output_samples dimension in the module predictions.
     """
-    _type: ClassVar[str | None] = None
-
-
-    @classmethod
-    def check_registered(cls):
-        '''
-        Class attribute _type will only be set if the class is registered.
-        '''
-        if cls._type is None:
-            raise RuntimeError(
-                f"{cls.__name__} has not been registered."
-            )
-
-    @abc.abstractmethod
-    def build(
+    def __init__(
         self,
-        input_shape: np.ndarray,
-        output_shape: np.ndarray | None = None,
-        added_features_dim: int = None,
+        module: moduleABC | None = None
     ):
-        """
-        Construct and return a module instance.
 
-        Parameters
-        ----------
-        input_shape : np.ndarray
-            Shape of the input data expected by the module.
-        output_shape : np.ndarray or None, optional
-            Shape of the target/output data. If None, the module may assume
-            the same shape as the input or infer it internally.
-        added_features_dim : int, optional
-            Number of additional feature dimensions provided alongside the input.
+        if module is not None:
+            self.generator = getattr(module.model_config, "GENERATOR", None) is not None
+            self.generative_modeling = getattr(module.model, "generative_modeling", False)
 
-        Returns
-        -------
-        moduleABC
-            Instantiated and optionally initialized module ready for training
-            or inference.
-        """
-
-        pass
-
-    @abc.abstractmethod
-    def _load_from_checkpoint(self):
-        """
-        Load configuration from a saved checkpoint.
-
-        Returns
-        -------
-        None
-        """
-
-        pass
+        else:
+            self.generator = False
+            self.generative_modeling = False
 
 
 @dataclasses.dataclass
