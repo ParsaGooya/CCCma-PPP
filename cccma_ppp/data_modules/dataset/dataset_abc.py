@@ -305,8 +305,8 @@ class DatasetConfigABC(abc.ABC):
                 if any(checklist):
                     raise ValueError(
                         "For static condition method the condition dataset cannot have" \
-                        f"any of the sampling dimensions and coords {(required_sample_dimensions + 
-                                            optional_sample_dimensions)}"
+                        f"any of the sampling dimensions and coords " \
+                        f"{(required_sample_dimensions + optional_sample_dimensions)}"
                     )
 
         else: 
