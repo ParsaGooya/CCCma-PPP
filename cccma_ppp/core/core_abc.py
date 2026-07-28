@@ -9,9 +9,6 @@ from typing import ClassVar
 import dataclasses
 
 
-
-
-
 class moduleConfigABC(abc.ABC):
     """
     Abstract base class for module configuration objects.
@@ -23,18 +20,16 @@ class moduleConfigABC(abc.ABC):
     _load_from_checkpoint()
         Load configuration from checkpoint.
     """
-    _type: ClassVar[str | None] = None
 
+    _type: ClassVar[str | None] = None
 
     @classmethod
     def check_registered(cls):
-        '''
+        """
         Class attribute _type will only be set if the class is registered.
-        '''
+        """
         if cls._type is None:
-            raise RuntimeError(
-                f"{cls.__name__} has not been registered."
-            )
+            raise RuntimeError(f"{cls.__name__} has not been registered.")
 
     @abc.abstractmethod
     def build(
@@ -76,6 +71,7 @@ class moduleConfigABC(abc.ABC):
         """
 
         pass
+
 
 class moduleABC(nn.Module, abc.ABC):
     """
@@ -218,11 +214,9 @@ class moduleABC(nn.Module, abc.ABC):
         gc.collect()
 
 
-
-
 class GenerativeContext:
     """
-    Determining if the module for which the loss fucntion will 
+    Determining if the module for which the loss fucntion will
     be used is a generative model or not and if it has a generator
     or not.
 
@@ -234,14 +228,14 @@ class GenerativeContext:
     - If the module has a generator (generator = True),
     there would be output_samples dimension in the module predictions.
     """
-    def __init__(
-        self,
-        module: moduleABC | None = None
-    ):
+
+    def __init__(self, module: moduleABC | None = None):
 
         if module is not None:
             self.generator = getattr(module.model_config, "GENERATOR", None) is not None
-            self.generative_modeling = getattr(module.model, "generative_modeling", False)
+            self.generative_modeling = getattr(
+                module.model, "generative_modeling", False
+            )
 
         else:
             self.generator = False
@@ -253,4 +247,5 @@ class OutputABC:
     """
     Base container for model outputs.
     """
+
     output: torch.Tensor

@@ -67,11 +67,10 @@ class MetricsAggregator:
                 f"Not all loss lists have the same length: {lengths}"
             )
             if self.num_epochs_seen == 0:
-                self.num_epochs_seen = next(iter(lengths), 0)               
+                self.num_epochs_seen = next(iter(lengths), 0)
 
         else:
             self.epoch_metric_terms = {}
-
 
         if self.epoch_times is not None:
             assert self.epoch_metric_terms is not None, (
@@ -85,10 +84,12 @@ class MetricsAggregator:
             self.epoch_times = []
 
     @torch.no_grad()
-    def record(self, 
-               loss_dict: dict[str, torch.Tensor | int | float],
-               lr: torch.Tensor | int | float | None = None,
-               kwargs:  dict[str, torch.Tensor | int | float] | None = None ) -> None:
+    def record(
+        self,
+        loss_dict: dict[str, torch.Tensor | int | float],
+        lr: torch.Tensor | int | float | None = None,
+        kwargs: dict[str, torch.Tensor | int | float] | None = None,
+    ) -> None:
         """
         Accumulate batch-level loss values.
 
@@ -130,10 +131,7 @@ class MetricsAggregator:
             if isinstance(lr, (int, float)):
                 self.lr_values += float(lr)
 
-  
         self.num_batches_seen += 1
-
-
 
     @torch.no_grad()
     def _dist_compute(self) -> dict[str, float]:
@@ -155,11 +153,10 @@ class MetricsAggregator:
         for name in sorted(self.kwargs_terms):
             logs[name] = self._dist_average(self.kwargs_terms[name])
 
-        logs['lr'] = self._dist_average(self.lr_values)
+        logs["lr"] = self._dist_average(self.lr_values)
 
         self._aggregated_across_ranks = True
         return logs
-    
 
     def _dist_average(self, tensor: float) -> float:
 
@@ -178,7 +175,6 @@ class MetricsAggregator:
             return float("nan")
         else:
             return global_sum / global_count
-        
 
     def record_epoch(
         self,
@@ -389,8 +385,7 @@ class MetricsAggregator:
                 if aggregator is not None:
                     epoch_losses = aggregator.epoch_metric_terms.get(loss_name)
 
-                    if (epoch_losses is None or 
-                    len(epoch_losses) == 0):
+                    if epoch_losses is None or len(epoch_losses) == 0:
                         continue
 
                     color, style = style_by_name[aggregator.name]
@@ -481,17 +476,12 @@ class MetricsAggregator:
         self.reset_batch_losses()
 
 
-
-
-
-
 @dataclasses.dataclass
 class RunningCovariance:
     distributed: Distributed
     sum_x: torch.Tensor | None = None
     sum_xxT: torch.Tensor | None = None
     count: torch.Tensor | None = None
-    
 
     def update(self, x: torch.Tensor):
         """
@@ -528,9 +518,6 @@ class RunningCovariance:
         if self.count <= 1:
             raise ValueError("Need at least two samples to compute covariance.")
 
-        cov = (
-            self.sum_xxT
-            - self.count * torch.outer(mean, mean)
-        ) / (self.count - 1)
+        cov = (self.sum_xxT - self.count * torch.outer(mean, mean)) / (self.count - 1)
 
         return mean.cpu(), cov.cpu()
