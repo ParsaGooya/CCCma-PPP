@@ -32,7 +32,7 @@ class WriterConfig:
         )
     
     num_output_sampling: int | None = None
-    saved_model_training_vars_from_validation: bool = False
+    get_trained_model_stats_from_validation: bool = False
 
     def __post_init__(self):
 
@@ -188,7 +188,7 @@ class Writer:
         if not self.train_stats_save_dir.exists():
 
             loader =  self.build_train_loader(from_validation = 
-                                self.config.saved_model_training_vars_from_validation) 
+                                self.config.get_trained_model_stats_from_validation) 
 
             stats = self.predictor.stats    
             for batch in tqdm(loader,
