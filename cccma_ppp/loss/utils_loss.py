@@ -4,8 +4,10 @@ import torch.nn.functional as F
 import xarray as xr
 from typing import Literal
 
-from cccma_ppp.loss import Losspipeline
+from cccma_ppp.loss.loss import Losspipeline
 from cccma_ppp.loss.loss_abc import lossABC, Reduction
+
+from cccma_ppp.core.core_abc import GenerativeContext
 
 
 CovarianceDim = Literal["spatial", "channel"]
@@ -40,6 +42,7 @@ class WeightedMSE(lossABC):
         reduction: Reduction = "mean",
         num_output_dimensions: int = 2,
         low_ress_kernel_size: int = None,
+        generative_context: GenerativeContext | None = None,
         hyperparam=1.0,
         min_threshold=0,
         max_threshold=0,
@@ -58,6 +61,8 @@ class WeightedMSE(lossABC):
             Number of output dimensions.
         low_ress_kernel_size : int or None, optional
             Kernel size for downsampling.
+        generative_context: GenerativeContext
+            Generative context for the module paired with the loss function.
         hyperparam : float, optional
             Scaling factor for asymmetric penalty.
         min_threshold : float, optional
@@ -98,6 +103,11 @@ class WeightedMSE(lossABC):
         self.max_threshold = max_threshold
         self.num_output_dimensions = num_output_dimensions
         self.low_ress_kernel_size = low_ress_kernel_size
+        self.generative_context = (
+            generative_context
+            if generative_context is not None
+            else GenerativeContext()
+        )
 
         has_channels = "channels" in weights.dims
 
@@ -184,8 +194,6 @@ class WeightedMSE(lossABC):
         data: torch.Tensor,
         target: torch.Tensor,
         target_mask: torch.Tensor | None = None,
-        generative_modeling: bool = False,
-        generator: bool = False,
         print_loss=False,
     ) -> torch.Tensor:
         """
@@ -199,10 +207,6 @@ class WeightedMSE(lossABC):
             Ground truth values.
         target_mask : torch.Tensor or None, optional
             Mask applied to targets.
-        generative_modeling : bool, optional
-            Whether inputs contain sample dimension.
-        generator : bool, optional
-            Whether predictions come from generator samples.
         print_loss : bool, optional
             Whether to print loss.
 
@@ -228,7 +232,7 @@ class WeightedMSE(lossABC):
         where ``E`` is the ensemble/sample dimension, ``Z`` is the latent sample dimension, ``B`` is batch size, and ``C`` is the channel dimension.
         """
 
-        if generator:
+        if self.generative_context.generator:
             _check_generator_structure(data, target)
             data = data.mean(0)
 
@@ -241,7 +245,7 @@ class WeightedMSE(lossABC):
         y_hat = data
 
         if self.low_ress_kernel_size is not None:
-            if generative_modeling:
+            if self.generative_context.generative_modeling:
                 if target_mask is not None and target_mask.shape == y.shape:
                     target_mask = torch.flatten(target_mask, start_dim=0, end_dim=1)
                 y = torch.flatten(y, start_dim=0, end_dim=1)
@@ -350,6 +354,9 @@ class WeightedCRPS(lossABC):
         Number of output dimensions.
     low_ress_kernel_size : int or None, optional
         Kernel size for low-resolution smoothing (if used).
+    generative_context : GenerativeContext
+        Generative modeling context based on the module.
+        Default values are set to False.
     """
 
     def __init__(
@@ -358,6 +365,7 @@ class WeightedCRPS(lossABC):
         reduction: Reduction = "mean",
         num_output_dimensions: int = 2,
         low_ress_kernel_size: int = None,
+        generative_context: GenerativeContext | None = None,
         **kwargs,
     ):
         """
@@ -373,6 +381,8 @@ class WeightedCRPS(lossABC):
             Number of output dimensions.
         low_ress_kernel_size : int or None, optional
             Kernel size for downsampling.
+        generative_context: GenerativeContext
+            Generative context for the module paired with the loss function.
 
         Returns
         -------
@@ -394,6 +404,11 @@ class WeightedCRPS(lossABC):
         self.reduction = reduction
         self.num_output_dimensions = num_output_dimensions
         self.low_ress_kernel_size = low_ress_kernel_size
+        self.generative_context = (
+            generative_context
+            if generative_context is not None
+            else GenerativeContext()
+        )
 
         has_channels = "channels" in weights.dims
 
@@ -469,8 +484,6 @@ class WeightedCRPS(lossABC):
         data: torch.Tensor,
         target: torch.Tensor,
         target_mask: torch.Tensor | None = None,
-        generative_modeling: bool = False,
-        generator: bool = True,
         print_loss=False,
     ) -> torch.Tensor:
         """
@@ -483,8 +496,6 @@ class WeightedCRPS(lossABC):
         target : torch.Tensor
             Ground truth.
         target_mask : torch.Tensor or None, optional
-        generative_modeling : bool, optional
-        generator : bool, optional
         print_loss : bool, optional
 
         Returns
@@ -527,13 +538,13 @@ class WeightedCRPS(lossABC):
         where ``E`` is the ensemble size.
         """
 
-        if not generator:
+        if not self.generative_context.generator:
             raise RuntimeError(
                 "generator cannot be False as a step_argument in Losspipeline.forward()"
             )
         _check_generator_structure(data, target)
 
-        if generative_modeling:
+        if self.generative_context.generative_modeling:
             if target_mask is not None and target_mask.shape == target.shape:
                 target_mask = torch.flatten(target_mask, start_dim=0, end_dim=1)
             y = torch.flatten(target, start_dim=0, end_dim=1)
@@ -646,6 +657,9 @@ class Frobenius_norm(lossABC):
         Reduction method applied to the loss.
     num_output_dimensions : int, optional
         Number of output dimensions.
+    generative_context : GenerativeContext
+        Generative modeling context based on the module.
+        Default values are set to False.
     covariance_dim : {"spatial", "channel"}, optional
         Dimension along which covariance is computed.
     """
@@ -655,7 +669,8 @@ class Frobenius_norm(lossABC):
         weights: xr.DataArray,
         reduction: Reduction = "mean",
         num_output_dimensions: int = 2,
-        covariance_dim: CovarianceDim = "spatial",
+        generative_context: GenerativeContext | None = None,
+        covariance_dim: CovarianceDim = "spatial"
     ):
         """
         Initialize Frobenius norm loss size    Initialize Frobenius norm loss.
@@ -671,6 +686,8 @@ class Frobenius_norm(lossABC):
             Number of output dimensions.
         covariance_dim : {"spatial", "channel"}, optional
             Dimension along which covariance is computed.
+        generative_context: GenerativeContext
+            Generative context for the module paired with the loss function.
 
         Returns
         -------
@@ -683,13 +700,16 @@ class Frobenius_norm(lossABC):
         self.num_output_dimensions = num_output_dimensions
         self.reduction = reduction
         self.output_size = np.prod(weights.shape[-self.num_output_dimensions + 1 :])
+        self.generative_context = (
+            generative_context
+            if generative_context is not None
+            else GenerativeContext()
+        )
 
     def forward(
         self,
         data: torch.Tensor,
         target: torch.Tensor,
-        generative_modeling: bool = False,
-        generator: bool = False,
         print_loss=False,
     ) -> torch.Tensor:
         """
@@ -699,8 +719,6 @@ class Frobenius_norm(lossABC):
         ----------
         data : torch.Tensor
         target : torch.Tensor
-        generative_modeling : bool, optional
-        generator : bool, optional
         print_loss : bool, optional
 
         Returns
@@ -739,7 +757,7 @@ class Frobenius_norm(lossABC):
         4. The Frobenius norm of the covariance difference is returned.
         """
 
-        if generator:
+        if self.generative_context.generator:
             _check_generator_structure(data, target)
             data = data.mean(0)
 
@@ -748,7 +766,7 @@ class Frobenius_norm(lossABC):
         y = torch.flatten(target, start_dim=-self.num_output_dimensions + 1, end_dim=-1)
         y_hat = torch.flatten(data, start_dim=-self.num_output_dimensions + 1, end_dim=-1)
 
-        if generative_modeling:
+        if self.generative_context.generative_modeling:
             y = torch.flatten(y, start_dim=0, end_dim=1)
             y_hat = torch.flatten(y_hat, start_dim=0, end_dim=1)
 

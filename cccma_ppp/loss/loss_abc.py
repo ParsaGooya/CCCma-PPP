@@ -3,8 +3,10 @@ import torch
 import torch.nn as nn
 from typing import Literal
 
+from cccma_ppp.core.core_abc import GenerativeContext
 
 Reduction = Literal["mean", "sum"]
+
 
 
 class lossABC(nn.Module, abc.ABC):
@@ -16,6 +18,8 @@ class lossABC(nn.Module, abc.ABC):
 
     Methods
     -------
+    _init_module
+        initialize loss function based on the model
     forward(data, target, generative_modeling, generator, print_loss)
         Compute loss.
     _aggregate(loss)
@@ -23,14 +27,14 @@ class lossABC(nn.Module, abc.ABC):
     _print_loss(loss)
         Print formatted loss value.
     """
+    generative_context: GenerativeContext
+
 
     @abc.abstractmethod
     def forward(
         self,
         data: torch.Tensor,
         target: torch.Tensor,
-        generative_modeling: bool = False,
-        generator: bool = False,
         print_loss=False,
     ) -> torch.Tensor:
         """
@@ -42,10 +46,6 @@ class lossABC(nn.Module, abc.ABC):
             Model predictions.
         target : torch.Tensor
             Ground truth targets.
-        generative_modeling : bool, optional
-            Whether loss is used in a generative modeling context.
-        generator : bool, optional
-            Indicates if generator-specific behavior is applied.
         print_loss : bool, optional
             Whether to print the loss value.
 

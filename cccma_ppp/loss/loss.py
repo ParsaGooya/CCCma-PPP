@@ -7,6 +7,8 @@ import torch
 from cccma_ppp.loss.loss_abc import Reduction
 from cccma_ppp.loss.registery import Registery
 
+from cccma_ppp.core.core_abc import GenerativeContext
+
 
 @dataclasses.dataclass
 class LossStepConfig:
@@ -67,11 +69,12 @@ class LosspipelineConfig:
 
         for loss in self.loss_pipeline:
             if len(loss.args) > 0:
-                if {"reduction", "weights", "num_output_dimensions"}.intersection(
+                if {"reduction", "weights", "num_output_dimensions", "generative_context"}.intersection(
                     list(loss.args.keys())
                 ):
                     raise ValueError(
-                        "do not specify reduction, weights, or num_output_dimensions for specific loss terms manually. Set them for the parent LosspipelineConfig."
+                        "Do not specify reduction, weights, num_output_dimensions or generative_context for individual loss terms manually. " \
+                        "Set them for the LosspipelineConfig."
                     )
 
             self.loss_types.add(loss.name)
@@ -86,7 +89,10 @@ class LosspipelineConfig:
                 1 / len(self.loss_pipeline) for _ in self.loss_pipeline
             ]
 
-    def build(self, weights: xr.DataArray, num_output_dimensions: int = 2):
+    def build(self, 
+              weights: xr.DataArray, 
+              num_output_dimensions: int = 2,
+              generative_context: GenerativeContext | None = None ):
         """
         Construct loss pipeline.
 
@@ -103,7 +109,10 @@ class LosspipelineConfig:
             Initialized loss pipeline.
         """
 
-        return Losspipeline(self, weights, num_output_dimensions)
+        return Losspipeline(self, 
+                            weights, 
+                            num_output_dimensions,
+                            generative_context=generative_context)
 
 
 class Losspipeline(nn.Module):
@@ -134,6 +143,7 @@ class Losspipeline(nn.Module):
         config: LosspipelineConfig,
         weights: xr.DataArray,
         num_output_dimensions: int = 2,
+        generative_context: GenerativeContext | None = None,
     ):
         """
         Initialize loss pipeline.
@@ -154,15 +164,23 @@ class Losspipeline(nn.Module):
         self.reduction = config.reduction
         self.weights = weights
         self.num_output_dimensions = num_output_dimensions
+        self.generative_context = (
+            generative_context
+            if generative_context is not None
+            else GenerativeContext()
+        )
         self.pipeline = []
         self.steps = []
 
         for step in self.config.loss_pipeline:
             name = step.name
-            args = step.args
-            args["num_output_dimensions"] = self.num_output_dimensions
-            args["weights"] = self.weights
-            args["reduction"] = self.reduction
+            args = dict(step.args)
+            args.update(
+                num_output_dimensions=self.num_output_dimensions,
+                weights=self.weights,
+                reduction=self.reduction,
+                generative_context=self.generative_context
+            )
 
             self.pipeline.append(self.registery.get(name.lower(), args))
 
@@ -242,7 +260,7 @@ class Losspipeline(nn.Module):
 
         if not self._checked_dimensionality:
             expected_ndim = self.num_output_dimensions + 1
-            if "generative_modeling" in step_arguments:
+            if self.generative_context.generative_modeling:
                 expected_ndim += 1
 
             assert target.ndim == expected_ndim, (
@@ -266,4 +284,4 @@ class Losspipeline(nn.Module):
             else:
                 total_loss += loss * self.config.loss_weights[ind]
 
-        return loss, indiv_loses
+        return total_loss, indiv_loses
