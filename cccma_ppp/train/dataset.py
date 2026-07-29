@@ -63,6 +63,16 @@ class TrainDatasetConfig(DatasetConfigABC):
 
         self._check_observation()
 
+    def _check_condition(self):
+        return super()._check_condition()
+
+    def _check_model(self):
+        return super()._check_model()
+
+    @property
+    def num_input_lead_months(self):
+        return super().num_input_lead_months
+
     def _check_observation(self):
         """
         Validate observation dataset configuration.

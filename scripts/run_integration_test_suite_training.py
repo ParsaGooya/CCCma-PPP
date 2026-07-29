@@ -15,9 +15,7 @@ import dacite
 import yaml
 from tqdm import tqdm
 
-import cccma_ppp.models.mlp_model  # noqa: F401
-import cccma_ppp.models.mlp_models.deterministic  # noqa: F401
-import cccma_ppp.models.mlp_models.cvae  # noqa: F401
+import cccma_ppp.train.registry_imports  # noqa: F401
 
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.train.train import main as train_main
