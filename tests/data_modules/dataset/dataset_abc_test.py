@@ -369,7 +369,6 @@ def test_added_time_features_length():
     assert len(features) == 3
 
 
-@pytest.mark.pruned
 def test_added_time_features_equal():
     left = AddedTimeFeatures(
         make_reference_config(),
@@ -383,6 +382,7 @@ def test_added_time_features_equal():
     assert left == right
 
 
+@pytest.mark.pruned
 def test_added_time_features_not_equal_features():
     left = AddedTimeFeatures(
         make_reference_config(),
@@ -1156,7 +1156,6 @@ def test_check_condition_method_invalid(
         config._check_condition_method()
 
 
-@pytest.mark.pruned
 def test_check_required_input_source_model_only():
     config = bare_abc_config(
         model=make_config_data(),
@@ -1190,7 +1189,6 @@ def test_check_required_input_source_rejects_none():
         config._check_required_input_source()
 
 
-@pytest.mark.pruned
 def test_resolve_lead_months_none():
     config = bare_abc_config(
         lead_months=None,
@@ -1266,9 +1264,6 @@ def test_using_model_as_condition_supported_methods(
         "static",
     ],
 )
-@pytest.mark.xfail(
-    reason="condition_method=None is not guarded by the implementation", strict=False
-)
 def test_not_using_model_as_condition_without_condition(
     condition_method,
 ):
@@ -1337,6 +1332,7 @@ def test_different_condition_is_not_model_source(
     assert config._using_model_data_as_condition is False
 
 
+@pytest.mark.pruned
 def test_condition_without_model_is_not_model_source():
     config = bare_abc_config(
         model=None,
@@ -1362,7 +1358,6 @@ def test_resolve_explicit_condition():
     assert config.effective_condition is condition
 
 
-@pytest.mark.pruned
 def test_resolve_model_as_condition():
     expected = object()
 
@@ -1382,19 +1377,6 @@ def test_resolve_model_as_condition():
     assert result is config
     assert config.effective_condition is expected
     builder.assert_called_once_with()
-
-
-@pytest.mark.pruned
-@pytest.mark.xfail(reason="condition_method=None is not guarded by the implementation")
-def test_resolve_without_condition():
-    config = bare_abc_config(
-        model=make_config_data(),
-        condition=None,
-        condition_method=None,
-    )
-
-    assert config._resolve_condition() is config
-    assert config.effective_condition is None
 
 
 @pytest.mark.parametrize(
@@ -1487,19 +1469,6 @@ def test_check_model_same_member_rejects_mean():
         match="should not be ensemble mean",
     ):
         config._check_model()
-
-
-@pytest.mark.pruned
-@pytest.mark.xfail(reason="condition_method=None is not guarded by the implementation")
-def test_check_condition_without_condition():
-    config = bare_abc_config(
-        model=make_config_data(),
-        condition=None,
-        condition_method=None,
-        effective_condition=None,
-    )
-
-    assert config._check_condition() is config
 
 
 def test_static_condition_requires_dataset():
@@ -1641,6 +1610,7 @@ def test_ensemble_mean_condition_requires_mean():
         config._check_condition()
 
 
+@pytest.mark.pruned
 def test_ensemble_mean_condition_valid():
     condition = make_config_data(
         paths=("condition.nc",),
@@ -1714,19 +1684,6 @@ def test_static_condition_valid():
     assert config._check_condition() is config
 
 
-@pytest.mark.pruned
-@pytest.mark.xfail(reason="condition_method=None is not guarded by the implementation")
-def test_model_condition_validation_skipped_without_condition():
-    config = bare_abc_config(
-        model=make_config_data(),
-        condition=None,
-        condition_method=None,
-    )
-
-    assert config._check_model_vs_condition() is None
-
-
-@pytest.mark.pruned
 def test_model_condition_validation_skipped_without_model():
     config = bare_abc_config(
         model=None,
@@ -1751,6 +1708,7 @@ def test_model_condition_validation_skipped_same_source():
     assert config._check_model_vs_condition() is None
 
 
+@pytest.mark.pruned
 def test_static_condition_skips_sample_coordinate_checks():
     model = make_config_data(
         paths=("model.nc",),
@@ -1871,6 +1829,7 @@ def test_same_member_requires_model_ensembles():
         config._check_model_vs_condition()
 
 
+@pytest.mark.pruned
 def test_same_member_requires_condition_ensembles():
     model = make_config_data(
         paths=("model.nc",),
@@ -1919,7 +1878,6 @@ def test_same_member_rejects_different_ensembles():
         config._check_model_vs_condition()
 
 
-@pytest.mark.pruned
 def test_same_member_accepts_equal_ensembles():
     model = make_config_data(
         paths=("model.nc",),
@@ -3138,86 +3096,6 @@ def test_lead_months_empty_list_without_end_fails_when_built():
         config.build_lead_months()
 
 
-@pytest.mark.xfail(
-    reason="initialization evaluates condition_method before resolving lead months"
-)
-def test_config_init_defaults_lead_months_to_input_coordinates():
-    model = make_config_data(
-        lead_times=(2, 4, 6),
-    )
-
-    config = ConcreteDatasetConfig(
-        model=model,
-        condition_method="cross_ensemble",
-        lead_months=None,
-    )
-
-    np.testing.assert_array_equal(
-        config.lead_months,
-        [2, 4, 6],
-    )
-
-
-@pytest.mark.xfail(
-    reason="initialization evaluates condition_method before resolving lead months"
-)
-@pytest.mark.pruned
-def test_config_init_accepts_requested_lead_month_subset():
-    model = make_config_data(
-        lead_times=(1, 2, 3, 6),
-    )
-
-    config = ConcreteDatasetConfig(
-        model=model,
-        lead_months=[2, 6],
-    )
-
-    assert config.lead_months == [2, 6]
-
-
-@pytest.mark.xfail(
-    reason="initialization evaluates condition_method before resolving lead months"
-)
-@pytest.mark.pruned
-def test_config_init_rejects_unavailable_lead_month():
-    model = make_config_data(
-        lead_times=(1, 2, 3),
-    )
-
-    with pytest.raises(
-        ValueError,
-        match="requested lead months are not available",
-    ):
-        ConcreteDatasetConfig(
-            model=model,
-            condition_method="cross_ensemble",
-            lead_months=[1, 9],
-        )
-
-
-@pytest.mark.xfail(
-    reason="initialization evaluates condition_method before resolving lead months"
-)
-@pytest.mark.pruned
-def test_config_init_resolves_lead_month_config():
-    model = make_config_data(
-        lead_times=(1, 2, 3, 4),
-    )
-
-    config = ConcreteDatasetConfig(
-        model=model,
-        lead_months=lead_months_config(
-            start=2,
-            end=4,
-        ),
-    )
-
-    np.testing.assert_array_equal(
-        config.lead_months,
-        [2, 3, 4],
-    )
-
-
 @pytest.mark.pruned
 def test_check_condition_method_none_avoids_membership_check():
     config = bare_abc_config(
@@ -3273,9 +3151,6 @@ def test_check_condition_method_rejects_additional_invalid_values(
         ("same_member", True),
         ("unsupported", False),
     ],
-)
-@pytest.mark.xfail(
-    reason="condition_method=None is not guarded by the implementation", strict=False
 )
 def test_using_model_as_condition_without_explicit_condition(
     condition_method,
@@ -3355,22 +3230,6 @@ def test_resolve_condition_replaces_stale_value_with_explicit_condition():
 
     assert result is config
     assert config.effective_condition is explicit_condition
-
-
-@pytest.mark.pruned
-@pytest.mark.xfail(reason="condition_method=None is not guarded by the implementation")
-def test_resolve_condition_clears_stale_value_when_condition_unused():
-    config = bare_abc_config(
-        model=make_config_data(),
-        condition=None,
-        condition_method=None,
-        effective_condition=object(),
-    )
-
-    result = config._resolve_condition()
-
-    assert result is config
-    assert config.effective_condition is None
 
 
 @pytest.mark.parametrize(
@@ -3462,9 +3321,6 @@ def test_check_model_same_member_rejects_mean_model():
         "cross_ensemble",
         "same_member",
     ],
-)
-@pytest.mark.xfail(
-    reason="condition_method=None is not guarded by the implementation", strict=False
 )
 def test_check_condition_without_effective_condition_nonstatic(
     condition_method,
@@ -3572,22 +3428,6 @@ def test_model_vs_condition_model_none_short_circuits():
         condition=condition,
         condition_method="static",
         effective_condition=condition,
-    )
-
-    assert config._check_model_vs_condition() is None
-
-
-@pytest.mark.pruned
-@pytest.mark.xfail(reason="condition_method=None is not guarded by the implementation")
-def test_model_vs_condition_condition_none_short_circuits():
-    model = make_config_data()
-    model.info = None
-
-    config = bare_abc_config(
-        model=model,
-        condition=None,
-        condition_method=None,
-        effective_condition=None,
     )
 
     assert config._check_model_vs_condition() is None
@@ -3919,7 +3759,6 @@ def test_model_vs_condition_observation_missing_spatial_coordinate(
         config._check_model_vs_condition()
 
 
-@pytest.mark.pruned
 def test_model_vs_condition_observation_mismatched_spatial_coordinate(
     monkeypatch,
 ):

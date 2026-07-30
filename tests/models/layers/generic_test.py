@@ -51,13 +51,13 @@ def test_build_activation_relu():
     assert activation.inplace is True
 
 
-@pytest.mark.pruned
 def test_build_activation_gelu():
     activation = _build_activation("gelu")
 
     assert isinstance(activation, nn.GELU)
 
 
+@pytest.mark.pruned
 def test_build_activation_silu():
     activation = _build_activation("silu")
 
@@ -180,6 +180,7 @@ def test_build_normalization_group():
     assert normalization.num_channels == 8
 
 
+@pytest.mark.pruned
 def test_build_normalization_layer():
     normalization = _build_normalization(
         "layer",

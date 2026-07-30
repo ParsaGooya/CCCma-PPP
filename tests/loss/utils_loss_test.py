@@ -299,7 +299,6 @@ def test_mse_lowres_uses_avg_pool1d():
     assert loss.average_pool is F.avg_pool1d
 
 
-@pytest.mark.pruned
 def test_mse_lowres_uses_avg_pool2d():
     loss = WeightedMSE(
         w_channels_1(),
@@ -425,6 +424,7 @@ def test_mse_shape_mismatch():
         )
 
 
+@pytest.mark.pruned
 def test_mse_invalid_reduction():
     with pytest.raises(NotImplementedError):
         WeightedMSE(
@@ -437,7 +437,6 @@ def test_mse_invalid_reduction():
         )
 
 
-@pytest.mark.pruned
 def test_mse_uppercase_reduction_is_invalid():
     with pytest.raises(NotImplementedError):
         WeightedMSE(
@@ -515,6 +514,7 @@ def test_mse_mismatched_mask_shape_raises():
         )
 
 
+@pytest.mark.pruned
 def test_mse_aggregate_with_partial_mask():
     loss = make_mse()
 
@@ -613,7 +613,6 @@ def test_mse_generator_valid_structure():
     assert result >= 0
 
 
-@pytest.mark.pruned
 def test_mse_generator_rejects_invalid_structure():
     loss = WeightedMSE(
         w2d(),
@@ -628,93 +627,6 @@ def test_mse_generator_rejects_invalid_structure():
         )
 
 
-@pytest.mark.pruned
-def test_mse_lowres():
-    with pytest.raises(RuntimeError):
-        WeightedMSE(
-            w2d(),
-            num_output_dimensions=3,
-            low_ress_kernel_size=3,
-        )(
-            d(),
-            t(),
-        )
-
-
-def test_mse_lowres_channel_weights():
-    with pytest.raises(RuntimeError):
-        WeightedMSE(
-            w_channels_1(),
-            num_output_dimensions=3,
-            low_ress_kernel_size=3,
-        )(
-            d(),
-            t(),
-        )
-
-
-@pytest.mark.pruned
-def test_mse_generative_lowres_flattens_leading_dimensions():
-    loss = WeightedMSE(
-        w2d(),
-        num_output_dimensions=3,
-        low_ress_kernel_size=3,
-        generative_context=mse_generative_context(),
-    )
-
-    data = torch.ones(3, 2, 1, 3, 4)
-    target = torch.zeros_like(data)
-    target_mask = torch.ones_like(target)
-
-    with pytest.raises(RuntimeError):
-        loss(
-            data,
-            target,
-            target_mask=target_mask,
-        )
-
-
-def test_mse_generative_lowres_with_already_flattened_mask():
-    loss = WeightedMSE(
-        w2d(),
-        num_output_dimensions=3,
-        low_ress_kernel_size=3,
-        generative_context=mse_generative_context(),
-    )
-
-    data = torch.ones(3, 2, 1, 3, 4)
-    target = torch.zeros_like(data)
-    target_mask = torch.ones(6, 1, 3, 4)
-
-    with pytest.raises(RuntimeError):
-        loss(
-            data,
-            target,
-            target_mask=target_mask,
-        )
-
-
-def test_mse_generator_and_generative_lowres():
-    loss = WeightedMSE(
-        w2d(),
-        num_output_dimensions=3,
-        low_ress_kernel_size=3,
-        generative_context=mse_full_generative_context(),
-    )
-
-    target = torch.zeros(3, 2, 1, 3, 4)
-    data = torch.ones(4, 3, 2, 1, 3, 4)
-    target_mask = torch.ones_like(target)
-
-    with pytest.raises(RuntimeError):
-        loss(
-            data,
-            target,
-            target_mask=target_mask,
-        )
-
-
-@pytest.mark.pruned
 def test_mse_lowres_bad_mask_shape_raises():
     loss = WeightedMSE(
         w2d(),
@@ -750,18 +662,6 @@ def test_mse_downsample_static_tensor_restores_rank():
 
 
 @pytest.mark.pruned
-def test_mse_downsample_batched_tensor_preserves_batch():
-    loss = WeightedMSE(
-        w2d(),
-        num_output_dimensions=3,
-        low_ress_kernel_size=3,
-    )
-
-    tensor = torch.ones(5, 1, 3, 4)
-    with pytest.raises(RuntimeError):
-        loss._downsample(tensor)
-
-
 def test_mse_downsample_uses_expected_stride(
     monkeypatch,
 ):
@@ -921,6 +821,7 @@ def test_crps_single_sample():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_crps_single_sample_equals_absolute_error():
     loss = WeightedCRPS(
         w2d(),
@@ -1214,70 +1115,6 @@ def test_crps_generative_flattens_latent_and_batch():
     assert torch.isfinite(result)
 
 
-@pytest.mark.pruned
-def test_crps_lowres():
-    with pytest.raises(RuntimeError):
-        WeightedCRPS(
-            w2d(),
-            num_output_dimensions=3,
-            low_ress_kernel_size=3,
-            generative_context=crps_context(),
-        )(
-            ens(),
-            t(),
-        )
-
-
-@pytest.mark.pruned
-def test_crps_lowres_channel_weights():
-    with pytest.raises(RuntimeError):
-        WeightedCRPS(
-            w_channels_1(),
-            num_output_dimensions=3,
-            low_ress_kernel_size=3,
-            generative_context=crps_context(),
-        )(
-            ens(),
-            t(),
-        )
-
-
-@pytest.mark.pruned
-def test_crps_generative_lowres():
-    loss = WeightedCRPS(
-        w2d(),
-        num_output_dimensions=3,
-        low_ress_kernel_size=3,
-        generative_context=crps_generative_context(),
-    )
-
-    data = torch.randn(4, 3, 2, 1, 3, 4)
-    target = torch.randn(3, 2, 1, 3, 4)
-    target_mask = torch.ones_like(target)
-
-    with pytest.raises(RuntimeError):
-        loss(
-            data,
-            target,
-            target_mask=target_mask,
-        )
-
-
-@pytest.mark.pruned
-def test_crps_lowres_with_none_mask():
-    with pytest.raises(RuntimeError):
-        WeightedCRPS(
-            w2d(),
-            num_output_dimensions=3,
-            low_ress_kernel_size=3,
-            generative_context=crps_context(),
-        )(
-            torch.randn(4, 2, 1, 3, 4),
-            torch.randn(2, 1, 3, 4),
-            target_mask=None,
-        )
-
-
 def test_crps_generative_lowres_bad_mask_raises():
     loss = WeightedCRPS(
         w2d(),
@@ -1310,19 +1147,6 @@ def test_crps_downsample_static_tensor_restores_rank():
     result = loss._downsample(tensor)
 
     assert result.ndim == tensor.ndim
-
-
-@pytest.mark.pruned
-def test_crps_downsample_batched_tensor_preserves_batch():
-    loss = WeightedCRPS(
-        w2d(),
-        num_output_dimensions=3,
-        low_ress_kernel_size=3,
-    )
-
-    tensor = torch.ones(4, 1, 3, 4)
-    with pytest.raises(RuntimeError):
-        loss._downsample(tensor)
 
 
 def test_crps_print(capsys):

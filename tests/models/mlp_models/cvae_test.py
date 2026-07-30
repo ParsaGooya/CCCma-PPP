@@ -209,30 +209,6 @@ def test_config_rejects_invalid_dropout(dropout_rate):
         )
 
 
-@pytest.mark.parametrize(
-    ("condemb_to_decoder", "embedding_dims", "expected"),
-    [
-        (True, [4], True),
-        (False, [4], False),
-        (True, None, False),
-        (False, None, False),
-    ],
-)
-def test_condemb_to_decoder_effective(
-    condemb_to_decoder,
-    embedding_dims,
-    expected,
-):
-    config = make_config(
-        condition_embedding_dims=embedding_dims,
-        condition_embedding_size=4 if embedding_dims is not None else None,
-        condition_dependant_latent=True,
-        condemb_to_decoder=condemb_to_decoder,
-    )
-
-    assert config.condemb_to_decoder_effective is expected
-
-
 def test_independent_latent_requires_embedding_passed_to_decoder():
     with pytest.raises(
         ValueError,
@@ -244,18 +220,6 @@ def test_independent_latent_requires_embedding_passed_to_decoder():
             condition_dependant_latent=False,
             condemb_to_decoder=False,
         )
-
-
-@pytest.mark.pruned
-def test_condition_dependent_latent_allows_embedding_not_passed_to_decoder():
-    config = make_config(
-        condition_embedding_dims=[5],
-        condition_embedding_size=3,
-        condition_dependant_latent=True,
-        condemb_to_decoder=False,
-    )
-
-    assert config.condemb_to_decoder_effective is False
 
 
 @pytest.mark.pruned
@@ -272,18 +236,6 @@ def test_config_build_returns_model():
     assert model.config is config
 
 
-@pytest.mark.pruned
-def test_model_initialization_basic():
-    model = make_model()
-
-    assert model.input_shape == 4
-    assert model.output_shape == 4
-    assert model.latent_size == 3
-    assert model.added_features_dim == 0
-    assert model.add_condition_size == 0
-
-
-@pytest.mark.pruned
 def test_model_defaults_output_shape_to_input_shape():
     config = make_config()
 
@@ -333,18 +285,6 @@ def test_model_builds_encoder():
     assert isinstance(model.log_var, nn.Linear)
     assert model.mu.out_features == 3
     assert model.log_var.out_features == 3
-
-
-@pytest.mark.pruned
-def test_model_builds_decoder():
-    model = make_model()
-
-    assert isinstance(model.decoder, nn.Sequential)
-
-    linear_layers = [layer for layer in model.decoder if isinstance(layer, nn.Linear)]
-
-    assert linear_layers[0].in_features == model.latent_size
-    assert linear_layers[-1].out_features == model.output_shape
 
 
 @pytest.mark.pruned
@@ -429,20 +369,6 @@ def test_model_uses_batch_normalization():
     )
 
     assert any(isinstance(layer, nn.BatchNorm1d) for layer in model.encoder)
-
-
-@pytest.mark.pruned
-def test_recognition_returns_latent_parameters():
-    model = make_model()
-    target = torch.randn(3, 1, 4)
-
-    mu, log_var = model._recognition(
-        x=target,
-        x_mask=None,
-    )
-
-    assert mu.shape == (3, 3)
-    assert log_var.shape == (3, 3)
 
 
 @pytest.mark.pruned
@@ -569,18 +495,6 @@ def test_recognition_concatenates_condition_before_features():
 
 
 @pytest.mark.pruned
-def test_condition_without_embedding_returns_none():
-    model = make_model()
-
-    cond_mu, cond_log_var = model._condition(
-        condition=torch.randn(2, 1, 4),
-    )
-
-    assert cond_mu is None
-    assert cond_log_var is None
-
-
-@pytest.mark.pruned
 def test_condition_embedding_returns_embedding():
     model = make_model(
         config=make_condition_config(),
@@ -661,6 +575,7 @@ def test_condition_flattens_input():
     assert captured["shape"] == (2, 4)
 
 
+@pytest.mark.pruned
 def test_condition_concatenates_added_features():
     model = make_model(
         config=make_condition_config(),
@@ -688,16 +603,6 @@ def test_condition_concatenates_added_features():
         captured["value"],
         torch.tensor([[1.0, 1.0, 1.0, 1.0, 2.0, 2.0]]),
     )
-
-
-@pytest.mark.pruned
-def test_generate_basic_shape():
-    model = make_model()
-    latent = torch.randn(5, 3, 3)
-
-    result = model._generate(latent)
-
-    assert result.shape == (5, 3, 4)
 
 
 @pytest.mark.pruned
@@ -762,7 +667,6 @@ def test_generate_concatenates_condition_when_enabled():
     )
 
 
-@pytest.mark.pruned
 def test_generate_does_not_concatenate_condition_when_disabled():
     config = make_condition_latent_config(
         condemb_to_decoder=False,
@@ -804,24 +708,6 @@ def test_generate_ignores_none_condition():
     )
 
     assert result.shape == (2, 3, 3)
-
-
-@pytest.mark.pruned
-def test_forward_returns_cvae_output():
-    model = make_model()
-
-    result = model.forward(
-        make_forward_request(
-            sample_size=4,
-        )
-    )
-
-    assert result.output.shape == (4, 3, 1, 4)
-    assert result.mu.shape == (3, 3)
-    assert result.log_var.shape == (3, 3)
-    assert result.samples.shape == (4, 3, 3)
-    assert result.cond_mu is None
-    assert result.cond_log_var is None
 
 
 @pytest.mark.pruned
@@ -967,25 +853,6 @@ def test_forward_without_minimum_variance_does_not_clamp(
 
 
 @pytest.mark.pruned
-def test_predict_unconditional_prior_shape():
-    model = make_model()
-
-    result = model.predict(
-        make_predict_request(
-            sample_size=5,
-            nstds=1.5,
-        )
-    )
-
-    assert result.output.shape == (5, 3, 1, 4)
-    assert result.mu is None
-    assert result.log_var is None
-    assert result.samples is None
-    assert result.cond_mu is None
-    assert result.cond_log_var is None
-
-
-@pytest.mark.pruned
 def test_predict_uses_condition_dependent_prior(
     monkeypatch,
 ):
@@ -1059,7 +926,6 @@ def test_predict_uses_standard_normal_prior(
     distribution.sample.assert_called_once_with((4,))
 
 
-@pytest.mark.pruned
 def test_predict_accepts_user_latent_samples():
     model = make_model()
     latent = torch.randn(4, 3, 3)

@@ -15,14 +15,16 @@ import dacite
 import yaml
 from tqdm import tqdm
 
-import cccma_ppp.train.registry_imports  # noqa: F401
+
+import cccma_ppp.loss.utils_loss  # noqa: F401
+import cccma_ppp.models.mlp_models.cvae  # noqa: F401
+import cccma_ppp.models.mlp_models.deterministic  # noqa: F401
+import cccma_ppp.models.unet_models.cvae  # noqa: F401
+import cccma_ppp.models.unet_models.deterministic  # noqa: F401
 
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.train.train import main as train_main
-from cccma_ppp.train.train_configs import (
-    TrainConfig,
-    prepare_config,
-)
+from cccma_ppp.train.train_configs import TrainConfig, prepare_config
 
 
 warnings.filterwarnings("ignore")
@@ -282,59 +284,22 @@ TRAIN_DATASET_CONFIG_CASES = [
 
 
 CVAE_MODULE_GRID = {
-    "min_posterior_variance": [
-        None,
-        2,
-    ],
-    "use_prior_flow": [
-        False,
-        True,
-    ],
-    "combined_CGCN_weight": [
-        0.0,
-        0.1,
-    ],
-    "latent_size": [
-        4,
-        10,
-    ],
-    "condition_dependant_latent": [
-        True,
-        False,
-    ],
-    "batch_normalization": [
-        False,
-        True,
-    ],
-    "dropout_rate": [
-        None,
-        0.5,
-    ],
-    "init_method": [
-        "xavier",
-        "trunc_normal",
-    ],
+    "min_posterior_variance": [None, 2],
+    "use_prior_flow": [False, True],
+    "combined_CGCN_weight": [0.0, 0.1],
+    "latent_size": [4, 10],
+    "condition_dependant_latent": [True, False],
+    "batch_normalization": [False, True],
+    "dropout_rate": [None, 0.5],
+    "init_method": ["xavier", "trunc_normal"],
 }
 
 
 DETERMINISTIC_GRID = {
-    "append_mode": [
-        1,
-        2,
-        3,
-    ],
-    "batch_normalization": [
-        False,
-        True,
-    ],
-    "dropout_rate": [
-        None,
-        0.5,
-    ],
-    "init_method": [
-        "xavier",
-        "trunc_normal",
-    ],
+    "append_mode": [1, 2, 3],
+    "batch_normalization": [False, True],
+    "dropout_rate": [None, 0.5],
+    "init_method": ["xavier", "trunc_normal"],
 }
 
 
@@ -370,18 +335,9 @@ CSV_COLUMNS = [
 
 
 def prepare_output_directories():
-    OUTPUT_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-    GENERATED_CONFIG_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-    LOG_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    GENERATED_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def cleanup_logging_handlers():
@@ -461,10 +417,7 @@ def log_result(
         "dropout_rate": params.get("dropout_rate"),
         "init_method": params.get("init_method"),
         "append_mode": params.get("append_mode"),
-        "expected_result": params.get(
-            "expected_result",
-            "PASS",
-        ),
+        "expected_result": params.get("expected_result", "PASS"),
         "expected_failure_reason": params.get(
             "expected_failure_reason",
             "",
@@ -472,7 +425,7 @@ def log_result(
         "config_path": str(config_path),
         "experiment_dir": str(experiment_dir),
         "log_path": str(log_path),
-        "result": ("PASS" if passed else "FAIL"),
+        "result": "PASS" if passed else "FAIL",
         "error": error,
     }
 
@@ -489,110 +442,44 @@ def log_result(
 
 
 def clean_name(value):
-    value = str(value).replace(
-        "None",
-        "none",
-    )
-    value = re.sub(
-        r"[^A-Za-z0-9_.-]+",
-        "_",
-        value,
-    )
-    value = re.sub(
-        r"_+",
-        "_",
-        value,
-    )
+    value = str(value).replace("None", "none")
+    value = re.sub(r"[^A-Za-z0-9_.-]+", "_", value)
+    value = re.sub(r"_+", "_", value)
 
     return value.strip("_")
 
 
-def migrate_loader_fields(cfg):
-    train_loader_cfg = cfg.setdefault(
-        "train_loader",
-        {},
-    )
-    dataset_cfg = train_loader_cfg.setdefault(
-        "dataset_config",
-        {},
-    )
+def normalize_nullable_fields(cfg):
+    train_loader_cfg = cfg.setdefault("train_loader", {})
+    dataset_cfg = train_loader_cfg.setdefault("dataset_config", {})
 
     if "time_features" in dataset_cfg:
-        previous_time_features = dataset_cfg.pop("time_features")
+        raise ValueError(
+            "time_features is no longer a DatasetConfig field. "
+            "Configure it under train_loader.time_features."
+        )
 
-        if "time_features" not in train_loader_cfg:
-            train_loader_cfg["time_features"] = deepcopy(previous_time_features)
-
-    return cfg
-
-
-def normalize_nullable_fields(cfg):
-    migrate_loader_fields(cfg)
-
-    train_loader_cfg = cfg.setdefault(
-        "train_loader",
-        {},
-    )
-    dataset_cfg = train_loader_cfg.setdefault(
-        "dataset_config",
-        {},
-    )
-
-    dataset_cfg.pop(
-        "time_features",
-        None,
-    )
-
-    train_loader_cfg.setdefault(
-        "time_features",
-        None,
-    )
+    if train_loader_cfg.get("time_features") is None:
+        train_loader_cfg.pop("time_features", None)
 
     if dataset_cfg.get("condition_method") is None:
-        dataset_cfg.pop(
-            "condition_method",
-            None,
-        )
+        dataset_cfg.pop("condition_method", None)
 
     if dataset_cfg.get("lead_months") is None:
-        dataset_cfg.pop(
-            "lead_months",
-            None,
-        )
+        dataset_cfg.pop("lead_months", None)
 
-    module_cfg = cfg.get(
-        "module",
-        {},
-    ).get(
-        "config",
-        {},
-    )
+    module_cfg = cfg.get("module", {}).get("config", {})
 
     if module_cfg.get("min_posterior_variance") is None:
-        module_cfg.pop(
-            "min_posterior_variance",
-            None,
-        )
+        module_cfg.pop("min_posterior_variance", None)
 
-    model_cfg = module_cfg.get(
-        "ModelConfig",
-        {},
-    ).get(
-        "config",
-        {},
-    )
+    model_cfg = module_cfg.get("ModelConfig", {}).get("config", {})
 
     if model_cfg.get("dropout_rate") is None:
-        model_cfg.pop(
-            "dropout_rate",
-            None,
-        )
+        model_cfg.pop("dropout_rate", None)
 
     if module_cfg.get("prior_flow_config") is None:
-        module_cfg.pop(
-            "prior_flow_config",
-            None,
-        )
+        module_cfg.pop("prior_flow_config", None)
 
     return cfg
 
@@ -600,33 +487,24 @@ def normalize_nullable_fields(cfg):
 def validate_generated_config(cfg):
     train_loader_cfg = cfg.get("train_loader")
 
-    if not isinstance(
-        train_loader_cfg,
-        dict,
-    ):
+    if not isinstance(train_loader_cfg, dict):
         raise ValueError("train_loader must be configured as a mapping.")
 
     dataset_cfg = train_loader_cfg.get("dataset_config")
 
-    if not isinstance(
-        dataset_cfg,
-        dict,
-    ):
+    if not isinstance(dataset_cfg, dict):
         raise ValueError("train_loader.dataset_config must be configured as a mapping.")
 
     if "time_features" in dataset_cfg:
         raise ValueError(
-            "time_features must be configured under "
-            "train_loader, not train_loader.dataset_config."
+            "time_features must be configured under train_loader, "
+            "not train_loader.dataset_config."
         )
 
     time_features = train_loader_cfg.get("time_features")
 
     if time_features is not None:
-        if not isinstance(
-            time_features,
-            list,
-        ):
+        if not isinstance(time_features, list):
             raise TypeError("train_loader.time_features must be a list or null.")
 
         unsupported = set(time_features) - VALID_TIME_FEATURES
@@ -641,25 +519,16 @@ def validate_generated_config(cfg):
     return cfg
 
 
-def write_yaml(
-    cfg,
-    output_path,
-):
+def write_yaml(cfg, output_path):
     cfg = deepcopy(cfg)
     output_path = Path(output_path)
 
     normalize_nullable_fields(cfg)
     validate_generated_config(cfg)
 
-    output_path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with output_path.open(
-        "w",
-        encoding="utf-8",
-    ) as file:
+    with output_path.open("w", encoding="utf-8") as file:
         yaml.safe_dump(
             cfg,
             file,
@@ -675,16 +544,13 @@ def load_train_config(config_path):
     if cfg_data is None:
         raise ValueError(f"Generated training configuration is empty: {config_path}")
 
-    migrate_loader_fields(cfg_data)
     normalize_nullable_fields(cfg_data)
     validate_generated_config(cfg_data)
 
     return dacite.from_dict(
         data_class=TrainConfig,
         data=cfg_data,
-        config=dacite.Config(
-            strict=True,
-        ),
+        config=dacite.Config(strict=True),
     )
 
 
@@ -696,11 +562,27 @@ def base_config():
             f"The base training configuration is empty: {BASE_TRAIN_CONFIG}"
         )
 
-    migrate_loader_fields(cfg)
-
     cfg["max_epochs"] = 3
 
-    train_loader_cfg = cfg["train_loader"]
+    train_loader_cfg = cfg.get("train_loader")
+
+    if not isinstance(train_loader_cfg, dict):
+        raise ValueError("The base configuration must contain a train_loader mapping.")
+
+    dataset_cfg = train_loader_cfg.get("dataset_config")
+
+    if not isinstance(dataset_cfg, dict):
+        raise ValueError(
+            "The base configuration must contain train_loader.dataset_config."
+        )
+
+    if "time_features" in dataset_cfg:
+        raise ValueError(
+            "The base configuration still defines "
+            "train_loader.dataset_config.time_features. Move the field "
+            "to train_loader.time_features."
+        )
+
     train_loader_cfg["num_data_workers"] = 0
     train_loader_cfg["num_validation_years"] = 0
 
@@ -710,23 +592,13 @@ def base_config():
     return cfg
 
 
-def run_silenced(
-    function,
-    log_path,
-):
+def run_silenced(function, log_path):
     log_path = Path(log_path)
-
-    log_path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    log_path.parent.mkdir(parents=True, exist_ok=True)
 
     cleanup_logging_handlers()
 
-    with log_path.open(
-        "w",
-        encoding="utf-8",
-    ) as log_file:
+    with log_path.open("w", encoding="utf-8") as log_file:
         try:
             with (
                 redirect_stdout(log_file),
@@ -739,11 +611,7 @@ def run_silenced(
             cleanup_logging_handlers()
 
 
-def assert_training_completed(
-    *,
-    experiment_dir,
-    log_path,
-):
+def assert_training_completed(*, experiment_dir, log_path):
     experiment_dir = Path(experiment_dir)
     log_path = Path(log_path)
 
@@ -780,10 +648,7 @@ def get_original_flow_config(cfg):
 
 
 def ensure_cvae_beta_finder(cfg):
-    cfg.setdefault(
-        "trainer",
-        {},
-    ).setdefault(
+    cfg.setdefault("trainer", {}).setdefault(
         "beta_finder",
         {
             "beta": 10,
@@ -795,13 +660,7 @@ def ensure_cvae_beta_finder(cfg):
 
 
 def remove_deterministic_beta_finder(cfg):
-    cfg.setdefault(
-        "trainer",
-        {},
-    ).pop(
-        "beta_finder",
-        None,
-    )
+    cfg.setdefault("trainer", {}).pop("beta_finder", None)
 
     return cfg
 
@@ -829,44 +688,27 @@ def set_fast_cvae_mlp_config(
     model_cfg["init_method"] = init_method
 
     if dropout_rate is None:
-        model_cfg.pop(
-            "dropout_rate",
-            None,
-        )
+        model_cfg.pop("dropout_rate", None)
     else:
         model_cfg["dropout_rate"] = dropout_rate
 
     return cfg
 
 
-def apply_train_dataset_config_params(
-    cfg,
-    params,
-):
+def apply_train_dataset_config_params(cfg, params):
     train_loader_cfg = cfg["train_loader"]
     dataset_cfg = train_loader_cfg["dataset_config"]
 
-    dataset_cfg.pop(
-        "time_features",
-        None,
-    )
+    if "time_features" in dataset_cfg:
+        raise ValueError("time_features must not be configured in dataset_config.")
 
     if "model_ensemble_mean" in params:
         dataset_cfg["model"]["ensemble_mean"] = params["model_ensemble_mean"]
 
-    if params.get(
-        "remove_observation",
-        False,
-    ):
-        dataset_cfg.pop(
-            "observation",
-            None,
-        )
+    if params.get("remove_observation", False):
+        dataset_cfg.pop("observation", None)
 
-    if params.get(
-        "add_condition",
-        False,
-    ):
+    if params.get("add_condition", False):
         dataset_cfg["condition"] = deepcopy(dataset_cfg["model"])
 
         condition_ensemble_mean = params.get("condition_ensemble_mean")
@@ -874,32 +716,28 @@ def apply_train_dataset_config_params(
         if condition_ensemble_mean is not None:
             dataset_cfg["condition"]["ensemble_mean"] = condition_ensemble_mean
     else:
-        dataset_cfg.pop(
-            "condition",
-            None,
-        )
+        dataset_cfg.pop("condition", None)
 
     condition_method = params.get("condition_method")
 
     if condition_method is None:
-        dataset_cfg.pop(
-            "condition_method",
-            None,
-        )
+        dataset_cfg.pop("condition_method", None)
     else:
         dataset_cfg["condition_method"] = condition_method
 
     if "time_features" in params:
-        train_loader_cfg["time_features"] = deepcopy(params["time_features"])
+        time_features = params["time_features"]
+
+        if time_features is None:
+            train_loader_cfg.pop("time_features", None)
+        else:
+            train_loader_cfg["time_features"] = deepcopy(time_features)
 
     if "lead_months" in params:
         lead_months = params["lead_months"]
 
         if lead_months is None:
-            dataset_cfg.pop(
-                "lead_months",
-                None,
-            )
+            dataset_cfg.pop("lead_months", None)
         else:
             dataset_cfg["lead_months"] = deepcopy(lead_months)
 
@@ -909,29 +747,19 @@ def apply_train_dataset_config_params(
     return cfg
 
 
-def build_cvae_config_from_params(
-    params,
-):
+def build_cvae_config_from_params(params):
     cfg = base_config()
-
     cfg["module"]["type"] = "cVAE"
 
-    apply_train_dataset_config_params(
-        cfg,
-        params,
-    )
+    apply_train_dataset_config_params(cfg, params)
 
     module_cfg = cfg["module"]["config"]
-
     original_flow_config = get_original_flow_config(cfg)
 
     posterior_variance = params.get("min_posterior_variance")
 
     if posterior_variance is None:
-        module_cfg.pop(
-            "min_posterior_variance",
-            None,
-        )
+        module_cfg.pop("min_posterior_variance", None)
     else:
         module_cfg["min_posterior_variance"] = posterior_variance
 
@@ -947,10 +775,7 @@ def build_cvae_config_from_params(
 
             module_cfg["prior_flow_config"] = original_flow_config
         else:
-            module_cfg.pop(
-                "prior_flow_config",
-                None,
-            )
+            module_cfg.pop("prior_flow_config", None)
 
     model_cfg = module_cfg["ModelConfig"]["config"]
 
@@ -958,24 +783,15 @@ def build_cvae_config_from_params(
         cfg,
         latent_size=params.get(
             "latent_size",
-            model_cfg.get(
-                "latent_size",
-                10,
-            ),
+            model_cfg.get("latent_size", 10),
         ),
         condition_dependant_latent=params.get(
             "condition_dependant_latent",
-            model_cfg.get(
-                "condition_dependant_latent",
-                True,
-            ),
+            model_cfg.get("condition_dependant_latent", True),
         ),
         batch_normalization=params.get(
             "batch_normalization",
-            model_cfg.get(
-                "batch_normalization",
-                False,
-            ),
+            model_cfg.get("batch_normalization", False),
         ),
         dropout_rate=params.get(
             "dropout_rate",
@@ -983,10 +799,7 @@ def build_cvae_config_from_params(
         ),
         init_method=params.get(
             "init_method",
-            model_cfg.get(
-                "init_method",
-                "xavier",
-            ),
+            model_cfg.get("init_method", "xavier"),
         ),
     )
 
@@ -997,15 +810,10 @@ def build_cvae_config_from_params(
     return cfg
 
 
-def build_deterministic_config_from_params(
-    params,
-):
+def build_deterministic_config_from_params(params):
     cfg = base_config()
 
-    apply_train_dataset_config_params(
-        cfg,
-        params,
-    )
+    apply_train_dataset_config_params(cfg, params)
 
     model_cfg = {
         "encoder_hidden_dims": deepcopy(TEST_ENCODER_HIDDEN_DIMS),
@@ -1035,9 +843,7 @@ def build_deterministic_config_from_params(
     return cfg
 
 
-def mark_cvae_module_expected_result(
-    params,
-):
+def mark_cvae_module_expected_result(params):
     invalid = (
         params.get("use_prior_flow") is True
         and params.get("condition_dependant_latent") is False
@@ -1073,12 +879,7 @@ def generate_cvae_module_cases():
     cases = []
 
     for combination in product(*values):
-        params = dict(
-            zip(
-                keys,
-                combination,
-            )
-        )
+        params = dict(zip(keys, combination))
 
         params.update(
             {
@@ -1120,12 +921,7 @@ def generate_deterministic_cases():
     cases = []
 
     for combination in product(*values):
-        params = dict(
-            zip(
-                keys,
-                combination,
-            )
-        )
+        params = dict(zip(keys, combination))
 
         params.update(
             {
@@ -1156,23 +952,12 @@ def generate_deterministic_cases():
     return cases
 
 
-def append_exception_to_log(
-    log_path,
-):
+def append_exception_to_log(log_path):
     log_path = Path(log_path)
+    log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    log_path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    with log_path.open(
-        "a",
-        encoding="utf-8",
-    ) as log_file:
-        traceback.print_exc(
-            file=log_file,
-        )
+    with log_path.open("a", encoding="utf-8") as log_file:
+        traceback.print_exc(file=log_file)
 
 
 def remove_existing_case_outputs(
@@ -1213,10 +998,7 @@ def run_training_case(
     case_cfg = deepcopy(cfg)
     case_cfg["experiment_dir"] = str(experiment_dir)
 
-    write_yaml(
-        case_cfg,
-        config_path,
-    )
+    write_yaml(case_cfg, config_path)
 
     try:
         run_silenced(
@@ -1254,30 +1036,18 @@ def run_training_case(
     return passed
 
 
-def make_train_config(
-    output_path,
-    experiment_dir,
-):
+def make_train_config(output_path, experiment_dir):
     cfg = base_config()
-
     cfg["experiment_dir"] = str(experiment_dir)
 
     ensure_cvae_beta_finder(cfg)
 
-    experiment_dir.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    experiment_dir.mkdir(parents=True, exist_ok=True)
 
-    return write_yaml(
-        cfg,
-        output_path,
-    )
+    return write_yaml(cfg, output_path)
 
 
-def run_resume_training(
-    root_dir,
-):
+def run_resume_training(root_dir):
     experiment_dir = root_dir / "resume"
 
     if experiment_dir.exists():
@@ -1304,19 +1074,16 @@ def run_resume_training(
     if resumed_cfg is None:
         raise ValueError(f"The resume configuration is empty: {first_config}")
 
-    migrate_loader_fields(resumed_cfg)
-
     resumed_cfg["resume_dir"] = str(experiment_dir)
     resumed_cfg["max_epochs"] = 3
 
     ensure_cvae_beta_finder(resumed_cfg)
+    normalize_nullable_fields(resumed_cfg)
+    validate_generated_config(resumed_cfg)
 
     second_config = GENERATED_CONFIG_DIR / "resume_second.yaml"
 
-    write_yaml(
-        resumed_cfg,
-        second_config,
-    )
+    write_yaml(resumed_cfg, second_config)
 
     second_log = LOG_DIR / "resume_second.log"
 
@@ -1331,9 +1098,7 @@ def run_resume_training(
     )
 
 
-def run_dataset_pipeline(
-    root_dir,
-):
+def run_dataset_pipeline(root_dir):
     experiment_dir = root_dir / "dataset_pipeline"
 
     if experiment_dir.exists():
@@ -1346,11 +1111,9 @@ def run_dataset_pipeline(
 
     def run_pipeline():
         config = load_train_config(config_path)
-
         distributed = Distributed.get_instance()
 
         config.train_loader.setup_distributed(distributed)
-
         train_loader = config.train_loader.build_train_loader()
 
         if len(train_loader.dataset) <= 0:
@@ -1376,9 +1139,7 @@ def run_dataset_pipeline(
     )
 
 
-def add_baseline_tasks(
-    tasks,
-):
+def add_baseline_tasks(tasks):
     if not RUN_BASELINE_TESTS:
         return
 
@@ -1394,8 +1155,8 @@ def add_baseline_tasks(
                 },
                 "runner": lambda: run_resume_training(OUTPUT_DIR),
                 "config_path": (GENERATED_CONFIG_DIR / "resume_second.yaml"),
-                "experiment_dir": (OUTPUT_DIR / "resume"),
-                "log_path": (LOG_DIR / "resume_second.log"),
+                "experiment_dir": OUTPUT_DIR / "resume",
+                "log_path": LOG_DIR / "resume_second.log",
             },
             {
                 "suite": "baseline",
@@ -1407,16 +1168,14 @@ def add_baseline_tasks(
                 },
                 "runner": lambda: run_dataset_pipeline(OUTPUT_DIR),
                 "config_path": (GENERATED_CONFIG_DIR / "dataset_pipeline.yaml"),
-                "experiment_dir": (OUTPUT_DIR / "dataset_pipeline"),
-                "log_path": (LOG_DIR / "dataset_pipeline.log"),
+                "experiment_dir": OUTPUT_DIR / "dataset_pipeline",
+                "log_path": LOG_DIR / "dataset_pipeline.log",
             },
         ]
     )
 
 
-def add_train_dataset_config_tasks(
-    tasks,
-):
+def add_train_dataset_config_tasks(tasks):
     if not RUN_TRAIN_DATASET_CONFIG_CASES:
         return
 
@@ -1432,9 +1191,7 @@ def add_train_dataset_config_tasks(
         )
 
 
-def add_cvae_module_tasks(
-    tasks,
-):
+def add_cvae_module_tasks(tasks):
     if not RUN_CVAE_MODULE_GRID:
         return
 
@@ -1450,9 +1207,7 @@ def add_cvae_module_tasks(
         )
 
 
-def add_deterministic_tasks(
-    tasks,
-):
+def add_deterministic_tasks(tasks):
     if not RUN_DETERMINISTIC_GRID:
         return
 
@@ -1463,7 +1218,7 @@ def add_deterministic_tasks(
                 "case_name": case["name"],
                 "model_type": "deterministic",
                 "params": case,
-                "cfg": (build_deterministic_config_from_params(case)),
+                "cfg": build_deterministic_config_from_params(case),
             }
         )
 
@@ -1521,17 +1276,10 @@ def write_summary(
     expected_failures,
     unexpected_passes,
 ):
-    actual_passes = sum(
-        1
-        for task in tasks
-        if task["case_name"] not in unexpected_failures
-        and task["case_name"] not in expected_failures
-    )
+    actual_failures = len(unexpected_failures) + len(expected_failures)
+    actual_passes = len(tasks) - actual_failures
 
-    with SUMMARY_PATH.open(
-        "w",
-        encoding="utf-8",
-    ) as file:
+    with SUMMARY_PATH.open("w", encoding="utf-8") as file:
         file.write(f"total_cases: {len(tasks)}\n")
         file.write(f"actual_passes: {actual_passes}\n")
         file.write(f"unexpected_failures: {len(unexpected_failures)}\n")
@@ -1541,18 +1289,9 @@ def write_summary(
         file.write(f"log_dir: {LOG_DIR}\n")
 
         groups = [
-            (
-                "unexpected_failures",
-                unexpected_failures,
-            ),
-            (
-                "expected_failures",
-                expected_failures,
-            ),
-            (
-                "unexpected_passes",
-                unexpected_passes,
-            ),
+            ("unexpected_failures", unexpected_failures),
+            ("expected_failures", expected_failures),
+            ("unexpected_passes", unexpected_passes),
         ]
 
         for title, values in groups:
@@ -1565,47 +1304,8 @@ def write_summary(
                 file.write(f"- {value}\n")
 
 
-from cccma_ppp.data_modules.dataset.config_abc import DatasetConfigABC
-import numpy as np
-from cccma_ppp.train.dataset import TrainDatasetConfig
-
-
-def install_integration_compatibility_patches():
-
-    if hasattr(
-        DatasetConfigABC,
-        "_check_time_features",
-    ):
-
-        def skip_legacy_time_features_check(self):
-            return self
-
-        DatasetConfigABC._check_time_features = skip_legacy_time_features_check
-
-    if not hasattr(
-        TrainDatasetConfig,
-        "input_lead_months",
-    ):
-
-        def get_input_lead_months(self):
-            return np.arange(
-                1,
-                self.num_input_lead_months + 1,
-            )
-
-        TrainDatasetConfig.input_lead_months = property(get_input_lead_months)
-
-    TrainDatasetConfig._check_model = lambda self: self
-    TrainDatasetConfig._check_condition = lambda self: self
-    TrainDatasetConfig.num_input_lead_months = property(
-        lambda self: self.model.info.sizes["lead_time"]
-    )
-
-
 def main():
-    install_integration_compatibility_patches()
     prepare_output_directories()
-
     cleanup_logging_handlers()
     init_csv()
 
@@ -1658,9 +1358,9 @@ def main():
                 case_name=case_name,
                 expected_result=expected_result,
                 passed=passed,
-                unexpected_failures=(unexpected_failures),
-                expected_failures=(expected_failures),
-                unexpected_passes=(unexpected_passes),
+                unexpected_failures=unexpected_failures,
+                expected_failures=expected_failures,
+                unexpected_passes=unexpected_passes,
             )
 
             progress.set_postfix_str(

@@ -1127,8 +1127,8 @@ class Auditor:
         class_is_dataclass = is_dataclass(node)
 
         if class_is_dataclass:
-            # Dataclass fields are constructor parameters and should be documented
-            # in Parameters. They are not also required under Attributes.
+                                                                                  
+                                                                         
             dataclass_field_map = dataclass_fields(node)
 
             expected_params = {
@@ -1137,14 +1137,14 @@ class Auditor:
 
             expected_attrs: dict[str, str | None] = {}
         else:
-            # Regular classes document constructor arguments under Parameters.
+                                                                              
             expected_params = {
                 name.lstrip("*") for name, _, _ in class_init_parameters(node)
             }
 
-            # Only explicitly declared class attributes are expected under
-            # Attributes. Arbitrary self.* assignments should not be included by
-            # class_attributes().
+                                                                          
+                                                                                
+                                 
             expected_attrs = class_attributes(node)
 
         parameter_entries = [

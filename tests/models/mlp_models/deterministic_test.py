@@ -615,6 +615,7 @@ def test_forward_without_mask_preserves_input_values():
     )
 
 
+@pytest.mark.pruned
 def test_forward_append_mode_one_concatenates_features_to_encoder():
     model = make_model(
         config=make_config(
@@ -692,7 +693,6 @@ def test_forward_append_mode_one_does_not_append_to_decoder():
     assert captured["value"].shape == (3, 4)
 
 
-@pytest.mark.pruned
 def test_forward_append_mode_two_concatenates_features_to_decoder():
     model = make_model(
         config=make_config(

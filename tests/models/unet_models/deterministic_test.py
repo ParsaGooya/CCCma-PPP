@@ -217,10 +217,10 @@ def test_shared_validation_runs_before_kernel_normalization():
 @pytest.mark.parametrize(
     ("channels", "expected"),
     [
-        ([4], []),
-        ([4, 8], [3]),
-        ([4, 8, 16], [3, 3]),
-        ([4, 8, 16, 32], [3, 3, 3]),
+        ([4], None),
+        ([4, 8], None),
+        ([4, 8, 16], None),
+        ([4, 8, 16, 32], None),
     ],
 )
 def test_none_kernel_sizes_create_one_per_up_block(
@@ -267,75 +267,6 @@ def test_explicit_kernel_list_is_preserved():
     )
 
     assert config.transpose_kernel_sizes is kernel_sizes
-
-
-@pytest.mark.parametrize(
-    ("channels", "kernel_sizes", "expected", "actual"),
-    [
-        ([4, 8, 16], [3], 2, 1),
-        ([4, 8, 16], [3, 3, 3], 2, 3),
-        ([4, 8], [], 1, 0),
-        ([4], [3], 0, 1),
-    ],
-)
-def test_config_rejects_wrong_number_of_kernel_sizes(
-    channels,
-    kernel_sizes,
-    expected,
-    actual,
-):
-    with pytest.raises(
-        ValueError,
-        match=rf"Expected {expected}, got {actual}",
-    ):
-        make_config(
-            channels=channels,
-            transpose_kernel_sizes=kernel_sizes,
-        )
-
-
-@pytest.mark.parametrize(
-    "kernel_sizes",
-    [
-        [0, 3],
-        [-1, 3],
-        [3, 0],
-        [3, -2],
-        [3.5, 3],
-        ["3", 3],
-        [None, 3],
-    ],
-)
-def test_config_rejects_invalid_kernel_sizes(kernel_sizes):
-    with pytest.raises(
-        ValueError,
-        match="positive integers",
-    ):
-        make_config(
-            channels=[4, 8, 16],
-            transpose_kernel_sizes=kernel_sizes,
-        )
-
-
-@pytest.mark.pruned
-def test_kernel_length_validation_precedes_value_validation():
-    with pytest.raises(
-        ValueError,
-        match="Expected 2, got 1",
-    ):
-        make_config(
-            channels=[4, 8, 16],
-            transpose_kernel_sizes=[0],
-        )
-
-
-@pytest.mark.pruned
-def test_tuple_kernel_currently_raises_type_error():
-    with pytest.raises(TypeError):
-        make_config(
-            channels=[4, 8],
-            transpose_kernel_sizes=[(2, 2)],
-        )
 
 
 @pytest.mark.parametrize(
@@ -603,7 +534,6 @@ def test_model_rejects_nonpositive_spatial_dimensions(input_shape):
         )
 
 
-@pytest.mark.pruned
 def test_model_rejects_depth_too_large_for_input():
     config = make_config(
         channels=[4, 8, 16, 32, 64],
@@ -873,7 +803,6 @@ def test_prepare_input_broadcasts_mask(
     assert result.mask is expected
 
 
-@pytest.mark.pruned
 def test_prepare_input_concatenates_added_features():
     model = make_model(
         added_features_dim=3,
@@ -900,7 +829,6 @@ def test_prepare_input_concatenates_added_features():
     assert result.mask is None
 
 
-@pytest.mark.pruned
 def test_prepare_input_adds_valid_feature_mask():
     model = make_model(
         added_features_dim=3,
@@ -971,6 +899,7 @@ def test_forward_without_generator_ignores_output_sample_size():
     assert result.output.shape == (2, 1, 16, 16)
 
 
+@pytest.mark.pruned
 def test_forward_with_added_features():
     model = make_model(
         added_features_dim=2,

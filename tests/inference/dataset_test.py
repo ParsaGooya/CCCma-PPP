@@ -265,7 +265,6 @@ def test_effective_input_returns_model_without_condition():
     assert config.effective_input is model
 
 
-@pytest.mark.pruned
 def test_effective_input_falls_back_to_condition():
     condition = DummyDataConfig("condition")
 
@@ -277,6 +276,7 @@ def test_effective_input_falls_back_to_condition():
     assert config.effective_input is condition
 
 
+@pytest.mark.pruned
 def test_effective_input_returns_none_without_sources():
     config = make_config(
         model=None,
@@ -539,7 +539,7 @@ def test_getitem_model_only():
     with patch.object(
         dataset,
         "_compute",
-            side_effect=lambda value: (np.asarray(value),),
+        side_effect=lambda value: (np.asarray(value),),
     ) as compute:
         result = dataset[0]
 
@@ -629,7 +629,7 @@ def test_getitem_condition_only():
     with patch.object(
         dataset,
         "_compute",
-            side_effect=lambda value: (np.asarray(value),),
+        side_effect=lambda value: (np.asarray(value),),
     ):
         result = dataset[0]
 
@@ -710,7 +710,7 @@ def test_getitem_condition_replacement_precedes_concat():
     with patch.object(
         dataset,
         "_compute",
-            side_effect=lambda value: (np.asarray(value),),
+        side_effect=lambda value: (np.asarray(value),),
     ):
         result = dataset[0]
 
@@ -754,7 +754,7 @@ def test_getitem_time_features_receive_final_model_input():
     with patch.object(
         dataset,
         "_compute",
-            side_effect=lambda value: (np.asarray(value),),
+        side_effect=lambda value: (np.asarray(value),),
     ):
         result = dataset[0]
 
@@ -807,7 +807,7 @@ def test_getitem_time_features_receive_condition_input():
     with patch.object(
         dataset,
         "_compute",
-            side_effect=lambda value: (np.asarray(value),),
+        side_effect=lambda value: (np.asarray(value),),
     ):
         dataset[0]
 
@@ -849,7 +849,7 @@ def test_getitem_time_features_receive_concatenated_input():
     with patch.object(
         dataset,
         "_compute",
-            side_effect=lambda value: (np.asarray(value),),
+        side_effect=lambda value: (np.asarray(value),),
     ):
         dataset[0]
 
@@ -876,7 +876,7 @@ def test_getitem_without_time_features_returns_none():
     with patch.object(
         dataset,
         "_compute",
-            side_effect=lambda value: (np.asarray(value),),
+        side_effect=lambda value: (np.asarray(value),),
     ):
         result = dataset[0]
 
@@ -909,7 +909,7 @@ def test_getitem_converts_tensors_to_float32():
     with patch.object(
         dataset,
         "_compute",
-            side_effect=lambda value: (np.asarray(value),),
+        side_effect=lambda value: (np.asarray(value),),
     ):
         result = dataset[0]
 
@@ -932,7 +932,7 @@ def test_getitem_without_metadata_returns_dictionary():
     with patch.object(
         dataset,
         "_compute",
-            side_effect=lambda value: (np.asarray(value),),
+        side_effect=lambda value: (np.asarray(value),),
     ):
         result = dataset[0]
 
@@ -963,7 +963,7 @@ def test_getitem_with_metadata_returns_tuple():
     with patch.object(
         dataset,
         "_compute",
-            side_effect=lambda value: (np.asarray(value),),
+        side_effect=lambda value: (np.asarray(value),),
     ):
         result, metadata = dataset[0]
 
@@ -1011,7 +1011,7 @@ def test_getitem_uses_requested_sample_index():
     with patch.object(
         dataset,
         "_compute",
-            side_effect=lambda value: (np.asarray(value),),
+        side_effect=lambda value: (np.asarray(value),),
     ):
         _, metadata = dataset[1]
 
@@ -1042,7 +1042,7 @@ def test_getitem_passes_input_data_to_dask_compute():
     with patch.object(
         dataset,
         "_compute",
-            return_value=(computed,),
+        return_value=(computed,),
     ) as compute:
         result = dataset[0]
 
@@ -1130,6 +1130,7 @@ def test_from_train_model_condition_branch_precedes_condition_branch():
     assert result["model"].names == ["model"]
 
 
+@pytest.mark.pruned
 def test_from_train_observation_and_independent_condition():
     model = DummyDataConfig("model")
     condition = DummyDataConfig("condition")
@@ -1155,7 +1156,6 @@ def test_from_train_observation_and_independent_condition():
     assert result["condition"].names == ["condition"]
 
 
-@pytest.mark.pruned
 def test_from_train_condition_without_observation():
     model = DummyDataConfig("model")
     condition = DummyDataConfig("condition")

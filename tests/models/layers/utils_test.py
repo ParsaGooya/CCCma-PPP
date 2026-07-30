@@ -57,147 +57,6 @@ def test_same_padding_rejects_invalid_kernel_sizes(
 
 
 @pytest.mark.pruned
-def test_align_to_skip_returns_same_tensor_when_shapes_match():
-    tensor = torch.randn(2, 3, 8, 10)
-    skip = torch.randn(2, 4, 8, 10)
-
-    result = align_to_skip(
-        tensor,
-        skip,
-        mode="strict",
-    )
-
-    assert result is tensor
-
-
-@pytest.mark.pruned
-def test_align_to_skip_resize():
-    tensor = torch.randn(2, 3, 4, 5)
-    skip = torch.randn(2, 4, 8, 10)
-
-    result = align_to_skip(
-        tensor,
-        skip,
-        mode="resize",
-    )
-
-    expected = F.interpolate(
-        tensor,
-        size=(8, 10),
-        mode="bilinear",
-        align_corners=False,
-    )
-
-    assert result.shape == (2, 3, 8, 10)
-    torch.testing.assert_close(result, expected)
-
-
-def test_align_to_skip_resize_calls_interpolate(
-    monkeypatch,
-):
-    tensor = torch.randn(2, 3, 4, 5)
-    skip = torch.randn(2, 4, 8, 10)
-    expected = torch.randn(2, 3, 8, 10)
-    captured = {}
-
-    def fake_interpolate(
-        value,
-        size,
-        mode,
-        align_corners,
-    ):
-        captured["value"] = value
-        captured["size"] = size
-        captured["mode"] = mode
-        captured["align_corners"] = align_corners
-        return expected
-
-    monkeypatch.setattr(
-        module.F,
-        "interpolate",
-        fake_interpolate,
-    )
-
-    result = align_to_skip(
-        tensor,
-        skip,
-        mode="resize",
-    )
-
-    assert result is expected
-    assert captured == {
-        "value": tensor,
-        "size": torch.Size([8, 10]),
-        "mode": "bilinear",
-        "align_corners": False,
-    }
-
-
-@pytest.mark.parametrize(
-    "padding_mode",
-    [
-        "constant",
-        "reflect",
-        "replicate",
-        "circular",
-    ],
-)
-def test_align_to_skip_padd(
-    padding_mode,
-):
-    tensor = torch.randn(1, 2, 4, 4)
-    skip = torch.randn(1, 3, 6, 6)
-
-    result = align_to_skip(
-        tensor,
-        skip,
-        mode="padd",
-        padding_mode=padding_mode,
-    )
-
-    assert result.shape == (1, 2, 6, 6)
-
-
-@pytest.mark.pruned
-def test_align_to_skip_padd_calls_helper(
-    monkeypatch,
-):
-    tensor = torch.randn(1, 2, 4, 4)
-    skip = torch.randn(1, 3, 6, 8)
-    expected = torch.randn(1, 2, 6, 8)
-    captured = {}
-
-    def fake_padd(
-        value,
-        target_size,
-        padding_mode,
-    ):
-        captured["value"] = value
-        captured["target_size"] = target_size
-        captured["padding_mode"] = padding_mode
-        return expected
-
-    monkeypatch.setattr(
-        module,
-        "padd",
-        fake_padd,
-    )
-
-    result = align_to_skip(
-        tensor,
-        skip,
-        mode="padd",
-        padding_mode="reflect",
-    )
-
-    assert result is expected
-    assert captured == {
-        "value": tensor,
-        "target_size": torch.Size([6, 8]),
-        "padding_mode": "reflect",
-    }
-
-
 def test_align_to_skip_strict_raises_for_mismatched_shapes():
     tensor = torch.randn(2, 3, 4, 5)
     skip = torch.randn(2, 4, 8, 10)
@@ -205,22 +64,6 @@ def test_align_to_skip_strict_raises_for_mismatched_shapes():
     with pytest.raises(
         RuntimeError,
         match="incompatible spatial shapes",
-    ):
-        align_to_skip(
-            tensor,
-            skip,
-            mode="strict",
-        )
-
-
-@pytest.mark.pruned
-def test_align_to_skip_strict_error_contains_shapes():
-    tensor = torch.randn(2, 3, 4, 5)
-    skip = torch.randn(2, 4, 8, 10)
-
-    with pytest.raises(
-        RuntimeError,
-        match=r"\[4, 5\].*\[8, 10\]",
     ):
         align_to_skip(
             tensor,
@@ -251,20 +94,6 @@ def test_align_to_skip_rejects_unknown_mode(mode):
             skip,
             mode=mode,
         )
-
-
-@pytest.mark.pruned
-def test_align_to_skip_does_not_validate_mode_when_shapes_match():
-    tensor = torch.randn(2, 3, 8, 10)
-    skip = torch.randn(2, 4, 8, 10)
-
-    result = align_to_skip(
-        tensor,
-        skip,
-        mode="invalid",
-    )
-
-    assert result is tensor
 
 
 @pytest.mark.parametrize(
@@ -413,7 +242,6 @@ def test_broadcast_mask_none_returns_none():
     assert _broadcast_mask(None, reference) is None
 
 
-@pytest.mark.pruned
 def test_broadcast_mask_2d_adds_batch_and_channel_dimensions():
     mask = torch.ones(8, 8)
     reference = torch.randn(1, 3, 8, 8)
@@ -500,7 +328,6 @@ def test_broadcast_mask_rejects_invalid_rank(shape):
         )
 
 
-@pytest.mark.pruned
 def test_broadcast_mask_rejects_batch_mismatch():
     mask = torch.ones(3, 1, 8, 8)
     reference = torch.randn(2, 3, 8, 8)
@@ -668,6 +495,7 @@ def test_merge_masks_both_present():
     )
 
 
+@pytest.mark.pruned
 def test_merge_masks_input_none_creates_valid_input_mask():
     skip_mask = torch.zeros(2, 3, 8, 8)
     reference = torch.randn(2, 5, 8, 8)
@@ -765,7 +593,6 @@ def test_merge_masks_concatenates_skip_before_input():
     )
 
 
-@pytest.mark.pruned
 def test_merge_masks_generated_mask_uses_reference_dtype():
     skip_mask = torch.zeros(
         2,

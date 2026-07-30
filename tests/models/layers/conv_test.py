@@ -94,23 +94,6 @@ def make_mask(
     )
 
 
-@pytest.mark.pruned
-def test_conv_config_defaults():
-    config = ConvBlockConfig(name="standard_conv")
-
-    assert config.name == "standard_conv"
-    assert config.num_convolutions == 2
-    assert config.kernel_size == 3
-    assert config.normalization == "batch"
-    assert config.padding_method == "circular"
-    assert config.activation == "relu"
-    assert config.dropout_rate is None
-    assert config.bias is False
-    assert config.group_norm_groups == 8
-    assert config.latent_size is None
-    assert config.inject_noise is False
-
-
 @pytest.mark.parametrize(
     "num_convolutions",
     [
@@ -184,61 +167,6 @@ def test_conv_config_accepts_valid_dropout(
     assert config.dropout_rate == dropout_rate
 
 
-@pytest.mark.pruned
-def test_conv_config_setup_generative():
-    config = make_conv_config()
-
-    result = config.setup_generative(
-        latent_size=16,
-        inject_noise=True,
-    )
-
-    assert result is config
-    assert config.latent_size == 16
-    assert config.inject_noise is True
-
-
-@pytest.mark.pruned
-def test_conv_config_setup_generative_defaults():
-    config = make_conv_config()
-
-    result = config.setup_generative()
-
-    assert result is config
-    assert config.latent_size is None
-    assert config.inject_noise is False
-
-
-@pytest.mark.pruned
-def test_conv_config_setup_generative_can_be_updated():
-    config = make_conv_config()
-
-    config.setup_generative(
-        latent_size=8,
-        inject_noise=True,
-    )
-    config.setup_generative(
-        latent_size=None,
-        inject_noise=False,
-    )
-
-    assert config.latent_size is None
-    assert config.inject_noise is False
-
-
-@pytest.mark.pruned
-def test_partial_conv_config_defaults():
-    config = PartialConvBlockConfig(name="partial_conv")
-
-    assert config.name == "partial_conv"
-    assert config.num_convolutions == 2
-    assert config.kernel_size == 3
-    assert config.multi_channel is True
-    assert config.return_mask is True
-    assert config.latent_size is None
-    assert config.inject_noise is False
-
-
 @pytest.mark.parametrize(
     "num_convolutions",
     [
@@ -291,20 +219,6 @@ def test_partial_conv_config_rejects_invalid_dropout(
         make_partial_config(
             dropout_rate=dropout_rate,
         )
-
-
-@pytest.mark.pruned
-def test_partial_conv_config_setup_generative():
-    config = make_partial_config()
-
-    result = config.setup_generative(
-        latent_size=12,
-        inject_noise=True,
-    )
-
-    assert result is config
-    assert config.latent_size == 12
-    assert config.inject_noise is True
 
 
 @pytest.mark.pruned
@@ -416,20 +330,6 @@ def test_convnext_config_rejects_invalid_drop_path_rate(
 
 
 @pytest.mark.pruned
-def test_convnext_config_setup_generative():
-    config = make_convnext_config()
-
-    result = config.setup_generative(
-        latent_size=32,
-        inject_noise=True,
-    )
-
-    assert result is config
-    assert config.latent_size == 32
-    assert config.inject_noise is True
-
-
-@pytest.mark.pruned
 def test_conv_single_forward_shape():
     config = make_conv_config(
         normalization="batch",
@@ -510,71 +410,6 @@ def test_conv_single_without_bias():
     )
 
     assert layer.conv.bias is None
-
-
-@pytest.mark.pruned
-def test_conv_single_noise_adds_input_channel():
-    config = make_conv_config()
-    config.setup_generative(
-        inject_noise=True,
-    )
-
-    layer = ConvSingle(
-        in_channels=3,
-        out_channels=4,
-        config=config,
-    )
-
-    assert layer.inject_noise is True
-    assert layer.conv.in_channels == 4
-
-
-@pytest.mark.pruned
-def test_conv_single_noise_injection_called(
-    monkeypatch,
-):
-    config = make_conv_config()
-    config.setup_generative(
-        inject_noise=True,
-    )
-
-    layer = ConvSingle(
-        in_channels=3,
-        out_channels=4,
-        config=config,
-    )
-
-    calls = []
-
-    def fake_noise_injection(x):
-        calls.append(x)
-        noise = torch.zeros(
-            x.shape[0],
-            1,
-            x.shape[2],
-            x.shape[3],
-            dtype=x.dtype,
-            device=x.device,
-        )
-        return torch.cat(
-            [
-                x,
-                noise,
-            ],
-            dim=1,
-        )
-
-    monkeypatch.setattr(
-        module,
-        "_noise_injection",
-        fake_noise_injection,
-    )
-
-    x = make_tensor(channels=3)
-    result = layer(x)
-
-    assert calls == [x]
-    assert result.shape == (2, 4, 8, 8)
 
 
 @pytest.mark.pruned
@@ -663,142 +498,6 @@ def test_partial_conv_single_positive_dropout_uses_dropout2d():
     )
 
     assert isinstance(layer.dropout, nn.Dropout2d)
-
-
-@pytest.mark.pruned
-def test_partial_conv_single_noise_adds_input_channel():
-    config = make_partial_config()
-    config.setup_generative(
-        inject_noise=True,
-    )
-
-    layer = PartialConvSingle(
-        in_channels=3,
-        out_channels=4,
-        config=config,
-    )
-
-    assert layer.conv.in_channels == 4
-
-
-def test_partial_conv_single_noise_expands_mask(
-    monkeypatch,
-):
-    config = make_partial_config()
-    config.setup_generative(
-        inject_noise=True,
-    )
-
-    layer = PartialConvSingle(
-        in_channels=3,
-        out_channels=4,
-        config=config,
-    )
-
-    calls = {
-        "noise": 0,
-        "expand": 0,
-    }
-
-    def fake_noise_injection(x):
-        calls["noise"] += 1
-        noise = torch.zeros(
-            x.shape[0],
-            1,
-            x.shape[2],
-            x.shape[3],
-            dtype=x.dtype,
-            device=x.device,
-        )
-        return torch.cat(
-            [
-                x,
-                noise,
-            ],
-            dim=1,
-        )
-
-    def fake_expand_mask(x, mask):
-        calls["expand"] += 1
-        assert x.shape[1] == 4
-        return torch.ones_like(x)
-
-    monkeypatch.setattr(
-        module,
-        "_noise_injection",
-        fake_noise_injection,
-    )
-    monkeypatch.setattr(
-        module,
-        "_expand_mask",
-        fake_expand_mask,
-    )
-
-    result, result_mask = layer(
-        make_tensor(channels=3),
-        make_mask(channels=3),
-    )
-
-    assert calls == {
-        "noise": 1,
-        "expand": 1,
-    }
-    assert result.shape == (2, 4, 8, 8)
-    assert result_mask is not None
-
-
-@pytest.mark.pruned
-def test_partial_conv_single_noise_does_not_expand_single_channel_mask(
-    monkeypatch,
-):
-    config = make_partial_config()
-    config.multi_channel = False
-    config.setup_generative(
-        inject_noise=True,
-    )
-
-    layer = PartialConvSingle(
-        in_channels=3,
-        out_channels=4,
-        config=config,
-    )
-
-    def fake_noise_injection(x):
-        noise = torch.zeros(
-            x.shape[0],
-            1,
-            x.shape[2],
-            x.shape[3],
-        )
-        return torch.cat(
-            [
-                x,
-                noise,
-            ],
-            dim=1,
-        )
-
-    def fail_expand_mask(x, mask):
-        raise AssertionError("_expand_mask should not be called.")
-
-    monkeypatch.setattr(
-        module,
-        "_noise_injection",
-        fake_noise_injection,
-    )
-    monkeypatch.setattr(
-        module,
-        "_expand_mask",
-        fail_expand_mask,
-    )
-
-    result, result_mask = layer(
-        make_tensor(channels=3),
-        make_mask(channels=1),
-    )
-
-    assert result.shape == (2, 4, 8, 8)
-    assert result_mask is not None
 
 
 @pytest.mark.pruned
@@ -1091,7 +790,6 @@ def test_convnext_single_forward_standard_conv_preserves_mask():
     assert result_mask is mask
 
 
-@pytest.mark.pruned
 def test_convnext_single_partial_conv_return_mask_false():
     config = make_convnext_config(
         use_partial_conv=True,
@@ -1204,80 +902,6 @@ def test_convnext_single_without_layer_scale_forward():
 
     assert result.shape == x.shape
     assert result_mask is None
-
-
-@pytest.mark.pruned
-def test_convnext_single_noise_changes_pointwise_channels():
-    config = make_convnext_config(
-        use_partial_conv=False,
-    )
-    config.setup_generative(
-        inject_noise=True,
-    )
-
-    layer = ConvNeXtSingle(
-        channels=4,
-        config=config,
-        drop_path_rate=0.0,
-    )
-
-    assert layer.pointwise_1.in_channels == 5
-    assert layer.pointwise_2.in_channels == 9
-
-
-def test_convnext_single_noise_called_twice(
-    monkeypatch,
-):
-    config = make_convnext_config(
-        use_partial_conv=False,
-    )
-    config.setup_generative(
-        inject_noise=True,
-    )
-
-    layer = ConvNeXtSingle(
-        channels=4,
-        config=config,
-        drop_path_rate=0.0,
-    )
-
-    calls = []
-
-    def fake_noise_injection(x):
-        calls.append(x.shape)
-        noise = torch.zeros(
-            x.shape[0],
-            1,
-            x.shape[2],
-            x.shape[3],
-            dtype=x.dtype,
-            device=x.device,
-        )
-        return torch.cat(
-            [
-                x,
-                noise,
-            ],
-            dim=1,
-        )
-
-    monkeypatch.setattr(
-        module,
-        "_noise_injection",
-        fake_noise_injection,
-    )
-
-    x = make_tensor(channels=4)
-    result, _ = layer(
-        x,
-        None,
-    )
-
-    assert calls == [
-        torch.Size([2, 4, 8, 8]),
-        torch.Size([2, 8, 8, 8]),
-    ]
-    assert result.shape == x.shape
 
 
 @pytest.mark.pruned
@@ -1570,7 +1194,6 @@ def test_mask_pool_any_all_ones():
     )
 
 
-@pytest.mark.pruned
 def test_mask_pool_all_requires_every_input_to_be_valid():
     pooling = MaskPool2d(method="all")
 

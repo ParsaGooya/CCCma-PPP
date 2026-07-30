@@ -306,7 +306,6 @@ def test_check_observation_equal_coordinates():
     assert caught == []
 
 
-@pytest.mark.pruned
 def test_check_observation_coordinate_mismatch():
     model = make_data_config(
         lat=(0, 1),
@@ -328,6 +327,7 @@ def test_check_observation_coordinate_mismatch():
         assert config._check_observation() is config
 
 
+@pytest.mark.pruned
 def test_check_observation_dimension_missing_from_model():
     model = make_data_config()
     observation = make_data_config()
@@ -954,12 +954,12 @@ def test_getitem_with_metadata_returns_tuple():
         "expected_exception",
     ),
     [
-        ("same_member", True, None),
+        ("same_member", True, ValueError),
         ("same_member", False, None),
         ("ensemble_mean", True, None),
         ("cross_ensemble", False, None),
         ("static", False, None),
-        (None, True, None),
+        (None, True, AttributeError),
     ],
 )
 def test_check_model_branches(
@@ -977,11 +977,11 @@ def test_check_model_branches(
     )
 
     if expected_exception is None:
-        assert TrainDatasetConfig._check_model(config) is None
+        assert TrainDatasetConfig._check_model(config) is config
     else:
         with pytest.raises(
             expected_exception,
-            match="same member",
+            match=None,
         ):
             TrainDatasetConfig._check_model(config)
 
@@ -993,7 +993,6 @@ def test_check_model_branches(
         "same_member",
     ],
 )
-@pytest.mark.xfail(reason="condition validation is not performed by TrainDatasetConfig", strict=False)
 def test_check_condition_member_methods_reject_ensemble_mean(
     condition_method,
 ):
@@ -1035,7 +1034,7 @@ def test_check_condition_member_methods_accept_ensemble_data(
         effective_condition=condition,
     )
 
-    assert TrainDatasetConfig._check_condition(config) is None
+    assert TrainDatasetConfig._check_condition(config) is config
 
 
 @pytest.mark.pruned

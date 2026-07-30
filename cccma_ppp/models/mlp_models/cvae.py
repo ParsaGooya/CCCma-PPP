@@ -1,10 +1,8 @@
 import torch
 import torch.nn as nn
 import numpy as np
-import numpy as np
 from typing import ClassVar
 import dataclasses
-from typing import Literal
 
 from cccma_ppp.models.models_abc import (
     cVAEmodelsABC,
@@ -12,16 +10,17 @@ from cccma_ppp.models.models_abc import (
     cVAEForwardRequest,
     cVAEPredictRequest,
 )
-from cccma_ppp.models.layers import _get_normal
+from cccma_ppp.models.layers.utils import _get_normal
 from cccma_ppp.models.layers.mlp import build_mlp
 from cccma_ppp.core.cVAE_module import cVAEOutput
 
-from cccma_ppp.models.layers import (InitMethod, 
-                                     ActivationName, 
-                                     _validate_dropout)
+from cccma_ppp.models.layers.generic import (
+    InitMethod,
+    ActivationName,
+    _validate_dropout,
+)
 
 from cccma_ppp.core.selectors import cVAEModelSelector
-
 
 
 @cVAEModelSelector.register("mlp")
@@ -36,7 +35,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
         Hidden layer sizes for encoder network.
     latent_size : int
         Dimensionality of latent space.
-    condition_embedding_dims : list of int 
+    condition_embedding_dims : list of int
         Hidden layer sizes for condition embedding network.
     condition_embedding_size : int
         Output size of condition embedding.
@@ -57,14 +56,14 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     encoder_hidden_dims: list
     latent_size: int
     condition_embedding_dims: list | None = None
-    condition_embedding_size: int  | None = None
+    condition_embedding_size: int | None = None
     decoder_hidden_dims: list = None
     condition_dependant_latent: bool = False
     condemb_to_decoder: bool = True
     batch_normalization: bool = False
     dropout_rate: float = None
     init_method: InitMethod = "trunc_normal"
-    activation: ActivationName = 'relu'
+    activation: ActivationName = "relu"
 
     NUM_INPUT_DIMS: ClassVar[int] = 2
     NUM_OUTPUT_DIMS: ClassVar[int] = 2
@@ -105,11 +104,10 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
             self.condition_embedding_size = self.latent_size
 
         if not self.condition_dependant_latent:
-                if not self.condemb_to_decoder:
-                    raise ValueError(
-                        "condition embedding has to be passed to decoder for cVAE when latent is not condition dependant."
-                    )
-                
+            if not self.condemb_to_decoder:
+                raise ValueError(
+                    "condition embedding has to be passed to decoder for cVAE when latent is not condition dependant."
+                )
 
     def build(
         self,
@@ -143,7 +141,6 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
         )
 
 
-    
 class cVAE_MLP(cVAEmodelsABC):
     """
     MLP-based conditional variational autoencoder (cVAE).
@@ -244,13 +241,13 @@ class cVAE_MLP(cVAEmodelsABC):
         ]
 
         self.embedding = build_mlp(
-                condition_embedding_dims,
-                activation=self.config.activation,
-                dropout_rate=self.dropout_rate,
-                batch_normalization=self.batch_normalization,
-                activate_final=True,
-            )
-                        
+            condition_embedding_dims,
+            activation=self.config.activation,
+            dropout_rate=self.dropout_rate,
+            batch_normalization=self.batch_normalization,
+            activate_final=True,
+        )
+
         if self.condition_dependant_latent and not self.condition_dependant_flow:
             self.condition_mu = nn.Linear(
                 condition_embedding_dims[-1], self.condition_embedding_size
@@ -260,9 +257,7 @@ class cVAE_MLP(cVAEmodelsABC):
             )
         else:
             self.embedding.append(
-                nn.Linear(
-                    condition_embedding_dims[-1], self.condition_embedding_size
-                )
+                nn.Linear(condition_embedding_dims[-1], self.condition_embedding_size)
             )
 
         self.add_condition_size = self.condition_embedding_size
@@ -297,9 +292,7 @@ class cVAE_MLP(cVAEmodelsABC):
         else:
             self._initialize_weights(self.init_method)
 
-    def forward(
-        self,
-        request: cVAEForwardRequest) -> cVAEOutput:
+    def forward(self, request: cVAEForwardRequest) -> cVAEOutput:
         """
         Perform forward pass through cVAE.
 
@@ -315,18 +308,20 @@ class cVAE_MLP(cVAEmodelsABC):
             and optional conditioning statistics.
         """
 
-        x =  request.target
+        x = request.target
         x_mask = request.target_mask
         condition = request.condition
         condition_mask = request.condition_mask
         added_features = request.added_features
         sample_size = request.sample_size
         min_posterior_variance = request.min_posterior_variance
-    
+
         self._shape_model_output = x.shape
 
         cond_mu, cond_log_var = self._condition(
-            condition=condition, condition_mask=condition_mask, added_features=added_features
+            condition=condition,
+            condition_mask=condition_mask,
+            added_features=added_features,
         )
 
         mu, log_var = self._recognition(
@@ -369,7 +364,7 @@ class cVAE_MLP(cVAEmodelsABC):
         Parameters
         ----------
         request
-            cVAE predict arguments specified 
+            cVAE predict arguments specified
             by cVAEPredictRequest.
 
         Returns
@@ -393,16 +388,21 @@ class cVAE_MLP(cVAEmodelsABC):
         _shape_model_output = (sample_size, B, C, -1)
 
         cond_mu, cond_log_var = self._condition(
-                condition=condition, condition_mask=condition_mask, added_features=added_features
-            )
+            condition=condition,
+            condition_mask=condition_mask,
+            added_features=added_features,
+        )
 
         if latent_samples is None:
-
             if self.condition_dependant_latent and not self.condition_dependant_flow:
-                latent_samples = self._sample(cond_mu, cond_log_var, sample_size, std=nstds)
+                latent_samples = self._sample(
+                    cond_mu, cond_log_var, sample_size, std=nstds
+                )
 
             else:
-                latent_samples = _get_normal(latent_ref_tensor, std=nstds).sample((sample_size,))
+                latent_samples = _get_normal(latent_ref_tensor, std=nstds).sample(
+                    (sample_size,)
+                )
 
             if prior_flow is not None:
                 cond = None
@@ -410,9 +410,8 @@ class cVAE_MLP(cVAEmodelsABC):
 
                 if prior_flow.condition_size is not None:
                     cond = (
-                        cond_mu
-                        .unsqueeze(0)                     # [1, B, C]
-                        .expand(sample_size, -1, -1)      # [S, B, C]
+                        cond_mu.unsqueeze(0)  # [1, B, C]
+                        .expand(sample_size, -1, -1)  # [S, B, C]
                         .reshape(sample_size * batch_size, -1)
                     )
 
@@ -427,7 +426,7 @@ class cVAE_MLP(cVAEmodelsABC):
             expected_shape = (sample_size, *latent_ref_tensor.shape)
             if not latent_samples.shape == expected_shape:
                 raise ValueError(
-                    f"Got user specified latent_samples of shape ({latent_samples.shape}) " \
+                    f"Got user specified latent_samples of shape ({latent_samples.shape}) "
                     f"but expected shape {(expected_shape)}"
                 )
 
@@ -447,7 +446,7 @@ class cVAE_MLP(cVAEmodelsABC):
     def _recognition(
         self,
         x: torch.Tensor,
-        x_mask:  torch.Tensor | None,
+        x_mask: torch.Tensor | None,
         condition: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
@@ -514,7 +513,6 @@ class cVAE_MLP(cVAEmodelsABC):
             x_features = added_features.flatten(start_dim=1)
         else:
             x_features = None
-
 
         if condition_mask is not None:
             condition = condition * condition_mask
@@ -585,6 +583,3 @@ class cVAE_MLP(cVAEmodelsABC):
         out = self.decoder(latent_samples)
 
         return out.reshape(sample_size, batch_size, -1)
-
-
-

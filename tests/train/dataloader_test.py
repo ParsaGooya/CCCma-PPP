@@ -489,7 +489,6 @@ def test_config_workers_positive_preserves_prefetch():
     assert config.prefetch_factor == 4
 
 
-@pytest.mark.pruned
 def test_config_invalid_train_years():
     with pytest.raises(
         ValueError,
@@ -511,6 +510,7 @@ def test_config_custom_train_years_valid():
     )
 
 
+@pytest.mark.pruned
 def test_config_custom_train_and_validation_split_rejects_overlap():
     with pytest.raises(
         ValueError,
@@ -676,6 +676,7 @@ def test_build_validation_loader_disabled():
     assert loader is None
 
 
+@pytest.mark.pruned
 def test_build_validation_loader_success():
     config = setup_config(
         make_config(
@@ -689,7 +690,6 @@ def test_build_validation_loader_success():
     assert len(loader.dataset) == 2
 
 
-@pytest.mark.pruned
 def test_build_validation_loader_passes_years():
     config = setup_config(
         make_config(

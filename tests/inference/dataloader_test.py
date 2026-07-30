@@ -219,6 +219,7 @@ def test_batchdata_creates_spatial_mask():
     )
 
 
+@pytest.mark.pruned
 def test_batchdata_reduces_spatial_mask():
     batch = BatchData(
         input=torch.tensor(
@@ -452,6 +453,7 @@ def test_init_workers_positive_preserves_prefetch(
     assert config.prefetch_factor == 8
 
 
+@pytest.mark.pruned
 def test_available_times_requires_config():
     config = make_loader_config()
 
@@ -539,7 +541,6 @@ def test_target_metadata_requires_train_config(
         _ = config.target_var_metadata
 
 
-@pytest.mark.pruned
 def test_target_metadata_success(dataset_config):
     config = make_loader_config(
         dataset_config=dataset_config,
@@ -937,7 +938,6 @@ def test_batchdata_reduced_mask_initializes_shared_mask():
     )
 
 
-@pytest.mark.pruned
 def test_batchdata_reduced_mask_reuses_shared_mask():
     shared = torch.tensor([False, True])
     BatchData._shared_input_mask = shared

@@ -138,6 +138,7 @@ def test_build_weights_cosine_lat():
     assert not np.allclose(weights.values, 1.0)
 
 
+@pytest.mark.pruned
 def test_build_weights_variable_weights():
     cfg = WeightsConfig(
         variable_weights={
@@ -223,7 +224,6 @@ def test_build_weights_load_dir(tmp_path):
     assert weights is not None
 
 
-@pytest.mark.pruned
 def test_build_weights_loaded_ref_coords_match(tmp_path):
     cfg = WeightsConfig(load_dir=tmp_path)
 
@@ -764,7 +764,6 @@ def test_build_weights_save_false_does_not_write():
     save_mock.assert_not_called()
 
 
-@pytest.mark.pruned
 def test_build_weights_save_true_writes_file(tmp_path):
     cfg = WeightsConfig()
 
@@ -782,6 +781,7 @@ def test_build_weights_save_true_writes_file(tmp_path):
     save_mock.assert_called_once()
 
 
+@pytest.mark.pruned
 def test_build_weights_custom_save_name(tmp_path):
     cfg = WeightsConfig()
 

@@ -522,6 +522,7 @@ def test_span_ends_after_exception(basic_monitor):
     assert basic_monitor.current_stage() == "root"
 
 
+@pytest.mark.pruned
 def test_empty_span_name(basic_monitor):
     with pytest.raises(
         ValueError,
@@ -876,6 +877,7 @@ def test_invalid_rolling_window():
         )
 
 
+@pytest.mark.pruned
 def test_kalman_smoothing():
     series = pd.Series([1.0, 2.0, 3.0, 4.0])
 
@@ -1136,6 +1138,7 @@ def test_plot_empty_dataframe():
     assert result is None
 
 
+@pytest.mark.pruned
 def test_plot_without_samples():
     instance = Monitor()
 
@@ -1160,7 +1163,6 @@ def test_plot_without_samples():
     assert result is None
 
 
-@pytest.mark.pruned
 def test_plot_without_timeline_events():
     instance = Monitor(
         cpu=True,
@@ -1268,7 +1270,6 @@ def test_plot_rejects_string_metrics(
         )
 
 
-@pytest.mark.pruned
 def test_plot_rejects_unknown_metric(
     sample_dataframe,
 ):
@@ -1345,7 +1346,6 @@ def test_plot_returns_none_for_nan_metric():
     assert result is None
 
 
-@pytest.mark.pruned
 def test_sample_stage_tracks_active_span(
     basic_monitor,
 ):

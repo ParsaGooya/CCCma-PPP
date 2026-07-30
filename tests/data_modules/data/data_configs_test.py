@@ -251,6 +251,7 @@ def test_obs_data_config_get_info_called():
     assert called["x"] is True
 
 
+@pytest.mark.pruned
 def test_condition_data_config_basic():
     with patch_common():
         cfg = ConditionDataConfig(
@@ -283,7 +284,6 @@ def test_condition_data_config_check_ensemble_false():
     assert cfg._check_ensemble is False
 
 
-@pytest.mark.pruned
 def test_condition_data_config_check_ensemble_true():
     with patch_common():
         cfg = ConditionDataConfig(

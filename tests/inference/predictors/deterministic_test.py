@@ -5,8 +5,8 @@ from unittest.mock import Mock
 import pytest
 import torch
 
-import cccma_ppp.inference.predictors_lib.deterministic as module
-from cccma_ppp.inference.predictors_lib.deterministic import (
+import cccma_ppp.inference.predictors.deterministic as module
+from cccma_ppp.inference.predictors.deterministic import (
     DeterministicPredictorConfig,
     DetermninisticPredictor,
 )
@@ -133,19 +133,6 @@ def clear_memory_mock(monkeypatch):
     return clear_mock
 
 
-# ---------------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_config_type_is_deterministic():
-    config = DeterministicPredictorConfig()
-
-    assert config._type == "deterministic"
-
-
 @pytest.mark.pruned
 def test_config_build_returns_predictor(tmp_path):
     config = DeterministicPredictorConfig()
@@ -168,11 +155,6 @@ def test_config_build_returns_predictor(tmp_path):
     assert predictor.distributed is distributed
     assert predictor.output_dir == Path(tmp_path)
     assert predictor.num_output_sampling == 3
-
-
-# ---------------------------------------------------------------------------
-# Initialization and properties
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -249,11 +231,6 @@ def test_non_generator_enables_training_variable_extraction(
         DummyRunningCovariance,
     )
     assert predictor.stats["residual"].distributed is predictor.distributed
-
-
-# ---------------------------------------------------------------------------
-# Training statistics
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.pruned
@@ -396,11 +373,6 @@ def test_update_train_stats_uses_target_minus_prediction(
     )
 
 
-# ---------------------------------------------------------------------------
-# Inference
-# ---------------------------------------------------------------------------
-
-
 def test_infer_on_batch_requires_target_for_training_stats(
     tmp_path,
     clear_memory_mock,
@@ -466,6 +438,7 @@ def test_infer_on_batch_returns_training_stats(
     )
 
 
+@pytest.mark.pruned
 def test_infer_on_batch_predicts_and_saves(
     tmp_path,
     clear_memory_mock,
@@ -502,7 +475,6 @@ def test_infer_on_batch_predicts_and_saves(
     clear_memory_mock.assert_called_once()
 
 
-@pytest.mark.pruned
 def test_infer_on_batch_skips_noise_for_generator(
     tmp_path,
     clear_memory_mock,
@@ -604,11 +576,6 @@ def test_infer_on_batch_uses_prediction_batch_as_sample_size(
         (7,),
         torch.Size([2, 3]),
     )
-
-
-# ---------------------------------------------------------------------------
-# NetCDF delegation
-# ---------------------------------------------------------------------------
 
 
 def test_batch_to_netcdf_delegates_prediction(

@@ -238,7 +238,6 @@ def test_load_dir_input_metadata_mismatch(monkeypatch):
         ConcreteDeterministic(cfg, input_shape=np.array([1]))
 
 
-@pytest.mark.pruned
 def test_load_dir_output_metadata_mismatch(monkeypatch):
     import cccma_ppp.core.deterministic_module as mod
 
@@ -298,7 +297,6 @@ def test_load_dir_output_shape_mismatch(monkeypatch):
         )
 
 
-@pytest.mark.pruned
 def test_load_dir_success_calls_load_state_dict(monkeypatch):
     import cccma_ppp.core.deterministic_module as mod
 
@@ -331,6 +329,7 @@ def test_load_dir_success_calls_load_state_dict(monkeypatch):
     assert called["load"] is True
 
 
+@pytest.mark.pruned
 def test_load_dir_success_with_explicit_output_shape(monkeypatch):
     import cccma_ppp.core.deterministic_module as mod
 
@@ -414,6 +413,7 @@ def test_predict_alias_calls_predict():
     assert isinstance(out, deterministicOutput)
 
 
+@pytest.mark.pruned
 def test_compute_loss_requires_criterion():
     module = make_module(input_shape=np.array([1]))
 
@@ -421,6 +421,7 @@ def test_compute_loss_requires_criterion():
         module._compute_loss(DummyBatch())
 
 
+@pytest.mark.pruned
 def test_compute_loss_plain_target():
     module = make_module(input_shape=np.array([1]))
     module.init_loss_function(DummyLoss())
@@ -447,7 +448,6 @@ def test_compute_loss_tuple_target_with_mask():
     assert losses["total_loss"] == 1.0
 
 
-@pytest.mark.pruned
 def test_compute_loss_list_target_with_mask():
     module = make_module(input_shape=np.array([1]))
     module.init_loss_function(DummyLoss())

@@ -34,7 +34,6 @@ def test_register_and_get_with_config():
     assert obj.y == 3
 
 
-@pytest.mark.pruned
 def test_get_unregistered_raises():
     reg = Registery()
 
@@ -42,6 +41,7 @@ def test_get_unregistered_raises():
         reg.get("missing")
 
 
+@pytest.mark.pruned
 def test_overwrite_registration():
     reg = Registery()
 
@@ -73,7 +73,6 @@ def test_get_with_empty_config_dict():
     assert obj.ok
 
 
-@pytest.mark.pruned
 def test_get_with_none_config_passes_none():
     reg = Registery()
 

@@ -226,6 +226,7 @@ def test_set_random_seed(tmp_path):
     cfg.set_random_seed(0)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_creates_dirs(tmp_path):
     cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
@@ -235,7 +236,6 @@ def test_prepare_directory_creates_dirs(tmp_path):
     assert os.path.exists(cfg.checkpoint_dir)
 
 
-@pytest.mark.pruned
 def test_prepare_directory_yaml_copy(tmp_path):
     cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
@@ -289,6 +289,7 @@ def test_build_trainer_basic(tmp_path):
     assert trainer == "trainer"
 
 
+@pytest.mark.pruned
 def test_build_trainer_with_logger(tmp_path):
     cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
@@ -328,7 +329,6 @@ def test_resolve_resuming_updates_config(tmp_path):
     assert cfg.max_epochs == halted.max_epochs
 
 
-@pytest.mark.pruned
 def test_set_random_seed_none(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -693,6 +693,7 @@ def test_optimization_exists(tmp_path):
     assert cfg.optimization is not None
 
 
+@pytest.mark.pruned
 def test_deterministic_beta_finder_warning(tmp_path):
     loader = DummyTrainLoader()
     loader.dataset_config.observation = DummyObservation()
@@ -714,6 +715,7 @@ def test_deterministic_beta_finder_warning(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_non_mlp_with_flattener_raises(tmp_path):
     loader = DummyTrainLoader()
 
@@ -1025,7 +1027,6 @@ def test_resolve_resuming_sets_experiment_dir_path(tmp_path):
     assert isinstance(cfg.experiment_dir, Path)
 
 
-@pytest.mark.pruned
 def test_missing_flattener_for_mlp(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1859,7 +1860,6 @@ def test_resolve_resuming_copy_flag_false(tmp_path):
     assert cfg.copy_resume_dir_to_new_path is False
 
 
-@pytest.mark.pruned
 def test_logger_not_called_when_not_root(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 

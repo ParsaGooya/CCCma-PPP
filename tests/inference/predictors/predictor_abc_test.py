@@ -3,13 +3,12 @@ from types import SimpleNamespace
 from unittest.mock import Mock
 
 import numpy as np
-import pandas as pd
 import pytest
 import torch
 import xarray as xr
 
-import cccma_ppp.inference.predictors_lib.predictor_abc as module
-from cccma_ppp.inference.predictors_lib.predictor_abc import (
+import cccma_ppp.inference.predictors.predictor_abc as module
+from cccma_ppp.inference.predictors.predictor_abc import (
     PredictorABC,
     save_batch_to_netcdf,
 )
@@ -60,26 +59,6 @@ def make_output(output=None):
     return SimpleNamespace(output=(torch.zeros(2, 3) if output is None else output))
 
 
-# ---------------------------------------------------------------------------
-# Abstract interface and basic properties
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_predictor_abc_cannot_be_instantiated():
-    with pytest.raises(TypeError):
-        PredictorABC()
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_temp_save_dir_uses_output_directory(tmp_path):
-    predictor = ConcretePredictor(tmp_path)
-
-    assert predictor.temp_save_dir == tmp_path / "_temp"
-
-
 @pytest.mark.pruned
 def test_stats_returns_none_when_training_variables_disabled(
     tmp_path,
@@ -103,37 +82,6 @@ def test_stats_returns_internal_statistics_when_enabled(
 
     assert predictor.stats is predictor._stats
     assert set(predictor.stats) == {"residual"}
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_concrete_abstract_method_implementations(tmp_path):
-    predictor = ConcretePredictor(tmp_path)
-
-    batch = object()
-    output = object()
-    metadata = [{"year": 2000}]
-
-    assert predictor._infer_on_batch(batch) is batch
-    assert predictor._batch_to_netcdf(
-        output,
-        metadata,
-    ) == (
-        output,
-        metadata,
-    )
-    assert predictor._update_train_stats(
-        output,
-        batch,
-    ) == (
-        output,
-        batch,
-    )
-
-
-# ---------------------------------------------------------------------------
-# raw_module
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.pruned
@@ -164,11 +112,6 @@ def test_raw_module_unwraps_distributed_module(
     predictor.module = FakeDDP(raw)
 
     assert predictor.raw_module is raw
-
-
-# ---------------------------------------------------------------------------
-# Decoder noise
-# ---------------------------------------------------------------------------
 
 
 def test_add_decoder_noise_builds_sampler_when_missing(
@@ -327,11 +270,6 @@ def test_add_decoder_noise_reshapes_flat_noise(
     assert result.output.shape == (2, 2, 3, 4)
 
 
-# ---------------------------------------------------------------------------
-# Output sampler
-# ---------------------------------------------------------------------------
-
-
 def test_build_output_sampler_requires_statistics_file(
     tmp_path,
 ):
@@ -424,11 +362,6 @@ def test_output_sampler_accepts_integer_sample_size(
     sampler(4)
 
     assert predictor._sample.call_args.args[2] == 4
-
-
-# ---------------------------------------------------------------------------
-# Multivariate normal
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -609,11 +542,6 @@ def test_get_multinormal_increases_jitter_between_retries(
     assert third_jitter > second_jitter
 
 
-# ---------------------------------------------------------------------------
-# Sampling
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.pruned
 def test_sample_converts_integer_size_to_tuple(
     tmp_path,
@@ -690,11 +618,6 @@ def test_sample_default_size_is_one(tmp_path):
     distribution.sample.assert_called_once_with((1,))
 
 
-# ---------------------------------------------------------------------------
-# save_batch_to_netcdf validation
-# ---------------------------------------------------------------------------
-
-
 def test_save_batch_to_netcdf_rejects_wrong_rank(
     tmp_path,
 ):
@@ -716,6 +639,7 @@ def test_save_batch_to_netcdf_rejects_wrong_rank(
         )
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_rejects_metadata_mismatch(
     tmp_path,
 ):
@@ -734,11 +658,6 @@ def test_save_batch_to_netcdf_rejects_metadata_mismatch(
             save_name="prediction.nc",
             save_dir=tmp_path,
         )
-
-
-# ---------------------------------------------------------------------------
-# save_batch_to_netcdf output
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.pruned
@@ -817,7 +736,6 @@ def test_save_batch_to_netcdf_with_extra_dimensions(
         )
 
 
-@pytest.mark.pruned
 def test_save_batch_to_netcdf_assigns_coordinates(
     tmp_path,
 ):

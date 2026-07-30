@@ -325,7 +325,6 @@ def test_record_ignores_invalid_learning_rate(
     assert aggregator.lr_values == 0.0
 
 
-@pytest.mark.pruned
 def test_dist_compute_combines_all_metric_groups():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -433,6 +432,7 @@ def test_record_epoch_requires_distributed_compute():
         aggregator.record_epoch({"loss": 1.0})
 
 
+@pytest.mark.pruned
 def test_record_epoch_appends_metrics():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -501,7 +501,6 @@ def test_record_epoch_resets_batch_state():
     assert aggregator._aggregated_across_ranks is False
 
 
-@pytest.mark.pruned
 def test_record_epoch_replaces_existing_metrics():
     aggregator = make_agg(
         metrics={
@@ -526,6 +525,7 @@ def test_record_epoch_replaces_existing_metrics():
     assert aggregator.epoch_times == [9.0]
 
 
+@pytest.mark.pruned
 def test_record_epoch_replacement_none_time_becomes_nan():
     aggregator = make_agg(
         metrics={
@@ -634,7 +634,6 @@ def test_state_dict_empty():
     }
 
 
-@pytest.mark.pruned
 def test_state_dict_roundtrip():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -662,6 +661,7 @@ def test_state_dict_roundtrip():
     assert loaded.num_epochs_seen == 1
 
 
+@pytest.mark.pruned
 def test_load_state_dict_missing_keys():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -780,6 +780,7 @@ def test_plot_rejects_inconsistent_epoch_counts(
         )
 
 
+@pytest.mark.pruned
 def test_plot_rejects_zero_epochs(tmp_path):
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -956,7 +957,6 @@ def test_plot_accepts_string_directory(tmp_path):
     assert list(tmp_path.glob("*.png"))
 
 
-@pytest.mark.pruned
 def test_plot_uses_runtime_context(
     monkeypatch,
     tmp_path,

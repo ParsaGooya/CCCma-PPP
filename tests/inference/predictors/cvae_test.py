@@ -2,12 +2,11 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
 
-import numpy as np
 import pytest
 import torch
 
-import cccma_ppp.inference.predictors_lib.cvae as module
-from cccma_ppp.inference.predictors_lib.cvae import (
+import cccma_ppp.inference.predictors.cvae as module
+from cccma_ppp.inference.predictors.cvae import (
     cVAEPredictor,
     cVAEPredictorConfig,
 )
@@ -320,6 +319,7 @@ def test_update_train_stats_updates_posterior_samples(
     )
 
 
+@pytest.mark.pruned
 def test_update_train_stats_requires_samples(
     tmp_path,
     monkeypatch,
@@ -1012,7 +1012,6 @@ def test_get_latent_samples_uses_existing_sampler(
     assert result.shape == (4, 3, 5)
 
 
-@pytest.mark.pruned
 def test_infer_on_batch_save_latent_requires_target(
     tmp_path,
     monkeypatch,

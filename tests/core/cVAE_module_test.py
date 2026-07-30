@@ -212,7 +212,6 @@ def test_build_with_explicit_output_shape():
     assert np.array_equal(m.model.build_kwargs["output_shape"], np.array([2]))
 
 
-@pytest.mark.pruned
 def test_build_shape_mismatch(monkeypatch):
     cfg = cVAEConfig(ModelConfig=DummySelector())
     cfg.load_dir = "fake_checkpoint.pt"
@@ -272,7 +271,6 @@ def test_flow_without_condition():
     assert m.prior_flow is not None
 
 
-@pytest.mark.pruned
 def test_build_with_prior_flow_and_min_variance_and_added_features():
     cfg = cVAEConfig(
         ModelConfig=DummySelector(),
@@ -363,6 +361,7 @@ def test_forward_with_sample_size_explicit():
     assert isinstance(out, cVAEOutput)
 
 
+@pytest.mark.pruned
 def test_compute_loss_requires_init():
     m = make_module()
 
@@ -423,6 +422,7 @@ def test_load_checkpoint_missing():
         cfg._load_from_checkpoint("missing.pt")
 
 
+@pytest.mark.pruned
 def test_config_load_dir_branch_success(monkeypatch):
     def fake_load_from_checkpoint(self, load_path):
         self.ModelConfig = DummySelector()
@@ -446,7 +446,6 @@ def test_config_load_dir_branch_success(monkeypatch):
     assert cfg.model_config is not None
 
 
-@pytest.mark.pruned
 def test_config_load_dir_branch_with_none_combined_sets_default(monkeypatch):
     def fake_load_from_checkpoint(self, load_path):
         self.ModelConfig = DummySelector()
@@ -881,6 +880,7 @@ def test_min_posterior_variance_must_be_positive():
         make_module(cfg)
 
 
+@pytest.mark.pruned
 def test_min_posterior_variance_is_converted_to_log_tensor():
     cfg = cVAEConfig(
         ModelConfig=DummySelector(),
@@ -896,44 +896,6 @@ def test_min_posterior_variance_is_converted_to_log_tensor():
     )
 
 
-@pytest.mark.pruned
-def test_forward_records_all_request_fields():
-    selector = RecordingSelector()
-    cfg = cVAEConfig(
-        ModelConfig=selector,
-        min_posterior_variance=0.25,
-    )
-    module = make_module(cfg)
-
-    batch = DummyBatch(
-        input=torch.full((2, 1), 2.0),
-        target=torch.full((2, 1), 3.0),
-        input_mask=torch.full((2, 1), 4.0),
-        target_mask=torch.full((2, 1), 5.0),
-        added_features=torch.full((2, 3), 6.0),
-    )
-
-    module.forward(
-        batch,
-        sample_size=9,
-    )
-
-    request = selector.model_config.forward_request
-
-    assert request.target is batch.target
-    assert request.target_mask is batch.target_mask
-    assert request.condition is batch.input
-    assert request.condition_mask is batch.input_mask
-    assert request.added_features is batch.added_features
-    assert request.sample_size == 9
-    assert request.output_sample_size is None
-    assert torch.equal(
-        request.min_posterior_variance,
-        module.min_posterior_variance,
-    )
-
-
-@pytest.mark.pruned
 def test_forward_eval_uses_validation_noise_sample_count():
     selector = GeneratorSelector()
     module = make_module(
@@ -946,21 +908,6 @@ def test_forward_eval_uses_validation_noise_sample_count():
     request = selector.model_config.forward_request
 
     assert request.output_sample_size == 11
-
-
-@pytest.mark.pruned
-def test_forward_training_does_not_use_validation_noise_sample_count():
-    selector = GeneratorSelector()
-    module = make_module(
-        cVAEConfig(ModelConfig=selector),
-    )
-    module.train()
-
-    module.forward(DummyBatch())
-
-    request = selector.model_config.forward_request
-
-    assert request.output_sample_size is None
 
 
 def test_predict_training_uses_training_noise_sample_count():
@@ -1285,6 +1232,7 @@ def test_build_load_dir_rejects_input_metadata_mismatch(
         )
 
 
+@pytest.mark.pruned
 def test_build_load_dir_rejects_output_metadata_mismatch(
     monkeypatch,
 ):

@@ -261,7 +261,6 @@ def test_validate_checkpoint_compatibility_without_checkpoint():
     assert result is None
 
 
-@pytest.mark.pruned
 def test_validate_checkpoint_compatibility_matching_values():
     RuntimeContext.INPUT_VAR_METADATA = {
         "input": "metadata",
@@ -360,6 +359,7 @@ def test_validate_checkpoint_compatibility_rejects_input_metadata():
         )
 
 
+@pytest.mark.pruned
 def test_validate_checkpoint_compatibility_rejects_target_metadata():
     RuntimeContext.TARGET_VAR_METADATA = {
         "current": "target",
@@ -1220,6 +1220,7 @@ def test_config_level_checkpoint_validation_without_checkpoint():
     assert result is None
 
 
+@pytest.mark.pruned
 def test_config_level_checkpoint_validation_matching_values():
     RuntimeContext.INPUT_VAR_METADATA = {
         "input": "metadata",
@@ -1298,7 +1299,6 @@ def test_config_level_checkpoint_validation_rejects_input_metadata():
         )
 
 
-@pytest.mark.pruned
 def test_config_level_checkpoint_validation_rejects_target_metadata():
     RuntimeContext.TARGET_VAR_METADATA = {
         "current": "target",
