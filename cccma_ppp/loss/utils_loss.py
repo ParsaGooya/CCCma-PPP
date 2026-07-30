@@ -174,7 +174,7 @@ class WeightedMSE(lossABC):
         """
 
         squeeze = False
-        if len(tensor.shape) == self.num_output_dimensions + 1:
+        if len(tensor.shape) == self.num_output_dimensions:
             tensor = tensor.unsqueeze(0)
             squeeze = True
 
@@ -243,6 +243,7 @@ class WeightedMSE(lossABC):
 
         y = target
         y_hat = data
+
 
         if self.low_ress_kernel_size is not None:
             if self.generative_context.generative_modeling:
@@ -464,7 +465,7 @@ class WeightedCRPS(lossABC):
         """
 
         squeeze = False
-        if len(tensor.shape) == self.num_output_dimensions + 1:
+        if len(tensor.shape) == self.num_output_dimensions:
             tensor = tensor.unsqueeze(0)
             squeeze = True
 
