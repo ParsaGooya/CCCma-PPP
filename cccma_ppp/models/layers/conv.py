@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
+import math
 from cccma_ppp.models.layers.partialconv2d import PartialConv2d
 from cccma_ppp.models.layers import (MaskPoolingMethod,
                                      NormalizationMethod,
@@ -31,20 +31,24 @@ class TensorMask:
     tensor: torch.Tensor
     mask: torch.Tensor | None = None
 
+@dataclasses.dataclass
+class LatentVector:
+    """mu and log_var tensors for cVAE."""
+
+    mu: torch.Tensor
+    log_var: torch.Tensor | None
+
 
 
 class ConvBlockConfigABC(abc.ABC):
 
     def __init__(self):
-        self.latent_size: int | None = None
         self.inject_noise: bool = False
     
     @final
-    def setup_generative(self, 
-                         latent_size: int | None = None,
-                         inject_noise: bool = False):
+    def setup_generator(self, 
+                         inject_noise: bool = False,):
         
-        self.latent_size = latent_size
         self.inject_noise = inject_noise
 
         return self
@@ -220,7 +224,7 @@ class PartialConvSingle(nn.Module):
         self,
         x: torch.Tensor,
         mask: torch.Tensor | None,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
         
         if self.inject_noise:
             x = _noise_injection(x)
@@ -305,7 +309,7 @@ class ConvNeXtSingle(nn.Module):
         self,
         x: torch.Tensor,
         mask: torch.Tensor | None = None,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
         
         residual = x
 
@@ -345,6 +349,7 @@ class ConvBlock(nn.Module):
         config: ConvBlockConfig,
     ):
         super().__init__()
+        self.config = config
         self.out_channels = out_channels
 
         stages = []
@@ -361,6 +366,7 @@ class ConvBlock(nn.Module):
             current_channels = out_channels
 
         self.stages = nn.ModuleList(stages)
+
 
     def forward(self, input: TensorMask) -> TensorMask:
         x = input.tensor
@@ -385,6 +391,7 @@ class PartialConvBlock(nn.Module):
         config: PartialConvBlockConfig,
     ):
         super().__init__()
+        self.config = config
         self.out_channels = out_channels
 
         stages: list[nn.Module] = []
@@ -401,6 +408,7 @@ class PartialConvBlock(nn.Module):
             current_channels = out_channels
 
         self.stages = nn.ModuleList(stages)
+
 
     def forward(self, input: TensorMask) -> TensorMask:
         mask = _broadcast_mask(input.mask, input.tensor)
@@ -423,6 +431,7 @@ class ConvNeXtBlock(nn.Module):
     ):
         super().__init__()
 
+        self.config = config
         self.out_channels = out_channels
         self.use_partial_conv = config.use_partial_conv
         self.requires_projection = in_channels != out_channels
@@ -469,6 +478,7 @@ class ConvNeXtBlock(nn.Module):
             ]
         )
 
+
     def forward(self, input: TensorMask ) -> TensorMask:
         x = input.tensor
         mask = input.mask
@@ -488,6 +498,35 @@ class ConvNeXtBlock(nn.Module):
             tensor=x,
             mask=mask,
         )
+    
+
+
+class LatentBlock(nn.Module):
+    def __init__(
+        self,
+        conv_block: ConvNeXtBlock | PartialConvBlock | ConvBlock,
+        input_shape: tuple[int, int, int],
+        latent_size: int,
+        *,
+        get_log_var: bool = True,
+        latent_normalization: NormalizationMethod | None = "layer",
+    ):
+        super().__init__()
+
+        self.conv_block = conv_block
+
+        self.latent_head = LatentLayer(
+            input_shape=input_shape,
+            latent_size=latent_size,
+            get_log_var=get_log_var,
+            latent_normalization=latent_normalization,
+            group_norm_groups= getattr(conv_block.config, "group_norm_groups", 8)
+        )
+
+    def forward(self, input: TensorMask) -> LatentVector:
+
+        features = self.conv_block(input)
+        return self.latent_head(features.tensor)
 
 
 class MaskPool2d(nn.Module):
@@ -524,3 +563,46 @@ class MaskPool2d(nn.Module):
             return (fraction >= self.fraction_threshold).to(mask.dtype)
 
         raise ValueError(f"Unsupported mask pooling method: {self.method!r}")
+
+
+class LatentLayer(nn.Module):
+
+    def __init__(self,
+                input_shape: tuple[int, int, int],
+                latent_size: int,
+                latent_normalization: NormalizationMethod | None = 'layer',
+                *,
+                get_log_var: bool = True,
+                group_norm_groups: int = 8):
+    
+        super().__init__()
+
+        input_channels = input_shape[0]
+        self.normalization = (
+            _build_normalization(
+                latent_normalization,
+                input_channels,
+                group_norm_groups=group_norm_groups,
+            )
+            if latent_normalization is not None
+            else nn.Identity()
+        )
+    
+        flattened_size = math.prod(input_shape)
+        self.mu = nn.Linear(flattened_size, latent_size)
+
+        self.log_var = (
+            nn.Linear(flattened_size, latent_size)
+            if get_log_var
+            else None
+        )
+    def forward(self, x : torch.Tensor) -> LatentVector:
+
+        x = self.normalization(x)
+
+        x = x.flatten(start_dim=1)
+
+        mu = self.mu(x)
+        log_var = self.log_var(x) if self.log_var is not None else None
+
+        return LatentVector(mu=mu, log_var=log_var)

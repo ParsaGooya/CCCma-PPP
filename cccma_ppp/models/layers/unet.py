@@ -1,12 +1,14 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 import copy
 
 from cccma_ppp.models.layers import (MaskPoolingMethod,
                                     UpsamplingMethod,
                                     OutputActivation,
-                                    AlignmentMethod)
+                                    AlignmentMethod,
+                                    NormalizationMethod)
 
 
 from cccma_ppp.models.layers.utils import (align_to_skip,
@@ -18,6 +20,7 @@ from cccma_ppp.models.layers.conv import (ConvBlockConfig,
                                           PartialConvBlock,
                                           ConvNeXtBlockConfig,
                                           ConvNeXtBlock,
+                                          LatentBlock,
                                           MaskPool2d,
                                           TensorMask)
 
@@ -29,40 +32,66 @@ def build_conv_block(
     config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig,
     *,
     latent_size: int = None,
+    block_output_shape: tuple[int, int, int] | None = None,
+    get_log_var: bool = True,
+    latent_normalization: NormalizationMethod | None = 'layar',
     inject_noise: bool = False
 ) -> nn.Module:
     
     effective_config = copy.copy(config)
 
-    effective_config = effective_config.setup_generative(
-                latent_size=latent_size,
+    effective_config = effective_config.setup_generator(
                 inject_noise=inject_noise
             )
     
     if isinstance(config, ConvBlockConfig):
-        return ConvBlock(
+        block = ConvBlock(
             in_channels,
             out_channels,
             effective_config,
         )
 
-    if isinstance(config, PartialConvBlockConfig):
-        return PartialConvBlock(
+    elif isinstance(config, PartialConvBlockConfig):
+        block = PartialConvBlock(
             in_channels,
             out_channels,
             effective_config,
         )
 
-    if isinstance(config, ConvNeXtBlockConfig):
-        return ConvNeXtBlock(
+    elif isinstance(config, ConvNeXtBlockConfig):
+        block = ConvNeXtBlock(
             in_channels,
             out_channels,
             effective_config,
         )
 
-    raise TypeError(
-        f"Unsupported UNet block configuration: {type(effective_config).__name__}."
-    )
+    else:
+        raise TypeError(
+            f"Unsupported UNet block configuration: {type(effective_config).__name__}."
+        )
+
+    if latent_size is not None:
+        if block_output_shape is None:
+            raise ValueError(
+            f"When latent_size is specified, block_output_shape must be available"
+        )
+
+        if block_output_shape[0] != out_channels:
+                raise ValueError(
+                    f"Latent block output shape starts with "
+                    f"{block_output_shape[0]} channels, but the block outputs "
+                    f"{out_channels} channels."
+                )
+
+        return LatentBlock(
+            conv_block=block,
+            input_shape=block_output_shape,
+            latent_size=latent_size,
+            get_log_var=get_log_var,
+            latent_normalization=latent_normalization,
+        )
+
+    return block
 
 
 
@@ -76,11 +105,14 @@ class DownBlock(nn.Module):
         out_channels: int,
         *,
         block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig,
-        process_skip: bool,
         mask_pooling: MaskPoolingMethod,
         mask_fraction_threshold: float,
+        return_skip: bool = True,
+        process_skip: bool,
+
     ):
         super().__init__()
+        self.return_skip = return_skip
 
         self._block = build_conv_block(
             in_channels,
@@ -93,7 +125,7 @@ class DownBlock(nn.Module):
                 out_channels,
                 block_config,
             )
-            if process_skip
+            if (process_skip and return_skip)
             else None
         )
 
@@ -109,9 +141,6 @@ class DownBlock(nn.Module):
     ) -> tuple[TensorMask, TensorMask]:
         skip = self._block(input)
 
-        if self.skip_processor is not None:
-            skip = self.skip_processor(skip)
-
         pooled_mask = (
             self.mask_pool(skip.mask)
             if skip.mask is not None
@@ -123,7 +152,17 @@ class DownBlock(nn.Module):
             mask=pooled_mask,
         )
 
-        return downsampled, skip
+        if self.skip_processor is not None:
+            skip = self.skip_processor(skip)
+
+        if self.return_skip:
+            return downsampled, skip
+
+        else:
+            return downsampled
+
+    def output_shape(self, input_shape: np.ndarray | tuple):
+        return tuple(shape//2 for shape in input_shape)
 
 
 
@@ -134,7 +173,7 @@ class UpBlock(nn.Module):
     def __init__(
         self,
         input_channels: int,
-        skip_channels: int,
+        skip_channels: int | None,
         out_channels: int,
         *,
         block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig,
@@ -212,6 +251,7 @@ class UpBlock(nn.Module):
             effective_block_config.multi_channel = False
             effective_block_config.return_mask = False
 
+        skip_channels = skip_channels or 0
 
         self._block = build_conv_block(
             skip_channels + out_channels,
@@ -224,7 +264,8 @@ class UpBlock(nn.Module):
     def forward(
         self,
         input: TensorMask,
-        skip: TensorMask,
+        skip: TensorMask | None = None,
+        resize_shape: tuple | None = None,
     ) -> TensorMask:
         if self.inject_noise:
             if self.upsampling_method == "transpose_conv":
@@ -241,12 +282,27 @@ class UpBlock(nn.Module):
             x = self.upsample(input.tensor)
             x = self.channel_projection(x)
 
-        x = align_to_skip(x, 
-                          skip.tensor,
-                          self.skip_alignment_method,
-                          self.skip_padding_method)
 
-        merged_tensor = torch.cat([skip.tensor, x], dim=1)
+        if self.skip_channels is not None:
+
+            if skip is None:
+                raise ValueError(
+                    "A skip tensor is required when skip_channels is configured."
+                )
+
+            x = align_to_skip(x, 
+                            skip.tensor.shape[-2:],
+                            self.skip_alignment_method,
+                            self.skip_padding_method)
+
+            merged_tensor = torch.cat([skip.tensor, x], dim=1)
+
+        elif resize_shape is not None:
+
+            merged_tensor = align_to_skip(x, 
+                            resize_shape,
+                            self.skip_alignment_method,
+                            self.skip_padding_method)
 
         return self._block(
             TensorMask(

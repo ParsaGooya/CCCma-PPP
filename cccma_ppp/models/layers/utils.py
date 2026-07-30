@@ -17,19 +17,18 @@ def _same_padding(kernel_size: int) -> int:
 
 def align_to_skip(
     x: torch.Tensor,
-    skip: torch.Tensor,
+    skip_shape: torch.Tensor,
     mode: AlignmentMethod = 'padd',
     padding_mode: PaddingMethod = "zeros"
 ) -> torch.Tensor:
-    target_size = skip.shape[-2:]
 
-    if x.shape[-2:] == target_size:
+    if x.shape[-2:] == skip_shape:
         return x
 
     if mode == "resize":
         return F.interpolate(
             x,
-            size=target_size,
+            size=skip_shape,
             mode="bilinear",
             align_corners=False,
         )
@@ -37,14 +36,14 @@ def align_to_skip(
     if mode == "padd":
         return padd(
             x,
-            target_size,
+            skip_shape,
             padding_mode
         )
 
     if mode == "strict":
         raise RuntimeError(
             "Decoder and skip features have incompatible spatial "
-            f"shapes: {x.shape[-2:]} and {target_size}."
+            f"shapes: {x.shape[-2:]} and {skip_shape}."
         )
 
     raise ValueError(f"Unknown alignment mode: {mode}")

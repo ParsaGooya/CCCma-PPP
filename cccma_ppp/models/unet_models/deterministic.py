@@ -23,8 +23,7 @@ from cccma_ppp.models.layers import ( _broadcast_mask,
                                     UpsamplingMethod,
                                     MaskPoolingMethod,
                                     OutputActivation,
-                                    AlignmentMethod,
-                                    NoiseLevel)
+                                    AlignmentMethod)
 
 from cccma_ppp.models.layers.unet import (build_conv_block,
                                           UpBlock,
@@ -92,21 +91,6 @@ class UNetConfig(modelConfigABC):
             self.transpose_kernel_sizes = [self.transpose_kernel_sizes] * n_up_blocks
 
         
-        if len(self.transpose_kernel_sizes) != n_up_blocks:
-            raise ValueError(
-                "transpose_kernel_sizes must contain one value per "
-                f"upsampling stage. Expected {n_up_blocks}, got "
-                f"{len(self.transpose_kernel_sizes)}."
-            )
-
-        if any(
-            not isinstance(kernel, int | tuple) or kernel <= 0
-            for kernel in self.transpose_kernel_sizes
-        ):
-            raise ValueError(
-                "All transpose-convolution kernel sizes must be "
-                "positive integers."
-            )
 
     def build(
         self,
@@ -236,18 +220,22 @@ class UNet(deterministicmodelsABC):
 
         reversed_skips = list(reversed(channels[1:]))
         input_channels = bottleneck_dim
-        inject_noise = config.GENERATOR or None
-        inject_noise_in_block = True
-        if inject_noise:
-            inject_noise_in_block = config.GENERATOR.noise_level != "low"
+        generator_enabled = config.GENERATOR is not None
+        inject_noise_in_block = (
+            generator_enabled
+            and config.GENERATOR.noise_level != "low"
+        )
         
         up_blocks: list[nn.Module] = []
         for index, skip_channels in enumerate(reversed_skips):
 
-            if inject_noise:
-                inject_noise = (config.GENERATOR.noise_level != "medium"
-                or index == len(reversed_skips) - 1 
-            )
+            inject_noise =  (
+                        generator_enabled
+                        and (
+                            config.GENERATOR.noise_level != "medium"
+                            or index == len(channels) - 1
+                        )
+                    )
 
             out_channels = skip_channels
             
