@@ -6,7 +6,8 @@ import os
 
 from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
-from cccma_ppp.configs import supported_NN_dimensions_sorted
+from cccma_ppp.configs import (supported_NN_dimensions_sorted,
+                               required_sample_dimensions)
 
 @PreprocessingStepSelector.register("normalizer")
 class Normalizer(PreprocessModuleABC):
@@ -106,8 +107,10 @@ class Normalizer(PreprocessModuleABC):
         xr.DataArray
             Data in original scale.
         """
+        max = align_stat_data_lead_time_inverse_transform(data, self.max)
+        min = align_stat_data_lead_time_inverse_transform(data, self.min)
 
-        data_raw = data * (self.max - self.min) + self.min
+        data_raw = data * (max - min) + min
         return data_raw
 
 
@@ -207,8 +210,10 @@ class Standardizer(PreprocessModuleABC):
         xr.DataArray
             Original scale data.
         """
+        std = align_stat_data_lead_time_inverse_transform(data, self.std)
+        mean = align_stat_data_lead_time_inverse_transform(data, self.mean)
 
-        data_raw = data * self.std + self.mean
+        data_raw = data * std + mean
 
         return data_raw
 
@@ -308,14 +313,9 @@ class AnomaliesScaler(PreprocessModuleABC):
             Reconstructed data.
         """
 
-        if data.shape[-3] > 12 and self.mean.shape[-3] <= 12:
-            lead_years = int(data.shape[-3] / 12)
-            mean = xr.concat(
-                [self.mean for _ in range(lead_years)], dim=self.mean.dims()[-3]
-            )
-            data_raw = data + mean
-        else:
-            data_raw = data + self.mean
+        mean = align_stat_data_lead_time_inverse_transform(data, self.mean)
+        data_raw = data + mean
+        
         return data_raw
 
 
@@ -559,3 +559,162 @@ class Flattennanremove(PreprocessModuleABC):
 
 
 
+
+def align_stat_data_lead_time_inverse_transform(
+    ds: xr.DataArray,
+    stat: xr.DataArray,
+) -> xr.DataArray:
+
+    """
+    Align fitted temporal statistics with forecast lead-time data.
+    The fitted statistic may contain a ``year`` dimension, a ``month``
+    dimension, both, or neither. If temporal dimensions are present,
+    the statistic is expanded over the initialization-year and lead-time
+    dimensions of ``ds``.
+
+    Assumptions
+    -----------
+    - ``ds[time_dim]`` contains initialization years.
+
+    - ``ds[lead_time_dim]`` contains monthly leads 1, 2, 3, ...
+
+    - Lead 1 corresponds to January of the initialization year.
+
+    - ``stat["month"]`` contains 12 entries ordered from January to
+      December.
+
+    Parameters
+    ----------
+    ds : xr.DataArray
+        Forecast data containing initialization-year and lead-time
+        dimensions.
+    stat : xr.DataArray
+        Fitted statistic, such as mean, standard deviation, minimum,
+        or maximum.
+    Returns
+    -------
+    xr.DataArray
+        Statistic aligned with the temporal structure of ``ds``.
+
+    Raises
+    ------
+    ValueError
+        If required dimensions are missing, lead times are invalid,
+        monthly statistics do not contain 12 entries, or the statistic
+        does not contain all required valid years.
+    """
+    time_dim, lead_time_dim = required_sample_dimensions
+
+    if time_dim not in ds.dims:
+        raise ValueError(
+            f"Data must contain the time dimension {time_dim!r}. "
+            f"Found dimensions: {ds.dims}."
+        )
+
+    if lead_time_dim not in ds.dims:
+
+        raise ValueError(
+            f"Data must contain the lead-time dimension "
+            f"{lead_time_dim!r}. Found dimensions: {ds.dims}."
+        )
+
+    has_year = "year" in stat.dims
+    has_month = "month" in stat.dims
+    has_lead_time = lead_time_dim in stat.dims
+
+    if has_lead_time:
+        if has_year:
+            stat = stat.rename({"year" : time_dim})
+        return stat
+
+    if not has_year and not has_month:
+        return stat
+    
+    initialization_years = np.asarray(ds[time_dim].values)
+    lead_times = np.asarray(ds[lead_time_dim].values)
+    lead_month_offsets = lead_times.astype(np.int64) - 1
+
+    year_offsets = lead_month_offsets // 12
+    valid_month_positions = lead_month_offsets % 12
+
+    valid_years = (
+        initialization_years[:, np.newaxis]
+        + year_offsets[np.newaxis, :]
+    )
+
+    valid_month_positions = np.broadcast_to(
+        valid_month_positions[np.newaxis, :],
+        valid_years.shape,
+    )
+
+    temporal_dims = (time_dim, lead_time_dim)
+
+    temporal_coords = {
+        time_dim: ds[time_dim],
+        lead_time_dim: ds[lead_time_dim],
+    }
+
+    valid_month_position_da = xr.DataArray(
+        valid_month_positions,
+        dims=temporal_dims,
+        coords=temporal_coords,
+    )
+
+    rename_dims = {}
+
+    if has_year:
+        rename_dims["year"] = "__stat_year"
+
+    if has_month:
+        rename_dims["month"] = "__stat_month"
+
+    aligned_stat = stat.rename(rename_dims)
+    indexers = {}
+
+    if has_year:
+
+        stat_year_index = stat.indexes["year"]
+        year_positions = stat_year_index.get_indexer(
+            valid_years.reshape(-1)
+        ).reshape(valid_years.shape)
+
+        missing_year_mask = year_positions < 0
+
+        if missing_year_mask.any():
+            missing_years = np.unique(
+                valid_years[missing_year_mask]
+            )
+
+            raise ValueError(
+                "The fitted statistic does not contain all valid years "
+                "required by the forecast. Missing years: "
+                f"{missing_years.tolist()}."
+            )
+
+        indexers["__stat_year"] = xr.DataArray(
+            year_positions,
+            dims=temporal_dims,
+            coords=temporal_coords,
+        )
+
+    if has_month:
+        if stat.sizes["month"] != 12:
+            raise ValueError(
+                "A monthly statistic must contain exactly 12 month "
+                f"entries, but found {stat.sizes['month']}."
+            )
+
+        indexers["__stat_month"] = valid_month_position_da
+
+    aligned_stat = aligned_stat.isel(indexers)
+
+    auxiliary_coords = [
+        coord
+        for coord in ("__stat_year", "__stat_month")
+        if coord in aligned_stat.coords
+    ]
+
+    if auxiliary_coords:
+        aligned_stat = aligned_stat.drop_vars(auxiliary_coords)
+
+    return aligned_stat
