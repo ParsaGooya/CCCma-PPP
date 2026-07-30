@@ -5,29 +5,36 @@ def _unet_config_checks(config):
         channels = config.channels
         transpose_kernel_sizes = config.transpose_kernel_sizes
 
-        if len(transpose_kernel_sizes) != len(channels) - 1:
-            raise ValueError(
-                "transpose_kernel_sizes must contain one value per "
-                f"upsampling stage. Expected {len(channels) - 1}, got "
-                f"{len(transpose_kernel_sizes)}."
-            )
+        if isinstance(transpose_kernel_sizes, list):
+            if len(transpose_kernel_sizes) != len(channels) - 1:
+                raise ValueError(
+                    "transpose_kernel_sizes must contain one value per "
+                    f"upsampling stage. Expected {len(channels) - 1}, got "
+                    f"{len(transpose_kernel_sizes)}."
+                )
 
-        for kernel in config.transpose_kernel_sizes:
+            for kernel in config.transpose_kernel_sizes:
 
-            if isinstance(kernel, int):
-                check = kernel > 0
+                if isinstance(kernel, int):
+                    check = kernel > 0
 
-            else:
-                check = (len(kernel) == 2
-                        and all(isinstance(value, int) and value > 0 for value in kernel)
+                else:
+                    check = (len(kernel) == 2
+                            and all(isinstance(value, int) and value > 0 for value in kernel)
+                        )
+
+                if not check:
+                    raise ValueError(
+                        "Each transpose-convolution kernel size must be either "
+                        "a positive integer or a tuple of two positive integers."
                     )
+        else:
+            if transpose_kernel_sizes<=0:
 
-            if not check:
                 raise ValueError(
                     "Each transpose-convolution kernel size must be either "
                     "a positive integer or a tuple of two positive integers."
                 )
-
 
         channel_lists = {
             "channels": channels,

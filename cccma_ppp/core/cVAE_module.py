@@ -423,7 +423,7 @@ class cVAE(moduleABC):
         """
 
         generator = self.model_config.GENERATOR
-        output_sample_size = None
+        output_sample_size = 0
         if not self.training and generator is not None:
             output_sample_size = generator.num_validation_noise_samples
 

@@ -61,7 +61,7 @@ class UNetConfig(modelConfigABC):
 
     upsampling_method: UpsamplingMethod = "bilinear"
     skip_alignment_method: AlignmentMethod = "padd"
-    transpose_kernel_sizes: list[int | tuple[int, int]] | int | None = 3
+    transpose_kernel_sizes: list[int | tuple[int, int]] | int = 3
 
     process_skip: bool = False
     
@@ -83,11 +83,7 @@ class UNetConfig(modelConfigABC):
 
         n_up_blocks = len(self.channels) - 1
 
-
-        if self.transpose_kernel_sizes is None:
-            self.transpose_kernel_sizes = [3] * n_up_blocks
-
-        elif isinstance(self.transpose_kernel_sizes, int):
+        if isinstance(self.transpose_kernel_sizes, int):
             self.transpose_kernel_sizes = [self.transpose_kernel_sizes] * n_up_blocks
 
         

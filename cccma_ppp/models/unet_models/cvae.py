@@ -24,7 +24,7 @@ from cccma_ppp.models.layers import ( _broadcast_mask,
                                     _resize_mask,
                                     InitMethod,
                                     UpsamplingMethod,
-                                    MaskPoolingMode,
+                                    MaskPoolingMethod,
                                     OutputActivation,
                                     NormalizationMethod,
                                     AlignmentMethod)
@@ -43,6 +43,9 @@ from cccma_ppp.models.layers.conv import (ConvBlockConfig,
 
 from cccma_ppp.models.unet_models.utils import (_unet_config_checks,
                                                 _repeat_tensor_mask)
+
+from cccma_ppp.models.layers import _get_normal
+
 
 
 @cVAEModelSelector.register("unet")
@@ -74,11 +77,11 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
 
     upsampling_method: UpsamplingMethod = "bilinear"
     upsampling_alignment_method: AlignmentMethod = "padd"
-    transpose_kernel_sizes: list[int | tuple[int, int]] | int | None = 3
+    transpose_kernel_sizes: list[int | tuple[int, int]] | int = 3
 
     add_skip_latent: bool = False
 
-    mask_pooling: MaskPoolingMode = "any"
+    mask_pooling: MaskPoolingMethod = "any"
     mask_fraction_threshold: float = 0.5
 
     output_activation: OutputActivation = "identity"
@@ -96,10 +99,7 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
 
         n_up_blocks = len(self.channels) - 1
 
-        if self.transpose_kernel_sizes is None:
-            self.transpose_kernel_sizes = [3] * n_up_blocks
-
-        elif isinstance(self.transpose_kernel_sizes, int):
+        if isinstance(self.transpose_kernel_sizes, int):
             self.transpose_kernel_sizes = [self.transpose_kernel_sizes] * n_up_blocks
 
 

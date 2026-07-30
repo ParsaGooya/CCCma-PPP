@@ -108,7 +108,7 @@ class DownBlock(nn.Module):
         mask_pooling: MaskPoolingMethod,
         mask_fraction_threshold: float,
         return_skip: bool = True,
-        process_skip: bool,
+        process_skip: bool = False,
 
     ):
         super().__init__()
