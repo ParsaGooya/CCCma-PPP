@@ -30,6 +30,7 @@ class DummyLoader:
         self.batches = [DummyBatch() for _ in range(n)]
         self.input_shape = [2]
         self.target_shape = [1]
+        self.added_features_dim = None
 
     def __len__(self):
         return self.n
@@ -84,6 +85,8 @@ class DummyCVAE(DummyModule):
 
 
 class DummyOptimizer:
+    learning_rate = 0.001
+
     def __init__(self, module):
         self.optimizer = torch.optim.SGD(module.parameters(), lr=0.1)
         self.zero_grad_calls = []
@@ -161,7 +164,7 @@ class FakeAggregator:
         self.loaded_state = None
         self.remove_second_last_called = False
 
-    def record(self, loss_dict):
+    def record(self, loss_dict, current_lr=None, kwargs=None):
         self.records.append(loss_dict)
 
     def _dist_compute(self):
@@ -417,7 +420,26 @@ def test_setup_distributed_device_mismatch_raises(env_dirs):
 
 
 @pytest.mark.pruned
-def test_setup_distributed_calls_barrier_when_distributed(env_dirs):
+def test_setup_distributed_calls_barrier_when_distributed(env_dirs, monkeypatch):
+    class FakeDDP:
+        def __init__(
+            self,
+            module,
+            device_ids=None,
+            output_device=None,
+            find_unused_parameters=None,
+        ):
+            self.module = module
+
+        def __getattr__(self, name):
+            return getattr(self.module, name)
+
+    monkeypatch.setattr(
+        torch.nn.parallel,
+        "DistributedDataParallel",
+        FakeDDP,
+    )
+
     trainer, _, _, _, _ = make_trainer(validation=False)
     dist = DummyDistributed(distributed=True)
 
@@ -437,6 +459,7 @@ def test_log_root_uses_logger(env_dirs):
     assert any(rec[1] == "hello" for rec in logger.records)
 
 
+@pytest.mark.pruned
 def test_log_root_prints_when_logger_none(env_dirs, capsys):
     trainer, _, _, _, _ = make_trainer(validation=False)
     trainer.setup_distributed(DummyDistributed(root=True), None)
@@ -489,7 +512,6 @@ def test_should_stop_early_no_validation():
     assert trainer._should_stop_early() is False
 
 
-@pytest.mark.pruned
 def test_should_stop_early_none_buffer():
     trainer, _, _, _, _ = make_trainer(validation=True)
     trainer.config.earlystoppingbuffer = None
@@ -516,7 +538,6 @@ def test_should_stop_early_true():
     assert trainer._should_stop_early() is True
 
 
-@pytest.mark.pruned
 def test_train_requires_setup():
     trainer, _, _, _, _ = make_trainer(validation=False)
 
@@ -530,7 +551,7 @@ def test_train_on_batch_basic(env_dirs):
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
 
     batch = DummyBatch()
-    logs = trainer._train_on_batch(batch)
+    logs, _ = trainer._train_on_batch(batch)
 
     assert batch.moved_to == torch.device("cpu")
     assert logs["total_loss"] == 1.0
@@ -555,7 +576,7 @@ def test_train_on_batch_with_beta(env_dirs):
     )
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
 
-    logs = trainer._train_on_batch(DummyBatch())
+    logs, _ = trainer._train_on_batch(DummyBatch())
 
     assert logs["beta"] == 0.5
     assert beta.calls == [0]
@@ -647,26 +668,23 @@ def test_optimizer_step_with_grad_clip(env_dirs):
 
 
 @pytest.mark.pruned
-def test_clear_memory_cpu():
-    trainer, _, _, _, _ = make_trainer(validation=False)
-    trainer._clear_memory()
+def test_clear_memory_cpu(monkeypatch):
+    called = {"gc": False}
 
-
-def test_clear_memory_cuda_available(monkeypatch):
-    trainer, _, _, _, _ = make_trainer(validation=False)
-
-    called = {"empty": False}
-
-    monkeypatch.setattr(trainer_mod.torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(
+        trainer_mod.gc,
+        "collect",
+        lambda: called.__setitem__("gc", True),
+    )
     monkeypatch.setattr(
         trainer_mod.torch.cuda,
-        "empty_cache",
-        lambda: called.__setitem__("empty", True),
+        "is_available",
+        lambda: False,
     )
 
-    trainer._clear_memory()
+    trainer_mod.clear_memory()
 
-    assert called["empty"] is True
+    assert called["gc"] is True
 
 
 @pytest.mark.pruned
@@ -700,7 +718,26 @@ def test_save_checkpoint_with_validation(env_dirs):
 
 
 @pytest.mark.pruned
-def test_save_checkpoint_distributed_barrier(env_dirs):
+def test_save_checkpoint_distributed_barrier(env_dirs, monkeypatch):
+
+    class FakeDDP:
+        def __init__(
+            self,
+            module,
+            device_ids=None,
+            output_device=None,
+            find_unused_parameters=None,
+        ):
+            self.module = module
+
+        def __getattr__(self, name):
+            return getattr(self.module, name)
+
+    monkeypatch.setattr(
+        torch.nn.parallel,
+        "DistributedDataParallel",
+        FakeDDP,
+    )
     trainer, _, _, _, _ = make_trainer(validation=False)
     dist = DummyDistributed(distributed=True)
     trainer.setup_distributed(dist, DummyLogger())
@@ -723,7 +760,6 @@ def test_load_checkpoint_missing_file(env_dirs):
         trainer._load_checkpoint(env_dirs[0] / "missing.pt")
 
 
-@pytest.mark.pruned
 def test_load_checkpoint_success(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -861,7 +897,25 @@ def test_train_loop_early_stopping(env_dirs):
     assert trainer._epochs_trained < 5
 
 
-def test_train_loop_distributed_stop_broadcast(env_dirs):
+def test_train_loop_distributed_stop_broadcast(env_dirs, monkeypatch):
+    class FakeDDP:
+        def __init__(
+            self,
+            module,
+            device_ids=None,
+            output_device=None,
+            find_unused_parameters=None,
+        ):
+            self.module = module
+
+        def __getattr__(self, name):
+            return getattr(self.module, name)
+
+    monkeypatch.setattr(
+        torch.nn.parallel,
+        "DistributedDataParallel",
+        FakeDDP,
+    )
     trainer, _, _, _, _ = make_trainer(validation=True)
     trainer.max_epochs = 1
     trainer.config.earlystoppingbuffer = 0
@@ -918,6 +972,7 @@ def test_train_loop_final_leftover_validation_improved(env_dirs):
     assert trainer.validation_aggregator.epochs
 
 
+@pytest.mark.pruned
 def test_raw_module_ddp_branch(monkeypatch):
     class FakeDDP:
         def __init__(self, module):
@@ -1226,22 +1281,6 @@ def test_load_checkpoint_restores_scaler_state(env_dirs):
 
 
 @pytest.mark.pruned
-def test_train_loop_zero_epochs(env_dirs):
-    trainer, _, _, _, _ = make_trainer(validation=False)
-
-    trainer.max_epochs = 0
-
-    trainer.setup_distributed(
-        DummyDistributed(),
-        DummyLogger(),
-    )
-
-    trainer.train()
-
-    assert trainer._epochs_trained == 0
-
-
-@pytest.mark.pruned
 def test_optimizer_step_without_grad_clip(env_dirs):
     trainer, module, optimizer, _, _ = make_trainer(
         validation=False,
@@ -1330,7 +1369,25 @@ def test_setup_distributed_save_checkpoint_false_no_warning_non_root(env_dirs):
 
 
 @pytest.mark.pruned
-def test_setup_distributed_distributed_existing_dirs(env_dirs):
+def test_setup_distributed_distributed_existing_dirs(env_dirs, monkeypatch):
+    class FakeDDP:
+        def __init__(
+            self,
+            module,
+            device_ids=None,
+            output_device=None,
+            find_unused_parameters=None,
+        ):
+            self.module = module
+
+        def __getattr__(self, name):
+            return getattr(self.module, name)
+
+    monkeypatch.setattr(
+        torch.nn.parallel,
+        "DistributedDataParallel",
+        FakeDDP,
+    )
     trainer, _, _, _, _ = make_trainer(validation=False)
 
     dist = DummyDistributed(distributed=True)
@@ -1384,7 +1441,6 @@ def test_optimizer_step_amp_enabled_branch(env_dirs):
     assert trainer.global_step == 1
 
 
-@pytest.mark.pruned
 def test_log_epoch_root_without_logger(env_dirs, capsys):
     trainer, _, _, _, _ = make_trainer(validation=False)
 
@@ -1421,6 +1477,7 @@ def test_train_loop_no_validation_no_plot_when_non_root(env_dirs):
     assert trainer._epochs_trained == 1
 
 
+@pytest.mark.pruned
 def test_load_checkpoint_restores_histories(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
 
@@ -1442,23 +1499,6 @@ def test_load_checkpoint_restores_histories(env_dirs):
 
     assert trainer.train_aggregator.loaded_state is not None
     assert trainer.validation_aggregator.loaded_state is not None
-
-
-@pytest.mark.pruned
-def test_train_loop_zero_epoch_no_batches_processed(env_dirs):
-    trainer, _, _, _, _ = make_trainer(validation=False)
-
-    trainer.max_epochs = 0
-
-    trainer.setup_distributed(
-        DummyDistributed(),
-        DummyLogger(),
-    )
-
-    trainer.train()
-
-    assert trainer.batch_step == 0
-    assert trainer.global_step == 0
 
 
 @pytest.mark.pruned

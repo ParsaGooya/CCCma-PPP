@@ -1,492 +1,16 @@
-import pytest
+import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 import torch
-import warnings
-import os
-from cccma_ppp.generic.aggregator import MetricsAggregator
+
+from cccma_ppp.generic.aggregator import (
+    MetricsAggregator,
+    RunningCovariance,
+)
 from cccma_ppp.generic.runtime import RuntimeContext
 
 
 class DummyDistributed:
-    def __init__(self):
-        self.device = "cpu"
-
-    def all_reduce_sum(self, tensor):
-
-        return tensor
-
-
-@pytest.mark.pruned
-def test_init_basic():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-    assert agg.num_epochs_seen == 0
-    assert agg.epoch_loss_terms == {}
-    assert agg.epoch_times == []
-
-
-@pytest.mark.pruned
-def test_init_with_existing_data():
-    agg = MetricsAggregator(
-        DummyDistributed(),
-        "train",
-        epoch_loss_terms={"loss": [1, 2]},
-        epoch_times=[1.0, 2.0],
-    )
-    assert agg.num_epochs_seen == 2
-
-
-@pytest.mark.pruned
-def test_init_invalid_lengths():
-    with pytest.raises((AssertionError, ValueError, RuntimeError)):
-        MetricsAggregator(
-            DummyDistributed(),
-            "train",
-            epoch_loss_terms={"loss1": [1], "loss2": [1, 2]},
-        )
-
-
-def test_init_epoch_times_mismatch():
-    with pytest.raises((AssertionError, ValueError, RuntimeError)):
-        MetricsAggregator(
-            DummyDistributed(),
-            "train",
-            epoch_loss_terms={"loss": [1, 2]},
-            epoch_times=[1.0],
-        )
-
-
-@pytest.mark.pruned
-def test_record_numeric_and_tensor():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.record({"loss": 2.0, "val": torch.tensor([3.0, 5.0])})
-    assert pytest.approx(agg.loss_terms["loss"]) == 2.0
-    assert pytest.approx(agg.loss_terms["val"]) == 4.0
-    assert agg.num_batches_seen == 1
-
-
-@pytest.mark.pruned
-def test_record_ignore_none():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-    agg.record({"loss": None})
-    assert "loss" not in agg.loss_terms
-
-
-@pytest.mark.pruned
-def test_dist_compute_basic():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-    agg.record({"loss": 4.0})
-    logs = agg._dist_compute()
-
-    assert logs["loss"] == 4.0
-    assert agg._aggregated_across_ranks
-
-
-@pytest.mark.pruned
-def test_dist_compute_zero_batches():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-    logs = agg._dist_compute()
-
-    for v in logs.values():
-        assert np.isnan(v)
-
-
-@pytest.mark.pruned
-def test_record_epoch_append():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.record({"loss": 1.0})
-    logs = agg._dist_compute()
-
-    agg.record_epoch(logs, time_elapsed=2.5)
-
-    assert agg.epoch_loss_terms["loss"][0] == 1.0
-    assert agg.epoch_times[0] == 2.5
-    assert agg.num_epochs_seen == 1
-
-
-def test_record_epoch_replace():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.record({"loss": 1.0})
-    logs = agg._dist_compute()
-    agg.record_epoch(logs)
-
-    agg._aggregated_across_ranks = True
-    agg.record_epoch({"loss": 10.0}, replace_index=0)
-
-    assert agg.epoch_loss_terms["loss"][0] == 10.0
-
-
-@pytest.mark.pruned
-def test_record_epoch_missing_key_replace():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.record({"loss": 1.0})
-    logs = agg._dist_compute()
-    agg.record_epoch(logs)
-
-    agg._aggregated_across_ranks = True
-
-    with pytest.raises(ValueError):
-        agg.record_epoch({"new_loss": 2.0}, replace_index=0)
-
-
-def test_record_epoch_without_sync():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    with pytest.raises(RuntimeError):
-        agg.record_epoch({"loss": 1.0})
-
-
-@pytest.mark.pruned
-def test_reset_after_epoch():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.record({"loss": 1.0})
-    logs = agg._dist_compute()
-    agg.record_epoch(logs)
-
-    agg.reset_batch_losses()
-
-    assert agg.num_batches_seen == 0
-    assert agg.loss_terms == {}
-
-
-def test_reset_warning():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always")
-        agg.reset_batch_losses()
-        assert len(w) > 0
-
-
-def make_agg(name, values):
-    agg = MetricsAggregator(DummyDistributed(), name)
-    agg.epoch_loss_terms = {"loss": values}
-    agg.epoch_times = [1] * len(values)
-    agg.num_epochs_seen = len(values)
-    return agg
-
-
-@pytest.mark.pruned
-def test_plot_basic(tmp_path):
-    agg1 = make_agg("train", [1, 2])
-    agg2 = make_agg("val", [2, 3])
-
-    MetricsAggregator.plot([agg1, agg2], plot_dir=tmp_path)
-
-    files = list(tmp_path.glob("*.png"))
-    assert len(files) > 0
-
-
-def test_plot_uses_env_dir(monkeypatch, tmp_path):
-    agg = make_agg("train", [1, 2])
-
-    monkeypatch.setenv("GLOBAL_FIGURES_DIR", str(tmp_path))
-    monkeypatch.setattr(RuntimeContext, "GLOBAL_FIGURES_DIR", str(tmp_path))
-
-    MetricsAggregator.plot([agg])
-
-    assert os.path.isdir(tmp_path)
-
-
-def test_plot_inconsistent_epochs(tmp_path):
-    agg1 = make_agg("train", [1, 2])
-    agg2 = make_agg("val", [1])
-
-    with pytest.raises(ValueError):
-        MetricsAggregator.plot([agg1, agg2], plot_dir=tmp_path)
-
-
-def test_plot_no_epochs_recorded(tmp_path):
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    with pytest.raises(ValueError):
-        MetricsAggregator.plot([agg], plot_dir=tmp_path)
-
-
-@pytest.mark.pruned
-def test_state_dict_roundtrip():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.record({"loss": 2.0})
-    logs = agg._dist_compute()
-    agg.record_epoch(logs, time_elapsed=1.2)
-
-    state = agg.state_dict()
-
-    new_agg = MetricsAggregator(DummyDistributed(), "new")
-    new_agg.load_state_dict(state)
-
-    assert new_agg.name == "train"
-    assert new_agg.epoch_loss_terms == agg.epoch_loss_terms
-    assert new_agg.epoch_times == agg.epoch_times
-    assert new_agg.num_epochs_seen == agg.num_epochs_seen
-
-
-def test_dist_compute_nan_branch():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-    agg.loss_terms = {"loss": 0.0}
-    agg.num_batches_seen = 0
-
-    logs = agg._dist_compute()
-
-    assert np.isnan(logs["loss"])
-
-
-def test_record_ignores_invalid_types():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.record({"loss": "invalid", "another": None})
-
-    assert len(agg.loss_terms) == 0
-
-
-@pytest.mark.pruned
-def test_record_epoch_replace_with_nan_time():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.record({"loss": 1.0})
-    logs = agg._dist_compute()
-    agg.record_epoch(logs, time_elapsed=5.0)
-
-    agg._aggregated_across_ranks = True
-    agg.record_epoch({"loss": 2.0}, replace_index=0, time_elapsed=None)
-
-    assert np.isnan(agg.epoch_times[0])
-
-
-@pytest.mark.pruned
-def test_plot_with_custom_styles(tmp_path):
-    agg1 = make_agg("a", [1, 2])
-    agg2 = make_agg("b", [2, 3])
-
-    MetricsAggregator.plot(
-        [agg1, agg2],
-        color_styles_list=[("red", "solid"), ("blue", "dashed")],
-        plot_dir=tmp_path,
-    )
-
-    assert len(list(tmp_path.glob("*.png"))) > 0
-
-
-def test_plot_random_style_branch(tmp_path):
-    agg1 = make_agg("foo", [1, 2])
-    agg2 = make_agg("bar", [2, 3])
-
-    MetricsAggregator.plot([agg1, agg2], plot_dir=tmp_path)
-
-    assert len(list(tmp_path.glob("*.png"))) > 0
-
-
-def test_plot_missing_loss_key(tmp_path):
-    agg1 = make_agg("train", [1, 2])
-    agg2 = make_agg("val", [2, 3])
-
-    agg2.epoch_loss_terms = {"other": [3, 4]}
-
-    MetricsAggregator.plot([agg1, agg2], plot_dir=tmp_path)
-
-    assert len(list(tmp_path.glob("*.png"))) > 0
-
-
-def test_plot_empty_epoch_times(tmp_path):
-    agg = make_agg("train", [1, 2])
-    agg.epoch_times = []
-
-    MetricsAggregator.plot([agg], plot_dir=tmp_path)
-
-    assert len(list(tmp_path.glob("*.png"))) > 0
-
-
-@pytest.mark.pruned
-def test_dist_compute_multiple_metrics():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-    agg.record({"a": 2.0, "b": 4.0})
-
-
-@pytest.mark.pruned
-def test_load_state_dict_missing_keys():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.load_state_dict({})
-
-    assert agg.name is None
-
-    assert agg.num_epochs_seen == 0
-    assert agg.epoch_loss_terms is None
-    assert agg.epoch_times is None
-
-
-@pytest.mark.pruned
-def test_dist_compute_multiple_metrics_assert():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.record({"b": 4.0, "a": 2.0})
-
-    logs = agg._dist_compute()
-
-    assert list(sorted(logs.keys())) == ["a", "b"]
-    assert logs["a"] == 2.0
-    assert logs["b"] == 4.0
-
-
-@pytest.mark.pruned
-def test_record_mixed_valid_invalid():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.record({"loss": 2.0, "bad": "x", "none": None})
-
-    assert agg.loss_terms["loss"] == 2.0
-    assert "bad" not in agg.loss_terms
-
-
-@pytest.mark.pruned
-def test_record_epoch_append_nan_time():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.record({"loss": 1.0})
-    logs = agg._dist_compute()
-
-    agg.record_epoch(logs, time_elapsed=None)
-
-    assert np.isnan(agg.epoch_times[-1])
-
-
-def test_plot_inconsistent_loss_lengths(tmp_path):
-    agg1 = make_agg("train", [1, 2])
-    agg2 = make_agg("val", [1, 2])
-
-    agg2.epoch_loss_terms = {"loss": [1]}
-
-    with pytest.raises(ValueError):
-        MetricsAggregator.plot([agg1, agg2], plot_dir=tmp_path)
-
-
-@pytest.mark.pruned
-def test_plot_multiple_loss_types(tmp_path):
-    agg = MetricsAggregator(DummyDistributed(), "train")
-    agg.epoch_loss_terms = {"a": [1, 2], "b": [2, 3]}
-    agg.epoch_times = [1, 1]
-    agg.num_epochs_seen = 2
-
-    MetricsAggregator.plot([agg], plot_dir=tmp_path)
-
-    files = list(tmp_path.glob("*.png"))
-    assert any("a" in f.name for f in files)
-    assert any("b" in f.name for f in files)
-
-
-@pytest.mark.pruned
-def test_load_state_dict_resets_batches():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.record({"loss": 5.0})
-
-    state = {
-        "name": "loaded",
-        "epoch_loss_terms": {"loss": [1]},
-        "epoch_times": [1.0],
-        "num_epochs_seen": 1,
-    }
-
-    agg.load_state_dict(state)
-
-    assert agg.name == "loaded"
-
-    assert agg.num_batches_seen == 1
-    assert agg.loss_terms["loss"] == 5.0
-
-
-@pytest.mark.pruned
-def test_init_empty_epoch_loss_terms():
-    agg = MetricsAggregator(
-        DummyDistributed(),
-        "train",
-        epoch_loss_terms={"loss": []},
-    )
-
-    assert agg.num_epochs_seen == 0
-
-
-@pytest.mark.pruned
-def test_plot_train_val_style(tmp_path):
-    agg1 = make_agg("train_loss", [1, 2])
-    agg2 = make_agg("val_loss", [2, 3])
-
-    MetricsAggregator.plot([agg1, agg2], plot_dir=tmp_path)
-
-    assert len(list(tmp_path.glob("*.png"))) > 0
-
-
-@pytest.mark.pruned
-def test_plot_multiple_losses_same_aggregator(tmp_path):
-    agg = MetricsAggregator(DummyDistributed(), "train")
-    agg.epoch_loss_terms = {
-        "loss": [1, 2],
-        "val_loss": [2, 3],
-    }
-    agg.epoch_times = [1, 1]
-    agg.num_epochs_seen = 2
-
-    MetricsAggregator.plot([agg], plot_dir=tmp_path)
-
-    files = list(tmp_path.glob("*.png"))
-    assert len(files) >= 2
-
-
-@pytest.mark.pruned
-def test_plot_skip_empty_times(tmp_path):
-    agg = make_agg("train", [1, 2])
-    agg.epoch_times = []
-
-    MetricsAggregator.plot([agg], plot_dir=tmp_path)
-
-
-@pytest.mark.pruned
-def test_reset_clears_aggregation_flag():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.record({"loss": 1.0})
-    agg._dist_compute()
-    agg.record_epoch({"loss": 1.0})
-
-    assert agg._aggregated_across_ranks is False
-
-
-@pytest.mark.pruned
-def test_record_int_values():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.record({"loss": 1})
-
-    assert agg.loss_terms["loss"] == 1.0
-
-
-@pytest.mark.pruned
-def test_load_state_dict_with_reset_trigger():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.record({"loss": 5.0})
-
-    agg.epochs_submitted = True
-
-    state = {
-        "name": "loaded",
-        "epoch_loss_terms": {"loss": [1]},
-        "epoch_times": [1.0],
-        "num_epochs_seen": 1,
-    }
-
-    agg.load_state_dict(state)
-
-    assert agg.num_batches_seen == 0
-    assert agg.loss_terms == {}
-
-
-class TrackingDistributed:
     def __init__(self):
         self.device = "cpu"
         self.calls = []
@@ -496,180 +20,1077 @@ class TrackingDistributed:
         return tensor
 
 
+class ScalingDistributed:
+    def __init__(self, scale=2):
+        self.device = "cpu"
+        self.scale = scale
+        self.calls = []
+
+    def all_reduce_sum(self, tensor):
+        self.calls.append(tensor.clone())
+        tensor.mul_(self.scale)
+        return tensor
+
+
+def make_agg(
+    name="train",
+    metrics=None,
+    epoch_times=None,
+):
+    if metrics is None:
+        metrics = {
+            "loss": [1.0, 2.0],
+        }
+
+    if epoch_times is None:
+        number_of_epochs = len(next(iter(metrics.values())))
+        epoch_times = [1.0] * number_of_epochs
+
+    return MetricsAggregator(
+        distributed=DummyDistributed(),
+        name=name,
+        epoch_metric_terms=metrics,
+        epoch_times=epoch_times,
+    )
+
+
 @pytest.mark.pruned
-def test_dist_compute_calls_all_reduce_sum():
-    dist = TrackingDistributed()
-    agg = MetricsAggregator(dist, "train")
+def test_init_defaults():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
 
-    agg.record({"loss": 4.0})
-    logs = agg._dist_compute()
+    assert aggregator.name == "train"
+    assert aggregator.epoch_metric_terms == {}
+    assert aggregator.epoch_times == []
+    assert aggregator.num_epochs_seen == 0
+    assert aggregator.num_batches_seen == 0
+    assert aggregator.loss_terms == {}
+    assert aggregator.kwargs_terms == {}
+    assert aggregator.lr_values == 0.0
+    assert aggregator.epochs_submitted is False
+    assert aggregator._aggregated_across_ranks is False
 
-    assert logs["loss"] == 4.0
-    assert len(dist.calls) >= 1
+
+@pytest.mark.pruned
+def test_init_with_existing_history_sets_epoch_count():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+        epoch_metric_terms={
+            "loss": [1.0, 2.0],
+            "rmse": [2.0, 3.0],
+        },
+        epoch_times=[4.0, 5.0],
+    )
+
+    assert aggregator.num_epochs_seen == 2
+    assert aggregator.epoch_metric_terms["loss"] == [
+        1.0,
+        2.0,
+    ]
 
 
-def test_record_scalar_tensor():
-    agg = MetricsAggregator(DummyDistributed(), "train")
+def test_init_preserves_explicit_epoch_count():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+        epoch_metric_terms={
+            "loss": [1.0, 2.0],
+        },
+        epoch_times=[1.0, 2.0],
+        num_epochs_seen=7,
+    )
 
-    agg.record({"loss": torch.tensor(7.0)})
+    assert aggregator.num_epochs_seen == 7
 
-    assert agg.loss_terms["loss"] == 7.0
-    assert agg.num_batches_seen == 1
+
+@pytest.mark.pruned
+def test_init_rejects_inconsistent_metric_lengths():
+    with pytest.raises(AssertionError):
+        MetricsAggregator(
+            DummyDistributed(),
+            "train",
+            epoch_metric_terms={
+                "loss": [1.0],
+                "rmse": [2.0, 3.0],
+            },
+        )
+
+
+@pytest.mark.pruned
+def test_init_rejects_inconsistent_epoch_times():
+    with pytest.raises(AssertionError):
+        MetricsAggregator(
+            DummyDistributed(),
+            "train",
+            epoch_metric_terms={
+                "loss": [1.0, 2.0],
+            },
+            epoch_times=[1.0],
+        )
+
+
+@pytest.mark.pruned
+def test_init_empty_metric_history():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+        epoch_metric_terms={
+            "loss": [],
+        },
+    )
+
+    assert aggregator.num_epochs_seen == 0
+    assert aggregator.epoch_times == []
+
+
+@pytest.mark.pruned
+def test_record_numeric_metrics():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+
+    aggregator.record(
+        {
+            "loss": 2.0,
+            "count": 3,
+        }
+    )
+
+    assert aggregator.loss_terms["loss"] == 2.0
+    assert aggregator.loss_terms["count"] == 3.0
+    assert aggregator.num_batches_seen == 1
+
+
+def test_record_tensor_metrics_uses_mean():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+
+    aggregator.record(
+        {
+            "loss": torch.tensor(
+                [
+                    [1.0, 3.0],
+                    [5.0, 7.0],
+                ]
+            ),
+        }
+    )
+
+    assert aggregator.loss_terms["loss"] == 4.0
+
+
+def test_record_ignores_none_and_invalid_metrics():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+
+    aggregator.record(
+        {
+            "missing": None,
+            "invalid": "value",
+            "valid": 2.0,
+        }
+    )
+
+    assert aggregator.loss_terms == {
+        "valid": 2.0,
+    }
+    assert aggregator.num_batches_seen == 1
+
+
+@pytest.mark.pruned
+def test_record_empty_dictionary_increments_batches():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+
+    aggregator.record({})
+
+    assert aggregator.num_batches_seen == 1
+    assert aggregator.loss_terms == {}
 
 
 @pytest.mark.pruned
 def test_record_accumulates_multiple_batches():
-    agg = MetricsAggregator(DummyDistributed(), "train")
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
 
-    agg.record({"loss": 2.0})
-    agg.record({"loss": 4.0})
+    aggregator.record({"loss": 2.0})
+    aggregator.record({"loss": 4.0})
 
-    logs = agg._dist_compute()
+    assert aggregator.loss_terms["loss"] == 6.0
+    assert aggregator.num_batches_seen == 2
+
+    logs = aggregator._dist_compute()
 
     assert logs["loss"] == 3.0
-    assert agg.num_batches_seen == 2
 
 
 @pytest.mark.pruned
-def test_record_epoch_replace_updates_time():
-    agg = MetricsAggregator(DummyDistributed(), "train")
+def test_record_kwargs_numeric_and_tensor():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
 
-    agg.record({"loss": 1.0})
-    logs = agg._dist_compute()
-    agg.record_epoch(logs, time_elapsed=1.0)
+    aggregator.record(
+        {"loss": 1.0},
+        kwargs={
+            "beta": torch.tensor([0.2, 0.4]),
+            "weight": 2,
+        },
+    )
 
-    agg._aggregated_across_ranks = True
-    agg.record_epoch({"loss": 2.0}, replace_index=0, time_elapsed=9.5)
+    assert aggregator.kwargs_terms["beta"] == pytest.approx(0.3)
+    assert aggregator.kwargs_terms["weight"] == 2.0
 
-    assert agg.epoch_loss_terms["loss"][0] == 2.0
-    assert agg.epoch_times[0] == 9.5
+
+def test_record_kwargs_ignores_invalid_values():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+
+    aggregator.record(
+        {"loss": 1.0},
+        kwargs={
+            "missing": None,
+            "invalid": "value",
+            "valid": 3.0,
+        },
+    )
+
+    assert aggregator.kwargs_terms == {
+        "valid": 3.0,
+    }
+
+
+@pytest.mark.parametrize(
+    ("learning_rate", "expected"),
+    [
+        (0.1, 0.1),
+        (2, 2.0),
+        (torch.tensor(0.25), 0.25),
+        (torch.tensor([0.1, 0.3]), 0.2),
+    ],
+)
+def test_record_learning_rate(
+    learning_rate,
+    expected,
+):
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+
+    aggregator.record(
+        {"loss": 1.0},
+        lr=learning_rate,
+    )
+
+    assert aggregator.lr_values == pytest.approx(expected)
+
+
+@pytest.mark.parametrize(
+    "learning_rate",
+    [
+        None,
+        "invalid",
+        object(),
+    ],
+)
+def test_record_ignores_invalid_learning_rate(
+    learning_rate,
+):
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+
+    aggregator.record(
+        {"loss": 1.0},
+        lr=learning_rate,
+    )
+
+    assert aggregator.lr_values == 0.0
+
+
+def test_dist_compute_combines_all_metric_groups():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+
+    aggregator.record(
+        {
+            "z_loss": 4.0,
+            "a_loss": 2.0,
+        },
+        lr=0.1,
+        kwargs={
+            "beta": 0.5,
+        },
+    )
+
+    logs = aggregator._dist_compute()
+
+    assert list(logs) == [
+        "a_loss",
+        "z_loss",
+        "beta",
+        "lr",
+    ]
+    assert logs["a_loss"] == 2.0
+    assert logs["z_loss"] == 4.0
+    assert logs["beta"] == 0.5
+    assert logs["lr"] == 0.1
+    assert aggregator._aggregated_across_ranks is True
+
+
+def test_dist_compute_zero_batches_returns_nan():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+
+    logs = aggregator._dist_compute()
+
+    assert set(logs) == {"lr"}
+    assert np.isnan(logs["lr"])
+
+
+@pytest.mark.pruned
+def test_dist_average_calls_distributed_reduce():
+    distributed = DummyDistributed()
+
+    aggregator = MetricsAggregator(
+        distributed,
+        "train",
+    )
+    aggregator.record({"loss": 4.0})
+
+    assert aggregator._dist_average(4.0) == 4.0
+    assert len(distributed.calls) == 1
+
+    np.testing.assert_array_equal(
+        distributed.calls[0].numpy(),
+        [4.0, 1.0],
+    )
+
+
+@pytest.mark.pruned
+def test_dist_average_distributed_scaling_preserves_average():
+    distributed = ScalingDistributed(scale=4)
+
+    aggregator = MetricsAggregator(
+        distributed,
+        "train",
+    )
+    aggregator.record({"loss": 3.0})
+
+    logs = aggregator._dist_compute()
+
+    assert logs["loss"] == 3.0
+    assert logs["lr"] == 0.0
+
+
+@pytest.mark.pruned
+def test_dist_compute_twice_without_new_records():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+    aggregator.record({"loss": 4.0})
+
+    first = aggregator._dist_compute()
+    second = aggregator._dist_compute()
+
+    assert first == second
+    assert first["loss"] == 4.0
+
+
+def test_record_epoch_requires_distributed_compute():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="_dist_compute",
+    ):
+        aggregator.record_epoch({"loss": 1.0})
+
+
+@pytest.mark.pruned
+def test_record_epoch_appends_metrics():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+
+    aggregator.record(
+        {"loss": 2.0},
+        lr=0.1,
+        kwargs={"beta": 0.5},
+    )
+    logs = aggregator._dist_compute()
+
+    result = aggregator.record_epoch(
+        logs,
+        time_elapsed=3.5,
+    )
+
+    assert result == logs
+    assert aggregator.epoch_metric_terms == {
+        "loss": [2.0],
+        "beta": [0.5],
+        "lr": [0.1],
+    }
+    assert aggregator.epoch_times == [3.5]
+    assert aggregator.num_epochs_seen == 1
+    assert aggregator.epochs_submitted is True
+
+
+@pytest.mark.pruned
+def test_record_epoch_none_time_becomes_nan():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+
+    aggregator.record({"loss": 1.0})
+    logs = aggregator._dist_compute()
+    aggregator.record_epoch(
+        logs,
+        time_elapsed=None,
+    )
+
+    assert np.isnan(aggregator.epoch_times[0])
+
+
+@pytest.mark.pruned
+def test_record_epoch_resets_batch_state():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+
+    aggregator.record(
+        {"loss": 2.0},
+        lr=0.2,
+        kwargs={"beta": 0.5},
+    )
+    logs = aggregator._dist_compute()
+    aggregator.record_epoch(logs)
+
+    assert aggregator.loss_terms == {}
+    assert aggregator.kwargs_terms == {}
+    assert aggregator.lr_values == 0.0
+    assert aggregator.num_batches_seen == 0
+    assert aggregator._aggregated_across_ranks is False
+
+
+def test_record_epoch_replaces_existing_metrics():
+    aggregator = make_agg(
+        metrics={
+            "loss": [1.0],
+            "lr": [0.1],
+        },
+        epoch_times=[2.0],
+    )
+    aggregator._aggregated_across_ranks = True
+
+    aggregator.record_epoch(
+        {
+            "loss": 5.0,
+            "lr": 0.2,
+        },
+        replace_index=0,
+        time_elapsed=9.0,
+    )
+
+    assert aggregator.epoch_metric_terms["loss"] == [5.0]
+    assert aggregator.epoch_metric_terms["lr"] == [0.2]
+    assert aggregator.epoch_times == [9.0]
+
+
+@pytest.mark.pruned
+def test_record_epoch_replacement_none_time_becomes_nan():
+    aggregator = make_agg(
+        metrics={
+            "loss": [1.0],
+        },
+        epoch_times=[2.0],
+    )
+    aggregator._aggregated_across_ranks = True
+
+    aggregator.record_epoch(
+        {"loss": 3.0},
+        replace_index=0,
+    )
+
+    assert np.isnan(aggregator.epoch_times[0])
+
+
+def test_record_epoch_rejects_new_metric_during_replace():
+    aggregator = make_agg(
+        metrics={
+            "loss": [1.0],
+        },
+        epoch_times=[2.0],
+    )
+    aggregator._aggregated_across_ranks = True
+
+    with pytest.raises(
+        ValueError,
+        match="not previously recorded",
+    ):
+        aggregator.record_epoch(
+            {"new_metric": 3.0},
+            replace_index=0,
+        )
 
 
 @pytest.mark.pruned
 def test_record_epoch_replace_index_out_of_range():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.record({"loss": 1.0})
-    logs = agg._dist_compute()
-    agg.record_epoch(logs)
-
-    agg._aggregated_across_ranks = True
+    aggregator = make_agg(
+        metrics={
+            "loss": [1.0],
+        },
+        epoch_times=[2.0],
+    )
+    aggregator._aggregated_across_ranks = True
 
     with pytest.raises(IndexError):
-        agg.record_epoch({"loss": 2.0}, replace_index=99)
+        aggregator.record_epoch(
+            {"loss": 3.0},
+            replace_index=99,
+        )
 
 
 @pytest.mark.pruned
-def test_state_dict_empty_aggregator():
-    agg = MetricsAggregator(DummyDistributed(), "train")
+def test_reset_before_epoch_warns_and_preserves_batches():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+    aggregator.record({"loss": 2.0})
 
-    state = agg.state_dict()
+    with pytest.warns(
+        UserWarning,
+        match="before submitting",
+    ):
+        aggregator.reset_batch_losses()
 
-    assert state["name"] == "train"
-    assert state["epoch_loss_terms"] == {}
-    assert state["epoch_times"] == []
-    assert state["num_epochs_seen"] == 0
-
-
-@pytest.mark.pruned
-def test_plot_accepts_string_plot_dir(tmp_path):
-    agg = make_agg("train", [1, 2])
-
-    MetricsAggregator.plot([agg], plot_dir=str(tmp_path))
-
-    assert len(list(tmp_path.glob("*.png"))) > 0
+    assert aggregator.num_batches_seen == 1
+    assert aggregator.loss_terms["loss"] == 2.0
 
 
 @pytest.mark.pruned
-def test_plot_single_aggregator_single_loss(tmp_path):
-    agg = MetricsAggregator(DummyDistributed(), "single")
-    agg.epoch_loss_terms = {"loss": [0.5]}
-    agg.epoch_times = [1.0]
-    agg.num_epochs_seen = 1
+def test_reset_after_epoch_clears_state():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
 
-    MetricsAggregator.plot([agg], plot_dir=tmp_path)
+    aggregator.record({"loss": 2.0})
+    logs = aggregator._dist_compute()
+    aggregator.record_epoch(logs)
 
-    files = list(tmp_path.glob("*.png"))
-    assert len(files) > 0
+    aggregator.record({"loss": 4.0})
+    aggregator._aggregated_across_ranks = True
+    aggregator.reset_batch_losses()
+
+    assert aggregator.loss_terms == {}
+    assert aggregator.kwargs_terms == {}
+    assert aggregator.lr_values == 0.0
+    assert aggregator.num_batches_seen == 0
+    assert aggregator._aggregated_across_ranks is False
+
+
+@pytest.mark.pruned
+def test_state_dict_empty():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+
+    assert aggregator.state_dict() == {
+        "name": "train",
+        "epoch_metric_terms": {},
+        "epoch_times": [],
+        "num_epochs_seen": 0,
+    }
+
+
+def test_state_dict_roundtrip():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+
+    aggregator.record({"loss": 2.0})
+    logs = aggregator._dist_compute()
+    aggregator.record_epoch(
+        logs,
+        time_elapsed=1.5,
+    )
+
+    state = aggregator.state_dict()
+
+    loaded = MetricsAggregator(
+        DummyDistributed(),
+        "other",
+    )
+    loaded.load_state_dict(state)
+
+    assert loaded.name == "train"
+    assert loaded.epoch_metric_terms == aggregator.epoch_metric_terms
+    assert loaded.epoch_times == aggregator.epoch_times
+    assert loaded.num_epochs_seen == 1
+
+
+@pytest.mark.pruned
+def test_load_state_dict_missing_keys():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+
+    with pytest.warns(UserWarning):
+        aggregator.load_state_dict({})
+
+    assert aggregator.name is None
+    assert aggregator.epoch_metric_terms is None
+    assert aggregator.epoch_times is None
+    assert aggregator.num_epochs_seen == 0
 
 
 @pytest.mark.pruned
 def test_load_state_dict_explicit_none_values():
-    agg = MetricsAggregator(DummyDistributed(), "train")
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
 
-    state = {
-        "name": None,
-        "epoch_loss_terms": None,
-        "epoch_times": None,
-        "num_epochs_seen": 0,
-    }
+    with pytest.warns(UserWarning):
+        aggregator.load_state_dict(
+            {
+                "name": None,
+                "epoch_metric_terms": None,
+                "epoch_times": None,
+                "num_epochs_seen": 0,
+            }
+        )
 
-    agg.load_state_dict(state)
+    assert aggregator.name is None
+    assert aggregator.epoch_metric_terms is None
+    assert aggregator.epoch_times is None
 
-    assert agg.name is None
-    assert agg.epoch_loss_terms is None
-    assert agg.epoch_times is None
-    assert agg.num_epochs_seen == 0
+
+@pytest.mark.pruned
+def test_load_state_preserves_batch_state_before_submission():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+    aggregator.record({"loss": 3.0})
+
+    with pytest.warns(UserWarning):
+        aggregator.load_state_dict(
+            {
+                "name": "loaded",
+                "epoch_metric_terms": {
+                    "loss": [1.0],
+                },
+                "epoch_times": [1.0],
+                "num_epochs_seen": 1,
+            }
+        )
+
+    assert aggregator.num_batches_seen == 1
+    assert aggregator.loss_terms["loss"] == 3.0
+
+
+@pytest.mark.pruned
+def test_load_state_resets_batches_after_submission():
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+    aggregator.record({"loss": 3.0})
+    aggregator.epochs_submitted = True
+
+    aggregator.load_state_dict(
+        {
+            "name": "loaded",
+            "epoch_metric_terms": {
+                "loss": [1.0],
+            },
+            "epoch_times": [1.0],
+            "num_epochs_seen": 1,
+        }
+    )
+
+    assert aggregator.num_batches_seen == 0
+    assert aggregator.loss_terms == {}
+
+
+def test_plot_requires_aggregator(tmp_path):
+    with pytest.raises(
+        ValueError,
+        match="at least one aggregator",
+    ):
+        MetricsAggregator.plot(
+            [],
+            plot_dir=tmp_path,
+        )
+
+
+def test_plot_rejects_inconsistent_epoch_counts(
+    tmp_path,
+):
+    first = make_agg(
+        "train",
+        metrics={"loss": [1.0, 2.0]},
+    )
+    second = make_agg(
+        "validation",
+        metrics={"loss": [3.0]},
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="same number of epochs",
+    ):
+        MetricsAggregator.plot(
+            [first, second],
+            plot_dir=tmp_path,
+        )
+
+
+@pytest.mark.pruned
+def test_plot_rejects_zero_epochs(tmp_path):
+    aggregator = MetricsAggregator(
+        DummyDistributed(),
+        "train",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="No epochs",
+    ):
+        MetricsAggregator.plot(
+            [aggregator],
+            plot_dir=tmp_path,
+        )
+
+
+@pytest.mark.pruned
+def test_plot_creates_loss_and_time_files(
+    tmp_path,
+):
+    train = make_agg(
+        "train",
+        metrics={
+            "loss": [1.0, 2.0],
+            "rmse": [2.0, 3.0],
+        },
+    )
+    validation = make_agg(
+        "validation",
+        metrics={
+            "loss": [2.0, 3.0],
+            "rmse": [3.0, 4.0],
+        },
+    )
+
+    MetricsAggregator.plot(
+        [train, validation],
+        plot_dir=tmp_path,
+    )
+
+    assert (tmp_path / "epoch_2_loss.png").exists()
+    assert (tmp_path / "epoch_2_rmse.png").exists()
+    assert (tmp_path / "epoch_2_times.png").exists()
+
+
+@pytest.mark.pruned
+def test_plot_uses_custom_styles(tmp_path):
+    first = make_agg("first")
+    second = make_agg("second")
+
+    MetricsAggregator.plot(
+        [first, second],
+        color_styles_list=[
+            ("red", "solid"),
+            ("blue", "dashed"),
+        ],
+        plot_dir=tmp_path,
+    )
+
+    assert list(tmp_path.glob("*.png"))
+
+
+@pytest.mark.pruned
+def test_plot_random_style_branch(tmp_path):
+    first = make_agg("alpha")
+    second = make_agg("beta")
+
+    MetricsAggregator.plot(
+        [first, second],
+        plot_dir=tmp_path,
+    )
+
+    assert list(tmp_path.glob("*.png"))
 
 
 def test_plot_skips_none_aggregator(tmp_path):
-    agg = make_agg("train", [1, 2])
+    aggregator = make_agg("train")
 
-    MetricsAggregator.plot([agg, None], plot_dir=tmp_path)
+    MetricsAggregator.plot(
+        [aggregator, None],
+        plot_dir=tmp_path,
+    )
 
-    assert len(list(tmp_path.glob("*.png"))) > 0
-
-
-@pytest.mark.pruned
-def test_plot_uses_runtime_context_when_plot_dir_none(monkeypatch, tmp_path):
-    agg = make_agg("train", [1, 2])
-
-    monkeypatch.setattr(RuntimeContext, "GLOBAL_FIGURES_DIR", str(tmp_path))
-
-    MetricsAggregator.plot([agg], plot_dir=None)
-
-    assert len(list(tmp_path.glob("*.png"))) > 0
+    assert list(tmp_path.glob("*.png"))
 
 
-@pytest.mark.pruned
-def test_dist_compute_can_be_called_twice_without_new_records():
-    agg = MetricsAggregator(DummyDistributed(), "train")
+def test_plot_skips_missing_metric(tmp_path):
+    first = make_agg(
+        "train",
+        metrics={
+            "loss": [1.0, 2.0],
+        },
+    )
+    second = make_agg(
+        "validation",
+        metrics={
+            "rmse": [2.0, 3.0],
+        },
+    )
 
-    agg.record({"loss": 4.0})
+    MetricsAggregator.plot(
+        [first, second],
+        plot_dir=tmp_path,
+    )
 
-    logs1 = agg._dist_compute()
-    logs2 = agg._dist_compute()
-
-    assert logs1["loss"] == 4.0
-    assert logs2["loss"] == 4.0
-    assert agg._aggregated_across_ranks is True
-
-
-@pytest.mark.pruned
-def test_record_negative_value():
-    agg = MetricsAggregator(DummyDistributed(), "train")
-
-    agg.record({"loss": -2.0})
-
-    assert agg.loss_terms["loss"] == -2.0
-    assert agg.num_batches_seen == 1
+    assert (tmp_path / "epoch_2_loss.png").exists()
+    assert (tmp_path / "epoch_2_rmse.png").exists()
 
 
 @pytest.mark.pruned
-def test_record_numpy_scalar_value():
-    agg = MetricsAggregator(DummyDistributed(), "train")
+def test_plot_skips_empty_epoch_times(tmp_path):
+    aggregator = make_agg("train")
+    aggregator.epoch_times = []
 
-    agg.record({"loss": np.float64(3.5)})
+    MetricsAggregator.plot(
+        [aggregator],
+        plot_dir=tmp_path,
+    )
 
-    assert agg.loss_terms["loss"] == 3.5
-    assert agg.num_batches_seen == 1
+    assert (tmp_path / "epoch_2_loss.png").exists()
+    assert (tmp_path / "epoch_2_times.png").exists()
 
 
 @pytest.mark.pruned
-def test_record_tensor_with_multiple_dimensions_uses_mean():
-    agg = MetricsAggregator(DummyDistributed(), "train")
+def test_plot_sanitizes_metric_name(tmp_path):
+    aggregator = make_agg(
+        "train",
+        metrics={
+            "loss/train": [1.0, 2.0],
+        },
+    )
 
-    value = torch.tensor([[1.0, 3.0], [5.0, 7.0]])
-    agg.record({"loss": value})
+    MetricsAggregator.plot(
+        [aggregator],
+        plot_dir=tmp_path,
+    )
 
-    assert agg.loss_terms["loss"] == 4.0
+    assert (tmp_path / "epoch_2_loss_train.png").exists()
+
+
+@pytest.mark.pruned
+def test_plot_removes_old_loss_plot(tmp_path):
+    old_plot = tmp_path / "epoch_1_loss.png"
+    old_plot.write_text("old")
+
+    MetricsAggregator.plot(
+        [make_agg("train")],
+        plot_dir=tmp_path,
+    )
+
+    assert old_plot.exists() is False
+
+
+@pytest.mark.pruned
+def test_plot_removes_old_time_plot(tmp_path):
+    old_plot = tmp_path / "epoch_1_times.png"
+    old_plot.write_text("old")
+
+    MetricsAggregator.plot(
+        [make_agg("train")],
+        plot_dir=tmp_path,
+    )
+
+    assert old_plot.exists() is False
+
+
+@pytest.mark.pruned
+def test_plot_accepts_string_directory(tmp_path):
+    MetricsAggregator.plot(
+        [make_agg("train")],
+        plot_dir=str(tmp_path),
+    )
+
+    assert list(tmp_path.glob("*.png"))
+
+
+def test_plot_uses_runtime_context(
+    monkeypatch,
+    tmp_path,
+):
+    monkeypatch.setattr(
+        RuntimeContext,
+        "GLOBAL_FIGURES_DIR",
+        str(tmp_path),
+    )
+
+    MetricsAggregator.plot(
+        [make_agg("train")],
+    )
+
+    assert list(tmp_path.glob("*.png"))
+
+
+@pytest.mark.pruned
+def test_plot_closes_figures(tmp_path):
+    MetricsAggregator.plot(
+        [make_agg("train")],
+        plot_dir=tmp_path,
+    )
+
+    assert plt.get_fignums() == []
+
+
+@pytest.mark.pruned
+def test_running_covariance_first_update():
+    covariance = RunningCovariance(DummyDistributed())
+
+    covariance.update(
+        torch.tensor(
+            [
+                [1.0, 2.0],
+                [3.0, 4.0],
+            ]
+        )
+    )
+
+    assert covariance.count.item() == 2
+    np.testing.assert_array_equal(
+        covariance.sum_x.numpy(),
+        [4.0, 6.0],
+    )
+    np.testing.assert_array_equal(
+        covariance.sum_xxT.numpy(),
+        [
+            [10.0, 14.0],
+            [14.0, 20.0],
+        ],
+    )
+
+
+def test_running_covariance_multiple_updates():
+    covariance = RunningCovariance(DummyDistributed())
+
+    covariance.update(torch.tensor([[1.0, 2.0]]))
+    covariance.update(torch.tensor([[3.0, 4.0]]))
+
+    assert covariance.count.item() == 2
+    np.testing.assert_array_equal(
+        covariance.sum_x.numpy(),
+        [4.0, 6.0],
+    )
+
+
+@pytest.mark.pruned
+def test_running_covariance_detaches_input():
+    covariance = RunningCovariance(DummyDistributed())
+
+    value = torch.tensor(
+        [[1.0, 2.0]],
+        requires_grad=True,
+    )
+
+    covariance.update(value)
+
+    assert covariance.sum_x.requires_grad is False
+    assert covariance.sum_xxT.requires_grad is False
+
+
+def test_running_covariance_finalize():
+    covariance = RunningCovariance(DummyDistributed())
+
+    covariance.update(
+        torch.tensor(
+            [
+                [1.0, 2.0],
+                [3.0, 4.0],
+            ]
+        )
+    )
+
+    mean, result = covariance.finalize()
+
+    np.testing.assert_allclose(
+        mean.numpy(),
+        [2.0, 3.0],
+    )
+    np.testing.assert_allclose(
+        result.numpy(),
+        [
+            [2.0, 2.0],
+            [2.0, 2.0],
+        ],
+    )
+
+
+def test_running_covariance_finalize_rejects_one_sample():
+    covariance = RunningCovariance(DummyDistributed())
+
+    covariance.update(torch.tensor([[1.0, 2.0]]))
+
+    with pytest.raises(
+        ValueError,
+        match="at least two samples",
+    ):
+        covariance.finalize()
+
+
+@pytest.mark.pruned
+def test_running_covariance_distributed_reduce():
+    distributed = DummyDistributed()
+    covariance = RunningCovariance(distributed)
+
+    covariance.update(
+        torch.tensor(
+            [
+                [1.0, 2.0],
+                [3.0, 4.0],
+            ]
+        )
+    )
+    covariance.distributed_reduce()
+
+    assert len(distributed.calls) == 3

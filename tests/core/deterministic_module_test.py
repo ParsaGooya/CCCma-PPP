@@ -217,7 +217,6 @@ def test_constructor_passes_shapes_to_model():
     assert module.model.last_build_kwargs["added_features_dim"] == 3
 
 
-@pytest.mark.pruned
 def test_load_dir_input_metadata_mismatch(monkeypatch):
     import cccma_ppp.core.deterministic_module as mod
 
@@ -239,7 +238,6 @@ def test_load_dir_input_metadata_mismatch(monkeypatch):
         ConcreteDeterministic(cfg, input_shape=np.array([1]))
 
 
-@pytest.mark.pruned
 def test_load_dir_output_metadata_mismatch(monkeypatch):
     import cccma_ppp.core.deterministic_module as mod
 
@@ -415,6 +413,7 @@ def test_predict_alias_calls_predict():
     assert isinstance(out, deterministicOutput)
 
 
+@pytest.mark.pruned
 def test_compute_loss_requires_criterion():
     module = make_module(input_shape=np.array([1]))
 
@@ -422,6 +421,7 @@ def test_compute_loss_requires_criterion():
         module._compute_loss(DummyBatch())
 
 
+@pytest.mark.pruned
 def test_compute_loss_plain_target():
     module = make_module(input_shape=np.array([1]))
     module.init_loss_function(DummyLoss())
@@ -440,8 +440,7 @@ def test_compute_loss_tuple_target_with_mask():
     module.init_loss_function(DummyLoss())
 
     batch = DummyBatch()
-    mask = torch.ones_like(batch.target)
-    batch.target = (batch.target, mask)
+    batch.target_mask = torch.ones_like(batch.target)
 
     total, losses = module._compute_loss(batch)
 
@@ -449,14 +448,12 @@ def test_compute_loss_tuple_target_with_mask():
     assert losses["total_loss"] == 1.0
 
 
-@pytest.mark.pruned
 def test_compute_loss_list_target_with_mask():
     module = make_module(input_shape=np.array([1]))
     module.init_loss_function(DummyLoss())
 
     batch = DummyBatch()
-    mask = torch.ones_like(batch.target)
-    batch.target = [batch.target, mask]
+    batch.target_mask = torch.ones_like(batch.target)
 
     total, losses = module._compute_loss(batch)
 
@@ -488,36 +485,22 @@ def test_compute_loss_empty_individual_losses():
     assert losses == {"total_loss": 1.0}
 
 
-def test_compute_loss_passes_mask_to_criterion():
-    class InspectLoss:
-        def __init__(self):
-            self.seen_mask = None
-
-        def __call__(self, output, target, target_mask=None, print_loss=False):
-            self.seen_mask = target_mask
-            return torch.tensor(1.0), {}
-
-    module = make_module(input_shape=np.array([1]))
-
-    loss = InspectLoss()
-    module.init_loss_function(loss)
-
-    batch = DummyBatch()
-    mask = torch.ones_like(batch.target)
-    batch.target = (batch.target, mask)
-
-    module._compute_loss(batch)
-
-    assert loss.seen_mask is mask
-
-
 @pytest.mark.pruned
 def test_compute_loss_passes_print_loss_false():
     class InspectLoss:
         def __init__(self):
             self.print_loss = None
 
-        def __call__(self, output, target, target_mask=None, print_loss=False):
+        def to(self, device):
+            return self
+
+        def __call__(
+            self,
+            output,
+            target,
+            target_mask=None,
+            print_loss=False,
+        ):
             self.print_loss = print_loss
             return torch.tensor(1.0), {}
 
@@ -537,7 +520,7 @@ def test_compute_loss_target_tuple_with_none_mask():
     module.init_loss_function(DummyLoss())
 
     batch = DummyBatch()
-    batch.target = (batch.target, None)
+    batch.target_mask = None
 
     total, losses = module._compute_loss(batch)
 
@@ -561,15 +544,23 @@ class DummyModel:
         self.last_build_kwargs = kwargs
         return self
 
-    def __call__(self, x=None, added_features=None):
+    def __call__(self, request):
+        self.last_request = request
         self.last_call_kwargs = {
-            "x": x,
-            "added_features": added_features,
+            "x": request.input,
+            "x_mask": request.input_mask,
+            "added_features": request.added_features,
+            "output_sample_size": request.output_sample_size,
         }
-        return deterministicOutput(output=torch.ones_like(x))
+
+        return deterministicOutput(
+            output=torch.ones_like(request.input),
+        )
 
 
 class DummySelector:
+    GENERATOR = None
+
     def __init__(self):
         self.last_build_kwargs = None
 
@@ -598,22 +589,42 @@ class DummyCheckpointConfig:
 
 
 class DummyBatch:
-    def __init__(self):
-        self.input = torch.ones(2, 1, 3, 4)
-        self.target = torch.zeros(2, 1, 3, 4)
-        self.added_features = None
+    def __init__(
+        self,
+        input=None,
+        target=None,
+        input_mask=None,
+        target_mask=None,
+        added_features=None,
+        metadata=None,
+    ):
+        self.input = torch.ones(2, 1) if input is None else input
+        self.target = torch.ones(2, 1) if target is None else target
+        self.input_mask = input_mask
+        self.target_mask = target_mask
+        self.added_features = added_features
+        self.metadata = metadata
 
 
 class DummyLoss:
     def __call__(self, output, target, target_mask=None, print_loss=False):
         return torch.tensor(1.0), {"mse": 1.0}
 
+    def to(self, device):
+        return self
+
 
 class MultiLoss:
     def __call__(self, output, target, target_mask=None, print_loss=False):
         return torch.tensor(2.0), {"mse": 1.0, "mae": 1.0}
 
+    def to(self, device):
+        return self
+
 
 class EmptyLoss:
     def __call__(self, output, target, target_mask=None, print_loss=False):
         return torch.tensor(1.0), {}
+
+    def to(self, device):
+        return self

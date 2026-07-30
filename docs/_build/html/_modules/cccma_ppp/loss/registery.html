@@ -8,7 +8,6 @@
   <title>cccma_ppp.loss.registery &mdash; CCCma PPP  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=18aa9b61" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
@@ -40,10 +39,16 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Start Here</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/contributing.html">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -71,13 +76,12 @@
            <div itemprop="articleBody">
              
   <h1>Source code for cccma_ppp.loss.registery</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">dacite</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">dacite</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
 
 
 <div class="viewcode-block" id="Registery">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.loss.Registery">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.loss.registery.html#cccma_ppp.loss.loss.Registery">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Registery</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Registry for mapping string identifiers to classes and instantiating them.</span>
@@ -104,7 +108,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="Registery.register">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.loss.Registery.register">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.loss.registery.html#cccma_ppp.loss.loss.Registery.register">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Register a class under a specified name.</span>
@@ -129,7 +133,7 @@
 
 
 <div class="viewcode-block" id="Registery.get">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.loss.Registery.get">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.loss.registery.html#cccma_ppp.loss.loss.Registery.get">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve and instantiate a registered class.</span>
@@ -175,7 +179,7 @@
 
 
 <div class="viewcode-block" id="Registery.available">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.loss.Registery.available">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.loss.registery.html#cccma_ppp.loss.loss.Registery.available">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">available</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get available class names.</span>

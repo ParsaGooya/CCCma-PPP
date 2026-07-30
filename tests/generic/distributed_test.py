@@ -57,7 +57,6 @@ def test_singleton(monkeypatch):
     assert d1 is d2
 
 
-@pytest.mark.pruned
 def test_cleanup(monkeypatch):
     monkeypatch.setattr(mod.dist, "is_available", lambda: True)
     monkeypatch.setattr(mod.dist, "is_initialized", lambda: True)
@@ -110,6 +109,7 @@ def test_barrier_not_called(monkeypatch):
     d.barrier()
 
 
+@pytest.mark.pruned
 def test_all_reduce_called(monkeypatch):
     monkeypatch.setattr(mod.dist, "is_available", lambda: True)
     monkeypatch.setattr(mod.dist, "is_initialized", lambda: True)

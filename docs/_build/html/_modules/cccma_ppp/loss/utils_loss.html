@@ -8,7 +8,6 @@
   <title>cccma_ppp.loss.utils_loss &mdash; CCCma PPP  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=18aa9b61" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
@@ -40,10 +39,16 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Start Here</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/contributing.html">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -71,14 +76,13 @@
            <div itemprop="articleBody">
              
   <h1>Source code for cccma_ppp.loss.utils_loss</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">Losspipeline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss.loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">Losspipeline</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss.loss_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">lossABC</span><span class="p">,</span> <span class="n">Reduction</span>
 
 
@@ -86,7 +90,7 @@
 
 
 <div class="viewcode-block" id="WeightedMSE">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.utils_loss.WeightedMSE">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.utils_loss.WeightedMSE">[docs]</a>
 <span class="nd">@Losspipeline</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">WeightedMSE</span><span class="p">(</span><span class="n">lossABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -151,6 +155,20 @@
 <span class="sd">            If kernel size is not odd.</span>
 <span class="sd">        NotImplementedError</span>
 <span class="sd">            If unsupported number of output dimensions is used.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Expected weight tensor layouts:</span>
+
+<span class="sd">        - With channels: ``(C, O1, ..., On)``</span>
+<span class="sd">        - Without channels: ``(O1, ..., On)``</span>
+
+<span class="sd">        where:</span>
+
+<span class="sd">        - ``C`` is the channel dimension</span>
+<span class="sd">        - ``O1 ... On`` are spatial/output dimensions</span>
+
+<span class="sd">        If channels are not present, a singleton channel dimension may be temporarily added during low-resolution downsampling.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
@@ -209,6 +227,20 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        torch.Tensor</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Expected input shapes:</span>
+
+<span class="sd">        - Static weights/masks:</span>
+<span class="sd">        ``(C, O1, ..., On)``</span>
+<span class="sd">        - Batched tensors:</span>
+<span class="sd">        ``(B, C, O1, ..., On)``</span>
+<span class="sd">        - Generative tensors:</span>
+<span class="sd">        ``(Z, B, C, O1, ..., On)``</span>
+
+<span class="sd">        The method temporarily inserts a batch dimension for static weight tensors so that PyTorch pooling operators can be applied. The original dimensionality is restored before returning.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">squeeze</span> <span class="o">=</span> <span class="kc">False</span>
@@ -228,7 +260,7 @@
         <span class="k">return</span> <span class="n">tensor_</span>
 
 <div class="viewcode-block" id="WeightedMSE.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.utils_loss.WeightedMSE.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.utils_loss.WeightedMSE.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
@@ -265,6 +297,17 @@
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
 <span class="sd">            If shapes do not match.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Expected tensor shapes are:</span>
+
+<span class="sd">        - Standard mode: ``(B, C, ...)``</span>
+<span class="sd">        - Generator mode: ``(E, B, C, ...)``</span>
+<span class="sd">        - Generative modeling mode: ``(Z, B, C, ...)``</span>
+<span class="sd">        - Generator + generative modeling: ``(E, Z, B, C, ...)``</span>
+
+<span class="sd">        where ``E`` is the ensemble/sample dimension, ``Z`` is the latent sample dimension, ``B`` is batch size, and ``C`` is the channel dimension.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">generator</span><span class="p">:</span>
@@ -335,6 +378,19 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        torch.Tensor</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Expected loss shape before reduction:</span>
+
+<span class="sd">        ``(B, C, O1, ..., On)``</span>
+
+<span class="sd">        or, for generative modeling:</span>
+
+<span class="sd">        ``(Z, B, C, O1, ..., On)``</span>
+
+<span class="sd">        Weights are broadcast across all leading dimensions and applied</span>
+<span class="sd">        along the channel and spatial dimensions.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span>
@@ -362,7 +418,7 @@
 
 
 <div class="viewcode-block" id="WeightedCRPS">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.utils_loss.WeightedCRPS">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.utils_loss.WeightedCRPS">[docs]</a>
 <span class="nd">@Losspipeline</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;crps&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">WeightedCRPS</span><span class="p">(</span><span class="n">lossABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -414,6 +470,10 @@
 <span class="sd">            If kernel size is not odd.</span>
 <span class="sd">        NotImplementedError</span>
 <span class="sd">            If unsupported number of output dimensions is used.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Both `weights` and the internally constructed `weights_mask` are expected to follow the shape `(C, ...)`, where `C` is the channel dimension.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
@@ -491,7 +551,7 @@
         <span class="k">return</span> <span class="n">tensor_</span>
 
 <div class="viewcode-block" id="WeightedCRPS.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.utils_loss.WeightedCRPS.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.utils_loss.WeightedCRPS.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
@@ -523,6 +583,27 @@
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
 <span class="sd">            If generator flag is False.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        CRPS requires an ensemble of predictions. The first dimension of ``data`` is interpreted as the ensemble/sample dimension.</span>
+
+<span class="sd">        Expected tensor layouts:</span>
+
+<span class="sd">        Standard ensemble prediction:</span>
+<span class="sd">        - ``data``: ``(E, B, C, O1, ..., On)``</span>
+<span class="sd">        - ``target``: ``(B, C, O1, ..., On)``</span>
+
+<span class="sd">        Generative modeling:</span>
+<span class="sd">        - ``data``: ``(E, Z, B, C, O1, ..., On)``</span>
+<span class="sd">        - ``target``: ``(Z, B, C, O1, ..., On)``</span>
+
+<span class="sd">        Where:</span>
+<span class="sd">        - ``E`` = ensemble size</span>
+<span class="sd">        - ``Z`` = latent realization dimension</span>
+<span class="sd">        - ``B`` = batch dimension</span>
+<span class="sd">        - ``C`` = channel dimension</span>
+<span class="sd">        - ``O1...On`` = spatial/output dimensions</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">generator</span><span class="p">:</span>
@@ -634,7 +715,7 @@
 
 
 <div class="viewcode-block" id="Frobenius_norm">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.utils_loss.Frobenius_norm">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.utils_loss.Frobenius_norm">[docs]</a>
 <span class="nd">@Losspipeline</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;frobenius_norm&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Frobenius_norm</span><span class="p">(</span><span class="n">lossABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -687,7 +768,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="p">:])</span>
 
 <div class="viewcode-block" id="Frobenius_norm.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.loss.html#cccma_ppp.loss.utils_loss.Frobenius_norm.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.utils_loss.Frobenius_norm.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
@@ -710,6 +791,27 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        torch.Tensor</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Expected tensor layouts:</span>
+
+<span class="sd">        Standard mode:</span>
+<span class="sd">        - ``data``: ``(B, C, O1, ..., On)``</span>
+<span class="sd">        - ``target``: ``(B, C, O1, ..., On)``</span>
+
+<span class="sd">        Generative modeling:</span>
+<span class="sd">        - ``data``: ``(Z, B, C, O1, ..., On)``</span>
+<span class="sd">        - ``target``: ``(Z, B, C, O1, ..., On)``</span>
+
+<span class="sd">        Processing steps:</span>
+
+<span class="sd">        1. Spatial dimensions ``O1...On`` are flattened into a single feature dimension.</span>
+<span class="sd">        2. If generative modeling is enabled, the latent dimension ``Z`` is merged with the batch dimension.</span>
+<span class="sd">        3. Covariance matrices are computed either:</span>
+<span class="sd">        - across spatial features (``covariance_dim=&quot;spatial&quot;``)</span>
+<span class="sd">        - across channels (``covariance_dim=&quot;channel&quot;``)</span>
+<span class="sd">        4. The Frobenius norm of the covariance difference is returned.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">generator</span><span class="p">:</span>
@@ -818,6 +920,34 @@
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If structure is inconsistent.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Generator outputs must contain exactly one additional leading</span>
+<span class="sd">    ensemble/sample dimension compared to the target.</span>
+
+<span class="sd">    Valid examples:</span>
+
+<span class="sd">    - target:</span>
+<span class="sd">    ``(B, C, O1, O2)``</span>
+<span class="sd">    - data:</span>
+<span class="sd">    ``(E, B, C, O1, O2)``</span>
+
+<span class="sd">    Generative example:</span>
+
+<span class="sd">    - target:</span>
+<span class="sd">    ``(Z, B, C, O1, O2)``</span>
+<span class="sd">    - data:</span>
+<span class="sd">    ``(E, Z, B, C, O1, O2)``</span>
+
+<span class="sd">    Invalid examples:</span>
+
+<span class="sd">    - data:</span>
+<span class="sd">    ``(B, E, C, O1, O2)``</span>
+<span class="sd">    - data:</span>
+<span class="sd">    ``(E, C, O1, O2)``</span>
+
+<span class="sd">    The ensemble dimension must always be the left-most dimension.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nb">bool</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">-</span> <span class="n">target</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">target</span><span class="o">.</span><span class="n">shape</span>

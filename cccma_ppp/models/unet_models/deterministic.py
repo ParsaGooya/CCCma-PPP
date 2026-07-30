@@ -14,31 +14,38 @@ from cccma_ppp.models.models_abc import (
     deterministicmodelsABC,
     modelConfigABC,
     DeterministicRequest,
-    GENERATORConfig
+    GENERATORConfig,
 )
 
-from cccma_ppp.models.layers import ( _broadcast_mask,
-                                    _resize_tensor,
-                                    InitMethod,
-                                    UpsamplingMethod,
-                                    MaskPoolingMethod,
-                                    OutputActivation,
-                                    AlignmentMethod)
+from cccma_ppp.models.layers.generic import (
+    InitMethod,
+    UpsamplingMethod,
+    MaskPoolingMethod,
+    OutputActivation,
+    AlignmentMethod,
+)
+from cccma_ppp.models.layers.utils import (
+    _broadcast_mask,
+    _resize_tensor,
+)
 
-from cccma_ppp.models.layers.unet import (build_conv_block,
-                                          UpBlock,
-                                          DownBlock,
-                                          UNetOutput)
+from cccma_ppp.models.layers.unet import (
+    build_conv_block,
+    UpBlock,
+    DownBlock,
+    UNetOutput,
+)
 
 
-from cccma_ppp.models.layers.conv import (ConvBlockConfig,
-                                          PartialConvBlockConfig,
-                                          ConvNeXtBlockConfig,
-                                          TensorMask)
+from cccma_ppp.models.layers.conv import (
+    ConvBlockConfig,
+    PartialConvBlockConfig,
+    ConvNeXtBlockConfig,
+    TensorMask,
+)
 
 
-from cccma_ppp.models.unet_models.utils import (_unet_config_checks,
-                                                _repeat_tensor_mask)
+from cccma_ppp.models.unet_models.utils import _unet_config_checks, _repeat_tensor_mask
 
 
 @deterministicModelSelector.register("unet")
@@ -53,10 +60,10 @@ class UNetConfig(modelConfigABC):
     bottleneck configured through ``bottleneck_dim``.
     """
 
-    channels: list[int] 
+    channels: list[int]
     bottleneck_dim: int | None = None
-    block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig = field(
-        default_factory=ConvBlockConfig
+    block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig = (
+        field(default_factory=ConvBlockConfig)
     )
 
     upsampling_method: UpsamplingMethod = "bilinear"
@@ -64,7 +71,7 @@ class UNetConfig(modelConfigABC):
     transpose_kernel_sizes: list[int | tuple[int, int]] | int = 3
 
     process_skip: bool = False
-    
+
     mask_pooling: MaskPoolingMethod = "any"
     mask_fraction_threshold: float = 0.5
 
@@ -86,8 +93,6 @@ class UNetConfig(modelConfigABC):
         if isinstance(self.transpose_kernel_sizes, int):
             self.transpose_kernel_sizes = [self.transpose_kernel_sizes] * n_up_blocks
 
-        
-
     def build(
         self,
         input_shape: np.ndarray,
@@ -102,10 +107,7 @@ class UNetConfig(modelConfigABC):
         )
 
 
-
-
 class UNet(deterministicmodelsABC):
-
     def __init__(
         self,
         config: UNetConfig,
@@ -136,9 +138,8 @@ class UNet(deterministicmodelsABC):
 
         if not np.array_equal(input_shape[-2:], output_shape[-2:]):
             if self.config.output_block_hidden_channels is None:
-            
                 raise RuntimeError(
-                   f"Input spatial shape {input_shape[-2:]} does not match "
+                    f"Input spatial shape {input_shape[-2:]} does not match "
                     f"output spatial shape {output_shape[-2:]}. Output block "
                     "needs output_block_hidden_channels to process output after "
                     "interpolation."
@@ -147,7 +148,7 @@ class UNet(deterministicmodelsABC):
             #     f"Input spatial shape {input_shape[-2:]} does not match "
             #     f"output spatial shape {output_shape[-2:]}."
             # )
-        
+
         min_spatial_size = int(min(input_shape[-2:]))
 
         if min_spatial_size < 1:
@@ -166,9 +167,8 @@ class UNet(deterministicmodelsABC):
                 f"{n_down_blocks} downsampling blocks, but the minimum spatial "
                 f"dimension permits at most {max_down_blocks}. "
                 f"Use no more than {max_down_blocks + 1} channel levels."
-                )       
-        
-        
+            )
+
         self._validate_checkpoint_compatibility(
             input_shape=input_shape,
             output_shape=output_shape,
@@ -193,7 +193,6 @@ class UNet(deterministicmodelsABC):
             config.block_config,
         )
 
-
         self.down_blocks = nn.ModuleList(
             [
                 DownBlock(
@@ -202,7 +201,7 @@ class UNet(deterministicmodelsABC):
                     block_config=config.block_config,
                     process_skip=config.process_skip,
                     mask_pooling=config.mask_pooling,
-                    mask_fraction_threshold=config.mask_fraction_threshold
+                    mask_fraction_threshold=config.mask_fraction_threshold,
                 )
                 for index in range(len(channels) - 1)
             ]
@@ -218,23 +217,17 @@ class UNet(deterministicmodelsABC):
         input_channels = bottleneck_dim
         generator_enabled = config.GENERATOR is not None
         inject_noise_in_block = (
-            generator_enabled
-            and config.GENERATOR.noise_level != "low"
+            generator_enabled and config.GENERATOR.noise_level != "low"
         )
-        
+
         up_blocks: list[nn.Module] = []
         for index, skip_channels in enumerate(reversed_skips):
-
-            inject_noise =  (
-                        generator_enabled
-                        and (
-                            config.GENERATOR.noise_level != "medium"
-                            or index == len(channels) - 1
-                        )
-                    )
+            inject_noise = generator_enabled and (
+                config.GENERATOR.noise_level != "medium" or index == len(channels) - 1
+            )
 
             out_channels = skip_channels
-            
+
             up_blocks.append(
                 UpBlock(
                     input_channels=input_channels,
@@ -245,7 +238,7 @@ class UNet(deterministicmodelsABC):
                     skip_alignment_method=config.skip_alignment_method,
                     transpose_kernel_size=config.transpose_kernel_sizes[index],
                     inject_noise=inject_noise,
-                    inject_noise_in_block=inject_noise_in_block
+                    inject_noise_in_block=inject_noise_in_block,
                 )
             )
             input_channels = out_channels
@@ -264,7 +257,6 @@ class UNet(deterministicmodelsABC):
         else:
             self._initialize_weights(config.init_method)
 
-
     def _prepare_input(
         self,
         x: torch.Tensor,
@@ -272,16 +264,11 @@ class UNet(deterministicmodelsABC):
         added_features: torch.Tensor | None,
     ) -> TensorMask:
 
-
         x_mask = _broadcast_mask(x_mask, x)
 
-
         if added_features is not None:
-
             feature_mask = (
-                torch.ones_like(added_features)
-                if x_mask is not None
-                else None
+                torch.ones_like(added_features) if x_mask is not None else None
             )
 
             x = torch.cat([x, added_features], dim=1)
@@ -293,22 +280,16 @@ class UNet(deterministicmodelsABC):
                 )
 
         return TensorMask(tensor=x, mask=x_mask)
-    
 
-    def forward(
-        self,
-        request: DeterministicRequest) -> deterministicOutput:
+    def forward(self, request: DeterministicRequest) -> deterministicOutput:
 
         x = request.input
         x_mask = request.input_mask
         added_features = request.added_features
         num_output_samples = request.output_sample_size
-    
 
-        if (self.training and 
-            self.config.GENERATOR is not None):
+        if self.training and self.config.GENERATOR is not None:
             num_output_samples = self.config.GENERATOR.num_training_noise_samples
-  
 
         input = self._prepare_input(
             x=x,
@@ -326,17 +307,14 @@ class UNet(deterministicmodelsABC):
         input = self.bottleneck(input)
         batch_size = input.tensor.shape[0]
 
-        if (self.config.GENERATOR is not None 
-            and num_output_samples > 0):
-
+        if self.config.GENERATOR is not None and num_output_samples > 0:
             input = _repeat_tensor_mask(
                 input,
                 repeats=num_output_samples,
             )
 
             skips = [
-                _repeat_tensor_mask(skip, repeats=num_output_samples)
-                for skip in skips
+                _repeat_tensor_mask(skip, repeats=num_output_samples) for skip in skips
             ]
 
         for up_block, skip in zip(
@@ -353,17 +331,11 @@ class UNet(deterministicmodelsABC):
 
         output = self.output(output_tensor)
 
-        if (self.config.GENERATOR is not None 
-            and num_output_samples > 0):
-
+        if self.config.GENERATOR is not None and num_output_samples > 0:
             output = output.reshape(
                 batch_size,
                 num_output_samples,
                 *output.shape[1:],
             ).transpose(0, 1)
 
-
         return deterministicOutput(output=output)
-
-
-

@@ -8,7 +8,6 @@
   <title>cccma_ppp.models.normalized_flows &mdash; CCCma PPP  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=18aa9b61" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
@@ -40,10 +39,16 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Start Here</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/contributing.html">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -71,8 +76,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for cccma_ppp.models.normalized_flows</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn.init</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">init</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
@@ -84,7 +88,7 @@
 
 
 <div class="viewcode-block" id="flowOutput">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.normalized_flows.flowOutput">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.flowOutput">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">flowOutput</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -104,7 +108,7 @@
 
 
 <div class="viewcode-block" id="NormalizedFlowConfig">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.normalized_flows.NormalizedFlowConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.NormalizedFlowConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">NormalizedFlowConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -122,7 +126,7 @@
     <span class="n">flow_sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5000</span>
 
 <div class="viewcode-block" id="NormalizedFlowConfig.build">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.normalized_flows.NormalizedFlowConfig.build">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.NormalizedFlowConfig.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">latent_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">condition_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct normalized flow model.</span>
@@ -147,7 +151,7 @@
 
 
 <div class="viewcode-block" id="NormalizedFlowModel">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.normalized_flows.NormalizedFlowModel">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.NormalizedFlowModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">NormalizedFlowModel</span><span class="p">(</span><span class="n">flowABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Composed normalizing flow model.</span>
@@ -185,7 +189,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">flows</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flows</span><span class="p">)</span>
 
 <div class="viewcode-block" id="NormalizedFlowModel.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.normalized_flows.NormalizedFlowModel.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.NormalizedFlowModel.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Apply forward transformation through all flow steps.</span>
@@ -213,7 +217,7 @@
 
 
 <div class="viewcode-block" id="NormalizedFlowModel.inverse">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.normalized_flows.NormalizedFlowModel.inverse">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.NormalizedFlowModel.inverse">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Apply inverse transformation through all flow steps.</span>
@@ -243,7 +247,7 @@
 
 
 <div class="viewcode-block" id="FCNN">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.normalized_flows.FCNN">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.FCNN">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">FCNN</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Fully connected neural network used in flow components.</span>
@@ -277,7 +281,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="FCNN.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.normalized_flows.FCNN.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.FCNN.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute forward pass.</span>
@@ -297,7 +301,7 @@
 
 
 <div class="viewcode-block" id="MAF">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.normalized_flows.MAF">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.MAF">[docs]</a>
 <span class="nd">@FlowSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;maf&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">MAF</span><span class="p">(</span><span class="n">flowABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -323,7 +327,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">base_network</span> <span class="o">=</span> <span class="n">base_network</span>
 
 <div class="viewcode-block" id="MAF.build">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.normalized_flows.MAF.build">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.MAF.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">condition_size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Build MAF layers.</span>
@@ -358,7 +362,7 @@
 
 
 <div class="viewcode-block" id="MAF.reset_parameters">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.normalized_flows.MAF.reset_parameters">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.MAF.reset_parameters">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">reset_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize learnable parameters.</span>
@@ -372,7 +376,7 @@
 
 
 <div class="viewcode-block" id="MAF.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.normalized_flows.MAF.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.MAF.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Progressive forward transformation.</span>
@@ -413,7 +417,7 @@
 
 
 <div class="viewcode-block" id="MAF.inverse">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.normalized_flows.MAF.inverse">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.MAF.inverse">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Apply autoregressive inverse transformation.</span>
@@ -455,7 +459,7 @@
 
 
 <div class="viewcode-block" id="RealNVP">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.normalized_flows.RealNVP">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.RealNVP">[docs]</a>
 <span class="nd">@FlowSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;realnvp&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">RealNVP</span><span class="p">(</span><span class="n">flowABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -477,7 +481,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">base_network</span> <span class="o">=</span> <span class="n">base_network</span>
 
 <div class="viewcode-block" id="RealNVP.build">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.normalized_flows.RealNVP.build">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.RealNVP.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">condition_size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Build coupling layers.</span>
@@ -509,7 +513,7 @@
 
 
 <div class="viewcode-block" id="RealNVP.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.normalized_flows.RealNVP.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.RealNVP.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Apply forward coupling transformations.</span>
@@ -547,7 +551,7 @@
 
 
 <div class="viewcode-block" id="RealNVP.inverse">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.normalized_flows.RealNVP.inverse">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.RealNVP.inverse">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Apply inverse coupling transformations.</span>

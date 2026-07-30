@@ -2,12 +2,12 @@ import numpy as np
 import xarray as xr
 from pathlib import Path
 import joblib
-import os
 
 from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
-from cccma_ppp.configs import (supported_NN_dimensions_sorted,
-                               required_sample_dimensions)
+from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.configs import supported_NN_dimensions_sorted, required_sample_dimensions
+
 
 @PreprocessingStepSelector.register("normalizer")
 class Normalizer(PreprocessModuleABC):
@@ -277,7 +277,7 @@ class AnomaliesScaler(PreprocessModuleABC):
             data_masked = data.where(~np.isnan(mask))
         else:
             data_masked = data
-            
+
         self.mean = data_masked.mean(self.dims).load()
         self.fitted = True
         return self
@@ -295,7 +295,7 @@ class AnomaliesScaler(PreprocessModuleABC):
         xr.DataArray
             Anomaly values.
         """
-        
+
         data_anomalies = data - self.mean
         return data_anomalies
 
@@ -315,7 +315,7 @@ class AnomaliesScaler(PreprocessModuleABC):
 
         mean = align_stat_data_lead_time_inverse_transform(data, self.mean)
         data_raw = data + mean
-        
+
         return data_raw
 
 
@@ -386,29 +386,25 @@ class Flattennanremove(PreprocessModuleABC):
 
         if self.load_dir is not None:
             self._load_from_memory(self.load_dir)
-            
+
             self._check_nn_dims(data)
             self._check_nn_dims(target)
             return self
-        
+
         reference = target if target is not None else data
-        
+
         self.NN_dims = [
-            dim
-            for dim in supported_NN_dimensions_sorted 
-            if dim in reference.dims 
+            dim for dim in supported_NN_dimensions_sorted if dim in reference.dims
         ]
 
-        missing_from_data = [
-            dim for dim in self.NN_dims if dim not in data.dims
-        ]
+        missing_from_data = [dim for dim in self.NN_dims if dim not in data.dims]
 
         if missing_from_data:
             raise RuntimeError(
                 "The input and reference data do not share all required NN "
                 f"dimensions. Missing from input data: {missing_from_data}."
             )
-        
+
         self.reference_shape = xr.Dataset(
             coords={dim: reference[dim] for dim in self.NN_dims}
         )
@@ -425,8 +421,7 @@ class Flattennanremove(PreprocessModuleABC):
             )
 
             self.final_locations = (
-                target_stacked
-                .sel(ref=data_stacked["ref"])
+                target_stacked.sel(ref=data_stacked["ref"])
                 .dropna(dim="ref", how="any")
                 .load()["ref"]
             )
@@ -455,12 +450,13 @@ class Flattennanremove(PreprocessModuleABC):
             )
 
         return self
-    
-    def _check_nn_dims(self, data: xr.Dataset | xr.DataArray,):
+
+    def _check_nn_dims(
+        self,
+        data: xr.Dataset | xr.DataArray,
+    ):
         if data is not None:
-            missing_dims = [
-                dim for dim in self.NN_dims if dim not in data.dims
-            ]
+            missing_dims = [dim for dim in self.NN_dims if dim not in data.dims]
 
             if missing_dims:
                 raise ValueError(
@@ -468,9 +464,7 @@ class Flattennanremove(PreprocessModuleABC):
                     f"Missing dimensions: {missing_dims}."
                 )
 
-    def transform(self, data: xr.DataArray
-        ) -> xr.Dataset | xr.DataArray:
-    
+    def transform(self, data: xr.DataArray) -> xr.Dataset | xr.DataArray:
         """
         Apply flattening and spatial filtering.
 
@@ -492,12 +486,9 @@ class Flattennanremove(PreprocessModuleABC):
         if "ref" in data.dims:
             return data.sel(ref=self.final_locations)
 
-
-        return (
-            data
-            .stack(ref=self.NN_dims)
-            .sel(ref=self.final_locations)
-        ).transpose(..., 'ref')
+        return (data.stack(ref=self.NN_dims).sel(ref=self.final_locations)).transpose(
+            ..., "ref"
+        )
 
     def inverse_transform(self, data: xr.DataArray) -> xr.DataArray:
         """
@@ -520,10 +511,8 @@ class Flattennanremove(PreprocessModuleABC):
         """
 
         if "ref" not in data.dims:
-            raise ValueError(
-                "The input must contain the flattened 'ref' dimension."
-            )
-        
+            raise ValueError("The input must contain the flattened 'ref' dimension.")
+
         return data.unstack().combine_first(self.reference_shape)
 
     def _load_from_memory(self, load_dir: Path | str) -> None:
@@ -551,20 +540,15 @@ class Flattennanremove(PreprocessModuleABC):
 
         self.reference_shape = loaded.reference_shape
         self.final_locations = loaded.final_locations
-        self.common_to_input_and_target = (
-            loaded.common_to_input_and_target
-        )
+        self.common_to_input_and_target = loaded.common_to_input_and_target
         self.fitted = loaded.fitted
         del loaded
-
-
 
 
 def align_stat_data_lead_time_inverse_transform(
     ds: xr.DataArray,
     stat: xr.DataArray,
 ) -> xr.DataArray:
-
     """
     Align fitted temporal statistics with forecast lead-time data.
     The fitted statistic may contain a ``year`` dimension, a ``month``
@@ -612,7 +596,6 @@ def align_stat_data_lead_time_inverse_transform(
         )
 
     if lead_time_dim not in ds.dims:
-
         raise ValueError(
             f"Data must contain the lead-time dimension "
             f"{lead_time_dim!r}. Found dimensions: {ds.dims}."
@@ -624,12 +607,12 @@ def align_stat_data_lead_time_inverse_transform(
 
     if has_lead_time:
         if has_year:
-            stat = stat.rename({"year" : time_dim})
+            stat = stat.rename({"year": time_dim})
         return stat
 
     if not has_year and not has_month:
         return stat
-    
+
     initialization_years = np.asarray(ds[time_dim].values)
     lead_times = np.asarray(ds[lead_time_dim].values)
     lead_month_offsets = lead_times.astype(np.int64) - 1
@@ -637,10 +620,7 @@ def align_stat_data_lead_time_inverse_transform(
     year_offsets = lead_month_offsets // 12
     valid_month_positions = lead_month_offsets % 12
 
-    valid_years = (
-        initialization_years[:, np.newaxis]
-        + year_offsets[np.newaxis, :]
-    )
+    valid_years = initialization_years[:, np.newaxis] + year_offsets[np.newaxis, :]
 
     valid_month_positions = np.broadcast_to(
         valid_month_positions[np.newaxis, :],
@@ -672,18 +652,15 @@ def align_stat_data_lead_time_inverse_transform(
     indexers = {}
 
     if has_year:
-
         stat_year_index = stat.indexes["year"]
-        year_positions = stat_year_index.get_indexer(
-            valid_years.reshape(-1)
-        ).reshape(valid_years.shape)
+        year_positions = stat_year_index.get_indexer(valid_years.reshape(-1)).reshape(
+            valid_years.shape
+        )
 
         missing_year_mask = year_positions < 0
 
         if missing_year_mask.any():
-            missing_years = np.unique(
-                valid_years[missing_year_mask]
-            )
+            missing_years = np.unique(valid_years[missing_year_mask])
 
             raise ValueError(
                 "The fitted statistic does not contain all valid years "

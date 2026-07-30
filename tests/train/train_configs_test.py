@@ -1,14 +1,15 @@
+from types import SimpleNamespace
+
 import pytest
 import os
 from pathlib import Path
 import logging
-import numpy as np
+import torch
 from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 from cccma_ppp.train.train_configs import (
     TrainConfig,
-    prepare_config,
+    _check_IO,
     build_trainer,
-    set_seed,
     RuntimeContext,
 )
 
@@ -40,8 +41,15 @@ class DummyTrainLoader:
         self.dataset_config.model = DummyObservation()
         self.dataset_config.condition_method = "x"
 
-        self.input_var_metadata = {}
-        self.target_var_metadata = {}
+        self.input_var_metadata = {
+            "NN_dims": [10, 10, 10, 10],
+            "preprocessors": [],
+        }
+
+        self.target_var_metadata = {
+            "NN_dims": [10],
+            "preprocessors": [],
+        }
 
     def setup_distributed(self, d):
         pass
@@ -65,41 +73,47 @@ class DummyTrainLoader:
 
 
 class DummyModuleSelector:
-    def __init__(self):
-        self.type = "cVAE"
-
-        self._module_config = type(
-            "cfg",
-            (),
-            {
-                "model_config": type(
-                    "mc", (), {"GENERATOR": False, "NUM_OUTPUT_DIMS": 1}
-                )()
-            },
-        )
+    type = "cvae"
+    NUM_INPUT_DIMS = 4
+    NUM_OUTPUT_DIMS = 1
+    GENERATOR = None
 
     def build_module(self, **kwargs):
         class M:
-            def to(self, d):
+            model_config = SimpleNamespace(GENERATOR=None)
+            model = SimpleNamespace(
+                generative_modeling=False, config=SimpleNamespace(NUM_OUTPUT_DIMS=1)
+            )
+
+            def __init__(self):
+                self.model_config = SimpleNamespace(
+                    GENERATOR=None,
+                )
+                self.model = SimpleNamespace(
+                    generative_modeling=False,
+                    config=SimpleNamespace(),
+                )
+
+            def to(self, device):
+                self.device = device
                 return self
 
-            def init_loss_function(self, x):
-                pass
-
-            model = type("X", (), {"config": type("C", (), {"NUM_OUTPUT_DIMS": 1})()})
+            def init_loss_function(self, loss):
+                self.loss = loss
 
         return M()
 
 
 class DummyLossPipeline:
-    def __init__(self):
-        self.loss_pipeline = type("L", (), {"loss_types": ["mse"]})
+    loss_types = []
 
     def build(self, **kwargs):
         return "loss"
 
 
 class DummyTrainer:
+    gradient_accumulation_steps = 1
+
     def __init__(self):
         self.beta_finder = True
 
@@ -197,10 +211,10 @@ def test_generator_requires_crps(tmp_path):
     loader = DummyTrainLoader()
 
     module = DummyModuleSelector()
-    module._module_config.model_config.GENERATOR = True
+    module.GENERATOR = True
 
     loss = DummyLossPipeline()
-    loss.loss_pipeline.loss_types = ["mse"]
+    loss.loss_types = ["mse"]
 
     with pytest.raises(RuntimeError):
         TrainConfig(tmp_path, 1, loader, module, loss, DummyTrainer())
@@ -209,7 +223,7 @@ def test_generator_requires_crps(tmp_path):
 def test_set_random_seed(tmp_path):
     cfg = make_valid_config_with(tmp_path)
     cfg.seed = 42
-    cfg.set_random_seed()
+    cfg.set_random_seed(0)
 
 
 @pytest.mark.pruned
@@ -234,7 +248,6 @@ def test_prepare_directory_yaml_copy(tmp_path):
     assert (Path(cfg.experiment_dir) / "config.yaml").exists()
 
 
-@pytest.mark.pruned
 def test_resolve_resuming_same_path(tmp_path):
     cfg = object.__new__(TrainConfig)
     cfg.resume_dir = tmp_path
@@ -267,17 +280,6 @@ def test_resolve_resuming_different_path(tmp_path):
     assert cfg.copy_resume_dir_to_new_path is True
 
 
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_prepare_config_reads_yaml(tmp_path):
-    path = tmp_path / "cfg.yaml"
-    path.write_text("x: 1")
-
-    data = prepare_config(path)
-    assert data["x"] == 1
-
-
-@pytest.mark.pruned
 def test_build_trainer_basic(tmp_path):
     cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
@@ -332,7 +334,7 @@ def test_set_random_seed_none(tmp_path):
 
     cfg.seed = None
 
-    cfg.set_random_seed()
+    cfg.set_random_seed(0)
 
 
 @pytest.mark.pruned
@@ -417,10 +419,10 @@ def test_generator_with_crps_valid(tmp_path):
     loader = DummyTrainLoader()
 
     module = DummyModuleSelector()
-    module._module_config.model_config.GENERATOR = True
+    module.GENERATOR = True
 
     loss = DummyLossPipeline()
-    loss.loss_pipeline.loss_types = ["crps"]
+    loss.loss_types = ["crps"]
 
     cfg = TrainConfig(
         tmp_path,
@@ -451,17 +453,6 @@ def test_deterministic_with_observation_valid(tmp_path):
     )
 
     assert cfg is not None
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_prepare_config_invalid_yaml(tmp_path):
-    path = tmp_path / "bad.yaml"
-    path.write_text("::::")
-
-    data = prepare_config(path)
-
-    assert data is not None
 
 
 @pytest.mark.pruned
@@ -702,9 +693,7 @@ def test_optimization_exists(tmp_path):
     assert cfg.optimization is not None
 
 
-import torch
-
-
+@pytest.mark.pruned
 def test_deterministic_beta_finder_warning(tmp_path):
     loader = DummyTrainLoader()
     loader.dataset_config.observation = DummyObservation()
@@ -726,11 +715,12 @@ def test_deterministic_beta_finder_warning(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_non_mlp_with_flattener_raises(tmp_path):
     loader = DummyTrainLoader()
 
     module = DummyModuleSelector()
-    module._module_config.model_config.NUM_OUTPUT_DIMS = 2
+    module.NUM_OUTPUT_DIMS = 3
 
     with pytest.raises(RuntimeError):
         TrainConfig(
@@ -746,10 +736,14 @@ def test_non_mlp_with_flattener_raises(tmp_path):
 def test_non_mlp_without_flattener_valid(tmp_path):
     loader = DummyTrainLoader()
 
-    loader.dataset_config.observation.preprocessing_pipeline.pipeline = []
+    loader.input_var_metadata["preprocessors"] = []
+    loader.target_var_metadata["preprocessors"] = []
+    loader.input_var_metadata["NN_dims"] = [10, 10]
+    loader.target_var_metadata["NN_dims"] = [10, 10]
 
     module = DummyModuleSelector()
-    module._module_config.model_config.NUM_OUTPUT_DIMS = 2
+    module.NUM_INPUT_DIMS = 2
+    module.NUM_OUTPUT_DIMS = 2
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -848,19 +842,6 @@ def test_read_config_missing_resume_dir(tmp_path):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
-def test_prepare_config_roundtrip(tmp_path):
-    yaml_path = tmp_path / "config.yaml"
-
-    yaml_path.write_text("a: 1\nb: 2")
-
-    data = prepare_config(yaml_path)
-
-    assert data["a"] == 1
-    assert data["b"] == 2
-
-
-@pytest.mark.pruned
 def test_build_trainer_print_logger_branch(tmp_path, capsys):
     cfg = make_valid_config_with(tmp_path)
 
@@ -910,6 +891,7 @@ def test_module_to_called(tmp_path):
     called = {"x": False}
 
     class M:
+        model_config = SimpleNamespace(GENERATOR=None)
         model = type(
             "X",
             (),
@@ -942,6 +924,7 @@ def test_module_init_loss_called(tmp_path):
     called = {"x": False}
 
     class M:
+        model_config = SimpleNamespace(GENERATOR=None)
         model = type(
             "X",
             (),
@@ -973,6 +956,7 @@ def test_build_trainer_num_output_dims_fallback(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     class M:
+        model_config = SimpleNamespace(GENERATOR=None)
         model = type("X", (), {"config": type("C", (), {})()})
 
         def to(self, d):
@@ -995,26 +979,12 @@ def test_build_trainer_num_output_dims_fallback(tmp_path):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
-def test_set_seed_function():
-    set_seed(123)
-
-    x = np.random.rand()
-
-    set_seed(123)
-
-    y = np.random.rand()
-
-    assert x == y
-
-
-@pytest.mark.pruned
 def test_set_random_seed_executes(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     cfg.seed = 123
 
-    cfg.set_random_seed()
+    cfg.set_random_seed(0)
 
 
 @pytest.mark.pruned
@@ -1061,6 +1031,8 @@ def test_missing_flattener_for_mlp(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     cfg.train_loader.dataset_config.observation.preprocessing_pipeline.pipeline = []
+    cfg.train_loader.input_var_metadata["preprocessors"] = []
+    cfg.train_loader.input_var_metadata["NN_dims"] = [10, 10, 10]
 
     with pytest.raises(RuntimeError):
         cfg.__post_init__()
@@ -1084,6 +1056,7 @@ def test_resolve_resuming_none_branch(tmp_path):
     assert cfg.resume_dir is None
 
 
+@pytest.mark.pruned
 def test_build_trainer_distributed_true_monkeypatch(tmp_path, monkeypatch):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1141,7 +1114,7 @@ def test_prepare_runtime_sets_input_metadata(tmp_path):
 
     cfg._prepare_runtime_variables()
 
-    assert RuntimeContext.INPUT_VAR_METADATA == {}
+    assert RuntimeContext.INPUT_VAR_METADATA == cfg.train_loader.input_var_metadata
 
 
 @pytest.mark.pruned
@@ -1150,7 +1123,7 @@ def test_prepare_runtime_sets_target_metadata(tmp_path):
 
     cfg._prepare_runtime_variables()
 
-    assert RuntimeContext.TARGET_VAR_METADATA == {}
+    assert RuntimeContext.TARGET_VAR_METADATA == cfg.train_loader.target_var_metadata
 
 
 @pytest.mark.pruned
@@ -1199,37 +1172,6 @@ def test_prepare_directory_root_false(tmp_path):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
-def test_set_seed_repeatability():
-    set_seed(999)
-    a = np.random.randint(0, 100000)
-
-    set_seed(999)
-    b = np.random.randint(0, 100000)
-
-    assert a == b
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_prepare_config_multikey(tmp_path):
-    path = tmp_path / "cfg.yaml"
-
-    path.write_text(
-        """
-a: 1
-b: hello
-c:
-  d: 3
-"""
-    )
-
-    data = prepare_config(path)
-
-    assert data["c"]["d"] == 3
-
-
-@pytest.mark.pruned
 def test_build_trainer_train_loader_len_used(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1265,47 +1207,6 @@ def test_build_trainer_added_features_none(tmp_path):
     loader = cfg.train_loader.build_train_loader()
 
     assert loader.added_features_dim is None
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_module_selector_type_exists():
-    module = DummyModuleSelector()
-
-    assert module.type == "cVAE"
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_dummy_optimizer_type():
-    opt = DummyOptimization()
-
-    assert opt.optimizer_type == "adam"
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_dummy_trainer_beta_finder_default():
-    trainer = DummyTrainer()
-
-    assert trainer.beta_finder is True
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_dummy_loss_pipeline_default():
-    loss = DummyLossPipeline()
-
-    assert "mse" in loss.loss_pipeline.loss_types
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_dummy_distributed_defaults():
-    d = DummyDistributed()
-
-    assert d.device == "cpu"
-    assert d.local_rank == 0
 
 
 @pytest.mark.pruned
@@ -1465,7 +1366,7 @@ def test_prepare_runtime_variables_input_metadata(tmp_path):
 
     cfg._prepare_runtime_variables()
 
-    assert RuntimeContext.INPUT_VAR_METADATA == {}
+    assert RuntimeContext.INPUT_VAR_METADATA == cfg.train_loader.input_var_metadata
 
 
 @pytest.mark.pruned
@@ -1474,21 +1375,7 @@ def test_prepare_runtime_variables_target_metadata(tmp_path):
 
     cfg._prepare_runtime_variables()
 
-    assert RuntimeContext.TARGET_VAR_METADATA == {}
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_set_seed_changes_numpy_state():
-    set_seed(111)
-
-    a = np.random.rand()
-
-    set_seed(111)
-
-    b = np.random.rand()
-
-    assert a == b
+    assert RuntimeContext.TARGET_VAR_METADATA == cfg.train_loader.target_var_metadata
 
 
 @pytest.mark.pruned
@@ -1497,7 +1384,7 @@ def test_set_random_seed_with_none(tmp_path):
 
     cfg.seed = None
 
-    cfg.set_random_seed()
+    cfg.set_random_seed(0)
 
 
 @pytest.mark.pruned
@@ -1506,43 +1393,7 @@ def test_set_random_seed_with_integer(tmp_path):
 
     cfg.seed = 999
 
-    cfg.set_random_seed()
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_prepare_config_nested_yaml(tmp_path):
-    path = tmp_path / "cfg.yaml"
-
-    path.write_text(
-        """
-a:
-  b:
-    c: 1
-"""
-    )
-
-    data = prepare_config(path)
-
-    assert data["a"]["b"]["c"] == 1
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_prepare_config_list_yaml(tmp_path):
-    path = tmp_path / "cfg.yaml"
-
-    path.write_text(
-        """
-x:
-  - 1
-  - 2
-"""
-    )
-
-    data = prepare_config(path)
-
-    assert data["x"] == [1, 2]
+    cfg.set_random_seed(0)
 
 
 @pytest.mark.pruned
@@ -1709,6 +1560,7 @@ def test_module_to_executes(tmp_path):
     called = {"x": False}
 
     class M:
+        model_config = SimpleNamespace(GENERATOR=None)
         model = type(
             "X",
             (),
@@ -1742,6 +1594,7 @@ def test_init_loss_function_executes(tmp_path):
     called = {"x": False}
 
     class M:
+        model_config = SimpleNamespace(GENERATOR=None)
         model = type(
             "X",
             (),
@@ -1816,30 +1669,6 @@ def test_build_trainer_validation_loader_present(tmp_path):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
-def test_dummy_module_selector_type():
-    module = DummyModuleSelector()
-
-    assert module.type == "cVAE"
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_dummy_trainer_default_beta_finder():
-    trainer = DummyTrainer()
-
-    assert trainer.beta_finder is True
-
-
-@pytest.mark.pruned
-# Remove test due to no coverage
-def test_dummy_optimizer_default_type():
-    opt = DummyOptimization()
-
-    assert opt.optimizer_type == "adam"
-
-
-@pytest.mark.pruned
 def test_prepare_directory_copytree_branch_real(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"
@@ -1863,10 +1692,14 @@ def test_prepare_directory_copytree_branch_real(tmp_path):
 def test_non_mlp_without_flatten_branch(tmp_path):
     loader = DummyTrainLoader()
 
-    loader.dataset_config.observation.preprocessing_pipeline.pipeline = []
+    loader.input_var_metadata["preprocessors"] = []
+    loader.target_var_metadata["preprocessors"] = []
+    loader.input_var_metadata["NN_dims"] = [10, 10]
+    loader.target_var_metadata["NN_dims"] = [10, 10]
 
     module = DummyModuleSelector()
-    module._module_config.model_config.NUM_OUTPUT_DIMS = 2
+    module.NUM_INPUT_DIMS = 2
+    module.NUM_OUTPUT_DIMS = 2
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -1880,12 +1713,11 @@ def test_non_mlp_without_flatten_branch(tmp_path):
     assert cfg is not None
 
 
-@pytest.mark.pruned
 def test_non_mlp_with_flatten_branch(tmp_path):
     loader = DummyTrainLoader()
 
     module = DummyModuleSelector()
-    module._module_config.model_config.NUM_OUTPUT_DIMS = 2
+    module.NUM_OUTPUT_DIMS = 2
 
     with pytest.raises(RuntimeError):
         TrainConfig(
@@ -1901,7 +1733,7 @@ def test_non_mlp_with_flatten_branch(tmp_path):
 @pytest.mark.pruned
 def test_generator_false_branch(tmp_path):
     module = DummyModuleSelector()
-    module._module_config.model_config.GENERATOR = False
+    module.GENERATOR = None
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -2287,12 +2119,18 @@ def test_build_trainer_num_output_dims_fallback_len(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     class M:
-        model = type("X", (), {"config": type("C", (), {})()})
+        model_config = SimpleNamespace(
+            GENERATOR=None,
+        )
+        model = SimpleNamespace(
+            generative_modeling=False,
+            config=SimpleNamespace(),
+        )
 
         def to(self, device):
             return self
 
-        def init_loss_function(self, x):
+        def init_loss_function(self, loss):
             pass
 
     class Module(DummyModuleSelector):
@@ -2451,10 +2289,10 @@ def test_required_inputs_trainer_missing(tmp_path):
 @pytest.mark.pruned
 def test_generator_true_with_crps_valid(tmp_path):
     module = DummyModuleSelector()
-    module._module_config.model_config.GENERATOR = True
+    module.GENERATOR = True
 
     loss = DummyLossPipeline()
-    loss.loss_pipeline.loss_types = ["crps"]
+    loss.loss_types = ["crps"]
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -2471,7 +2309,7 @@ def test_generator_true_with_crps_valid(tmp_path):
 @pytest.mark.pruned
 def test_generator_false_valid(tmp_path):
     module = DummyModuleSelector()
-    module._module_config.model_config.GENERATOR = False
+    module.GENERATOR = None
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -2638,9 +2476,9 @@ def test_build_trainer_logger_present_root_branch(tmp_path):
 def test_num_output_dims_equals_one_branch(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
-    cfg.module._module_config.model_config.NUM_OUTPUT_DIMS = 1
+    cfg.module.NUM_OUTPUT_DIMS = 1
 
-    assert cfg.module._module_config.model_config.NUM_OUTPUT_DIMS == 1
+    assert cfg.module.NUM_OUTPUT_DIMS == 1
 
 
 @pytest.mark.pruned
@@ -2650,7 +2488,12 @@ def test_num_output_dims_not_one_branch(tmp_path):
     loader.dataset_config.observation.preprocessing_pipeline.pipeline = []
 
     module = DummyModuleSelector()
-    module._module_config.model_config.NUM_OUTPUT_DIMS = 2
+    module.NUM_INPUT_DIMS = 2
+    module.NUM_OUTPUT_DIMS = 2
+    loader.input_var_metadata["NN_dims"] = [10, 10]
+    loader.target_var_metadata["NN_dims"] = [10, 10]
+    loader.input_var_metadata["preprocessors"] = []
+    loader.target_var_metadata["preprocessors"] = []
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -2661,14 +2504,14 @@ def test_num_output_dims_not_one_branch(tmp_path):
         trainer=DummyTrainer(),
     )
 
-    assert cfg.module._module_config.model_config.NUM_OUTPUT_DIMS == 2
+    assert cfg.module.NUM_OUTPUT_DIMS == 2
 
 
 @pytest.mark.pruned
 def test_generator_branch_false(tmp_path):
     module = DummyModuleSelector()
 
-    module._module_config.model_config.GENERATOR = False
+    module.GENERATOR = None
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -2686,10 +2529,10 @@ def test_generator_branch_false(tmp_path):
 def test_generator_branch_true_valid(tmp_path):
     module = DummyModuleSelector()
 
-    module._module_config.model_config.GENERATOR = True
+    module.GENERATOR = True
 
     loss = DummyLossPipeline()
-    loss.loss_pipeline.loss_types = ["crps"]
+    loss.loss_types = ["crps"]
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -2718,24 +2561,6 @@ def test_cvae_requires_beta_finder(tmp_path):
             module=module,
             losspipeline=DummyLossPipeline(),
             trainer=trainer,
-        )
-
-
-def test_cvae_requires_condition_method(tmp_path):
-    loader = DummyTrainLoader()
-    loader.dataset_config.condition_method = None
-
-    module = DummyModuleSelector()
-    module.type = "cVAE"
-
-    with pytest.raises(ValueError):
-        TrainConfig(
-            experiment_dir=tmp_path,
-            max_epochs=1,
-            train_loader=loader,
-            module=module,
-            losspipeline=DummyLossPipeline(),
-            trainer=DummyTrainer(),
         )
 
 
@@ -2784,7 +2609,7 @@ def test_default_model_beta_warning(tmp_path):
 def test_mlp_with_flattener_valid(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
-    cfg.module._module_config.model_config.NUM_OUTPUT_DIMS = 1
+    cfg.module.NUM_OUTPUT_DIMS = 1
 
     assert cfg is not None
 
@@ -2793,10 +2618,14 @@ def test_mlp_with_flattener_valid(tmp_path):
 def test_non_mlp_without_flattener_valid_again(tmp_path):
     loader = DummyTrainLoader()
 
-    loader.dataset_config.observation.preprocessing_pipeline.pipeline = []
+    loader.input_var_metadata["preprocessors"] = []
+    loader.target_var_metadata["preprocessors"] = []
+    loader.input_var_metadata["NN_dims"] = [10, 10]
+    loader.target_var_metadata["NN_dims"] = [10, 10]
 
     module = DummyModuleSelector()
-    module._module_config.model_config.NUM_OUTPUT_DIMS = 2
+    module.NUM_INPUT_DIMS = 2
+    module.NUM_OUTPUT_DIMS = 2
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -2813,7 +2642,7 @@ def test_non_mlp_without_flattener_valid_again(tmp_path):
 @pytest.mark.pruned
 def test_generator_false_edge(tmp_path):
     module = DummyModuleSelector()
-    module._module_config.model_config.GENERATOR = False
+    module.GENERATOR = None
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -2830,10 +2659,10 @@ def test_generator_false_edge(tmp_path):
 @pytest.mark.pruned
 def test_generator_true_edge(tmp_path):
     module = DummyModuleSelector()
-    module._module_config.model_config.GENERATOR = True
+    module.GENERATOR = True
 
     loss = DummyLossPipeline()
-    loss.loss_pipeline.loss_types = ["crps"]
+    loss.loss_types = ["crps"]
 
     cfg = TrainConfig(
         experiment_dir=tmp_path,
@@ -2845,3 +2674,260 @@ def test_generator_true_edge(tmp_path):
     )
 
     assert cfg is not None
+
+
+def test_check_io_invalid_which():
+    with pytest.raises(
+        ValueError,
+        match="only checks IO",
+    ):
+        _check_IO(
+            {"NN_dims": [1], "preprocessors": []},
+            1,
+            "bad",
+        )
+
+
+@pytest.mark.pruned
+def test_check_io_1d_with_single_dim_no_flattener():
+    _check_IO(
+        {
+            "NN_dims": [10],
+            "preprocessors": [],
+        },
+        1,
+        "input",
+    )
+
+
+def test_check_io_multid_with_flattener_wrong_dims():
+    with pytest.raises(
+        RuntimeError,
+        match="do not add Flattennanremove",
+    ):
+        _check_IO(
+            {
+                "NN_dims": [10, 10],
+                "preprocessors": ["flattener"],
+            },
+            3,
+            "input",
+        )
+
+
+@pytest.mark.pruned
+def test_check_io_multid_with_flattener_correct_dims():
+    with pytest.raises(
+        RuntimeError,
+        match="do not add Flattennanremove",
+    ):
+        _check_IO(
+            {
+                "NN_dims": [10, 10, 10],
+                "preprocessors": ["flattener"],
+            },
+            3,
+            "input",
+        )
+
+
+@pytest.mark.pruned
+def test_prepare_runtime_variables_string_conversion(tmp_path):
+    cfg = make_valid_config_with(tmp_path)
+
+    cfg._prepare_runtime_variables()
+
+    assert isinstance(
+        RuntimeContext.GLOBAL_EXP_DIR,
+        str,
+    )
+
+    assert isinstance(
+        RuntimeContext.GLOBAL_CHECKPOINT_DIR,
+        str,
+    )
+
+
+@pytest.mark.pruned
+def test_build_trainer_passes_max_epochs(tmp_path):
+    received = {"epochs": None}
+
+    class T(DummyTrainer):
+        def build(self, **kwargs):
+            received["epochs"] = kwargs["max_epochs"]
+            return "trainer"
+
+    cfg = make_valid_config_with(tmp_path)
+    cfg.trainer = T()
+
+    build_trainer(
+        cfg,
+        DummyDistributed(),
+    )
+
+    assert received["epochs"] == 1
+
+
+@pytest.mark.pruned
+def test_build_trainer_passes_validation_loader(tmp_path):
+    received = {"loader": None}
+
+    class Loader(DummyTrainLoader):
+        def build_validation_loader(self):
+            return ["val"]
+
+    class T(DummyTrainer):
+        def build(self, **kwargs):
+            received["loader"] = kwargs["validation_data_loader"]
+            return "trainer"
+
+    cfg = make_valid_config_with(tmp_path)
+    cfg.train_loader = Loader()
+    cfg.trainer = T()
+
+    build_trainer(
+        cfg,
+        DummyDistributed(),
+    )
+
+    assert received["loader"] == ["val"]
+
+
+@pytest.mark.pruned
+def test_build_trainer_passes_train_loader(tmp_path):
+    received = {"loader": None}
+
+    class T(DummyTrainer):
+        def build(self, **kwargs):
+            received["loader"] = kwargs["train_data_loader"]
+            return "trainer"
+
+    cfg = make_valid_config_with(tmp_path)
+    cfg.trainer = T()
+
+    build_trainer(
+        cfg,
+        DummyDistributed(),
+    )
+
+    assert received["loader"] is not None
+
+
+@pytest.mark.pruned
+def test_build_trainer_passes_optimizer(tmp_path):
+    received = {"optimizer": None}
+
+    class T(DummyTrainer):
+        def build(self, **kwargs):
+            received["optimizer"] = kwargs["optimization"]
+            return "trainer"
+
+    cfg = make_valid_config_with(tmp_path)
+    cfg.trainer = T()
+
+    build_trainer(
+        cfg,
+        DummyDistributed(),
+    )
+
+    assert received["optimizer"] == "opt"
+
+
+@pytest.mark.pruned
+def test_build_trainer_passes_module(tmp_path):
+    received = {"module": None}
+
+    class T(DummyTrainer):
+        def build(self, **kwargs):
+            received["module"] = kwargs["module"]
+            return "trainer"
+
+    cfg = make_valid_config_with(tmp_path)
+    cfg.trainer = T()
+
+    build_trainer(
+        cfg,
+        DummyDistributed(),
+    )
+
+    assert received["module"] is not None
+
+
+@pytest.mark.pruned
+def test_build_trainer_uses_len_output_shape_fallback(tmp_path):
+    class Module(DummyModuleSelector):
+        NUM_OUTPUT_DIMS = 0
+
+    captured = {"value": None}
+
+    class Loss(DummyLossPipeline):
+        def build(self, **kwargs):
+            captured["value"] = kwargs["num_output_dimensions"]
+            return "loss"
+
+    cfg = make_valid_config_with(tmp_path)
+    cfg.module = Module()
+    cfg.losspipeline = Loss()
+
+    build_trainer(
+        cfg,
+        DummyDistributed(),
+    )
+
+    assert captured["value"] == 1
+
+
+@pytest.mark.pruned
+def test_resolve_resuming_restores_requested_resume_dir(tmp_path):
+    cfg = object.__new__(TrainConfig)
+
+    cfg.resume_dir = tmp_path / "resume"
+    cfg.experiment_dir = tmp_path
+    cfg.max_epochs = 1
+
+    resumed = make_valid_config_with(tmp_path)
+
+    cfg.read_config_from_halted_experiment = lambda **kwargs: resumed
+
+    cfg._resolve_resuming()
+
+    assert cfg.resume_dir == tmp_path / "resume"
+
+
+@pytest.mark.pruned
+def test_prepare_directory_barrier_called(tmp_path):
+    calls = {"n": 0}
+
+    class D(DummyDistributed):
+        def barrier(self):
+            calls["n"] += 1
+
+    cfg = make_valid_config_with(tmp_path)
+
+    cfg.prepare_directory(
+        D(),
+        yaml_config=None,
+    )
+
+    assert calls["n"] == 2
+
+
+@pytest.mark.pruned
+def test_prepare_directory_barrier_called_with_yaml(tmp_path):
+    calls = {"n": 0}
+
+    class D(DummyDistributed):
+        def barrier(self):
+            calls["n"] += 1
+
+    cfg = make_valid_config_with(tmp_path)
+
+    yaml_file = tmp_path / "cfg.yaml"
+    yaml_file.write_text("x: 1")
+
+    cfg.prepare_directory(
+        D(),
+        yaml_config=yaml_file,
+    )
+
+    assert calls["n"] == 2

@@ -264,7 +264,7 @@ def test_main_build_trainer_receives_config_distributed_logger(monkeypatch, tmp_
 
 
 @pytest.mark.pruned
-def test_main_propagates_train_error_and_does_not_cleanup(monkeypatch, tmp_path):
+def test_main_propagates_train_error_and_cleanup(monkeypatch, tmp_path):
     yaml_path = tmp_path / "config.yaml"
     yaml_path.write_text("experiment_dir: test\n", encoding="utf-8")
 
@@ -311,12 +311,13 @@ def test_main_propagates_train_error_and_does_not_cleanup(monkeypatch, tmp_path)
     with pytest.raises(RuntimeError, match="training failed"):
         main(str(yaml_path))
 
-    assert distributed.cleanup_called is False
+    assert distributed.cleanup_called is True
 
 
 class DummyDistributed:
     def __init__(self, root=True):
         self._root = root
+        self.rank = 0
         self.cleanup_called = False
 
     def is_root(self):
@@ -344,7 +345,7 @@ class DummyTrainConfig:
         self.log_every_n_epochs = 3
         self.save_checkpoint = True
 
-    def set_random_seed(self):
+    def set_random_seed(self, rank=None):
         self.seed_called = True
 
     def prepare_directory(self, distributed, yaml_config):

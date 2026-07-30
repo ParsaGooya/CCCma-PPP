@@ -6,20 +6,23 @@ from torch.utils.data import Dataset
 import xarray as xr
 import dask
 
-from cccma_ppp.data_modules.data import ModelDataConfig, ConditionDataConfig, DataConfigABC
-from cccma_ppp.configs import (supported_NN_dimensions_sorted,
-                               required_sample_dimensions,
-                               optional_sample_dimensions)
+from cccma_ppp.data_modules.data.data_configs import (
+    ModelDataConfig,
+    ConditionDataConfig,
+    DataConfigABC,
+)
+from cccma_ppp.configs import (
+    supported_NN_dimensions_sorted,
+    required_sample_dimensions,
+    optional_sample_dimensions,
+)
 
-from cccma_ppp.data_modules import (
+from cccma_ppp.data_modules.utils import (
     _unwrap_data_variables,
     _load_xarray_data,
     _create_train_mask,
-    suppress_stderr
+    suppress_stderr,
 )
-
-
-
 
 
 @dataclasses.dataclass
@@ -109,7 +112,7 @@ class DatasetConfigABC(abc.ABC):
         self._check_required_input_source()
         self._check_condition_method()
         self._check_model_vs_condition()
-        
+
         self._resolve_lead_months()
         self._resolve_condition()
 
@@ -160,7 +163,7 @@ class DatasetConfigABC(abc.ABC):
         ValueError
             If condition data does not provide sufficient lead-time coverage for non static condition methods.
         ValueError
-            If condition data and model data do not have similar ensembles for same_member condition methods.            
+            If condition data and model data do not have similar ensembles for same_member condition methods.
         ValueError
             If spatial coordinates (lat/lon) between model and condition differ
             when observation-based correction is applied.
@@ -173,18 +176,17 @@ class DatasetConfigABC(abc.ABC):
             ]
         ):
             if self.condition_method.lower() != "static":
-
-                for dim in [dim for dim in self.model.info.coords 
+                for dim in [
+                    dim
+                    for dim in self.model.info.coords
                     if dim in required_sample_dimensions
-                    ]:
-                    
+                ]:
                     if self.condition.info.coords.get(dim) is None:
-                    
                         raise ValueError(
                             "Condition data should be available"
-                            f" on the same dimestions as model data."
+                            " on the same dimestions as model data."
                         )
-                
+
                     if not set(self.model.info.coords[dim].values).issubset(
                         set(self.condition.info.coords[dim].values)
                     ):
@@ -193,34 +195,35 @@ class DatasetConfigABC(abc.ABC):
                             f" on the same {dim} coordinates as model data."
                         )
 
-            
             if self.condition_method.lower() == "same_member":
-
-                if any([self.model.info.coords.get("ensembles") is None, 
-                        self.effective_condition.info.coords.get("ensembles") is None]):
-
+                if any(
+                    [
+                        self.model.info.coords.get("ensembles") is None,
+                        self.effective_condition.info.coords.get("ensembles") is None,
+                    ]
+                ):
                     raise ValueError(
-                                "Condition data and model data must have ensembles "
-                                "dims and coords."
-                            )                   
+                        "Condition data and model data must have ensembles "
+                        "dims and coords."
+                    )
 
                 if not self.model.info.coords["ensembles"].equals(
-                    self.condition.info.coords["ensembles"]):
-                
+                    self.condition.info.coords["ensembles"]
+                ):
                     raise ValueError(
                         "Condition data should have the same ensemble members"
                         "as model data for same_member conditioning."
                     )
-                            
+
             if getattr(self, "observation", None) is not None:
-
-                for dim in [dim for dim in self.model.info.coords 
-                    if dim in supported_NN_dimensions_sorted]:
-                
-
+                for dim in [
+                    dim
+                    for dim in self.model.info.coords
+                    if dim in supported_NN_dimensions_sorted
+                ]:
                     if self.condition.info.coords.get(dim, None) is None:
                         raise ValueError(
-                            f"model and condition data must have the same NN dims."
+                            "model and condition data must have the same NN dims."
                             / "when bias correcting to observations"
                         )
 
@@ -231,7 +234,6 @@ class DatasetConfigABC(abc.ABC):
                             f"model and condition data do not have the same {dim} cooridnates."
                             / "when bias correcting to observations"
                         )
-
 
     @final
     def _check_condition_method(self):
@@ -260,62 +262,60 @@ class DatasetConfigABC(abc.ABC):
             if self.condition_method.lower() == "same_member":
                 if self.model.ensemble_mean:
                     raise ValueError(
-                    "for same member coniditioning the model data should not be ensemble mean."
-                )
-            
+                        "for same member coniditioning the model data should not be ensemble mean."
+                    )
+
         return self
-    
 
     def _check_condition(self):
         if self.effective_condition is not None:
             if self.condition_method is None:
                 raise ValueError(
-                "You must specify condition_method for conditioning dataset!"
-            )
+                    "You must specify condition_method for conditioning dataset!"
+                )
 
             if self.condition_method.lower() in ["cross_ensemble", "same_member"]:
-                if self.effective_condition.ensemble_mean: 
+                if self.effective_condition.ensemble_mean:
                     raise ValueError(
-                    "condition ensemble_mean cannot be True for cross_ensemble or same_member conditioning."
-                )
+                        "condition ensemble_mean cannot be True for cross_ensemble or same_member conditioning."
+                    )
                 if self.effective_condition.info.coords.get("ensembles") is None:
                     raise ValueError(
-                    "For cross_ensemble or same_member conditioning an ensembles dim must exist in the condition."
-                )
+                        "For cross_ensemble or same_member conditioning an ensembles dim must exist in the condition."
+                    )
             elif self.condition_method.lower() == "ensemble_mean":
-                if not self.effective_condition.ensemble_mean is True:
+                if self.effective_condition.ensemble_mean is not True:
                     raise ValueError(
-                    "Ensemble mean must be True for ensemble_mean conditioning."
-                )
+                        "Ensemble mean must be True for ensemble_mean conditioning."
+                    )
             else:
                 if self.effective_condition.ensemble_list is not None:
                     raise ValueError(
-                    'For "static" conditioning fields cannot specify ensemble list.'
-                )
+                        'For "static" conditioning fields cannot specify ensemble list.'
+                    )
                 if self._using_model_data_as_condition:
                     raise ValueError(
-                    "'static' conditioning method cannot point to the same model data!"
-                )
-            
+                        "'static' conditioning method cannot point to the same model data!"
+                    )
+
             if self.condition_method.lower() == "static":
-                checklist = [dim in self.effective_condition.info.coords 
-                             for dim in (required_sample_dimensions + 
-                                            optional_sample_dimensions)
+                checklist = [
+                    dim in self.effective_condition.info.coords
+                    for dim in (required_sample_dimensions + optional_sample_dimensions)
                 ]
                 if any(checklist):
                     raise ValueError(
-                        "For static condition method the condition dataset cannot have" \
-                        f"any of the sampling dimensions and coords " \
+                        "For static condition method the condition dataset cannot have"
+                        f"any of the sampling dimensions and coords "
                         f"{(required_sample_dimensions + optional_sample_dimensions)}"
                     )
 
-        else: 
+        else:
             if self.condition_method.lower() == "static":
-
                 raise ValueError(
-                "For static conditioning method condition dataset must be specified!"
-            )
-            
+                    "For static conditioning method condition dataset must be specified!"
+                )
+
         return self
 
     @final
@@ -327,10 +327,10 @@ class DatasetConfigABC(abc.ABC):
         -------
         None
         """
-        if (self.lead_months is not None and
-            isinstance(self.lead_months, lead_months_config)):
+        if self.lead_months is not None and isinstance(
+            self.lead_months, lead_months_config
+        ):
             self.lead_months = self.lead_months.build_lead_months()
-
 
     @property
     @abc.abstractmethod
@@ -343,7 +343,6 @@ class DatasetConfigABC(abc.ABC):
         np.ndarray
         """
         pass
-                                  
 
     @property
     @abc.abstractmethod
@@ -369,13 +368,11 @@ class DatasetConfigABC(abc.ABC):
         time_dim, lead_time_dim = required_sample_dimensions
         return self.effective_input.info.coords[lead_time_dim].values
 
-
     @property
     @abc.abstractmethod
     def effective_input(self) -> ConditionDataConfig | ModelDataConfig | None:
 
         pass
-
 
     @final
     @property
@@ -481,38 +478,30 @@ class DatasetConfigABC(abc.ABC):
         pass
 
 
-
-
-
-
 @dataclasses.dataclass
 class AddedTimeFeatures:
-    reference_config: DatasetConfigABC 
+    reference_config: DatasetConfigABC
     time_features: list[str] | None = None
 
     def __post_init__(self):
 
         self.time_dim, self.lead_time_dim = required_sample_dimensions
         self.feature_indices = {
-                self.time_dim: 0,
-                self.lead_time_dim: 1,
-                "month_sin": 2,
-                "month_cos": 3,
-            }
-        
+            self.time_dim: 0,
+            self.lead_time_dim: 1,
+            "month_sin": 2,
+            "month_cos": 3,
+        }
+
         self.time_features = tuple(self.time_features or ())
-            
-        unsupported = (
-            set(self.time_features)
-            - set(self.feature_indices)
-        )
+
+        unsupported = set(self.time_features) - set(self.feature_indices)
 
         if unsupported:
             raise ValueError(
                 f"Unsupported time features: {unsupported}. "
                 f"Supported features are: {set(self.feature_indices)}"
             )
-        
 
     def __call__(
         self,
@@ -539,26 +528,24 @@ class AddedTimeFeatures:
         """
         if self.time_features is None:
             return
-        
+
         missing = set(required_sample_dimensions) - selection.keys()
 
         if missing:
-
             raise ValueError(
                 "The provided selection coords are not in required sample dimensions."
                 f"{missing}"
             )
-        
-        
+
         time = selection[self.time_dim]
         lead_time = selection[self.lead_time_dim]
-
 
         target_time = time + lead_time - 0.5 // 12
         target_month = lead_time
 
         y = (target_time - np.min(self.reference_config.get_common_time)) / (
-            np.max(self.reference_config.get_common_time) - np.min(self.reference_config.get_common_time)
+            np.max(self.reference_config.get_common_time)
+            - np.min(self.reference_config.get_common_time)
         )
         lt = lead_time / max(self.reference_config.lead_months)
         msin = np.sin(2 * np.pi * target_month / 12.0)
@@ -576,35 +563,32 @@ class AddedTimeFeatures:
             )
 
         return time_features
-    
+
     def __len__(self):
         return len(self.time_features)
-
 
     def __eq__(self, other):
         if not isinstance(other, AddedTimeFeatures):
             return NotImplemented
 
         return (
-            all(self.reference_config.lead_months 
-            == other.reference_config.lead_months)
-            and all(self.reference_config.get_common_time 
-            == other.reference_config.get_common_time)
-            and (type(self.reference_config) is 
-                 type(other.reference_config))
+            all(self.reference_config.lead_months == other.reference_config.lead_months)
+            and all(
+                self.reference_config.get_common_time
+                == other.reference_config.get_common_time
+            )
+            and (type(self.reference_config) is type(other.reference_config))
             and (self.time_features == other.time_features)
         )
 
 
-
 class DatasetABC(Dataset, abc.ABC):
-
     config: DatasetConfigABC
     requested_years: list[int] | tuple[int, ...] | np.ndarray
-    mask: xr.DataArray | None 
+    mask: xr.DataArray | None
     time_features: AddedTimeFeatures
-    return_metadata: bool 
-    load: bool 
+    return_metadata: bool
+    load: bool
     model_dataset: xr.DataArray | None
     observation_dataset: xr.DataArray | None
     condition_dataset: xr.DataArray | None
@@ -620,17 +604,18 @@ class DatasetABC(Dataset, abc.ABC):
         self.observation_dataset = None
 
         if self._load_model:
-            self.model_dataset = self._load_xarray_data(self.config.model,
-                                                        load = self.load)
+            self.model_dataset = self._load_xarray_data(
+                self.config.model, load=self.load
+            )
 
         if self.config.effective_condition is not None:
-            self.condition_dataset = self._load_xarray_data(self.config.effective_condition,
-                                                            load = self.load)
+            self.condition_dataset = self._load_xarray_data(
+                self.config.effective_condition, load=self.load
+            )
 
         self.sample_coords = self.get_sampling_coords()
         self.model_indexes = self.get_model_indexes(self.sample_coords)
         self.cond_indexes = self.get_cond_indexes(self.sample_coords)
-
 
     @final
     def _check_init(self):
@@ -639,38 +624,33 @@ class DatasetABC(Dataset, abc.ABC):
             raise RuntimeError(
                 "Make sure to fit preprocessors first!. Hint:  TrainDatasetConfig._fit_preprocessors()"
             )
-        if not set(self.requested_years).issubset(
-            set(self.config.available_times)
-        ):
+        if not set(self.requested_years).issubset(set(self.config.available_times)):
             raise ValueError(
                 "the requested years are not available given the data sources provided."
             )
 
     @final
     def _resolve_mask(self):
-        
-        if self.mask is None:
 
+        if self.mask is None:
             mask = _create_train_mask(
                 time=self.config.available_times,
                 lead_times=self.config.input_lead_months,
             )
-            self.mask = xr.full_like(mask, fill_value=False)               
-
+            self.mask = xr.full_like(mask, fill_value=False)
 
         missing = set(required_sample_dimensions) - set(self.mask.dims)
 
         if missing:
-            raise ValueError(f"The mask must have {required_sample_dimensions} dims. Current dims: {missing}")    
+            raise ValueError(
+                f"The mask must have {required_sample_dimensions} dims. Current dims: {missing}"
+            )
 
     @property
     def _sampling_times_selectors(self) -> dict:
 
         time_dim, lead_time_dim = required_sample_dimensions
-        return {
-        time_dim : self.requested_years,
-        lead_time_dim : self.config.lead_months
-        }
+        return {time_dim: self.requested_years, lead_time_dim: self.config.lead_months}
 
     @property
     @abc.abstractmethod
@@ -693,16 +673,14 @@ class DatasetABC(Dataset, abc.ABC):
     @final
     def _prepare_sampling_mask(self, sampling_times_selectors: dict):
 
-
         missing = set(required_sample_dimensions) - sampling_times_selectors.keys()
 
         if missing:
             raise ValueError(f"No selectors provided for dimensions: {missing}")
 
-        mask = self.mask.sel({
-            dim: sampling_times_selectors[dim]
-            for dim in required_sample_dimensions
-        })
+        mask = self.mask.sel(
+            {dim: sampling_times_selectors[dim] for dim in required_sample_dimensions}
+        )
 
         for dim in optional_sample_dimensions:
             if dim not in self.config.effective_input.info.coords:
@@ -714,16 +692,13 @@ class DatasetABC(Dataset, abc.ABC):
             coords = self.config.effective_input.info.coords[dim]
 
             mask = mask.expand_dims({dim: coords}, axis=0)
-        
 
         self.mask = mask.where(~mask)
 
         return self
 
     @final
-    def _load_xarray_data(self, 
-                          config: DataConfigABC, 
-                          load: bool = False):
+    def _load_xarray_data(self, config: DataConfigABC, load: bool = False):
         """
         Load dataset from xarray sources.
 
@@ -741,7 +716,7 @@ class DatasetABC(Dataset, abc.ABC):
             else None,
             concat_dim=config.concat_dim,
             rename_dict=config.rename_dict,
-            load=load
+            load=load,
         )
 
     @final
@@ -761,10 +736,7 @@ class DatasetABC(Dataset, abc.ABC):
             .batch.values
         )
         mask = tuple(map(np.array, zip(*mask)))
-        indexes = {
-            key: mask[ind]
-            for ind, key in enumerate(self.mask.sizes)
-        }
+        indexes = {key: mask[ind] for ind, key in enumerate(self.mask.sizes)}
 
         return indexes
 
@@ -838,14 +810,12 @@ class DatasetABC(Dataset, abc.ABC):
             self.condition_dataset is None
             or self.config.condition_method.lower() == "static"
         ):
-            
             return None
-        
+
         condition_coords = {
             dim: np.asarray(values)
             for dim, values in sample_coords.items()
-            if dim in self.condition_dataset.dims
-            and dim != "ensembles"
+            if dim in self.condition_dataset.dims and dim != "ensembles"
         }
 
         if self.config.condition_method.lower() == "same_member":
@@ -854,9 +824,7 @@ class DatasetABC(Dataset, abc.ABC):
                     "'same_member' conditioning requires ensemble coordinates."
                 )
 
-            condition_coords["ensembles"] = np.asarray(
-                sample_coords["ensembles"]
-            )
+            condition_coords["ensembles"] = np.asarray(sample_coords["ensembles"])
 
         indexes = {
             dim: self.condition_dataset.indexes[dim].get_indexer(values)
@@ -899,24 +867,26 @@ class DatasetABC(Dataset, abc.ABC):
             len_names += len(self.config.effective_condition.names)
 
         if any(checklist):
-            in_shape = self.config.effective_input.preprocessing_pipeline.get_preprocessors(
+            in_shape = (
+                self.config.effective_input.preprocessing_pipeline.get_preprocessors(
                     "flattener"
                 ).final_locations.shape
-                
-   
+            )
+
         else:
             in_shape = tuple(
-                self.config.effective_input.info.coords[dim].size 
-                for dim in supported_NN_dimensions_sorted  
-                if dim in self.config.effective_input.info.coords)
-            
+                self.config.effective_input.info.coords[dim].size
+                for dim in supported_NN_dimensions_sorted
+                if dim in self.config.effective_input.info.coords
+            )
+
         return tuple([len_names, *in_shape])
-        
+
     @final
     def get_added_features_dim(self):
 
         return len(self.time_features)
-    
+
     @final
     def _index_condition_dataset(self, ind: int) -> xr.DataArray | None:
         """
@@ -941,8 +911,7 @@ class DatasetABC(Dataset, abc.ABC):
 
         else:
             selection = {
-                dim: [int(indexes[ind])]
-                for dim, indexes in self.cond_indexes.items()
+                dim: [int(indexes[ind])] for dim, indexes in self.cond_indexes.items()
             }
 
             if self.config.condition_method.lower() == "cross_ensemble":
@@ -950,17 +919,13 @@ class DatasetABC(Dataset, abc.ABC):
                     np.random.randint(self.condition_dataset.sizes["ensembles"])
                 ]
 
-
         condition = self.condition_dataset.isel(**selection)
 
-        condition = (
-            self.config.effective_condition.preprocessing_pipeline.transform(
-                condition
-            )
+        condition = self.config.effective_condition.preprocessing_pipeline.transform(
+            condition
         )
 
         return _unwrap_data_variables(condition)
-        
 
     @final
     def _index_model_dataset(self, ind: int) -> xr.DataArray | None:
@@ -981,15 +946,13 @@ class DatasetABC(Dataset, abc.ABC):
             return None
 
         selection = {
-            dim: [int(indexes[ind])]
-            for dim, indexes in self.model_indexes.items()
+            dim: [int(indexes[ind])] for dim, indexes in self.model_indexes.items()
         }
 
         model = self.model_dataset.isel(**selection)
         model = self.config.model.preprocessing_pipeline.transform(model)
 
         return _unwrap_data_variables(model)
-
 
     @staticmethod
     def _compute(*arrays) -> tuple:
@@ -1006,9 +969,3 @@ class DatasetABC(Dataset, abc.ABC):
         int
         """
         return len(next(iter(self.sample_coords.values())))
-
-
-
-
-
-

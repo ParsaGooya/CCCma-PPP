@@ -30,6 +30,8 @@ class lossABC(nn.Module, abc.ABC):
     generative_context: GenerativeContext
 
 
+    generative_context: GenerativeContext
+
     @abc.abstractmethod
     def forward(
         self,

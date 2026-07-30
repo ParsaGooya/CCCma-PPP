@@ -8,7 +8,6 @@
   <title>cccma_ppp.train.dataloader &mdash; CCCma PPP  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=18aa9b61" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
@@ -40,10 +39,16 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Start Here</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/contributing.html">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -71,8 +76,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for cccma_ppp.train.dataloader</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
@@ -80,18 +84,17 @@
 
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.train.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrainDatasetConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules</span><span class="w"> </span><span class="kn">import</span> <span class="n">_create_train_mask</span><span class="p">,</span> <span class="n">WeightsConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_create_train_mask</span><span class="p">,</span> <span class="n">WeightsConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.dataloader</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">Dataloader</span><span class="p">,</span>
     <span class="n">DataloaderConfigABC</span><span class="p">,</span>
     <span class="n">BatchDataABC</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Distributed</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic.distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">Distributed</span>
 
 
 <div class="viewcode-block" id="BatchData">
-<a class="viewcode-back" href="../../../cccma_ppp.train.html#cccma_ppp.train.dataloader.BatchData">[docs]</a>
-<span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.dataloader.html#cccma_ppp.core.cVAE_module.BatchData">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">BatchData</span><span class="p">(</span><span class="n">BatchDataABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -114,6 +117,7 @@
     <span class="nb">input</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
     <span class="n">target</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
     <span class="n">added_features</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">metadata</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">return_spatial_mask</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">reduce_spatial_mask</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -143,7 +147,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_mask</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BatchData.to_device">
-<a class="viewcode-back" href="../../../cccma_ppp.train.html#cccma_ppp.train.dataloader.BatchData.to_device">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.dataloader.html#cccma_ppp.core.cVAE_module.BatchData.to_device">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_device</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Move batch data to specified device.</span>
@@ -174,7 +178,7 @@
 
 
 <div class="viewcode-block" id="TrainDataloaderConfig">
-<a class="viewcode-back" href="../../../cccma_ppp.train.html#cccma_ppp.train.dataloader.TrainDataloaderConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.cVAE_module.TrainDataloaderConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TrainDataloaderConfig</span><span class="p">(</span><span class="n">DataloaderConfigABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -262,7 +266,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_config</span><span class="o">.</span><span class="n">available_train_time</span>
 
 <div class="viewcode-block" id="TrainDataloaderConfig.setup_distributed">
-<a class="viewcode-back" href="../../../cccma_ppp.train.html#cccma_ppp.train.dataloader.TrainDataloaderConfig.setup_distributed">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.cVAE_module.TrainDataloaderConfig.setup_distributed">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">setup_distributed</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">distributed</span><span class="p">:</span> <span class="n">Distributed</span><span class="p">,</span> <span class="n">save_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">):</span>
@@ -297,7 +301,7 @@
 
 
 <div class="viewcode-block" id="TrainDataloaderConfig.build_train_loader">
-<a class="viewcode-back" href="../../../cccma_ppp.train.html#cccma_ppp.train.dataloader.TrainDataloaderConfig.build_train_loader">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.cVAE_module.TrainDataloaderConfig.build_train_loader">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_train_loader</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">return_spatial_mask</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -349,7 +353,7 @@
 
 
 <div class="viewcode-block" id="TrainDataloaderConfig.build_validation_loader">
-<a class="viewcode-back" href="../../../cccma_ppp.train.html#cccma_ppp.train.dataloader.TrainDataloaderConfig.build_validation_loader">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.cVAE_module.TrainDataloaderConfig.build_validation_loader">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_validation_loader</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">return_spatial_mask</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -406,7 +410,7 @@
 
 
 <div class="viewcode-block" id="TrainDataloaderConfig.get_weights">
-<a class="viewcode-back" href="../../../cccma_ppp.train.html#cccma_ppp.train.dataloader.TrainDataloaderConfig.get_weights">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.cVAE_module.TrainDataloaderConfig.get_weights">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">WeightsConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve weights for loss computation.</span>
@@ -449,7 +453,7 @@
 
 
 <div class="viewcode-block" id="collate_batch">
-<a class="viewcode-back" href="../../../cccma_ppp.train.html#cccma_ppp.train.dataloader.collate_batch">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.dataloader.html#cccma_ppp.core.cVAE_module.collate_batch">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">collate_batch</span><span class="p">(</span>
     <span class="n">batch</span><span class="p">,</span>
     <span class="n">return_spatial_mask</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -488,6 +492,7 @@
         <span class="nb">input</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
         <span class="n">target</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span>
         <span class="n">added_features</span><span class="o">=</span><span class="n">added_features</span><span class="p">,</span>
+        <span class="n">metadata</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span> <span class="k">if</span> <span class="n">metadata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">return_spatial_mask</span><span class="o">=</span><span class="n">return_spatial_mask</span><span class="p">,</span>
         <span class="n">reduce_spatial_mask</span><span class="o">=</span><span class="n">reduce_spatial_mask</span><span class="p">,</span>
     <span class="p">)</span></div>

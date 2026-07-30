@@ -5,7 +5,6 @@ import pytest
 from cccma_ppp.core.registery import Registery
 
 
-@pytest.mark.pruned
 def test_get_unregistered_raises():
     registry = Registery()
 
@@ -13,7 +12,6 @@ def test_get_unregistered_raises():
         registry.get("missing")
 
 
-@pytest.mark.pruned
 def test_get_dataclass_from_dict():
     registry = Registery()
 
@@ -54,7 +52,6 @@ def test_get_regular_class_from_dict():
     assert result.port == 8080
 
 
-@pytest.mark.pruned
 def test_get_regular_class_with_non_dict_config():
     registry = Registery()
 
@@ -69,6 +66,7 @@ def test_get_regular_class_with_non_dict_config():
     assert result.value == "abc"
 
 
+@pytest.mark.pruned
 def test_get_regular_class_with_none_config():
     registry = Registery()
 

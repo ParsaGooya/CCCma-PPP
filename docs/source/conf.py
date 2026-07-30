@@ -1,14 +1,8 @@
-"""
-Auto-generated Sphinx configuration.
-"""
-
-import sys
 from pathlib import Path
+import sys
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-SRC_ROOT = PROJECT_ROOT / "src"
 
-sys.path.insert(0, str(SRC_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT))
 
 project = "CCCma PPP"
@@ -19,36 +13,55 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
-    "sphinx_autodoc_typehints",
 ]
-
-templates_path = ["_templates"]
-exclude_patterns = []
 
 html_theme = "sphinx_rtd_theme"
 
-html_static_path = ["_static"]
-
-html_css_files = [
-    "custom.css",
-]
-
 autosummary_generate = True
+autosummary_imported_members = False
+
+autodoc_typehints = "description"
+autodoc_inherit_docstrings = True
 
 autodoc_default_options = {
     "members": True,
-    "undoc-members": True,
-    "show-inheritance": True,
+    "undoc-members": False,
+    "show-inheritance": False,
+    "imported-members": False,
 }
 
-autodoc_member_order = "bysource"
-autodoc_typehints = "description"
+exclude_patterns = [
+    "_build",
+]
 
-napoleon_google_docstring = True
-napoleon_numpy_docstring = True
-
-# Suppress duplicate autodoc warnings
-suppress_warnings = ["autodoc.duplicate"]
-
-# Auto-added by build script
 nitpicky = False
+
+suppress_warnings = [
+    "ref.python",
+    "ref.ref",
+    "image.not_readable",
+]
+
+exclude_external_modules = {
+    "pathlib",
+    "collections",
+    "typing",
+    "torch",
+    "numpy",
+    "timm",
+    "contextlib"
+}
+
+def skip_member(app, what, name, obj, skip, options):
+    module = getattr(obj, "__module__", "")
+
+    if module:
+        root = module.split(".")[0]
+
+        if root in exclude_external_modules:
+            return True
+
+    return skip
+
+def setup(app):
+    app.connect("autodoc-skip-member", skip_member)

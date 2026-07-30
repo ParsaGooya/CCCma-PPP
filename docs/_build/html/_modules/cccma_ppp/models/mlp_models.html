@@ -8,7 +8,6 @@
   <title>cccma_ppp.models.mlp_models &mdash; CCCma PPP  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=18aa9b61" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
@@ -40,10 +39,16 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Start Here</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/contributing.html">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -71,8 +76,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for cccma_ppp.models.mlp_models</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
@@ -88,15 +92,16 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.selectors</span><span class="w"> </span><span class="kn">import</span> <span class="n">deterministicModelSelector</span><span class="p">,</span> <span class="n">cVAEModelSelector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.models.normalized_flows</span><span class="w"> </span><span class="kn">import</span> <span class="n">NormalizedFlowModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">cVAEOutput</span><span class="p">,</span> <span class="n">deterministicOutput</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeContext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.cVAE_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">cVAEOutput</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.deterministic_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">deterministicOutput</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic.runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeContext</span>
 
 
 <span class="n">AppendMode</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="cVAE_MLPConfig">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.mlp_models.cVAE_MLPConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.mlp_models.html#cccma_ppp.models.mlp_models.cVAE_MLPConfig">[docs]</a>
 <span class="nd">@cVAEModelSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;mlp&quot;</span><span class="p">)</span>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">cVAE_MLPConfig</span><span class="p">(</span><span class="n">cVAEmodelConfigABC</span><span class="p">):</span>
@@ -181,7 +186,7 @@
                     <span class="p">)</span>
 
 <div class="viewcode-block" id="cVAE_MLPConfig.build">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.mlp_models.cVAE_MLPConfig.build">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.mlp_models.html#cccma_ppp.models.mlp_models.cVAE_MLPConfig.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">input_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -217,7 +222,7 @@
 
 
 <div class="viewcode-block" id="cVAE_MLP">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.mlp_models.cVAE_MLP">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.mlp_models.html#cccma_ppp.models.mlp_models.cVAE_MLP">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">cVAE_MLP</span><span class="p">(</span><span class="n">cVAEmodelsABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    MLP-based conditional variational autoencoder (cVAE).</span>
@@ -403,7 +408,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_weights</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">init_method</span><span class="p">)</span>
 
 <div class="viewcode-block" id="cVAE_MLP.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.mlp_models.cVAE_MLP.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.mlp_models.html#cccma_ppp.models.mlp_models.cVAE_MLP.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
@@ -475,7 +480,7 @@
 
 
 <div class="viewcode-block" id="cVAE_MLP.predict">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.mlp_models.cVAE_MLP.predict">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.mlp_models.html#cccma_ppp.models.mlp_models.cVAE_MLP.predict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">condition</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -743,7 +748,7 @@
 
 
 <div class="viewcode-block" id="AutoencoderConfig">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.mlp_models.AutoencoderConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.mlp_models.html#cccma_ppp.models.mlp_models.AutoencoderConfig">[docs]</a>
 <span class="nd">@deterministicModelSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;mlp&quot;</span><span class="p">)</span>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">AutoencoderConfig</span><span class="p">(</span><span class="n">modelConfigABC</span><span class="p">):</span>
@@ -797,7 +802,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">decoder_hidden_dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder_hidden_dims</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
 
 <div class="viewcode-block" id="AutoencoderConfig.build">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.mlp_models.AutoencoderConfig.build">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.mlp_models.html#cccma_ppp.models.mlp_models.AutoencoderConfig.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">input_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -833,7 +838,7 @@
 
 
 <div class="viewcode-block" id="Autoencoder">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.mlp_models.Autoencoder">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.mlp_models.html#cccma_ppp.models.mlp_models.Autoencoder">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Autoencoder</span><span class="p">(</span><span class="n">deterministicmodelsABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Deterministic MLP-based autoencoder.</span>
@@ -981,7 +986,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_weights</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">init_method</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Autoencoder.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.mlp_models.Autoencoder.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.mlp_models.html#cccma_ppp.models.mlp_models.Autoencoder.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">added_features</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">deterministicOutput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Forward pass through the encoder/decoder.</span>

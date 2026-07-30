@@ -1,21 +1,18 @@
 import pytest
 import torch
-import sys
-import types
 
 
-fake_cvae_module = types.ModuleType("cccma_ppp.core.cVAE_module")
-
-
-class DummyCvaeOutput:
-    pass
-
-
-fake_cvae_module.cVAEOutput = DummyCvaeOutput
-
-sys.modules["cccma_ppp.core.cVAE_module"] = fake_cvae_module
-
+from dataclasses import dataclass
 from cccma_ppp.loss.kld import BetaAnnealing, KLD
+
+
+@dataclass
+class DummyCvaeOutput:
+    output: object = None
+    mu: object = None
+    log_var: object = None
+    cond_mu: object = None
+    cond_log_var: object = None
 
 
 def test_beta_no_warmup():
@@ -107,7 +104,6 @@ def test_kld_shape_mismatch():
         kld(mu, logvar)
 
 
-@pytest.mark.pruned
 def test_kld_sum_reduction():
     kld = KLD(reduction="sum")
 
@@ -137,7 +133,6 @@ class DummyFlow:
         )
 
 
-@pytest.mark.pruned
 def test_kld_with_flow():
     kld = KLD()
 
@@ -193,6 +188,7 @@ def test_mean_aggregation():
     assert result.item() == pytest.approx(loss.mean().item())
 
 
+@pytest.mark.pruned
 def test_sum_aggregation():
     kld = KLD(reduction="sum")
     loss = torch.tensor([[1.0, 2.0], [3.0, 4.0]])

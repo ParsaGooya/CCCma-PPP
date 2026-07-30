@@ -8,7 +8,6 @@
   <title>cccma_ppp.core.trainer &mdash; CCCma PPP  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=18aa9b61" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
@@ -40,10 +39,16 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Start Here</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/contributing.html">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -71,8 +76,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for cccma_ppp.core.trainer</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch.cuda.amp</span><span class="w"> </span><span class="kn">import</span> <span class="n">GradScaler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
@@ -81,16 +85,18 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">moduleABC</span><span class="p">,</span> <span class="n">OptimizerWrapper</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.core_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">moduleABC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.optimization</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizerWrapper</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.cVAE_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">cVAE</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.dataloader</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataloader</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Distributed</span><span class="p">,</span> <span class="n">MetricsAggregator</span><span class="p">,</span> <span class="n">RuntimeContext</span>
-
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic.distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">Distributed</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic.aggregator</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricsAggregator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic.runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeContext</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss.kld</span><span class="w"> </span><span class="kn">import</span> <span class="n">BetaAnnealing</span>
 
 
 <div class="viewcode-block" id="TrainerConfig">
-<a class="viewcode-back" href="../../../cccma_ppp.core.html#cccma_ppp.core.trainer.TrainerConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.trainer.TrainerConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TrainerConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -133,7 +139,7 @@
             <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_clip</span> <span class="o">&gt;</span> <span class="mi">0</span>
 
 <div class="viewcode-block" id="TrainerConfig.build">
-<a class="viewcode-back" href="../../../cccma_ppp.core.html#cccma_ppp.core.trainer.TrainerConfig.build">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.trainer.TrainerConfig.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">train_data_loader</span><span class="p">:</span> <span class="n">Dataloader</span><span class="p">,</span>
@@ -191,7 +197,7 @@
 
 
 <div class="viewcode-block" id="Trainer">
-<a class="viewcode-back" href="../../../cccma_ppp.core.html#cccma_ppp.core.trainer.Trainer">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.trainer.Trainer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Trainer</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Training loop manager supporting distributed training, logging,</span>
@@ -254,9 +260,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">beta_finder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">beta_finder</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_setup</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_skip_training</span> <span class="o">=</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="Trainer.setup_distributed">
-<a class="viewcode-back" href="../../../cccma_ppp.core.html#cccma_ppp.core.trainer.Trainer.setup_distributed">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.trainer.Trainer.setup_distributed">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">setup_distributed</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">distributed</span><span class="p">:</span> <span class="n">Distributed</span><span class="p">,</span>
@@ -340,6 +347,7 @@
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_load_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpoint_dir</span> <span class="o">/</span> <span class="s2">&quot;best.pt&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_epochs_trained</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_epochs</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_skip_training</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">log_root</span><span class="p">(</span>
                     <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
                     <span class="s2">&quot;maximum epochs already reached in the resumed model. No training will be done.&quot;</span><span class="p">,</span>
@@ -360,7 +368,7 @@
 
 
 <div class="viewcode-block" id="Trainer.train">
-<a class="viewcode-back" href="../../../cccma_ppp.core.html#cccma_ppp.core.trainer.Trainer.train">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.trainer.Trainer.train">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Execute full training loop.</span>
@@ -478,6 +486,11 @@
         <span class="n">time_elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time_train</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_on_root</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skip_training</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_log_epoch</span><span class="p">(</span>
+                    <span class="n">train_logs</span><span class="o">=</span><span class="n">train_logs</span><span class="p">,</span>
+                    <span class="n">validation_logs</span><span class="o">=</span><span class="n">validation_logs</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="n">MetricsAggregator</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
                 <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">train_aggregator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation_aggregator</span><span class="p">],</span>
                 <span class="n">plot_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plot_dir</span><span class="p">,</span>
@@ -846,7 +859,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span>
 
 <div class="viewcode-block" id="Trainer.log_root">
-<a class="viewcode-back" href="../../../cccma_ppp.core.html#cccma_ppp.core.trainer.Trainer.log_root">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.trainer.Trainer.log_root">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">log_root</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">msg</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Log message from root process.</span>

@@ -8,7 +8,6 @@
   <title>cccma_ppp.models.models_abc &mdash; CCCma PPP  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=18aa9b61" />
 
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
@@ -40,10 +39,16 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Start Here</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../cccma_ppp.html">cccma_ppp package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../start_here/contributing.html">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -71,8 +76,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for cccma_ppp.models.models_abc</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">abc</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">abc</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
@@ -87,7 +91,7 @@
 
 
 <div class="viewcode-block" id="CheckpointConfig">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.models_abc.CheckpointConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.CheckpointConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CheckpointConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -122,14 +126,14 @@
 
 
 <div class="viewcode-block" id="flowABC">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.models_abc.flowABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.selectors.flowABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">flowABC</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Abstract base class for flow-based models.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="flowABC.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.models_abc.flowABC.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.selectors.flowABC.forward">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -149,7 +153,7 @@
 
 
 <div class="viewcode-block" id="flowABC.inverse">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.models_abc.flowABC.inverse">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.selectors.flowABC.inverse">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -171,7 +175,7 @@
 
 
 <div class="viewcode-block" id="modelConfigABC">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.models_abc.modelConfigABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.modelConfigABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">modelConfigABC</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Abstract base class for model configuration.</span>
@@ -209,7 +213,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">checkpoint_config</span> <span class="o">=</span> <span class="n">checkpoint_config</span>
 
 <div class="viewcode-block" id="modelConfigABC.build">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.models_abc.modelConfigABC.build">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.modelConfigABC.build">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -232,7 +236,7 @@
 
 
 <div class="viewcode-block" id="cVAEmodelConfigABC">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.models_abc.cVAEmodelConfigABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.cVAEmodelConfigABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">cVAEmodelConfigABC</span><span class="p">(</span><span class="n">modelConfigABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Abstract base class for cVAE model configurations.</span>
@@ -276,14 +280,14 @@
 
 
 <div class="viewcode-block" id="modelABC">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.models_abc.modelABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.modelABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">modelABC</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Abstract base class for all models.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="modelABC.forward">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.models_abc.modelABC.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.modelABC.forward">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -382,7 +386,7 @@
 
 
 <div class="viewcode-block" id="deterministicmodelsABC">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.models_abc.deterministicmodelsABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.deterministicmodelsABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">deterministicmodelsABC</span><span class="p">(</span><span class="n">modelABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for deterministic models.</span>
@@ -403,7 +407,7 @@
 
 
 <div class="viewcode-block" id="cVAEmodelsABC">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.models_abc.cVAEmodelsABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.cVAEmodelsABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">cVAEmodelsABC</span><span class="p">(</span><span class="n">modelABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for conditional variational autoencoders.</span>
@@ -422,7 +426,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">generative_modeling</span> <span class="o">=</span> <span class="kc">True</span>
 
 <div class="viewcode-block" id="cVAEmodelsABC.predict">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.models_abc.cVAEmodelsABC.predict">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.cVAEmodelsABC.predict">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -476,7 +480,7 @@
 
 
 <div class="viewcode-block" id="weights_init">
-<a class="viewcode-back" href="../../../cccma_ppp.models.html#cccma_ppp.models.models_abc.weights_init">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.weights_init">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">weights_init</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="n">InitMethod</span> <span class="o">=</span> <span class="s2">&quot;xavier&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Initialize layer weights.</span>

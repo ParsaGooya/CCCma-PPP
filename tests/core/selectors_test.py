@@ -156,7 +156,6 @@ def test_model_selector_requires_config_or_load_dir():
         LocalModelSelector(type="anything", config=None, load_dir=None)
 
 
-@pytest.mark.pruned
 def test_model_selector_register_available_get_model_config():
     name = unique_name("model")
 
@@ -371,6 +370,7 @@ def test_flow_selector_register_available_and_get_model():
     assert name in FlowSelector.available()
 
 
+@pytest.mark.pruned
 def test_flow_selector_unregistered_raises():
     selector = FlowSelector(type=unique_name("missing_flow"), args={})
 

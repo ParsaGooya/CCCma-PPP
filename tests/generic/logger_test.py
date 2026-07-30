@@ -50,7 +50,7 @@ def test_logger_file_written(tmp_path):
 
     logger = setup_logger(name=name, log_dir=tmp_path, rank=0)
 
-    log_file = tmp_path / "training.log"
+    log_file = tmp_path / f"{name}.log"
 
     logger.info("test message")
 
@@ -84,7 +84,7 @@ def test_logger_format(tmp_path):
 
     logger = setup_logger(name=name, log_dir=tmp_path, rank=0)
 
-    log_file = tmp_path / "training.log"
+    log_file = tmp_path / f"{name}.log"
 
     logger.info("format test")
 
@@ -115,7 +115,7 @@ def test_log_dir_as_string(tmp_path):
 
     logger = setup_logger(name=name, log_dir=str(tmp_path), rank=0)
 
-    log_file = tmp_path / "training.log"
+    log_file = tmp_path / f"{name}.log"
 
     logger.warning("string path")
 
