@@ -4,27 +4,29 @@ import torch
 import dataclasses
 import warnings
 from pathlib import Path
+import dask
 
-from cccma_ppp.data_modules.dataset.config_abc import (
+from cccma_ppp.data_modules.dataset import (
     DatasetConfigABC,
-    lead_months_config,
-)
-from cccma_ppp.data_modules.dataset.dataset_abc import (
     DatasetABC,
+    DatasetOperator,
+    lead_months_config,
     AddedTimeFeatures,
 )
-from cccma_ppp.data_modules.dataset.operator import DatasetOperator
-from cccma_ppp.data_modules.data.data_configs import (
+from cccma_ppp.data_modules.data import (
     ModelDataConfig,
     ObsDataConfig,
     ConditionDataConfig,
 )
 
-from cccma_ppp.data_modules.utils import _unwrap_data_variables
+from cccma_ppp.data_modules import (
+    _unwrap_data_variables,
+)
 
+from torch.utils.data import get_worker_info
 
-from cccma_ppp.configs import supported_NN_dimensions_sorted, required_sample_dimensions
-
+from cccma_ppp.configs import (supported_NN_dimensions_sorted,
+                                required_sample_dimensions)
 
 @dataclasses.dataclass
 class TrainDatasetConfig(DatasetConfigABC):
@@ -63,15 +65,6 @@ class TrainDatasetConfig(DatasetConfigABC):
 
         self._check_observation()
 
-    def _check_condition(self):
-        return super()._check_condition()
-
-    def _check_model(self):
-        return super()._check_model()
-
-    @property
-    def num_input_lead_months(self):
-        return super().num_input_lead_months
 
     def _check_observation(self):
         """
@@ -87,12 +80,14 @@ class TrainDatasetConfig(DatasetConfigABC):
             If required observation data is missing.
         """
         if self.observation is not None:
+
             for dim in [
-                dim
-                for dim in supported_NN_dimensions_sorted
-                if dim in self.observation.info.coords
-            ]:
+            dim
+            for dim in supported_NN_dimensions_sorted  
+            if dim in self.observation.info.coords]:
+        
                 if dim in self.model.info.coords:
+
                     if not self.observation.info.coords[dim].equals(
                         self.model.info.coords[dim]
                     ):
@@ -110,10 +105,11 @@ class TrainDatasetConfig(DatasetConfigABC):
                     )
 
         else:
-            if self.condition_method is None:
+            
+            if self.condition_method is None: 
                 raise ValueError(
-                    "No target observation is specified. Specify condition_method!"
-                )
+                "No target observation is specified. Specify condition_method!"
+            )
 
         return self
 
@@ -133,6 +129,7 @@ class TrainDatasetConfig(DatasetConfigABC):
 
         return DatasetOperator(self)
 
+
     @property
     def get_common_time(self):
         """
@@ -145,7 +142,7 @@ class TrainDatasetConfig(DatasetConfigABC):
 
         if self.observation is None:
             return self.model.year_range
-
+  
         else:
             return np.intersect1d(self.model.year_range, self.observation.year_range)
 
@@ -159,9 +156,9 @@ class TrainDatasetConfig(DatasetConfigABC):
         np.ndarray
         """
 
-        return np.intersect1d(
-            self.model.info.coords["year"].values, self.get_common_time
-        )
+        return np.intersect1d(self.model.info.coords["year"].values,
+                                  self.get_common_time)
+                                  
 
     def fit_preprocessors(
         self,
@@ -231,7 +228,7 @@ class TrainDatasetConfig(DatasetConfigABC):
             time_features=time_features,
             mask=mask,
             return_metadata=return_metadata,
-            load=load,
+            load=load
         )
 
 
@@ -250,7 +247,7 @@ class TrainDataset(DatasetABC):
 
     config: TrainDatasetConfig
     requested_years: list[int] | tuple[int, ...] | np.ndarray
-    time_features: AddedTimeFeatures
+    time_features: AddedTimeFeatures 
     mask: xr.DataArray | None = None
     return_metadata: bool = False
     load: bool = False
@@ -272,10 +269,10 @@ class TrainDataset(DatasetABC):
         """
         super().__init__()
 
+
         if self.config.observation is not None:
-            self.observation_dataset = self._load_xarray_data(
-                self.config.observation, load=self.load
-            )
+            self.observation_dataset = self._load_xarray_data(self.config.observation,
+                                                                load = self.load)
 
         self.obs_indexes = self.get_obs_indexes(self.sample_coords)
 
@@ -371,6 +368,8 @@ class TrainDataset(DatasetABC):
             and self.config.effective_condition is not None
         )
 
+
+
     def get_obs_indexes(
         self,
         sample_coords: dict[str, np.ndarray],
@@ -397,7 +396,7 @@ class TrainDataset(DatasetABC):
         """
         if self.observation_dataset is None:
             return None
-
+        
         time_dim, lead_time_dim = required_sample_dimensions
         model_years = np.asarray(sample_coords[time_dim])
         lead_times = np.asarray(sample_coords[lead_time_dim])
@@ -426,8 +425,9 @@ class TrainDataset(DatasetABC):
                 f"dataset: {missing_values}"
             )
 
-        return indexes
-
+        return indexes    
+        
+            
     def get_target_shape(self):
         """
         Determine target shape.
@@ -444,28 +444,27 @@ class TrainDataset(DatasetABC):
                 isinstance(item, Flattennanremove)
                 for item in self.config.observation.preprocessing_pipeline.fitted_preprocessors
             ]
-
+            
             len_names = len(self.config.observation.names)
 
             if any(checklist):
-                out_shape = (
-                    self.config.observation.preprocessing_pipeline.get_preprocessors(
-                        "flattener"
-                    ).final_locations.shape
-                )
+                out_shape =  self.config.observation.preprocessing_pipeline.get_preprocessors(
+                    "flattener"
+                ).final_locations.shape
 
             else:
                 out_shape = tuple(
-                    self.config.observation.info.coords[dim].size
-                    for dim in supported_NN_dimensions_sorted
-                    if dim in self.config.observation.info.coords
-                )
+                self.config.observation.info.coords[dim].size 
+                for dim in supported_NN_dimensions_sorted  
+                if dim in self.config.observation.info.coords)
 
             return tuple([len_names, *out_shape])
+            
 
         else:
             return self.get_input_shape()
 
+        
     def _index_observation_dataset(self, ind: int) -> xr.DataArray | None:
         """
         Select and preprocess one observation sample.
@@ -486,7 +485,8 @@ class TrainDataset(DatasetABC):
             return None
 
         selection = {
-            dim: [int(indexes[ind])] for dim, indexes in self.obs_indexes.items()
+            dim: [int(indexes[ind])]
+            for dim, indexes in self.obs_indexes.items()
         }
 
         if "ensembles" in self.observation_dataset.dims:
@@ -512,7 +512,9 @@ class TrainDataset(DatasetABC):
         dict or tuple
             Sample dictionary, optionally with metadata.
         """
-        selection = {dim: value[ind] for dim, value in self.sample_coords.items()}
+        selection = {dim : value[ind]
+            for dim, value in self.sample_coords.items()
+        }
 
         condition = self._index_condition_dataset(ind)
         target = self._index_observation_dataset(ind)
@@ -527,12 +529,14 @@ class TrainDataset(DatasetABC):
         elif self._concat_condition_to_input:
             input = xr.concat([input, condition], dim="channels")
 
-        time_features_array = self.time_features(selection, input)
+        time_features_array = self.time_features(
+                                           selection, 
+                                           input)
 
         input_array, target_array = self._compute(
-            input.data,
-            target.data,
-        )
+                input.data,
+                target.data,
+            )
 
         datadict = dict(
             input=torch.as_tensor(input_array, dtype=torch.float32),
@@ -541,7 +545,7 @@ class TrainDataset(DatasetABC):
             if time_features_array is not None
             else None,
         )
-
+        
         if self.return_metadata:
             return datadict, selection
         else:

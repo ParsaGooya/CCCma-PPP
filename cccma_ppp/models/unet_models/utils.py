@@ -2,26 +2,92 @@ from cccma_ppp.models.layers.conv import TensorMask
 
 def _unet_config_checks(config):
 
-        if len(config.channels) < 1:
-            raise ValueError(
-                "channels must contain at least one encoder width."
-            )
+        channels = config.channels
+        transpose_kernel_sizes = config.transpose_kernel_sizes
 
-        if any(
-            not isinstance(channel, int) or channel <= 0
-            for channel in config.channels
-        ):
-            raise ValueError(
-                "All channel sizes must be positive integers."
-            )
+        if isinstance(transpose_kernel_sizes, list):
+            if len(transpose_kernel_sizes) != len(channels) - 1:
+                raise ValueError(
+                    "transpose_kernel_sizes must contain one value per "
+                    f"upsampling stage. Expected {len(channels) - 1}, got "
+                    f"{len(transpose_kernel_sizes)}."
+                )
 
-        if (
-            config.bottleneck_dim is not None
-            and config.bottleneck_dim <= 0
-        ):
-            raise ValueError(
-                "bottleneck_dim must be positive."
-            )
+            for kernel in config.transpose_kernel_sizes:
+
+                if isinstance(kernel, int):
+                    check = kernel > 0
+
+                else:
+                    check = (len(kernel) == 2
+                            and all(isinstance(value, int) and value > 0 for value in kernel)
+                        )
+
+                if not check:
+                    raise ValueError(
+                        "Each transpose-convolution kernel size must be either "
+                        "a positive integer or a tuple of two positive integers."
+                    )
+        else:
+            if transpose_kernel_sizes<=0:
+
+                raise ValueError(
+                    "Each transpose-convolution kernel size must be either "
+                    "a positive integer or a tuple of two positive integers."
+                )
+
+        channel_lists = {
+            "channels": channels,
+            "condition_embedding_channels": getattr(
+                config,
+                "condition_embedding_channels",
+                None,
+            ),
+        }
+
+        for key, channels_list in channel_lists.items():
+            if channels_list is None:
+                continue
+
+            if len(channels_list) < 1:
+                raise ValueError(
+                    f"{key} must contain at least one encoder width."
+                )
+
+            if any(
+                channel <= 0
+                for channel in channels_list
+            ):
+                raise ValueError(
+                    f"All {key} sizes must be positive integers."
+                )
+
+        dimensions = {
+            "bottleneck_dim": getattr(config, "bottleneck_dim", None),
+            "latent_size": getattr(config, "latent_size", None),
+            "condition_embedding_size": getattr(
+                config,
+                "condition_embedding_size",
+                None,
+            ),
+        }
+
+        for key, dimension in dimensions.items():
+            if dimension is None:
+                continue
+
+            if dimension <= 0:
+                raise ValueError(
+                    f"{key} must be a positive integer."
+                )
+
+        if  getattr(config,"condition_dependant_latent", None) is not None:
+                if (not config.condition_dependant_latent and 
+                    not config.condemb_to_decoder):
+
+                    raise ValueError(
+                        "condition embedding has to be passed to decoder for cVAE when latent is not condition dependant."
+                    )
 
         if not 0 <= config.mask_fraction_threshold <= 1:
             raise ValueError(

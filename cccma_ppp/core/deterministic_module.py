@@ -7,15 +7,15 @@ import gc
 import warnings
 
 from cccma_ppp.loss.loss import Losspipeline
-from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC, OutputABC
+from cccma_ppp.core import moduleABC, moduleConfigABC, OutputABC
 from cccma_ppp.models.models_abc import DeterministicRequest
 from cccma_ppp.core.selectors import (
     ModuleSelector,
     deterministicModelSelector,
-    _load_config_from_checkpoint,
+    _load_config_from_checkpoint
 )
-from cccma_ppp.train.dataloader import BatchData
-from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.train import BatchData
+from cccma_ppp.generic import RuntimeContext
 
 
 @dataclasses.dataclass
@@ -265,7 +265,10 @@ class deterministic(moduleABC):
         target_mask = data.target_mask
 
         total_loss, indiv_losses = self.criterion(
-            output.output, target, target_mask=target_mask, print_loss=False
+            output.output, 
+            target, 
+            target_mask=target_mask, 
+            print_loss=False
         )
 
         losses_dict = {"total_loss": total_loss.item()}
@@ -289,23 +292,23 @@ class deterministic(moduleABC):
         deterministicOutput
             Model predictions.
         """
-        generator = self.model_config.GENERATOR
+        generator = self.model_config.GENERATOR 
         output_sample_size = 0
         if not self.training and generator is not None:
             output_sample_size = generator.num_validation_noise_samples
 
-        return self.model(
-            DeterministicRequest(
-                input=data.input,
-                input_mask=data.input_mask,
-                added_features=data.added_features,
-                output_sample_size=output_sample_size,
-            )
-        )
 
-    def predict(
-        self, data: BatchData, output_sample_size: int = 0
-    ) -> deterministicOutput:
+        return self.model( DeterministicRequest(
+            input=data.input, 
+            input_mask=data.input_mask, 
+            added_features=data.added_features,
+            output_sample_size=output_sample_size)
+            )
+
+    def predict(self, 
+                data: BatchData, 
+                output_sample_size: int = 0 
+        ) -> deterministicOutput:
         """
         Perform inference.
 
@@ -320,11 +323,9 @@ class deterministic(moduleABC):
             Model predictions.
         """
 
-        return self.forward(
-            DeterministicRequest(
-                input=data.input,
-                input_mask=data.input_mask,
-                added_features=data.added_features,
-                output_sample_size=output_sample_size,
+        return self.forward(DeterministicRequest(
+            input=data.input, 
+            input_mask=data.input_mask, 
+            added_features=data.added_features,
+            output_sample_size=output_sample_size)
             )
-        )

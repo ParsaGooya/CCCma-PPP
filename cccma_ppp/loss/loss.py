@@ -69,14 +69,11 @@ class LosspipelineConfig:
 
         for loss in self.loss_pipeline:
             if len(loss.args) > 0:
-                if {
-                    "reduction",
-                    "weights",
-                    "num_output_dimensions",
-                    "generative_context",
-                }.intersection(list(loss.args.keys())):
+                if {"reduction", "weights", "num_output_dimensions", "generative_context"}.intersection(
+                    list(loss.args.keys())
+                ):
                     raise ValueError(
-                        "Do not specify reduction, weights, num_output_dimensions or generative_context for individual loss terms manually. "
+                        "Do not specify reduction, weights, num_output_dimensions or generative_context for individual loss terms manually. " \
                         "Set them for the LosspipelineConfig."
                     )
 
@@ -92,12 +89,10 @@ class LosspipelineConfig:
                 1 / len(self.loss_pipeline) for _ in self.loss_pipeline
             ]
 
-    def build(
-        self,
-        weights: xr.DataArray,
-        num_output_dimensions: int = 2,
-        generative_context: GenerativeContext | None = None,
-    ):
+    def build(self, 
+              weights: xr.DataArray, 
+              num_output_dimensions: int = 2,
+              generative_context: GenerativeContext | None = None ):
         """
         Construct loss pipeline.
 
@@ -114,9 +109,10 @@ class LosspipelineConfig:
             Initialized loss pipeline.
         """
 
-        return Losspipeline(
-            self, weights, num_output_dimensions, generative_context=generative_context
-        )
+        return Losspipeline(self, 
+                            weights, 
+                            num_output_dimensions,
+                            generative_context=generative_context)
 
 
 class Losspipeline(nn.Module):
@@ -183,7 +179,7 @@ class Losspipeline(nn.Module):
                 num_output_dimensions=self.num_output_dimensions,
                 weights=self.weights,
                 reduction=self.reduction,
-                generative_context=self.generative_context,
+                generative_context=self.generative_context
             )
 
             self.pipeline.append(self.registery.get(name.lower(), args))

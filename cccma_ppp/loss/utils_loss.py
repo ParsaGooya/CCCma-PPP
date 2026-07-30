@@ -174,7 +174,7 @@ class WeightedMSE(lossABC):
         """
 
         squeeze = False
-        if len(tensor.shape) == self.num_output_dimensions + 1:
+        if len(tensor.shape) == self.num_output_dimensions:
             tensor = tensor.unsqueeze(0)
             squeeze = True
 
@@ -243,6 +243,7 @@ class WeightedMSE(lossABC):
 
         y = target
         y_hat = data
+
 
         if self.low_ress_kernel_size is not None:
             if self.generative_context.generative_modeling:
@@ -464,7 +465,7 @@ class WeightedCRPS(lossABC):
         """
 
         squeeze = False
-        if len(tensor.shape) == self.num_output_dimensions + 1:
+        if len(tensor.shape) == self.num_output_dimensions:
             tensor = tensor.unsqueeze(0)
             squeeze = True
 
@@ -670,7 +671,7 @@ class Frobenius_norm(lossABC):
         reduction: Reduction = "mean",
         num_output_dimensions: int = 2,
         generative_context: GenerativeContext | None = None,
-        covariance_dim: CovarianceDim = "spatial",
+        covariance_dim: CovarianceDim = "spatial"
     ):
         """
         Initialize Frobenius norm loss size    Initialize Frobenius norm loss.
@@ -764,9 +765,7 @@ class Frobenius_norm(lossABC):
         assert data.shape == target.shape
 
         y = torch.flatten(target, start_dim=-self.num_output_dimensions + 1, end_dim=-1)
-        y_hat = torch.flatten(
-            data, start_dim=-self.num_output_dimensions + 1, end_dim=-1
-        )
+        y_hat = torch.flatten(data, start_dim=-self.num_output_dimensions + 1, end_dim=-1)
 
         if self.generative_context.generative_modeling:
             y = torch.flatten(y, start_dim=0, end_dim=1)
