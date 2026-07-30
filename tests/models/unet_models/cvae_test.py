@@ -315,7 +315,6 @@ def stub_model_components(monkeypatch):
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_config_dimension_constants():
     assert cVAEUNetConfig.NUM_INPUT_DIMS == 3
     assert cVAEUNetConfig.NUM_OUTPUT_DIMS == 3
@@ -347,7 +346,6 @@ def test_config_post_init_calls_validation(
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_config_post_init_propagates_validation_error(
     monkeypatch,
 ):
@@ -1414,7 +1412,6 @@ def test_prepare_input_combines_condition_and_features(
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_recognition_helper_returns_mu_and_log_var():
     model = make_bare_model()
 
@@ -1468,7 +1465,6 @@ def test_recognition_helper_returns_mu_and_log_var():
 
 
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_condition_helper_returns_mu_and_log_var():
     model = make_bare_model()
 

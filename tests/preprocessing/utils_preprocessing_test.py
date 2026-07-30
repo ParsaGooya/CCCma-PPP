@@ -1670,9 +1670,7 @@ def make_flatten_data():
     )
 
 
-                                
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_flattener_defaults():
     flattener = Flattennanremove()
 

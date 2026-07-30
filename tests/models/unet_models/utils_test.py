@@ -729,9 +729,7 @@ def test_generator_error_reports_requirement():
     assert "larger than 0" in message
 
 
-                                
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_repeat_tensor_mask_repeats_tensor():
     tensor = torch.tensor(
         [
@@ -769,9 +767,7 @@ def test_repeat_tensor_mask_repeats_tensor():
     assert result.mask is None
 
 
-                                
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_repeat_tensor_mask_repeats_tensor_and_mask():
     tensor = torch.tensor(
         [
@@ -823,9 +819,7 @@ def test_repeat_tensor_mask_repeats_tensor_and_mask():
     )
 
 
-                                
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_repeat_tensor_mask_preserves_tensor_dtype():
     value = TensorMask(
         tensor=torch.ones(
@@ -873,9 +867,7 @@ def test_repeat_tensor_mask_preserves_mask_dtype(
     assert result.mask.dtype == mask_dtype
 
 
-                                
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_repeat_tensor_mask_preserves_remaining_dimensions():
     value = TensorMask(
         tensor=torch.ones(2, 3, 4, 5),
@@ -891,9 +883,7 @@ def test_repeat_tensor_mask_preserves_remaining_dimensions():
     assert result.mask.shape == (8, 1, 4, 5)
 
 
-                                
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_repeat_tensor_mask_with_one_repeat_preserves_values():
     tensor = torch.randn(2, 3, 4, 5)
     mask = torch.randint(
@@ -921,9 +911,7 @@ def test_repeat_tensor_mask_with_one_repeat_preserves_values():
     )
 
 
-                                
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_repeat_tensor_mask_returns_new_container():
     value = TensorMask(
         tensor=torch.ones(2, 3),
@@ -938,9 +926,7 @@ def test_repeat_tensor_mask_returns_new_container():
     assert result is not value
 
 
-                                
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_repeat_tensor_mask_repetition_order():
     value = TensorMask(
         tensor=torch.tensor(
@@ -973,9 +959,7 @@ def test_repeat_tensor_mask_repetition_order():
     )
 
 
-                                
 @pytest.mark.pruned
-# Remove test due to no coverage
 def test_repeat_tensor_mask_zero_repeats_returns_empty_batch():
     value = TensorMask(
         tensor=torch.ones(2, 3, 4),
