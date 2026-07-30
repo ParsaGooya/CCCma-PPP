@@ -8,6 +8,7 @@ from cccma_ppp.core.core_abc import GenerativeContext
 Reduction = Literal["mean", "sum"]
 
 
+
 class lossABC(nn.Module, abc.ABC):
     """
     Abstract base class for loss functions.
@@ -26,6 +27,8 @@ class lossABC(nn.Module, abc.ABC):
     _print_loss(loss)
         Print formatted loss value.
     """
+    generative_context: GenerativeContext
+
 
     generative_context: GenerativeContext
 

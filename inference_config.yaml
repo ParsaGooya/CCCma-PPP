@@ -1,0 +1,16 @@
+experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/cccma_PPP_test_full
+
+writer:
+    predictor:
+        config:
+            num_latent_samples: 10
+
+    num_output_covariance_sampling: 2
+
+inference_loader:
+
+    batch_size: 12
+    inference_years : [2018, 2020]
+    num_data_workers: 0
+    load: True
+
