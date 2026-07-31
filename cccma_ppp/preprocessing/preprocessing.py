@@ -249,7 +249,7 @@ class PreprocessingPipeline:
                     for ind, dim in enumerate(output_dims)
                 }
             )
-            data.assign_coords(self.reference_coords)
+            data = data.assign_coords(self.reference_coords)
 
         return data.assign_coords(channels=self.reference_var).to_dataset(
             dim="channels"
