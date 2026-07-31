@@ -226,6 +226,7 @@ class KLD(lossABC):
         else:
             opts = dict(device=mu.device, dtype=mu.dtype)
             base_dist = Normal(torch.zeros_like(mu), torch.ones_like(log_var))
+  
 
             posterior_samples = self.sample(
                 mu, torch.sqrt(var), sample_size=prior_flow.flow_sample_size
@@ -245,7 +246,7 @@ class KLD(lossABC):
                     posterior_samples.shape[0], *cond_mu.shape
                 )
                 condition = torch.flatten(condition, start_dim=0, end_dim=1)
-
+            
             flow_output = prior_flow(
                 torch.flatten(posterior_samples, start_dim=0, end_dim=1),
                 condition=condition,
