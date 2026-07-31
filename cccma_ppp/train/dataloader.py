@@ -141,7 +141,6 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     prefetch_factor: int = 2
     drop_last: bool = False
     load: bool = False
-    return_spatial_mask: bool = False
     reduce_spatial_mask: bool = False
 
     def __post_init__(self):
@@ -172,7 +171,8 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
             if not set(self.train_years).issubset(set(self.available_times)):
                 raise ValueError(
-                    f"the requested train years are not available: available years: [{self.available_times.min()},{self.available_times.max()}]"
+                    f"the requested train years are not available for {self.num_validation_years} "
+                    f"valodation years. Available years: [{self.available_times.min()},{self.available_times.max()}]"
                 )
 
             if self.num_validation_years > 0:
@@ -233,6 +233,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     def build_train_loader(
         self,
         return_metadata: bool = False,
+        return_spatial_mask: bool = False,
         shuffle: bool | None = None,
     ):
         """
@@ -280,11 +281,13 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             rank=self.rank,
             shuffle=shuffle,
             world_size=self.world_size,
+            return_spatial_mask=return_spatial_mask
         )
 
     def build_validation_loader(
         self,
         return_metadata: bool = False,
+        return_spatial_mask: bool = False,
         shuffle: bool | None = None,
         supress_error: bool = True,
     ):
@@ -335,6 +338,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
                 rank=self.rank,
                 shuffle=shuffle,
                 world_size=self.world_size,
+                return_spatial_mask=return_spatial_mask
             )
 
         else:

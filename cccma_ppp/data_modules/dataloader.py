@@ -131,6 +131,7 @@ class Dataloader:
     rank: int = 0
     world_size: int = 1
     shuffle: bool | None = None
+    return_spatial_mask: bool = False
 
     def __post_init__(self):
         """
@@ -154,7 +155,7 @@ class Dataloader:
             sampler=self.sampler,
             collate_fn=partial(
                 self.collate_fn,
-                return_spatial_mask=self.config.return_spatial_mask,
+                return_spatial_mask=self.return_spatial_mask,
                 reduce_spatial_mask=self.config.reduce_spatial_mask,
             ),
             num_workers=num_workers,

@@ -129,7 +129,7 @@ class InferenceConfig:
         )
 
     def load_module(
-        self, inference_loader: Dataloader | None = None, strict: bool = False
+        self, strict: bool = False
     ):
 
         path = Path(self.experiment_dir) / "checkpoints"
@@ -159,15 +159,6 @@ class InferenceConfig:
         input_shape = checkpoint["input_shape"]
         output_shape = checkpoint["output_shape"]
         added_features_dim = checkpoint["added_features_dim"]
-
-        if inference_loader is not None:
-            if not all(
-                [
-                    input_shape == inference_loader.input_shape,
-                    added_features_dim == inference_loader.added_features_dim,
-                ]
-            ):
-                raise RuntimeError("Data and model IO dimensions do not match!")
 
         selector = dacite.from_dict(
             data_class=ModuleSelector,
@@ -208,19 +199,27 @@ def build_writer(
             else:
                 print(msg)
 
+    log("Loading saved module ...")
+
+    module = config.load_module()
+    module = module.to(distributed.device)
+
     log("creating data loader ...")
 
     config.inference_loader.setup_distributed(config.train_loader, distributed)
 
-    inference_loader = config.inference_loader.build_inference_loader()
+    return_spatial_mask=getattr(module.model_config, "EXPECTS_MASK", False)
+    inference_loader = config.inference_loader.build_inference_loader(return_spatial_mask=return_spatial_mask)
 
-    log("Loading saved module ...")
+    log("Checking module dataloader compatability ...")
 
-    module = config.load_module(inference_loader)
-    module = module.to(distributed.device)
-
-    # if distributed.distributed:
-    #     module = torch.nn.parallel.DistributedDataParallel(module, device_ids=[distributed.local_rank], output_device=distributed.local_rank, find_unused_parameters=False)
+    if not all(
+        [
+            module.input_shape == inference_loader.input_shape,
+            module.added_features_dim == inference_loader.added_features_dim,
+        ]
+    ):
+        raise RuntimeError("Data and model IO dimensions do not match!")
 
     log("Loading postprocessor ...")
     post_processor = PreprocessingPipeline().load_from_memory(

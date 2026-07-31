@@ -431,9 +431,10 @@ def build_trainer(
     log("creating data loaders ...")
 
     config.train_loader.setup_distributed(distributed)
+    return_spatial_mask = config.module.EXPECTS_MASK
 
-    train_loader = config.train_loader.build_train_loader()
-    validation_loader = config.train_loader.build_validation_loader()
+    train_loader = config.train_loader.build_train_loader(return_spatial_mask=return_spatial_mask)
+    validation_loader = config.train_loader.build_validation_loader(return_spatial_mask=return_spatial_mask)
     weights = config.train_loader.get_weights(config.weights)
 
     num_train_batches = len(train_loader)
