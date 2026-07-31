@@ -223,11 +223,12 @@ class Dataloader:
         """
 
         if self.world_size > 1:
+            shuffle= self.world_size > 1 if self.shuffle is None else self.shuffle
             return DistributedSampler(
                 self.dataset,
                 num_replicas=self.world_size,
                 rank=self.rank,
-                shuffle=True,
+                shuffle=shuffle,
                 drop_last=self.config.drop_last,
                 **kwargs,
             )
