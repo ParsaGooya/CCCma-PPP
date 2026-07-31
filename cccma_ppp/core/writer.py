@@ -390,12 +390,14 @@ def aggregate_predictions(
 
         ds_year = next(iter(ds_year.data_vars.values()))
         ds_year = _sort_sample_coords(ds_year)
+        
 
         if post_processor is not None:
             ds_year = post_processor.to_dataset(ds_year)
             ds_year = post_processor.inverse_transform(ds_year)
         else:
             ds_year = ds_year.to_dataset(dim="channels")
+
 
         output_path = output_dir / f"{naming_convention}_{year}.nc"
         ds_year.to_netcdf(output_path)
