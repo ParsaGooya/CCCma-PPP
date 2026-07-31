@@ -474,7 +474,7 @@ class cVAEForwardRequest:
         Number of latent samples.
     output_sample_size : int, optional
         Number of output samples for models with GENERATOR.
-    min_posterior_variance : torch.Tensor or None, optional
+    posterior_variance_limits : list of two torch.Tensors or None, optional
         Minimum variance constraint.
     """
 
@@ -485,7 +485,7 @@ class cVAEForwardRequest:
     added_features: torch.Tensor | None = None
     sample_size: int = 1
     output_sample_size: int = 0
-    min_posterior_variance: torch.Tensor | None = None
+    posterior_variance_limits: list[torch.Tensor, torch.Tensor] | None = None
 
 
 @dataclasses.dataclass

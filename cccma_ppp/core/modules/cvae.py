@@ -57,7 +57,7 @@ class cVAEConfig(moduleConfigABC):
     ----------
     ModelConfig : cVAEModelSelector or None
         Model configuration selector.
-    min_posterior_variance : float or None
+    posterior_variance_limits : list/tuple of two floats or None
         Minimum allowed posterior variance.
     prior_flow_config : NormalizedFlowConfig or None
         Configuration for optional prior flow.
@@ -68,7 +68,7 @@ class cVAEConfig(moduleConfigABC):
     """
 
     ModelConfig: cVAEModelSelector | None = None
-    min_posterior_variance: float | None = None
+    posterior_variance_limits: list[float | None, float | None] | tuple[float | None, float | None] | None = None
     prior_flow_config: NormalizedFlowConfig | None = None
     combined_CGCN_weight: float = None
     load_dir: str | None = None
@@ -175,9 +175,9 @@ class cVAEConfig(moduleConfigABC):
             config=dacite.Config(strict=True),
         )
 
-        if self.min_posterior_variance is None:
-            self.min_posterior_variance = checkpoint_module.get(
-                "min_posterior_variance", None
+        if self.posterior_variance_limits is None:
+            self.posterior_variance_limits = checkpoint_module.get(
+                "posterior_variance_limits", None
             )
         if self.combined_CGCN_weight is None:
             self.combined_CGCN_weight = checkpoint_module.get("combined_CGCN_weight", 0)
@@ -227,7 +227,7 @@ class cVAE(moduleABC):
         Raises
         ------
         AssertionError
-            If `min_posterior_variance` is non-positive.
+            If `posterior_variance_limits` is non-negative.
         RuntimeError
             If checkpoint metadata or shapes are inconsistent.
         """
@@ -236,13 +236,15 @@ class cVAE(moduleABC):
         self.config = config
         self.model_config = self.config.model_config
         self.latent_size = self.config.latent_size
-        self.min_posterior_variance = self.config.min_posterior_variance
+        self.posterior_variance_limits = self.config.posterior_variance_limits
         self.prior_flow_config = self.config.prior_flow_config
         self.combined_CGCN_weight = self.config.combined_CGCN_weight
 
-        if self.min_posterior_variance is not None:
-            assert self.min_posterior_variance > 0, (
-                "min_posterior_variance must be positive."
+        if self.posterior_variance_limits is not None:
+            assert all([limit > 0 for limit in 
+                        self.posterior_variance_limits 
+                        if limit is not None]), (
+                "posterior_variance_limits must be positive or None."
             )
         if getattr(self.config, "condition_dependant_flow", False):
             self.flow_condition_size = self.model_config.condition_embedding_size
@@ -280,10 +282,17 @@ class cVAE(moduleABC):
                     f"the requested output shape ({output_shape}) does not match the loaded module : {self.config.checkpoint_config.checkpoint_output_shape}"
                 )
 
-        if self.min_posterior_variance is not None:
-            self.min_posterior_variance = torch.log(
-                torch.tensor(self.min_posterior_variance)
-            )
+        if self.posterior_variance_limits is not None:
+            min = torch.log(
+                torch.tensor(self.posterior_variance_limits[0])
+            ) if self.posterior_variance_limits[0] is not None else None
+
+            max = torch.log(
+                torch.tensor(self.posterior_variance_limits[1])
+            ) if self.posterior_variance_limits[1] is not None else None
+
+            self.posterior_variance_limits = [min, max]
+            
 
         self.model = self.model_config.build(
             input_shape=input_shape,
@@ -435,7 +444,7 @@ class cVAE(moduleABC):
                 added_features=data.added_features,
                 condition=data.input,
                 condition_mask=data.input_mask,
-                min_posterior_variance=self.min_posterior_variance,
+                posterior_variance_limits=self.posterior_variance_limits,
                 sample_size=sample_size,
                 output_sample_size=output_sample_size,
             )
