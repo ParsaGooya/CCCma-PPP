@@ -102,6 +102,13 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
         if self.condition_embedding_size is None:
             self.condition_embedding_size = self.latent_size
 
+    @property
+    def EXPECTS_MASK(self) -> bool:
+        return (
+            isinstance(self.block_config, PartialConvBlockConfig)
+            or getattr(self.block_config, "use_partial_conv", False)
+        )
+    
     def build(
         self,
         input_shape: np.ndarray,
@@ -221,9 +228,15 @@ class cVAEUNet(cVAEmodelsABC):
         self.generation = Generation(
             latent_size=generation_latent_size,
             channels=reversed_channels,
-            output_channels=output_channels,
             resize_shapes=self.upsampling_shapes,
             config=config,
+        )
+
+        self.output = UNetOutput(
+            in_channels=reversed_channels[-1],
+            out_channels=output_channels,
+            hidden_channels=config.output_block_hidden_channels,
+            activation=config.output_activation,
         )
 
         if config.checkpoint_config is not None:
@@ -290,9 +303,11 @@ class cVAEUNet(cVAEmodelsABC):
         condition = request.condition
         condition_mask = request.condition_mask
         added_features = request.added_features
-        sample_size = request.sample_size
+        latent_sample_size = request.latent_sample_size
         posterior_variance_limits = request.posterior_variance_limits
         num_output_samples = request.output_sample_size
+
+        batch_size = x.shape[0]
 
         if self.training and self.config.GENERATOR is not None:
             num_output_samples = self.config.GENERATOR.num_training_noise_samples
@@ -318,7 +333,7 @@ class cVAEUNet(cVAEmodelsABC):
                 max=posterior_variance_limits[1].type_as(mu),
             )
 
-        latent_samples = self._sample(mu, log_var, sample_size)
+        latent_samples = self._sample(mu, log_var, latent_sample_size)
 
         out = self._generate(
             latent_samples=latent_samples,
@@ -326,8 +341,17 @@ class cVAEUNet(cVAEmodelsABC):
             num_output_samples=num_output_samples,
         )
 
+        if num_output_samples > 0:
+            sample_sizes = (num_output_samples, latent_sample_size, batch_size)
+
+        else:
+            sample_sizes = (latent_sample_size, batch_size)
+
+        output = self._output_block(out, 
+                                    sample_sizes)
+
         return cVAEOutput(
-            output=out,
+            output=output,
             mu=mu,
             log_var=log_var,
             samples=latent_samples,
@@ -355,14 +379,25 @@ class cVAEUNet(cVAEmodelsABC):
         """
 
         num_output_samples = request.output_sample_size
+        latent_sample_size = request.latent_sample_size
 
         latent_samples, cond_mu, cond_log_var = self._sample_prior(request)
+        batch_size = cond_mu.shape[0]
 
-        output = self._generate(
+        out = self._generate(
             latent_samples,
             condition_embedding=cond_mu,
             num_output_samples=num_output_samples,
         )
+
+        if num_output_samples > 0:
+            sample_sizes = (num_output_samples, latent_sample_size, batch_size)
+
+        else:
+            sample_sizes = (latent_sample_size, batch_size)
+
+        output = self._output_block(out, 
+                                    sample_sizes)
 
         return cVAEOutput(
             output=output,
@@ -421,14 +456,14 @@ class cVAEUNet(cVAEmodelsABC):
         num_output_samples: int = 0,
     ) -> torch.Tensor:
 
-        sample_size, batch_size = latent_samples.shape[:-1]
+        latent_sample_size, batch_size = latent_samples.shape[:-1]
 
         if all([condition_embedding is not None, self.condemb_to_decoder]):
             latent_samples = torch.cat(
                 [
                     latent_samples,
                     condition_embedding.unsqueeze(0).expand(
-                        sample_size, *condition_embedding.shape
+                        latent_sample_size, *condition_embedding.shape
                     ),
                 ],
                 dim=-1,
@@ -436,19 +471,36 @@ class cVAEUNet(cVAEmodelsABC):
 
         feature_size = latent_samples.shape[-1]
 
-        latent_samples = latent_samples.reshape(sample_size * batch_size, feature_size)
+        latent_samples = latent_samples.reshape(latent_sample_size * batch_size, feature_size)
         out = self.generation(latent_samples, num_output_samples)
 
         if num_output_samples > 0:
             return out.reshape(
                 num_output_samples,
-                sample_size,
+                latent_sample_size,
                 batch_size,
                 *out.shape[2:],
             )
 
-        return out.reshape(sample_size, batch_size, *out.shape[1:])
+        return out.reshape(latent_sample_size, batch_size, *out.shape[1:])
 
+
+    def _output_block(
+        self,
+        input: torch.Tensor,
+        sample_sizes: tuple[int, ...],
+    ) -> torch.Tensor:
+        input = input.reshape(
+            math.prod(sample_sizes),
+            *input.shape[len(sample_sizes):],
+        )
+
+        output = self.output(input)
+
+        return output.reshape(
+            *sample_sizes,
+            *output.shape[1:],
+        )
 
 class Recognition(nn.Module):
     def __init__(
@@ -533,7 +585,6 @@ class Generation(nn.Module):
         self,
         latent_size: int,
         channels: list[int],
-        output_channels: int,
         resize_shapes: list[tuple],
         config: cVAEUNetConfig,
     ):
@@ -557,7 +608,7 @@ class Generation(nn.Module):
         up_blocks: list[nn.Module] = []
         for index, out_channels in enumerate(channels[1:]):
             inject_noise = generator_enabled and (
-                config.GENERATOR.noise_level != "medium" or index == len(channels) - 1
+                config.GENERATOR.noise_level != "medium" or index == len(self.resize_shapes) - 1
             )
 
             up_blocks.append(
@@ -576,13 +627,6 @@ class Generation(nn.Module):
             input_channels = out_channels
 
         self.up_blocks = nn.ModuleList(up_blocks)
-
-        self.output = UNetOutput(
-            in_channels=channels[-1],
-            out_channels=output_channels,
-            hidden_channels=config.output_block_hidden_channels,
-            activation=config.output_activation,
-        )
 
     def forward(
         self,
@@ -609,13 +653,7 @@ class Generation(nn.Module):
         ):
             input = up_block(input, skip=None, resize_shape=resize_shape)
 
-        # output_tensor = _resize_tensor(
-        #     input.tensor,
-        #     self.resize_shapes[-1],
-        # )
-
-        output = self.output(input.tensor)
-
+        output = input.tensor
         if self.config.GENERATOR is not None and num_output_samples > 0:
             output = output.reshape(
                 batch_size,
@@ -624,3 +662,7 @@ class Generation(nn.Module):
             ).transpose(0, 1)
 
         return output
+
+
+
+

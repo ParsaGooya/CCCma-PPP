@@ -85,6 +85,13 @@ class UNetConfig(modelConfigABC):
         if isinstance(self.transpose_kernel_sizes, int):
             self.transpose_kernel_sizes = [self.transpose_kernel_sizes] * n_up_blocks
 
+    @property
+    def EXPECTS_MASK(self) -> bool:
+        return (
+            isinstance(self.block_config, PartialConvBlockConfig)
+            or getattr(self.block_config, "use_partial_conv", False)
+        )
+    
     def build(
         self,
         input_shape: np.ndarray,
