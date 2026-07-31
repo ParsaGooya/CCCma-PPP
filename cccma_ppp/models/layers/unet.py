@@ -114,20 +114,28 @@ class DownBlock(nn.Module):
 
         self._block = build_conv_block(
             in_channels,
-            out_channels,
+            in_channels,
             block_config,
         )
         self.skip_processor = (
             build_conv_block(
-                out_channels,
-                out_channels,
+                in_channels,
+                in_channels,
                 block_config,
             )
             if (process_skip and return_skip)
             else None
         )
 
-        self.tensor_pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.tensor_downsample = nn.Conv2d(
+            in_channels,
+            out_channels,
+            kernel_size=3,
+            stride=2,
+            padding=1,
+            padding_mode=block_config.padding_method,
+        )
+
         self.mask_pool = MaskPool2d(
             method=mask_pooling,
             fraction_threshold=mask_fraction_threshold,
@@ -136,13 +144,13 @@ class DownBlock(nn.Module):
     def forward(
         self,
         input: TensorMask,
-    ) -> tuple[TensorMask, TensorMask]:
+    ) -> TensorMask | tuple[TensorMask, TensorMask]:
         skip = self._block(input)
 
         pooled_mask = self.mask_pool(skip.mask) if skip.mask is not None else None
 
         downsampled = TensorMask(
-            tensor=self.tensor_pool(skip.tensor),
+            tensor=self.tensor_downsample(skip.tensor),
             mask=pooled_mask,
         )
 
@@ -156,7 +164,10 @@ class DownBlock(nn.Module):
             return downsampled
 
     def output_shape(self, input_shape: np.ndarray | tuple):
-        return tuple(shape // 2 for shape in input_shape)
+            return tuple(
+                (shape + 1) // 2
+                for shape in input_shape
+            )
 
 
 class UpBlock(nn.Module):

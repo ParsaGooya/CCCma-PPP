@@ -212,7 +212,7 @@ class UNet(deterministicmodelsABC):
             config.block_config,
         )
 
-        reversed_skips = list(reversed(channels[1:]))
+        reversed_skips = list(reversed(channels[:-1]))
         input_channels = bottleneck_dim
         generator_enabled = config.GENERATOR is not None
         inject_noise_in_block = (
@@ -222,7 +222,7 @@ class UNet(deterministicmodelsABC):
         up_blocks: list[nn.Module] = []
         for index, skip_channels in enumerate(reversed_skips):
             inject_noise = generator_enabled and (
-                config.GENERATOR.noise_level != "medium" or index == len(channels) - 1
+                config.GENERATOR.noise_level != "medium" or index == len(reversed_skips) - 1
             )
 
             out_channels = skip_channels

@@ -542,18 +542,33 @@ class MaskPool2d(nn.Module):
 
     def forward(self, mask: torch.Tensor) -> torch.Tensor:
         if self.method == "any":
-            return F.max_pool2d(mask, kernel_size=2, stride=2)
+            return F.max_pool2d(mask, kernel_size=3, stride=2, padding=1)
 
         if self.method == "all":
             invalid = F.max_pool2d(
                 1.0 - mask,
-                kernel_size=2,
+                kernel_size=3,
                 stride=2,
+                padding=1
             )
             return 1.0 - invalid
 
         if self.method == "fraction":
-            fraction = F.avg_pool2d(mask, kernel_size=2, stride=2)
+            sum_pool = F.avg_pool2d(
+                mask,
+                kernel_size=3,
+                stride=2,
+                padding=1,
+            ) * 9
+
+            count_pool = F.avg_pool2d(
+                torch.ones_like(mask),
+                kernel_size=3,
+                stride=2,
+                padding=1,
+            ) * 9
+
+            fraction = sum_pool / count_pool
             return (fraction >= self.fraction_threshold).to(mask.dtype)
 
         raise ValueError(f"Unsupported mask pooling method: {self.method!r}")
@@ -573,12 +588,13 @@ class LatentLayer(nn.Module):
         super().__init__()
 
         input_channels = input_shape[0]
-        self.normalization = (
+        self.normalization = (nn.Sequential(
             _build_normalization(
                 latent_normalization,
                 input_channels,
                 group_norm_groups=group_norm_groups,
-            )
+            ),
+            nn.ReLU(inplace=True))
             if latent_normalization is not None
             else nn.Identity()
         )
