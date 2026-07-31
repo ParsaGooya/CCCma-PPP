@@ -127,19 +127,35 @@ class DownBlock(nn.Module):
             else None
         )
 
-        self.tensor_downsample = nn.Conv2d(
-            in_channels,
-            out_channels,
-            kernel_size=3,
-            stride=2,
-            padding=1,
-            padding_mode=block_config.padding_method,
+        self.use_partial_conv_downsample = (
+            isinstance(block_config, PartialConvBlockConfig) or getattr(
+                block_config, "use_partial_conv", False
+            )
         )
 
-        self.mask_pool = MaskPool2d(
-            method=mask_pooling,
-            fraction_threshold=mask_fraction_threshold,
-        )
+        if self.use_partial_conv_downsample:
+                
+            self.tensor_downsample = PartialConv2d(
+                    in_channels,
+                    out_channels,
+                    kernel_size=3,
+                    stride=2,
+                    padding=1,
+                    padding_mode=block_config.padding_method,
+                    multi_channel=True,
+                    return_mask=True,
+                )
+        else:
+                        
+            self.tensor_downsample = nn.Conv2d(
+                in_channels,
+                out_channels,
+                kernel_size=3,
+                stride=2,
+                padding=1,
+                padding_mode=block_config.padding_method,
+            )
+
 
     def forward(
         self,
@@ -147,11 +163,18 @@ class DownBlock(nn.Module):
     ) -> TensorMask | tuple[TensorMask, TensorMask]:
         skip = self._block(input)
 
-        pooled_mask = self.mask_pool(skip.mask) if skip.mask is not None else None
+        if self.use_partial_conv_downsample:
+            downsampled_tensor , downsampled_mask = self.tensor_downsample(skip.tensor, skip.mask)
+
+        else:
+            downsampled_tensor = self.tensor_downsample(skip.tensor)
+            downsampled_mask = None
+
+        # pooled_mask = self.mask_pool(skip.mask) if skip.mask is not None else None
 
         downsampled = TensorMask(
-            tensor=self.tensor_downsample(skip.tensor),
-            mask=pooled_mask,
+            tensor=downsampled_tensor,
+            mask=downsampled_mask,
         )
 
         if self.skip_processor is not None:

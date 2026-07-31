@@ -236,6 +236,7 @@ class PartialConvSingle(nn.Module):
             x, mask = self.conv(x, mask)
         else:
             x = self.conv(x, mask)
+            mask = None
 
         x = self.normalization(x)
         x = self.activation(x)
@@ -321,6 +322,7 @@ class ConvNeXtSingle(nn.Module):
                 x, mask = self.depthwise(x, mask)
             else:
                 x = self.depthwise(x, mask)
+                mask = None
         else:
             x = self.depthwise(x)
 
@@ -433,6 +435,7 @@ class ConvNeXtBlock(nn.Module):
         self.out_channels = out_channels
         self.use_partial_conv = config.use_partial_conv
         self.requires_projection = in_channels != out_channels
+        self.return_mask = config.return_mask
 
         if self.requires_projection:
             if self.use_partial_conv:
@@ -440,8 +443,8 @@ class ConvNeXtBlock(nn.Module):
                     in_channels,
                     out_channels,
                     kernel_size=1,
-                    multi_channel=True,
-                    return_mask=True,
+                    multi_channel=config.multi_channel,
+                    return_mask=config.return_mask,
                 )
             else:
                 self.projection_conv = nn.Conv2d(
@@ -482,7 +485,11 @@ class ConvNeXtBlock(nn.Module):
 
         if self.requires_projection:
             if self.use_partial_conv:
-                x, mask = self.projection_conv(x, mask)
+                if self.return_mask:
+                    x, mask = self.projection_conv(x, mask)
+                else:
+                    x = self.projection_conv(x, mask)
+                    mask = None
             else:
                 x = self.projection_conv(x)
 
