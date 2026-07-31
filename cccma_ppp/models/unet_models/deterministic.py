@@ -115,9 +115,8 @@ class UNet(deterministicmodelsABC):
         output_shape: np.ndarray | tuple | None = None,
         added_features_dim: int | None = None,
     ):
-        super().__init__()
+        super().__init__(config)
 
-        self.config = config
         self.init_method = config.init_method
         self.added_features_dim = added_features_dim or 0
 

@@ -10,7 +10,6 @@ from cccma_ppp.models.models_abc import (
     cVAEForwardRequest,
     cVAEPredictRequest,
 )
-from cccma_ppp.models.layers.utils import _get_normal
 from cccma_ppp.models.layers.mlp import build_mlp
 from cccma_ppp.core.cVAE_module import cVAEOutput
 
@@ -184,9 +183,7 @@ class cVAE_MLP(cVAEmodelsABC):
             If shapes do not match expected dimensions or checkpoint.
         """
 
-        super().__init__()
-
-        self.config = config
+        super().__init__(config)
 
         self.encoder_hidden_dims = config.encoder_hidden_dims
         self.latent_size = config.latent_size
@@ -199,10 +196,6 @@ class cVAE_MLP(cVAEmodelsABC):
 
         self.batch_normalization = config.batch_normalization
         self.dropout_rate = config.dropout_rate
-
-        self.condition_dependant_flow = getattr(
-            config, "condition_dependant_flow", False
-        )
 
         if output_shape is None:
             output_shape = input_shape.copy()
@@ -374,62 +367,14 @@ class cVAE_MLP(cVAEmodelsABC):
         """
 
         condition = request.condition
-        condition_mask = request.condition_mask
         added_features = request.added_features
-        prior_flow = request.prior_flow
-        latent_samples = request.latent_samples
-        nstds = request.nstds
         sample_size = request.sample_size
 
         B, C = condition.shape[:2]
-        latent_ref_tensor = torch.zeros(
-            (B, self.latent_size), device=condition.device, dtype=condition.dtype
-        )
         _shape_model_output = (sample_size, B, C, -1)
 
-        cond_mu, cond_log_var = self._condition(
-            condition=condition,
-            condition_mask=condition_mask,
-            added_features=added_features,
-        )
-
-        if latent_samples is None:
-            if self.condition_dependant_latent and not self.condition_dependant_flow:
-                latent_samples = self._sample(
-                    cond_mu, cond_log_var, sample_size, std=nstds
-                )
-
-            else:
-                latent_samples = _get_normal(latent_ref_tensor, std=nstds).sample(
-                    (sample_size,)
-                )
-
-            if prior_flow is not None:
-                cond = None
-                batch_size, feature_size = latent_samples.shape[1:]
-
-                if prior_flow.condition_size is not None:
-                    cond = (
-                        cond_mu.unsqueeze(0)  # [1, B, C]
-                        .expand(sample_size, -1, -1)  # [S, B, C]
-                        .reshape(sample_size * batch_size, -1)
-                    )
-
-                latent_samples = latent_samples.reshape(
-                    sample_size * batch_size, feature_size
-                )
-
-                flow_output = prior_flow.inverse(latent_samples, cond)
-                latent_samples = flow_output.e_samples
-                latent_samples = latent_samples.reshape(sample_size, batch_size, -1)
-        else:
-            expected_shape = (sample_size, *latent_ref_tensor.shape)
-            if not latent_samples.shape == expected_shape:
-                raise ValueError(
-                    f"Got user specified latent_samples of shape ({latent_samples.shape}) "
-                    f"but expected shape {(expected_shape)}"
-                )
-
+        latent_samples, cond_mu, cond_log_var = self._sample_prior(request)
+        
         output = self._generate(
             latent_samples, condition=cond_mu, added_features=added_features
         )

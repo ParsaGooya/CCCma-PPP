@@ -162,9 +162,8 @@ class Autoencoder(deterministicmodelsABC):
             If shape or metadata mismatches occur.
         """
 
-        super().__init__()
+        super().__init__(config)
 
-        self.config = config
         self.batch_normalization = config.batch_normalization
         self.dropout_rate = config.dropout_rate
         self.init_method = config.init_method

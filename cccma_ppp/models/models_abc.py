@@ -8,6 +8,7 @@ import gc
 from pathlib import Path
 import dataclasses
 
+from cccma_ppp.models.layers.utils import _get_normal
 from cccma_ppp.core.core_abc import OutputABC
 from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.models.layers.generic import ActivationName, InitMethod, NoiseLevel
@@ -380,7 +381,7 @@ class deterministicmodelsABC(modelABC):
     Base class for deterministic models.
     """
 
-    def __init__(self):
+    def __init__(self, config: modelConfigABC):
         """
         Initialize deterministic model.
 
@@ -390,6 +391,7 @@ class deterministicmodelsABC(modelABC):
         """
 
         super().__init__()
+        self.config = config
         self.generative_modeling = False
 
     @abc.abstractmethod
@@ -439,8 +441,8 @@ class cVAEmodelConfigABC(modelConfigABC):
 
         self.condition_dependant_flow = condition_dependant_flow
 
-        if self.condition_dependant_latent:
-            if not self.condition_dependant_flow:
+        if (self.condition_dependant_latent and 
+            not self.condition_dependant_flow):
                 if self.latent_size != self.condition_embedding_size:
                     raise ValueError(
                         f"for condition dependent latent when prior flow is off, "
@@ -530,7 +532,7 @@ class cVAEmodelsABC(modelABC):
     Base class for conditional variational autoencoders.
     """
 
-    def __init__(self):
+    def __init__(self, config: cVAEmodelConfigABC):
         """
         Initialize cVAE model.
 
@@ -541,6 +543,8 @@ class cVAEmodelsABC(modelABC):
 
         super().__init__()
         self.generative_modeling = True
+        self.config = config
+        self.condition_dependant_flow = self.config.condition_dependant_flow
 
     @abc.abstractmethod
     def forward(
@@ -629,6 +633,72 @@ class cVAEmodelsABC(modelABC):
 
         var = torch.exp(log_var) + 1e-4
         return _sample(mu, var, sample_size, std)
+
+    @final
+    def _sample_prior(self, 
+                      request: cVAEPredictRequest
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor | None]:
+
+
+        condition= request.condition
+        latent_samples= request.latent_samples
+        sample_size= request.sample_size
+        condition_mask= request.condition_mask
+        added_features= request.added_features
+        prior_flow= request.prior_flow
+        nstds= request.nstds
+
+
+        B, C = condition.shape[:2]
+        latent_ref_tensor = torch.zeros(
+            (B, self.latent_size), device=condition.device, dtype=condition.dtype
+        )
+
+        cond_mu, cond_log_var = self._condition(
+            condition=condition,
+            condition_mask=condition_mask,
+            added_features=added_features,
+        )
+
+        if latent_samples is None:
+            if self.condition_dependant_latent and not self.condition_dependant_flow:
+                latent_samples = self._sample(
+                    cond_mu, cond_log_var, sample_size, std=nstds
+                )
+
+            else:
+                latent_samples = _get_normal(latent_ref_tensor, std=nstds).sample(
+                    (sample_size,)
+                )
+
+            if prior_flow is not None:
+                cond = None
+                batch_size, feature_size = latent_samples.shape[1:]
+
+                if prior_flow.condition_size is not None:
+                    cond = (
+                        cond_mu.unsqueeze(0)  # [1, B, C]
+                        .expand(sample_size, -1, -1)  # [S, B, C]
+                        .reshape(sample_size * batch_size, -1)
+                    )
+
+                latent_samples = latent_samples.reshape(
+                    sample_size * batch_size, feature_size
+                )
+
+                flow_output = prior_flow.inverse(latent_samples, cond)
+                latent_samples = flow_output.e_samples
+                latent_samples = latent_samples.reshape(sample_size, batch_size, -1)
+        else:
+            expected_shape = (sample_size, *latent_ref_tensor.shape)
+            if not latent_samples.shape == expected_shape:
+                raise ValueError(
+                    f"Got user specified latent_samples of shape ({latent_samples.shape}) "
+                    f"but expected shape {(expected_shape)}"
+                )
+
+        return  latent_samples, cond_mu, cond_log_var
+
 
 
 def weights_init(m, method: InitMethod = "xavier"):
