@@ -131,7 +131,7 @@ class DetermninisticPredictor(PredictorABC):
         metadata: list[dict],
     ):
 
-        prediction = output.output.detach().cpu()
+        prediction = output.output
 
         if self.num_output_sampling == 0:
             prediction = prediction.unsqueeze(0)

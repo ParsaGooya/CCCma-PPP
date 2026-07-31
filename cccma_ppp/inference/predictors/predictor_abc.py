@@ -165,6 +165,7 @@ def save_batch_to_netcdf(
     assign_coords: dict = None,
     attrs: dict = None,
 ):
+    prediction = prediction.detach().float().cpu()
 
     if extra_dims_sorted is None:
         extra_dims_sorted = []

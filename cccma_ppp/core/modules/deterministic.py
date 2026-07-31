@@ -209,6 +209,9 @@ class deterministic(moduleABC):
                     f"the requested output shape ({output_shape}) does not match the loaded module : {self.config.checkpoint_config.checkpoint_output_shape}"
                 )
 
+        self.input_shape = input_shape
+        self.output_shape = output_shape
+
         self.model = self.model_config.build(
             input_shape=input_shape,
             output_shape=output_shape,

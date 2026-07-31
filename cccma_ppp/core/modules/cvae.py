@@ -293,7 +293,9 @@ class cVAE(moduleABC):
 
             self.posterior_variance_limits = [min, max]
             
-
+        self.input_shape = input_shape
+        self.output_shape = output_shape
+        
         self.model = self.model_config.build(
             input_shape=input_shape,
             output_shape=output_shape,
@@ -415,7 +417,7 @@ class cVAE(moduleABC):
 
         return total_loss, losses_dict
 
-    def forward(self, data: BatchData, sample_size=1) -> cVAEOutput:
+    def forward(self, data: BatchData, latent_sample_size=1) -> cVAEOutput:
         """
         Perform forward pass.
 
@@ -445,7 +447,7 @@ class cVAE(moduleABC):
                 condition=data.input,
                 condition_mask=data.input_mask,
                 posterior_variance_limits=self.posterior_variance_limits,
-                sample_size=sample_size,
+                latent_sample_size=latent_sample_size,
                 output_sample_size=output_sample_size,
             )
         )
@@ -453,7 +455,7 @@ class cVAE(moduleABC):
     def predict(
         self,
         data: BatchData,
-        sample_size: int = 1,
+        latent_sample_size: int = 1,
         nstds: int = 1,
         latent_samples: torch.Tensor = None,
         output_sample_size: int = 0,
@@ -483,7 +485,7 @@ class cVAE(moduleABC):
                 condition_mask=data.input_mask,
                 added_features=data.added_features,
                 prior_flow=self.prior_flow,
-                sample_size=sample_size,
+                latent_sample_size=latent_sample_size,
                 nstds=nstds,
                 latent_samples=latent_samples,
                 output_sample_size=output_sample_size,

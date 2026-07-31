@@ -125,7 +125,7 @@ class cVAEPredictor(PredictorABC):
                     raise RuntimeError(
                         "to save the posterior variables the dataset must contain the target prediction."
                     )
-                output = self.raw_module.forward(data=batch, sample_size=1)
+                output = self.raw_module.forward(data=batch, latent_sample_size=1)
 
             if _getting_train_stats:
                 stats = self._update_train_stats(output, batch)
@@ -140,7 +140,7 @@ class cVAEPredictor(PredictorABC):
 
             output = self.raw_module.predict(
                 data=batch,
-                sample_size=self.num_latent_samples,
+                latent_sample_size=self.num_latent_samples,
                 nstds=self.nstds,
                 latent_samples=latent_samples,
                 output_sample_size=self.num_output_sampling,
@@ -287,7 +287,7 @@ class cVAEPredictor(PredictorABC):
                 attrs = {"infer_latent_samples_from_training": True}
 
         else:
-            prediction = output.output.detach().cpu()
+            prediction = output.output
 
             if self.num_output_sampling == 0:
                 prediction = prediction.unsqueeze(0)
