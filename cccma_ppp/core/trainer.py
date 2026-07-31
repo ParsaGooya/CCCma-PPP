@@ -350,6 +350,9 @@ class Trainer:
                         validation_logs=None,
                     )
 
+            if self.is_distributed:
+                    self.distributed.barrier()
+
             if self.is_on_root:
                 if (self._epochs_trained) % self.log_every_n_epochs == 0:
                     self._log_epoch(
@@ -364,7 +367,7 @@ class Trainer:
             should_stop = self._should_stop_early()
             if self.is_distributed:
                 stop_tensor = torch.tensor(
-                    int(self._should_stop_early()), device=self.device
+                    int(should_stop), device=self.device
                 )
                 self.distributed.broadcast(stop_tensor, src=0)
                 should_stop = bool(stop_tensor.item())
@@ -517,6 +520,7 @@ class Trainer:
 
             self.validation_aggregator.record(batch_loss_dict)
 
+        
     @torch.no_grad()
     def _validate_on_batch(self, batch):
         """
@@ -696,9 +700,6 @@ class Trainer:
 
         path = Path(self.checkpoint_dir) / f"{name}.pt"
         torch.save(checkpoint, path)
-
-        if self.is_distributed:
-            self.distributed.barrier()
 
     def _load_checkpoint(self, path: str | Path | None = None, strict: bool = True):
         """
