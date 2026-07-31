@@ -9,7 +9,7 @@ from cccma_ppp.core.trainer import clear_memory
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.aggregator import RunningCovariance
 from cccma_ppp.core.core_abc import moduleABC
-from cccma_ppp.core.cVAE_module import cVAEOutput
+from cccma_ppp.core.modules.cvae import cVAEOutput
 from cccma_ppp.inference.predictors.predictor_abc import (
     PredictorABC,
     save_batch_to_netcdf,

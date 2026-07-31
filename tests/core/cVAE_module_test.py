@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 import torch
 
-import cccma_ppp.core.cVAE_module as mod
-from cccma_ppp.core.cVAE_module import cVAE, cVAEConfig, cVAEOutput
+import cccma_ppp.core.modules.cvae as mod
+from cccma_ppp.core.modules.cvae import cVAE, cVAEConfig, cVAEOutput
 from cccma_ppp.generic.runtime import RuntimeContext
 
 

@@ -8,7 +8,7 @@ import torch.nn as nn
 
 
 from cccma_ppp.core.selectors import cVAEModelSelector
-from cccma_ppp.core.cVAE_module import cVAEOutput
+from cccma_ppp.core.modules.cvae import cVAEOutput
 
 from cccma_ppp.models.models_abc import (
     cVAEmodelConfigABC,

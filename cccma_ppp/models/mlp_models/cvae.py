@@ -11,7 +11,7 @@ from cccma_ppp.models.models_abc import (
     cVAEPredictRequest,
 )
 from cccma_ppp.models.layers.mlp import build_mlp
-from cccma_ppp.core.cVAE_module import cVAEOutput
+from cccma_ppp.core.modules.cvae import cVAEOutput
 
 from cccma_ppp.models.layers.generic import (
     InitMethod,

@@ -9,7 +9,7 @@ from cccma_ppp.models.models_abc import (
 )
 
 from cccma_ppp.models.layers.mlp import build_mlp
-from cccma_ppp.core.deterministic_module import deterministicOutput
+from cccma_ppp.core.modules.deterministic import deterministicOutput
 
 
 from typing import ClassVar

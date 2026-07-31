@@ -8,7 +8,7 @@ import torch.nn as nn
 
 
 from cccma_ppp.core.selectors import deterministicModelSelector
-from cccma_ppp.core.deterministic_module import deterministicOutput
+from cccma_ppp.core.modules.deterministic import deterministicOutput
 
 from cccma_ppp.models.models_abc import (
     deterministicmodelsABC,
