@@ -84,6 +84,7 @@ class cVAEConfig(moduleConfigABC):
         AssertionError
             If `combined_CGCN_weight` is not in [0, 1].
         """
+        self.condition_dependant_flow = False
 
         if self.load_dir is None:
             if self.ModelConfig is None:
@@ -105,8 +106,7 @@ class cVAEConfig(moduleConfigABC):
         if self.prior_flow_config is not None:
             self.condition_dependant_flow = self.model_config.condition_dependant_latent
 
-            if self.condition_dependant_flow:
-                self.model_config._resolve_flow_settings(self.condition_dependant_flow)
+        self.model_config._resolve_flow_settings(self.condition_dependant_flow)
 
         assert 0 <= self.combined_CGCN_weight <= 1, (
             "CGCN weight should be between [0,1]"
@@ -362,7 +362,10 @@ class cVAE(moduleABC):
         if target_mask is not None and target_mask.shape == target.shape:
             target_mask = target_mask.unsqueeze(0).expand_as(output.output)
 
-        target = target.unsqueeze(0).expand_as(output.output)
+        target = target.unsqueeze(0).expand(
+            output.output.shape[1], # Z 
+            *target.shape, # B x C x ...
+        ) # Z x B x C x ...
 
         reconstruction_loss, indiv_losses = self.criterion(
             output.output,
