@@ -542,7 +542,7 @@ class Trainer:
         with torch.cuda.amp.autocast(
             enabled=self.scaler.is_enabled() and self.device.type == "cuda"
         ):
-            _, loss_dict = self.raw_module._compute_loss(data=batch)
+            _, loss_dict = self.raw_module._compute_loss(data=batch, **kwargs)
 
         return loss_dict
 
