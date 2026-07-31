@@ -108,6 +108,10 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
                     "condition embedding has to be passed to decoder for cVAE when latent is not condition dependant."
                 )
 
+    @property
+    def EXPECTS_MASK(self) -> bool:
+        return False
+
     def build(
         self,
         input_shape: np.ndarray,

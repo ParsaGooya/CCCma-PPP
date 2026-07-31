@@ -107,6 +107,7 @@ class modelConfigABC(abc.ABC):
     NUM_INPUT_DIMS: ClassVar[int | None]
     NUM_OUTPUT_DIMS: ClassVar[int | None]
     GENERATOR: GENERATORConfig | None
+    EXPECTS_MASK: bool
 
     def __init_subclass__(cls):
         """
@@ -183,6 +184,63 @@ class modelConfigABC(abc.ABC):
                 "Checkpoint target metadata is incompatible with the "
                 "current target variables or preprocessing pipeline."
             )
+
+    @final
+    @property
+    def NUM_INPUT_DIMS(self) -> int:
+        """
+        Return number of input dims in
+        the selected architecture.
+
+        Return
+        -------
+        int
+        """
+
+        return self.NUM_INPUT_DIMS
+
+    @final
+    @property
+    def NUM_OUTPUT_DIMS(self) -> int:
+        """
+        Return number of output dims in
+        the selected architecture.
+
+        Return
+        -------
+        int
+        """
+
+        return self.NUM_OUTPUT_DIMS
+
+    @final
+    @property
+    def GENERATOR(self) -> bool:
+        """
+        Check if the selected architecture
+        has a GENERATOR.
+
+        Return
+        -------
+        bool
+        """
+
+        return getattr(self, "GENERATOR", None)
+
+    
+    @property
+    @abc.abstractmethod
+    def EXPECTS_MASK(self) -> bool:
+        """
+        Check if the selected architecture
+        EXPECTS_MASK.
+
+        Return
+        -------
+        bool
+        """
+
+        pass
 
     @abc.abstractmethod
     def build(
@@ -470,7 +528,7 @@ class cVAEForwardRequest:
         Conditioning input mask.
     added_features : torch.Tensor or None
         Additional features.
-    sample_size : int, optional
+    latent_sample_size : int, optional
         Number of latent samples.
     output_sample_size : int, optional
         Number of output samples for models with GENERATOR.
@@ -483,7 +541,7 @@ class cVAEForwardRequest:
     target_mask: torch.Tensor | None = None
     condition_mask: torch.Tensor | None = None
     added_features: torch.Tensor | None = None
-    sample_size: int = 1
+    latent_sample_size: int = 1
     output_sample_size: int = 0
     posterior_variance_limits: list[torch.Tensor, torch.Tensor] | None = None
 
@@ -511,8 +569,8 @@ class cVAEPredictRequest:
         latent_samples pre-specified by user
     nstds: int
         Adjust the spread in prior samples.
-    sample_size : int, optional
-        Number of samples.
+    latent_sample_size : int, optional
+        Number of latent samples.
     output_sample_size : int, optional
         Number of output samples for models with GENERATOR.
     """
@@ -523,7 +581,7 @@ class cVAEPredictRequest:
     prior_flow: flowABC | None = None
     latent_samples: torch.Tensor | None = None
     nstds: int = 1
-    sample_size: int = 1
+    latent_sample_size: int = 1
     output_sample_size: int = 0
 
 

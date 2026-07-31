@@ -63,6 +63,7 @@ class AutoencoderConfig(modelConfigABC):
 
     NUM_INPUT_DIMS: ClassVar[int] = 2
     NUM_OUTPUT_DIMS: ClassVar[int] = 2
+
     GENERATOR: ClassVar[None] = None
 
     def __post_init__(self):
@@ -83,6 +84,10 @@ class AutoencoderConfig(modelConfigABC):
                 self.decoder_hidden_dims = []
             else:
                 self.decoder_hidden_dims = self.encoder_hidden_dims[::-1][1:]
+
+    @property
+    def EXPECTS_MASK(self) -> bool:
+        return False
 
     def build(
         self,
