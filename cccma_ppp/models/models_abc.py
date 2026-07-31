@@ -700,7 +700,7 @@ class cVAEmodelsABC(modelABC):
 
         condition= request.condition
         latent_samples= request.latent_samples
-        sample_size= request.sample_size
+        latent_sample_size= request.latent_sample_size
         condition_mask= request.condition_mask
         added_features= request.added_features
         prior_flow= request.prior_flow
@@ -721,12 +721,12 @@ class cVAEmodelsABC(modelABC):
         if latent_samples is None:
             if self.condition_dependant_latent and not self.condition_dependant_flow:
                 latent_samples = self._sample(
-                    cond_mu, cond_log_var, sample_size, std=nstds
+                    cond_mu, cond_log_var, latent_sample_size, std=nstds
                 )
 
             else:
                 latent_samples = _get_normal(latent_ref_tensor, std=nstds).sample(
-                    (sample_size,)
+                    (latent_sample_size,)
                 )
 
             if prior_flow is not None:
@@ -736,19 +736,19 @@ class cVAEmodelsABC(modelABC):
                 if prior_flow.condition_size is not None:
                     cond = (
                         cond_mu.unsqueeze(0)  # [1, B, C]
-                        .expand(sample_size, -1, -1)  # [S, B, C]
-                        .reshape(sample_size * batch_size, -1)
+                        .expand(latent_sample_size, -1, -1)  # [S, B, C]
+                        .reshape(latent_sample_size * batch_size, -1)
                     )
 
                 latent_samples = latent_samples.reshape(
-                    sample_size * batch_size, feature_size
+                    latent_sample_size * batch_size, feature_size
                 )
 
                 flow_output = prior_flow.inverse(latent_samples, cond)
                 latent_samples = flow_output.e_samples
-                latent_samples = latent_samples.reshape(sample_size, batch_size, -1)
+                latent_samples = latent_samples.reshape(latent_sample_size, batch_size, -1)
         else:
-            expected_shape = (sample_size, *latent_ref_tensor.shape)
+            expected_shape = (latent_sample_size, *latent_ref_tensor.shape)
             if not latent_samples.shape == expected_shape:
                 raise ValueError(
                     f"Got user specified latent_samples of shape ({latent_samples.shape}) "
