@@ -22,7 +22,7 @@ from cccma_ppp.core.trainer import TrainerConfig
 from cccma_ppp.core.optimization import OptimizerConfig
 from cccma_ppp.core.core_abc import GenerativeContext
 
-
+import cccma_ppp.generic.registry_imports
 
 def set_seed(seed):
     """

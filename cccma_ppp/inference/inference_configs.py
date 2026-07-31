@@ -16,6 +16,7 @@ from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.data_modules.dataloader import Dataloader
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
 from cccma_ppp.train.train_configs import set_seed
+import cccma_ppp.generic.registry_imports
 
 
 @dataclasses.dataclass
