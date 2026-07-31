@@ -54,21 +54,13 @@ from cccma_ppp.models.unet_models.utils import _unet_config_checks, _repeat_tens
 @cVAEModelSelector.register("unet")
 @dataclasses.dataclass
 class cVAEUNetConfig(cVAEmodelConfigABC):
-    """
-    Configuration for a flexible cVAE UNet.
 
-    The number of downsampling stages is determined by ``len(channels)``.
-    For example, ``channels=[16, 32, 64, 128, 256]`` reproduces the
-    encoder widths of the former fixed-depth UNet, with a separate
-    bottleneck configured through ``bottleneck_dim``.
-    """
 
     channels: list[int]
     latent_size: int
     condition_embedding_channels: list | None = None
     condition_embedding_size: int | None = None
 
-    bottleneck_dim: int | None = None
     latent_normalization: NormalizationMethod | None = "layer"
     condition_dependant_latent: bool = False
     condemb_to_decoder: bool = True
@@ -190,11 +182,7 @@ class cVAEUNet(cVAEmodelsABC):
         output_channels = output_shape[0]
         output_spatial_shape = output_shape[1:]
         channels = config.channels
-        bottleneck_dim = (
-            config.bottleneck_dim
-            if config.bottleneck_dim is not None
-            else channels[-1] * 2
-        )
+        
         recognition_input_channels = (
             output_shape[0] + input_shape[0] + self.added_features_dim
         )
@@ -203,7 +191,6 @@ class cVAEUNet(cVAEmodelsABC):
             input_channels=recognition_input_channels,
             input_spatial_shape=tuple(output_shape[-2:]),
             channels=channels,
-            bottleneck_dim=bottleneck_dim,
             latent_size=self.latent_size,
             config=config,
         )
@@ -217,7 +204,6 @@ class cVAEUNet(cVAEmodelsABC):
             input_channels=condition_input_channels,
             input_spatial_shape=tuple(input_shape[-2:]),
             channels=self.condition_embedding_channels,
-            bottleneck_dim=bottleneck_dim,
             latent_size=self.condition_embedding_size,
             config=config,
             get_log_var=get_log_var,
@@ -225,7 +211,7 @@ class cVAEUNet(cVAEmodelsABC):
 
         self.upsampling_shapes = list(reversed(self.recognition.spatial_shapes))
 
-        reversed_channels = list(reversed(channels[1:]))
+        reversed_channels = list(reversed(channels))
         if self.condemb_to_decoder:
             self.add_condition_size = self.condition_embedding_size
         else:
@@ -237,7 +223,6 @@ class cVAEUNet(cVAEmodelsABC):
             channels=reversed_channels,
             output_channels=output_channels,
             resize_shapes=self.upsampling_shapes,
-            bottleneck_dim=bottleneck_dim,
             config=config,
         )
 
@@ -306,7 +291,7 @@ class cVAEUNet(cVAEmodelsABC):
         condition_mask = request.condition_mask
         added_features = request.added_features
         sample_size = request.sample_size
-        min_posterior_variance = request.min_posterior_variance
+        posterior_variance_limits = request.posterior_variance_limits
         num_output_samples = request.output_sample_size
 
         if self.training and self.config.GENERATOR is not None:
@@ -326,9 +311,11 @@ class cVAEUNet(cVAEmodelsABC):
             added_features=added_features,
         )
 
-        if min_posterior_variance is not None:
+        if posterior_variance_limits is not None:
             log_var = torch.clamp(
-                log_var, min=min_posterior_variance.type_as(mu), max=None
+                log_var, 
+                min=posterior_variance_limits[0].type_as(mu), 
+                max=posterior_variance_limits[1].type_as(mu),
             )
 
         latent_samples = self._sample(mu, log_var, sample_size)
@@ -469,7 +456,6 @@ class Recognition(nn.Module):
         input_channels: int,
         input_spatial_shape: tuple[int, int],
         channels: list[int],
-        bottleneck_dim: int,
         latent_size: int,
         config: cVAEUNetConfig,
         *,
@@ -502,13 +488,13 @@ class Recognition(nn.Module):
 
         bottleneck_spatial_shape = self.spatial_shapes[-1]
         bottleneck_output_shape = (
-            bottleneck_dim,
+            channels[-1],
             *bottleneck_spatial_shape,
         )
 
         self.bottleneck = build_conv_block(
             channels[-1],
-            bottleneck_dim,
+            channels[-1],
             config.block_config,
             latent_size=latent_size,
             block_output_shape=bottleneck_output_shape,
@@ -549,28 +535,27 @@ class Generation(nn.Module):
         channels: list[int],
         output_channels: int,
         resize_shapes: list[tuple],
-        bottleneck_dim: int,
         config: cVAEUNetConfig,
     ):
 
         super().__init__()
-        self.bottleneck_dim = bottleneck_dim
+        self.bottleneck_dim = channels[0]
         self.bottleneck_shape = resize_shapes[0]
         self.resize_shapes = resize_shapes[1:]
         self.config = config
 
         self.combine_latent = nn.Linear(
-            latent_size, bottleneck_dim * np.prod(self.bottleneck_shape)
+            latent_size, self.bottleneck_dim * np.prod(self.bottleneck_shape)
         )
 
-        input_channels = bottleneck_dim
+        input_channels = self.bottleneck_dim
         generator_enabled = config.GENERATOR is not None
         inject_noise_in_block = (
             generator_enabled and config.GENERATOR.noise_level != "low"
         )
 
         up_blocks: list[nn.Module] = []
-        for index, out_channels in enumerate(channels):
+        for index, out_channels in enumerate(channels[1:]):
             inject_noise = generator_enabled and (
                 config.GENERATOR.noise_level != "medium" or index == len(channels) - 1
             )

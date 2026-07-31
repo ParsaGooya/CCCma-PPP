@@ -307,7 +307,7 @@ class cVAE_MLP(cVAEmodelsABC):
         condition_mask = request.condition_mask
         added_features = request.added_features
         sample_size = request.sample_size
-        min_posterior_variance = request.min_posterior_variance
+        posterior_variance_limits = request.posterior_variance_limits
 
         self._shape_model_output = x.shape
 
@@ -321,10 +321,13 @@ class cVAE_MLP(cVAEmodelsABC):
             x=x, x_mask=x_mask, condition=cond_mu, added_features=added_features
         )
 
-        if min_posterior_variance is not None:
+        if posterior_variance_limits is not None:
             log_var = torch.clamp(
-                log_var, min=min_posterior_variance.type_as(mu), max=None
+                log_var, 
+                min=posterior_variance_limits[0].type_as(mu), 
+                max=posterior_variance_limits[1].type_as(mu),
             )
+
 
         latent_samples = self._sample(mu, log_var, sample_size)
 

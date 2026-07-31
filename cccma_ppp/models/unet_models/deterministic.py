@@ -51,17 +51,9 @@ from cccma_ppp.models.unet_models.utils import _unet_config_checks, _repeat_tens
 @deterministicModelSelector.register("unet")
 @dataclasses.dataclass
 class UNetConfig(modelConfigABC):
-    """
-    Configuration for a flexible deterministic UNet supporting Generator for decoder.
 
-    The number of downsampling stages is determined by ``len(channels)``.
-    For example, ``channels=[16, 32, 64, 128, 256]`` reproduces the
-    encoder widths of the former fixed-depth UNet, with a separate
-    bottleneck configured through ``bottleneck_dim``.
-    """
 
     channels: list[int]
-    bottleneck_dim: int | None = None
     block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig = (
         field(default_factory=ConvBlockConfig)
     )
@@ -180,12 +172,7 @@ class UNet(deterministicmodelsABC):
         output_channels = output_shape[0]
 
         channels = config.channels
-        bottleneck_dim = (
-            config.bottleneck_dim
-            if config.bottleneck_dim is not None
-            else channels[-1] * 2
-        )
-
+        
         self.initial_mapping = build_conv_block(
             input_channels,
             channels[0],
@@ -208,12 +195,12 @@ class UNet(deterministicmodelsABC):
 
         self.bottleneck = build_conv_block(
             channels[-1],
-            bottleneck_dim,
+            channels[-1],
             config.block_config,
         )
 
         reversed_skips = list(reversed(channels[:-1]))
-        input_channels = bottleneck_dim
+        input_channels = channels[-1]
         generator_enabled = config.GENERATOR is not None
         inject_noise_in_block = (
             generator_enabled and config.GENERATOR.noise_level != "low"
