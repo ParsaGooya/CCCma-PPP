@@ -211,6 +211,7 @@ class deterministic(moduleABC):
 
         self.input_shape = input_shape
         self.output_shape = output_shape
+        self.added_features_dim = added_features_dim
 
         self.model = self.model_config.build(
             input_shape=input_shape,
