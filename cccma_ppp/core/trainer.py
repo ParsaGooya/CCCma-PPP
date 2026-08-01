@@ -177,6 +177,9 @@ class Trainer:
         if self.config.beta_finder is not None:
             self.beta_finder = self.config.beta_finder
 
+        self.num_batches = len(self.TrainLoader)
+        self.remainder_batch_size = self.num_batches % self.config.gradient_accumulation_steps
+
         self._setup = False
         self._skip_training = False
 
@@ -442,7 +445,14 @@ class Trainer:
             desc="Train",
         ):
             current_lr = self.optimizer.learning_rate
-            batch_loss_dict, kwargs = self._train_on_batch(batch)
+            current_accumulation_size = (
+                self.remainder_batch_size
+                if (self.remainder_batch_size != 0 and 
+                batch_id >= self.num_batches - self.remainder_batch_size)
+                else self.config.gradient_accumulation_steps
+            )
+                
+            batch_loss_dict, kwargs = self._train_on_batch(batch, current_accumulation_size)
 
             self.train_aggregator.record(batch_loss_dict, current_lr, kwargs)
 
@@ -452,7 +462,7 @@ class Trainer:
 
         return time_elapsed
 
-    def _train_on_batch(self, batch):
+    def _train_on_batch(self, batch, accumulation_size: int):
         """
         Perform training step on a single batch.
 
@@ -460,6 +470,7 @@ class Trainer:
         ----------
         batch : BatchData
             Input batch.
+        accumulation_size : Number of batches accumulated
 
         Returns
         -------
@@ -470,6 +481,8 @@ class Trainer:
         batch.to_device(self.device)
         kwargs = {}
 
+
+
         if hasattr(self, "beta_finder"):
             beta = self.beta_finder(self.global_step)
             kwargs = dict(beta=beta)
@@ -478,7 +491,7 @@ class Trainer:
             enabled=self.scaler.is_enabled() and self.device.type == "cuda"
         ):
             loss, loss_dict = self.raw_module._compute_loss(data=batch, **kwargs)
-            loss = loss / self.config.gradient_accumulation_steps
+            loss = loss / accumulation_size
 
         self.scaler.scale(loss).backward()
 

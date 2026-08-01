@@ -24,6 +24,7 @@ class LRSchedulerConfig:
     min_lr: float = 0.0
     warmup_epochs: int = 0
     total_epochs: int = None
+    hold_min_lr: bool = True
 
     def __post_init__(self):
         """
@@ -67,13 +68,22 @@ class LRSchedulerConfig:
             If warmup exceeds total epochs.
         """
 
-        assert self.total_epochs is not None
-        assert self.total_epochs > 0
-        assert num_batches > 0
+        if self.total_epochs is None or self.total_epochs <= 0:
+            raise ValueError("total_epochs must be positive.")
+
+        if num_batches <= 0:
+            raise ValueError("num_batches must be positive.")
+
+        if gradient_accumulation_steps <= 0:
+            raise ValueError(
+                "gradient_accumulation_steps must be positive."
+            )
+
         if self.warmup_epochs >= self.total_epochs:
             raise ValueError(
-                "number of warmup epochs must be smaller than total epochs."
+                "warmup_epochs must be smaller than total_epochs."
             )
+
 
         self.total_steps = (
             math.ceil(num_batches / gradient_accumulation_steps) * self.total_epochs
@@ -213,7 +223,7 @@ class OptimizerWrapper:
         ValueError
             If scheduler configuration requirements are not met.
         """
-
+        self.lr_scheduler = None
         params = [p for p in module.parameters() if p.requires_grad]
 
         self.optimizer = config.OPTIMIZER_REGISTERY.get(config.optimizer_type.lower())
@@ -380,6 +390,8 @@ class CosineAnnealingLRScheduler:
         """
 
         self.config = config
+        self.optimizer = optimizer
+        self.num_steps = 0
 
         if config.warmup_steps > 0:
             warmup_scheduler = LinearLR(
@@ -421,7 +433,19 @@ class CosineAnnealingLRScheduler:
 
         if not hasattr(self, "scheduler"):
             raise RuntimeError("Scheduler must be built before stepping.")
-        self.scheduler.step()
+
+        if self.num_steps < self.config.total_steps:
+            self.scheduler.step()
+            self.num_steps += 1
+            return
+
+        if self.config.hold_min_lr:
+            for param_group in self.optimizer.param_groups:
+                param_group["lr"] = self.config.min_lr
+        else:
+            self.scheduler.step()
+            self.num_steps += 1
+
 
     def state_dict(self):
         """
