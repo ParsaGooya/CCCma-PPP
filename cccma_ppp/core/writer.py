@@ -383,13 +383,34 @@ def aggregate_predictions(
         if not year_datasets:
             continue
 
-        ds_year = xr.combine_by_coords(
+        combined = xr.concat(
             year_datasets,
-            combine_attrs="override",
+            dim="lead_time",
+            coords="minimal",
+            compat="equals",
+            join="exact",
         )
 
-        ds_year = next(iter(ds_year.data_vars.values()))
-        ds_year = _sort_sample_coords(ds_year)
+        lead_times = combined["lead_time"].values
+        _, unique_indices = np.unique(
+            lead_times,
+            return_index=True,
+        )
+
+        if len(unique_indices) != len(lead_times):
+            combined = combined.isel(
+                lead_time=np.sort(unique_indices)
+            )
+
+        combined = combined.sortby("lead_time")
+
+        if not combined.indexes["lead_time"].is_monotonic_increasing:
+            raise RuntimeError(
+                f"Lead times remain non-monotonic for year {year}: "
+                f"{combined['lead_time'].values}"
+            )
+
+        ds_year = _sort_sample_coords(combined)
         
 
         if post_processor is not None:
