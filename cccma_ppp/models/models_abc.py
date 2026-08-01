@@ -333,7 +333,10 @@ class modelABC(nn.Module, abc.ABC):
         pass
 
     @final
-    def _initialize_weights(self, init_method="trunc_normal"):
+    def _initialize_weights(self, 
+                            init_method="trunc_normal",
+                            exclude: tuple[nn.Module, ...] = ()
+    ) -> None:
         """
         Initialize model weights.
 
@@ -341,8 +344,18 @@ class modelABC(nn.Module, abc.ABC):
         -------
         None
         """
+        excluded = {id(module) for module in exclude}
 
-        self.apply(lambda m: weights_init(m, method=init_method))
+        def visit(module: nn.Module):
+            if id(module) in excluded:
+                return
+
+            weights_init(module, method=init_method)
+
+            for child in module.children():
+                visit(child)
+
+        visit(self)
 
     @final
     def _get_device(self) -> torch.device:
@@ -407,8 +420,9 @@ class modelABC(nn.Module, abc.ABC):
         gc.collect()
 
         if checkpoint_config.freeze_weights:
-            for param in self.parameters():
-                param.requires_grad = False
+            # for param in self.parameters():
+            #     param.requires_grad = False
+            self.requires_grad_(False)
 
 
 @dataclasses.dataclass
