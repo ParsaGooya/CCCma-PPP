@@ -276,6 +276,24 @@ class UNet(deterministicmodelsABC):
 
     def forward(self, request: DeterministicRequest) -> deterministicOutput:
 
+
+        num_output_samples = request.output_sample_size
+        batch_size = request.input.shape[0]
+
+        unet_output_tensor = self.forward_decoder(request)
+        output = self.output_block(unet_output_tensor)
+
+        if self.config.GENERATOR is not None and num_output_samples > 0:
+            output = output.reshape(
+                batch_size,
+                num_output_samples,
+                *output.shape[1:],
+            ).transpose(0, 1)
+
+        return deterministicOutput(output=output)
+
+    def forward_decoder(self, request: DeterministicRequest) -> torch.Tensor:
+    
         x = request.input
         x_mask = request.input_mask
         added_features = request.added_features
@@ -298,7 +316,7 @@ class UNet(deterministicmodelsABC):
             skips.append(skip)
 
         input = self.bottleneck(input)
-        batch_size = input.tensor.shape[0]
+    
 
         if self.config.GENERATOR is not None and num_output_samples > 0:
             input = _repeat_tensor_mask(
@@ -322,13 +340,9 @@ class UNet(deterministicmodelsABC):
             self.output_shape[-2:],
         )
 
-        output = self.output(output_tensor)
+        return output_tensor
 
-        if self.config.GENERATOR is not None and num_output_samples > 0:
-            output = output.reshape(
-                batch_size,
-                num_output_samples,
-                *output.shape[1:],
-            ).transpose(0, 1)
 
-        return deterministicOutput(output=output)
+    @property
+    def output_block(self) -> UNetOutput:
+        return self.output

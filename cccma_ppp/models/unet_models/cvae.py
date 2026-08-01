@@ -1,13 +1,13 @@
 import dataclasses
 from dataclasses import field
-from typing import ClassVar
+from typing import ClassVar, Mapping, Any
 import numpy as np
 import math
 import torch
 import torch.nn as nn
+from pathlib import Path
 
-
-from cccma_ppp.core.selectors import cVAEModelSelector
+from cccma_ppp.core.selectors import cVAEModelSelector, deterministicModelSelector
 from cccma_ppp.core.modules.cvae import cVAEOutput
 
 from cccma_ppp.models.models_abc import (
@@ -15,6 +15,7 @@ from cccma_ppp.models.models_abc import (
     cVAEmodelsABC,
     cVAEForwardRequest,
     cVAEPredictRequest,
+    DeterministicRequest,
     GENERATORConfig,
 )
 
@@ -51,6 +52,23 @@ from cccma_ppp.models.layers.conv import (
 from cccma_ppp.models.unet_models.utils import _unet_config_checks, _repeat_tensor_mask
 
 
+class UNetSelector(deterministicModelSelector):
+
+    def __init__(self,
+            config: Mapping[str, Any] | None = None,
+            load_dir: Path | str | None = None,
+            freeze_weights: bool = False,
+            share_output_block: bool = False):
+
+        super().__init__(
+            type = 'UNet',
+            config=config,
+            load_dir=load_dir,
+            freeze_weights=freeze_weights
+                         )
+
+
+
 @cVAEModelSelector.register("unet")
 @dataclasses.dataclass
 class cVAEUNetConfig(cVAEmodelConfigABC):
@@ -64,6 +82,7 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
     latent_normalization: NormalizationMethod | None = "layer"
     condition_dependant_latent: bool = False
     condemb_to_decoder: bool = True
+    deterministic_guess_config: UNetSelector | None = None
 
     block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig = (
         field(default_factory=ConvBlockConfig)
@@ -90,7 +109,6 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
     def __post_init__(self) -> None:
 
         _unet_config_checks(self)
-
         n_up_blocks = len(self.channels) - 1
 
         if isinstance(self.transpose_kernel_sizes, int):
@@ -101,6 +119,47 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
 
         if self.condition_embedding_size is None:
             self.condition_embedding_size = self.latent_size
+
+        self._resolve_deterministic_guess()
+
+    def _resolve_deterministic_guess(self):
+
+        if self.deterministic_guess_config is not None:
+            self.share_output_block = self.deterministic_guess_config.share_output_block
+            self.deterministic_guess_config = self.deterministic_guess_config.get_model_config()
+            if (self.deterministic_guess_config.channels[0] !=
+                self.channels[0]):
+                raise ValueError(
+                    "The cVAE UNet model and the configured deterministic guess " \
+                    "model must have the same number of channels before output block " \
+                    f"for summation of the deterministic guess at that level. Expected : {self.channels[0]} " \
+                    f"git {self.deterministic_guess_config.channels[0]}"
+                )
+
+            if self.deterministic_guess_config.GENERATOR is not None:
+
+                raise ValueError(
+                    "The deterministic guess UNet model cannot have GENERATOR on. " \
+                )  
+
+            if self.share_output_block:
+                if any[(
+                    self.output_activation
+                    != self.deterministic_guess_config.output_activation
+                    ),
+                    (
+                    self.output_block_hidden_channels
+                    != self.deterministic_guess_config.output_block_hidden_channels
+                    ),
+                ]:
+                    raise ValueError(
+                        "With share_output_block being True, the cVAE and deterministic " \
+                        "guess must have the same output_blovk activation and hidden_channels."
+                    )
+
+    
+        else:
+            self.share_output_block = False             
 
     @property
     def EXPECTS_MASK(self) -> bool:
@@ -139,9 +198,11 @@ class cVAEUNet(cVAEmodelsABC):
         self.condition_embedding_channels = config.condition_embedding_channels
         self.condition_embedding_size = config.condition_embedding_size
         self.condition_dependant_latent = config.condition_dependant_latent
-        self.condemb_to_decoder = config.condemb_to_decoder
+        self.condemb_to_decoder = config.condemb_to_decoder 
+        self.deterministic_guess_config = config.deterministic_guess_config
+        self.share_output_block = config.share_output_block
+        self.deterministic_guess = None
 
-        
 
         if output_shape is None:
             output_shape = input_shape
@@ -232,17 +293,35 @@ class cVAEUNet(cVAEmodelsABC):
             config=config,
         )
 
-        self.output = UNetOutput(
-            in_channels=reversed_channels[-1],
-            out_channels=output_channels,
-            hidden_channels=config.output_block_hidden_channels,
-            activation=config.output_activation,
-        )
+        if self.deterministic_guess_config is not None:
+
+            self.deterministic_guess = self.deterministic_guess_config.build(
+                input_shape=input_shape,
+                output_shape=output_shape,
+                added_features_dim=added_features_dim,
+            )
+
+        if self.share_output_block:
+
+            self.output = self.deterministic_guess.output_block
+
+        else:
+
+            self.output = UNetOutput(
+                in_channels=reversed_channels[-1],
+                out_channels=output_channels,
+                hidden_channels=config.output_block_hidden_channels,
+                activation=config.output_activation,
+            )
 
         if config.checkpoint_config is not None:
             self._load_state_dict(config.checkpoint_config)
         else:
-            self._initialize_weights(config.init_method)
+            self._initialize_weights(
+                config.init_method,
+                exclude=(self.deterministic_guess,))
+
+
 
     def _prepare_input(
         self,
@@ -347,8 +426,19 @@ class cVAEUNet(cVAEmodelsABC):
         else:
             sample_sizes = (latent_sample_size, batch_size)
 
+        deterministic_guess = self._deterministic_guess(
+                input = condition,
+                input_mask = condition_mask,
+                added_features = added_features,
+        )
+
+        if deterministic_guess is not None:
+            out = out + deterministic_guess
+
         output = self._output_block(out, 
                                     sample_sizes)
+                                    
+                                    
 
         return cVAEOutput(
             output=output,
@@ -395,6 +485,15 @@ class cVAEUNet(cVAEmodelsABC):
 
         else:
             sample_sizes = (latent_sample_size, batch_size)
+
+        deterministic_guess = self._deterministic_guess(
+                input = request.condition,
+                input_mask = request.condition_mask,
+                added_features = request.added_features,
+        )
+
+        if deterministic_guess is not None:
+            out = out + deterministic_guess
 
         output = self._output_block(out, 
                                     sample_sizes)
@@ -484,12 +583,31 @@ class cVAEUNet(cVAEmodelsABC):
 
         return out.reshape(latent_sample_size, batch_size, *out.shape[1:])
 
+    def _deterministic_guess(
+            self,
+            input: torch.Tensor,
+            input_mask: torch.Tensor | None = None,
+            added_features: torch.Tensor | None = None,
+    ) -> torch.Tensor | None:
+
+        if self.deterministic_guess is None:
+            return
+
+        request = DeterministicRequest(
+            input,
+            input_mask,
+            added_features,
+        )   
+
+        return self.deterministic_guess.forward_decoder(request) 
+
 
     def _output_block(
         self,
         input: torch.Tensor,
         sample_sizes: tuple[int, ...],
     ) -> torch.Tensor:
+        
         input = input.reshape(
             math.prod(sample_sizes),
             *input.shape[len(sample_sizes):],
