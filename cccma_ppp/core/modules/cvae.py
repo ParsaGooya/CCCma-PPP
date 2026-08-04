@@ -366,18 +366,20 @@ class cVAE(moduleABC):
                 "crieterion should be specified before training is possible. Hint: call .init_loss_function() method in your module first."
             )
 
-        output = self.forward(data)
+        latent_sample_size = 1
+        output = self.forward(data, latent_sample_size)
 
         target = data.target
         target_mask = data.target_mask
 
-        if target_mask is not None and target_mask.shape == target.shape:
-            target_mask = target_mask.unsqueeze(0).expand_as(output.output)
 
         target = target.unsqueeze(0).expand(
-            output.output.shape[1], # Z 
+            latent_sample_size, # Z 
             *target.shape, # B x C x ...
         ) # Z x B x C x ...
+
+        if target_mask is not None and target_mask.shape != target.shape:
+            target_mask = target_mask.unsqueeze(0).expand_as(target)
 
         reconstruction_loss, indiv_losses = self.criterion(
             output.output,
