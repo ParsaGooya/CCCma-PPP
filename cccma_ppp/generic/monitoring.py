@@ -16,31 +16,6 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 
 class Monitor:
-    """
-    Monitor process and GPU resource utilization.
-
-    Parameters
-    ----------
-    cpu : bool, optional
-        Whether to monitor process CPU utilization.
-    ram : bool, optional
-        Whether to monitor process resident memory utilization.
-    gpu0 : bool, optional
-        Whether to monitor NVIDIA GPU device 0.
-    gpu1 : bool, optional
-        Whether to monitor NVIDIA GPU device 1.
-    gpus : iterable of int or None, optional
-        NVIDIA GPU device indices to monitor. This can be used instead of,
-        or together with, ``gpu0`` and ``gpu1``.
-    interval : float, optional
-        Sampling interval in seconds.
-
-    Raises
-    ------
-    ValueError
-        If the sampling interval is not positive or a GPU index is negative.
-    """
-
     def __init__(
         self,
         *,
@@ -94,13 +69,6 @@ class Monitor:
             self._initialize_gpus()
 
     def _initialize_gpus(self) -> None:
-        """
-        Initialize NVIDIA GPU monitoring.
-
-        Returns
-        -------
-        None
-        """
         try:
             import pynvml
 
@@ -140,27 +108,12 @@ class Monitor:
             self._unavailable_gpus.update(self.gpu_indices)
 
     def _get_stack(self) -> list:
-        """
-        Retrieve the stage stack for the calling thread.
-
-        Returns
-        -------
-        list of str
-            Stack of active monitoring stages for the calling thread.
-        """
         thread_id = threading.get_ident()
 
         with self._lock:
             return self._thread_stacks.setdefault(thread_id, [])
 
     def _remove_empty_stack(self) -> None:
-        """
-        Remove the calling thread's stage stack if it is empty.
-
-        Returns
-        -------
-        None
-        """
         thread_id = threading.get_ident()
 
         with self._lock:
@@ -170,26 +123,10 @@ class Monitor:
                 self._thread_stacks.pop(thread_id, None)
 
     def current_stage(self) -> str:
-        """
-        Get the active stage for the calling thread.
-
-        Returns
-        -------
-        str
-            Active stage name. Returns ``"root"`` if no stage is active.
-        """
         stack = self._get_stack()
         return stack[-1] if stack else "root"
 
     def _current_sample_stage(self) -> str:
-        """
-        Determine the active stage associated with a resource sample.
-
-        Returns
-        -------
-        str
-            Active application stage or ``"root"``.
-        """
         sampler_thread_id = self._thread.ident if self._thread is not None else None
 
         with self._lock:
@@ -205,42 +142,12 @@ class Monitor:
         return " | ".join(sorted(set(stages)))
 
     def _ram_gb(self) -> float:
-        """
-        Get current process memory usage.
-
-        Returns
-        -------
-        float
-            Resident memory usage in gigabytes.
-        """
         return self._process.memory_info().rss / (1024**3)
 
     def _cpu(self) -> float:
-        """
-        Get current process CPU utilization.
-
-        Returns
-        -------
-        float
-            CPU utilization percentage for the current process.
-        """
         return float(self._process.cpu_percent(interval=None))
 
     def _gpu(self, index: int) -> tuple[float, float]:
-        """
-        Get current GPU utilization statistics.
-
-        Parameters
-        ----------
-        index : int
-            Zero-based NVIDIA GPU device index.
-
-        Returns
-        -------
-        tuple of float
-            GPU utilization percentage and VRAM utilization percentage.
-            Both values are NaN if the requested GPU is unavailable.
-        """
         if (
             self._pynvml is None
             or index in self._unavailable_gpus
@@ -279,24 +186,6 @@ class Monitor:
         event: str,
         span_id: str | None = None,
     ) -> dict[str, Any]:
-        """
-        Create a monitoring event record.
-
-        Parameters
-        ----------
-        stage : str
-            Stage associated with the event.
-        event : str
-            Event type, such as ``"start"``, ``"end"``, ``"checkpoint"``,
-            or ``"sample"``.
-        span_id : str or None, optional
-            Identifier connecting the start and end of a span.
-
-        Returns
-        -------
-        dict
-            Initialized event record.
-        """
         record: dict[str, Any] = {
             "t": time.time(),
             "stage": stage,
@@ -317,42 +206,11 @@ class Monitor:
         return record
 
     def _append_event(self, event: dict[str, Any]) -> None:
-        """
-        Append an event to the monitoring data.
-
-        Parameters
-        ----------
-        event : dict
-            Event record to append.
-
-        Returns
-        -------
-        None
-        """
         with self._lock:
             self._data.append(event)
 
     @contextmanager
     def span(self, name: str) -> Iterator:
-        """
-        Create a monitored execution span.
-
-        Parameters
-        ----------
-        name : str
-            Name of the execution stage.
-
-        Yields
-        ------
-        None
-
-        Raises
-        ------
-        TypeError
-            If ``name`` is not a string.
-        ValueError
-            If ``name`` is empty.
-        """
         if not isinstance(name, str):
             raise TypeError("span name must be a string")
 
@@ -405,19 +263,6 @@ class Monitor:
             self._remove_empty_stack()
 
     def observe(self, function: F) -> F:
-        """
-        Decorate a function with automatic stage monitoring.
-
-        Parameters
-        ----------
-        function : callable
-            Function to monitor.
-
-        Returns
-        -------
-        callable
-            Wrapped function.
-        """
         if not callable(function):
             raise TypeError("observe expects a callable")
 
@@ -429,25 +274,6 @@ class Monitor:
         return cast(F, wrapper)
 
     def checkpoint(self, name: str) -> None:
-        """
-        Record a checkpoint event.
-
-        Parameters
-        ----------
-        name : str
-            Checkpoint identifier.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        TypeError
-            If ``name`` is not a string.
-        ValueError
-            If ``name`` is empty.
-        """
         if not isinstance(name, str):
             raise TypeError("checkpoint name must be a string")
 
@@ -468,14 +294,6 @@ class Monitor:
         )
 
     def _collect_sample(self) -> dict[str, Any]:
-        """
-        Collect one resource utilization sample.
-
-        Returns
-        -------
-        dict
-            Sample event containing all enabled resource metrics.
-        """
         sample = self._create_event(
             stage=self._current_sample_stage(),
             event="sample",
@@ -496,13 +314,6 @@ class Monitor:
         return sample
 
     def _sampler(self) -> None:
-        """
-        Run the background resource-monitoring loop.
-
-        Returns
-        -------
-        None
-        """
         if self.cpu_enabled:
             self._process.cpu_percent(interval=None)
 
@@ -520,22 +331,6 @@ class Monitor:
             self._stop_event.wait(wait_time)
 
     def start(self, *, clear: bool = False) -> None:
-        """
-        Start resource monitoring.
-
-        Parameters
-        ----------
-        clear : bool, optional
-            Whether to discard previously collected events before starting.
-
-        Returns
-        -------
-        None
-
-        Notes
-        -----
-        Calling this method while monitoring is already active has no effect.
-        """
         if self.running:
             logger.warning("Monitoring is already running")
             return
@@ -561,24 +356,6 @@ class Monitor:
         )
 
     def stop(self, timeout: float | None = None) -> None:
-        """
-        Stop resource monitoring.
-
-        Parameters
-        ----------
-        timeout : float or None, optional
-            Maximum number of seconds to wait for the sampling thread. If
-            None, wait until the sampling thread terminates.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        ValueError
-            If ``timeout`` is negative.
-        """
         if timeout is not None and timeout < 0:
             raise ValueError("timeout cannot be negative")
 
@@ -600,26 +377,10 @@ class Monitor:
 
     @property
     def running(self) -> bool:
-        """
-        Indicate whether the monitoring thread is active.
-
-        Returns
-        -------
-        bool
-            True if monitoring is running.
-        """
         return self._thread is not None and self._thread.is_alive()
 
     @property
     def metric_names(self) -> tuple[str, ...]:
-        """
-        Get the configured metric column names.
-
-        Returns
-        -------
-        tuple of str
-            Configured metric names.
-        """
         metrics: list[str] = []
 
         if self.cpu_enabled:
@@ -635,25 +396,10 @@ class Monitor:
         return tuple(metrics)
 
     def clear(self) -> None:
-        """
-        Remove all collected monitoring events.
-
-        Returns
-        -------
-        None
-        """
         with self._lock:
             self._data.clear()
 
     def get_dataframe(self):
-        """
-        Convert collected monitoring events to a dataframe.
-
-        Returns
-        -------
-        pandas.DataFrame
-            Monitoring events and sampled resource metrics.
-        """
         import pandas as pd
 
         with self._lock:
@@ -662,14 +408,6 @@ class Monitor:
         return pd.DataFrame(records)
 
     def __enter__(self) -> "Monitor":
-        """
-        Start monitoring when entering a context manager.
-
-        Returns
-        -------
-        Monitor
-            Active monitor instance.
-        """
         self.start()
         return self
 
@@ -679,23 +417,6 @@ class Monitor:
         exception_value,
         traceback,
     ) -> bool:
-        """
-        Stop monitoring when leaving a context manager.
-
-        Parameters
-        ----------
-        exception_type : type or None
-            Type of exception raised in the context.
-        exception_value : BaseException or None
-            Exception raised in the context.
-        traceback : types.TracebackType or None
-            Associated traceback.
-
-        Returns
-        -------
-        bool
-            False so exceptions are not suppressed.
-        """
         self.stop()
         return False
 
@@ -705,28 +426,6 @@ class Monitor:
         process_variance: float = 1.0,
         measurement_variance: float = 25.0,
     ):
-        """
-        Apply a simple one-dimensional Kalman filter.
-
-        Parameters
-        ----------
-        values : array-like
-            Input observations.
-        process_variance : float, optional
-            Process noise variance.
-        measurement_variance : float, optional
-            Observation noise variance.
-
-        Returns
-        -------
-        numpy.ndarray
-            Smoothed values.
-
-        Raises
-        ------
-        ValueError
-            If either variance is negative.
-        """
         import numpy as np
 
         if process_variance < 0:
@@ -784,28 +483,6 @@ class Monitor:
         method: str | None = None,
         **kwargs,
     ):
-        """
-        Smooth a time series.
-
-        Parameters
-        ----------
-        series : pandas.Series
-            Input values.
-        method : {"ema", "rolling", "kalman"} or None, optional
-            Smoothing method. If None, the input is returned unchanged.
-        **kwargs
-            Additional arguments passed to the selected smoothing method.
-
-        Returns
-        -------
-        pandas.Series or numpy.ndarray
-            Smoothed values.
-
-        Raises
-        ------
-        ValueError
-            If the smoothing method or its configuration is invalid.
-        """
         if method is None:
             return series
 
@@ -867,30 +544,6 @@ class Monitor:
         smooth: str | None = None,
         **smooth_kwargs,
     ) -> None:
-        """
-        Plot a raw and optionally smoothed metric.
-
-        Parameters
-        ----------
-        ax : matplotlib.axes.Axes
-            Target axis.
-        t : array-like
-            Elapsed time values.
-        values : pandas.Series
-            Metric values.
-        label : str
-            Display name for the metric.
-        color : str
-            Plot color.
-        smooth : {"ema", "rolling", "kalman"} or None, optional
-            Smoothing method.
-        **smooth_kwargs
-            Arguments passed to the smoothing function.
-
-        Returns
-        -------
-        None
-        """
         ax.plot(
             t,
             values,
@@ -922,19 +575,6 @@ class Monitor:
 
     @staticmethod
     def _metric_label(metric: str) -> tuple[str, str]:
-        """
-        Get the display label and unit for a metric.
-
-        Parameters
-        ----------
-        metric : str
-            Metric column name.
-
-        Returns
-        -------
-        tuple of str
-            Display label and unit.
-        """
         if metric == "cpu":
             return "CPU", "%"
 
@@ -952,19 +592,6 @@ class Monitor:
         return metric, ""
 
     def _available_metrics(self, samples) -> list:
-        """
-        Determine which configured metrics contain sample data.
-
-        Parameters
-        ----------
-        samples : pandas.DataFrame
-            Resource sample events.
-
-        Returns
-        -------
-        list of str
-            Available metric names.
-        """
         return [
             metric
             for metric in self.metric_names
@@ -973,19 +600,6 @@ class Monitor:
 
     @staticmethod
     def _span_intervals(df) -> list[tuple[float, float, str]]:
-        """
-        Match span start and end events.
-
-        Parameters
-        ----------
-        df : pandas.DataFrame
-            Monitoring event dataframe containing elapsed times.
-
-        Returns
-        -------
-        list of tuple
-            Span start time, end time, and stage name.
-        """
         intervals: list[tuple[float, float, str]] = []
 
         if "span_id" not in df.columns:
@@ -1024,39 +638,6 @@ class Monitor:
         smooth=None,
         **smooth_kwargs,
     ):
-        """
-        Plot resource utilization and execution stages over time.
-
-        Parameters
-        ----------
-        df : pandas.DataFrame or None, optional
-            Monitoring dataframe. If None, data collected by this monitor
-            are used.
-        metrics : iterable of str or None, optional
-            Metrics to plot. If None, all configured metrics containing data
-            are plotted.
-        save_path : str or None, optional
-            Path where the figure should be saved.
-        show : bool, optional
-            Whether to display the figure.
-        smooth : {"ema", "rolling", "kalman"} or None, optional
-            Smoothing method applied to resource curves.
-        **smooth_kwargs
-            Additional arguments passed to the smoothing method.
-
-        Returns
-        -------
-        matplotlib.figure.Figure or None
-            Generated figure, or None if no samples can be plotted.
-
-        Raises
-        ------
-        TypeError
-            If metrics is provided as a single string.
-        ValueError
-            If the dataframe is invalid or a requested metric was not
-            collected.
-        """
         import matplotlib.pyplot as plt
 
         if df is None:
@@ -1373,30 +954,6 @@ def monitor(
     gpus: Iterable[int] | None = None,
     interval: float = 0.1,
 ) -> Monitor:
-    """
-    Create a configurable resource monitor.
-
-    Parameters
-    ----------
-    cpu : bool, optional
-        Whether to monitor process CPU utilization.
-    ram : bool, optional
-        Whether to monitor process resident memory utilization.
-    gpu0 : bool, optional
-        Whether to monitor NVIDIA GPU device 0.
-    gpu1 : bool, optional
-        Whether to monitor NVIDIA GPU device 1.
-    gpus : iterable of int or None, optional
-        Generic collection of NVIDIA GPU indices to monitor.
-    interval : float, optional
-        Sampling interval in seconds.
-
-    Returns
-    -------
-    Monitor
-        Configured monitor instance.
-
-    """
     return Monitor(
         cpu=cpu,
         ram=ram,

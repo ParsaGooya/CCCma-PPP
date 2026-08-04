@@ -8,27 +8,8 @@ from cccma_ppp.core.core_abc import GenerativeContext
 Reduction = Literal["mean", "sum"]
 
 
-
 class lossABC(nn.Module, abc.ABC):
-    """
-    Abstract base class for loss functions.
-
-    Defines the interface for computing loss, applying reductions,
-    and optionally printing loss values.
-
-    Methods
-    -------
-    _init_module
-        initialize loss function based on the model
-    forward(data, target, generative_modeling, generator, print_loss)
-        Compute loss.
-    _aggregate(loss)
-        Apply reduction to loss values.
-    _print_loss(loss)
-        Print formatted loss value.
-    """
     generative_context: GenerativeContext
-
 
     generative_context: GenerativeContext
 
@@ -39,51 +20,15 @@ class lossABC(nn.Module, abc.ABC):
         target: torch.Tensor,
         print_loss=False,
     ) -> torch.Tensor:
-        """
-        Compute loss between predictions and targets.
-
-        Parameters
-        ----------
-        data : torch.Tensor
-            Model predictions.
-        target : torch.Tensor
-            Ground truth targets.
-        print_loss : bool, optional
-            Whether to print the loss value.
-
-        Returns
-        -------
-        torch.Tensor
-            Computed loss value.
-        """
 
         pass
 
     @abc.abstractmethod
     def _print_loss(self, loss):
-        """
-        Print loss value.
-
-        Parameters
-        ----------
-        loss : torch.Tensor
-        """
 
         pass
 
     @abc.abstractmethod
     def _aggregate(self, loss) -> torch.Tensor:
-        """
-        Apply reduction to loss values.
-
-        Parameters
-        ----------
-        loss : torch.Tensor
-
-        Returns
-        -------
-        torch.Tensor
-            Reduced loss.
-        """
 
         pass

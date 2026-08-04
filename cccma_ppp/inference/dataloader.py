@@ -29,13 +29,6 @@ class BatchData(BatchDataABC):
     )
 
     def __post_init__(self):
-        """
-        Prepare batch data.
-
-        Returns
-        -------
-        None
-        """
 
         if self.return_spatial_mask:
             if self.reduce_spatial_mask:

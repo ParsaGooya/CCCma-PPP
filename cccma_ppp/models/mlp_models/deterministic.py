@@ -31,28 +31,6 @@ AppendMode = Literal[1, 2, 3]
 @deterministicModelSelector.register("mlp")
 @dataclasses.dataclass
 class AutoencoderConfig(modelConfigABC):
-    """
-    Configuration for MLP-based deterministic autoencoder.
-
-    Parameters
-    ----------
-    encoder_hidden_dims : list of int
-        Hidden layer sizes for encoder.
-    decoder_hidden_dims : list of int or None, optional
-        Hidden layer sizes for decoder.
-    batch_normalization : bool, optional
-        Whether to use batch normalization.
-    dropout_rate : float or None, optional
-        Dropout probability.
-    append_mode : {1, 2, 3}, optional
-        Determines where additional features are appended:
-        1 = encoder input,
-        2 = decoder input,
-        3 = both encoder and decoder.
-    init_method : InitMethod, optional
-        Weight initialization method.
-    """
-
     encoder_hidden_dims: list
     decoder_hidden_dims: list = None
     batch_normalization: bool = False
@@ -66,15 +44,6 @@ class AutoencoderConfig(modelConfigABC):
     GENERATOR: ClassVar[None] = None
 
     def __post_init__(self):
-        """
-        Initialize decoder dimensions.
-
-        Automatically mirrors encoder dimensions if not provided.
-
-        Returns
-        -------
-        None
-        """
 
         _validate_dropout(self.dropout_rate)
 
@@ -90,23 +59,6 @@ class AutoencoderConfig(modelConfigABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
-        """
-        Build autoencoder model instance.
-
-        Parameters
-        ----------
-        input_shape : np.ndarray
-            Input tensor shape.
-        output_shape : np.ndarray or None, optional
-            Output tensor shape.
-        added_features_dim : int or None, optional
-            Number of additional features.
-
-        Returns
-        -------
-        Autoencoder
-            Instantiated model.
-        """
 
         return Autoencoder(
             config=self,
@@ -117,24 +69,6 @@ class AutoencoderConfig(modelConfigABC):
 
 
 class Autoencoder(deterministicmodelsABC):
-    """
-    Deterministic MLP-based autoencoder.
-
-    Implements encoder-decoder architecture with optional feature
-    concatenation and regularization.
-
-    Parameters
-    ----------
-    config : AutoencoderConfig
-        Model configuration.
-    input_shape : np.ndarray
-        Input tensor shape.
-    output_shape : np.ndarray or None
-        Output tensor shape.
-    added_features_dim : int or None
-        Number of additional features.
-    """
-
     def __init__(
         self,
         config: AutoencoderConfig,
@@ -142,25 +76,6 @@ class Autoencoder(deterministicmodelsABC):
         output_shape: np.ndarray | tuple | None = None,
         added_features_dim: int = None,
     ):
-        """
-        Initialize autoencoder model.
-
-        Parameters
-        ----------
-        config : AutoencoderConfig
-            Model configuration.
-        input_shape : np.ndarray
-            Input shape.
-        output_shape : np.ndarray or None
-            Output shape.
-        added_features_dim : int or None
-            Number of additional features.
-
-        Raises
-        ------
-        RuntimeError
-            If shape or metadata mismatches occur.
-        """
 
         super().__init__()
 
@@ -236,19 +151,6 @@ class Autoencoder(deterministicmodelsABC):
             self._initialize_weights(self.init_method)
 
     def forward(self, request: DeterministicRequest) -> deterministicOutput:
-        """
-        Forward pass through the encoder/decoder.
-
-        Parameters
-        ----------
-        request : DeterministicRequest
-            Input request object.
-
-        Returns
-        -------
-        deterministicOutput
-            Reconstructed output tensor.
-        """
         x = request.input
         x_mask = request.input_mask
         added_features = request.added_features

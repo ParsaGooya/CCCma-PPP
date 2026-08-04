@@ -84,7 +84,6 @@ def _broadcast_mask(
     mask: torch.Tensor | None,
     reference: torch.Tensor,
 ) -> torch.Tensor | None:
-    """Normalize common mask layouts to NCHW and broadcast channels."""
 
     if mask is None:
         return None
@@ -93,7 +92,6 @@ def _broadcast_mask(
         mask = mask.unsqueeze(0).unsqueeze(0)
 
     elif mask.ndim == 3:
-        # Interpret as either [C, H, W].
         mask = mask.unsqueeze(0)
 
     if mask.ndim != 4:
@@ -125,7 +123,6 @@ def _merge_masks(
     spatial_size: tuple[int, int],
     reference: torch.Tensor,
 ) -> torch.Tensor | None:
-    """Create the mask matching a channel-wise concatenated feature tensor."""
 
     if input_mask is None and skip_mask is None:
         return None
@@ -175,21 +172,6 @@ def _resize_tensor(
 
 
 def _sample(mu, var, sample_size=1, std=1):
-    """
-    Sample latent variables from Gaussian distribution.
-
-    Parameters
-    ----------
-    mu : torch.Tensor
-    var : torch.Tensor
-    sample_size : int, optional
-    std : float, optional
-
-    Returns
-    -------
-    torch.Tensor
-        Sampled latent variables.
-    """
 
     out = mu + torch.sqrt(var) * _get_normal(var, std).sample((sample_size,))
 
@@ -197,18 +179,6 @@ def _sample(mu, var, sample_size=1, std=1):
 
 
 def _get_normal(ref_tensor, std=1):
-    """
-    Create standard normal distribution.
-
-    Parameters
-    ----------
-    ref_tensor : torch.Tensor
-    std : float, optional
-
-    Returns
-    -------
-    torch.distributions.Normal
-    """
 
     return torch.distributions.Normal(
         torch.zeros_like(ref_tensor), torch.ones_like(ref_tensor) * std

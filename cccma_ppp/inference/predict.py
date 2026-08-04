@@ -30,9 +30,6 @@ def main(yaml_config: str):
     try:
         config_data = prepare_config(yaml_config)
 
-        # to-do
-        # config.apply_overrides(args.override)
-
         config = dacite.from_dict(
             data_class=InferenceConfig,
             data=config_data,
@@ -58,9 +55,3 @@ def main(yaml_config: str):
 
     finally:
         distributed.cleanup()
-
-
-# if __name__ == "__main__":
-#     parser = get_parser()
-#     args = parser.parse_args()
-#     main(args.config)

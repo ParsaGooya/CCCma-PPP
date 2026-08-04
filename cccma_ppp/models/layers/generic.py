@@ -55,8 +55,6 @@ def _build_normalization(
 
 
 class LayerNorm2d(nn.Module):
-    """Channel-wise LayerNorm for NCHW tensors."""
-
     def __init__(self, num_channels: int, eps: float = 1e-6):
         super().__init__()
         self.weight = nn.Parameter(torch.ones(num_channels))
@@ -74,8 +72,6 @@ class LayerNorm2d(nn.Module):
 
 
 class DropPath(nn.Module):
-    """Per-sample stochastic depth."""
-
     def __init__(self, drop_probability: float = 0.0):
         super().__init__()
         self.drop_probability = drop_probability

@@ -26,33 +26,6 @@ from cccma_ppp.core.selectors import cVAEModelSelector
 @cVAEModelSelector.register("mlp")
 @dataclasses.dataclass
 class cVAE_MLPConfig(cVAEmodelConfigABC):
-    """
-    Configuration for MLP-based conditional variational autoencoder (cVAE).
-
-    Parameters
-    ----------
-    encoder_hidden_dims : list of int
-        Hidden layer sizes for encoder network.
-    latent_size : int
-        Dimensionality of latent space.
-    condition_embedding_dims : list of int
-        Hidden layer sizes for condition embedding network.
-    condition_embedding_size : int
-        Output size of condition embedding.
-    decoder_hidden_dims : list of int or None, optional
-        Hidden layer sizes for decoder network.
-    condition_dependant_latent : bool, optional
-        Whether latent distribution depends on condition.
-    condemb_to_decoder : bool, optional
-        Whether to pass condition embedding to decoder.
-    batch_normalization : bool, optional
-        Whether to use batch normalization.
-    dropout_rate : float or None, optional
-        Dropout probability.
-    init_method : InitMethod, optional
-        Weight initialization method.
-    """
-
     encoder_hidden_dims: list
     latent_size: int
     condition_embedding_dims: list | None = None
@@ -71,23 +44,6 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     GENERATOR: ClassVar[None] = None
 
     def __post_init__(self):
-        """
-        Validate and finalize cVAE configuration.
-
-        Initializes parent configuration, sets default decoder and
-        conditioning behavior, and validates parameter consistency.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        ValueError
-            If dropout rate is outside [0, 1].
-        ValueError
-            If conditioning configuration is inconsistent with latent setup.
-        """
 
         _validate_dropout(self.dropout_rate)
 
@@ -115,23 +71,6 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
-        """
-        Build cVAE MLP model instance.
-
-        Parameters
-        ----------
-        input_shape : np.ndarray
-            Input tensor shape.
-        output_shape : np.ndarray or None, optional
-            Output tensor shape.
-        added_features_dim : int or None, optional
-            Number of additional features.
-
-        Returns
-        -------
-        cVAE_MLP
-            Instantiated model.
-        """
 
         return cVAE_MLP(
             config=self,
@@ -142,21 +81,6 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
 
 
 class cVAE_MLP(cVAEmodelsABC):
-    """
-    MLP-based conditional variational autoencoder (cVAE).
-
-    Parameters
-    ----------
-    config : cVAE_MLPConfig
-        Model configuration.
-    input_shape : np.ndarray
-        Input tensor shape.
-    output_shape : np.ndarray or None
-        Output tensor shape.
-    added_features_dim : int or None
-        Number of additional input features.
-    """
-
     def __init__(
         self,
         config: cVAE_MLPConfig,
@@ -164,25 +88,6 @@ class cVAE_MLP(cVAEmodelsABC):
         output_shape: np.ndarray | tuple | None = None,
         added_features_dim: int = None,
     ):
-        """
-        Initialize cVAE MLP model.
-
-        Parameters
-        ----------
-        config : cVAE_MLPConfig
-            Model configuration.
-        input_shape : np.ndarray
-            Input shape.
-        output_shape : np.ndarray or None
-            Output shape.
-        added_features_dim : int or None
-            Number of additional features.
-
-        Raises
-        ------
-        RuntimeError
-            If shapes do not match expected dimensions or checkpoint.
-        """
 
         super().__init__()
 
@@ -293,20 +198,6 @@ class cVAE_MLP(cVAEmodelsABC):
             self._initialize_weights(self.init_method)
 
     def forward(self, request: cVAEForwardRequest) -> cVAEOutput:
-        """
-        Perform forward pass through cVAE.
-
-        Parameters
-        ----------
-        request
-            cVAEForwardRequest object
-
-        Returns
-        -------
-        cVAEOutput
-            Output containing predictions, latent parameters,
-            and optional conditioning statistics.
-        """
 
         x = request.target
         x_mask = request.target_mask
@@ -358,20 +249,6 @@ class cVAE_MLP(cVAEmodelsABC):
         self,
         request: cVAEPredictRequest,
     ) -> cVAEOutput:
-        """
-        Generate samples from learned prior.
-
-        Parameters
-        ----------
-        request
-            cVAE predict arguments specified
-            by cVAEPredictRequest.
-
-        Returns
-        -------
-        cVAEOutput
-            Generated samples and conditioning outputs.
-        """
 
         condition = request.condition
         condition_mask = request.condition_mask
@@ -410,8 +287,8 @@ class cVAE_MLP(cVAEmodelsABC):
 
                 if prior_flow.condition_size is not None:
                     cond = (
-                        cond_mu.unsqueeze(0)  # [1, B, C]
-                        .expand(sample_size, -1, -1)  # [S, B, C]
+                        cond_mu.unsqueeze(0)
+                        .expand(sample_size, -1, -1)
                         .reshape(sample_size * batch_size, -1)
                     )
 
@@ -450,22 +327,6 @@ class cVAE_MLP(cVAEmodelsABC):
         condition: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
-        """
-        Encode input into latent distribution parameters.
-
-        Parameters
-        ----------
-        x : torch.Tensor
-            Input tensor.
-        condition : torch.Tensor or None
-            Conditioning embedding.
-        added_features : torch.Tensor or None
-
-        Returns
-        -------
-        tuple of torch.Tensor
-            (mu, log_var)
-        """
 
         if x_mask is not None:
             x = x * x_mask
@@ -495,19 +356,6 @@ class cVAE_MLP(cVAEmodelsABC):
         condition_mask: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
-        """
-        Compute condition embedding.
-
-        Parameters
-        ----------
-        condition : torch.Tensor or None
-        added_features : torch.Tensor or None
-
-        Returns
-        -------
-        tuple
-            (cond_mu, cond_log_var)
-        """
 
         if added_features is not None:
             x_features = added_features.flatten(start_dim=1)
@@ -537,20 +385,6 @@ class cVAE_MLP(cVAEmodelsABC):
         condition: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> torch.Tensor:
-        """
-        Decode latent samples into output space.
-
-        Parameters
-        ----------
-        latent_samples : torch.Tensor
-        condition : torch.Tensor or None
-        added_features : torch.Tensor or None
-
-        Returns
-        -------
-        torch.Tensor
-            Decoded outputs.
-        """
 
         sample_size, batch_size = latent_samples.shape[:-1]
 

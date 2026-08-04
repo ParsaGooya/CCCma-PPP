@@ -27,36 +27,11 @@ from cccma_ppp.data_modules.utils import (
 
 @dataclasses.dataclass
 class lead_months_config:
-    """
-    Configuration for selecting lead months.
-
-    Parameters
-    ----------
-    list_months : list of int or None, optional
-        Explicit list of lead months.
-    start : int, optional
-        Start of lead month range (inclusive).
-    end : int or None, optional
-        End of lead month range (inclusive).
-    """
-
     list_months: list | None = None
     start: int = 1
     end: int = None
 
     def __post_init__(self):
-        """
-        Validate lead month configuration.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        ValueError
-            If neither list nor range is properly specified.
-        """
         if self.list_months is None:
             if self.end is None:
                 raise ValueError(
@@ -65,29 +40,10 @@ class lead_months_config:
                 )
 
     def build_lead_months(self):
-        """
-        Construct lead month array.
-
-        Returns
-        -------
-        np.ndarray or list
-            Lead months defined either explicitly or as a range.
-        """
         return self.list_months or np.arange(self.start, self.end + 1)
 
 
 class DatasetConfigABC(abc.ABC):
-    """
-    Abstract base class for dataset configuration.
-
-    Attributes
-    ----------
-    model : ModelDataConfig or None
-    condition : ConditionDataConfig or None
-    condition_method : str or None
-    lead_months : lead_months_config or None
-    """
-
     _VALID_CONDITION_METHODS: ClassVar[frozenset[str]] = frozenset(
         {"ensemble_mean", "cross_ensemble", "same_member", "static"}
     )
@@ -99,13 +55,6 @@ class DatasetConfigABC(abc.ABC):
     _effective_condition: ConditionDataConfig | ModelDataConfig | None
 
     def __init__(self):
-        """
-        Initialize dataset configuration.
-
-        Returns
-        -------
-        None
-        """
         self._fitted_preprocessors: bool = False
         self._effective_condition: ConditionDataConfig | ModelDataConfig | None = None
 
@@ -128,18 +77,6 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _check_required_input_source(self):
-        """
-        Ensure at least one input source is provided.
-
-        Returns
-        -------
-        self
-
-        Raises
-        ------
-        ValueError
-            If both model and condition are missing.
-        """
         if self.model is None and self.condition is None:
             raise ValueError(
                 "For a PPP dataset to create an input, either model or "
@@ -149,25 +86,6 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _check_model_vs_condition(self):
-        """
-        Validate compatibility between model and condition datasets.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        ValueError
-            If condition data does not span the same time range as model data for non static condition methods.
-        ValueError
-            If condition data does not provide sufficient lead-time coverage for non static condition methods.
-        ValueError
-            If condition data and model data do not have similar ensembles for same_member condition methods.
-        ValueError
-            If spatial coordinates (lat/lon) between model and condition differ
-            when observation-based correction is applied.
-        """
         if all(
             [
                 self.condition is not None,
@@ -237,18 +155,6 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _check_condition_method(self):
-        """
-        Validate conditioning method.
-
-        Returns
-        -------
-        self
-
-        Raises
-        ------
-        ValueError
-            If condition method is not supported.
-        """
         if self.condition_method is not None:
             if self.condition_method.lower() not in self._VALID_CONDITION_METHODS:
                 raise ValueError(
@@ -320,13 +226,6 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _resolve_lead_months(self):
-        """
-        Resolve lead month configuration.
-
-        Returns
-        -------
-        None
-        """
         if self.lead_months is not None and isinstance(
             self.lead_months, lead_months_config
         ):
@@ -335,36 +234,15 @@ class DatasetConfigABC(abc.ABC):
     @property
     @abc.abstractmethod
     def available_times(self):
-        """
-        Available times for dataset creation.
-
-        Returns
-        -------
-        np.ndarray
-        """
         pass
 
     @property
     @abc.abstractmethod
     def ds_operator(self):
-        """
-        Dataset operator instance.
-
-        Returns
-        -------
-        DatasetOperator
-        """
         pass
 
     @property
     def input_lead_months(self) -> int:
-        """
-        Coords of lead months in input dataset.
-
-        Returns
-        -------
-        int
-        """
         time_dim, lead_time_dim = required_sample_dimensions
         return self.effective_input.info.coords[lead_time_dim].values
 
@@ -377,28 +255,6 @@ class DatasetConfigABC(abc.ABC):
     @final
     @property
     def _using_model_data_as_condition(self) -> bool:
-        """
-        Determine whether the model data is reused as the condition.
-
-        Returns
-        -------
-        bool
-            True if the condition data is derived from or identical to the
-            model data.
-
-        Notes
-        -----
-        When this returns ``True``, loading separate model and condition
-        datasets can be avoided when unnecessary.
-
-        This returns ``True`` in either of the following cases:
-
-        1. No condition dataset is provided, but a ``condition_method`` is
-        specified (except when ``condition_method == "static"``).
-
-        2. A condition dataset is provided, but it references the same files,
-        variables, and ensemble members as the model dataset.
-        """
         if self.condition is None:
             return self.condition_method.lower() in {
                 "ensemble_mean",
@@ -418,24 +274,10 @@ class DatasetConfigABC(abc.ABC):
     @final
     @property
     def effective_condition(self) -> ConditionDataConfig | ModelDataConfig | None:
-        """
-        Effective conditioning dataset.
-
-        Returns
-        -------
-        ConditionDataConfig or ModelDataConfig or None
-        """
         return self._effective_condition
 
     @final
     def _model_as_condition(self) -> ModelDataConfig:
-        """
-        Create model-based condition configuration.
-
-        Returns
-        -------
-        ModelDataConfig
-        """
         ensemble_mean = self.condition_method.lower() == "ensemble_mean"
         return ModelDataConfig(
             paths=self.model.paths,
@@ -450,13 +292,6 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _resolve_condition(self):
-        """
-        Resolve effective condition dataset.
-
-        Returns
-        -------
-        self
-        """
         if self.condition is not None:
             self._effective_condition = self.condition
         elif self._using_model_data_as_condition:
@@ -468,13 +303,6 @@ class DatasetConfigABC(abc.ABC):
 
     @abc.abstractmethod
     def build_dataset(self):
-        """
-        Build dataset instance.
-
-        Returns
-        -------
-        Dataset
-        """
         pass
 
 
@@ -508,24 +336,6 @@ class AddedTimeFeatures:
         selection: dict[str, int | float],
         input: xr.DataArray,
     ) -> np.ndarray | None:
-        """
-        Generate time-based features.
-
-        Parameters
-        ----------
-        selection : dict
-            Selection coords of the sample
-
-        input : xr.DataArray
-            Input data used for shape alignment.
-
-        Returns
-        -------
-        np.ndarray or None
-            Array of time features.
-
-        Broadcasts features to match spatial input dimensions if needed.
-        """
         if self.time_features is None:
             return
 
@@ -699,13 +509,6 @@ class DatasetABC(Dataset, abc.ABC):
 
     @final
     def _load_xarray_data(self, config: DataConfigABC, load: bool = False):
-        """
-        Load dataset from xarray sources.
-
-        Returns
-        -------
-        xr.DataArray
-        """
 
         return _load_xarray_data(
             config.list_paths,
@@ -721,13 +524,6 @@ class DatasetABC(Dataset, abc.ABC):
 
     @final
     def get_sampling_coords(self):
-        """
-        Compute coordinates for sampling the datasets.
-
-        Returns
-        -------
-        dict
-        """
 
         mask = (
             self.mask.stack(batch=dict(self.mask.sizes).keys())
@@ -745,20 +541,6 @@ class DatasetABC(Dataset, abc.ABC):
         self,
         sample_coords: dict[str, np.ndarray],
     ) -> dict[str, np.ndarray] | None:
-        """
-        Convert sampling coordinates to positional model-dataset indexes.
-
-        Parameters
-        ----------
-        sample_coords : dict[str, np.ndarray]
-            Mapping from dimension names to coordinate values for each sample.
-
-        Returns
-        -------
-        dict[str, np.ndarray] or None
-            Positional indexes for each dimension, or None if no model dataset
-            is loaded.
-        """
         if not self._load_model:
             return None
 
@@ -785,27 +567,6 @@ class DatasetABC(Dataset, abc.ABC):
         self,
         sample_coords: dict[str, np.ndarray],
     ) -> dict[str, np.ndarray] | None:
-        """
-        Compute positional indexes for the conditioning dataset.
-
-        Parameters
-        ----------
-        sample_coords : dict[str, np.ndarray]
-            Sampling coordinate values for the model dataset.
-
-        Returns
-        -------
-        dict[str, np.ndarray] or None
-            Positional conditioning indexes for each sample, or ``None`` when
-            no conditioning dataset is available or the condition is static.
-
-        Raises
-        ------
-        ValueError
-            If required sampling coordinates are missing, if ``same_member`` is
-            requested without ensemble coordinates, or if any conditioning
-            coordinates cannot be found.
-        """
         if (
             self.condition_dataset is None
             or self.config.condition_method.lower() == "static"
@@ -847,13 +608,6 @@ class DatasetABC(Dataset, abc.ABC):
 
     @final
     def get_input_shape(self) -> tuple:
-        """
-        Determine input shape.
-
-        Returns
-        -------
-        tuple
-        """
 
         from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 
@@ -889,20 +643,6 @@ class DatasetABC(Dataset, abc.ABC):
 
     @final
     def _index_condition_dataset(self, ind: int) -> xr.DataArray | None:
-        """
-        Select and preprocess one conditioning sample.
-
-        Parameters
-        ----------
-        ind : int
-            Sample index.
-
-        Returns
-        -------
-        xr.DataArray or None
-            Preprocessed conditioning sample, or ``None`` when no conditioning
-            dataset is available.
-        """
         if self.condition_dataset is None:
             return None
 
@@ -929,19 +669,6 @@ class DatasetABC(Dataset, abc.ABC):
 
     @final
     def _index_model_dataset(self, ind: int) -> xr.DataArray | None:
-        """
-        Select and preprocess one model sample.
-
-        Parameters
-        ----------
-        ind : int
-            Sample index.
-
-        Returns
-        -------
-        xr.DataArray or None
-            Preprocessed model sample, or ``None`` when model data are not loaded.
-        """
         if not self._load_model:
             return None
 
@@ -961,11 +688,4 @@ class DatasetABC(Dataset, abc.ABC):
 
     @final
     def __len__(self):
-        """
-        Dataset length.
-
-        Returns
-        -------
-        int
-        """
         return len(next(iter(self.sample_coords.values())))

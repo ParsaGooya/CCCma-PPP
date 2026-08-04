@@ -11,28 +11,7 @@ from cccma_ppp.configs import supported_NN_dimensions_sorted, required_sample_di
 
 @PreprocessingStepSelector.register("normalizer")
 class Normalizer(PreprocessModuleABC):
-    """
-    Min-max normalization preprocessor.
-
-    Parameters
-    ----------
-    dims : list of str or None, optional
-        Dimensions along which normalization statistics are computed.
-    """
-
     def __init__(self, dims: list | None = None, **kwargs) -> None:
-        """
-        Initialize normalizer.
-
-        Parameters
-        ----------
-        dims : list of str or None, optional
-            Dimensions over which min and max are computed.
-
-        Returns
-        -------
-        None
-        """
 
         self.min = None
         self.max = None
@@ -43,20 +22,6 @@ class Normalizer(PreprocessModuleABC):
             self.dims = tuple(self.dims)
 
     def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
-        """
-        Fit normalization parameters.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-            Input data.
-        mask : xr.DataArray or None, optional
-            Mask specifying valid data.
-
-        Returns
-        -------
-        self
-        """
 
         if all(["ensembles" in data.dims, self.dims is not None]):
             if "ensembles" not in self.dims:
@@ -77,36 +42,11 @@ class Normalizer(PreprocessModuleABC):
         return self
 
     def transform(self, data: xr.DataArray):
-        """
-        Apply min-max normalization.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-
-        Returns
-        -------
-        xr.DataArray
-            Normalized data.
-        """
 
         data_normalized = (data - self.min) / (self.max - self.min)
         return data_normalized
 
     def inverse_transform(self, data: xr.DataArray):
-        """
-        Reverse normalization.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-            Input data in normalized space.
-
-        Returns
-        -------
-        xr.DataArray
-            Data in original scale.
-        """
         max = align_stat_data_lead_time_inverse_transform(data, self.max)
         min = align_stat_data_lead_time_inverse_transform(data, self.min)
 
@@ -116,27 +56,7 @@ class Normalizer(PreprocessModuleABC):
 
 @PreprocessingStepSelector.register("standardizer")
 class Standardizer(PreprocessModuleABC):
-    """
-    Standardization preprocessor.
-
-    Parameters
-    ----------
-    dims : list of str or None, optional
-        Dimensions along which mean and std are computed.
-    """
-
     def __init__(self, dims: list | None = None, **kwargs) -> None:
-        """
-        Initialize standardizer.
-
-        Parameters
-        ----------
-        dims : list of str or None, optional
-
-        Returns
-        -------
-        None
-        """
 
         self.mean = None
         self.std = None
@@ -147,18 +67,6 @@ class Standardizer(PreprocessModuleABC):
             self.dims = tuple(self.dims)
 
     def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
-        """
-        Fit standardization parameters.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-        mask : xr.DataArray or None, optional
-
-        Returns
-        -------
-        self
-        """
 
         if all(["ensembles" in data.dims, self.dims is not None]):
             if "ensembles" not in self.dims:
@@ -180,36 +88,12 @@ class Standardizer(PreprocessModuleABC):
         return self
 
     def transform(self, data: xr.DataArray):
-        """
-        Apply standardization.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-
-        Returns
-        -------
-        xr.DataArray
-            Standardized data.
-        """
 
         data_standardized = (data - self.mean) / self.std
 
         return data_standardized
 
     def inverse_transform(self, data: xr.DataArray):
-        """
-        Reverse standardization.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-
-        Returns
-        -------
-        xr.DataArray
-            Original scale data.
-        """
         std = align_stat_data_lead_time_inverse_transform(data, self.std)
         mean = align_stat_data_lead_time_inverse_transform(data, self.mean)
 
@@ -220,29 +104,7 @@ class Standardizer(PreprocessModuleABC):
 
 @PreprocessingStepSelector.register("anomalies")
 class AnomaliesScaler(PreprocessModuleABC):
-    """
-    Anomaly scaling preprocessor.
-
-    Computes anomalies relative to a mean climatology.
-
-    Parameters
-    ----------
-    dims : list of str or None, optional
-        Dimensions used to compute mean.
-    """
-
     def __init__(self, dims: list | None = None, **kwargs) -> None:
-        """
-        Initialize anomaly scaler.
-
-        Parameters
-        ----------
-        dims : list of str or None, optional
-
-        Returns
-        -------
-        None
-        """
 
         self.mean = None
         self.dims = dims
@@ -252,18 +114,6 @@ class AnomaliesScaler(PreprocessModuleABC):
             self.dims = tuple(self.dims)
 
     def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
-        """
-        Fit anomaly baseline.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-        mask : xr.DataArray or None, optional
-
-        Returns
-        -------
-        self
-        """
 
         if all(["ensembles" in data.dims, self.dims is not None]):
             if "ensembles" not in self.dims:
@@ -283,35 +133,11 @@ class AnomaliesScaler(PreprocessModuleABC):
         return self
 
     def transform(self, data: xr.DataArray):
-        """
-        Compute anomalies.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-
-        Returns
-        -------
-        xr.DataArray
-            Anomaly values.
-        """
 
         data_anomalies = data - self.mean
         return data_anomalies
 
     def inverse_transform(self, data: xr.DataArray):
-        """
-        Reconstruct original values from anomalies.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-
-        Returns
-        -------
-        xr.DataArray
-            Reconstructed data.
-        """
 
         mean = align_stat_data_lead_time_inverse_transform(data, self.mean)
         data_raw = data + mean
@@ -321,28 +147,7 @@ class AnomaliesScaler(PreprocessModuleABC):
 
 @PreprocessingStepSelector.register("flattener")
 class Flattennanremove(PreprocessModuleABC):
-    """
-    Flatten NN dimensions while removing NaN locations.
-
-    Parameters
-    ----------
-    load_dir : pathlib.Path or str or None, optional
-        Path to a previously fitted preprocessor.
-    """
-
     def __init__(self, load_dir: Path | str = None, **kwargs):
-        """
-        Initialize flattener.
-
-        Parameters
-        ----------
-        load_dir : pathlib.Path or str or None, optional
-            Path to load a pre-fitted instance.
-
-        Returns
-        -------
-        None
-        """
 
         self.load_dir = load_dir
         self.fitted = False
@@ -358,31 +163,6 @@ class Flattennanremove(PreprocessModuleABC):
         save_name: str | None = None,
         save_path: Path | str = None,
     ):
-        """
-        Fit spatial flattening transformation.
-
-        Determines valid spatial locations and optionally aligns them
-        between input and target datasets.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-            Input data.
-        target : xr.DataArray or None, optional
-            Target data for alignment.
-        mask : xr.DataArray or None, optional
-            Optional mask (unused in current implementation).
-        save : bool, optional
-            Whether to save fitted preprocessor.
-        save_name : str or None, optional
-            Name of saved file.
-        save_path : pathlib.Path or str or None, optional
-            Directory to save object.
-
-        Returns
-        -------
-        self
-        """
 
         if self.load_dir is not None:
             self._load_from_memory(self.load_dir)
@@ -465,23 +245,6 @@ class Flattennanremove(PreprocessModuleABC):
                 )
 
     def transform(self, data: xr.DataArray) -> xr.Dataset | xr.DataArray:
-        """
-        Apply flattening and spatial filtering.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-
-        Returns
-        -------
-        xr.DataArray
-            Flattened data with only valid spatial locations.
-
-        Raises
-        ------
-        ValueError
-            The data to be transformed does not have the correct NN dims.
-        """
 
         if "ref" in data.dims:
             return data.sel(ref=self.final_locations)
@@ -491,24 +254,6 @@ class Flattennanremove(PreprocessModuleABC):
         )
 
     def inverse_transform(self, data: xr.DataArray) -> xr.DataArray:
-        """
-        Restore original spatial layout.
-
-        Parameters
-        ----------
-        data : xr.DataArray
-            Transformed data.
-
-        Returns
-        -------
-        xr.DataArray
-            Reconstructed data in the original spatial grid.
-
-        Raises
-        ------
-        ValueError
-            The data to be inverse transformed does not have the ref dims.
-        """
 
         if "ref" not in data.dims:
             raise ValueError("The input must contain the flattened 'ref' dimension.")
@@ -516,23 +261,6 @@ class Flattennanremove(PreprocessModuleABC):
         return data.unstack().combine_first(self.reference_shape)
 
     def _load_from_memory(self, load_dir: Path | str) -> None:
-        """
-        Load fitted preprocessor from disk.
-
-        Parameters
-        ----------
-        load_dir : pathlib.Path or str
-            Directory containing the saved preprocessor.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        RuntimeError
-            If the loaded preprocessor is not fitted.
-        """
 
         loaded = joblib.load(Path(load_dir))
         if not loaded.fitted:
@@ -549,44 +277,6 @@ def align_stat_data_lead_time_inverse_transform(
     ds: xr.DataArray,
     stat: xr.DataArray,
 ) -> xr.DataArray:
-    """
-    Align fitted temporal statistics with forecast lead-time data.
-    The fitted statistic may contain a ``year`` dimension, a ``month``
-    dimension, both, or neither. If temporal dimensions are present,
-    the statistic is expanded over the initialization-year and lead-time
-    dimensions of ``ds``.
-
-    Assumptions
-    -----------
-    - ``ds[time_dim]`` contains initialization years.
-
-    - ``ds[lead_time_dim]`` contains monthly leads 1, 2, 3, ...
-
-    - Lead 1 corresponds to January of the initialization year.
-
-    - ``stat["month"]`` contains 12 entries ordered from January to
-      December.
-
-    Parameters
-    ----------
-    ds : xr.DataArray
-        Forecast data containing initialization-year and lead-time
-        dimensions.
-    stat : xr.DataArray
-        Fitted statistic, such as mean, standard deviation, minimum,
-        or maximum.
-    Returns
-    -------
-    xr.DataArray
-        Statistic aligned with the temporal structure of ``ds``.
-
-    Raises
-    ------
-    ValueError
-        If required dimensions are missing, lead times are invalid,
-        monthly statistics do not contain 12 entries, or the statistic
-        does not contain all required valid years.
-    """
     time_dim, lead_time_dim = required_sample_dimensions
 
     if time_dim not in ds.dims:

@@ -27,27 +27,6 @@ class GENERATORConfig:
 
 @dataclasses.dataclass
 class CheckpointConfig:
-    """
-    Configuration for loading model checkpoints.
-
-    Parameters
-    ----------
-    load_path : pathlib.Path or str
-        Path to checkpoint file.
-    checkpoint_input_shape : np.ndarray
-        Input shape used during training.
-    checkpoint_output_shape : np.ndarray
-        Output shape used during training.
-    checkpoint_input_var_metadata : dict
-        Metadata describing input variables and preprocessing.
-    checkpoint_output_var_metadata : dict
-        Metadata describing target variables and preprocessing.
-    strict : bool, optional
-        Whether to strictly enforce state_dict matching.
-    freeze_weights : bool, optional
-        Whether to freeze model parameters after loading.
-    """
-
     load_path: Path | str
     checkpoint_input_shape: np.ndarray
     checkpoint_output_shape: np.ndarray
@@ -58,80 +37,30 @@ class CheckpointConfig:
 
 
 class flowABC(nn.Module, abc.ABC):
-    """
-    Abstract base class for flow-based models.
-    """
-
     @abc.abstractmethod
     def forward(self, x, condition=None):
-        """
-        Apply forward transformation.
-
-        Parameters
-        ----------
-        x : torch.Tensor
-        condition : torch.Tensor or None, optional
-
-        Returns
-        -------
-        torch.Tensor
-        """
 
         pass
 
     @abc.abstractmethod
     def inverse(self, z, condition=None):
-        """
-        Apply inverse transformation.
-
-        Parameters
-        ----------
-        z : torch.Tensor
-        condition : torch.Tensor or None, optional
-
-        Returns
-        -------
-        torch.Tensor
-        """
 
         pass
 
 
 class modelConfigABC(abc.ABC):
-    """
-    Abstract base class for model configuration.
-    """
-
     activation: ActivationName
     NUM_INPUT_DIMS: ClassVar[int | None]
     NUM_OUTPUT_DIMS: ClassVar[int | None]
     GENERATOR: GENERATORConfig | None
 
     def __init_subclass__(cls):
-        """
-        Validate subclass configuration.
-
-        Returns
-        -------
-        None
-        """
 
         super().__init_subclass__()
         cls.checkpoint_config = None
 
     @final
     def _add_checkpoint_config(self, checkpoint_config: CheckpointConfig) -> None:
-        """
-        Attach checkpoint configuration.
-
-        Parameters
-        ----------
-        checkpoint_config : CheckpointConfig
-
-        Returns
-        -------
-        None
-        """
 
         self.checkpoint_config = checkpoint_config
 
@@ -191,22 +120,11 @@ class modelConfigABC(abc.ABC):
         added_features_dim: int = None,
         **kwargs,
     ):
-        """
-        Construct model instance.
-
-        Returns
-        -------
-        modelABC
-        """
 
         pass
 
 
 class modelABC(nn.Module, abc.ABC):
-    """
-    Abstract base class for all models.
-    """
-
     generative_modeling: bool
 
     @final
@@ -259,41 +177,16 @@ class modelABC(nn.Module, abc.ABC):
 
     @abc.abstractmethod
     def forward(self):
-        """
-        Perform forward pass.
-
-        Parameters
-        ----------
-        x : torch.Tensor
-
-        Returns
-        -------
-        torch.Tensor
-        """
 
         pass
 
     @final
     def _initialize_weights(self, init_method="trunc_normal"):
-        """
-        Initialize model weights.
-
-        Returns
-        -------
-        None
-        """
 
         self.apply(lambda m: weights_init(m, method=init_method))
 
     @final
     def _get_device(self) -> torch.device:
-        """
-        Get model device.
-
-        Returns
-        -------
-        torch.device
-        """
 
         param = next(self.parameters(), None)
 
@@ -309,21 +202,6 @@ class modelABC(nn.Module, abc.ABC):
 
     @final
     def _load_state_dict(self, checkpoint_config: CheckpointConfig):
-        """
-        Load model weights from checkpoint.
-
-        Parameters
-        ----------
-        checkpoint_config : CheckpointConfig
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        FileNotFoundError
-        """
 
         if not Path(checkpoint_config.load_path).exists():
             raise FileNotFoundError(
@@ -354,21 +232,6 @@ class modelABC(nn.Module, abc.ABC):
 
 @dataclasses.dataclass
 class DeterministicRequest:
-    """
-    Deterministic forward method arguments.
-
-    Parameters
-    ----------
-    input : torch.Tensor
-        Model input.
-    input_mask : torch.Tensor
-        Model input mask.
-    added_features : torch.Tensor or None
-        Additional features.
-    output_sample_size : int, optional
-        Number of output samples for models with GENERATOR.
-    """
-
     input: torch.Tensor
     input_mask: torch.Tensor | None = None
     added_features: torch.Tensor | None = None
@@ -376,18 +239,7 @@ class DeterministicRequest:
 
 
 class deterministicmodelsABC(modelABC):
-    """
-    Base class for deterministic models.
-    """
-
     def __init__(self):
-        """
-        Initialize deterministic model.
-
-        Parameters
-        ----------
-        config : modelConfigABC
-        """
 
         super().__init__()
         self.generative_modeling = False
@@ -397,22 +249,11 @@ class deterministicmodelsABC(modelABC):
         self,
         request: DeterministicRequest,
     ) -> OutputABC:
-        """
-        Generate samples.
-
-        Returns
-        -------
-        torch.Tensor
-        """
 
         pass
 
 
 class cVAEmodelConfigABC(modelConfigABC):
-    """
-    Abstract base class for cVAE model configurations.
-    """
-
     latent_size: int
     condition_dependant_latent: bool
     condition_embedding_size: int
@@ -420,22 +261,6 @@ class cVAEmodelConfigABC(modelConfigABC):
     condemb_to_decoder: bool
 
     def _resolve_flow_settings(self, condition_dependant_flow: bool = False):
-        """
-        Configure flow-related settings.
-
-        Parameters
-        ----------
-        condition_dependant_flow : bool, optional
-
-        Returns
-        -------
-        self
-
-        Raises
-        ------
-        ValueError
-            If configuration is inconsistent.
-        """
 
         self.condition_dependant_flow = condition_dependant_flow
 
@@ -453,29 +278,6 @@ class cVAEmodelConfigABC(modelConfigABC):
 
 @dataclasses.dataclass
 class cVAEForwardRequest:
-    """
-    cVAE forward arguments.
-
-    Parameters
-    ----------
-    target : torch.Tensor
-        Target to reconstruct.
-    condition : torch.Tensor
-        Conditioning input.
-    target_mask : torch.Tensor
-        Mask for target to reconstruct.
-    condition_mask : torch.Tensor
-        Conditioning input mask.
-    added_features : torch.Tensor or None
-        Additional features.
-    sample_size : int, optional
-        Number of latent samples.
-    output_sample_size : int, optional
-        Number of output samples for models with GENERATOR.
-    min_posterior_variance : torch.Tensor or None, optional
-        Minimum variance constraint.
-    """
-
     target: torch.Tensor
     condition: torch.Tensor
     target_mask: torch.Tensor | None = None
@@ -488,33 +290,6 @@ class cVAEForwardRequest:
 
 @dataclasses.dataclass
 class cVAEPredictRequest:
-    """
-    cVAE predict arguments.
-
-    Parameters
-    ----------
-    condition : torch.Tensor
-        Conditioning input.
-    condition_mask : torch.Tensor
-        Conditioning input mask.
-    target : torch.Tensor
-        Target to reconstruct.
-    target_mask : torch.Tensor
-        Mask for target to reconstruct.
-    added_features : torch.Tensor or None
-        Additional features.
-    prior_flow : NormalizedFlowModel or None
-        Optional flow-based prior.
-    latent_samples: torch.Tensor or None
-        latent_samples pre-specified by user
-    nstds: int
-        Adjust the spread in prior samples.
-    sample_size : int, optional
-        Number of samples.
-    output_sample_size : int, optional
-        Number of output samples for models with GENERATOR.
-    """
-
     condition: torch.Tensor
     condition_mask: torch.Tensor | None = None
     added_features: torch.Tensor | None = None
@@ -526,18 +301,7 @@ class cVAEPredictRequest:
 
 
 class cVAEmodelsABC(modelABC):
-    """
-    Base class for conditional variational autoencoders.
-    """
-
     def __init__(self):
-        """
-        Initialize cVAE model.
-
-        Parameters
-        ----------
-        config : modelConfigABC
-        """
 
         super().__init__()
         self.generative_modeling = True
@@ -547,13 +311,6 @@ class cVAEmodelsABC(modelABC):
         self,
         request: cVAEForwardRequest,
     ) -> OutputABC:
-        """
-        Generate samples.
-
-        Returns
-        -------
-        torch.Tensor
-        """
 
         pass
 
@@ -562,92 +319,32 @@ class cVAEmodelsABC(modelABC):
         self,
         request: cVAEPredictRequest,
     ) -> OutputABC:
-        """
-        Generate samples.
-
-        Returns
-        -------
-        torch.Tensor
-        """
 
         pass
 
     @abc.abstractmethod
     def _recognition(self) -> tuple[torch.Tensor, ...]:
-        """
-        Encode to latent distribution.
-
-        Returns
-        -------
-        tuple
-        """
 
         pass
 
     @abc.abstractmethod
     def _condition(self) -> tuple[torch.Tensor, ...]:
-        """
-        Compute condition representation.
-
-        Returns
-        -------
-        tuple
-            Tuple of condition tensors.
-        """
 
         pass
 
     @abc.abstractmethod
     def _generate(self) -> torch.Tensor:
-        """
-        Decode latent representation.
-
-        Returns
-        -------
-        torch.Tensor
-        """
 
         pass
 
     @final
     def _sample(self, mu, log_var, sample_size=1, std=1):
-        """
-        Sample latent variables from Gaussian distribution.
-
-        Parameters
-        ----------
-        mu : torch.Tensor
-        log_var : torch.Tensor
-        sample_size : int, optional
-        std : float, optional
-
-        Returns
-        -------
-        torch.Tensor
-            Sampled latent variables.
-        """
 
         var = torch.exp(log_var) + 1e-4
         return _sample(mu, var, sample_size, std)
 
 
 def weights_init(m, method: InitMethod = "xavier"):
-    """
-    Initialize layer weights.
-
-    Parameters
-    ----------
-    m : torch.nn.Module
-    method : {"xavier", "trunc_normal"}, optional
-
-    Returns
-    -------
-    None
-
-    Raises
-    ------
-    NotImplementedError
-    """
 
     if not isinstance(m, (nn.Linear, nn.Conv1d, nn.Conv2d, nn.Conv3d)):
         return

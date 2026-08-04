@@ -253,22 +253,6 @@ class Writer:
             self.distributed.barrier()
 
     def log_root(self, level: int, msg: str, *args):
-        """
-        Log message from root process.
-
-        Parameters
-        ----------
-        level : int
-            Logging level.
-        msg : str
-            Message.
-        *args
-            Formatting arguments.
-
-        Returns
-        -------
-        None
-        """
 
         if self.is_on_root:
             if self.logger is not None:
@@ -362,7 +346,6 @@ def aggregate_predictions(
                 if "year" in ds.dims:
                     ds_year_part = ds.sel(year=slice(year, year))
                 else:
-                    # Handles cases where year is an auxiliary coordinate.
                     ds_year_part = ds.where(
                         ds["year"] == year,
                         drop=True,

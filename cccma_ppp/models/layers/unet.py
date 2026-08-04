@@ -96,8 +96,6 @@ def build_conv_block(
 
 
 class DownBlock(nn.Module):
-    """Feature transformation followed by spatial downsampling."""
-
     def __init__(
         self,
         in_channels: int,
@@ -160,8 +158,6 @@ class DownBlock(nn.Module):
 
 
 class UpBlock(nn.Module):
-    """Upsample, concatenate with a skip feature, and transform."""
-
     def __init__(
         self,
         input_channels: int,
@@ -295,8 +291,6 @@ class UpBlock(nn.Module):
 
 
 class UNetOutput(nn.Module):
-    """Final channel projection and optional output activation."""
-
     def __init__(
         self,
         in_channels: int,

@@ -93,9 +93,6 @@ class InferenceConfig:
         RuntimeContext.INPUT_VAR_METADATA = self.inference_loader.input_var_metadata
 
     def prepare_directory(self, distributed: Distributed):
-        """
-        Create output (sub)directories.
-        """
 
         self._prepare_runtime_variables()
 
@@ -105,13 +102,6 @@ class InferenceConfig:
         distributed.barrier()
 
     def set_random_seed(self, rank: int):
-        """
-        Apply configured random seed.
-
-        Returns
-        -------
-        None
-        """
 
         if self.seed is not None:
             set_seed(self.seed + rank)
@@ -141,7 +131,7 @@ class InferenceConfig:
         if not path.exists():
             raise FileNotFoundError(f"Checkpoint not found: {path}")
 
-        checkpoint = torch.load(path, map_location="cpu", weights_only=False)  ### ERROR
+        checkpoint = torch.load(path, map_location="cpu", weights_only=False)
 
         required_keys = {
             "input_shape",
@@ -189,7 +179,6 @@ class InferenceConfig:
 
 
 def prepare_config(path: Path | str) -> dict:
-    """Get config and update with possible dotlist override."""
     with open(path) as f:
         data = yaml.safe_load(f)
     return data
@@ -217,9 +206,6 @@ def build_writer(
 
     module = config.load_module(inference_loader)
     module = module.to(distributed.device)
-
-    # if distributed.distributed:
-    #     module = torch.nn.parallel.DistributedDataParallel(module, device_ids=[distributed.local_rank], output_device=distributed.local_rank, find_unused_parameters=False)
 
     log("Loading postprocessor ...")
     post_processor = PreprocessingPipeline().load_from_memory(

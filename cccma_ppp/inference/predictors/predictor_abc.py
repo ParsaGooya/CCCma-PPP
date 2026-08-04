@@ -46,14 +46,6 @@ class PredictorABC(abc.ABC):
     @final
     @property
     def raw_module(self):
-        """
-        Access underlying module (unwrap DDP if needed).
-
-        Returns
-        -------
-        moduleABC
-            Raw model instance.
-        """
 
         if isinstance(self.module, torch.nn.parallel.DistributedDataParallel):
             return self.module.module
@@ -117,10 +109,8 @@ class PredictorABC(abc.ABC):
         if std <= 0:
             raise ValueError(f"std must be positive, got {std}.")
 
-        # Widen/narrow spread. Scaling std by k means covariance scales by k**2.
         cov = cov * (std**2)
 
-        # Numerical stability for nearly-singular covariance matrices.
         jitter = 1e-6
         eye = torch.eye(cov.shape[-1], device=self.device, dtype=cov.dtype)
 

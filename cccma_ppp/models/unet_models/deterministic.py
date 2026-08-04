@@ -51,15 +51,6 @@ from cccma_ppp.models.unet_models.utils import _unet_config_checks, _repeat_tens
 @deterministicModelSelector.register("unet")
 @dataclasses.dataclass
 class UNetConfig(modelConfigABC):
-    """
-    Configuration for a flexible deterministic UNet supporting Generator for decoder.
-
-    The number of downsampling stages is determined by ``len(channels)``.
-    For example, ``channels=[16, 32, 64, 128, 256]`` reproduces the
-    encoder widths of the former fixed-depth UNet, with a separate
-    bottleneck configured through ``bottleneck_dim``.
-    """
-
     channels: list[int]
     bottleneck_dim: int | None = None
     block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig = (
@@ -144,10 +135,6 @@ class UNet(deterministicmodelsABC):
                     "needs output_block_hidden_channels to process output after "
                     "interpolation."
                 )
-            #     "This UNet implementation preserves spatial resolution. "
-            #     f"Input spatial shape {input_shape[-2:]} does not match "
-            #     f"output spatial shape {output_shape[-2:]}."
-            # )
 
         min_spatial_size = int(min(input_shape[-2:]))
 

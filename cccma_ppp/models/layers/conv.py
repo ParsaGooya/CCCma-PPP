@@ -29,16 +29,12 @@ from cccma_ppp.models.layers.utils import _noise_injection, _expand_mask
 
 @dataclasses.dataclass
 class TensorMask:
-    """Tensor and optional validity mask propagated through the conv models."""
-
     tensor: torch.Tensor
     mask: torch.Tensor | None = None
 
 
 @dataclasses.dataclass
 class LatentVector:
-    """mu and log_var tensors for cVAE."""
-
     mu: torch.Tensor
     log_var: torch.Tensor | None
 
@@ -60,8 +56,6 @@ class ConvBlockConfigABC(abc.ABC):
 
 @dataclasses.dataclass
 class ConvBlockConfig(ConvBlockConfigABC):
-    """Configuration for a conventional repeated-convolution block."""
-
     name: Literal["standard_conv"]
     num_convolutions: int = 2
     kernel_size: int = 3
@@ -83,8 +77,6 @@ class ConvBlockConfig(ConvBlockConfigABC):
 
 @dataclasses.dataclass
 class PartialConvBlockConfig(ConvBlockConfigABC):
-    """Configuration for a repeated partial-convolution block."""
-
     name: Literal["partial_conv"]
     num_convolutions: int = 2
     kernel_size: int = 3
@@ -109,8 +101,6 @@ class PartialConvBlockConfig(ConvBlockConfigABC):
 
 @dataclasses.dataclass
 class ConvNeXtBlockConfig(ConvBlockConfigABC):
-    """Configuration for a repeated ConvNeXt-style residual block."""
-
     name: Literal["convnext"]
     num_blocks: int = 2
     kernel_size: int = 7
@@ -182,8 +172,6 @@ class ConvSingle(nn.Module):
 
 
 class PartialConvSingle(nn.Module):
-    """One PartialConv2d + normalization + activation stage."""
-
     def __init__(
         self,
         in_channels: int,
@@ -244,8 +232,6 @@ class PartialConvSingle(nn.Module):
 
 
 class ConvNeXtSingle(nn.Module):
-    """A compact NCHW ConvNeXt-style block."""
-
     def __init__(
         self,
         channels: int,
@@ -381,8 +367,6 @@ class ConvBlock(nn.Module):
 
 
 class PartialConvBlock(nn.Module):
-    """Repeated PartialConv2d block that updates the validity mask."""
-
     def __init__(
         self,
         in_channels: int,
@@ -419,8 +403,6 @@ class PartialConvBlock(nn.Module):
 
 
 class ConvNeXtBlock(nn.Module):
-    """Channel projection followed by one or more ConvNeXt blocks."""
-
     def __init__(
         self,
         in_channels: int,
@@ -526,8 +508,6 @@ class LatentBlock(nn.Module):
 
 
 class MaskPool2d(nn.Module):
-    """Pool masks according to configurable validity semantics."""
-
     def __init__(
         self,
         method: MaskPoolingMethod = "any",

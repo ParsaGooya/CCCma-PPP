@@ -56,15 +56,6 @@ from cccma_ppp.models.layers.utils import _get_normal
 @cVAEModelSelector.register("unet")
 @dataclasses.dataclass
 class cVAEUNetConfig(cVAEmodelConfigABC):
-    """
-    Configuration for a flexible cVAE UNet.
-
-    The number of downsampling stages is determined by ``len(channels)``.
-    For example, ``channels=[16, 32, 64, 128, 256]`` reproduces the
-    encoder widths of the former fixed-depth UNet, with a separate
-    bottleneck configured through ``bottleneck_dim``.
-    """
-
     channels: list[int]
     latent_size: int
     condition_embedding_channels: list | None = None
@@ -353,20 +344,6 @@ class cVAEUNet(cVAEmodelsABC):
         self,
         request: cVAEPredictRequest,
     ) -> cVAEOutput:
-        """
-        Generate samples from learned prior.
-
-        Parameters
-        ----------
-        request
-            cVAE predict arguments specified
-            by cVAEPredictRequest.
-
-        Returns
-        -------
-        cVAEOutput
-            Generated samples and conditioning outputs.
-        """
 
         condition = request.condition
         condition_mask = request.condition_mask
@@ -405,8 +382,8 @@ class cVAEUNet(cVAEmodelsABC):
 
                 if prior_flow.condition_size is not None:
                     cond = (
-                        cond_mu.unsqueeze(0)  # [1, B, C]
-                        .expand(sample_size, -1, -1)  # [S, B, C]
+                        cond_mu.unsqueeze(0)
+                        .expand(sample_size, -1, -1)
                         .reshape(sample_size * batch_size, -1)
                     )
 
@@ -677,11 +654,6 @@ class Generation(nn.Module):
             strict=True,
         ):
             input = up_block(input, skip=None, resize_shape=resize_shape)
-
-        # output_tensor = _resize_tensor(
-        #     input.tensor,
-        #     self.resize_shapes[-1],
-        # )
 
         output = self.output(input.tensor)
 
