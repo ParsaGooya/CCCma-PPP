@@ -30,7 +30,6 @@ from cccma_ppp.models.layers.generic import (
 from cccma_ppp.models.layers.utils import (
     _broadcast_mask,
     _resize_tensor,
-    _resize_mask,
 )
 
 from cccma_ppp.models.layers.unet import (
@@ -52,20 +51,14 @@ from cccma_ppp.models.layers.conv import (
 from cccma_ppp.models.unet_models.utils import _unet_config_checks, _repeat_tensor_mask
 
 
+@dataclasses.dataclass
 class UNetSelector(deterministicModelSelector):
+    type: str = field(
+        init=False,
+        default="UNet",
+    )
 
-    def __init__(self,
-            config: Mapping[str, Any] | None = None,
-            load_dir: Path | str | None = None,
-            freeze_weights: bool = False,
-            share_output_block: bool = False):
-
-        super().__init__(
-            type = 'UNet',
-            config=config,
-            load_dir=load_dir,
-            freeze_weights=freeze_weights
-                         )
+    share_output_block: bool = True
 
 
 
@@ -143,7 +136,7 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
                 )  
 
             if self.share_output_block:
-                if any[(
+                if any([(
                     self.output_activation
                     != self.deterministic_guess_config.output_activation
                     ),
@@ -151,7 +144,7 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
                     self.output_block_hidden_channels
                     != self.deterministic_guess_config.output_block_hidden_channels
                     ),
-                ]:
+                ]):
                     raise ValueError(
                         "With share_output_block being True, the cVAE and deterministic " \
                         "guess must have the same output_blovk activation and hidden_channels."
@@ -343,8 +336,6 @@ class cVAEUNet(cVAEmodelsABC):
 
             if x_mask is not None:
                 if condition_mask is not None:
-                    condition_mask = _resize_mask(condition_mask, x_mask.shape[-2:])
-
                     condition_mask = _broadcast_mask(condition_mask, condition)
                 else:
                     condition_mask = torch.ones_like(condition)
