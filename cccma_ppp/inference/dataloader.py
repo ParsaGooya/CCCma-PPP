@@ -225,7 +225,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         if self.train_dataset_config is None:
             raise RuntimeError(
                 "output variables metadata cannot be read unless train dataloader "
-                "is available. Hint: run setup_distributed(TrainDatasetConfig, ...)."
+                "is available. Hint: run read_configs_from_train(TrainDatasetConfig, ...)."
             )
         return self.train_dataset_config.ds_operator.get_target_var_metadata()
 
