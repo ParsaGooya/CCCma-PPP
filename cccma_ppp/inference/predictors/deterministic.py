@@ -93,8 +93,13 @@ class DetermninisticPredictor(PredictorABC):
                 stats = self._update_train_stats(output, batch)
                 return stats
 
+            if self.num_output_covariance_sampling > 0:
+                num_output_sampling = 0
+            else: 
+                num_output_sampling = self.num_output_sampling
+
             output = self.raw_module.predict(
-                data=batch, output_sample_size=self.num_output_sampling
+                data=batch, output_sample_size=num_output_sampling
             )
 
             if self.num_output_covariance_sampling > 0:

@@ -138,12 +138,17 @@ class cVAEPredictor(PredictorABC):
             if self.infer_latent_samples_from_training:
                 latent_samples = self._get_latent_samples_based_on_train(data=batch)
 
+            if self.num_output_covariance_sampling > 0:
+                num_output_sampling = 0
+            else: 
+                num_output_sampling = self.num_output_sampling
+
             output = self.raw_module.predict(
                 data=batch,
                 latent_sample_size=self.num_latent_samples,
                 nstds=self.nstds,
                 latent_samples=latent_samples,
-                output_sample_size=self.num_output_sampling,
+                output_sample_size=num_output_sampling,
             )
 
             if self.num_output_covariance_sampling > 0:
