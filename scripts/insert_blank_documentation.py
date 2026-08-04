@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import ast
 import difflib
+import fnmatch
 import hashlib
 import json
 import shutil
@@ -14,7 +15,11 @@ from typing import Any, Iterable, Sequence
 
 
 DEFAULT_ROOT = Path("cccma_ppp")
+
 DEFAULT_REPORT = Path("output/documentation_audit_results/docstring_insertions.json")
+
+DEFAULT_CONFIG = Path("docstring_config.json")
+
 
 IGNORED_DIRECTORIES = {
     ".git",
@@ -33,12 +38,15 @@ IGNORED_DIRECTORIES = {
     "venv",
 }
 
-IGNORED_FILES: set[str] = set()
+
+BUILTIN_IGNORED_FILES: set[str] = set()
+
 
 OPTIONAL_UNDOCUMENTED_METHODS = {
     "__repr__",
     "__str__",
 }
+
 
 IGNORED_CLASS_ATTRIBUTES = {
     "__annotations__",
@@ -47,11 +55,13 @@ IGNORED_CLASS_ATTRIBUTES = {
     "__slots__",
 }
 
+
 FUNCTION_SUMMARY = "Document this function."
 CLASS_SUMMARY = "Document this class."
 PLACEHOLDER_DESCRIPTION = "Description not yet provided."
 
 INDENT_WIDTH = 4
+
 
 FunctionNode = ast.FunctionDef | ast.AsyncFunctionDef
 DocumentableNode = ast.ClassDef | FunctionNode
@@ -59,7 +69,8 @@ DocumentableNode = ast.ClassDef | FunctionNode
 
 @dataclass(frozen=True)
 class SourceEdit:
-    offset: int
+    start: int
+    end: int
     text: str
     qualified_name: str
     line: int
@@ -93,11 +104,20 @@ class SkippedSymbol:
 class RunReport:
     root: str
     mode: str
+    configuration: str
     files_scanned: int = 0
     files_changed: int = 0
     inserted: list[PlannedInsertion] = field(default_factory=list)
     skipped: list[SkippedSymbol] = field(default_factory=list)
     errors: list[dict[str, Any]] = field(default_factory=list)
+
+
+@dataclass
+class DocstringConfig:
+    ignored_files: set[str] = field(default_factory=set)
+    ignored_file_patterns: list[str] = field(default_factory=list)
+    ignored_symbols: dict[str, set[str]] = field(default_factory=dict)
+    ignored_symbol_patterns: dict[str, list[str]] = field(default_factory=dict)
 
 
 class ScopedFlowVisitor(ast.NodeVisitor):
@@ -147,15 +167,177 @@ class ScopedFlowVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_Call(self, node: ast.Call) -> None:
-        if dotted_name(node.func) in {"warnings.warn", "warn"}:
+        if dotted_name(node.func) in {
+            "warnings.warn",
+            "warn",
+        }:
             self.warning_calls.append(node)
 
         self.generic_visit(node)
 
 
-def is_ignored(path: Path) -> bool:
+def normalize_path(path: str | Path) -> str:
 
-    if path.name in IGNORED_FILES:
+    return Path(path).as_posix()
+
+
+def read_string_list(
+    payload: dict[str, Any],
+    key: str,
+    config_path: Path,
+) -> list:
+
+    values = payload.get(key, [])
+
+    if not isinstance(values, list):
+        raise ValueError(f"{key!r} must be a JSON list in {config_path}.")
+
+    if not all(isinstance(value, str) for value in values):
+        raise ValueError(f"Every value in {key!r} must be a string.")
+
+    return values
+
+
+def read_symbol_mapping(
+    payload: dict[str, Any],
+    key: str,
+    config_path: Path,
+) -> dict[str, list[str]]:
+
+    mapping = payload.get(key, {})
+
+    if not isinstance(mapping, dict):
+        raise ValueError(f"{key!r} must be a JSON object in {config_path}.")
+
+    result: dict[str, list[str]] = {}
+
+    for file_name, symbols in mapping.items():
+        if not isinstance(file_name, str):
+            raise ValueError(f"Every key in {key!r} must be a string.")
+
+        if not isinstance(symbols, list):
+            raise ValueError(f"{key!r}[{file_name!r}] must be a JSON list.")
+
+        if not all(isinstance(symbol, str) for symbol in symbols):
+            raise ValueError(f"Every value in {key!r}[{file_name!r}] must be a string.")
+
+        normalized_file = "*" if file_name == "*" else normalize_path(file_name)
+
+        result[normalized_file] = symbols
+
+    return result
+
+
+def load_docstring_config(path: Path) -> DocstringConfig:
+
+    if not path.exists():
+        return DocstringConfig()
+
+    with path.open(encoding="utf-8") as stream:
+        payload = json.load(stream)
+
+    if not isinstance(payload, dict):
+        raise ValueError(f"Configuration must contain a JSON object: {path}")
+
+    ignored_symbols = read_symbol_mapping(
+        payload,
+        "ignored_symbols",
+        path,
+    )
+
+    ignored_symbol_patterns = read_symbol_mapping(
+        payload,
+        "ignored_symbol_patterns",
+        path,
+    )
+
+    return DocstringConfig(
+        ignored_files={
+            normalize_path(value)
+            for value in read_string_list(
+                payload,
+                "ignored_files",
+                path,
+            )
+        },
+        ignored_file_patterns=[
+            normalize_path(value)
+            for value in read_string_list(
+                payload,
+                "ignored_file_patterns",
+                path,
+            )
+        ],
+        ignored_symbols={
+            file_name: set(symbols) for file_name, symbols in ignored_symbols.items()
+        },
+        ignored_symbol_patterns={
+            file_name: list(patterns)
+            for file_name, patterns in ignored_symbol_patterns.items()
+        },
+    )
+
+
+def ignored_file_reason(
+    path: Path,
+    config: DocstringConfig,
+) -> str | None:
+
+    normalized = normalize_path(path)
+
+    if normalized in config.ignored_files:
+        return "listed in ignored_files"
+
+    for pattern in config.ignored_file_patterns:
+        if fnmatch.fnmatchcase(normalized, pattern):
+            return f"matches ignored file pattern {pattern!r}"
+
+    return None
+
+
+def ignored_symbol_reason(
+    path: Path,
+    qualified_symbol_name: str,
+    config: DocstringConfig,
+) -> str | None:
+
+    normalized_file = normalize_path(path)
+
+    explicitly_ignored = {
+        *config.ignored_symbols.get("*", set()),
+        *config.ignored_symbols.get(
+            normalized_file,
+            set(),
+        ),
+    }
+
+    if qualified_symbol_name in explicitly_ignored:
+        return "listed in ignored_symbols"
+
+    patterns = [
+        *config.ignored_symbol_patterns.get(
+            "*",
+            [],
+        ),
+        *config.ignored_symbol_patterns.get(
+            normalized_file,
+            [],
+        ),
+    ]
+
+    for pattern in patterns:
+        if fnmatch.fnmatchcase(
+            qualified_symbol_name,
+            pattern,
+        ):
+            return f"matches ignored symbol pattern {pattern!r}"
+
+    return None
+
+
+def is_builtin_ignored(path: Path) -> bool:
+
+    if path.name in BUILTIN_IGNORED_FILES:
         return True
 
     return any(part in IGNORED_DIRECTORIES for part in path.parts)
@@ -164,13 +346,15 @@ def is_ignored(path: Path) -> bool:
 def python_files(root: Path) -> list:
 
     if root.is_file():
-        if root.suffix == ".py" and not is_ignored(root):
+        if root.suffix == ".py" and not is_builtin_ignored(root):
             return [root]
 
         return []
 
     return sorted(
-        path for path in root.rglob("*.py") if path.is_file() and not is_ignored(path)
+        path
+        for path in root.rglob("*.py")
+        if (path.is_file() and not is_builtin_ignored(path))
     )
 
 
@@ -221,7 +405,9 @@ def annotation_text(
         return fallback
 
 
-def has_overload_decorator(node: FunctionNode) -> bool:
+def has_overload_decorator(
+    node: FunctionNode,
+) -> bool:
 
     return any(
         dotted_name(decorator).endswith("overload") for decorator in node.decorator_list
@@ -281,13 +467,14 @@ def function_parameters(
 
     parameters: list[tuple[str, ast.arg]] = []
 
-    positional = [
+    for argument in [
         *node.args.posonlyargs,
         *node.args.args,
-    ]
-
-    for argument in positional:
-        if argument.arg not in {"self", "cls"}:
+    ]:
+        if argument.arg not in {
+            "self",
+            "cls",
+        }:
             parameters.append((argument.arg, argument))
 
     if node.args.vararg is not None:
@@ -332,7 +519,9 @@ def class_initializer(
     return None
 
 
-def is_classvar(annotation: ast.expr | None) -> bool:
+def is_classvar(
+    annotation: ast.expr | None,
+) -> bool:
 
     if annotation is None:
         return False
@@ -350,10 +539,16 @@ def dataclass_parameters(
     parameters: list[tuple[str, str]] = []
 
     for statement in node.body:
-        if not isinstance(statement, ast.AnnAssign):
+        if not isinstance(
+            statement,
+            ast.AnnAssign,
+        ):
             continue
 
-        if not isinstance(statement.target, ast.Name):
+        if not isinstance(
+            statement.target,
+            ast.Name,
+        ):
             continue
 
         if is_classvar(statement.annotation):
@@ -412,10 +607,16 @@ def class_attributes(
     attributes: list[tuple[str, str]] = []
 
     for statement in node.body:
-        if not isinstance(statement, ast.AnnAssign):
+        if not isinstance(
+            statement,
+            ast.AnnAssign,
+        ):
             continue
 
-        if not isinstance(statement.target, ast.Name):
+        if not isinstance(
+            statement.target,
+            ast.Name,
+        ):
             continue
 
         if is_classvar(statement.annotation):
@@ -477,7 +678,13 @@ def yielded_type(
         if container == "Generator":
             slice_node = annotation.slice
 
-            if isinstance(slice_node, ast.Tuple) and slice_node.elts:
+            if (
+                isinstance(
+                    slice_node,
+                    ast.Tuple,
+                )
+                and slice_node.elts
+            ):
                 return annotation_text(slice_node.elts[0])
 
     return annotation_text(annotation)
@@ -657,12 +864,17 @@ def build_docstring(
     return build_function_docstring(node)
 
 
-def symbol_type(node: DocumentableNode) -> str:
+def symbol_type(
+    node: DocumentableNode,
+) -> str:
 
     if isinstance(node, ast.ClassDef):
         return "class"
 
-    if isinstance(node, ast.AsyncFunctionDef):
+    if isinstance(
+        node,
+        ast.AsyncFunctionDef,
+    ):
         return "async function"
 
     return "function"
@@ -673,6 +885,25 @@ def leading_whitespace(line: str) -> str:
     return line[: len(line) - len(line.lstrip())]
 
 
+def node_start_lineno(
+    node: ast.stmt,
+) -> int:
+
+    decorators = getattr(
+        node,
+        "decorator_list",
+        [],
+    )
+
+    if decorators:
+        return min(
+            node.lineno,
+            *(decorator.lineno for decorator in decorators),
+        )
+
+    return node.lineno
+
+
 def body_indent(
     node: DocumentableNode,
     source_lines: Sequence[str],
@@ -680,7 +911,10 @@ def body_indent(
 
     if node.body:
         first_statement = node.body[0]
-        line = source_lines[first_statement.lineno - 1]
+        first_line_number = node_start_lineno(first_statement)
+
+        line = source_lines[first_line_number - 1]
+
         detected = leading_whitespace(line)
 
         if len(detected.expandtabs()) > node.col_offset:
@@ -697,20 +931,25 @@ def render_docstring(
     newline: str,
 ) -> str:
 
+    if not doc:
+        raise ValueError("Cannot render an empty docstring.")
+
     if '"""' in doc:
         raise ValueError("Generated documentation unexpectedly contains triple quotes.")
 
     lines = doc.splitlines()
 
-    rendered = [f'{indent}"""{lines[0]}']
+    rendered = [
+        f'{indent}"""',
+    ]
 
-    for line in lines[1:]:
+    for line in lines:
         if line:
             rendered.append(f"{indent}{line}")
         else:
             rendered.append(indent)
 
-    rendered[-1] += '"""'
+    rendered.append(f'{indent}"""')
 
     return newline.join(rendered) + newline
 
@@ -727,17 +966,32 @@ def line_start_offsets(
     return offsets
 
 
-def insertion_offset(
+def docstring_insertion_range(
     node: DocumentableNode,
+    source_lines: Sequence[str],
     offsets: Sequence[int],
-) -> int:
+) -> tuple[int, int]:
 
     if not node.body:
         raise ValueError(f"Symbol {node.name!r} has no body.")
 
     first_statement = node.body[0]
 
-    return offsets[first_statement.lineno - 1]
+    first_statement_line = node_start_lineno(first_statement)
+
+    first_statement_index = first_statement_line - 1
+
+    insertion_index = first_statement_index
+
+    while (
+        insertion_index > node.lineno and not source_lines[insertion_index - 1].strip()
+    ):
+        insertion_index -= 1
+
+    start = offsets[insertion_index]
+    end = offsets[first_statement_index]
+
+    return start, end
 
 
 def iter_symbols(
@@ -785,13 +1039,24 @@ def apply_edits(
 ) -> str:
 
     updated = source
+    previous_start = len(source) + 1
 
     for edit in sorted(
         edits,
-        key=lambda item: item.offset,
+        key=lambda item: (
+            item.start,
+            item.end,
+        ),
         reverse=True,
     ):
-        updated = updated[: edit.offset] + edit.text + updated[edit.offset :]
+        if edit.end > previous_start:
+            raise ValueError(
+                f"Overlapping source edits detected for {edit.qualified_name!r}."
+            )
+
+        updated = updated[: edit.start] + edit.text + updated[edit.end :]
+
+        previous_start = edit.start
 
     return updated
 
@@ -925,6 +1190,7 @@ def plan_file(
     tree: ast.Module,
     *,
     include_optional_methods: bool,
+    config: DocstringConfig,
 ) -> tuple[
     str,
     list[PlannedInsertion],
@@ -950,19 +1216,37 @@ def plan_file(
         if existing_docstring is not None:
             continue
 
-        reason = should_skip(
-            node,
-            include_optional_methods=(include_optional_methods),
+        ignore_reason = ignored_symbol_reason(
+            path,
+            qname,
+            config,
         )
 
-        if reason is not None:
+        if ignore_reason is not None:
             skipped.append(
                 SkippedSymbol(
                     file=str(path),
                     qualified_name=qname,
                     line=node.lineno,
                     symbol_type=symbol_type(node),
-                    reason=reason,
+                    reason=ignore_reason,
+                )
+            )
+            continue
+
+        skip_reason = should_skip(
+            node,
+            include_optional_methods=(include_optional_methods),
+        )
+
+        if skip_reason is not None:
+            skipped.append(
+                SkippedSymbol(
+                    file=str(path),
+                    qualified_name=qname,
+                    line=node.lineno,
+                    symbol_type=symbol_type(node),
+                    reason=skip_reason,
                 )
             )
             continue
@@ -974,12 +1258,16 @@ def plan_file(
             source_lines,
         )
 
+        edit_start, edit_end = docstring_insertion_range(
+            node,
+            source_lines,
+            offsets,
+        )
+
         edits.append(
             SourceEdit(
-                offset=insertion_offset(
-                    node,
-                    offsets,
-                ),
+                start=edit_start,
+                end=edit_end,
                 text=render_docstring(
                     doc,
                     indent,
@@ -1046,15 +1334,15 @@ def plan_file(
             insertion.qualified_name,
         )
 
-        node = updated_symbols.get(key)
+        updated_node = updated_symbols.get(key)
 
-        if node is None:
+        if updated_node is None:
             raise RuntimeError(
                 f"Generated symbol disappeared: {insertion.qualified_name}"
             )
 
         generated_docstring = ast.get_docstring(
-            node,
+            updated_node,
             clean=False,
         )
 
@@ -1073,6 +1361,7 @@ def process_file(
     backup: bool,
     show_diff: bool,
     include_optional_methods: bool,
+    config: DocstringConfig,
 ) -> tuple[
     list[PlannedInsertion],
     list[SkippedSymbol],
@@ -1086,6 +1375,7 @@ def process_file(
         source,
         tree,
         include_optional_methods=(include_optional_methods),
+        config=config,
     )
 
     changed = updated != source
@@ -1152,10 +1442,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(
         description=(
-            "Insert NumPy-style docstring scaffolds "
-            "into undocumented classes, functions, "
-            "and methods. Existing docstrings are "
-            "never modified."
+            "Insert NumPy-style docstrings into "
+            "undocumented classes, functions, and "
+            "methods. Existing docstrings are never "
+            "modified."
         )
     )
 
@@ -1192,6 +1482,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "--config",
+        type=Path,
+        default=DEFAULT_CONFIG,
+        help=("JSON configuration containing ignored files and symbols."),
+    )
+
+    parser.add_argument(
         "--report",
         type=Path,
         default=DEFAULT_REPORT,
@@ -1215,6 +1512,20 @@ def main(
         )
         return 2
 
+    try:
+        config = load_docstring_config(args.config)
+    except (
+        OSError,
+        UnicodeError,
+        json.JSONDecodeError,
+        ValueError,
+    ) as exc:
+        print(
+            f"ERROR: Could not load docstring configuration: {exc}",
+            file=sys.stderr,
+        )
+        return 2
+
     files = python_files(root)
 
     if not files:
@@ -1227,10 +1538,30 @@ def main(
     report = RunReport(
         root=str(root),
         mode=("apply" if args.apply else "dry-run"),
+        configuration=str(args.config),
         files_scanned=len(files),
     )
 
     for path in files:
+        file_ignore_reason = ignored_file_reason(
+            path,
+            config,
+        )
+
+        if file_ignore_reason is not None:
+            report.skipped.append(
+                SkippedSymbol(
+                    file=str(path),
+                    qualified_name="<file>",
+                    line=1,
+                    symbol_type="file",
+                    reason=file_ignore_reason,
+                )
+            )
+
+            print(f"SKIPPED FILE: {path}: {file_ignore_reason}")
+            continue
+
         try:
             inserted, skipped, changed = process_file(
                 path,
@@ -1238,6 +1569,7 @@ def main(
                 backup=not args.no_backup,
                 show_diff=not args.no_diff,
                 include_optional_methods=(args.include_optional_methods),
+                config=config,
             )
 
             report.inserted.extend(inserted)
@@ -1290,6 +1622,7 @@ def main(
     print("=" * 72)
     print(f"Mode:                 {report.mode}")
     print(f"Root:                 {report.root}")
+    print(f"Configuration:        {report.configuration}")
     print(f"Files scanned:        {report.files_scanned}")
     print(f"Files changed:        {report.files_changed}")
     print(f"{action + ':':<22}{len(report.inserted)}")
@@ -1303,10 +1636,7 @@ def main(
         print()
         print("Dry run only. Review the diff, then re-run with --apply.")
 
-    if report.errors:
-        return 1
-
-    return 0
+    return 1 if report.errors else 0
 
 
 if __name__ == "__main__":

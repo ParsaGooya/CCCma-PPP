@@ -18,3 +18,4 @@ cccma_ppp/inference/registry_imports.py
 cfg._using_model_data_as_condition
 cfg.ds_operator
 cccma_ppp/_internal/*
+*.py.bak
