@@ -170,6 +170,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     ):
 
         self._check_config()
+        self.distributed = distributed
         self.rank = distributed.rank
         self.world_size = distributed.world_size
 

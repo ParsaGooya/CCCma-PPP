@@ -213,6 +213,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         -------
         None
         """
+        self.distributed = distributed
         self.rank = distributed.rank
         self.world_size = distributed.world_size
 
@@ -364,7 +365,10 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         xr.DataArray
             Weights for loss computation.
         """
-        return self.dataset_config.ds_operator.get_weights(config)
+        save = self.distributed.is_root()
+        weights = self.dataset_config.ds_operator.get_weights(config, save=save)
+        self.distributed.barrier()
+        return weights
 
     @property
     def input_var_metadata(self):
