@@ -138,54 +138,6 @@ class modelConfigABC(abc.ABC):
         self.checkpoint_config = checkpoint_config
 
     @final
-    def _validate_checkpoint_compatibility(
-        self,
-        *,
-        input_shape: np.ndarray | tuple,
-        output_shape: np.ndarray | tuple,
-    ) -> None:
-        checkpoint = self.config.checkpoint_config
-
-        if checkpoint is None:
-            return
-
-        if not np.array_equal(
-            input_shape,
-            checkpoint.checkpoint_input_shape,
-        ):
-            raise RuntimeError(
-                f"Requested input shape {input_shape} does not match "
-                f"checkpoint input shape {checkpoint.checkpoint_input_shape}."
-            )
-
-        if not np.array_equal(
-            output_shape,
-            checkpoint.checkpoint_output_shape,
-        ):
-            raise RuntimeError(
-                f"Requested output shape {output_shape} does not match "
-                f"checkpoint output shape {checkpoint.checkpoint_output_shape}."
-            )
-
-        if (
-            RuntimeContext.INPUT_VAR_METADATA
-            != checkpoint.checkpoint_input_var_metadata
-        ):
-            raise RuntimeError(
-                "Checkpoint input metadata is incompatible with the "
-                "current input variables or preprocessing pipeline."
-            )
-
-        if (
-            RuntimeContext.TARGET_VAR_METADATA
-            != checkpoint.checkpoint_output_var_metadata
-        ):
-            raise RuntimeError(
-                "Checkpoint target metadata is incompatible with the "
-                "current target variables or preprocessing pipeline."
-            )
-
-    @final
     @property
     def NUM_INPUT_DIMS(self) -> int:
         """
