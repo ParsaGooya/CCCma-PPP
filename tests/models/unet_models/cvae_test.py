@@ -314,13 +314,11 @@ def stub_model_components(monkeypatch):
     )
 
 
-@pytest.mark.pruned
 def test_config_dimension_constants():
     assert cVAEUNetConfig.NUM_INPUT_DIMS == 3
     assert cVAEUNetConfig.NUM_OUTPUT_DIMS == 3
 
 
-@pytest.mark.pruned
 def test_config_post_init_calls_validation(
     monkeypatch,
 ):
@@ -345,7 +343,6 @@ def test_config_post_init_calls_validation(
     validation.assert_called_once_with(config)
 
 
-@pytest.mark.pruned
 def test_config_post_init_propagates_validation_error(
     monkeypatch,
 ):
@@ -415,7 +412,6 @@ def test_config_post_init_expands_integer_kernel(
     assert config.transpose_kernel_sizes == expected
 
 
-@pytest.mark.pruned
 def test_config_post_init_preserves_kernel_list(
     monkeypatch,
 ):
@@ -472,7 +468,6 @@ def test_config_post_init_defaults_condition_channels(
     assert config.condition_embedding_channels == [4, 8, 16]
 
 
-@pytest.mark.pruned
 def test_config_post_init_preserves_condition_channels(
     monkeypatch,
 ):
@@ -522,7 +517,6 @@ def test_config_post_init_defaults_condition_size(
     assert config.condition_embedding_size == 7
 
 
-@pytest.mark.pruned
 def test_config_post_init_preserves_condition_size(
     monkeypatch,
 ):
@@ -548,7 +542,6 @@ def test_config_post_init_preserves_condition_size(
     assert config.condition_embedding_size == 11
 
 
-@pytest.mark.pruned
 def test_config_build_delegates_to_model(
     monkeypatch,
 ):
@@ -582,7 +575,6 @@ def test_config_build_delegates_to_model(
     )
 
 
-@pytest.mark.pruned
 def test_config_build_passes_optional_defaults(
     monkeypatch,
 ):
@@ -670,7 +662,6 @@ def test_model_rejects_nonpositive_spatial_dimension(
         )
 
 
-@pytest.mark.pruned
 def test_model_rejects_depth_larger_than_input():
     config = make_config(
         channels=[
@@ -705,7 +696,6 @@ def test_model_rejects_depth_larger_than_input():
         )
 
 
-@pytest.mark.pruned
 def test_model_defaults_output_shape_to_input(
     stub_model_components,
 ):
@@ -726,7 +716,6 @@ def test_model_defaults_output_shape_to_input(
     )
 
 
-@pytest.mark.pruned
 def test_model_uses_explicit_output_shape(
     stub_model_components,
 ):
@@ -743,7 +732,6 @@ def test_model_uses_explicit_output_shape(
     )
 
 
-@pytest.mark.pruned
 def test_model_defaults_added_features_to_zero(
     stub_model_components,
 ):
@@ -763,7 +751,6 @@ def test_model_defaults_added_features_to_zero(
     assert condition.kwargs["input_channels"] == 2
 
 
-@pytest.mark.pruned
 def test_model_includes_added_feature_channels(
     stub_model_components,
 ):
@@ -783,7 +770,6 @@ def test_model_includes_added_feature_channels(
     assert condition.kwargs["input_channels"] == 5
 
 
-@pytest.mark.pruned
 def test_model_uses_explicit_bottleneck_dimension(
     stub_model_components,
 ):
@@ -810,7 +796,6 @@ def test_model_defaults_bottleneck_dimension(
     assert StubGeneration.instances[0].kwargs["bottleneck_dim"] == 16
 
 
-@pytest.mark.pruned
 def test_model_condition_skips_log_variance_for_independent_latent(
     stub_model_components,
 ):
@@ -825,7 +810,6 @@ def test_model_condition_skips_log_variance_for_independent_latent(
     assert condition.kwargs["get_log_var"] is False
 
 
-@pytest.mark.pruned
 def test_model_condition_skips_log_variance_for_flow(
     stub_model_components,
     monkeypatch,
@@ -859,7 +843,6 @@ def test_model_condition_skips_log_variance_for_flow(
     assert condition.kwargs["get_log_var"] is False
 
 
-@pytest.mark.pruned
 def test_model_condition_embedding_is_added_to_decoder(
     stub_model_components,
 ):
@@ -878,7 +861,6 @@ def test_model_condition_embedding_is_added_to_decoder(
     assert StubGeneration.instances[0].kwargs["latent_size"] == 8
 
 
-@pytest.mark.pruned
 def test_model_initializes_weights_without_checkpoint(
     stub_model_components,
     monkeypatch,
@@ -936,7 +918,6 @@ def test_model_loads_checkpoint_when_configured(
     initializer.assert_not_called()
 
 
-@pytest.mark.pruned
 def test_prepare_input_without_optional_values():
     model = make_bare_model()
 
@@ -956,7 +937,6 @@ def test_prepare_input_without_optional_values():
     assert result.mask is None
 
 
-@pytest.mark.pruned
 def test_prepare_input_broadcasts_input_mask(
     monkeypatch,
 ):
@@ -997,7 +977,6 @@ def test_prepare_input_broadcasts_input_mask(
     assert result.mask is broadcast
 
 
-@pytest.mark.pruned
 def test_prepare_input_resizes_and_concatenates_condition(
     monkeypatch,
 ):
@@ -1123,7 +1102,6 @@ def test_prepare_input_creates_condition_mask_when_missing(
     )
 
 
-@pytest.mark.pruned
 def test_prepare_input_resizes_and_broadcasts_condition_mask(
     monkeypatch,
 ):
@@ -1203,7 +1181,6 @@ def test_prepare_input_resizes_and_broadcasts_condition_mask(
     )
 
 
-@pytest.mark.pruned
 def test_prepare_input_resizes_and_concatenates_features_without_mask(
     monkeypatch,
 ):
@@ -1411,7 +1388,6 @@ def test_prepare_input_combines_condition_and_features(
     )
 
 
-@pytest.mark.pruned
 def test_recognition_helper_returns_mu_and_log_var():
     model = make_bare_model()
 
@@ -1464,7 +1440,6 @@ def test_recognition_helper_returns_mu_and_log_var():
     assert recognition.received == [prepared]
 
 
-@pytest.mark.pruned
 def test_condition_helper_returns_mu_and_log_var():
     model = make_bare_model()
 
@@ -1582,7 +1557,6 @@ def configure_forward_model(
     )
 
 
-@pytest.mark.pruned
 def test_forward_returns_complete_cvae_output():
     setup = configure_forward_model()
 
@@ -1613,7 +1587,6 @@ def test_forward_returns_complete_cvae_output():
     )
 
 
-@pytest.mark.pruned
 def test_forward_passes_request_values():
     setup = configure_forward_model()
 
@@ -1661,7 +1634,6 @@ def test_forward_passes_request_values():
     )
 
 
-@pytest.mark.pruned
 def test_forward_without_minimum_preserves_log_variance():
     setup = configure_forward_model()
 
@@ -1715,7 +1687,6 @@ def test_forward_training_uses_generator_noise_count():
     assert setup.model._generate.call_args.kwargs["num_output_samples"] == 5
 
 
-@pytest.mark.pruned
 def test_forward_evaluation_uses_request_noise_count():
     generator = SimpleNamespace(num_training_noise_samples=5)
 
@@ -1729,7 +1700,6 @@ def test_forward_evaluation_uses_request_noise_count():
     assert setup.model._generate.call_args.kwargs["num_output_samples"] == 9
 
 
-@pytest.mark.pruned
 def test_forward_training_without_generator_uses_request_count():
     setup = configure_forward_model(
         training=True,
@@ -1955,7 +1925,6 @@ def test_predict_rejects_invalid_user_latent_shape(
         )
 
 
-@pytest.mark.pruned
 def test_predict_applies_unconditional_flow(
     monkeypatch,
 ):
@@ -2080,7 +2049,6 @@ def test_predict_applies_conditioned_flow(
     )
 
 
-@pytest.mark.pruned
 def test_predict_skips_flow_for_user_latent_samples():
     setup = configure_predict_model()
 
@@ -2104,7 +2072,6 @@ def test_predict_skips_flow_for_user_latent_samples():
     assert flow.condition is None
 
 
-@pytest.mark.pruned
 def test_predict_passes_condition_request_values():
     setup = configure_predict_model()
 
@@ -2143,7 +2110,6 @@ def test_predict_passes_condition_request_values():
     )
 
 
-@pytest.mark.pruned
 def test_predict_passes_output_sample_count():
     setup = configure_predict_model()
 
@@ -2227,7 +2193,6 @@ def test_generate_appends_condition_embedding():
     )
 
 
-@pytest.mark.pruned
 def test_generate_does_not_append_condition_when_disabled():
     model = make_bare_model(condemb_to_decoder=False)
 
@@ -2267,7 +2232,6 @@ def test_generate_does_not_append_condition_when_disabled():
     )
 
 
-@pytest.mark.pruned
 def test_generate_does_not_append_missing_condition():
     model = make_bare_model(condemb_to_decoder=True)
 
@@ -2297,7 +2261,6 @@ def test_generate_does_not_append_missing_condition():
     )
 
 
-@pytest.mark.pruned
 def test_generate_restores_sample_and_batch_dimensions():
     model = make_bare_model(condemb_to_decoder=False)
 
@@ -2360,7 +2323,6 @@ def test_generate_restores_output_noise_dimension():
     )
 
 
-@pytest.mark.pruned
 def test_generate_passes_output_sample_count_to_generation():
     model = make_bare_model(condemb_to_decoder=False)
 
@@ -2408,7 +2370,6 @@ def make_recognition_config(
     )
 
 
-@pytest.mark.pruned
 def test_recognition_builds_expected_down_blocks(
     monkeypatch,
 ):
@@ -2613,7 +2574,6 @@ def test_recognition_bottleneck_arguments(
     )
 
 
-@pytest.mark.pruned
 def test_recognition_with_single_channel_level(
     monkeypatch,
 ):
@@ -2719,7 +2679,6 @@ def test_recognition_forward_applies_all_modules():
     assert bottleneck.received == [value]
 
 
-@pytest.mark.pruned
 def test_recognition_forward_without_down_blocks():
     recognition = object.__new__(Recognition)
     nn.Module.__init__(recognition)
@@ -2831,7 +2790,6 @@ def test_generation_builds_linear_mapping(
     ]
 
 
-@pytest.mark.pruned
 def test_generation_builds_up_blocks_in_sequence(
     monkeypatch,
 ):
@@ -2907,7 +2865,6 @@ def test_generation_builds_up_blocks_in_sequence(
     assert second["transpose_kernel_size"] == 5
 
 
-@pytest.mark.pruned
 def test_generation_builds_output_layer(
     monkeypatch,
 ):
@@ -3022,7 +2979,6 @@ def test_generation_single_block_noise_configuration(
     assert kwargs["inject_noise"] is expected_up_noise
 
 
-@pytest.mark.pruned
 def test_generation_medium_noise_only_on_last_block(
     monkeypatch,
 ):
@@ -3103,7 +3059,6 @@ def test_generation_medium_noise_only_on_last_block(
     ]
 
 
-@pytest.mark.pruned
 def test_generation_full_noise_on_all_blocks(
     monkeypatch,
 ):
@@ -3174,7 +3129,6 @@ def test_generation_full_noise_on_all_blocks(
     ]
 
 
-@pytest.mark.pruned
 def test_generation_low_noise_uses_no_internal_noise(
     monkeypatch,
 ):
@@ -3245,7 +3199,6 @@ def test_generation_low_noise_uses_no_internal_noise(
     )
 
 
-@pytest.mark.pruned
 def test_generation_without_generator_disables_all_noise(
     monkeypatch,
 ):
@@ -3358,7 +3311,6 @@ def make_generation_without_constructor(
     return generation
 
 
-@pytest.mark.pruned
 def test_generation_forward_reshapes_linear_output():
     generation = make_generation_without_constructor()
 
@@ -3389,7 +3341,6 @@ def test_generation_forward_reshapes_linear_output():
     assert received.mask is None
 
 
-@pytest.mark.pruned
 def test_generation_forward_passes_resize_shapes():
     generation = make_generation_without_constructor(
         resize_shapes=[
@@ -3421,7 +3372,6 @@ def test_generation_forward_passes_resize_shapes():
     )
 
 
-@pytest.mark.pruned
 def test_generation_forward_passes_no_skip():
     generation = make_generation_without_constructor()
 
@@ -3490,7 +3440,6 @@ def test_generation_repeats_tensor_mask_for_generator(
     )
 
 
-@pytest.mark.pruned
 def test_generation_does_not_repeat_without_generator(
     monkeypatch,
 ):
@@ -3515,7 +3464,6 @@ def test_generation_does_not_repeat_without_generator(
     repeat.assert_not_called()
 
 
-@pytest.mark.pruned
 def test_generation_does_not_repeat_for_zero_output_samples(
     monkeypatch,
 ):
@@ -3542,7 +3490,6 @@ def test_generation_does_not_repeat_for_zero_output_samples(
     repeat.assert_not_called()
 
 
-@pytest.mark.pruned
 def test_generation_generator_reshapes_output_samples():
     generation = make_generation_without_constructor(
         generator=make_generator_config(noise_level="full")
@@ -3574,7 +3521,6 @@ def test_generation_generator_reshapes_output_samples():
     )
 
 
-@pytest.mark.pruned
 def test_generation_without_generator_preserves_batch_dimension():
     generation = make_generation_without_constructor(generator=None)
 

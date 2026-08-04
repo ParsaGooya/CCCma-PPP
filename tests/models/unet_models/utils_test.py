@@ -28,14 +28,12 @@ def make_config(**overrides):
     return SimpleNamespace(**values)
 
 
-@pytest.mark.pruned
 def test_unet_config_checks_accepts_valid_minimal_config():
     config = make_config()
 
     assert _unet_config_checks(config) is None
 
 
-@pytest.mark.pruned
 def test_unet_config_checks_accepts_single_channel_level():
     config = make_config(
         channels=[4],
@@ -46,7 +44,6 @@ def test_unet_config_checks_accepts_single_channel_level():
     assert _unet_config_checks(config) is None
 
 
-@pytest.mark.pruned
 def test_unet_config_checks_accepts_multiple_channel_levels():
     config = make_config(
         channels=[4, 8, 16, 32],
@@ -101,7 +98,6 @@ def test_unet_config_checks_accepts_tuple_kernels_in_list(
     assert _unet_config_checks(config) is None
 
 
-@pytest.mark.pruned
 def test_unet_config_checks_accepts_mixed_kernel_list():
     config = make_config(
         channels=[4, 8, 16, 32],
@@ -116,7 +112,6 @@ def test_unet_config_checks_accepts_mixed_kernel_list():
     assert _unet_config_checks(config) is None
 
 
-@pytest.mark.pruned
 def test_unet_config_checks_accepts_none_condition_channels():
     config = make_config(
         condition_embedding_channels=None,
@@ -125,7 +120,6 @@ def test_unet_config_checks_accepts_none_condition_channels():
     assert _unet_config_checks(config) is None
 
 
-@pytest.mark.pruned
 def test_unet_config_checks_accepts_none_dimensions():
     config = make_config(
         bottleneck_dim=None,
@@ -196,7 +190,6 @@ def test_unet_config_checks_accepts_valid_generator_sample_counts(
     assert _unet_config_checks(config) is None
 
 
-@pytest.mark.pruned
 def test_unet_config_checks_accepts_generator_none():
     config = make_config(
         GENERATOR=None,
@@ -205,7 +198,6 @@ def test_unet_config_checks_accepts_generator_none():
     assert _unet_config_checks(config) is None
 
 
-@pytest.mark.pruned
 def test_unet_config_checks_accepts_condition_independent_latent_with_decoder():
     config = make_config(
         condition_dependant_latent=False,
@@ -215,7 +207,6 @@ def test_unet_config_checks_accepts_condition_independent_latent_with_decoder():
     assert _unet_config_checks(config) is None
 
 
-@pytest.mark.pruned
 def test_unet_config_checks_accepts_condition_dependent_latent_without_decoder():
     config = make_config(
         condition_dependant_latent=True,
@@ -225,7 +216,6 @@ def test_unet_config_checks_accepts_condition_dependent_latent_without_decoder()
     assert _unet_config_checks(config) is None
 
 
-@pytest.mark.pruned
 def test_unet_config_checks_skips_condition_rule_when_attribute_is_none():
     config = make_config(
         condition_dependant_latent=None,
@@ -235,7 +225,6 @@ def test_unet_config_checks_skips_condition_rule_when_attribute_is_none():
     assert _unet_config_checks(config) is None
 
 
-@pytest.mark.pruned
 def test_unet_config_checks_does_not_mutate_config():
     config = make_config(
         channels=[4, 8, 16],
@@ -378,7 +367,6 @@ def test_unet_config_checks_rejects_or_errors_for_unsupported_scalar_kernel(
         _unet_config_checks(config)
 
 
-@pytest.mark.pruned
 def test_kernel_count_validation_precedes_kernel_value_validation():
     config = make_config(
         channels=[4, 8, 16],
@@ -393,7 +381,6 @@ def test_kernel_count_validation_precedes_kernel_value_validation():
         _unet_config_checks(config)
 
 
-@pytest.mark.pruned
 def test_unet_config_checks_rejects_empty_channels():
     config = make_config(
         channels=[],
@@ -434,7 +421,6 @@ def test_unet_config_checks_rejects_nonpositive_channels(
         _unet_config_checks(config)
 
 
-@pytest.mark.pruned
 def test_unet_config_checks_rejects_empty_condition_channels():
     config = make_config(
         condition_embedding_channels=[],
@@ -471,7 +457,6 @@ def test_unet_config_checks_rejects_nonpositive_condition_channels(
         _unet_config_checks(config)
 
 
-@pytest.mark.pruned
 def test_channel_validation_precedes_dimension_validation():
     config = make_config(
         channels=[],
@@ -552,7 +537,6 @@ def test_unet_config_checks_rejects_nonpositive_condition_embedding_size(
         _unet_config_checks(config)
 
 
-@pytest.mark.pruned
 def test_dimension_validation_order_starts_with_bottleneck():
     config = make_config(
         bottleneck_dim=0,
@@ -567,7 +551,6 @@ def test_dimension_validation_order_starts_with_bottleneck():
         _unet_config_checks(config)
 
 
-@pytest.mark.pruned
 def test_latent_size_checked_before_condition_embedding_size():
     config = make_config(
         bottleneck_dim=16,
@@ -595,7 +578,6 @@ def test_unet_config_checks_rejects_independent_latent_without_decoder_condition
         _unet_config_checks(config)
 
 
-@pytest.mark.pruned
 def test_condition_rule_precedes_mask_threshold_validation():
     config = make_config(
         condition_dependant_latent=False,
@@ -635,7 +617,6 @@ def test_unet_config_checks_rejects_invalid_mask_threshold(
         _unet_config_checks(config)
 
 
-@pytest.mark.pruned
 def test_mask_threshold_checked_before_output_hidden_channels():
     config = make_config(
         mask_fraction_threshold=-1.0,
@@ -671,7 +652,6 @@ def test_unet_config_checks_rejects_nonpositive_output_hidden_channels(
         _unet_config_checks(config)
 
 
-@pytest.mark.pruned
 def test_output_hidden_channels_checked_before_generator():
     config = make_config(
         output_block_hidden_channels=0,
@@ -711,7 +691,6 @@ def test_unet_config_checks_rejects_nonpositive_training_noise_samples(
         _unet_config_checks(config)
 
 
-@pytest.mark.pruned
 def test_generator_error_reports_requirement():
     config = make_config(
         GENERATOR=SimpleNamespace(
@@ -729,7 +708,6 @@ def test_generator_error_reports_requirement():
     assert "larger than 0" in message
 
 
-@pytest.mark.pruned
 def test_repeat_tensor_mask_repeats_tensor():
     tensor = torch.tensor(
         [
@@ -767,7 +745,6 @@ def test_repeat_tensor_mask_repeats_tensor():
     assert result.mask is None
 
 
-@pytest.mark.pruned
 def test_repeat_tensor_mask_repeats_tensor_and_mask():
     tensor = torch.tensor(
         [
@@ -819,7 +796,6 @@ def test_repeat_tensor_mask_repeats_tensor_and_mask():
     )
 
 
-@pytest.mark.pruned
 def test_repeat_tensor_mask_preserves_tensor_dtype():
     value = TensorMask(
         tensor=torch.ones(
@@ -867,7 +843,6 @@ def test_repeat_tensor_mask_preserves_mask_dtype(
     assert result.mask.dtype == mask_dtype
 
 
-@pytest.mark.pruned
 def test_repeat_tensor_mask_preserves_remaining_dimensions():
     value = TensorMask(
         tensor=torch.ones(2, 3, 4, 5),
@@ -883,7 +858,6 @@ def test_repeat_tensor_mask_preserves_remaining_dimensions():
     assert result.mask.shape == (8, 1, 4, 5)
 
 
-@pytest.mark.pruned
 def test_repeat_tensor_mask_with_one_repeat_preserves_values():
     tensor = torch.randn(2, 3, 4, 5)
     mask = torch.randint(
@@ -911,7 +885,6 @@ def test_repeat_tensor_mask_with_one_repeat_preserves_values():
     )
 
 
-@pytest.mark.pruned
 def test_repeat_tensor_mask_returns_new_container():
     value = TensorMask(
         tensor=torch.ones(2, 3),
@@ -926,7 +899,6 @@ def test_repeat_tensor_mask_returns_new_container():
     assert result is not value
 
 
-@pytest.mark.pruned
 def test_repeat_tensor_mask_repetition_order():
     value = TensorMask(
         tensor=torch.tensor(
@@ -959,7 +931,6 @@ def test_repeat_tensor_mask_repetition_order():
     )
 
 
-@pytest.mark.pruned
 def test_repeat_tensor_mask_zero_repeats_returns_empty_batch():
     value = TensorMask(
         tensor=torch.ones(2, 3, 4),

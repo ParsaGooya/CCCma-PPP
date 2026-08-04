@@ -134,7 +134,6 @@ def make_predict_request(
     )
 
 
-@pytest.mark.pruned
 def test_config_preserves_explicit_decoder_dimensions():
     config = make_config(
         encoder_hidden_dims=[10, 8, 6],
@@ -153,7 +152,6 @@ def test_config_builds_default_decoder_dimensions():
     assert config.decoder_hidden_dims == [8, 10]
 
 
-@pytest.mark.pruned
 def test_config_default_decoder_for_single_encoder_layer():
     config = make_config(
         encoder_hidden_dims=[8],
@@ -222,7 +220,6 @@ def test_independent_latent_requires_embedding_passed_to_decoder():
         )
 
 
-@pytest.mark.pruned
 def test_config_build_returns_model():
     config = make_config()
 
@@ -258,7 +255,6 @@ def test_model_rejects_invalid_output_rank():
         )
 
 
-@pytest.mark.pruned
 def test_model_converts_added_features_none_to_zero():
     model = make_model(
         added_features_dim=None,
@@ -267,7 +263,6 @@ def test_model_converts_added_features_none_to_zero():
     assert model.added_features_dim == 0
 
 
-@pytest.mark.pruned
 def test_model_preserves_added_features_dimension():
     model = make_model(
         added_features_dim=2,
@@ -276,7 +271,6 @@ def test_model_preserves_added_features_dimension():
     assert model.added_features_dim == 2
 
 
-@pytest.mark.pruned
 def test_model_builds_encoder():
     model = make_model()
 
@@ -287,7 +281,6 @@ def test_model_builds_encoder():
     assert model.log_var.out_features == 3
 
 
-@pytest.mark.pruned
 def test_model_builds_condition_embedding():
     model = make_model(
         config=make_condition_config(),
@@ -298,7 +291,6 @@ def test_model_builds_condition_embedding():
     assert model.add_condition_size == 4
 
 
-@pytest.mark.pruned
 def test_condition_independent_latent_appends_embedding_projection():
     model = make_model(
         config=make_condition_config(),
@@ -310,7 +302,6 @@ def test_condition_independent_latent_appends_embedding_projection():
     assert not hasattr(model, "condition_log_var")
 
 
-@pytest.mark.pruned
 def test_condition_dependent_latent_builds_distribution_layers():
     model = make_model(
         config=make_condition_latent_config(),
@@ -322,7 +313,6 @@ def test_condition_dependent_latent_builds_distribution_layers():
     assert model.condition_log_var.out_features == 3
 
 
-@pytest.mark.pruned
 def test_condition_dependent_flow_uses_embedding_projection():
     config = make_condition_latent_config()
     config.condition_dependant_flow = True
@@ -335,7 +325,6 @@ def test_condition_dependent_flow_uses_embedding_projection():
     assert not hasattr(model, "condition_log_var")
 
 
-@pytest.mark.pruned
 def test_model_uses_requested_activation():
     model = make_model(
         config=make_config(
@@ -346,7 +335,6 @@ def test_model_uses_requested_activation():
     assert any(isinstance(layer, nn.GELU) for layer in model.encoder)
 
 
-@pytest.mark.pruned
 def test_model_uses_requested_dropout():
     model = make_model(
         config=make_config(
@@ -360,7 +348,6 @@ def test_model_uses_requested_dropout():
     assert dropout_layers[0].p == pytest.approx(0.25)
 
 
-@pytest.mark.pruned
 def test_model_uses_batch_normalization():
     model = make_model(
         config=make_config(
@@ -371,7 +358,6 @@ def test_model_uses_batch_normalization():
     assert any(isinstance(layer, nn.BatchNorm1d) for layer in model.encoder)
 
 
-@pytest.mark.pruned
 def test_recognition_applies_target_mask():
     model = make_model()
 
@@ -398,7 +384,6 @@ def test_recognition_applies_target_mask():
     )
 
 
-@pytest.mark.pruned
 def test_recognition_flattens_target():
     model = make_model()
     captured = {}
@@ -418,7 +403,6 @@ def test_recognition_flattens_target():
     assert captured["shape"] == (3, 4)
 
 
-@pytest.mark.pruned
 def test_recognition_concatenates_condition():
     model = make_model(
         config=make_config(
@@ -444,7 +428,6 @@ def test_recognition_concatenates_condition():
     torch.testing.assert_close(mu, log_var)
 
 
-@pytest.mark.pruned
 def test_recognition_concatenates_added_features():
     model = make_model(
         added_features_dim=2,
@@ -467,7 +450,6 @@ def test_recognition_concatenates_added_features():
     torch.testing.assert_close(mu, log_var)
 
 
-@pytest.mark.pruned
 def test_recognition_concatenates_condition_before_features():
     model = make_model(
         added_features_dim=2,
@@ -494,7 +476,6 @@ def test_recognition_concatenates_condition_before_features():
     )
 
 
-@pytest.mark.pruned
 def test_condition_embedding_returns_embedding():
     model = make_model(
         config=make_condition_config(),
@@ -508,7 +489,6 @@ def test_condition_embedding_returns_embedding():
     assert cond_log_var is None
 
 
-@pytest.mark.pruned
 def test_condition_dependent_latent_returns_distribution():
     model = make_model(
         config=make_condition_latent_config(),
@@ -522,7 +502,6 @@ def test_condition_dependent_latent_returns_distribution():
     assert cond_log_var.shape == (2, 3)
 
 
-@pytest.mark.pruned
 def test_condition_applies_mask():
     model = make_model(
         config=make_condition_config(
@@ -553,7 +532,6 @@ def test_condition_applies_mask():
     )
 
 
-@pytest.mark.pruned
 def test_condition_flattens_input():
     model = make_model(
         config=make_condition_config(),
@@ -575,7 +553,6 @@ def test_condition_flattens_input():
     assert captured["shape"] == (2, 4)
 
 
-@pytest.mark.pruned
 def test_condition_concatenates_added_features():
     model = make_model(
         config=make_condition_config(),
@@ -605,7 +582,6 @@ def test_condition_concatenates_added_features():
     )
 
 
-@pytest.mark.pruned
 def test_generate_concatenates_added_features():
     model = make_model(
         added_features_dim=2,
@@ -637,7 +613,6 @@ def test_generate_concatenates_added_features():
     )
 
 
-@pytest.mark.pruned
 def test_generate_concatenates_condition_when_enabled():
     model = make_model(
         config=make_condition_config(),
@@ -693,7 +668,6 @@ def test_generate_does_not_concatenate_condition_when_disabled():
     assert captured["value"].shape == (6, 3)
 
 
-@pytest.mark.pruned
 def test_generate_ignores_none_condition():
     model = make_model(
         config=make_condition_config(),
@@ -710,7 +684,6 @@ def test_generate_ignores_none_condition():
     assert result.shape == (2, 3, 3)
 
 
-@pytest.mark.pruned
 def test_forward_with_condition_embedding():
     model = make_model(
         config=make_condition_config(),
@@ -727,7 +700,6 @@ def test_forward_with_condition_embedding():
     assert result.cond_log_var is None
 
 
-@pytest.mark.pruned
 def test_forward_with_condition_dependent_latent():
     model = make_model(
         config=make_condition_latent_config(),
@@ -779,7 +751,6 @@ def test_forward_with_masks():
     assert result.output.shape == (2, 3, 1, 4)
 
 
-@pytest.mark.pruned
 def test_forward_clamps_minimum_posterior_variance(
     monkeypatch,
 ):
@@ -817,7 +788,6 @@ def test_forward_clamps_minimum_posterior_variance(
     )
 
 
-@pytest.mark.pruned
 def test_forward_without_minimum_variance_does_not_clamp(
     monkeypatch,
 ):
@@ -852,7 +822,6 @@ def test_forward_without_minimum_variance_does_not_clamp(
     assert result.log_var is original_log_var
 
 
-@pytest.mark.pruned
 def test_predict_uses_condition_dependent_prior(
     monkeypatch,
 ):
@@ -896,7 +865,6 @@ def test_predict_uses_condition_dependent_prior(
     assert result.output.shape == (4, 3, 1, 4)
 
 
-@pytest.mark.pruned
 def test_predict_uses_standard_normal_prior(
     monkeypatch,
 ):
@@ -1008,7 +976,6 @@ def test_predict_applies_unconditional_prior_flow():
     assert result.output.shape == (4, 3, 1, 4)
 
 
-@pytest.mark.pruned
 def test_predict_applies_conditioned_prior_flow():
     config = make_condition_config()
     model = make_model(config=config)
@@ -1031,7 +998,6 @@ def test_predict_applies_conditioned_prior_flow():
     assert result.output.shape == (4, 3, 1, 4)
 
 
-@pytest.mark.pruned
 def test_predict_does_not_apply_flow_to_user_latent_samples():
     model = make_model()
     flow = DummyPriorFlow(condition_size=None)
@@ -1063,7 +1029,6 @@ def test_predict_returns_condition_statistics():
     assert result.cond_log_var.shape == (3, 3)
 
 
-@pytest.mark.pruned
 def test_forward_supports_backward():
     model = make_model()
 
@@ -1092,7 +1057,6 @@ def test_forward_supports_backward():
     assert any(parameter.grad is not None for parameter in trainable_parameters)
 
 
-@pytest.mark.pruned
 def test_predict_output_is_finite():
     model = make_model(
         config=make_condition_config(),
