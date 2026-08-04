@@ -80,39 +80,71 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">final</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">ClassVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">final</span><span class="p">,</span> <span class="n">ClassVar</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">timm.models.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">trunc_normal_</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.core_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">OutputABC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic.runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeContext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.models.layers.generic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ActivationName</span><span class="p">,</span> <span class="n">InitMethod</span><span class="p">,</span> <span class="n">NoiseLevel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.models.layers.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_sample</span>
 
-<span class="n">InitMethod</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;trunc_normal&quot;</span><span class="p">,</span> <span class="s2">&quot;xavier&quot;</span><span class="p">]</span>
 
-
-<div class="viewcode-block" id="CheckpointConfig">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.CheckpointConfig">[docs]</a>
+<div class="viewcode-block" id="GENERATORConfig">
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.unet_models.deterministic.html#cccma_ppp.core.cVAE_module.GENERATORConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">CheckpointConfig</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GENERATORConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Configuration for loading model checkpoints.</span>
+<span class="sd">    Document this class.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    load_path : pathlib.Path or str</span>
-<span class="sd">        Path to checkpoint file.</span>
+<span class="sd">    noise_level : NoiseLevel</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    num_training_noise_samples : int</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    num_validation_noise_samples : int | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">noise_level</span><span class="p">:</span> <span class="n">NoiseLevel</span> <span class="o">=</span> <span class="s2">&quot;full&quot;</span>
+    <span class="n">num_training_noise_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">num_validation_noise_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Document this function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_validation_noise_samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_validation_noise_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_training_noise_samples</span></div>
+
+
+
+<div class="viewcode-block" id="CheckpointConfig">
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.cVAE_module.CheckpointConfig">[docs]</a>
+<span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CheckpointConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Document this class.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    load_path : Path | str</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    checkpoint_input_shape : np.ndarray</span>
-<span class="sd">        Input shape used during training.</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    checkpoint_output_shape : np.ndarray</span>
-<span class="sd">        Output shape used during training.</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    checkpoint_input_var_metadata : dict</span>
-<span class="sd">        Metadata describing input variables and preprocessing.</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    checkpoint_output_var_metadata : dict</span>
-<span class="sd">        Metadata describing target variables and preprocessing.</span>
-<span class="sd">    strict : bool, optional</span>
-<span class="sd">        Whether to strictly enforce state_dict matching.</span>
-<span class="sd">    freeze_weights : bool, optional</span>
-<span class="sd">        Whether to freeze model parameters after loading.</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    strict : bool</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    freeze_weights : bool</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">load_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span>
@@ -126,94 +158,151 @@
 
 
 <div class="viewcode-block" id="flowABC">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.selectors.flowABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.flowABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">flowABC</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Abstract base class for flow-based models.</span>
+<span class="sd">    Document this class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="flowABC.forward">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.selectors.flowABC.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.flowABC.forward">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Apply forward transformation.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        x : torch.Tensor</span>
-<span class="sd">        condition : torch.Tensor or None, optional</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        torch.Tensor</span>
+<span class="sd">        x : Any</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        condition : Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span></div>
 
 
 <div class="viewcode-block" id="flowABC.inverse">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.selectors.flowABC.inverse">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.flowABC.inverse">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Apply inverse transformation.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        z : torch.Tensor</span>
-<span class="sd">        condition : torch.Tensor or None, optional</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        torch.Tensor</span>
+<span class="sd">        z : Any</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        condition : Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span></div>
 </div>
 
 
 
 <div class="viewcode-block" id="modelConfigABC">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.modelConfigABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.unet_models.deterministic.html#cccma_ppp.core.cVAE_module.modelConfigABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">modelConfigABC</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Abstract base class for model configuration.</span>
+<span class="sd">    Document this class.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    activation : ActivationName</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    GENERATOR : GENERATORConfig | None</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="n">activation</span><span class="p">:</span> <span class="n">ActivationName</span>
+    <span class="n">NUM_INPUT_DIMS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span>
     <span class="n">NUM_OUTPUT_DIMS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span>
-    <span class="n">GENERATOR</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span>
+    <span class="n">GENERATOR</span><span class="p">:</span> <span class="n">GENERATORConfig</span> <span class="o">|</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Validate subclass configuration.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">()</span>
         <span class="bp">cls</span><span class="o">.</span><span class="n">checkpoint_config</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@final</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_add_checkpoint_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint_config</span><span class="p">:</span> <span class="n">CheckpointConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Attach checkpoint configuration.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        checkpoint_config : CheckpointConfig</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">checkpoint_config</span> <span class="o">=</span> <span class="n">checkpoint_config</span>
 
+    <span class="nd">@final</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_checkpoint_compatibility</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">input_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">,</span>
+        <span class="n">output_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Document this function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_shape : np.ndarray | tuple</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        output_shape : np.ndarray | tuple</span>
+<span class="sd">            Description not yet provided.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        RuntimeError</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">checkpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">checkpoint_config</span>
+
+        <span class="k">if</span> <span class="n">checkpoint</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span>
+            <span class="n">input_shape</span><span class="p">,</span>
+            <span class="n">checkpoint</span><span class="o">.</span><span class="n">checkpoint_input_shape</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Requested input shape </span><span class="si">{</span><span class="n">input_shape</span><span class="si">}</span><span class="s2"> does not match &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;checkpoint input shape </span><span class="si">{</span><span class="n">checkpoint</span><span class="o">.</span><span class="n">checkpoint_input_shape</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span>
+            <span class="n">output_shape</span><span class="p">,</span>
+            <span class="n">checkpoint</span><span class="o">.</span><span class="n">checkpoint_output_shape</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Requested output shape </span><span class="si">{</span><span class="n">output_shape</span><span class="si">}</span><span class="s2"> does not match &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;checkpoint output shape </span><span class="si">{</span><span class="n">checkpoint</span><span class="o">.</span><span class="n">checkpoint_output_shape</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">RuntimeContext</span><span class="o">.</span><span class="n">INPUT_VAR_METADATA</span>
+            <span class="o">!=</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">checkpoint_input_var_metadata</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Checkpoint input metadata is incompatible with the &quot;</span>
+                <span class="s2">&quot;current input variables or preprocessing pipeline.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">RuntimeContext</span><span class="o">.</span><span class="n">TARGET_VAR_METADATA</span>
+            <span class="o">!=</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">checkpoint_output_var_metadata</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Checkpoint target metadata is incompatible with the &quot;</span>
+                <span class="s2">&quot;current target variables or preprocessing pipeline.&quot;</span>
+            <span class="p">)</span>
+
 <div class="viewcode-block" id="modelConfigABC.build">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.modelConfigABC.build">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.unet_models.deterministic.html#cccma_ppp.core.cVAE_module.modelConfigABC.build">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -223,110 +312,133 @@
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Construct model instance.</span>
+<span class="sd">        Document this function.</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        modelABC</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_shape : np.ndarray</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        output_shape : np.ndarray | None</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        added_features_dim : int</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        **kwargs : Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span></div>
 </div>
 
 
 
-<div class="viewcode-block" id="cVAEmodelConfigABC">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.cVAEmodelConfigABC">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">cVAEmodelConfigABC</span><span class="p">(</span><span class="n">modelConfigABC</span><span class="p">):</span>
+<div class="viewcode-block" id="modelABC">
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.cVAE_module.modelABC">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">modelABC</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Abstract base class for cVAE model configurations.</span>
+<span class="sd">    Document this class.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    generative_modeling : bool</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">latent_size</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">condition_dependant_latent</span><span class="p">:</span> <span class="nb">bool</span>
-    <span class="n">condition_embedding_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">generative_modeling</span><span class="p">:</span> <span class="nb">bool</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_flow_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition_dependant_flow</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="nd">@final</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_checkpoint_compatibility</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">input_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">output_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Configure flow-related settings.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        condition_dependant_flow : bool, optional</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        self</span>
+<span class="sd">        input_shape : np.ndarray</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        output_shape : np.ndarray</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            If configuration is inconsistent.</span>
+<span class="sd">        RuntimeError</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">checkpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">checkpoint_config</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">condition_dependant_flow</span> <span class="o">=</span> <span class="n">condition_dependant_flow</span>
+        <span class="k">if</span> <span class="n">checkpoint</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition_dependant_latent</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition_dependant_flow</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">latent_size</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition_embedding_size</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;for condition dependent latent when prior flow is off, &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;condition embedding size (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">condition_embedding_size</span><span class="si">}</span><span class="s2">) &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;must equal latent size (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">latent_size</span><span class="si">}</span><span class="s2">).&quot;</span>
-                    <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span>
+            <span class="n">input_shape</span><span class="p">,</span>
+            <span class="n">checkpoint</span><span class="o">.</span><span class="n">checkpoint_input_shape</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Requested input shape </span><span class="si">{</span><span class="n">input_shape</span><span class="si">}</span><span class="s2"> does not match &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;checkpoint input shape </span><span class="si">{</span><span class="n">checkpoint</span><span class="o">.</span><span class="n">checkpoint_input_shape</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span></div>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span>
+            <span class="n">output_shape</span><span class="p">,</span>
+            <span class="n">checkpoint</span><span class="o">.</span><span class="n">checkpoint_output_shape</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Requested output shape </span><span class="si">{</span><span class="n">output_shape</span><span class="si">}</span><span class="s2"> does not match &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;checkpoint output shape </span><span class="si">{</span><span class="n">checkpoint</span><span class="o">.</span><span class="n">checkpoint_output_shape</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
 
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">RuntimeContext</span><span class="o">.</span><span class="n">INPUT_VAR_METADATA</span>
+            <span class="o">!=</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">checkpoint_input_var_metadata</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Checkpoint input metadata is incompatible with the &quot;</span>
+                <span class="s2">&quot;current input variables or preprocessing pipeline.&quot;</span>
+            <span class="p">)</span>
 
-
-<div class="viewcode-block" id="modelABC">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.modelABC">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">modelABC</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Abstract base class for all models.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">RuntimeContext</span><span class="o">.</span><span class="n">TARGET_VAR_METADATA</span>
+            <span class="o">!=</span> <span class="n">checkpoint</span><span class="o">.</span><span class="n">checkpoint_output_var_metadata</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Checkpoint target metadata is incompatible with the &quot;</span>
+                <span class="s2">&quot;current target variables or preprocessing pipeline.&quot;</span>
+            <span class="p">)</span>
 
 <div class="viewcode-block" id="modelABC.forward">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.modelABC.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.cVAE_module.modelABC.forward">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Perform forward pass.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        x : torch.Tensor</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        torch.Tensor</span>
+<span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span></div>
 
 
     <span class="nd">@final</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init_method</span><span class="o">=</span><span class="s2">&quot;trunc_normal&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize model weights.</span>
+<span class="sd">        Document this function.</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        init_method : Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">weights_init</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">init_method</span><span class="p">))</span>
 
     <span class="nd">@final</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_device</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get model device.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        torch.device</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">param</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">param</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -342,21 +454,18 @@
     <span class="nd">@final</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint_config</span><span class="p">:</span> <span class="n">CheckpointConfig</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Load model weights from checkpoint.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        checkpoint_config : CheckpointConfig</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        FileNotFoundError</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">checkpoint_config</span><span class="o">.</span><span class="n">load_path</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Checkpoint not found: </span><span class="si">{</span><span class="n">checkpoint_config</span><span class="o">.</span><span class="n">load_path</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -385,120 +494,317 @@
 
 
 
+<div class="viewcode-block" id="DeterministicRequest">
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.unet_models.deterministic.html#cccma_ppp.core.cVAE_module.DeterministicRequest">[docs]</a>
+<span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DeterministicRequest</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Document this class.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input : torch.Tensor</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    input_mask : torch.Tensor | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    added_features : torch.Tensor | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    output_sample_size : int</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nb">input</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="n">input_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">added_features</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">output_sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+
 <div class="viewcode-block" id="deterministicmodelsABC">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.deterministicmodelsABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.unet_models.deterministic.html#cccma_ppp.core.cVAE_module.deterministicmodelsABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">deterministicmodelsABC</span><span class="p">(</span><span class="n">modelABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Base class for deterministic models.</span>
+<span class="sd">    Document this class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize deterministic model.</span>
+<span class="sd">        Document this function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generative_modeling</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="deterministicmodelsABC.forward">
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.unet_models.deterministic.html#cccma_ppp.core.cVAE_module.deterministicmodelsABC.forward">[docs]</a>
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">request</span><span class="p">:</span> <span class="n">DeterministicRequest</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OutputABC</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        config : modelConfigABC</span>
+<span class="sd">        request : DeterministicRequest</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+</div>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">generative_modeling</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="cVAEmodelConfigABC">
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.unet_models.cvae.html#cccma_ppp.core.cVAE_module.cVAEmodelConfigABC">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">cVAEmodelConfigABC</span><span class="p">(</span><span class="n">modelConfigABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Document this class.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    latent_size : int</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    condition_dependant_latent : bool</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    condition_embedding_size : int</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    condition_embedding_dims : list</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    condemb_to_decoder : bool</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">latent_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">condition_dependant_latent</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">condition_embedding_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">condition_embedding_dims</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">condemb_to_decoder</span><span class="p">:</span> <span class="nb">bool</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_flow_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition_dependant_flow</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Document this function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        condition_dependant_flow : bool</span>
+<span class="sd">            Description not yet provided.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">condition_dependant_flow</span> <span class="o">=</span> <span class="n">condition_dependant_flow</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition_dependant_latent</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition_dependant_flow</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">latent_size</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition_embedding_size</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;for condition dependent latent when prior flow is off, &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;condition embedding size (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">condition_embedding_size</span><span class="si">}</span><span class="s2">) &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;must equal latent size (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">latent_size</span><span class="si">}</span><span class="s2">).&quot;</span>
+                    <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+
+<div class="viewcode-block" id="cVAEForwardRequest">
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.unet_models.cvae.html#cccma_ppp.core.cVAE_module.cVAEForwardRequest">[docs]</a>
+<span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">cVAEForwardRequest</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Document this class.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target : torch.Tensor</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    condition : torch.Tensor</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    target_mask : torch.Tensor | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    condition_mask : torch.Tensor | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    added_features : torch.Tensor | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    sample_size : int</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    output_sample_size : int</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    min_posterior_variance : torch.Tensor | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">target</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="n">condition</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="n">target_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">condition_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">added_features</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">output_sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">min_posterior_variance</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="cVAEPredictRequest">
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.unet_models.cvae.html#cccma_ppp.core.cVAE_module.cVAEPredictRequest">[docs]</a>
+<span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">cVAEPredictRequest</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Document this class.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    condition : torch.Tensor</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    condition_mask : torch.Tensor | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    added_features : torch.Tensor | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    prior_flow : flowABC | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    latent_samples : torch.Tensor | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    nstds : int</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    sample_size : int</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    output_sample_size : int</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">condition</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="n">condition_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">added_features</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">prior_flow</span><span class="p">:</span> <span class="n">flowABC</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">latent_samples</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">nstds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">output_sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span></div>
 
 
 
 <div class="viewcode-block" id="cVAEmodelsABC">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.cVAEmodelsABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.unet_models.cvae.html#cccma_ppp.core.cVAE_module.cVAEmodelsABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">cVAEmodelsABC</span><span class="p">(</span><span class="n">modelABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Base class for conditional variational autoencoders.</span>
+<span class="sd">    Document this class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize cVAE model.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        config : modelConfigABC</span>
+<span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">generative_modeling</span> <span class="o">=</span> <span class="kc">True</span>
 
-<div class="viewcode-block" id="cVAEmodelsABC.predict">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.cVAEmodelsABC.predict">[docs]</a>
+<div class="viewcode-block" id="cVAEmodelsABC.forward">
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.unet_models.cvae.html#cccma_ppp.core.cVAE_module.cVAEmodelsABC.forward">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">request</span><span class="p">:</span> <span class="n">cVAEForwardRequest</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OutputABC</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generate samples.</span>
+<span class="sd">        Document this function.</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        torch.Tensor</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        request : cVAEForwardRequest</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
 
+
+<div class="viewcode-block" id="cVAEmodelsABC.predict">
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.unet_models.cvae.html#cccma_ppp.core.cVAE_module.cVAEmodelsABC.predict">[docs]</a>
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">request</span><span class="p">:</span> <span class="n">cVAEPredictRequest</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OutputABC</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Document this function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        request : cVAEPredictRequest</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
 
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_recognition</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Encode to latent distribution.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        tuple</span>
+<span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span>
 
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Compute condition representation.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        tuple</span>
-<span class="sd">            Tuple of condition tensors.</span>
+<span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span>
 
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_generate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Decode latent representation.</span>
+<span class="sd">        Document this function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@final</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">log_var</span><span class="p">,</span> <span class="n">sample_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Document this function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mu : Any</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        log_var : Any</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        sample_size : Any</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        std : Any</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        torch.Tensor</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">pass</span></div>
+        <span class="n">var</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_var</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1e-4</span>
+        <span class="k">return</span> <span class="n">_sample</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">sample_size</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="weights_init">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.selectors.weights_init">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.cVAE_module.weights_init">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">weights_init</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="n">InitMethod</span> <span class="o">=</span> <span class="s2">&quot;xavier&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Initialize layer weights.</span>
+<span class="sd">    Document this function.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    m : torch.nn.Module</span>
-<span class="sd">    method : {&quot;xavier&quot;, &quot;trunc_normal&quot;}, optional</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    None</span>
+<span class="sd">    m : Any</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    method : InitMethod</span>
+<span class="sd">        Description not yet provided.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    NotImplementedError</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv1d</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv3d</span><span class="p">)):</span>
         <span class="k">return</span>
 

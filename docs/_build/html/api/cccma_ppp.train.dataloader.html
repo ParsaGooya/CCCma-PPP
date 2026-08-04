@@ -19,7 +19,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="cccma_ppp.train.datasets module" href="cccma_ppp.train.datasets.html" />
+    <link rel="next" title="cccma_ppp.train.dataset module" href="cccma_ppp.train.dataset.html" />
     <link rel="prev" title="cccma_ppp.train package" href="cccma_ppp.train.html" /> 
 </head>
 
@@ -53,6 +53,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="cccma_ppp.html">cccma_ppp package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="cccma_ppp.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.configs.html">cccma_ppp.configs package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.core.html">cccma_ppp.core package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.html">cccma_ppp.data_modules package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.generic.html">cccma_ppp.generic package</a></li>
@@ -66,7 +67,6 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.html#submodules">Submodules</a></li>
 </ul>
 </li>
 </ul>
@@ -101,18 +101,45 @@
 <h1>cccma_ppp.train.dataloader module<a class="headerlink" href="#cccma-ppp-train-dataloader-module" title="Link to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">BatchData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataloader.html#BatchData"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BatchDataABC</span></code></p>
-<p>Container for batched training data.</p>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">AddedTimeFeatures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/data_modules/dataset/dataset_abc.html#AddedTimeFeatures"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input</strong> (<em>torch.Tensor</em>) – Input tensor.</p></li>
-<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Target tensor.</p></li>
-<li><p><strong>added_features</strong> (<em>torch.Tensor</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Additional input features.</p></li>
-<li><p><strong>return_spatial_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to compute and include spatial masks.</p></li>
-<li><p><strong>reduce_spatial_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to reduce masks across batch dimension.</p></li>
-<li><p><strong>metadata</strong> (<em>list</em><em>[</em><em>dict</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>reference_config</strong> (<em>DatasetConfigABC</em>) – Description not yet provided.</p></li>
+<li><p><strong>time_features</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">reference_config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DatasetConfigABC</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">time_features</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">BatchData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataloader.html#BatchData"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BatchDataABC</span></code></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>added_features</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>metadata</strong> (<em>list</em><em>[</em><em>dict</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>return_spatial_mask</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>reduce_spatial_mask</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>input_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
@@ -128,12 +155,17 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">input_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">metadata</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">reduce_spatial_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span></dt>
+<span class="sig-name descname"><span class="pre">reduce_spatial_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -146,19 +178,24 @@
 <span class="sig-name descname"><span class="pre">target</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></span></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">target_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">to_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataloader.html#BatchData.to_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Move batch data to specified device.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>device</strong> (<em>torch.device</em><em> or </em><em>str</em>)</p>
+<dd class="field-odd"><p><strong>device</strong> (<em>torch.device</em><em> | </em><em>str</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Updated instance on target device.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>BatchData</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -169,11 +206,11 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">BatchDataABC</span></span><a class="reference internal" href="../_modules/cccma_ppp/data_modules/dataloader.html#BatchDataABC"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Abstract base class for batched data containers.</p>
+<p>Document this class.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">input</span></span></dt>
-<dd><p>Input batch.</p>
+<dd><p>Description not yet provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>torch.Tensor</p>
@@ -184,10 +221,10 @@
 <dl class="py attribute">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">target</span></span></dt>
-<dd><p>Target batch.</p>
+<dd><p>Description not yet provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>torch.Tensor or None</p>
+<dd class="field-odd"><p>torch.Tensor | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -195,10 +232,10 @@
 <dl class="py attribute">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">added_features</span></span></dt>
-<dd><p>Additional features.</p>
+<dd><p>Description not yet provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>torch.Tensor or None</p>
+<dd class="field-odd"><p>torch.Tensor | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -206,10 +243,10 @@
 <dl class="py attribute">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">metadata</span></span></dt>
-<dd><p>Optional metadata associated with each batch element.</p>
+<dd><p>Description not yet provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list[dict] or None</p>
+<dd class="field-odd"><p>list[dict] | None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -237,16 +274,10 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">to_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/data_modules/dataloader.html#BatchDataABC.to_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Move batch to specified device.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>device</strong> (<em>torch.device</em><em> or </em><em>str</em>) – Target device to move the batch to.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Batch moved to the target device.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>BatchDataABC</p>
+<dd class="field-odd"><p><strong>device</strong> (<em>torch.device</em><em> | </em><em>str</em>) – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -255,29 +286,31 @@
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">Dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collate_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/data_modules/dataloader.html#Dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">Dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collate_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/data_modules/dataloader.html#Dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Wrapper around PyTorch DataLoader with distributed support.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<em>DataloaderConfigABC</em>) – Dataloader configuration.</p></li>
-<li><p><strong>dataset</strong> (<em>torch.utils.data.Dataset</em>) – Dataset instance.</p></li>
-<li><p><strong>rank</strong> (<em>int</em><em>, </em><em>optional</em>) – Process rank in distributed setup.</p></li>
-<li><p><strong>world_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Total number of processes.</p></li>
-<li><p><strong>return_spatial_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to include spatial masks.</p></li>
-<li><p><strong>reduce_spatial_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to reduce masks across batch dimension.</p></li>
-<li><p><strong>collate_fn</strong> (<em>Callable</em>)</p></li>
+<li><p><strong>config</strong> (<em>DataloaderConfigABC</em>) – Description not yet provided.</p></li>
+<li><p><strong>dataset</strong> (<em>Dataset</em>) – Description not yet provided.</p></li>
+<li><p><strong>collate_fn</strong> (<em>Callable</em>) – Description not yet provided.</p></li>
+<li><p><strong>rank</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>world_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>shuffle</strong> (<em>bool</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">added_features_dim</span></span></dt>
-<dd><p>Additional feature dimension.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -300,10 +333,10 @@
 <dl class="py property">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">input_shape</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span></span></dt>
-<dd><p>Input data shape.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Shape of the input data.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>tuple</p>
@@ -316,40 +349,41 @@
 <span class="sig-name descname"><span class="pre">rank</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">reduce_spatial_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">return_spatial_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">set_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/data_modules/dataloader.html#Dataloader.set_epoch"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Set epoch for distributed sampler.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>epoch</strong> (<em>int</em>)</p>
+<dd class="field-odd"><p><strong>epoch</strong> (<em>Any</em>) – Description not yet provided.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Dataloader</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">shuffle</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">subset_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/data_modules/dataloader.html#Dataloader.subset_loader"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Create iterator over subset of batches.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>start_batch</strong> (<em>int</em><em>, </em><em>optional</em>) – Starting batch index.</p>
+<dd class="field-odd"><p><strong>start_batch</strong> (<em>Any</em>) – Description not yet provided.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>iterator</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -357,10 +391,13 @@
 <dl class="py property">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">target_shape</span></span></dt>
-<dd><p>Target data shape.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -376,11 +413,11 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">DataloaderConfigABC</span></span><a class="reference internal" href="../_modules/cccma_ppp/data_modules/dataloader.html#DataloaderConfigABC"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Abstract base class for dataloader configuration.</p>
+<p>Document this class.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">dataset_config</span></span></dt>
-<dd><p>Dataset configuration.</p>
+<dd><p>Description not yet provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>DatasetConfigABC</p>
@@ -390,31 +427,8 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">dataset_config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DatasetConfigABC</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">setup_distributed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/data_modules/dataloader.html#DataloaderConfigABC.setup_distributed"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Prepare dataloader for distributed execution.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">Distributed</span></span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Single class for managing distributed training setup.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">distributed</span></span></dt>
-<dd><p>Whether distributed training is enabled.</p>
+<span class="sig-name descname"><span class="pre">pin_memory</span></span></dt>
+<dd><p>Description not yet provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
@@ -424,58 +438,104 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">rank</span></span></dt>
-<dd><p>Global process rank.</p>
+<span class="sig-name descname"><span class="pre">time_features</span></span></dt>
+<dd><p>Description not yet provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p>AddedTimeFeatures | list[str] | None</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">local_rank</span></span></dt>
-<dd><p>Local process rank (GPU index).</p>
+<span class="sig-name descname"><span class="pre">prefetch_factor</span></span></dt>
+<dd><p>Description not yet provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p>int | None</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">world_size</span></span></dt>
-<dd><p>Total number of processes.</p>
+<span class="sig-name descname"><span class="pre">return_spatial_mask</span></span></dt>
+<dd><p>Description not yet provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">device</span></span></dt>
-<dd><p>Device assigned to the current process.</p>
+<span class="sig-name descname"><span class="pre">reduce_spatial_mask</span></span></dt>
+<dd><p>Description not yet provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>torch.device</p>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">abstract</span></span><span class="w"> </span><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">available_times</span></span></dt>
+<dd><p>Document this function.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">dataset_config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DatasetConfigABC</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">pin_memory</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">prefetch_factor</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">reduce_spatial_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">return_spatial_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">setup_distributed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/data_modules/dataloader.html#DataloaderConfigABC.setup_distributed"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Document this function.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">time_features</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">AddedTimeFeatures</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">Distributed</span></span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Document this class.</p>
+<dl class="py method">
+<dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">all_reduce_sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.all_reduce_sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Perform all-reduce sum across processes.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>local</strong> (<em>torch.Tensor</em>) – Tensor to be summed across all ranks.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-odd"><p><strong>local</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -483,28 +543,19 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">barrier</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.barrier"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Synchronize all processes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
+<dd><p>Document this function.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">broadcast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lcoal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.broadcast"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Broadcast tensor from source process to all processes.</p>
+<span class="sig-name descname"><span class="pre">broadcast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.broadcast"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>local</strong> (<em>torch.Tensor</em>) – Tensor to broadcast.</p></li>
-<li><p><strong>src</strong> (<em>int</em><em>, </em><em>optional</em>) – Source rank.</p></li>
-<li><p><strong>lcoal</strong> (<em>Tensor</em>)</p></li>
+<li><p><strong>local</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>src</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -512,24 +563,19 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.cleanup"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Destroy distributed process group.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
+<dd><p>Document this function.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_instance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.get_instance"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Retrieve singleton instance.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Shared instance.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Distributed</p>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -537,10 +583,10 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">is_root</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.is_root"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Check if current process is the root process.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>True if rank is 0.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>bool</p>
@@ -552,32 +598,36 @@
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">TrainDataloaderConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_years</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_validation_years</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_data_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefetch_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataloader.html#TrainDataloaderConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">TrainDataloaderConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_years</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_validation_years</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_data_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefetch_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataloader.html#TrainDataloaderConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">DataloaderConfigABC</span></code></p>
-<p>Configuration for training and validation data loaders.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dataset_config</strong> (<em>DatasetConfig</em>) – Dataset configuration.</p></li>
-<li><p><strong>batch_size</strong> (<em>int</em>) – Number of samples per batch.</p></li>
-<li><p><strong>train_years</strong> (<em>tuple</em><em> or </em><em>list</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Range of training years.</p></li>
-<li><p><strong>num_validation_years</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of years reserved for validation.</p></li>
-<li><p><strong>num_data_workers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of parallel data workers.</p></li>
-<li><p><strong>prefetch_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Data prefetching factor.</p></li>
-<li><p><strong>drop_last</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to drop incomplete batches.</p></li>
+<li><p><strong>dataset_config</strong> (<em>TrainDatasetConfig</em>) – Description not yet provided.</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>time_features</strong> (<em>list</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>train_years</strong> (<em>tuple</em><em> | </em><em>list</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_validation_years</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_data_workers</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>prefetch_factor</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>drop_last</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>load</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>return_spatial_mask</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>reduce_spatial_mask</strong> (<em>bool</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">available_train_years</span></span></dt>
-<dd><p>Training years excluding validation period.</p>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">available_times</span></span></dt>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Array of years used for training.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>np.ndarray</p>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -589,46 +639,50 @@
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">build_train_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataloader.html#TrainDataloaderConfig.build_train_loader"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Construct training dataloader.</p>
+<span class="sig-name descname"><span class="pre">build_train_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataloader.html#TrainDataloaderConfig.build_train_loader"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>return_spatial_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to return the spatial mask along with the dataloader output.</p></li>
-<li><p><strong>reduce_spatial_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to reduce the spatial mask before returning it.</p></li>
+<li><p><strong>return_metadata</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>shuffle</strong> (<em>bool</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Training dataloader.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Dataloader</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>RuntimeError</strong> – If setup has not been called.</p>
+<dd class="field-even"><p><strong>RuntimeError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">build_validation_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataloader.html#TrainDataloaderConfig.build_validation_loader"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Construct validation dataloader.</p>
+<span class="sig-name descname"><span class="pre">build_validation_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supress_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataloader.html#TrainDataloaderConfig.build_validation_loader"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>return_spatial_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to return the spatial mask along with the dataloader output.</p></li>
-<li><p><strong>reduce_spatial_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to reduce the spatial mask before returning it.</p></li>
+<li><p><strong>return_metadata</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>shuffle</strong> (<em>bool</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>supress_error</strong> (<em>bool</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Validation dataloader, or None if no validation years are specified.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Dataloader or None</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>RuntimeError</strong> – If setup has not been called.</p>
+<dd class="field-even"><p><strong>RuntimeError</strong> – Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Warns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>UserWarning</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -646,16 +700,16 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">get_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataloader.html#TrainDataloaderConfig.get_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Retrieve weights for loss computation.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<em>WeightsConfig</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Configuration used to compute or retrieve weights.</p>
+<dd class="field-odd"><p><strong>config</strong> (<em>WeightsConfig</em><em> | </em><em>None</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Weights for loss computation.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>xr.DataArray</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -663,13 +717,21 @@
 <dl class="py property">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">input_var_metadata</span></span></dt>
-<dd><p>Retrieve input variable metadata.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span></dt>
+<dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py">
@@ -686,19 +748,26 @@
 <span class="sig-name descname"><span class="pre">prefetch_factor</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">reduce_spatial_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">return_spatial_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">setup_distributed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataloader.html#TrainDataloaderConfig.setup_distributed"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Prepare dataloader for distributed training.</p>
+<span class="sig-name descname"><span class="pre">setup_distributed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataloader.html#TrainDataloaderConfig.setup_distributed"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>distributed</strong> (<em>Distributed</em>) – Distributed training context.</p></li>
-<li><p><strong>save_path</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Path to save fitted preprocessors.</p></li>
+<li><p><strong>distributed</strong> (<em>Distributed</em>) – Description not yet provided.</p></li>
+<li><p><strong>load_path</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -706,13 +775,21 @@
 <dl class="py property">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">target_var_metadata</span></span></dt>
-<dd><p>Retrieve target variable metadata.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">time_features</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py">
@@ -723,39 +800,67 @@
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">TrainDatasetConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lead_months</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/datasets.html#TrainDatasetConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">TrainDatasetConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lead_months</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataset.html#TrainDatasetConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">DatasetConfigABC</span></code></p>
-<p>Configuration for training dataset construction.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>ModelDataConfig</em>) – Model dataset configuration.</p></li>
-<li><p><strong>observation</strong> (<em>ObsDataConfig</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Observation dataset configuration.</p></li>
-<li><p><strong>condition</strong> (<em>ConditionDataConfig</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Conditioning dataset configuration.</p></li>
-<li><p><strong>condition_method</strong> (<em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Method for conditioning (e.g., “cross_ensemble”, “same_member”, “static”).</p></li>
-<li><p><strong>time_features</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Time-based features to include.</p></li>
-<li><p><strong>lead_months</strong> (<em>array-like</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Lead months to use.</p></li>
+<li><p><strong>model</strong> (<em>ModelDataConfig</em>) – Description not yet provided.</p></li>
+<li><p><strong>observation</strong> (<em>ObsDataConfig</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition</strong> (<em>ConditionDataConfig</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition_method</strong> (<em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>lead_months</strong> (<em>lead_months_config</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">add_fitted_preprocessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preprocessor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataset.html#TrainDatasetConfig.add_fitted_preprocessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>preprocessor</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>index</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">available_train_time</span></span></dt>
-<dd><p>Available training years.</p>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">available_times</span></span></dt>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.ndarray</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">build_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">years</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/datasets.html#TrainDatasetConfig.build_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Construct training dataset.</p>
+<span class="sig-name descname"><span class="pre">build_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">years</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataset.html#TrainDatasetConfig.build_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>years</strong> (<em>np.ndarray</em>) – Description not yet provided.</p></li>
+<li><p><strong>time_features</strong> (<em>AddedTimeFeatures</em>) – Description not yet provided.</p></li>
+<li><p><strong>mask</strong> (<em>xr.DataArray</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>return_metadata</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>load</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>TrainDataset</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -773,10 +878,43 @@
 <dl class="py property">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ds_operator</span></span></dt>
-<dd><p>Access dataset operator.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>DatasetOperator</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">effective_input</span></span></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">fit_preprocessors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_years</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataset.html#TrainDatasetConfig.fit_preprocessors"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_years</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>save</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>save_path</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>save_name</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -784,10 +922,13 @@
 <dl class="py property">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_common_time</span></span></dt>
-<dd><p>Compute common time range.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.ndarray</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -797,30 +938,25 @@
 <span class="sig-name descname"><span class="pre">lead_months</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">lead_months_config</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
+<dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">model</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ModelDataConfig</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">num_input_lead_months</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span></dt>
-<dd><p>Number of lead months in model dataset.</p>
+<span class="sig-name descname"><span class="pre">load_fitted_preprocessors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataset.html#TrainDatasetConfig.load_fitted_preprocessors"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>load_dir</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">observation</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ObsDataConfig</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<span class="sig-name descname"><span class="pre">model</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ModelDataConfig</span></span></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">time_features</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<span class="sig-name descname"><span class="pre">observation</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ObsDataConfig</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -829,38 +965,38 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">WeightsConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spatial_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'uniform'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/data_modules/utils.html#WeightsConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Configuration for computing spatial and variable weights.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>spatial_method</strong> (<em>{&quot;uniform&quot;</em><em>, </em><em>&quot;cosine_lat&quot;}</em><em>, </em><em>optional</em>) – Method used to compute spatial weights.</p></li>
-<li><p><strong>variable_weights</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>float</em><em>] or </em><em>None</em><em>, </em><em>optional</em>) – Per-variable weighting factors.</p></li>
-<li><p><strong>load_dir</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Path to load precomputed weights.</p></li>
+<li><p><strong>spatial_method</strong> (<em>spatialmethod</em>) – Description not yet provided.</p></li>
+<li><p><strong>variable_weights</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>float</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>load_dir</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">build_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_coords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Flattennanremover</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/data_modules/utils.html#WeightsConfig.build_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Generate or load spatial weights.</p>
+<span class="sig-name descname"><span class="pre">build_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Flattennanremover</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/data_modules/utils.html#WeightsConfig.build_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>target_coords</strong> (<em>dict</em><em>, </em><em>optional</em>) – Spatial coordinates of target data.</p></li>
-<li><p><strong>Flattennanremover</strong> (<em>Flattennanremove</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Preprocessor for flattened spatial representation.</p></li>
-<li><p><strong>save</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to save computed weights.</p></li>
-<li><p><strong>save_path</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>)</p></li>
-<li><p><strong>save_name</strong> (<em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>)</p></li>
+<li><p><strong>target_coords</strong> (<em>dict</em>) – Description not yet provided.</p></li>
+<li><p><strong>Flattennanremover</strong> (<em>Flattennanremove</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>save</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>save_path</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>save_name</strong> (<em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Spatial (and optional variable) weights.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>xr.DataArray</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If loaded weights are incompatible with target coordinates.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -885,20 +1021,20 @@
 <dl class="py function">
 <dt class="sig sig-object py">
 <span class="sig-prename descclassname"><span class="pre">cccma_ppp.train.dataloader.</span></span><span class="sig-name descname"><span class="pre">collate_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/train/dataloader.html#collate_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Collate dataset samples into a batch.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>batch</strong> (<em>list</em>) – List of dataset samples.</p></li>
-<li><p><strong>return_spatial_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to include spatial masks.</p></li>
-<li><p><strong>reduce_spatial_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to reduce masks across the batch.</p></li>
+<li><p><strong>batch</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>return_spatial_mask</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>reduce_spatial_mask</strong> (<em>bool</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Batched data, optionally paired with metadata.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>BatchData or tuple</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -910,7 +1046,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="cccma_ppp.train.html" class="btn btn-neutral float-left" title="cccma_ppp.train package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="cccma_ppp.train.datasets.html" class="btn btn-neutral float-right" title="cccma_ppp.train.datasets module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="cccma_ppp.train.dataset.html" class="btn btn-neutral float-right" title="cccma_ppp.train.dataset module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

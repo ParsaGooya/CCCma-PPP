@@ -88,14 +88,13 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.train.train.html#cccma_ppp.train.train.get_parser">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_parser</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Create argument parser for training script.</span>
+<span class="sd">    Document this function.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    argparse.ArgumentParser</span>
-<span class="sd">        Configured parser expecting a YAML configuration path.</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Train model from config file&quot;</span><span class="p">)</span>
 
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
@@ -112,49 +111,46 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.train.train.html#cccma_ppp.train.train.main">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">yaml_config</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Run training from configuration file.</span>
+<span class="sd">    Document this function.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    yaml_config : str</span>
-<span class="sd">        Path to YAML configuration file.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    None</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">distributed</span> <span class="o">=</span> <span class="n">Distributed</span><span class="o">.</span><span class="n">get_instance</span><span class="p">()</span>
 
-    <span class="n">config_data</span> <span class="o">=</span> <span class="n">prepare_config</span><span class="p">(</span><span class="n">yaml_config</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">config_data</span> <span class="o">=</span> <span class="n">prepare_config</span><span class="p">(</span><span class="n">yaml_config</span><span class="p">)</span>
 
-    <span class="n">config</span> <span class="o">=</span> <span class="n">dacite</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
-        <span class="n">data_class</span><span class="o">=</span><span class="n">TrainConfig</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">config_data</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">dacite</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span><span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">set_random_seed</span><span class="p">()</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">dacite</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+            <span class="n">data_class</span><span class="o">=</span><span class="n">TrainConfig</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">config_data</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">dacite</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span><span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set_random_seed</span><span class="p">(</span><span class="n">distributed</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
 
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">setup_logger</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;training&quot;</span><span class="p">,</span> <span class="n">log_dir</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">log_dir</span><span class="p">)</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">setup_logger</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;training&quot;</span><span class="p">,</span> <span class="n">log_dir</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">log_dir</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">distributed</span><span class="o">.</span><span class="n">is_root</span><span class="p">():</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Setting up directories ...&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">distributed</span><span class="o">.</span><span class="n">is_root</span><span class="p">():</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Setting up directories ...&quot;</span><span class="p">)</span>
 
-    <span class="n">config</span><span class="o">.</span><span class="n">prepare_directory</span><span class="p">(</span><span class="n">distributed</span><span class="p">,</span> <span class="n">yaml_config</span><span class="p">)</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">prepare_directory</span><span class="p">(</span><span class="n">distributed</span><span class="p">,</span> <span class="n">yaml_config</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">distributed</span><span class="o">.</span><span class="n">is_root</span><span class="p">():</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Building objects:&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">distributed</span><span class="o">.</span><span class="n">is_root</span><span class="p">():</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Building objects:&quot;</span><span class="p">)</span>
 
-    <span class="n">trainer</span> <span class="o">=</span> <span class="n">build_trainer</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="n">trainer</span> <span class="o">=</span> <span class="n">build_trainer</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
-    <span class="n">trainer</span><span class="o">.</span><span class="n">setup_distributed</span><span class="p">(</span>
-        <span class="n">distributed</span><span class="o">=</span><span class="n">distributed</span><span class="p">,</span>
-        <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
-        <span class="n">log_every_n_epochs</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">log_every_n_epochs</span><span class="p">,</span>
-        <span class="n">save_checkpoint</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">save_checkpoint</span><span class="p">,</span>
-    <span class="p">)</span>
+        <span class="n">trainer</span><span class="o">.</span><span class="n">setup_distributed</span><span class="p">(</span>
+            <span class="n">distributed</span><span class="o">=</span><span class="n">distributed</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
+            <span class="n">log_every_n_epochs</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">log_every_n_epochs</span><span class="p">,</span>
+            <span class="n">save_checkpoint</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">save_checkpoint</span><span class="p">,</span>
+        <span class="p">)</span>
 
-    <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+        <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 
-    <span class="n">distributed</span><span class="o">.</span><span class="n">cleanup</span><span class="p">()</span></div>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">distributed</span><span class="o">.</span><span class="n">cleanup</span><span class="p">()</span></div>
 
 </pre></div>
 

@@ -110,7 +110,7 @@ def main():
     summarize_warnings()
 
     if rc == 0:
-        serve(8000)
+        serve(18000)
 
     sys.exit(rc)
 

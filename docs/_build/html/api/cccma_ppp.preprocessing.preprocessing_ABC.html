@@ -53,6 +53,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="cccma_ppp.html">cccma_ppp package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="cccma_ppp.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.configs.html">cccma_ppp.configs package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.core.html">cccma_ppp.core package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.html">cccma_ppp.data_modules package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.generic.html">cccma_ppp.generic package</a></li>
@@ -66,7 +67,6 @@
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.train.html">cccma_ppp.train package</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.html#submodules">Submodules</a></li>
 </ul>
 </li>
 </ul>
@@ -103,17 +103,14 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.preprocessing.preprocessing_ABC.</span></span><span class="sig-name descname"><span class="pre">PreprocessModuleABC</span></span><a class="reference internal" href="../_modules/cccma_ppp/preprocessing/preprocessing_ABC.html#PreprocessModuleABC"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Abstract base class for preprocessing modules.</p>
+<p>Document this class.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/preprocessing/preprocessing_ABC.html#PreprocessModuleABC.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Fit preprocessing parameters to data.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>object</em>) – Input data used to estimate preprocessing statistics.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-odd"><p><strong>data</strong> (<em>Any</em>) – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -121,19 +118,13 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">inverse_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/preprocessing/preprocessing_ABC.html#PreprocessModuleABC.inverse_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Reverse preprocessing transformation.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>object</em>) – Transformed data.</p></li>
-<li><p><strong>**kwargs</strong> (<em>dict</em>) – Additional arguments for inverse transformation.</p></li>
+<li><p><strong>data</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Data in original representation.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>object</p>
 </dd>
 </dl>
 </dd></dl>
@@ -141,19 +132,13 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/preprocessing/preprocessing_ABC.html#PreprocessModuleABC.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Apply preprocessing transformation.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>object</em>) – Input data to transform.</p></li>
-<li><p><strong>**kwargs</strong> (<em>dict</em>) – Additional arguments for transformation.</p></li>
+<li><p><strong>data</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Transformed data.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>object</p>
 </dd>
 </dl>
 </dd></dl>

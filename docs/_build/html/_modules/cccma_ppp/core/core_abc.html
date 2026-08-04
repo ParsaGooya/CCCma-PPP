@@ -83,120 +83,135 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">final</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss.loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">Losspipeline</span>
+
+<div class="viewcode-block" id="moduleConfigABC">
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.cVAE_module.moduleConfigABC">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">moduleConfigABC</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Document this class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_type</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="moduleConfigABC.check_registered">
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.cVAE_module.moduleConfigABC.check_registered">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_registered</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Document this function.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        RuntimeError</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> has not been registered.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="moduleConfigABC.build">
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.cVAE_module.moduleConfigABC.build">[docs]</a>
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">input_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">output_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">added_features_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Document this function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_shape : np.ndarray</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        output_shape : np.ndarray | None</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        added_features_dim : int</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_from_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Document this function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
 
 
 <div class="viewcode-block" id="moduleABC">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE_module.moduleABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.predictors.deterministic.html#cccma_ppp.core.cVAE_module.moduleABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">moduleABC</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Abstract base class for trainable modules.</span>
-
-<span class="sd">    Methods</span>
-<span class="sd">    -------</span>
-<span class="sd">    init_loss_function(reconstruction_loss, **kwargs)</span>
-<span class="sd">        Initialize loss function.</span>
-<span class="sd">    _compute_loss()</span>
-<span class="sd">        Compute training loss.</span>
-<span class="sd">    forward()</span>
-<span class="sd">        Perform forward pass.</span>
-<span class="sd">    predict()</span>
-<span class="sd">        Perform inference.</span>
+<span class="sd">    Document this class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize base module.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
 <div class="viewcode-block" id="moduleABC.init_loss_function">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE_module.moduleABC.init_loss_function">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.predictors.deterministic.html#cccma_ppp.core.cVAE_module.moduleABC.init_loss_function">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">init_loss_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reconstruction_loss</span><span class="p">:</span> <span class="n">Losspipeline</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_loss_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reconstruction_loss</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize loss function for training.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        reconstruction_loss : Losspipeline</span>
-<span class="sd">            Loss pipeline used for computing reconstruction loss.</span>
-<span class="sd">        **kwargs</span>
-<span class="sd">            Additional arguments for loss initialization.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">        reconstruction_loss : nn.Module</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        **kwargs : Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="moduleABC._compute_loss">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE_module.moduleABC._compute_loss">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Compute total training loss.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        tuple</span>
-<span class="sd">            Loss tensor and dictionary of loss components.</span>
+<span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">pass</span></div>
-
+        <span class="k">pass</span>
 
 <div class="viewcode-block" id="moduleABC.forward">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE_module.moduleABC.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.predictors.deterministic.html#cccma_ppp.core.cVAE_module.moduleABC.forward">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Perform forward pass.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        object</span>
-<span class="sd">            Model output (implementation-dependent).</span>
+<span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span></div>
 
 
 <div class="viewcode-block" id="moduleABC.predict">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.cVAE_module.moduleABC.predict">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.predictors.deterministic.html#cccma_ppp.core.cVAE_module.moduleABC.predict">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Perform inference using the model.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        object</span>
-<span class="sd">            Model predictions.</span>
+<span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span></div>
 
 
     <span class="nd">@final</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Determine device on which the module resides.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        torch.device</span>
-<span class="sd">            Device of parameters or buffers. Defaults to CPU if none exist.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">param</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">param</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -212,25 +227,20 @@
     <span class="nd">@final</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">load_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Load model weights from checkpoint.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        load_path : pathlib.Path or str</span>
-<span class="sd">            Path to checkpoint file.</span>
-<span class="sd">        strict : bool, optional</span>
-<span class="sd">            Whether to enforce strict parameter matching.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">        load_path : Path | str</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        strict : bool</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        FileNotFoundError</span>
-<span class="sd">            If the checkpoint file does not exist.</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">load_path</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checkpoint not found: </span><span class="si">{</span><span class="n">load_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -243,77 +253,53 @@
 
 
 
-<div class="viewcode-block" id="moduleConfigABC">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.cVAE_module.moduleConfigABC">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">moduleConfigABC</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
+<div class="viewcode-block" id="GenerativeContext">
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.cVAE_module.GenerativeContext">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GenerativeContext</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Abstract base class for module configuration objects.</span>
+<span class="sd">    Document this class.</span>
 
-<span class="sd">    Methods</span>
-<span class="sd">    -------</span>
-<span class="sd">    build(input_shape, output_shape=None, added_features_dim=None)</span>
-<span class="sd">        Construct module instance.</span>
-<span class="sd">    _load_from_checkpoint()</span>
-<span class="sd">        Load configuration from checkpoint.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    module : moduleABC | None</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">moduleABC</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize module configuration object.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-
-<div class="viewcode-block" id="moduleConfigABC.build">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.cVAE_module.moduleConfigABC.build">[docs]</a>
-    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">input_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-        <span class="n">output_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">added_features_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Construct and return a module instance.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        input_shape : np.ndarray</span>
-<span class="sd">            Shape of the input data expected by the module.</span>
-<span class="sd">        output_shape : np.ndarray or None, optional</span>
-<span class="sd">            Shape of the target/output data. If None, the module may assume</span>
-<span class="sd">            the same shape as the input or infer it internally.</span>
-<span class="sd">        added_features_dim : int, optional</span>
-<span class="sd">            Number of additional feature dimensions provided alongside the input.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        moduleABC</span>
-<span class="sd">            Instantiated and optionally initialized module ready for training</span>
-<span class="sd">            or inference.</span>
+<span class="sd">        module : moduleABC | None</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">module</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generator</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">model_config</span><span class="p">,</span> <span class="s2">&quot;GENERATOR&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generative_modeling</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span>
+                <span class="n">module</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;generative_modeling&quot;</span><span class="p">,</span> <span class="kc">False</span>
+            <span class="p">)</span>
 
-        <span class="k">pass</span></div>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generator</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generative_modeling</span> <span class="o">=</span> <span class="kc">False</span></div>
 
 
-<div class="viewcode-block" id="moduleConfigABC._load_from_checkpoint">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.cVAE_module.moduleConfigABC._load_from_checkpoint">[docs]</a>
-    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_load_from_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Load configuration from a saved checkpoint.</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="OutputABC">
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.models_abc.html#cccma_ppp.core.cVAE_module.OutputABC">[docs]</a>
+<span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OutputABC</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Document this class.</span>
 
-        <span class="k">pass</span></div>
-</div>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    output : torch.Tensor</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">output</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span></div>
 
 </pre></div>
 

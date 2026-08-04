@@ -19,7 +19,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="cccma_ppp.data_modules package" href="cccma_ppp.data_modules.html" />
+    <link rel="next" title="cccma_ppp.core.writer module" href="cccma_ppp.core.writer.html" />
     <link rel="prev" title="cccma_ppp.core.selectors module" href="cccma_ppp.core.selectors.html" /> 
 </head>
 
@@ -53,6 +53,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="cccma_ppp.html">cccma_ppp package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="cccma_ppp.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.configs.html">cccma_ppp.configs package</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="cccma_ppp.core.html">cccma_ppp.core package</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="cccma_ppp.core.html#submodules">Submodules</a></li>
 </ul>
@@ -66,7 +67,6 @@
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.train.html">cccma_ppp.train package</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.html#submodules">Submodules</a></li>
 </ul>
 </li>
 </ul>
@@ -103,14 +103,14 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.trainer.</span></span><span class="sig-name descname"><span class="pre">BetaAnnealing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epoch_to_warmup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epochs_to_hold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/loss/kld.html#BetaAnnealing"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Beta annealing schedule for variational models.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>beta</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum beta value.</p></li>
-<li><p><strong>beta_min</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum beta value.</p></li>
-<li><p><strong>num_epoch_to_warmup</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of epochs to linearly increase beta.</p></li>
-<li><p><strong>num_epochs_to_hold</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of epochs to maintain full beta in cyclic mode.</p></li>
+<li><p><strong>beta</strong> (<em>float</em>) – Description not yet provided.</p></li>
+<li><p><strong>beta_min</strong> (<em>float</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_epoch_to_warmup</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_epochs_to_hold</strong> (<em>int</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
@@ -127,13 +127,10 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_batches</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/loss/kld.html#BetaAnnealing.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Initialize annealing schedule.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>num_batches</strong> (<em>int</em>) – Number of batches per epoch.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-odd"><p><strong>num_batches</strong> (<em>Any</em>) – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -152,29 +149,31 @@
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.trainer.</span></span><span class="sig-name descname"><span class="pre">Dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collate_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_spatial_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/data_modules/dataloader.html#Dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.trainer.</span></span><span class="sig-name descname"><span class="pre">Dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collate_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/data_modules/dataloader.html#Dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Wrapper around PyTorch DataLoader with distributed support.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<em>DataloaderConfigABC</em>) – Dataloader configuration.</p></li>
-<li><p><strong>dataset</strong> (<em>torch.utils.data.Dataset</em>) – Dataset instance.</p></li>
-<li><p><strong>rank</strong> (<em>int</em><em>, </em><em>optional</em>) – Process rank in distributed setup.</p></li>
-<li><p><strong>world_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Total number of processes.</p></li>
-<li><p><strong>return_spatial_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to include spatial masks.</p></li>
-<li><p><strong>reduce_spatial_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to reduce masks across batch dimension.</p></li>
-<li><p><strong>collate_fn</strong> (<em>Callable</em>)</p></li>
+<li><p><strong>config</strong> (<em>DataloaderConfigABC</em>) – Description not yet provided.</p></li>
+<li><p><strong>dataset</strong> (<em>Dataset</em>) – Description not yet provided.</p></li>
+<li><p><strong>collate_fn</strong> (<em>Callable</em>) – Description not yet provided.</p></li>
+<li><p><strong>rank</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>world_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>shuffle</strong> (<em>bool</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">added_features_dim</span></span></dt>
-<dd><p>Additional feature dimension.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -197,10 +196,10 @@
 <dl class="py property">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">input_shape</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span></span></dt>
-<dd><p>Input data shape.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Shape of the input data.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>tuple</p>
@@ -213,40 +212,41 @@
 <span class="sig-name descname"><span class="pre">rank</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">reduce_spatial_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">return_spatial_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">set_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/data_modules/dataloader.html#Dataloader.set_epoch"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Set epoch for distributed sampler.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>epoch</strong> (<em>int</em>)</p>
+<dd class="field-odd"><p><strong>epoch</strong> (<em>Any</em>) – Description not yet provided.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Dataloader</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">shuffle</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">final</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">subset_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/data_modules/dataloader.html#Dataloader.subset_loader"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Create iterator over subset of batches.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>start_batch</strong> (<em>int</em><em>, </em><em>optional</em>) – Starting batch index.</p>
+<dd class="field-odd"><p><strong>start_batch</strong> (<em>Any</em>) – Description not yet provided.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>iterator</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -254,10 +254,13 @@
 <dl class="py property">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">target_shape</span></span></dt>
-<dd><p>Target data shape.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -273,72 +276,14 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.trainer.</span></span><span class="sig-name descname"><span class="pre">Distributed</span></span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Single class for managing distributed training setup.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">distributed</span></span></dt>
-<dd><p>Whether distributed training is enabled.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">rank</span></span></dt>
-<dd><p>Global process rank.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">local_rank</span></span></dt>
-<dd><p>Local process rank (GPU index).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">world_size</span></span></dt>
-<dd><p>Total number of processes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">device</span></span></dt>
-<dd><p>Device assigned to the current process.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>torch.device</p>
-</dd>
-</dl>
-</dd></dl>
-
+<p>Document this class.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">all_reduce_sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.all_reduce_sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Perform all-reduce sum across processes.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>local</strong> (<em>torch.Tensor</em>) – Tensor to be summed across all ranks.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-odd"><p><strong>local</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -346,28 +291,19 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">barrier</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.barrier"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Synchronize all processes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
+<dd><p>Document this function.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">broadcast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lcoal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.broadcast"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Broadcast tensor from source process to all processes.</p>
+<span class="sig-name descname"><span class="pre">broadcast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.broadcast"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>local</strong> (<em>torch.Tensor</em>) – Tensor to broadcast.</p></li>
-<li><p><strong>src</strong> (<em>int</em><em>, </em><em>optional</em>) – Source rank.</p></li>
-<li><p><strong>lcoal</strong> (<em>Tensor</em>)</p></li>
+<li><p><strong>local</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>src</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -375,24 +311,19 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.cleanup"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Destroy distributed process group.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
+<dd><p>Document this function.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_instance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.get_instance"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Retrieve singleton instance.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Shared instance.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Distributed</p>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -400,10 +331,10 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">is_root</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.is_root"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Check if current process is the root process.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>True if rank is 0.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>bool</p>
@@ -415,17 +346,17 @@
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.trainer.</span></span><span class="sig-name descname"><span class="pre">MetricsAggregator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch_loss_terms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch_times</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epochs_seen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#MetricsAggregator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.trainer.</span></span><span class="sig-name descname"><span class="pre">MetricsAggregator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch_metric_terms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch_times</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epochs_seen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#MetricsAggregator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Aggregate training and validation metrics across batches and epochs.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>distributed</strong> (<em>Distributed</em>) – Distributed training context.</p></li>
-<li><p><strong>name</strong> (<em>str</em>) – Name of the aggregator (e.g., “Train”, “Validation”).</p></li>
-<li><p><strong>epoch_loss_terms</strong> (<em>dict</em><em> of </em><em>str to list</em><em> of </em><em>float</em><em>, </em><em>optional</em>) – Stored loss values per epoch.</p></li>
-<li><p><strong>epoch_times</strong> (<em>list</em><em> of </em><em>float</em><em>, </em><em>optional</em>) – Time per epoch.</p></li>
-<li><p><strong>num_epochs_seen</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of processed epochs.</p></li>
+<li><p><strong>distributed</strong> (<em>Distributed</em>) – Description not yet provided.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>epoch_metric_terms</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>list</em><em>[</em><em>float</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>epoch_times</strong> (<em>list</em><em>[</em><em>float</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_epochs_seen</strong> (<em>int</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
@@ -436,7 +367,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">epoch_loss_terms</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<span class="sig-name descname"><span class="pre">epoch_metric_terms</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -447,13 +378,10 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">load_state_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#MetricsAggregator.load_state_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Load aggregator state from dictionary.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>state_dict</strong> (<em>dict</em>) – Stored state.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-odd"><p><strong>state_dict</strong> (<em>Any</em>) – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -471,32 +399,36 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aggregator_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_styles_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">5)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#MetricsAggregator.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Plot loss curves and epoch times.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>aggregator_list</strong> (<em>list</em><em> of </em><em>MetricsAggregator</em>) – Aggregators to plot.</p></li>
-<li><p><strong>color_styles_list</strong> (<em>list</em><em> of </em><em>(</em><em>str</em><em>, </em><em>str</em><em>)</em><em>, </em><em>optional</em>) – Custom color and linestyle pairs.</p></li>
-<li><p><strong>plot_dir</strong> (<em>Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Directory for saving plots.</p></li>
-<li><p><strong>figsize</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Figure size.</p></li>
+<li><p><strong>aggregator_list</strong> (<em>list</em><em>[</em><em>'MetricsAggregator'</em><em>]</em>) – Description not yet provided.</p></li>
+<li><p><strong>color_styles_list</strong> (<em>list</em><em>[</em><em>tuple</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Description not yet provided.</p></li>
+<li><p><strong>plot_dir</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>figsize</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
 </dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If aggregators are inconsistent or contain no data.</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#MetricsAggregator.record"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Accumulate batch-level loss values.</p>
+<span class="sig-name descname"><span class="pre">record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#MetricsAggregator.record"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>loss_dict</strong> (<em>dict</em><em> of </em><em>str to Tensor</em><em> or </em><em>float</em>) – Loss components for a batch.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loss_dict</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>torch.Tensor</em><em> | </em><em>int</em><em> | </em><em>float</em><em>]</em>) – Description not yet provided.</p></li>
+<li><p><strong>lr</strong> (<em>torch.Tensor</em><em> | </em><em>int</em><em> | </em><em>float</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>torch.Tensor</em><em> | </em><em>int</em><em> | </em><em>float</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -507,25 +439,25 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">record_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_elapsed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#MetricsAggregator.record_epoch"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Record aggregated metrics for an epoch.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>logs</strong> (<em>dict</em><em> of </em><em>str to float</em>) – Aggregated loss values.</p></li>
-<li><p><strong>replace_index</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Index to overwrite existing epoch values.</p></li>
-<li><p><strong>time_elapsed</strong> (<em>float</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Time taken for the epoch.</p></li>
+<li><p><strong>logs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – Description not yet provided.</p></li>
+<li><p><strong>replace_index</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>time_elapsed</strong> (<em>float</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Recorded logs.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>RuntimeError</strong> – If distributed aggregation has not been performed.</p></li>
-<li><p><strong>ValueError</strong> – If attempting to replace a non-existing metric.</p></li>
+<li><p><strong>RuntimeError</strong> – Description not yet provided.</p></li>
+<li><p><strong>ValueError</strong> – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
@@ -534,13 +466,10 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">reset_batch_losses</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#MetricsAggregator.reset_batch_losses"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Reset batch-level accumulators.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-<dt class="field-even">Warns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>If called before any epoch has been recorded.</strong></p>
+<dt class="field-odd">Warns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>UserWarning</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -548,13 +477,13 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">state_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#MetricsAggregator.state_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Return serialized aggregator state.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>State dictionary containing history and metadata.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dict</p>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -563,32 +492,44 @@
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.trainer.</span></span><span class="sig-name descname"><span class="pre">OptimizerWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_batches</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#OptimizerWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.trainer.</span></span><span class="sig-name descname"><span class="pre">OptimizerWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_batches</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_accumulation_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#OptimizerWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Wrapper around optimizer and optional learning rate scheduler.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<em>OptimizerConfig</em>) – Optimizer configuration.</p></li>
-<li><p><strong>module</strong> (<em>moduleABC</em>) – Model instance.</p></li>
-<li><p><strong>num_batches</strong> (<em>int</em><em> or </em><em>None</em>) – Number of batches per epoch.</p></li>
-<li><p><strong>max_epochs</strong> (<em>int</em><em> or </em><em>None</em>) – Total number of training epochs.</p></li>
+<li><p><strong>config</strong> (<em>OptimizerConfig</em>) – Description not yet provided.</p></li>
+<li><p><strong>module</strong> (<em>moduleABC</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_batches</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>max_epochs</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>gradient_accumulation_steps</strong> (<em>int</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py property">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">learning_rate</span></span></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">load_state_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#OptimizerWrapper.load_state_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Load optimizer and scheduler state.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>state_dict</strong> (<em>dict</em>) – State dictionary.</p>
+<dd class="field-odd"><p><strong>state_dict</strong> (<em>Any</em>) – Description not yet provided.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>RuntimeError</strong> – If optimizer is not initialized.</p>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -596,27 +537,22 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">scheduler_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#OptimizerWrapper.scheduler_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Perform scheduler step.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-</dl>
+<dd><p>Document this function.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">state_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#OptimizerWrapper.state_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Return optimizer and scheduler state.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>State dictionary containing optimizer and scheduler states.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dict</p>
+<dd class="field-even"><p>Any</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>RuntimeError</strong> – If optimizer has not been initialized.</p>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -624,13 +560,10 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#OptimizerWrapper.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Perform optimizer step.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>RuntimeError</strong> – If optimizer has not been initialized.</p>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -638,19 +571,16 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">zero_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">set_to_none</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/optimization.html#OptimizerWrapper.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Reset gradients of model parameters.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>set_to_none</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to set gradients to None instead of zero.</p></li>
-<li><p><strong>**kwargs</strong> – Additional arguments passed to optimizer.</p></li>
+<li><p><strong>set_to_none</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>RuntimeError</strong> – If optimizer has not been initialized.</p>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -661,17 +591,17 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.trainer.</span></span><span class="sig-name descname"><span class="pre">RuntimeContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">GLOBAL_EXP_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_CHECKPOINT_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_FIGURES_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_LOG_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_OUTPUT_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INPUT_VAR_METADATA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TARGET_VAR_METADATA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/runtime.html#RuntimeContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Global runtime configuration for experiment-level settings.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>GLOBAL_EXP_DIR</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Root directory for experiment outputs.</p></li>
-<li><p><strong>GLOBAL_CHECKPOINT_DIR</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Directory for saving model checkpoints.</p></li>
-<li><p><strong>GLOBAL_FIGURES_DIR</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Directory for saving figures and plots.</p></li>
-<li><p><strong>GLOBAL_LOG_DIR</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Directory for log files.</p></li>
-<li><p><strong>GLOBAL_OUTPUT_DIR</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – General output directory for experiment artifacts.</p></li>
-<li><p><strong>INPUT_VAR_METADATA</strong> (<em>dict</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Metadata describing input variables and preprocessing steps.</p></li>
-<li><p><strong>TARGET_VAR_METADATA</strong> (<em>dict</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Metadata describing target variables and preprocessing steps.</p></li>
+<li><p><strong>GLOBAL_EXP_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_CHECKPOINT_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_FIGURES_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_LOG_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_OUTPUT_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>INPUT_VAR_METADATA</strong> (<em>dict</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>TARGET_VAR_METADATA</strong> (<em>dict</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
@@ -716,34 +646,30 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.trainer.</span></span><span class="sig-name descname"><span class="pre">Trainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_data_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_data_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/trainer.html#Trainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Training loop manager supporting distributed training, logging,
-checkpointing, and early stopping.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<em>TrainerConfig</em>) – Training configuration.</p></li>
-<li><p><strong>train_data_loader</strong> (<em>Dataloader</em>) – Training data loader.</p></li>
-<li><p><strong>module</strong> (<em>moduleABC</em>) – Model module.</p></li>
-<li><p><strong>optimizer</strong> (<em>OptimizerWrapper</em>) – Optimizer wrapper.</p></li>
-<li><p><strong>max_epochs</strong> (<em>int</em>) – Number of training epochs.</p></li>
-<li><p><strong>validation_data_loader</strong> (<em>Dataloader</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Validation data loader.</p></li>
+<li><p><strong>config</strong> (<em>TrainerConfig</em>) – Description not yet provided.</p></li>
+<li><p><strong>train_data_loader</strong> (<em>Dataloader</em>) – Description not yet provided.</p></li>
+<li><p><strong>module</strong> (<em>moduleABC</em>) – Description not yet provided.</p></li>
+<li><p><strong>optimizer</strong> (<em>OptimizerWrapper</em>) – Description not yet provided.</p></li>
+<li><p><strong>max_epochs</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>validation_data_loader</strong> (<em>Dataloader</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">log_root</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">msg</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/trainer.html#Trainer.log_root"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Log message from root process.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>level</strong> (<em>int</em>) – Logging level.</p></li>
-<li><p><strong>msg</strong> (<em>str</em>) – Message.</p></li>
-<li><p><strong>*args</strong> – Formatting arguments.</p></li>
+<li><p><strong>level</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>msg</strong> (<em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>*args</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -751,13 +677,13 @@ checkpointing, and early stopping.</p>
 <dl class="py property">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">raw_module</span></span></dt>
-<dd><p>Access underlying module (unwrap DDP if needed).</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Raw model instance.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>moduleABC</p>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -765,21 +691,18 @@ checkpointing, and early stopping.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">setup_distributed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_every_n_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_checkpoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/trainer.html#Trainer.setup_distributed"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Setup distributed training environment.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>distributed</strong> (<em>Distributed</em>) – Distributed environment manager.</p></li>
-<li><p><strong>logger</strong> (<em>logging.Logger</em>) – Logger instance.</p></li>
-<li><p><strong>log_every_n_epochs</strong> (<em>int</em><em>, </em><em>optional</em>) – Logging frequency.</p></li>
-<li><p><strong>save_checkpoint</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to save checkpoints.</p></li>
+<li><p><strong>distributed</strong> (<em>Distributed</em>) – Description not yet provided.</p></li>
+<li><p><strong>logger</strong> (<em>logging.Logger</em>) – Description not yet provided.</p></li>
+<li><p><strong>log_every_n_epochs</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>save_checkpoint</strong> (<em>bool</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>RuntimeError</strong> – If module device does not match trainer device.</p>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -787,13 +710,10 @@ checkpointing, and early stopping.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/trainer.html#Trainer.train"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Execute full training loop.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>AssertionError</strong> – If trainer is not properly initialized.</p>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -804,16 +724,16 @@ checkpointing, and early stopping.</p>
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.trainer.</span></span><span class="sig-name descname"><span class="pre">TrainerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta_finder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">earlystoppingbuffer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum_validation_improvement_percentage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.02</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_accumulation_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mixed_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_clip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/trainer.html#TrainerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Training configuration controlling loop behavior.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>beta_finder</strong> (<em>BetaAnnealing</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Beta annealing schedule for KL divergence (used in cVAE training).</p></li>
-<li><p><strong>earlystoppingbuffer</strong> (<em>float</em><em>, </em><em>optional</em>) – Number of epochs allowed without improvement before stopping.</p></li>
-<li><p><strong>minimum_validation_improvement_percentage</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum relative improvement required to reset early stopping counter.</p></li>
-<li><p><strong>gradient_accumulation_steps</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of steps to accumulate gradients before optimizer update.</p></li>
-<li><p><strong>mixed_precision</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to use mixed precision training.</p></li>
-<li><p><strong>grad_clip</strong> (<em>float</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Maximum gradient norm for clipping.</p></li>
+<li><p><strong>beta_finder</strong> (<em>BetaAnnealing</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>earlystoppingbuffer</strong> (<em>float</em>) – Description not yet provided.</p></li>
+<li><p><strong>minimum_validation_improvement_percentage</strong> (<em>float</em>) – Description not yet provided.</p></li>
+<li><p><strong>gradient_accumulation_steps</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>mixed_precision</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>grad_clip</strong> (<em>float</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
@@ -825,25 +745,25 @@ checkpointing, and early stopping.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_data_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_epochs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/trainer.html#TrainerConfig.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Construct Trainer instance.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>train_data_loader</strong> (<em>Dataloader</em>) – Training data loader.</p></li>
-<li><p><strong>validation_data_loader</strong> (<em>Dataloader</em>) – Validation data loader.</p></li>
-<li><p><strong>optimization</strong> (<em>OptimizerWrapper</em>) – Optimizer wrapper.</p></li>
-<li><p><strong>module</strong> (<em>moduleABC</em>) – Model module.</p></li>
-<li><p><strong>max_epochs</strong> (<em>int</em>) – Total number of training epochs.</p></li>
+<li><p><strong>train_data_loader</strong> (<em>Dataloader</em>) – Description not yet provided.</p></li>
+<li><p><strong>validation_data_loader</strong> (<em>Dataloader</em>) – Description not yet provided.</p></li>
+<li><p><strong>optimization</strong> (<em>OptimizerWrapper</em>) – Description not yet provided.</p></li>
+<li><p><strong>module</strong> (<em>moduleABC</em>) – Description not yet provided.</p></li>
+<li><p><strong>max_epochs</strong> (<em>int</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Initialized trainer instance.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Trainer</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If beta annealing is required but not provided.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -879,30 +799,30 @@ checkpointing, and early stopping.</p>
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.trainer.</span></span><span class="sig-name descname"><span class="pre">cVAE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/cVAE_module.html#cVAE"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">moduleABC</span></code></p>
-<p>Conditional variational autoencoder module.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<em>cVAEConfig</em>) – Configuration object.</p></li>
-<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Shape of input data.</p></li>
-<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> or </em><em>None</em>) – Shape of output data.</p></li>
-<li><p><strong>added_features_dim</strong> (<em>int</em><em> or </em><em>None</em>) – Additional feature dimension.</p></li>
+<li><p><strong>config</strong> (<em>cVAEConfig</em>) – Description not yet provided.</p></li>
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Description not yet provided.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/cVAE_module.html#cVAE.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Perform forward pass.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>BatchData</em>) – Input batch.</p></li>
-<li><p><strong>sample_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of latent samples.</p></li>
+<li><p><strong>data</strong> (<em>BatchData</em>) – Description not yet provided.</p></li>
+<li><p><strong>sample_size</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Model outputs.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>cVAEOutput</p>
@@ -913,33 +833,33 @@ checkpointing, and early stopping.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">init_loss_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reconstruction_loss</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/cVAE_module.html#cVAE.init_loss_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Initialize reconstruction and KL divergence losses.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>reconstruction_loss</strong> (<em>Losspipeline</em>) – Loss pipeline instance.</p>
+<dd class="field-odd"><p><strong>reconstruction_loss</strong> (<em>Losspipeline</em>) – Description not yet provided.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>RuntimeError</strong> – If flow is used and reduction is not ‘sum’.</p>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/cVAE_module.html#cVAE.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Generate predictions using the learned prior.</p>
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/cVAE_module.html#cVAE.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>BatchData</em>) – Input batch.</p></li>
-<li><p><strong>sample_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of samples to generate.</p></li>
+<li><p><strong>data</strong> (<em>BatchData</em>) – Description not yet provided.</p></li>
+<li><p><strong>sample_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>nstds</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>latent_samples</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>output_sample_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Generated outputs.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>cVAEOutput</p>
@@ -949,67 +869,33 @@ checkpointing, and early stopping.</p>
 
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.trainer.</span></span><span class="sig-name descname"><span class="pre">clear_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/trainer.html#clear_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Document this function.</p>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.trainer.</span></span><span class="sig-name descname"><span class="pre">moduleABC</span></span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Abstract base class for trainable modules.</p>
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">init_loss_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reconstruction_loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">\*\*kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.init_loss_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Initialize loss function.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>reconstruction_loss</strong> (<em>Losspipeline</em>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">_compute_loss</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC._compute_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Compute training loss.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Perform forward pass.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Perform inference.</p>
-</dd></dl>
-
+<p>Document this class.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Perform forward pass.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Model output (implementation-dependent).</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>object</p>
-</dd>
-</dl>
+<dd><p>Document this function.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">init_loss_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reconstruction_loss</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.init_loss_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Initialize loss function for training.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>reconstruction_loss</strong> (<em>Losspipeline</em>) – Loss pipeline used for computing reconstruction loss.</p></li>
-<li><p><strong>**kwargs</strong> – Additional arguments for loss initialization.</p></li>
+<li><p><strong>reconstruction_loss</strong> (<em>nn.Module</em>) – Description not yet provided.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1017,15 +903,472 @@ checkpointing, and early stopping.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Perform inference using the model.</p>
+<dd><p>Document this function.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.trainer.</span></span><span class="sig-name descname"><span class="pre">tqdm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">_</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">__</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Comparable</span></code></p>
+<p>Decorate an iterable object, returning an iterator which acts exactly
+like the original iterable, but prints a dynamically updating
+progressbar every time a value is requested.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Model predictions.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>object</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>iterable</strong> (<em>iterable</em><em>, </em><em>optional</em>) – Iterable to decorate with a progressbar.
+Leave blank to manually manage the updates.</p></li>
+<li><p><strong>desc</strong> (<em>str</em><em>, </em><em>optional</em>) – Prefix for the progressbar.</p></li>
+<li><p><strong>total</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>optional</em>) – The number of expected iterations. If unspecified,
+len(iterable) is used if possible. If float(“inf”) or as a last
+resort, only basic progress statistics are displayed
+(no ETA, no progressbar).
+If <cite>gui</cite> is True and this parameter needs subsequent updating,
+specify an initial arbitrary large positive number,
+e.g. 9e9.</p></li>
+<li><p><strong>leave</strong> (<em>bool</em><em>, </em><em>optional</em>) – If [default: True], keeps all traces of the progressbar
+upon termination of iteration.
+If <cite>None</cite>, will leave only if <cite>position</cite> is <cite>0</cite>.</p></li>
+<li><p><strong>file</strong> (<cite>io.TextIOWrapper</cite> or <cite>io.StringIO</cite>, optional) – Specifies where to output the progress messages
+(default: sys.stderr). Uses <cite>file.write(str)</cite> and <cite>file.flush()</cite>
+methods.  For encoding, see <cite>write_bytes</cite>.</p></li>
+<li><p><strong>ncols</strong> (<em>int</em><em>, </em><em>optional</em>) – The width of the entire output message. If specified,
+dynamically resizes the progressbar to stay within this bound.
+If unspecified, attempts to use environment width. The
+fallback is a meter width of 10 and no limit for the counter and
+statistics. If 0, will not print any meter (only stats).</p></li>
+<li><p><strong>mininterval</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum progress display update interval [default: 0.1] seconds.</p></li>
+<li><p><strong>maxinterval</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum progress display update interval [default: 10] seconds.
+Automatically adjusts <cite>miniters</cite> to correspond to <cite>mininterval</cite>
+after long display update lag. Only works if <cite>dynamic_miniters</cite>
+or monitor thread is enabled.</p></li>
+<li><p><strong>miniters</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>optional</em>) – Minimum progress display update interval, in iterations.
+If 0 and <cite>dynamic_miniters</cite>, will automatically adjust to equal
+<cite>mininterval</cite> (more CPU efficient, good for tight loops).
+If &gt; 0, will skip display of specified number of iterations.
+Tweak this and <cite>mininterval</cite> to get very efficient loops.
+If your progress is erratic with both fast and slow iterations
+(network, skipping items, etc) you should set miniters=1.</p></li>
+<li><p><strong>ascii</strong> (<em>bool</em><em> or </em><em>str</em><em>, </em><em>optional</em>) – If unspecified or False, use unicode (smooth blocks) to fill
+the meter. The fallback is to use ASCII characters “ 123456789#”.</p></li>
+<li><p><strong>disable</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to disable the entire progressbar wrapper
+[default: False]. If set to None, disable on non-TTY.</p></li>
+<li><p><strong>unit</strong> (<em>str</em><em>, </em><em>optional</em>) – String that will be used to define the unit of each iteration
+[default: it].</p></li>
+<li><p><strong>unit_scale</strong> (<em>bool</em><em> or </em><em>int</em><em> or </em><em>float</em><em>, </em><em>optional</em>) – If 1 or True, the number of iterations will be reduced/scaled
+automatically and a metric prefix following the
+International System of Units standard will be added
+(kilo, mega, etc.) [default: False]. If any other non-zero
+number, will scale <cite>total</cite> and <cite>n</cite>.</p></li>
+<li><p><strong>dynamic_ncols</strong> (<em>bool</em><em>, </em><em>optional</em>) – If set, constantly alters <cite>ncols</cite> and <cite>nrows</cite> to the
+environment (allowing for window resizes) [default: False].</p></li>
+<li><p><strong>smoothing</strong> (<em>float</em><em>, </em><em>optional</em>) – Exponential moving average smoothing factor for speed estimates
+(ignored in GUI mode). Ranges from 0 (average speed) to 1
+(current/instantaneous speed) [default: 0.3].</p></li>
+<li><p><strong>bar_format</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>Specify a custom bar string formatting. May impact performance.
+[default: ‘{l_bar}{bar}{r_bar}’], where
+l_bar=’{desc}: {percentage:3.0f}%|’ and
+r_bar=’| {n_fmt}/{total_fmt} [{elapsed}&lt;{remaining}, ‘</p>
+<blockquote>
+<div><p>’{rate_fmt}{postfix}]’</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Possible vars: l_bar, bar, r_bar, n, n_fmt, total, total_fmt,</dt><dd><p>percentage, elapsed, elapsed_s, ncols, nrows, desc, unit,
+rate, rate_fmt, rate_noinv, rate_noinv_fmt,
+rate_inv, rate_inv_fmt, postfix, unit_divisor,
+remaining, remaining_s, eta.</p>
 </dd>
 </dl>
+<p>Note that a trailing “: “ is automatically removed after {desc}
+if the latter is empty.</p>
+</p></li>
+<li><p><strong>initial</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>optional</em>) – The initial counter value. Useful when restarting a progress
+bar [default: 0]. If using float, consider specifying <cite>{n:.3f}</cite>
+or similar in <cite>bar_format</cite>, or specifying <cite>unit_scale</cite>.</p></li>
+<li><p><strong>position</strong> (<em>int</em><em>, </em><em>optional</em>) – Specify the line offset to print this bar (starting from 0)
+Automatic if unspecified.
+Useful to manage multiple bars at once (eg, from threads).</p></li>
+<li><p><strong>postfix</strong> (dict or <a href="#id1"><span class="problematic" id="id2">*</span></a>, optional) – Specify additional stats to display at the end of the bar.
+Calls <cite>set_postfix(**postfix)</cite> if possible (dict).</p></li>
+<li><p><strong>unit_divisor</strong> (<em>float</em><em>, </em><em>optional</em>) – [default: 1000], ignored unless <cite>unit_scale</cite> is True.</p></li>
+<li><p><strong>write_bytes</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to write bytes. If (default: False) will write unicode.</p></li>
+<li><p><strong>lock_args</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Passed to <cite>refresh</cite> for intermediate output
+(initialisation, iterating, and updating).</p></li>
+<li><p><strong>nrows</strong> (<em>int</em><em>, </em><em>optional</em>) – The screen height. If specified, hides nested bars outside this
+bound. If unspecified, attempts to use environment height.
+The fallback is 20.</p></li>
+<li><p><strong>colour</strong> (<em>str</em><em>, </em><em>optional</em>) – Bar colour (e.g. ‘green’, ‘#00ff00’).</p></li>
+<li><p><strong>delay</strong> (<em>float</em><em>, </em><em>optional</em>) – Don’t display until [default: 0] seconds have elapsed.</p></li>
+<li><p><strong>gui</strong> (<em>bool</em><em>, </em><em>optional</em>) – WARNING: internal parameter - do not use.
+Use tqdm.gui.tqdm(…) instead. If set, will attempt to use
+matplotlib animations for a graphical output [default: False].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>out</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>decorated iterator.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nolock</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Clear current bar display.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Cleanup and (if leave=False) close the progressbar.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.display"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Use <cite>self.sp</cite> to display <cite>msg</cite> in the specified <cite>pos</cite>.</p>
+<p>Consider overloading this function when inheriting to use e.g.:
+<cite>self.some_frontend(**self.format_dict)</cite> instead of <cite>self.sp</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>msg</strong> (str, optional. What to display (default: <cite>repr(self)</cite>).)</p></li>
+<li><p><strong>pos</strong> (int, optional. Position to <cite>moveto</cite>) – (default: <cite>abs(self.pos)</cite>).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">external_write_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nolock</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.external_write_mode"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Disable tqdm within context and refresh tqdm when exits.
+Useful when writing to standard output stream</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">format_dict</span></span></dt>
+<dd><p>Public API for read-only member access.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">format_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.format_interval"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Formats a number of seconds as a clock time, [H:]MM:SS</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>t</strong> (<em>int</em>) – Number of seconds.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>out</strong> – [H:]MM:SS</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">format_meter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elapsed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ascii</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'it'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bar_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postfix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit_divisor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colour</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.format_meter"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Return a string-based progress bar given some parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<em>int</em><em> or </em><em>float</em>) – Number of finished iterations.</p></li>
+<li><p><strong>total</strong> (<em>int</em><em> or </em><em>float</em>) – The expected total number of iterations. If meaningless (None),
+only basic progress statistics are displayed (no ETA).</p></li>
+<li><p><strong>elapsed</strong> (<em>float</em>) – Number of seconds passed since start.</p></li>
+<li><p><strong>ncols</strong> (<em>int</em><em>, </em><em>optional</em>) – The width of the entire output message. If specified,
+dynamically resizes <cite>{bar}</cite> to stay within this bound
+[default: None]. If <cite>0</cite>, will not print any bar (only stats).
+The fallback is <cite>{bar:10}</cite>.</p></li>
+<li><p><strong>prefix</strong> (<em>str</em><em>, </em><em>optional</em>) – Prefix message (included in total width) [default: ‘’].
+Use as {desc} in bar_format string.</p></li>
+<li><p><strong>ascii</strong> (<em>bool</em><em>, </em><em>optional</em><em> or </em><em>str</em><em>, </em><em>optional</em>) – If not set, use unicode (smooth blocks) to fill the meter
+[default: False]. The fallback is to use ASCII characters
+“ 123456789#”.</p></li>
+<li><p><strong>unit</strong> (<em>str</em><em>, </em><em>optional</em>) – The iteration unit [default: ‘it’].</p></li>
+<li><p><strong>unit_scale</strong> (<em>bool</em><em> or </em><em>int</em><em> or </em><em>float</em><em>, </em><em>optional</em>) – If 1 or True, the number of iterations will be printed with an
+appropriate SI metric prefix (k = 10^3, M = 10^6, etc.)
+[default: False]. If any other non-zero number, will scale
+<cite>total</cite> and <cite>n</cite>.</p></li>
+<li><p><strong>rate</strong> (<em>float</em><em>, </em><em>optional</em>) – Manual override for iteration rate.
+If [default: None], uses n/elapsed.</p></li>
+<li><p><strong>bar_format</strong> (<em>str</em><em>, </em><em>optional</em>) – <p>Specify a custom bar string formatting. May impact performance.
+[default: ‘{l_bar}{bar}{r_bar}’], where
+l_bar=’{desc}: {percentage:3.0f}%|’ and
+r_bar=’| {n_fmt}/{total_fmt} [{elapsed}&lt;{remaining}, ‘</p>
+<blockquote>
+<div><p>’{rate_fmt}{postfix}]’</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Possible vars: l_bar, bar, r_bar, n, n_fmt, total, total_fmt,</dt><dd><p>percentage, elapsed, elapsed_s, ncols, nrows, desc, unit,
+rate, rate_fmt, rate_noinv, rate_noinv_fmt,
+rate_inv, rate_inv_fmt, postfix, unit_divisor,
+remaining, remaining_s, eta.</p>
+</dd>
+</dl>
+<p>Note that a trailing “: “ is automatically removed after {desc}
+if the latter is empty.</p>
+</p></li>
+<li><p><strong>postfix</strong> (<a href="#id3"><span class="problematic" id="id4">*</span></a>, optional) – Similar to <cite>prefix</cite>, but placed at the end
+(e.g. for additional stats).
+Note: postfix is usually a string (not a dict) for this method,
+and will if possible be set to postfix = ‘, ‘ + postfix.
+However other types are supported (#382).</p></li>
+<li><p><strong>unit_divisor</strong> (<em>float</em><em>, </em><em>optional</em>) – [default: 1000], ignored unless <cite>unit_scale</cite> is True.</p></li>
+<li><p><strong>initial</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>optional</em>) – The initial counter value [default: 0].</p></li>
+<li><p><strong>colour</strong> (<em>str</em><em>, </em><em>optional</em>) – Bar colour (e.g. ‘green’, ‘#00ff00’).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>out</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Formatted meter and stats, ready to display.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">format_num</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.format_num"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Intelligent scientific notation (.3g).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em><em> or </em><em>float</em><em> or </em><em>Numeric</em>) – A Number.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>out</strong> – Formatted number.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">format_sizeof</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">divisor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.format_sizeof"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Formats a number (greater than unity) with SI Order of Magnitude
+prefixes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num</strong> (<em>float</em>) – Number ( &gt;= 1) to format.</p></li>
+<li><p><strong>suffix</strong> (<em>str</em><em>, </em><em>optional</em>) – Post-postfix [default: ‘’].</p></li>
+<li><p><strong>divisor</strong> (<em>float</em><em>, </em><em>optional</em>) – Divisor between prefixes [default: 1000].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>out</strong> – Number with Order of Magnitude SI unit postfix.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_lock</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.get_lock"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Get the global lock. Construct it if it does not exist.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">monitor</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">monitor_interval</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">moveto</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.moveto"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">pandas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">tqdm_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.pandas"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><dl class="simple">
+<dt>Registers the current <cite>tqdm</cite> class with</dt><dd><p>pandas.core.
+( frame.DataFrame
+| series.Series
+| groupby.(generic.)DataFrameGroupBy
+| groupby.(generic.)SeriesGroupBy
+).progress_apply</p>
+</dd>
+</dl>
+<p>A new instance will be created every time <cite>progress_apply</cite> is called,
+and each instance will automatically <cite>close()</cite> upon completion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tqdm_kwargs</strong> (<em>arguments for the tqdm instance</em>)</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">tqdm.gui</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span> <span class="k">as</span> <span class="n">tqdm_gui</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="p">(</span><span class="mi">100000</span><span class="p">,</span> <span class="mi">6</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tqdm</span><span class="o">.</span><span class="n">pandas</span><span class="p">(</span><span class="n">ncols</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>  <span class="c1"># can use tqdm_gui, optional kwargs, etc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Now you can use `progress_apply` instead of `apply`</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">progress_apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">References</p>
+<p>&lt;<a class="reference external" href="https://stackoverflow.com/questions/18603270/">https://stackoverflow.com/questions/18603270/</a>        progress-indicator-during-pandas-operations-python&gt;</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nolock</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lock_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.refresh"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Force refresh the display of this bar.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nolock</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>True</cite>, does not lock.
+If [default: <cite>False</cite>]: calls <cite>acquire()</cite> on internal lock.</p></li>
+<li><p><strong>lock_args</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Passed to internal lock’s <cite>acquire()</cite>.
+If specified, will only <cite>display()</cite> if <cite>acquire()</cite> returns <cite>True</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Resets to 0 iterations for repeated use.</p>
+<p>Consider combining with <cite>leave=True</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>total</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>optional. Total to use for the new bar.</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">set_description</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">desc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.set_description"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Set/modify description of the progress bar.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>desc</strong> (<em>str</em><em>, </em><em>optional</em>)</p></li>
+<li><p><strong>refresh</strong> (<em>bool</em><em>, </em><em>optional</em>) – Forces refresh [default: True].</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">set_description_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">desc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.set_description_str"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Set/modify description without ‘: ‘ appended.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">set_lock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lock</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.set_lock"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Set the global lock.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">set_postfix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ordered_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.set_postfix"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Set/modify postfix (additional stats)
+with automatic formatting based on datatype.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ordered_dict</strong> (<em>dict</em><em> or </em><em>OrderedDict</em><em>, </em><em>optional</em>)</p></li>
+<li><p><strong>refresh</strong> (<em>bool</em><em>, </em><em>optional</em>) – Forces refresh [default: True].</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">set_postfix_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.set_postfix_str"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Postfix without dictionary expansion, similar to prefix handling.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">status_printer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.status_printer"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Manage the printing and in-place updating of a line of characters.
+Note that if the string is longer than a line, then in-place
+updating may not work (it will print a new line at each refresh).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">unpause</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.unpause"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Restart tqdm timer from last print time.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Manually update the progress bar, useful for streams
+such as reading files.
+E.g.:
+&gt;&gt;&gt; t = tqdm(total=filesize) # Initialise
+&gt;&gt;&gt; for current_buffer in stream:
+…    …
+…    t.update(len(current_buffer))
+&gt;&gt;&gt; t.close()
+The last line is highly recommended, but possibly not necessary if
+<cite>t.update()</cite> will be called in such a way that <cite>filesize</cite> will be
+exactly reached and printed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>optional</em>) – Increment to add to the internal counter of iterations
+[default: 1]. If using float, consider specifying <cite>{n:.3f}</cite>
+or similar in <cite>bar_format</cite>, or specifying <cite>unit_scale</cite>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>out</strong> – True if a <cite>display()</cite> was triggered.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">wrapattr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bytes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">tqdm_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.wrapattr"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>stream  : file-like object.
+method  : str, “read” or “write”. The result of <cite>read()</cite> and</p>
+<blockquote>
+<div><p>the first argument of <cite>write()</cite> should have a <cite>len()</cite>.</p>
+</div></blockquote>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">tqdm</span><span class="o">.</span><span class="n">wrapattr</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="s2">&quot;read&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="n">file_obj</span><span class="o">.</span><span class="n">size</span><span class="p">)</span> <span class="k">as</span> <span class="n">fobj</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">chunk</span> <span class="o">=</span> <span class="n">fobj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">chunk_size</span><span class="p">)</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">chunk</span><span class="p">:</span>
+<span class="gp">... </span>            <span class="k">break</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'\n'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nolock</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tqdm/std.html#tqdm.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Print a message via tqdm (without overlap with bars).</p>
 </dd></dl>
 
 </dd></dl>
@@ -1037,7 +1380,7 @@ checkpointing, and early stopping.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="cccma_ppp.core.selectors.html" class="btn btn-neutral float-left" title="cccma_ppp.core.selectors module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="cccma_ppp.data_modules.html" class="btn btn-neutral float-right" title="cccma_ppp.data_modules package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="cccma_ppp.core.writer.html" class="btn btn-neutral float-right" title="cccma_ppp.core.writer module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

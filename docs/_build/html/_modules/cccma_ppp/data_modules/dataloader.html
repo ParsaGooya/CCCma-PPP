@@ -82,30 +82,33 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data.distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">DistributedSampler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">abc</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">final</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">final</span><span class="p">,</span> <span class="n">ClassVar</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">islice</span>
 
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.dataset.config_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">DatasetConfigABC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.dataset.dataset_abc</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DatasetConfigABC</span><span class="p">,</span>
+    <span class="n">AddedTimeFeatures</span><span class="p">,</span>
+<span class="p">)</span>
 
 
 <div class="viewcode-block" id="BatchDataABC">
 <a class="viewcode-back" href="../../../api/cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.BatchDataABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">BatchDataABC</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Abstract base class for batched data containers.</span>
+<span class="sd">    Document this class.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    input : torch.Tensor</span>
-<span class="sd">        Input batch.</span>
-<span class="sd">    target : torch.Tensor or None</span>
-<span class="sd">        Target batch.</span>
-<span class="sd">    added_features : torch.Tensor or None</span>
-<span class="sd">        Additional features.</span>
-<span class="sd">    metadata : list[dict] or None</span>
-<span class="sd">        Optional metadata associated with each batch element.</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    target : torch.Tensor | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    added_features : torch.Tensor | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    metadata : list[dict] | None</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nb">input</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
@@ -113,22 +116,20 @@
     <span class="n">added_features</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span>
     <span class="n">metadata</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
+    <span class="n">_shared_input_mask</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_shared_target_mask</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
 <div class="viewcode-block" id="BatchDataABC.to_device">
 <a class="viewcode-back" href="../../../api/cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.BatchDataABC.to_device">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_device</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Move batch to specified device.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        device : torch.device or str</span>
-<span class="sd">            Target device to move the batch to.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        BatchDataABC</span>
-<span class="sd">            Batch moved to the target device.</span>
+<span class="sd">        device : torch.device | str</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 </div>
@@ -139,29 +140,58 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.DataloaderConfigABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DataloaderConfigABC</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Abstract base class for dataloader configuration.</span>
+<span class="sd">    Document this class.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    dataset_config : DatasetConfigABC</span>
-<span class="sd">        Dataset configuration.</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    pin_memory : bool</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    time_features : AddedTimeFeatures | list[str] | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    prefetch_factor : int | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    return_spatial_mask : bool</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    reduce_spatial_mask : bool</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">dataset_config</span><span class="p">:</span> <span class="n">DatasetConfigABC</span>
+    <span class="n">pin_memory</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">time_features</span><span class="p">:</span> <span class="n">AddedTimeFeatures</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">prefetch_factor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">return_spatial_mask</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">reduce_spatial_mask</span><span class="p">:</span> <span class="nb">bool</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Document this function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setup</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pin_memory</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_data_workers</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prefetch_factor</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="DataloaderConfigABC.setup_distributed">
 <a class="viewcode-back" href="../../../api/cccma_ppp.train.dataloader.html#cccma_ppp.core.trainer.DataloaderConfigABC.setup_distributed">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">setup_distributed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Prepare dataloader for distributed execution.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
-</div>
+
+
+    <span class="nd">@property</span>
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">available_times</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Document this function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
 
 
 
@@ -170,22 +200,22 @@
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Dataloader</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Wrapper around PyTorch DataLoader with distributed support.</span>
+<span class="sd">    Document this class.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    config : DataloaderConfigABC</span>
-<span class="sd">        Dataloader configuration.</span>
-<span class="sd">    dataset : torch.utils.data.Dataset</span>
-<span class="sd">        Dataset instance.</span>
-<span class="sd">    rank : int, optional</span>
-<span class="sd">        Process rank in distributed setup.</span>
-<span class="sd">    world_size : int, optional</span>
-<span class="sd">        Total number of processes.</span>
-<span class="sd">    return_spatial_mask : bool, optional</span>
-<span class="sd">        Whether to include spatial masks.</span>
-<span class="sd">    reduce_spatial_mask : bool, optional</span>
-<span class="sd">        Whether to reduce masks across batch dimension.</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    dataset : Dataset</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    collate_fn : Callable</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    rank : int</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    world_size : int</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    shuffle : bool | None</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">config</span><span class="p">:</span> <span class="n">DataloaderConfigABC</span>
@@ -193,22 +223,16 @@
     <span class="n">collate_fn</span><span class="p">:</span> <span class="n">Callable</span>
     <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">world_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="n">return_spatial_mask</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">reduce_spatial_mask</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">shuffle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize PyTorch DataLoader.</span>
-
-<span class="sd">        Sets up batching, distributed sampling, and collate function.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dataloader_sampler</span><span class="p">()</span>
-        <span class="n">shuffle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_size</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="n">shuffle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_size</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shuffle</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">shuffle</span>
+        <span class="n">num_workers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_data_workers</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_torch_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span>
             <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
@@ -216,70 +240,79 @@
             <span class="n">sampler</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sampler</span><span class="p">,</span>
             <span class="n">collate_fn</span><span class="o">=</span><span class="n">partial</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">,</span>
-                <span class="n">return_spatial_mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">return_spatial_mask</span><span class="p">,</span>
-                <span class="n">reduce_spatial_mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reduce_spatial_mask</span><span class="p">,</span>
+                <span class="n">return_spatial_mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">return_spatial_mask</span><span class="p">,</span>
+                <span class="n">reduce_spatial_mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">reduce_spatial_mask</span><span class="p">,</span>
             <span class="p">),</span>
-            <span class="n">num_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_data_workers</span><span class="p">,</span>
+            <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
             <span class="n">prefetch_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">prefetch_factor</span><span class="p">,</span>
+            <span class="n">persistent_workers</span><span class="o">=</span><span class="n">num_workers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">pin_memory</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">pin_memory</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="mi">60</span> <span class="k">if</span> <span class="n">num_workers</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">input_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Input data shape.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        tuple</span>
-<span class="sd">            Shape of the input data.</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">get_input_shape</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">target_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Target data shape.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        tuple</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">get_target_shape</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">added_features_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Additional feature dimension.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        int</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">get_added_features_dim</span><span class="p">()</span>
 
     <span class="nd">@final</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">BatchDataABC</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Iterate over batches.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Iterator of BatchDataABC</span>
+<span class="sd">        Iterator[BatchDataABC]</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_torch_loader</span><span class="p">)</span>
 
     <span class="nd">@final</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_dataloader_sampler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Sampler</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create distributed sampler if needed.</span>
+<span class="sd">        Document this function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        **kwargs : Any</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        torch.utils.data.Sampler or None</span>
-<span class="sd">            Sampler for distributed training, or None if not required.</span>
+<span class="sd">        torch.utils.data.Sampler | None</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">DistributedSampler</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span>
@@ -295,11 +328,12 @@
     <span class="nd">@final</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Number of batches per epoch.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        int</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_torch_loader</span><span class="p">)</span>
 
@@ -308,15 +342,17 @@
     <span class="nd">@final</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Set epoch for distributed sampler.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        epoch : int</span>
+<span class="sd">        epoch : Any</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Dataloader</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span><span class="o">.</span><span class="n">set_epoch</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
@@ -328,18 +364,18 @@
     <span class="nd">@final</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">subset_loader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_batch</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create iterator over subset of batches.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        start_batch : int, optional</span>
-<span class="sd">            Starting batch index.</span>
+<span class="sd">        start_batch : Any</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        iterator</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="n">islice</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">start_batch</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
 </div>
 

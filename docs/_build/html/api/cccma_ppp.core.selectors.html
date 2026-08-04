@@ -53,6 +53,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="cccma_ppp.html">cccma_ppp package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="cccma_ppp.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.configs.html">cccma_ppp.configs package</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="cccma_ppp.core.html">cccma_ppp.core package</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="cccma_ppp.core.html#submodules">Submodules</a></li>
 </ul>
@@ -66,7 +67,6 @@
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.train.html">cccma_ppp.train package</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.html#submodules">Submodules</a></li>
 </ul>
 </li>
 </ul>
@@ -103,17 +103,17 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.selectors.</span></span><span class="sig-name descname"><span class="pre">CheckpointConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint_input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint_output_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint_input_var_metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint_output_var_metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/models/models_abc.html#CheckpointConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Configuration for loading model checkpoints.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>load_path</strong> (<em>pathlib.Path</em><em> or </em><em>str</em>) – Path to checkpoint file.</p></li>
-<li><p><strong>checkpoint_input_shape</strong> (<em>np.ndarray</em>) – Input shape used during training.</p></li>
-<li><p><strong>checkpoint_output_shape</strong> (<em>np.ndarray</em>) – Output shape used during training.</p></li>
-<li><p><strong>checkpoint_input_var_metadata</strong> (<em>dict</em>) – Metadata describing input variables and preprocessing.</p></li>
-<li><p><strong>checkpoint_output_var_metadata</strong> (<em>dict</em>) – Metadata describing target variables and preprocessing.</p></li>
-<li><p><strong>strict</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to strictly enforce state_dict matching.</p></li>
-<li><p><strong>freeze_weights</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to freeze model parameters after loading.</p></li>
+<li><p><strong>load_path</strong> (<em>Path</em><em> | </em><em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>checkpoint_input_shape</strong> (<em>np.ndarray</em>) – Description not yet provided.</p></li>
+<li><p><strong>checkpoint_output_shape</strong> (<em>np.ndarray</em>) – Description not yet provided.</p></li>
+<li><p><strong>checkpoint_input_var_metadata</strong> (<em>dict</em>) – Description not yet provided.</p></li>
+<li><p><strong>checkpoint_output_var_metadata</strong> (<em>dict</em>) – Description not yet provided.</p></li>
+<li><p><strong>strict</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>freeze_weights</strong> (<em>bool</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
@@ -158,12 +158,12 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.selectors.</span></span><span class="sig-name descname"><span class="pre">FlowSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/selectors.html#FlowSelector"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Selector for constructing flow models.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>type</strong> (<em>str</em>) – Flow model type.</p></li>
-<li><p><strong>args</strong> (<em>dict</em><em> of </em><em>str to object</em>) – Arguments used to instantiate the flow model.</p></li>
+<li><p><strong>type</strong> (<em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>args</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>object</em><em>]</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
@@ -175,13 +175,13 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/selectors.html#FlowSelector.available"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Return available flow types.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Registered flow names.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>list of str</p>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -189,13 +189,13 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">get_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/selectors.html#FlowSelector.get_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Instantiate flow model.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Flow model instance.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>flowABC</p>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -203,16 +203,16 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/selectors.html#FlowSelector.register"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Register a flow model class.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name used for registration.</p>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Decorator for registering flow classes.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Callable</p>
+<dd class="field-odd"><p>Callable[…, flowABC]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -233,27 +233,27 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.selectors.</span></span><span class="sig-name descname"><span class="pre">ModelSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/selectors.html#ModelSelector"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Selector for constructing model configurations, optionally from checkpoint.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>type</strong> (<em>str</em>) – Model type identifier.</p></li>
-<li><p><strong>config</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] or </em><em>None</em><em>, </em><em>optional</em>) – Configuration dictionary for model.</p></li>
-<li><p><strong>load_dir</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Path to checkpoint for loading model configuration.</p></li>
-<li><p><strong>freeze_weights</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to freeze model weights after loading.</p></li>
+<li><p><strong>type</strong> (<em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>config</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>load_dir</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>freeze_weights</strong> (<em>bool</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/selectors.html#ModelSelector.available"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Return available model types.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Registered model names.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>list of str</p>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -271,13 +271,13 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">get_model_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/selectors.html#ModelSelector.get_model_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Get instantiated model configuration.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Model configuration instance.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>modelABC</p>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -290,16 +290,16 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/selectors.html#ModelSelector.register"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Decorator for registering model classes.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name used for registration.</p>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Decorator for registering model classes.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Callable</p>
+<dd class="field-odd"><p>Callable[…, modelABC]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -320,25 +320,67 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.selectors.</span></span><span class="sig-name descname"><span class="pre">ModuleSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/selectors.html#ModuleSelector"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Selector for constructing training modules from a registry.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>type</strong> (<em>str</em>) – Name of the registered module.</p></li>
-<li><p><strong>config</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Configuration dictionary used to instantiate the module config.</p></li>
+<li><p><strong>type</strong> (<em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>config</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py property">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">GENERATOR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">NUM_INPUT_DIMS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">NUM_OUTPUT_DIMS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/selectors.html#ModuleSelector.available"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Return available module types.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Registered module names.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>list of str</p>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -346,20 +388,20 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">build_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/selectors.html#ModuleSelector.build_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Build module instance.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Input data shape.</p></li>
-<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Output data shape.</p></li>
-<li><p><strong>added_features_dim</strong> (<em>int</em><em>, </em><em>optional</em>) – Additional feature dimension.</p></li>
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Description not yet provided.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Built module instance.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>moduleABC</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -372,16 +414,16 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/selectors.html#ModuleSelector.register"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Register a module configuration class.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name used for registration.</p>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Decorator for registering module configuration classes.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Callable</p>
+<dd class="field-odd"><p>Callable[…, moduleABC]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -402,35 +444,17 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.selectors.</span></span><span class="sig-name descname"><span class="pre">Registery</span></span><a class="reference internal" href="../_modules/cccma_ppp/core/registery.html#Registery"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Registry for mapping string identifiers to classes and instantiating them.</p>
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/registery.html#Registery.register"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Register a class under a given name.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/registery.html#Registery.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Retrieve and instantiate a registered class.</p>
-</dd></dl>
-
+<p>Document this class.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/registery.html#Registery.available"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Return all registered names.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/registery.html#Registery.available"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Return all registered class names.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Registered identifiers.</p>
+<dd class="field-odd"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>list of str</p>
+<dd class="field-even"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -438,25 +462,22 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/registery.html#Registery.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Retrieve and instantiate a registered class.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – Name of the registered class.</p></li>
-<li><p><strong>config</strong> (<em>dict</em><em> or </em><em>object</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Configuration used to construct the class:
-- If dict and class is a dataclass, instantiates via <cite>dacite.from_dict</cite>.
-- If dict and class is not a dataclass, calls <cite>cls(**config)</cite>.
-- Otherwise, passes config directly to constructor as <cite>cls(config)</cite>.</p></li>
+<li><p><strong>name</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>config</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Instantiated object corresponding to the given name.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>object</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If the requested name is not registered.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -464,16 +485,16 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/registery.html#Registery.register"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Register a class under a specified name.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Identifier used to register the class.</p>
+<dd class="field-odd"><p><strong>name</strong> (<em>Any</em>) – Description not yet provided.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Decorator that registers the class in the registry.</p>
+<dd class="field-even"><p>Description not yet provided.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Callable</p>
+<dd class="field-odd"><p>Any</p>
 </dd>
 </dl>
 </dd></dl>
@@ -484,7 +505,7 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.selectors.</span></span><span class="sig-name descname"><span class="pre">cVAEModelSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/selectors.html#cVAEModelSelector"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ModelSelector</span></code></p>
-<p>Model selector for cVAE models.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -506,7 +527,7 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.selectors.</span></span><span class="sig-name descname"><span class="pre">deterministicModelSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/selectors.html#deterministicModelSelector"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ModelSelector</span></code></p>
-<p>Model selector for deterministic models.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -528,7 +549,7 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.selectors.</span></span><span class="sig-name descname"><span class="pre">flowABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/models/models_abc.html#flowABC"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Abstract base class for flow-based models.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -540,16 +561,13 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/models/models_abc.html#flowABC.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Apply forward transformation.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<em>torch.Tensor</em>)</p></li>
-<li><p><strong>condition</strong> (<em>torch.Tensor</em><em> or </em><em>None</em><em>, </em><em>optional</em>)</p></li>
+<li><p><strong>x</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>torch.Tensor</p>
 </dd>
 </dl>
 </dd></dl>
@@ -557,16 +575,13 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/models/models_abc.html#flowABC.inverse"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Apply inverse transformation.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>z</strong> (<em>torch.Tensor</em>)</p></li>
-<li><p><strong>condition</strong> (<em>torch.Tensor</em><em> or </em><em>None</em><em>, </em><em>optional</em>)</p></li>
+<li><p><strong>z</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>torch.Tensor</p>
 </dd>
 </dl>
 </dd></dl>
@@ -577,7 +592,7 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.selectors.</span></span><span class="sig-name descname"><span class="pre">modelABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/models/models_abc.html#modelABC"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Abstract base class for all models.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -586,19 +601,27 @@
 </ul>
 </dd>
 </dl>
-<dl class="py method">
+<dl class="py attribute">
 <dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/models/models_abc.html#modelABC.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Perform forward pass.</p>
+<span class="sig-name descname"><span class="pre">generative_modeling</span></span></dt>
+<dd><p>Description not yet provided.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>x</strong> (<em>torch.Tensor</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>torch.Tensor</p>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/models/models_abc.html#modelABC.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Document this function.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">generative_modeling</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -606,63 +629,23 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.core.selectors.</span></span><span class="sig-name descname"><span class="pre">moduleABC</span></span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Abstract base class for trainable modules.</p>
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">init_loss_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reconstruction_loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">\*\*kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.init_loss_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Initialize loss function.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>reconstruction_loss</strong> (<em>Losspipeline</em>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">_compute_loss</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC._compute_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Compute training loss.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Perform forward pass.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Perform inference.</p>
-</dd></dl>
-
+<p>Document this class.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Perform forward pass.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Model output (implementation-dependent).</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>object</p>
-</dd>
-</dl>
+<dd><p>Document this function.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">init_loss_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reconstruction_loss</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.init_loss_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Initialize loss function for training.</p>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>reconstruction_loss</strong> (<em>Losspipeline</em>) – Loss pipeline used for computing reconstruction loss.</p></li>
-<li><p><strong>**kwargs</strong> – Additional arguments for loss initialization.</p></li>
+<li><p><strong>reconstruction_loss</strong> (<em>nn.Module</em>) – Description not yet provided.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -670,15 +653,7 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#moduleABC.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Perform inference using the model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Model predictions.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>object</p>
-</dd>
-</dl>
+<dd><p>Document this function.</p>
 </dd></dl>
 
 </dd></dl>

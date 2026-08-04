@@ -20,7 +20,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="cccma_ppp.inference package" href="cccma_ppp.inference.html" />
-    <link rel="prev" title="cccma_ppp.generic.logger module" href="cccma_ppp.generic.logger.html" /> 
+    <link rel="prev" title="cccma_ppp.generic.registry_imports module" href="cccma_ppp.generic.registry_imports.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -53,6 +53,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="cccma_ppp.html">cccma_ppp package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="cccma_ppp.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.configs.html">cccma_ppp.configs package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.core.html">cccma_ppp.core package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.html">cccma_ppp.data_modules package</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="cccma_ppp.generic.html">cccma_ppp.generic package</a><ul class="current">
@@ -66,7 +67,6 @@
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.train.html">cccma_ppp.train package</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.html#submodules">Submodules</a></li>
 </ul>
 </li>
 </ul>
@@ -103,17 +103,17 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.generic.runtime.</span></span><span class="sig-name descname"><span class="pre">RuntimeContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">GLOBAL_EXP_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_CHECKPOINT_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_FIGURES_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_LOG_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_OUTPUT_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INPUT_VAR_METADATA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TARGET_VAR_METADATA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/runtime.html#RuntimeContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Global runtime configuration for experiment-level settings.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>GLOBAL_EXP_DIR</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Root directory for experiment outputs.</p></li>
-<li><p><strong>GLOBAL_CHECKPOINT_DIR</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Directory for saving model checkpoints.</p></li>
-<li><p><strong>GLOBAL_FIGURES_DIR</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Directory for saving figures and plots.</p></li>
-<li><p><strong>GLOBAL_LOG_DIR</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Directory for log files.</p></li>
-<li><p><strong>GLOBAL_OUTPUT_DIR</strong> (<em>pathlib.Path</em><em> or </em><em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – General output directory for experiment artifacts.</p></li>
-<li><p><strong>INPUT_VAR_METADATA</strong> (<em>dict</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Metadata describing input variables and preprocessing steps.</p></li>
-<li><p><strong>TARGET_VAR_METADATA</strong> (<em>dict</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Metadata describing target variables and preprocessing steps.</p></li>
+<li><p><strong>GLOBAL_EXP_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_CHECKPOINT_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_FIGURES_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_LOG_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_OUTPUT_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>INPUT_VAR_METADATA</strong> (<em>dict</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>TARGET_VAR_METADATA</strong> (<em>dict</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 </dl>
@@ -160,7 +160,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="cccma_ppp.generic.logger.html" class="btn btn-neutral float-left" title="cccma_ppp.generic.logger module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cccma_ppp.generic.registry_imports.html" class="btn btn-neutral float-left" title="cccma_ppp.generic.registry_imports module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="cccma_ppp.inference.html" class="btn btn-neutral float-right" title="cccma_ppp.inference package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

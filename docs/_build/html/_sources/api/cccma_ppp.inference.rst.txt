@@ -7,6 +7,14 @@ cccma\_ppp.inference package
    :show-inheritance:
    :undoc-members:
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cccma_ppp.inference.predictors
+
 Submodules
 ----------
 
@@ -16,5 +24,4 @@ Submodules
    cccma_ppp.inference.dataloader
    cccma_ppp.inference.dataset
    cccma_ppp.inference.inference_configs
-   cccma_ppp.inference.registry_imports
-   cccma_ppp.inference.train
+   cccma_ppp.inference.predict

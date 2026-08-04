@@ -80,29 +80,24 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.dataset.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">DatasetOperator</span><span class="p">,</span> <span class="n">_get_time_features</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.dataset.config_abc</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">lead_months_config</span><span class="p">,</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.dataset.dataset_abc</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DatasetConfigABC</span><span class="p">,</span>
+    <span class="n">DatasetABC</span><span class="p">,</span>
+    <span class="n">lead_months_config</span><span class="p">,</span>
+    <span class="n">AddedTimeFeatures</span><span class="p">,</span>
 <span class="p">)</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.dataset.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">DatasetOperator</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.data.data_configs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">DataConfigABC</span><span class="p">,</span>
     <span class="n">ModelDataConfig</span><span class="p">,</span>
     <span class="n">ConditionDataConfig</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_unwrap_data_variables</span><span class="p">,</span>
-    <span class="n">_load_xarray_data</span><span class="p">,</span>
-    <span class="n">_create_train_mask</span><span class="p">,</span>
-<span class="p">)</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.train.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrainDatasetConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.train.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrainDatasetConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.preprocessing.preprocessing_ABC</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreprocessModuleABC</span>
 
 
@@ -111,160 +106,77 @@
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">InferenceDatasetConfig</span><span class="p">(</span><span class="n">DatasetConfigABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Configuration for inference datasets.</span>
+<span class="sd">    Document this class.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    model : ModelDataConfig or None, optional</span>
-<span class="sd">        Model input dataset configuration.</span>
-<span class="sd">    condition : ConditionDataConfig or None, optional</span>
-<span class="sd">        Conditioning dataset configuration.</span>
-<span class="sd">    condition_method : str or None, optional</span>
-<span class="sd">        Method used to construct conditioning inputs.</span>
-<span class="sd">    time_features : list of str or None, optional</span>
-<span class="sd">        Additional temporal features.</span>
-<span class="sd">    lead_months : lead_months_config or None, optional</span>
-<span class="sd">        Lead months used during inference.</span>
+<span class="sd">    model : ModelDataConfig | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    condition : ConditionDataConfig | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    condition_method : str</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    lead_months : lead_months_config | None</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">model</span><span class="p">:</span> <span class="n">ModelDataConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">condition</span><span class="p">:</span> <span class="n">ConditionDataConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">condition_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">time_features</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">lead_months</span><span class="p">:</span> <span class="n">lead_months_config</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize and validate inference dataset configuration.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fitted_preprocessors</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_effective_condition</span><span class="p">:</span> <span class="n">ConditionDataConfig</span> <span class="o">|</span> <span class="n">ModelDataConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_check_model</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_check_condition</span><span class="p">()</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_check_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">effective_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Validate model dataset configuration.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        self</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            If model configuration is incompatible with the</span>
-<span class="sd">            selected conditioning strategy.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition_method</span> <span class="o">==</span> <span class="s2">&quot;same_member&quot;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">ensemble_mean</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="s2">&quot;for same member coniditioning the model data should not be ensemble mean.&quot;</span>
-                    <span class="p">)</span>
-
-        <span class="k">return</span> <span class="bp">self</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_check_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Validate conditioning configuration.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        self</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            If conditioning configuration is inconsistent.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition_method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;You must specify condition_method for conditioning dataset!&quot;</span>
-                <span class="p">)</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition_method</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;cross_ensemble&quot;</span><span class="p">,</span> <span class="s2">&quot;same_member&quot;</span><span class="p">]:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_condition</span><span class="o">.</span><span class="n">ensemble_mean</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="s2">&quot;condition ensemble_mean cannot be True for cross_ensemble or same_member conditioning.&quot;</span>
-                    <span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_condition</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="s2">&quot;For cross_ensemble or same_member conditioning an ensembles dim must exist in the condition.&quot;</span>
-                    <span class="p">)</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition_method</span> <span class="o">==</span> <span class="s2">&quot;ensemble_mean&quot;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_condition</span><span class="o">.</span><span class="n">ensemble_mean</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="s2">&quot;Ensemble mean must be True for ensemble_mean conditioning.&quot;</span>
-                    <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_condition</span><span class="o">.</span><span class="n">ensemble_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="s1">&#39;For &quot;static&quot; conditioning fields cannot specify ensemble list.&#39;</span>
-                    <span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_using_model_data_as_condition</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="s2">&quot;&#39;static&#39; conditioning method cannot point to the same model data!&quot;</span>
-                    <span class="p">)</span>
-
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition_method</span> <span class="o">==</span> <span class="s2">&quot;static&quot;</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;For static conditioning method condition dataset must be specified!&quot;</span>
-                <span class="p">)</span>
-
-        <span class="k">return</span> <span class="bp">self</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ds_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Dataset operator associated with the configuration.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        DatasetOperator</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">DatasetOperator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">num_input_lead_months</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">available_times</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Number of available input lead months.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        int</span>
-<span class="sd">            Total number of lead months available from the</span>
-<span class="sd">            effective input dataset.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">&quot;lead_time&quot;</span><span class="p">]</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">&quot;lead_time&quot;</span><span class="p">]</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_common_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Time period shared by all required datasets.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.ndarray</span>
-<span class="sd">            Common years available across configured datasets.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">year_ranges</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">year_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">year_range</span><span class="p">)</span>
+            <span class="n">year_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;year&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">year_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">year_range</span><span class="p">)</span>
+            <span class="n">year_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;year&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="n">common</span> <span class="o">=</span> <span class="n">year_ranges</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">yr</span> <span class="ow">in</span> <span class="n">year_ranges</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
@@ -272,82 +184,34 @@
 
         <span class="k">return</span> <span class="n">common</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">available_inference_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="InferenceDatasetConfig.load_fitted_preprocessors">
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDatasetConfig.load_fitted_preprocessors">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_fitted_preprocessors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">load_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Years available for inference.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.ndarray</span>
-<span class="sd">            Years with sufficient lead-time coverage.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">num_lead_years</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lead_months</span><span class="p">)</span> <span class="o">//</span> <span class="mi">12</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_common_time</span><span class="p">),</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_common_time</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">num_lead_years</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_load_fitted_preprocessors</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">load_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Load fitted preprocessing pipelines.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        load_dir : pathlib.Path or str or None, optional</span>
-<span class="sd">            Directory containing saved preprocessing pipelines.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">        load_dir : Path | str | None</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ds_operator</span><span class="o">.</span><span class="n">_load_fitted_preprocessors</span><span class="p">(</span><span class="n">load_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ds_operator</span><span class="o">.</span><span class="n">load_fitted_preprocessors</span><span class="p">(</span><span class="n">load_dir</span><span class="p">)</span></div>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_add_fitted_preprocessor</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">preprocessor</span><span class="p">:</span> <span class="n">PreprocessModuleABC</span><span class="p">,</span>
-        <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-    <span class="p">):</span>
+
+<div class="viewcode-block" id="InferenceDatasetConfig.add_fitted_preprocessor">
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDatasetConfig.add_fitted_preprocessor">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_fitted_preprocessor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preprocessor</span><span class="p">:</span> <span class="n">PreprocessModuleABC</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Add a fitted preprocessor.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        preprocessor : PreprocessModuleABC</span>
-<span class="sd">            Fitted preprocessor instance.</span>
-<span class="sd">        index : int, optional</span>
-<span class="sd">            Insertion position.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        index : Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">ds_operator</span><span class="o">.</span><span class="n">_add_fitted_preprocessor</span><span class="p">(</span><span class="n">preprocessor</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
-
-<div class="viewcode-block" id="InferenceDatasetConfig.read_from_train">
-<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDatasetConfig.read_from_train">[docs]</a>
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">read_from_train</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">,</span>
-        <span class="n">train_dataset_config</span><span class="p">:</span> <span class="n">TrainDatasetConfig</span><span class="p">,</span>
-    <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create an inference configuration from training configuration.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        train_dataset_config : TrainDatasetConfig</span>
-<span class="sd">            Training dataset configuration.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        InferenceDatasetConfig</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_from_train</span><span class="p">(</span><span class="n">train_dataset_config</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ds_operator</span><span class="o">.</span><span class="n">add_fitted_preprocessor</span><span class="p">(</span><span class="n">preprocessor</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="InferenceDatasetConfig.build_dataset">
@@ -355,26 +219,35 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">build_dataset</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">years</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">time_features</span><span class="p">:</span> <span class="n">AddedTimeFeatures</span><span class="p">,</span>
         <span class="n">return_metadata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">load</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Construct inference dataset.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        years : np.ndarray</span>
-<span class="sd">            Years to include.</span>
-<span class="sd">        return_metadata : bool, optional</span>
-<span class="sd">            Whether metadata should be returned with samples.</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        time_features : AddedTimeFeatures</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        return_metadata : bool</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        load : bool</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        InferenceDataset</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">InferenceDataset</span><span class="p">(</span>
             <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
             <span class="n">requested_years</span><span class="o">=</span><span class="n">years</span><span class="p">,</span>
+            <span class="n">time_features</span><span class="o">=</span><span class="n">time_features</span><span class="p">,</span>
             <span class="n">return_metadata</span><span class="o">=</span><span class="n">return_metadata</span><span class="p">,</span>
+            <span class="n">load</span><span class="o">=</span><span class="n">load</span><span class="p">,</span>
         <span class="p">)</span></div>
 </div>
 
@@ -383,370 +256,104 @@
 <div class="viewcode-block" id="InferenceDataset">
 <a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDataset">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">InferenceDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">InferenceDataset</span><span class="p">(</span><span class="n">DatasetABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Dataset used during inference.</span>
+<span class="sd">    Document this class.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    config : InferenceDatasetConfig</span>
-<span class="sd">        Dataset configuration.</span>
-<span class="sd">    requested_years : array-like</span>
-<span class="sd">        Years to evaluate.</span>
-<span class="sd">    return_metadata : bool, optional</span>
-<span class="sd">        Whether to return metadata for each sample.</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    requested_years : list[int] | tuple[int, ...] | np.ndarray</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    time_features : AddedTimeFeatures</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    return_metadata : bool</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    load : bool</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    mask : xr.DataArray | None</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">config</span><span class="p">:</span> <span class="n">InferenceDatasetConfig</span>
-    <span class="n">requested_years</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">requested_years</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">time_features</span><span class="p">:</span> <span class="n">AddedTimeFeatures</span>
     <span class="n">return_metadata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">load</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">mask</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span>
+        <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize inference dataset.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        RuntimeError</span>
-<span class="sd">            If preprocessors have not been fitted.</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            If requested years are unavailable.</span>
+<span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_fitted_preprocessors</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Make sure to fit preprocessors first!. Hint:  TrainDatasetConfig._fit_preprocessors()&quot;</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">requested_years</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span>
-            <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">available_train_time</span><span class="p">)</span>
-        <span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;the requested years are not common to model and condition data.&quot;</span>
-            <span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">model_dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition_dataset</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model_dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_xarray_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">condition_dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_xarray_data</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span>
-            <span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_mask</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model_indexes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_model_indexes</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cond_indexes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_cond_indexes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_indexes</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">effective_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Effective input dataset configuration.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        ModelDataConfig or ConditionDataConfig</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">condition</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_load_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Determine whether model data must be loaded.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        bool</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_using_model_data_as_condition</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_using_model_data_as_condition</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_write_condition_to_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Determine whether condition data replaces model input.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        bool</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_using_model_data_as_condition</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_using_model_data_as_condition</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_concat_condition_to_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Determine whether condition data should be concatenated</span>
-<span class="sd">        with model input.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        bool</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_write_condition_to_input</span> <span class="ow">is</span> <span class="kc">False</span>
-            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Construct inference mask.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        xr.DataArray</span>
-<span class="sd">            Mask defining valid inference samples.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">mask</span> <span class="o">=</span> <span class="n">_create_train_mask</span><span class="p">(</span>
-            <span class="n">years</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">effective_input</span><span class="o">.</span><span class="n">year_range</span><span class="p">,</span>
-            <span class="n">lead_times</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_input</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">&quot;lead_time&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
-        <span class="p">)</span>
-        <span class="n">mask</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-        <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">requested_years</span><span class="p">)</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span>
-            <span class="n">lead_time</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">lead_months</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span>
-            <span class="p">[</span>
-                <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_input</span><span class="o">.</span><span class="n">ensemble_mean</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">effective_input</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="p">]</span>
-        <span class="p">):</span>
-            <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span>
-                <span class="n">ensembles</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">effective_input</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
-            <span class="p">)</span>
-            <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">assign_coords</span><span class="p">(</span>
-                <span class="n">ensembles</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">effective_input</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span>
-            <span class="p">)</span>
-
-        <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="o">~</span><span class="n">mask</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">mask</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_load_xarray_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">DataConfigABC</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Load xarray dataset.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        config : DataConfigABC</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        xr.Dataset or xr.DataArray</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">return</span> <span class="n">_load_xarray_data</span><span class="p">(</span>
-            <span class="n">config</span><span class="o">.</span><span class="n">list_paths</span><span class="p">,</span>
-            <span class="n">names</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">names</span><span class="p">,</span>
-            <span class="n">ensemble_mean</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">ensemble_mean</span><span class="p">,</span>
-            <span class="n">selection</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;ensembles&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]}</span>
-            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">concat_dim</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">concat_dim</span><span class="p">,</span>
-            <span class="n">rename_dict</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">rename_dict</span><span class="p">,</span>
-        <span class="p">)</span>
-
-<div class="viewcode-block" id="InferenceDataset.get_model_indexes">
-<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDataset.get_model_indexes">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_model_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generate sample indexes.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        dict</span>
-<span class="sd">            Mapping of dimension names to index arrays.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">sizes</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-            <span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;batch&quot;</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">batch</span><span class="o">.</span><span class="n">values</span>
-        <span class="p">)</span>
-        <span class="n">mask</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">mask</span><span class="p">)))</span>
-        <span class="n">indexes</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">key</span><span class="p">:</span> <span class="n">mask</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">sizes</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
-        <span class="p">}</span>
-
-        <span class="k">return</span> <span class="n">indexes</span></div>
-
-
-<div class="viewcode-block" id="InferenceDataset.get_cond_indexes">
-<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDataset.get_cond_indexes">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_cond_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_indexes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generate condition dataset indexes.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        model_indexes : dict</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        dict or None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition_dataset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">condition_method</span> <span class="o">!=</span> <span class="s2">&quot;static&quot;</span><span class="p">:</span>
-                <span class="n">indexes</span> <span class="o">=</span> <span class="p">{}</span>
-                <span class="n">indexes</span><span class="p">[</span><span class="s2">&quot;year&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_indexes</span><span class="p">[</span><span class="s2">&quot;year&quot;</span><span class="p">]</span>
-                <span class="n">indexes</span><span class="p">[</span><span class="s2">&quot;lead_time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_indexes</span><span class="p">[</span><span class="s2">&quot;lead_time&quot;</span><span class="p">]</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">condition_method</span> <span class="o">==</span> <span class="s2">&quot;cross_ensemble&quot;</span><span class="p">:</span>
-                    <span class="n">ens_inds</span> <span class="o">=</span> <span class="p">[</span>
-                        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span>
-                        <span class="p">)</span>
-                        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">model_indexes</span><span class="p">[</span><span class="s2">&quot;year&quot;</span><span class="p">]))</span>
-                    <span class="p">]</span>
-                    <span class="n">indexes</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ens_inds</span><span class="p">)</span>
-
-                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">condition_method</span> <span class="o">==</span> <span class="s2">&quot;same_member&quot;</span><span class="p">:</span>
-                    <span class="n">indexes</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_indexes</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span>
-
-                <span class="k">return</span> <span class="n">indexes</span></div>
-
-
-<div class="viewcode-block" id="InferenceDataset.get_input_shape">
-<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDataset.get_input_shape">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_input_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Determine model input shape.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        tuple</span>
-<span class="sd">            Expected input tensor shape.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.preprocessing.utils_preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flattennanremove</span>
-
-        <span class="n">checklist</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">Flattennanremove</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_input</span><span class="o">.</span><span class="n">preprocessing_pipeline</span><span class="o">.</span><span class="n">fitted_preprocessors</span>
-        <span class="p">]</span>
-
-        <span class="n">len_names</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">effective_input</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_concat_condition_to_input</span><span class="p">:</span>
-            <span class="n">len_names</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">checklist</span><span class="p">):</span>
-            <span class="k">return</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">effective_input</span><span class="o">.</span><span class="n">preprocessing_pipeline</span><span class="o">.</span><span class="n">get_preprocessors</span><span class="p">(</span>
-                    <span class="s2">&quot;flattener&quot;</span>
-                <span class="p">)</span><span class="o">.</span><span class="n">final_locations</span><span class="o">.</span><span class="n">size</span>
-                <span class="o">*</span> <span class="n">len_names</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">effective_input</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">effective_input</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;lon&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
-            <span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="InferenceDataset.get_added_features_dim">
-<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.inference.dataloader.InferenceDataset.get_added_features_dim">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_added_features_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Number of additional temporal features.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        int</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">time_features</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">time_features</span><span class="p">)</span>
-        <span class="p">)</span></div>
-
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_index_condition_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ind</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Retrieve a conditioned sample.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        ind : int</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        xr.DataArray or None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition_dataset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">condition_method</span> <span class="o">!=</span> <span class="s2">&quot;static&quot;</span><span class="p">:</span>
-                <span class="n">year</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cond_indexes</span><span class="p">[</span><span class="s2">&quot;year&quot;</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
-                <span class="n">lead_time</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cond_indexes</span><span class="p">[</span><span class="s2">&quot;lead_time&quot;</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
-                <span class="n">selection</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="n">year</span><span class="p">,</span> <span class="n">lead_time</span><span class="o">=</span><span class="n">lead_time</span><span class="p">)</span>
-                <span class="k">if</span> <span class="s2">&quot;ensembles&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_indexes</span><span class="p">:</span>
-                    <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond_indexes</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span>
-
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">selection</span> <span class="o">=</span> <span class="p">{}</span>
-
-            <span class="n">condition</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span><span class="o">.</span><span class="n">preprocessing_pipeline</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">condition_dataset</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="o">**</span><span class="n">selection</span><span class="p">)</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-            <span class="n">condition</span> <span class="o">=</span> <span class="n">_unwrap_data_variables</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
-
-            <span class="k">return</span> <span class="n">condition</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_index_model_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ind</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Retrieve a model input sample.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        ind : int</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        xr.DataArray or None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_model</span><span class="p">:</span>
-            <span class="n">year</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_indexes</span><span class="p">[</span><span class="s2">&quot;year&quot;</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
-            <span class="n">lead_time</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_indexes</span><span class="p">[</span><span class="s2">&quot;lead_time&quot;</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
-            <span class="n">selection</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="n">year</span><span class="p">,</span> <span class="n">lead_time</span><span class="o">=</span><span class="n">lead_time</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="s2">&quot;ensembles&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_indexes</span><span class="p">:</span>
-                <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_indexes</span><span class="p">[</span><span class="s2">&quot;ensembles&quot;</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span>
-
-            <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">preprocessing_pipeline</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">model_dataset</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="o">**</span><span class="n">selection</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="n">model</span> <span class="o">=</span> <span class="n">_unwrap_data_variables</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-
-            <span class="k">return</span> <span class="n">model</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ind</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Retrieve a dataset sample.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        ind : int</span>
-<span class="sd">            Sample index.</span>
+<span class="sd">        ind : Any</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        dict or tuple</span>
-<span class="sd">            Sample dictionary, optionally paired with metadata.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">year</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_indexes</span><span class="p">[</span><span class="s2">&quot;year&quot;</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
-        <span class="n">lead_time</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_indexes</span><span class="p">[</span><span class="s2">&quot;lead_time&quot;</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
-        <span class="n">selection</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="n">year</span><span class="p">,</span> <span class="n">lead_time</span><span class="o">=</span><span class="n">lead_time</span><span class="p">)</span>
+        <span class="n">selection</span> <span class="o">=</span> <span class="p">{</span><span class="n">dim</span><span class="p">:</span> <span class="n">value</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">dim</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_coords</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
 
         <span class="n">condition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_condition_dataset</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span>
         <span class="nb">input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_model_dataset</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span>
@@ -757,29 +364,21 @@
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_concat_condition_to_input</span><span class="p">:</span>
             <span class="nb">input</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="nb">input</span><span class="p">,</span> <span class="n">condition</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="s2">&quot;channels&quot;</span><span class="p">)</span>
 
-        <span class="n">time_features</span> <span class="o">=</span> <span class="n">_get_time_features</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">lead_time</span><span class="p">,</span> <span class="nb">input</span><span class="p">)</span>
+        <span class="n">time_features_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_features</span><span class="p">(</span><span class="n">selection</span><span class="p">,</span> <span class="nb">input</span><span class="p">)</span>
+
+        <span class="p">(</span><span class="n">input_array</span><span class="p">,)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
 
         <span class="n">datadict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-            <span class="nb">input</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
-            <span class="n">added_features</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">time_features</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">time_features</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="nb">input</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">input_array</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+            <span class="n">added_features</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">time_features_array</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">time_features_array</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
             <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_metadata</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">datadict</span><span class="p">,</span> <span class="n">selection</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">datadict</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Dataset length.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        int</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_indexes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_indexes</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]))</span></div>
+            <span class="k">return</span> <span class="n">datadict</span></div>
 
 
 
@@ -787,30 +386,27 @@
     <span class="n">train_dataset_config</span><span class="p">:</span> <span class="n">TrainDatasetConfig</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;InferenceDatasetConfig&quot;</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Create an inference dataset configuration from a training</span>
-<span class="sd">    dataset configuration.</span>
+<span class="sd">    Document this function.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    train_dataset_config : TrainDatasetConfig</span>
-<span class="sd">        Source training configuration.</span>
+<span class="sd">        Description not yet provided.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    InferenceDatasetConfig</span>
+<span class="sd">    &#39;InferenceDatasetConfig&#39;</span>
+<span class="sd">        Description not yet provided.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        If an inference configuration cannot be inferred from</span>
-<span class="sd">        the training configuration.</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
 
     <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;condition_method&quot;</span><span class="p">:</span> <span class="n">train_dataset_config</span><span class="o">.</span><span class="n">condition_method</span><span class="p">,</span>
-        <span class="s2">&quot;time_features&quot;</span><span class="p">:</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">train_dataset_config</span><span class="o">.</span><span class="n">time_features</span><span class="p">),</span>
         <span class="s2">&quot;lead_months&quot;</span><span class="p">:</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">train_dataset_config</span><span class="o">.</span><span class="n">lead_months</span><span class="p">),</span>
     <span class="p">}</span>
 

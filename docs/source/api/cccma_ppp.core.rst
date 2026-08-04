@@ -20,3 +20,4 @@ Submodules
    cccma_ppp.core.registery
    cccma_ppp.core.selectors
    cccma_ppp.core.trainer
+   cccma_ppp.core.writer

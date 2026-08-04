@@ -16,4 +16,5 @@ Submodules
    cccma_ppp.preprocessing.preprocessing
    cccma_ppp.preprocessing.preprocessing_ABC
    cccma_ppp.preprocessing.registery
+   cccma_ppp.preprocessing.selector
    cccma_ppp.preprocessing.utils_preprocessing

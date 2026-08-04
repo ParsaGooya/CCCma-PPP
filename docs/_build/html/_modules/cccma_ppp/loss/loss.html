@@ -80,9 +80,12 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss.loss_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reduction</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss.registery</span><span class="w"> </span><span class="kn">import</span> <span class="n">Registery</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.core_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">GenerativeContext</span>
 
 
 <div class="viewcode-block" id="LossStepConfig">
@@ -90,14 +93,14 @@
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">LossStepConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Configuration for a single loss step in a loss pipeline.</span>
+<span class="sd">    Document this class.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    name : str</span>
-<span class="sd">        Name of the registered loss function.</span>
-<span class="sd">    args : dict[str, object], optional</span>
-<span class="sd">        Arguments used to initialize the loss function.</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    args : dict[str, object]</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
@@ -110,16 +113,16 @@
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">LosspipelineConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Configuration for combining multiple loss functions.</span>
+<span class="sd">    Document this class.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    loss_pipeline : list of LossStepConfig</span>
-<span class="sd">        Sequence of loss steps.</span>
-<span class="sd">    loss_weights : list of float or None, optional</span>
-<span class="sd">        Weights applied to each loss term.</span>
-<span class="sd">    reduction : {&quot;mean&quot;, &quot;sum&quot;}, optional</span>
-<span class="sd">        Reduction method applied to individual losses.</span>
+<span class="sd">    loss_pipeline : list[LossStepConfig]</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    loss_weights : list[float]</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    reduction : Reduction</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">loss_pipeline</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LossStepConfig</span><span class="p">]</span>
@@ -128,20 +131,13 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Validate loss pipeline configuration.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If no loss terms are provided.</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            If loss weights are inconsistent or invalid.</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_pipeline</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;provide at least one loss term.&quot;</span><span class="p">)</span>
 
@@ -149,11 +145,15 @@
 
         <span class="k">for</span> <span class="n">loss</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_pipeline</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">if</span> <span class="p">{</span><span class="s2">&quot;reduction&quot;</span><span class="p">,</span> <span class="s2">&quot;weights&quot;</span><span class="p">,</span> <span class="s2">&quot;num_output_dimensions&quot;</span><span class="p">}</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span>
-                    <span class="nb">list</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-                <span class="p">):</span>
+                <span class="k">if</span> <span class="p">{</span>
+                    <span class="s2">&quot;reduction&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;weights&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;num_output_dimensions&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;generative_context&quot;</span><span class="p">,</span>
+                <span class="p">}</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="s2">&quot;do not specify reduction, weights, or num_output_dimensions for specific loss terms manually. Set them for the parent LosspipelineConfig.&quot;</span>
+                        <span class="s2">&quot;Do not specify reduction, weights, num_output_dimensions or generative_context for individual loss terms manually. &quot;</span>
+                        <span class="s2">&quot;Set them for the LosspipelineConfig.&quot;</span>
                     <span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">loss_types</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -170,24 +170,32 @@
 
 <div class="viewcode-block" id="LosspipelineConfig.build">
 <a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.cVAE_module.LosspipelineConfig.build">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weights</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">num_output_dimensions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">weights</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span>
+        <span class="n">num_output_dimensions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="n">generative_context</span><span class="p">:</span> <span class="n">GenerativeContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Construct loss pipeline.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        weights : xr.DataArray</span>
-<span class="sd">            Spatial or variable weights applied to loss computation.</span>
-<span class="sd">        num_output_dimensions : int, optional</span>
-<span class="sd">            Dimensionality of model outputs.</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        num_output_dimensions : int</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        generative_context : GenerativeContext | None</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Losspipeline</span>
-<span class="sd">            Initialized loss pipeline.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">return</span> <span class="n">Losspipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">num_output_dimensions</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">Losspipeline</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">num_output_dimensions</span><span class="p">,</span> <span class="n">generative_context</span><span class="o">=</span><span class="n">generative_context</span>
+        <span class="p">)</span></div>
 </div>
 
 
@@ -196,23 +204,18 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.loss.utils_loss.html#cccma_ppp.core.cVAE_module.Losspipeline">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Losspipeline</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Container for sequentially applying multiple loss functions.</span>
+<span class="sd">    Document this class.</span>
 
-<span class="sd">    Combines multiple loss terms using configurable weights,</span>
-<span class="sd">    supports spatial weighting, and enforces dimensionality checks.</span>
-
-<span class="sd">    Attributes</span>
+<span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    config : LosspipelineConfig</span>
-<span class="sd">        Configuration object.</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    weights : xr.DataArray</span>
-<span class="sd">        Spatial or variable weights.</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    num_output_dimensions : int</span>
-<span class="sd">        Output dimensionality used for validation.</span>
-<span class="sd">    pipeline : list</span>
-<span class="sd">        List of instantiated loss functions.</span>
-<span class="sd">    steps : list of str</span>
-<span class="sd">        Names of loss steps.</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    generative_context : GenerativeContext | None</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">registery</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Registery</span><span class="p">]</span> <span class="o">=</span> <span class="n">Registery</span><span class="p">()</span>
@@ -222,35 +225,45 @@
         <span class="n">config</span><span class="p">:</span> <span class="n">LosspipelineConfig</span><span class="p">,</span>
         <span class="n">weights</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span>
         <span class="n">num_output_dimensions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="n">generative_context</span><span class="p">:</span> <span class="n">GenerativeContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize loss pipeline.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        config : LossPipelineConfig</span>
-<span class="sd">            Configuration for the loss pipeline.</span>
+<span class="sd">        config : LosspipelineConfig</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        weights : xr.DataArray</span>
-<span class="sd">            Precomputed spatial/variable weights.</span>
-<span class="sd">        num_output_dimensions : int, optional</span>
-<span class="sd">            Number of output dimensions handled by the loss.</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        num_output_dimensions : int</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        generative_context : GenerativeContext | None</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_checked_dimensionality</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reduction</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">reduction</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">=</span> <span class="n">num_output_dimensions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generative_context</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">generative_context</span>
+            <span class="k">if</span> <span class="n">generative_context</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">GenerativeContext</span><span class="p">()</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">loss_pipeline</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">name</span>
-            <span class="n">args</span> <span class="o">=</span> <span class="n">step</span><span class="o">.</span><span class="n">args</span>
-            <span class="n">args</span><span class="p">[</span><span class="s2">&quot;num_output_dimensions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span>
-            <span class="n">args</span><span class="p">[</span><span class="s2">&quot;weights&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span>
-            <span class="n">args</span><span class="p">[</span><span class="s2">&quot;reduction&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduction</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="n">num_output_dimensions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span><span class="p">,</span>
+                <span class="n">weights</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span>
+                <span class="n">reduction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reduction</span><span class="p">,</span>
+                <span class="n">generative_context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">generative_context</span><span class="p">,</span>
+            <span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">registery</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">args</span><span class="p">))</span>
 
@@ -262,24 +275,25 @@
 
             <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="p">)</span>
+
 <div class="viewcode-block" id="Losspipeline.register">
 <a class="viewcode-back" href="../../../api/cccma_ppp.loss.utils_loss.html#cccma_ppp.core.cVAE_module.Losspipeline.register">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Register a loss function.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        name : str</span>
-<span class="sd">            Name used for registration.</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Callable</span>
-<span class="sd">            Decorator for registering loss functions.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">registery</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span></div>
 
 
@@ -294,37 +308,31 @@
         <span class="n">step_arguments</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Compute combined loss from all pipeline steps.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        data : torch.Tensor</span>
-<span class="sd">            Model predictions.</span>
-<span class="sd">        target : torch.Tensor</span>
-<span class="sd">            Ground truth targets.</span>
-<span class="sd">        target_mask : torch.Tensor or None, optional</span>
-<span class="sd">            Optional mask applied to targets.</span>
-<span class="sd">        print_loss : bool, optional</span>
-<span class="sd">            Whether to print individual loss values.</span>
-<span class="sd">        step_arguments : dict or None, optional</span>
-<span class="sd">            Additional arguments passed to each loss step.</span>
+<span class="sd">        data : Any</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        target : Any</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        target_mask : Any</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        print_loss : Any</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        step_arguments : dict</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        tuple</span>
-<span class="sd">            (total_loss, individual_losses)</span>
-
-<span class="sd">            total_loss : torch.Tensor</span>
-<span class="sd">                Weighted combined loss.</span>
-<span class="sd">            individual_losses : dict of str to float</span>
-<span class="sd">                Individual loss contributions.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        AssertionError</span>
-<span class="sd">            If input dimensionality does not match expectations.</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">total_loss</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">indiv_loses</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -332,15 +340,15 @@
             <span class="n">step_arguments</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_checked_dimensionality</span><span class="p">:</span>
-            <span class="n">expected_ndim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">+</span> <span class="mi">2</span>
-            <span class="k">if</span> <span class="s2">&quot;generative_modeling&quot;</span> <span class="ow">in</span> <span class="n">step_arguments</span><span class="p">:</span>
+            <span class="n">expected_ndim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generative_context</span><span class="o">.</span><span class="n">generative_modeling</span><span class="p">:</span>
                 <span class="n">expected_ndim</span> <span class="o">+=</span> <span class="mi">1</span>
 
             <span class="k">assert</span> <span class="n">target</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="n">expected_ndim</span><span class="p">,</span> <span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Expected target to have </span><span class="si">{</span><span class="n">expected_ndim</span><span class="si">}</span><span class="s2"> dims for &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;num_output_dimensions=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span><span class="si">}</span><span class="s2">, &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;but got target.shape=</span><span class="si">{</span><span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;If target is flattened as B x C x F, use num_output_dimensions=1.&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;If target is flattened as B x C x F, use num_output_dimensions=2.&quot;</span>
             <span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_checked_dimensionality</span> <span class="o">=</span> <span class="kc">True</span>
@@ -357,7 +365,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">total_loss</span> <span class="o">+=</span> <span class="n">loss</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">loss_weights</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">loss</span><span class="p">,</span> <span class="n">indiv_loses</span></div>
+        <span class="k">return</span> <span class="n">total_loss</span><span class="p">,</span> <span class="n">indiv_loses</span></div>
 </div>
 
 </pre></div>

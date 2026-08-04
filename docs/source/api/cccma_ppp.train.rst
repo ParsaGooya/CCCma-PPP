@@ -14,7 +14,6 @@ Submodules
    :maxdepth: 4
 
    cccma_ppp.train.dataloader
-   cccma_ppp.train.datasets
-   cccma_ppp.train.registry_imports
+   cccma_ppp.train.dataset
    cccma_ppp.train.train
    cccma_ppp.train.train_configs

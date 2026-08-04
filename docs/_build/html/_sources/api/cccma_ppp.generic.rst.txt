@@ -16,4 +16,6 @@ Submodules
    cccma_ppp.generic.aggregator
    cccma_ppp.generic.distributed
    cccma_ppp.generic.logger
+   cccma_ppp.generic.monitoring
+   cccma_ppp.generic.registry_imports
    cccma_ppp.generic.runtime

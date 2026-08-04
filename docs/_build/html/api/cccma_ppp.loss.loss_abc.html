@@ -53,6 +53,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="cccma_ppp.html">cccma_ppp package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="cccma_ppp.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.configs.html">cccma_ppp.configs package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.core.html">cccma_ppp.core package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.html">cccma_ppp.data_modules package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.generic.html">cccma_ppp.generic package</a></li>
@@ -66,7 +67,6 @@
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.train.html">cccma_ppp.train package</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.html#submodules">Submodules</a></li>
 </ul>
 </li>
 </ul>
@@ -101,11 +101,21 @@
 <h1>cccma_ppp.loss.loss_abc module<a class="headerlink" href="#cccma-ppp-loss-loss-abc-module" title="Link to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.loss.loss_abc.</span></span><span class="sig-name descname"><span class="pre">GenerativeContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/core_abc.html#GenerativeContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>module</strong> (<em>moduleABC</em><em> | </em><em>None</em>) – Description not yet provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.loss.loss_abc.</span></span><span class="sig-name descname"><span class="pre">lossABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/loss/loss_abc.html#lossABC"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Abstract base class for loss functions.</p>
-<p>Defines the interface for computing loss, applying reductions,
-and optionally printing loss values.</p>
+<p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -114,17 +124,27 @@ and optionally printing loss values.</p>
 </ul>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">generative_context</span></span></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>GenerativeContext</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generative_modeling</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/loss/loss_abc.html#lossABC.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Compute loss.</p>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/loss/loss_abc.html#lossABC.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Document this function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>Tensor</em>)</p></li>
-<li><p><strong>target</strong> (<em>Tensor</em>)</p></li>
-<li><p><strong>generative_modeling</strong> (<em>bool</em>)</p></li>
-<li><p><strong>generator</strong> (<em>bool</em>)</p></li>
+<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>print_loss</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -133,40 +153,10 @@ and optionally printing loss values.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
+<dl class="py attribute">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">_aggregate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/loss/loss_abc.html#lossABC._aggregate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Apply reduction to loss values.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">_print_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/loss/loss_abc.html#lossABC._print_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Print formatted loss value.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generative_modeling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/loss/loss_abc.html#lossABC.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Compute loss between predictions and targets.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>torch.Tensor</em>) – Model predictions.</p></li>
-<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Ground truth targets.</p></li>
-<li><p><strong>generative_modeling</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether loss is used in a generative modeling context.</p></li>
-<li><p><strong>generator</strong> (<em>bool</em><em>, </em><em>optional</em>) – Indicates if generator-specific behavior is applied.</p></li>
-<li><p><strong>print_loss</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to print the loss value.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Computed loss value.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>torch.Tensor</p>
-</dd>
-</dl>
-</dd></dl>
+<span class="sig-name descname"><span class="pre">generative_context</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">GenerativeContext</span></span></dt>
+<dd></dd></dl>
 
 </dd></dl>
 

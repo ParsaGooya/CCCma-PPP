@@ -85,27 +85,28 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss.loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">Losspipeline</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.core_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">moduleABC</span><span class="p">,</span> <span class="n">moduleConfigABC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.core_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">moduleABC</span><span class="p">,</span> <span class="n">moduleConfigABC</span><span class="p">,</span> <span class="n">OutputABC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.models.models_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeterministicRequest</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.selectors</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_load_config_from_checkpoint</span><span class="p">,</span>
     <span class="n">ModuleSelector</span><span class="p">,</span>
     <span class="n">deterministicModelSelector</span><span class="p">,</span>
+    <span class="n">_load_config_from_checkpoint</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.train.dataloader</span><span class="w"> </span><span class="kn">import</span> <span class="n">BatchData</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic.runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeContext</span>
 
 
 <div class="viewcode-block" id="deterministicOutput">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.mlp_models.html#cccma_ppp.core.deterministic_module.deterministicOutput">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.unet_models.deterministic.html#cccma_ppp.core.deterministic_module.deterministicOutput">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">deterministicOutput</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">deterministicOutput</span><span class="p">(</span><span class="n">OutputABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Container for deterministic model outputs.</span>
+<span class="sd">    Document this class.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    output : torch.Tensor</span>
-<span class="sd">        Model predictions.</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">output</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span></div>
@@ -119,14 +120,14 @@
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">deterministicConfig</span><span class="p">(</span><span class="n">moduleConfigABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Configuration for deterministic models.</span>
+<span class="sd">    Document this class.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ModelConfig : deterministicModelSelector or None</span>
-<span class="sd">        Model configuration selector.</span>
-<span class="sd">    load_dir : str or None</span>
-<span class="sd">        Path to checkpoint for loading configuration.</span>
+<span class="sd">    ModelConfig : deterministicModelSelector | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    load_dir : str | None</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">ModelConfig</span><span class="p">:</span> <span class="n">deterministicModelSelector</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -134,14 +135,18 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Validate and initialize configuration.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If neither `ModelConfig` nor `load_dir` is provided.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            Description not yet provided.</span>
 
+<span class="sd">        Warns</span>
+<span class="sd">        -----</span>
+<span class="sd">        UserWarning</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ModelConfig</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;provide loading dir or model configurations&quot;</span><span class="p">)</span>
@@ -157,28 +162,27 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic_module.deterministicConfig.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">input_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-        <span class="n">output_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">input_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">,</span>
+        <span class="n">output_shape</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">added_features_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Construct deterministic module instance.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        input_shape : np.ndarray</span>
-<span class="sd">            Shape of input data.</span>
-<span class="sd">        output_shape : np.ndarray or None, optional</span>
-<span class="sd">            Shape of output data.</span>
-<span class="sd">        added_features_dim : int, optional</span>
-<span class="sd">            Number of additional input features.</span>
+<span class="sd">        input_shape : np.ndarray | tuple</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        output_shape : np.ndarray | tuple | None</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        added_features_dim : int</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        deterministic</span>
-<span class="sd">            Initialized deterministic module.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="n">deterministic</span><span class="p">(</span>
             <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
             <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span>
@@ -189,19 +193,18 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_load_from_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">load_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Load configuration from checkpoint.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        load_path : pathlib.Path or str</span>
-<span class="sd">            Path to checkpoint file.</span>
+<span class="sd">        load_path : Path | str</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        deterministicConfig</span>
-<span class="sd">            Updated configuration instance.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">checkpoint_module</span><span class="p">,</span> <span class="n">checkpoint_config</span> <span class="o">=</span> <span class="n">_load_config_from_checkpoint</span><span class="p">(</span>
             <span class="n">Path</span><span class="p">(</span><span class="n">load_path</span><span class="p">)</span>
         <span class="p">)</span>
@@ -222,18 +225,18 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic_module.deterministic">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">deterministic</span><span class="p">(</span><span class="n">moduleABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Deterministic model module.</span>
+<span class="sd">    Document this class.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    config : deterministicConfig</span>
-<span class="sd">        Configuration object.</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    input_shape : np.ndarray</span>
-<span class="sd">        Shape of input data.</span>
-<span class="sd">    output_shape : np.ndarray or None</span>
-<span class="sd">        Shape of output data.</span>
-<span class="sd">    added_features_dim : int or None</span>
-<span class="sd">        Number of additional features.</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    output_shape : np.ndarray | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    added_features_dim : int</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -244,25 +247,24 @@
         <span class="n">added_features_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize deterministic module and underlying model.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        config : deterministicConfig</span>
-<span class="sd">            Configuration instance.</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        input_shape : np.ndarray</span>
-<span class="sd">            Input shape.</span>
-<span class="sd">        output_shape : np.ndarray or None</span>
-<span class="sd">            Output shape.</span>
-<span class="sd">        added_features_dim : int or None</span>
-<span class="sd">            Additional feature dimension.</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        output_shape : np.ndarray | None</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        added_features_dim : int</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
-<span class="sd">            If checkpoint metadata or shapes are inconsistent with current setup.</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">model_config</span>
@@ -310,41 +312,35 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic_module.deterministic.init_loss_function">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">init_loss_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reconstruction_loss</span><span class="p">:</span> <span class="n">Losspipeline</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize loss function.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        reconstruction_loss : Losspipeline</span>
-<span class="sd">            Loss pipeline used for training.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">=</span> <span class="n">reconstruction_loss</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">=</span> <span class="n">reconstruction_loss</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_device</span><span class="p">())</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">BatchData</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Compute training loss.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        data : BatchData</span>
-<span class="sd">            Input batch.</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        tuple</span>
-<span class="sd">            Total loss tensor and dictionary of loss components.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
-<span class="sd">            If loss function has not been initialized.</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s2">&quot;Criterion should be specified before training is possible. Hint: call .init_loss_function() method in your module first.&quot;</span>
@@ -352,10 +348,8 @@
 
         <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
-            <span class="n">target</span><span class="p">,</span> <span class="n">target_mask</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">target</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">target</span><span class="p">,</span> <span class="n">target_mask</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">target</span>
+        <span class="n">target_mask</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">target_mask</span>
 
         <span class="n">total_loss</span><span class="p">,</span> <span class="n">indiv_losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span><span class="p">(</span>
             <span class="n">output</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">target_mask</span><span class="o">=</span><span class="n">target_mask</span><span class="p">,</span> <span class="n">print_loss</span><span class="o">=</span><span class="kc">False</span>
@@ -372,40 +366,61 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic_module.deterministic.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">BatchData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">deterministicOutput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Perform forward pass.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        data : BatchData</span>
-<span class="sd">            Input batch.</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        deterministicOutput</span>
-<span class="sd">            Model predictions.</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_config</span><span class="o">.</span><span class="n">GENERATOR</span>
+        <span class="n">output_sample_size</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span> <span class="ow">and</span> <span class="n">generator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">output_sample_size</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">num_validation_noise_samples</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">added_features</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">added_features</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span>
+            <span class="n">DeterministicRequest</span><span class="p">(</span>
+                <span class="nb">input</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
+                <span class="n">input_mask</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">input_mask</span><span class="p">,</span>
+                <span class="n">added_features</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">added_features</span><span class="p">,</span>
+                <span class="n">output_sample_size</span><span class="o">=</span><span class="n">output_sample_size</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="deterministic.predict">
 <a class="viewcode-back" href="../../../api/cccma_ppp.core.deterministic_module.html#cccma_ppp.core.deterministic_module.deterministic.predict">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">BatchData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">deterministicOutput</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">BatchData</span><span class="p">,</span> <span class="n">output_sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">deterministicOutput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Perform inference.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        data : BatchData</span>
-<span class="sd">            Input batch.</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        output_sample_size : int</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        deterministicOutput</span>
-<span class="sd">            Model predictions.</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span>
+            <span class="n">DeterministicRequest</span><span class="p">(</span>
+                <span class="nb">input</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
+                <span class="n">input_mask</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">input_mask</span><span class="p">,</span>
+                <span class="n">added_features</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">added_features</span><span class="p">,</span>
+                <span class="n">output_sample_size</span><span class="o">=</span><span class="n">output_sample_size</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
 </div>
 
 </pre></div>

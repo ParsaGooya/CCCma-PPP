@@ -95,14 +95,14 @@
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ModuleSelector</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Selector for constructing training modules from a registry.</span>
+<span class="sd">    Document this class.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    type : str</span>
-<span class="sd">        Name of the registered module.</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    config : Mapping[str, Any]</span>
-<span class="sd">        Configuration dictionary used to instantiate the module config.</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span>
@@ -111,13 +111,8 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Retrieve module configuration from registry.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_module_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">registery</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ModuleSelector.register">
@@ -125,19 +120,18 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">moduleABC</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Register a module configuration class.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        name : str</span>
-<span class="sd">            Name used for registration.</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Callable</span>
-<span class="sd">            Decorator for registering module configuration classes.</span>
+<span class="sd">        Callable[..., moduleABC]</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">registery</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span></div>
 
 
@@ -146,16 +140,51 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">available</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return available module types.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        list of str</span>
-<span class="sd">            Registered module names.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">registery</span><span class="o">.</span><span class="n">available</span><span class="p">()</span></div>
 
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">NUM_INPUT_DIMS</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Document this function.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_config</span><span class="o">.</span><span class="n">model_config</span><span class="o">.</span><span class="n">NUM_INPUT_DIMS</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">NUM_OUTPUT_DIMS</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Document this function.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_config</span><span class="o">.</span><span class="n">model_config</span><span class="o">.</span><span class="n">NUM_OUTPUT_DIMS</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">GENERATOR</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Document this function.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_module_config</span><span class="o">.</span><span class="n">model_config</span><span class="p">,</span> <span class="s2">&quot;GENERATOR&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ModuleSelector.build_module">
 <a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.cVAE_module.ModuleSelector.build_module">[docs]</a>
@@ -166,23 +195,22 @@
         <span class="n">added_features_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Build module instance.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        input_shape : np.ndarray</span>
-<span class="sd">            Input data shape.</span>
-<span class="sd">        output_shape : np.ndarray or None, optional</span>
-<span class="sd">            Output data shape.</span>
-<span class="sd">        added_features_dim : int, optional</span>
-<span class="sd">            Additional feature dimension.</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        output_shape : np.ndarray | None</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        added_features_dim : int</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        moduleABC</span>
-<span class="sd">            Built module instance.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_config</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
             <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span>
             <span class="n">output_shape</span><span class="o">=</span><span class="n">output_shape</span><span class="p">,</span>
@@ -197,18 +225,18 @@
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ModelSelector</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Selector for constructing model configurations, optionally from checkpoint.</span>
+<span class="sd">    Document this class.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    type : str</span>
-<span class="sd">        Model type identifier.</span>
-<span class="sd">    config : Mapping[str, Any] or None, optional</span>
-<span class="sd">        Configuration dictionary for model.</span>
-<span class="sd">    load_dir : pathlib.Path or str or None, optional</span>
-<span class="sd">        Path to checkpoint for loading model configuration.</span>
-<span class="sd">    freeze_weights : bool, optional</span>
-<span class="sd">        Whether to freeze model weights after loading.</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    config : Mapping[str, Any] | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    load_dir : Path | str | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    freeze_weights : bool</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span>
@@ -220,28 +248,32 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize subclass with its own registry.</span>
+<span class="sd">        Document this function.</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        **kwargs : Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">cls</span><span class="o">.</span><span class="n">registery</span> <span class="o">=</span> <span class="n">Registery</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Validate configuration and optionally load from checkpoint.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
-<span class="sd">        RuntimeError</span>
-<span class="sd">            If neither configuration nor checkpoint path is provided.</span>
 <span class="sd">        AssertionError</span>
-<span class="sd">            If model type does not match checkpoint.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        RuntimeError</span>
+<span class="sd">            Description not yet provided.</span>
 
+<span class="sd">        Warns</span>
+<span class="sd">        -----</span>
+<span class="sd">        UserWarning</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">checkpoint_config</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="nb">all</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]):</span>
@@ -269,19 +301,18 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">modelABC</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Decorator for registering model classes.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        name : str</span>
-<span class="sd">            Name used for registration.</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Callable</span>
-<span class="sd">            Decorator for registering model classes.</span>
+<span class="sd">        Callable[..., modelABC]</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">registery</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span></div>
 
 
@@ -290,14 +321,13 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">available</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return available model types.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        list of str</span>
-<span class="sd">            Registered model names.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">registery</span><span class="o">.</span><span class="n">available</span><span class="p">()</span></div>
 
 
@@ -305,14 +335,13 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.core.selectors.html#cccma_ppp.core.cVAE_module.ModelSelector.get_model_config">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_model_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get instantiated model configuration.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        modelABC</span>
-<span class="sd">            Model configuration instance.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">model_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">registery</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkpoint_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">model_config</span><span class="o">.</span><span class="n">_add_checkpoint_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checkpoint_config</span><span class="p">)</span>
@@ -323,10 +352,10 @@
 
 
 <div class="viewcode-block" id="cVAEModelSelector">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.mlp_models.html#cccma_ppp.core.cVAE_module.cVAEModelSelector">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.unet_models.cvae.html#cccma_ppp.core.cVAE_module.cVAEModelSelector">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">cVAEModelSelector</span><span class="p">(</span><span class="n">ModelSelector</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Model selector for cVAE models.</span>
+<span class="sd">    Document this class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">pass</span></div>
@@ -334,10 +363,10 @@
 
 
 <div class="viewcode-block" id="deterministicModelSelector">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.mlp_models.html#cccma_ppp.core.cVAE_module.deterministicModelSelector">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.models.unet_models.deterministic.html#cccma_ppp.core.cVAE_module.deterministicModelSelector">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">deterministicModelSelector</span><span class="p">(</span><span class="n">ModelSelector</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Model selector for deterministic models.</span>
+<span class="sd">    Document this class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">pass</span></div>
@@ -349,14 +378,14 @@
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">FlowSelector</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Selector for constructing flow models.</span>
+<span class="sd">    Document this class.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    type : str</span>
-<span class="sd">        Flow model type.</span>
-<span class="sd">    args : dict of str to object</span>
-<span class="sd">        Arguments used to instantiate the flow model.</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    args : dict[str, object]</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span>
@@ -365,13 +394,8 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Post-initialization hook.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">pass</span>
 
 <div class="viewcode-block" id="FlowSelector.register">
@@ -379,19 +403,18 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">flowABC</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Register a flow model class.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        name : str</span>
-<span class="sd">            Name used for registration.</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Callable</span>
-<span class="sd">            Decorator for registering flow classes.</span>
+<span class="sd">        Callable[..., flowABC]</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">registery</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span></div>
 
 
@@ -400,14 +423,13 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">available</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return available flow types.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        list of str</span>
-<span class="sd">            Registered flow names.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">registery</span><span class="o">.</span><span class="n">available</span><span class="p">()</span></div>
 
 
@@ -415,14 +437,13 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.FlowSelector.get_model">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Instantiate flow model.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        flowABC</span>
-<span class="sd">            Flow model instance.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">registery</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span></div>
 </div>
 
@@ -430,31 +451,25 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_load_config_from_checkpoint</span><span class="p">(</span><span class="n">load_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Load configuration metadata from checkpoint.</span>
+<span class="sd">    Document this function.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    load_path : pathlib.Path or str</span>
-<span class="sd">        Path to checkpoint file.</span>
-<span class="sd">    strict : bool, optional</span>
-<span class="sd">        Whether to enforce strict loading.</span>
+<span class="sd">    load_path : Path | str</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    strict : bool</span>
+<span class="sd">        Description not yet provided.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tuple</span>
-<span class="sd">        (checkpoint_module, checkpoint_config)</span>
-
-<span class="sd">        checkpoint_module : dict</span>
-<span class="sd">            Stored module configuration dictionary.</span>
-<span class="sd">        checkpoint_config : CheckpointConfig</span>
-<span class="sd">            Object containing metadata and shape information.</span>
+<span class="sd">    Any</span>
+<span class="sd">        Description not yet provided.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    FileNotFoundError</span>
-<span class="sd">        If checkpoint file does not exist.</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">load_path</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checkpoint not found: </span><span class="si">{</span><span class="n">load_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
