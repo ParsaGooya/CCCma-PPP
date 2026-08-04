@@ -22,7 +22,9 @@ import cccma_ppp.generic.registry_imports
 @dataclasses.dataclass
 class InferenceConfig:
     experiment_dir: str
-    writer: WriterConfig
+    writer: WriterConfig = dataclasses.field(
+        default_factory=WriterConfig
+    )
     inference_loader: InferenceDataloaderConfig = dataclasses.field(
         default_factory=InferenceDataloaderConfig
     )
