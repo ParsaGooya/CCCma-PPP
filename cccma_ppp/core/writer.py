@@ -32,7 +32,7 @@ class WriterConfig:
         default_factory=DeterministicPredictorConfig
     )
 
-    num_output_sampling: int | None = None
+    num_output_sampling: int = 0
     get_trained_model_stats_from_validation: bool = False
 
     def __post_init__(self):
