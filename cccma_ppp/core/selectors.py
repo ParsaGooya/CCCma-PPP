@@ -10,7 +10,6 @@ import warnings
 from cccma_ppp.core.registery import Registery
 from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.models.models_abc import modelABC, flowABC, CheckpointConfig
-from cccma_ppp.generic.distributed import Distributed
 
 
 @dataclasses.dataclass
@@ -71,45 +70,6 @@ class ModuleSelector:
         """
 
         return cls.registery.available()
-
-    @property
-    def NUM_INPUT_DIMS(self) -> int:
-        """
-        Return number of input dims in
-        the selected architecture.
-
-        Return
-        -------
-        int
-        """
-
-        return self._module_config.model_config.NUM_INPUT_DIMS
-
-    @property
-    def NUM_OUTPUT_DIMS(self) -> int:
-        """
-        Return number of output dims in
-        the selected architecture.
-
-        Return
-        -------
-        int
-        """
-
-        return self._module_config.model_config.NUM_OUTPUT_DIMS
-
-    @property
-    def GENERATOR(self) -> bool:
-        """
-        Check if the selected architecture
-        has a GENERATOR.
-
-        Return
-        -------
-        bool
-        """
-
-        return getattr(self._module_config.model_config, "GENERATOR", False)
 
     @property
     def NUM_INPUT_DIMS(self) -> int:
