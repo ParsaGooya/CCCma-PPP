@@ -92,6 +92,7 @@ class InferenceConfig:
         RuntimeContext.GLOBAL_OUTPUT_DIR = str(self.output_dir)
         RuntimeContext.GLOBAL_LOG_DIR = str(self.log_dir)
         RuntimeContext.INPUT_VAR_METADATA = self.inference_loader.input_var_metadata
+        RuntimeContext.TARGET_VAR_METADATA = self.inference_loader.target_var_metadata
 
     def prepare_directory(self, distributed: Distributed):
         """
