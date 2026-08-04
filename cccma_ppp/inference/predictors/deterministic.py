@@ -48,8 +48,8 @@ class DetermninisticPredictor(PredictorABC):
         self.num_output_covariance_sampling = 0
         self.output_dir = Path(output_dir)
 
-        if num_output_sampling <= 0:
-            raise ValueError("num_output_sampling must be larger than 1.")
+        if num_output_sampling < 0:
+            raise ValueError("num_output_sampling must be larger than 0.")
 
         if module.model_config.GENERATOR is None:
             self.num_output_covariance_sampling = num_output_sampling
