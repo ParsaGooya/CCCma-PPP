@@ -7,7 +7,7 @@ train_loader:
           names: [tas]
           preprocessing_pipeline:
             preprocessors_list:
-              - name: standardizer
+              - name: anomalies
                 args:
                   dims: [year]
               # - name: flattener
@@ -20,7 +20,9 @@ train_loader:
             names: [tas]
             preprocessing_pipeline :
                     preprocessors_list :
-                            - name : standardizer
+                            - name : anomalies
+                              args:
+                                    dims: [year]
                             # - name : flattener
 
             concat_dim : year
@@ -30,20 +32,21 @@ train_loader:
         condition_method : ensemble_mean
         lead_months : 
                       start: 1
-                      end: 120
+                      end: 60
 
     batch_size: 10
     time_features :
                     - year
                     
-    train_years : [1980, 2010]
-    num_validation_years : 1
+    train_years : [1961, 2015]
+    num_validation_years : 5
     prefetch_factor : 4
     num_data_workers: 4
+    reduce_spatial_mask: True
     load: True
 
 module:
-    type :  cVAE #deterministic
+    type :  deterministic
     config:
             # ModelConfig :
             #         type : MLP
@@ -62,53 +65,48 @@ module:
             ModelConfig :
                     type : UNet
                     config :
-                          channels: [16,32,64]
-                          bottleneck_dim: 128
-                          latent_size: 1000
-                          block_config: 
-                                  name: standard_conv
-                                  num_convolutions: 2
-                                  kernel_size: 3
-                                  padding_method: circular
-                          GENERATOR: 
-                                  noise_level:  full
-                                  num_training_noise_samples: 10
-                          # condition_dependant_latent : True
-                          output_block_hidden_channels: 32
-            # min_posterior_variance: 2
-            # prior_flow_config:
-            #   list_flows:
-            #   - type: RealNVP
-            #     args:
-            #       hidden_dim: 5
-            # combined_CGCN_weight: 0.1
+                        channels: [16,32,64,128,256]
+                        block_config: 
+                                name: convnext
+                                num_blocks: 2
+                        output_block_hidden_channels: 32
+                        # latent_size: 1000
+                        # deterministic_guess_config:
+                        #     load_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_4/checkpoints/best.pt
+                        #     freeze_weights: True
+                        #     share_output_block: True    
+                        # GENERATOR: 
+                        #         noise_level:  full
+                        #         num_training_noise_samples: 10
+                        
 
                     
 losspipeline:
       loss_pipeline :
-                    - name : crps
+                    - name : mse
 
       reduction : mean
 
 trainer :
-    beta_finder :
-              beta : 10
-              num_epoch_to_warmup : 10
-
+    # beta_finder :
+    #           beta : 10
+    #           num_epoch_to_warmup : 10
+#     gradient_accumulation_steps: 2
     earlystoppingbuffer : 10
-    gradient_accumulation_steps: 2
+
     mixed_precision: True              
 
 optimization :
         lr : 0.0001
         optimizer_type : adam
         lr_scheduler_config :
-                    min_lr : 0
+                    min_lr : 0.00001
                     warmup_epochs : 2
                     total_epochs: 10
+                    hold_min_lr: True
 
 weights :
-        spatial_method : cosine_lat
+        spatial_method : uniform
 
 log_every_n_epochs : 2
 save_checkpoint : True
