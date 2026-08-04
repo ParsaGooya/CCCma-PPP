@@ -179,18 +179,6 @@ class ModelSelector:
 
     registery: ClassVar[Registery]
 
-    def __init_subclass__(cls, **kwargs):
-        """
-        Initialize subclass with its own registry.
-
-        Returns
-        -------
-        None
-        """
-
-        super().__init_subclass__(**kwargs)
-        cls.registery = Registery()
-
     def __post_init__(self):
         """
         Validate configuration and optionally load from checkpoint.
@@ -278,7 +266,7 @@ class cVAEModelSelector(ModelSelector):
     Model selector for cVAE models.
     """
 
-    pass
+    registery: ClassVar[Registery] = Registery()
 
 
 class deterministicModelSelector(ModelSelector):
@@ -286,7 +274,7 @@ class deterministicModelSelector(ModelSelector):
     Model selector for deterministic models.
     """
 
-    pass
+    registery: ClassVar[Registery] = Registery()
 
 
 
@@ -392,7 +380,9 @@ def _load_config_from_checkpoint(load_path: Path | str, strict: bool = True):
     if not Path(load_path).exists():
         raise FileNotFoundError(f"Checkpoint not found: {load_path}")
 
-    checkpoint = torch.load(Path(load_path), weights_only=False)
+    checkpoint = torch.load(Path(load_path), 
+                            weights_only=False, 
+                            map_location=torch.device('cpu'))
 
     checkpoint_module = checkpoint.get("module_config")
     checkpoint_input_shape = checkpoint.get("input_shape")
