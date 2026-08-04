@@ -16,11 +16,8 @@ class lossABC(nn.Module, abc.ABC):
     ----------
     generative_context : GenerativeContext
         Description not yet provided.
-    generative_context : GenerativeContext
-        Description not yet provided.
-    """
 
-    generative_context: GenerativeContext
+    """
 
     generative_context: GenerativeContext
 

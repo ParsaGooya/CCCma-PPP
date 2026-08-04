@@ -15,8 +15,7 @@ import dacite
 import yaml
 from tqdm import tqdm
 
-
-
+from cccma_ppp.generic import registry_imports  # noqa: F401
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.train.train import main as train_main
 from cccma_ppp.train.train_configs import TrainConfig, prepare_config

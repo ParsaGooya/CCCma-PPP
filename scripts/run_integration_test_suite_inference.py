@@ -15,8 +15,7 @@ import warnings
 import yaml
 from tqdm import tqdm
 
-                                     
-
+from cccma_ppp.generic import registry_imports  # noqa: F401
 from cccma_ppp.train.train import main as train_main
 
 
@@ -34,10 +33,10 @@ BASE_INFERENCE_CONFIG = (
 
 OUTPUT_DIR = PROJECT_ROOT / "output" / "inference_integration_test_results"
 
-                                                     
+
 TRAINING_EXPERIMENT_DIR = OUTPUT_DIR / "_trained_model"
 
-                                                                           
+
 CASE_DIR = OUTPUT_DIR
 
 TRAINING_CONFIG_PATH = TRAINING_EXPERIMENT_DIR / "training_config.yaml"
@@ -843,7 +842,6 @@ def load_base_inference_config():
 
     config = normalize_inference_config(config)
 
-                                                          
     config["experiment_dir"] = str(TRAINING_EXPERIMENT_DIR.resolve())
 
     validate_inference_config(config)
@@ -1097,7 +1095,6 @@ def run_inference_case(
 
     safe_name = clean_name(case["name"])
 
-                                                            
     case_dir = CASE_DIR / safe_name
     config_path = case_dir / "inference_config.yaml"
     log_path = case_dir / "inference.log"
@@ -1110,7 +1107,6 @@ def run_inference_case(
         exist_ok=True,
     )
 
-                                                                  
     config["experiment_dir"] = str(TRAINING_EXPERIMENT_DIR.resolve())
 
     validate_inference_config(config)

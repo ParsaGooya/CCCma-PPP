@@ -9,7 +9,7 @@ os.chdir(ROOT)
 
 print("WORKING DIRECTORY:", os.getcwd())
 
-OUTPUT_DIR = Path("test_suite_analysis")
+OUTPUT_DIR = Path("output/test_suite_analysis")
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 OUTPUT = OUTPUT_DIR / "test_map.json"

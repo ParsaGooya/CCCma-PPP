@@ -9,7 +9,7 @@ echo "Running test suite with coverage..."
 coverage run --branch -m pytest tests
 
 echo "Generating coverage JSON..."
-coverage json -o test_suite_analysis/baseline_cov.json
+coverage json -o output/test_suite_analysis/baseline_cov.json
 
 echo "Building test map..."
 python scripts/build_test_map_parallel.py

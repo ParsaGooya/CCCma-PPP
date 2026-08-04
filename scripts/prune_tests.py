@@ -9,7 +9,7 @@ import pulp
 ROOT = Path(__file__).resolve().parents[1]
 os.chdir(ROOT)
 
-OUTPUT_DIR = ROOT / "test_suite_analysis"
+OUTPUT_DIR = ROOT / "output/test_suite_analysis"
 
 TEST_MAP_FILE = OUTPUT_DIR / "test_map.json"
 BASELINE_COVERAGE_FILE = OUTPUT_DIR / "baseline_cov.json"
@@ -306,7 +306,7 @@ with open(OUTPUT_DIR / "final_module_coverage.json", "w") as f:
     )
 
 print("\nSaved:")
-print("  test_suite_analysis/pruned_tests.json")
-print("  test_suite_analysis/removed_tests.json")
-print("  test_suite_analysis/zero_branch_tests.json")
-print("  test_suite_analysis/final_module_coverage.json")
+print("  output/test_suite_analysis/pruned_tests.json")
+print("  output/test_suite_analysis/removed_tests.json")
+print("  output/test_suite_analysis/zero_branch_tests.json")
+print("  output/test_suite_analysis/final_module_coverage.json")

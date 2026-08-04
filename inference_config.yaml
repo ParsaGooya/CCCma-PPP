@@ -10,7 +10,6 @@ writer:
 inference_loader:
 
     batch_size: 12
-    inference_years : [2018, 2020]
+    inference_years: [ 2018, 2020 ]
     num_data_workers: 0
     load: True
-
