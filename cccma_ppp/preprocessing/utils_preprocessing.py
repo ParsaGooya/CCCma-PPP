@@ -11,8 +11,28 @@ from cccma_ppp.configs import supported_NN_dimensions_sorted, required_sample_di
 
 @PreprocessingStepSelector.register("normalizer")
 class Normalizer(PreprocessModuleABC):
-    def __init__(self, dims: list | None = None, **kwargs) -> None:
+    """
+    Document this class.
 
+    Parameters
+    ----------
+    dims : list | None
+        Description not yet provided.
+    **kwargs : Any
+        Description not yet provided.
+    """
+
+    def __init__(self, dims: list | None = None, **kwargs) -> None:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        dims : list | None
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
+        """
         self.min = None
         self.max = None
         self.dims = dims
@@ -22,7 +42,21 @@ class Normalizer(PreprocessModuleABC):
             self.dims = tuple(self.dims)
 
     def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : xr.Dataset | xr.DataArray
+            Description not yet provided.
+        mask : xr.DataArray
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         if all(["ensembles" in data.dims, self.dims is not None]):
             if "ensembles" not in self.dims:
                 self.large_ensemble = True
@@ -42,11 +76,36 @@ class Normalizer(PreprocessModuleABC):
         return self
 
     def transform(self, data: xr.DataArray):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : xr.DataArray
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         data_normalized = (data - self.min) / (self.max - self.min)
         return data_normalized
 
     def inverse_transform(self, data: xr.DataArray):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        data : xr.DataArray
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         max = align_stat_data_lead_time_inverse_transform(data, self.max)
         min = align_stat_data_lead_time_inverse_transform(data, self.min)
 
@@ -56,8 +115,28 @@ class Normalizer(PreprocessModuleABC):
 
 @PreprocessingStepSelector.register("standardizer")
 class Standardizer(PreprocessModuleABC):
-    def __init__(self, dims: list | None = None, **kwargs) -> None:
+    """
+    Document this class.
 
+    Parameters
+    ----------
+    dims : list | None
+        Description not yet provided.
+    **kwargs : Any
+        Description not yet provided.
+    """
+
+    def __init__(self, dims: list | None = None, **kwargs) -> None:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        dims : list | None
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
+        """
         self.mean = None
         self.std = None
         self.dims = dims
@@ -67,7 +146,21 @@ class Standardizer(PreprocessModuleABC):
             self.dims = tuple(self.dims)
 
     def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : xr.Dataset | xr.DataArray
+            Description not yet provided.
+        mask : xr.DataArray
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         if all(["ensembles" in data.dims, self.dims is not None]):
             if "ensembles" not in self.dims:
                 self.large_ensemble = True
@@ -88,12 +181,37 @@ class Standardizer(PreprocessModuleABC):
         return self
 
     def transform(self, data: xr.DataArray):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : xr.DataArray
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         data_standardized = (data - self.mean) / self.std
 
         return data_standardized
 
     def inverse_transform(self, data: xr.DataArray):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        data : xr.DataArray
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         std = align_stat_data_lead_time_inverse_transform(data, self.std)
         mean = align_stat_data_lead_time_inverse_transform(data, self.mean)
 
@@ -104,8 +222,28 @@ class Standardizer(PreprocessModuleABC):
 
 @PreprocessingStepSelector.register("anomalies")
 class AnomaliesScaler(PreprocessModuleABC):
-    def __init__(self, dims: list | None = None, **kwargs) -> None:
+    """
+    Document this class.
 
+    Parameters
+    ----------
+    dims : list | None
+        Description not yet provided.
+    **kwargs : Any
+        Description not yet provided.
+    """
+
+    def __init__(self, dims: list | None = None, **kwargs) -> None:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        dims : list | None
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
+        """
         self.mean = None
         self.dims = dims
         self.fitted = False
@@ -114,7 +252,21 @@ class AnomaliesScaler(PreprocessModuleABC):
             self.dims = tuple(self.dims)
 
     def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : xr.Dataset | xr.DataArray
+            Description not yet provided.
+        mask : xr.DataArray
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         if all(["ensembles" in data.dims, self.dims is not None]):
             if "ensembles" not in self.dims:
                 self.large_ensemble = True
@@ -133,12 +285,36 @@ class AnomaliesScaler(PreprocessModuleABC):
         return self
 
     def transform(self, data: xr.DataArray):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : xr.DataArray
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         data_anomalies = data - self.mean
         return data_anomalies
 
     def inverse_transform(self, data: xr.DataArray):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : xr.DataArray
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         mean = align_stat_data_lead_time_inverse_transform(data, self.mean)
         data_raw = data + mean
 
@@ -147,8 +323,28 @@ class AnomaliesScaler(PreprocessModuleABC):
 
 @PreprocessingStepSelector.register("flattener")
 class Flattennanremove(PreprocessModuleABC):
-    def __init__(self, load_dir: Path | str = None, **kwargs):
+    """
+    Document this class.
 
+    Parameters
+    ----------
+    load_dir : Path | str
+        Description not yet provided.
+    **kwargs : Any
+        Description not yet provided.
+    """
+
+    def __init__(self, load_dir: Path | str = None, **kwargs):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        load_dir : Path | str
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
+        """
         self.load_dir = load_dir
         self.fitted = False
         self.common_to_input_and_target = False
@@ -163,7 +359,34 @@ class Flattennanremove(PreprocessModuleABC):
         save_name: str | None = None,
         save_path: Path | str = None,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : xr.Dataset | xr.DataArray
+            Description not yet provided.
+        target : xr.DataArray | None
+            Description not yet provided.
+        mask : Any
+            Description not yet provided.
+        save : bool
+            Description not yet provided.
+        save_name : str | None
+            Description not yet provided.
+        save_path : Path | str
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if self.load_dir is not None:
             self._load_from_memory(self.load_dir)
 
@@ -235,6 +458,19 @@ class Flattennanremove(PreprocessModuleABC):
         self,
         data: xr.Dataset | xr.DataArray,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        data : xr.Dataset | xr.DataArray
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if data is not None:
             missing_dims = [dim for dim in self.NN_dims if dim not in data.dims]
 
@@ -245,7 +481,19 @@ class Flattennanremove(PreprocessModuleABC):
                 )
 
     def transform(self, data: xr.DataArray) -> xr.Dataset | xr.DataArray:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : xr.DataArray
+            Description not yet provided.
+
+        Returns
+        -------
+        xr.Dataset | xr.DataArray
+            Description not yet provided.
+        """
         if "ref" in data.dims:
             return data.sel(ref=self.final_locations)
 
@@ -254,14 +502,43 @@ class Flattennanremove(PreprocessModuleABC):
         )
 
     def inverse_transform(self, data: xr.DataArray) -> xr.DataArray:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : xr.DataArray
+            Description not yet provided.
+
+        Returns
+        -------
+        xr.DataArray
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if "ref" not in data.dims:
             raise ValueError("The input must contain the flattened 'ref' dimension.")
 
         return data.unstack().combine_first(self.reference_shape)
 
     def _load_from_memory(self, load_dir: Path | str) -> None:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        load_dir : Path | str
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         loaded = joblib.load(Path(load_dir))
         if not loaded.fitted:
             raise RuntimeError("the preprocessor to be loaded has to be fitted first.")
@@ -277,6 +554,26 @@ def align_stat_data_lead_time_inverse_transform(
     ds: xr.DataArray,
     stat: xr.DataArray,
 ) -> xr.DataArray:
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    ds : xr.DataArray
+        Description not yet provided.
+    stat : xr.DataArray
+        Description not yet provided.
+
+    Returns
+    -------
+    xr.DataArray
+        Description not yet provided.
+
+    Raises
+    ------
+    ValueError
+        Description not yet provided.
+    """
     time_dim, lead_time_dim = required_sample_dimensions
 
     if time_dim not in ds.dims:

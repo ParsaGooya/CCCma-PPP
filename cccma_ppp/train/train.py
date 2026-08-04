@@ -7,7 +7,14 @@ import dacite
 
 
 def get_parser() -> argparse.ArgumentParser:
+    """
+    Document this function.
 
+    Returns
+    -------
+    argparse.ArgumentParser
+        Description not yet provided.
+    """
     parser = argparse.ArgumentParser(description="Train model from config file")
 
     parser.add_argument(
@@ -20,7 +27,14 @@ def get_parser() -> argparse.ArgumentParser:
 
 
 def main(yaml_config: str):
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    yaml_config : str
+        Description not yet provided.
+    """
     distributed = Distributed.get_instance()
 
     try:

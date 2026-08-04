@@ -16,17 +16,54 @@ from cccma_ppp.models.layers.utils import _sample
 
 @dataclasses.dataclass
 class GENERATORConfig:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    noise_level : NoiseLevel
+        Description not yet provided.
+    num_training_noise_samples : int
+        Description not yet provided.
+    num_validation_noise_samples : int | None
+        Description not yet provided.
+    """
+
     noise_level: NoiseLevel = "full"
     num_training_noise_samples: int = 10
     num_validation_noise_samples: int | None = None
 
     def __post_init__(self):
+        """
+        Document this function.
+        """
         if self.num_validation_noise_samples is None:
             self.num_validation_noise_samples = self.num_training_noise_samples
 
 
 @dataclasses.dataclass
 class CheckpointConfig:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    load_path : Path | str
+        Description not yet provided.
+    checkpoint_input_shape : np.ndarray
+        Description not yet provided.
+    checkpoint_output_shape : np.ndarray
+        Description not yet provided.
+    checkpoint_input_var_metadata : dict
+        Description not yet provided.
+    checkpoint_output_var_metadata : dict
+        Description not yet provided.
+    strict : bool
+        Description not yet provided.
+    freeze_weights : bool
+        Description not yet provided.
+    """
+
     load_path: Path | str
     checkpoint_input_shape: np.ndarray
     checkpoint_output_shape: np.ndarray
@@ -37,31 +74,73 @@ class CheckpointConfig:
 
 
 class flowABC(nn.Module, abc.ABC):
+    """
+    Document this class.
+    """
+
     @abc.abstractmethod
     def forward(self, x, condition=None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        x : Any
+            Description not yet provided.
+        condition : Any
+            Description not yet provided.
+        """
         pass
 
     @abc.abstractmethod
     def inverse(self, z, condition=None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        z : Any
+            Description not yet provided.
+        condition : Any
+            Description not yet provided.
+        """
         pass
 
 
 class modelConfigABC(abc.ABC):
+    """
+    Document this class.
+
+    Attributes
+    ----------
+    activation : ActivationName
+        Description not yet provided.
+    GENERATOR : GENERATORConfig | None
+        Description not yet provided.
+    """
+
     activation: ActivationName
     NUM_INPUT_DIMS: ClassVar[int | None]
     NUM_OUTPUT_DIMS: ClassVar[int | None]
     GENERATOR: GENERATORConfig | None
 
     def __init_subclass__(cls):
-
+        """
+        Document this function.
+        """
         super().__init_subclass__()
         cls.checkpoint_config = None
 
     @final
     def _add_checkpoint_config(self, checkpoint_config: CheckpointConfig) -> None:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        checkpoint_config : CheckpointConfig
+            Description not yet provided.
+        """
         self.checkpoint_config = checkpoint_config
 
     @final
@@ -71,6 +150,21 @@ class modelConfigABC(abc.ABC):
         input_shape: np.ndarray | tuple,
         output_shape: np.ndarray | tuple,
     ) -> None:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        input_shape : np.ndarray | tuple
+            Description not yet provided.
+        output_shape : np.ndarray | tuple
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         checkpoint = self.config.checkpoint_config
 
         if checkpoint is None:
@@ -120,11 +214,33 @@ class modelConfigABC(abc.ABC):
         added_features_dim: int = None,
         **kwargs,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        input_shape : np.ndarray
+            Description not yet provided.
+        output_shape : np.ndarray | None
+            Description not yet provided.
+        added_features_dim : int
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
+        """
         pass
 
 
 class modelABC(nn.Module, abc.ABC):
+    """
+    Document this class.
+
+    Attributes
+    ----------
+    generative_modeling : bool
+        Description not yet provided.
+    """
+
     generative_modeling: bool
 
     @final
@@ -134,6 +250,21 @@ class modelABC(nn.Module, abc.ABC):
         input_shape: np.ndarray,
         output_shape: np.ndarray,
     ) -> None:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        input_shape : np.ndarray
+            Description not yet provided.
+        output_shape : np.ndarray
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         checkpoint = self.config.checkpoint_config
 
         if checkpoint is None:
@@ -177,17 +308,33 @@ class modelABC(nn.Module, abc.ABC):
 
     @abc.abstractmethod
     def forward(self):
-
+        """
+        Document this function.
+        """
         pass
 
     @final
     def _initialize_weights(self, init_method="trunc_normal"):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        init_method : Any
+            Description not yet provided.
+        """
         self.apply(lambda m: weights_init(m, method=init_method))
 
     @final
     def _get_device(self) -> torch.device:
+        """
+        Document this function.
 
+        Returns
+        -------
+        torch.device
+            Description not yet provided.
+        """
         param = next(self.parameters(), None)
 
         if param is not None:
@@ -202,7 +349,19 @@ class modelABC(nn.Module, abc.ABC):
 
     @final
     def _load_state_dict(self, checkpoint_config: CheckpointConfig):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        checkpoint_config : CheckpointConfig
+            Description not yet provided.
+
+        Raises
+        ------
+        FileNotFoundError
+            Description not yet provided.
+        """
         if not Path(checkpoint_config.load_path).exists():
             raise FileNotFoundError(
                 f"Checkpoint not found: {checkpoint_config.load_path}"
@@ -232,6 +391,21 @@ class modelABC(nn.Module, abc.ABC):
 
 @dataclasses.dataclass
 class DeterministicRequest:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    input : torch.Tensor
+        Description not yet provided.
+    input_mask : torch.Tensor | None
+        Description not yet provided.
+    added_features : torch.Tensor | None
+        Description not yet provided.
+    output_sample_size : int
+        Description not yet provided.
+    """
+
     input: torch.Tensor
     input_mask: torch.Tensor | None = None
     added_features: torch.Tensor | None = None
@@ -239,8 +413,14 @@ class DeterministicRequest:
 
 
 class deterministicmodelsABC(modelABC):
-    def __init__(self):
+    """
+    Document this class.
+    """
 
+    def __init__(self):
+        """
+        Document this function.
+        """
         super().__init__()
         self.generative_modeling = False
 
@@ -249,11 +429,35 @@ class deterministicmodelsABC(modelABC):
         self,
         request: DeterministicRequest,
     ) -> OutputABC:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        request : DeterministicRequest
+            Description not yet provided.
+        """
         pass
 
 
 class cVAEmodelConfigABC(modelConfigABC):
+    """
+    Document this class.
+
+    Attributes
+    ----------
+    latent_size : int
+        Description not yet provided.
+    condition_dependant_latent : bool
+        Description not yet provided.
+    condition_embedding_size : int
+        Description not yet provided.
+    condition_embedding_dims : list
+        Description not yet provided.
+    condemb_to_decoder : bool
+        Description not yet provided.
+    """
+
     latent_size: int
     condition_dependant_latent: bool
     condition_embedding_size: int
@@ -261,7 +465,24 @@ class cVAEmodelConfigABC(modelConfigABC):
     condemb_to_decoder: bool
 
     def _resolve_flow_settings(self, condition_dependant_flow: bool = False):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        condition_dependant_flow : bool
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         self.condition_dependant_flow = condition_dependant_flow
 
         if self.condition_dependant_latent:
@@ -278,6 +499,29 @@ class cVAEmodelConfigABC(modelConfigABC):
 
 @dataclasses.dataclass
 class cVAEForwardRequest:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    target : torch.Tensor
+        Description not yet provided.
+    condition : torch.Tensor
+        Description not yet provided.
+    target_mask : torch.Tensor | None
+        Description not yet provided.
+    condition_mask : torch.Tensor | None
+        Description not yet provided.
+    added_features : torch.Tensor | None
+        Description not yet provided.
+    sample_size : int
+        Description not yet provided.
+    output_sample_size : int
+        Description not yet provided.
+    min_posterior_variance : torch.Tensor | None
+        Description not yet provided.
+    """
+
     target: torch.Tensor
     condition: torch.Tensor
     target_mask: torch.Tensor | None = None
@@ -290,6 +534,29 @@ class cVAEForwardRequest:
 
 @dataclasses.dataclass
 class cVAEPredictRequest:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    condition : torch.Tensor
+        Description not yet provided.
+    condition_mask : torch.Tensor | None
+        Description not yet provided.
+    added_features : torch.Tensor | None
+        Description not yet provided.
+    prior_flow : flowABC | None
+        Description not yet provided.
+    latent_samples : torch.Tensor | None
+        Description not yet provided.
+    nstds : int
+        Description not yet provided.
+    sample_size : int
+        Description not yet provided.
+    output_sample_size : int
+        Description not yet provided.
+    """
+
     condition: torch.Tensor
     condition_mask: torch.Tensor | None = None
     added_features: torch.Tensor | None = None
@@ -301,8 +568,14 @@ class cVAEPredictRequest:
 
 
 class cVAEmodelsABC(modelABC):
-    def __init__(self):
+    """
+    Document this class.
+    """
 
+    def __init__(self):
+        """
+        Document this function.
+        """
         super().__init__()
         self.generative_modeling = True
 
@@ -311,7 +584,14 @@ class cVAEmodelsABC(modelABC):
         self,
         request: cVAEForwardRequest,
     ) -> OutputABC:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        request : cVAEForwardRequest
+            Description not yet provided.
+        """
         pass
 
     @abc.abstractmethod
@@ -319,33 +599,78 @@ class cVAEmodelsABC(modelABC):
         self,
         request: cVAEPredictRequest,
     ) -> OutputABC:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        request : cVAEPredictRequest
+            Description not yet provided.
+        """
         pass
 
     @abc.abstractmethod
     def _recognition(self) -> tuple[torch.Tensor, ...]:
-
+        """
+        Document this function.
+        """
         pass
 
     @abc.abstractmethod
     def _condition(self) -> tuple[torch.Tensor, ...]:
-
+        """
+        Document this function.
+        """
         pass
 
     @abc.abstractmethod
     def _generate(self) -> torch.Tensor:
-
+        """
+        Document this function.
+        """
         pass
 
     @final
     def _sample(self, mu, log_var, sample_size=1, std=1):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        mu : Any
+            Description not yet provided.
+        log_var : Any
+            Description not yet provided.
+        sample_size : Any
+            Description not yet provided.
+        std : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         var = torch.exp(log_var) + 1e-4
         return _sample(mu, var, sample_size, std)
 
 
 def weights_init(m, method: InitMethod = "xavier"):
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    m : Any
+        Description not yet provided.
+    method : InitMethod
+        Description not yet provided.
+
+    Raises
+    ------
+    NotImplementedError
+        Description not yet provided.
+    """
     if not isinstance(m, (nn.Linear, nn.Conv1d, nn.Conv2d, nn.Conv3d)):
         return
 

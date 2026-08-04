@@ -14,11 +14,36 @@ from cccma_ppp.configs import (
 
 
 class DatasetOperator:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    config : DatasetConfigABC
+        Description not yet provided.
+    """
+
     def __init__(self, config: DatasetConfigABC):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        config : DatasetConfigABC
+            Description not yet provided.
+        """
         self.config = config
 
     @property
     def config_observation(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         if hasattr(self.config, "observation"):
             return self.config.observation
 
@@ -29,6 +54,20 @@ class DatasetOperator:
         save_path: Path | str | None = None,
         save_name: str | None = None,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        train_years : np.ndarray | list | tuple
+            Description not yet provided.
+        save : Any
+            Description not yet provided.
+        save_path : Path | str | None
+            Description not yet provided.
+        save_name : str | None
+            Description not yet provided.
+        """
         time_dim, lead_time_dim = required_sample_dimensions
         if self.config.model is not None:
             selection = {
@@ -86,7 +125,14 @@ class DatasetOperator:
         self.config._fitted_preprocessors = True
 
     def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        load_dir : Path | str | None
+            Description not yet provided.
+        """
         if self.config.model is not None:
             self.config.model.load_preprocessor_pipeline(load_dir)
 
@@ -99,7 +145,23 @@ class DatasetOperator:
         self.config._fitted_preprocessors = True
 
     def add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        preprocessor : PreprocessModuleABC
+            Description not yet provided.
+        index : Any
+            Description not yet provided.
+
+        Raises
+        ------
+        AssertionError
+            Description not yet provided.
+        TypeError
+            Description not yet provided.
+        """
         if not isinstance(preprocessor, PreprocessModuleABC):
             raise TypeError(
                 f"preprocessor must be an instance of ProcessorConfig, "
@@ -127,6 +189,32 @@ class DatasetOperator:
         save_path: Path | str | None = None,
         save_name: str | None = None,
     ) -> xr.DataArray:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        config : WeightsConfig | None
+            Description not yet provided.
+        save : bool
+            Description not yet provided.
+        save_path : Path | str | None
+            Description not yet provided.
+        save_name : str | None
+            Description not yet provided.
+
+        Returns
+        -------
+        xr.DataArray
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+        """
         if config is None:
             config = WeightsConfig()
 
@@ -171,7 +259,14 @@ class DatasetOperator:
         return weights
 
     def get_input_var_metadata(self) -> dict:
+        """
+        Document this function.
 
+        Returns
+        -------
+        dict
+            Description not yet provided.
+        """
         metadata = dict(variables=list(), preprocessors=list())
         NN_dims = []
 
@@ -212,7 +307,19 @@ class DatasetOperator:
         return metadata
 
     def get_target_var_metadata(self):
+        """
+        Document this function.
 
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         metadata = dict(variables=list(), preprocessors=list())
         NN_dims = []
 
@@ -253,6 +360,21 @@ class DatasetOperator:
     def _update_metadata_with_dataconfig_metadata(
         self, metadata: dict, dataconfig: DataConfigABC
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        metadata : dict
+            Description not yet provided.
+        dataconfig : DataConfigABC
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         preprocessor_names = [
             processor[0].lower()
             for processor in dataconfig.preprocessing_pipeline.pipeline
@@ -265,7 +387,19 @@ class DatasetOperator:
 
 
 def _build_chunks(config: DataConfigABC | None = None):
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    config : DataConfigABC | None
+        Description not yet provided.
+
+    Returns
+    -------
+    Any
+        Description not yet provided.
+    """
     if config is None:
         return
 

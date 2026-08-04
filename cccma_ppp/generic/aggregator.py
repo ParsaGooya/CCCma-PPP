@@ -13,6 +13,23 @@ from cccma_ppp.generic.runtime import RuntimeContext
 
 @dataclasses.dataclass
 class MetricsAggregator:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    distributed : Distributed
+        Description not yet provided.
+    name : str
+        Description not yet provided.
+    epoch_metric_terms : dict[str, list[float]] | None
+        Description not yet provided.
+    epoch_times : list[float] | None
+        Description not yet provided.
+    num_epochs_seen : int
+        Description not yet provided.
+    """
+
     distributed: Distributed
     name: str
 
@@ -21,7 +38,14 @@ class MetricsAggregator:
     num_epochs_seen: int = 0
 
     def __post_init__(self):
+        """
+        Document this function.
 
+        Raises
+        ------
+        AssertionError
+            Description not yet provided.
+        """
         self.loss_terms = defaultdict(float)
         self.lr_values = 0.0
         self.kwargs_terms = defaultdict(float)
@@ -59,7 +83,18 @@ class MetricsAggregator:
         lr: torch.Tensor | int | float | None = None,
         kwargs: dict[str, torch.Tensor | int | float] | None = None,
     ) -> None:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        loss_dict : dict[str, torch.Tensor | int | float]
+            Description not yet provided.
+        lr : torch.Tensor | int | float | None
+            Description not yet provided.
+        kwargs : dict[str, torch.Tensor | int | float] | None
+            Description not yet provided.
+        """
         for name, value in loss_dict.items():
             if value is None:
                 continue
@@ -92,7 +127,14 @@ class MetricsAggregator:
 
     @torch.no_grad()
     def _dist_compute(self) -> dict[str, float]:
+        """
+        Document this function.
 
+        Returns
+        -------
+        dict[str, float]
+            Description not yet provided.
+        """
         logs = {}
 
         for name in sorted(self.loss_terms):
@@ -107,7 +149,19 @@ class MetricsAggregator:
         return logs
 
     def _dist_average(self, tensor: float) -> float:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        tensor : float
+            Description not yet provided.
+
+        Returns
+        -------
+        float
+            Description not yet provided.
+        """
         local = torch.tensor(
             [tensor, self.num_batches_seen],
             dtype=torch.float64,
@@ -130,7 +184,30 @@ class MetricsAggregator:
         replace_index: int = None,
         time_elapsed: float = None,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        logs : dict[str, float]
+            Description not yet provided.
+        replace_index : int
+            Description not yet provided.
+        time_elapsed : float
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+        """
         if not self._aggregated_across_ranks:
             raise RuntimeError(
                 "Call _dist_compute() before record_epoch(), so losses are "
@@ -165,7 +242,14 @@ class MetricsAggregator:
         return logs
 
     def reset_batch_losses(self):
+        """
+        Document this function.
 
+        Warns
+        -----
+        UserWarning
+            Description not yet provided.
+        """
         if self.epochs_submitted:
             self.loss_terms = defaultdict(float)
             self.kwargs_terms = defaultdict(float)
@@ -185,7 +269,25 @@ class MetricsAggregator:
         plot_dir: str | Path | None = None,
         figsize=(8, 5),
     ) -> None:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        aggregator_list : list['MetricsAggregator']
+            Description not yet provided.
+        color_styles_list : list[tuple[str, str]]
+            Description not yet provided.
+        plot_dir : str | Path | None
+            Description not yet provided.
+        figsize : Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if plot_dir is None:
             plot_dir = Path(RuntimeContext.GLOBAL_FIGURES_DIR)
         else:
@@ -329,7 +431,14 @@ class MetricsAggregator:
         plt.close()
 
     def state_dict(self):
+        """
+        Document this function.
 
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return {
             "name": self.name,
             "epoch_metric_terms": self.epoch_metric_terms,
@@ -338,7 +447,14 @@ class MetricsAggregator:
         }
 
     def load_state_dict(self, state_dict):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        state_dict : Any
+            Description not yet provided.
+        """
         self.name = state_dict.get("name")
         self.epoch_metric_terms = state_dict.get("epoch_metric_terms", None)
         self.epoch_times = state_dict.get("epoch_times", None)
@@ -348,12 +464,35 @@ class MetricsAggregator:
 
 @dataclasses.dataclass
 class RunningCovariance:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    distributed : Distributed
+        Description not yet provided.
+    sum_x : torch.Tensor | None
+        Description not yet provided.
+    sum_xxT : torch.Tensor | None
+        Description not yet provided.
+    count : torch.Tensor | None
+        Description not yet provided.
+    """
+
     distributed: Distributed
     sum_x: torch.Tensor | None = None
     sum_xxT: torch.Tensor | None = None
     count: torch.Tensor | None = None
 
     def update(self, x: torch.Tensor):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Description not yet provided.
+        """
         x = x.detach().float()
 
         batch_sum = x.sum(dim=0)
@@ -374,12 +513,27 @@ class RunningCovariance:
             self.count += batch_count
 
     def distributed_reduce(self):
-
+        """
+        Document this function.
+        """
         self.distributed.all_reduce_sum(self.sum_x)
         self.distributed.all_reduce_sum(self.sum_xxT)
         self.distributed.all_reduce_sum(self.count)
 
     def finalize(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         mean = self.sum_x / self.count
 
         if self.count <= 1:

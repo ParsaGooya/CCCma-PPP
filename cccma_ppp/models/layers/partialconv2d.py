@@ -4,8 +4,28 @@ from torch import nn
 
 
 class PartialConv2d(nn.Conv2d):
-    def __init__(self, *args, **kwargs):
+    """
+    Document this class.
 
+    Parameters
+    ----------
+    *args : Any
+        Description not yet provided.
+    **kwargs : Any
+        Description not yet provided.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        *args : Any
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
+        """
         self.multi_channel = kwargs.pop("multi_channel", False)
         self.return_mask = kwargs.pop("return_mask", False)
 
@@ -40,6 +60,26 @@ class PartialConv2d(nn.Conv2d):
         self.mask_ratio = None
 
     def forward(self, input, mask_in=None):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        input : Any
+            Description not yet provided.
+        mask_in : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        AssertionError
+            Description not yet provided.
+        """
         assert len(input.shape) == 4
         if mask_in is not None or self.last_size != tuple(input.shape):
             self.last_size = tuple(input.shape)

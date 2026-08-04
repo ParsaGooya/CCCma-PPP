@@ -21,6 +21,25 @@ from cccma_ppp.loss.kld import BetaAnnealing
 
 @dataclasses.dataclass
 class TrainerConfig:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    beta_finder : BetaAnnealing | None
+        Description not yet provided.
+    earlystoppingbuffer : float
+        Description not yet provided.
+    minimum_validation_improvement_percentage : float
+        Description not yet provided.
+    gradient_accumulation_steps : int
+        Description not yet provided.
+    mixed_precision : bool
+        Description not yet provided.
+    grad_clip : float | None
+        Description not yet provided.
+    """
+
     beta_finder: BetaAnnealing | None = None
     earlystoppingbuffer: float = float("inf")
     minimum_validation_improvement_percentage: float = 0.02
@@ -29,7 +48,14 @@ class TrainerConfig:
     grad_clip: float | None = None
 
     def __post_init__(self):
+        """
+        Document this function.
 
+        Raises
+        ------
+        AssertionError
+            Description not yet provided.
+        """
         if self.grad_clip is not None:
             assert self.grad_clip > 0
 
@@ -41,7 +67,32 @@ class TrainerConfig:
         module: moduleABC,
         max_epochs: int,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        train_data_loader : Dataloader
+            Description not yet provided.
+        validation_data_loader : Dataloader
+            Description not yet provided.
+        optimization : OptimizerWrapper
+            Description not yet provided.
+        module : moduleABC
+            Description not yet provided.
+        max_epochs : int
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         self.num_train_batches = len(train_data_loader)
         if validation_data_loader is not None:
             self.num_validation_batches = len(validation_data_loader)
@@ -64,6 +115,25 @@ class TrainerConfig:
 
 
 class Trainer:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    config : TrainerConfig
+        Description not yet provided.
+    train_data_loader : Dataloader
+        Description not yet provided.
+    module : moduleABC
+        Description not yet provided.
+    optimizer : OptimizerWrapper
+        Description not yet provided.
+    max_epochs : int
+        Description not yet provided.
+    validation_data_loader : Dataloader | None
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         config: TrainerConfig,
@@ -73,7 +143,24 @@ class Trainer:
         max_epochs: int,
         validation_data_loader: Dataloader | None = None,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        config : TrainerConfig
+            Description not yet provided.
+        train_data_loader : Dataloader
+            Description not yet provided.
+        module : moduleABC
+            Description not yet provided.
+        optimizer : OptimizerWrapper
+            Description not yet provided.
+        max_epochs : int
+            Description not yet provided.
+        validation_data_loader : Dataloader | None
+            Description not yet provided.
+        """
         self.config = config
         self.optimizer = optimizer
         self.module = module
@@ -102,7 +189,25 @@ class Trainer:
         log_every_n_epochs: int = 1,
         save_checkpoint: bool = True,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        distributed : Distributed
+            Description not yet provided.
+        logger : logging.Logger
+            Description not yet provided.
+        log_every_n_epochs : int
+            Description not yet provided.
+        save_checkpoint : bool
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         self.save_checkpoint = save_checkpoint
         self.log_every_n_epochs = log_every_n_epochs
 
@@ -184,7 +289,14 @@ class Trainer:
         self.log_root(logging.INFO, "Trainer setup complete.")
 
     def train(self):
+        """
+        Document this function.
 
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if not self._setup:
             raise RuntimeError("Call setup_distributed() before predict().")
 
@@ -302,7 +414,14 @@ class Trainer:
         self.log_root(logging.INFO, f"Training finished in {time_elapsed:.2f}s")
 
     def _train_on_epoch(self):
+        """
+        Document this function.
 
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         self.TrainLoader.set_epoch(self._epochs_trained)
         self.module.train()
 
@@ -324,7 +443,19 @@ class Trainer:
         return time_elapsed
 
     def _train_on_batch(self, batch):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        batch : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         batch.to_device(self.device)
         kwargs = {}
 
@@ -349,7 +480,14 @@ class Trainer:
 
     @torch.no_grad()
     def _validate_on_epoch(self):
+        """
+        Document this function.
 
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if self.ValidationLoader is None:
             raise RuntimeError(
                 "ValidationLoader is None, but validation was requested."
@@ -368,7 +506,19 @@ class Trainer:
 
     @torch.no_grad()
     def _validate_on_batch(self, batch):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        batch : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         batch.to_device(self.device)
         kwargs = {}
 
@@ -384,7 +534,9 @@ class Trainer:
         return loss_dict
 
     def _optimizer_step(self):
-
+        """
+        Document this function.
+        """
         if self.config.grad_clip is not None:
             self.scaler.unscale_(self.optimizer.optimizer)
             torch.nn.utils.clip_grad_norm_(
@@ -404,7 +556,19 @@ class Trainer:
         self.optimizer.zero_grad(set_to_none=True)
 
     def _is_improved(self, validation_loss: float | torch.Tensor) -> bool:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        validation_loss : float | torch.Tensor
+            Description not yet provided.
+
+        Returns
+        -------
+        bool
+            Description not yet provided.
+        """
         if isinstance(validation_loss, torch.Tensor):
             validation_loss = validation_loss.item()
 
@@ -419,7 +583,14 @@ class Trainer:
         return validation_loss < self._best_validation_loss - required_improvement
 
     def _should_stop_early(self) -> bool:
+        """
+        Document this function.
 
+        Returns
+        -------
+        bool
+            Description not yet provided.
+        """
         if self.ValidationLoader is None:
             return False
 
@@ -432,7 +603,16 @@ class Trainer:
         return self.earlystopping_counter >= self.config.earlystoppingbuffer
 
     def _log_epoch(self, train_logs, validation_logs=None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        train_logs : Any
+            Description not yet provided.
+        validation_logs : Any
+            Description not yet provided.
+        """
         elapsed_time = time.time() - self.start_time_train
         msg = (
             f"Epoch {self._epochs_trained}/{self.max_epochs} | "
@@ -453,7 +633,18 @@ class Trainer:
     def _save_checkpoint(
         self, name: str, train_logs: dict, validation_logs: dict | None = None
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        name : str
+            Description not yet provided.
+        train_logs : dict
+            Description not yet provided.
+        validation_logs : dict | None
+            Description not yet provided.
+        """
         checkpoint = {
             "epoch": self._epochs_trained,
             "global_step": self.global_step,
@@ -484,7 +675,26 @@ class Trainer:
             self.distributed.barrier()
 
     def _load_checkpoint(self, path: str | Path | None = None, strict: bool = True):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        path : str | Path | None
+            Description not yet provided.
+        strict : bool
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        FileNotFoundError
+            Description not yet provided.
+        """
         if path is None:
             path = Path(self.checkpoint_dir) / "best.pt"
         else:
@@ -527,13 +737,31 @@ class Trainer:
 
     @property
     def raw_module(self):
+        """
+        Document this function.
 
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         if isinstance(self.module, torch.nn.parallel.DistributedDataParallel):
             return self.module.module
         return self.module
 
     def log_root(self, level: int, msg: str, *args):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        level : int
+            Description not yet provided.
+        msg : str
+            Description not yet provided.
+        *args : Any
+            Description not yet provided.
+        """
         if self.is_on_root:
             if self.logger is not None:
                 self.logger.log(level, msg, *args)
@@ -542,7 +770,9 @@ class Trainer:
 
 
 def clear_memory():
-
+    """
+    Document this function.
+    """
     gc.collect()
 
     if torch.cuda.is_available():

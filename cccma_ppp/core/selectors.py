@@ -14,37 +14,90 @@ from cccma_ppp.models.models_abc import modelABC, flowABC, CheckpointConfig
 
 @dataclasses.dataclass
 class ModuleSelector:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    type : str
+        Description not yet provided.
+    config : Mapping[str, Any]
+        Description not yet provided.
+    """
+
     type: str
     config: Mapping[str, Any]
     registery: ClassVar[Registery] = Registery()
 
     def __post_init__(self):
-
+        """
+        Document this function.
+        """
         self._module_config = self.registery.get(self.type.lower(), self.config)
 
     @classmethod
     def register(cls, name: str) -> Callable[..., moduleABC]:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        name : str
+            Description not yet provided.
+
+        Returns
+        -------
+        Callable[..., moduleABC]
+            Description not yet provided.
+        """
         return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
+        """
+        Document this function.
 
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return cls.registery.available()
 
     @property
     def NUM_INPUT_DIMS(self) -> int:
+        """
+        Document this function.
 
+        Returns
+        -------
+        int
+            Description not yet provided.
+        """
         return self._module_config.model_config.NUM_INPUT_DIMS
 
     @property
     def NUM_OUTPUT_DIMS(self) -> int:
+        """
+        Document this function.
 
+        Returns
+        -------
+        int
+            Description not yet provided.
+        """
         return self._module_config.model_config.NUM_OUTPUT_DIMS
 
     @property
     def GENERATOR(self) -> bool:
+        """
+        Document this function.
 
+        Returns
+        -------
+        bool
+            Description not yet provided.
+        """
         return getattr(self._module_config.model_config, "GENERATOR", False)
 
     def build_module(
@@ -53,7 +106,23 @@ class ModuleSelector:
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        input_shape : np.ndarray
+            Description not yet provided.
+        output_shape : np.ndarray | None
+            Description not yet provided.
+        added_features_dim : int
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return self._module_config.build(
             input_shape=input_shape,
             output_shape=output_shape,
@@ -63,6 +132,21 @@ class ModuleSelector:
 
 @dataclasses.dataclass
 class ModelSelector:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    type : str
+        Description not yet provided.
+    config : Mapping[str, Any] | None
+        Description not yet provided.
+    load_dir : Path | str | None
+        Description not yet provided.
+    freeze_weights : bool
+        Description not yet provided.
+    """
+
     type: str
     config: Mapping[str, Any] | None = None
     load_dir: Path | str | None = None
@@ -71,12 +155,33 @@ class ModelSelector:
     registery: ClassVar[Registery]
 
     def __init_subclass__(cls, **kwargs):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        **kwargs : Any
+            Description not yet provided.
+        """
         super().__init_subclass__(**kwargs)
         cls.registery = Registery()
 
     def __post_init__(self):
+        """
+        Document this function.
 
+        Raises
+        ------
+        AssertionError
+            Description not yet provided.
+        RuntimeError
+            Description not yet provided.
+
+        Warns
+        -----
+        UserWarning
+            Description not yet provided.
+        """
         self.checkpoint_config = None
 
         if all([self.config is None, self.load_dir is None]):
@@ -101,16 +206,42 @@ class ModelSelector:
 
     @classmethod
     def register(cls, name: str) -> Callable[..., modelABC]:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        name : str
+            Description not yet provided.
+
+        Returns
+        -------
+        Callable[..., modelABC]
+            Description not yet provided.
+        """
         return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
+        """
+        Document this function.
 
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return cls.registery.available()
 
     def get_model_config(self):
+        """
+        Document this function.
 
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         model_config = self.registery.get(self.type.lower(), self.config)
         if self.checkpoint_config is not None:
             model_config._add_checkpoint_config(self.checkpoint_config)
@@ -119,40 +250,106 @@ class ModelSelector:
 
 
 class cVAEModelSelector(ModelSelector):
+    """
+    Document this class.
+    """
+
     pass
 
 
 class deterministicModelSelector(ModelSelector):
+    """
+    Document this class.
+    """
+
     pass
 
 
 @dataclasses.dataclass
 class FlowSelector:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    type : str
+        Description not yet provided.
+    args : dict[str, object]
+        Description not yet provided.
+    """
+
     type: str
     args: dict[str, object]
     registery: ClassVar[Registery] = Registery()
 
     def __post_init__(self):
-
+        """
+        Document this function.
+        """
         pass
 
     @classmethod
     def register(cls, name: str) -> Callable[..., flowABC]:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        name : str
+            Description not yet provided.
+
+        Returns
+        -------
+        Callable[..., flowABC]
+            Description not yet provided.
+        """
         return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
+        """
+        Document this function.
 
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return cls.registery.available()
 
     def get_model(self):
+        """
+        Document this function.
 
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return self.registery.get(self.type.lower(), self.args)
 
 
 def _load_config_from_checkpoint(load_path: Path | str, strict: bool = True):
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    load_path : Path | str
+        Description not yet provided.
+    strict : bool
+        Description not yet provided.
+
+    Returns
+    -------
+    Any
+        Description not yet provided.
+
+    Raises
+    ------
+    FileNotFoundError
+        Description not yet provided.
+    """
     if not Path(load_path).exists():
         raise FileNotFoundError(f"Checkpoint not found: {load_path}")
 

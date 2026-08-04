@@ -16,6 +16,21 @@ from cccma_ppp.data_modules.dataset.dataset_abc import (
 
 
 class BatchDataABC(abc.ABC):
+    """
+    Document this class.
+
+    Attributes
+    ----------
+    input : torch.Tensor
+        Description not yet provided.
+    target : torch.Tensor | None
+        Description not yet provided.
+    added_features : torch.Tensor | None
+        Description not yet provided.
+    metadata : list[dict] | None
+        Description not yet provided.
+    """
+
     input: torch.Tensor
     target: torch.Tensor | None
     added_features: torch.Tensor | None
@@ -26,10 +41,37 @@ class BatchDataABC(abc.ABC):
 
     @abc.abstractmethod
     def to_device(self, device: torch.device | str):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        device : torch.device | str
+            Description not yet provided.
+        """
         pass
 
 
 class DataloaderConfigABC(abc.ABC):
+    """
+    Document this class.
+
+    Attributes
+    ----------
+    dataset_config : DatasetConfigABC
+        Description not yet provided.
+    pin_memory : bool
+        Description not yet provided.
+    time_features : AddedTimeFeatures | list[str] | None
+        Description not yet provided.
+    prefetch_factor : int | None
+        Description not yet provided.
+    return_spatial_mask : bool
+        Description not yet provided.
+    reduce_spatial_mask : bool
+        Description not yet provided.
+    """
+
     dataset_config: DatasetConfigABC
     pin_memory: bool
     time_features: AddedTimeFeatures | list[str] | None
@@ -38,6 +80,9 @@ class DataloaderConfigABC(abc.ABC):
     reduce_spatial_mask: bool
 
     def __init__(self):
+        """
+        Document this function.
+        """
         self._setup = False
         self.pin_memory = False
 
@@ -46,17 +91,41 @@ class DataloaderConfigABC(abc.ABC):
 
     @abc.abstractmethod
     def setup_distributed(self):
+        """
+        Document this function.
+        """
         pass
 
     @property
     @abc.abstractmethod
     def available_times(self):
-
+        """
+        Document this function.
+        """
         pass
 
 
 @dataclasses.dataclass
 class Dataloader:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    config : DataloaderConfigABC
+        Description not yet provided.
+    dataset : Dataset
+        Description not yet provided.
+    collate_fn : Callable
+        Description not yet provided.
+    rank : int
+        Description not yet provided.
+    world_size : int
+        Description not yet provided.
+    shuffle : bool | None
+        Description not yet provided.
+    """
+
     config: DataloaderConfigABC
     dataset: Dataset
     collate_fn: Callable
@@ -65,7 +134,9 @@ class Dataloader:
     shuffle: bool | None = None
 
     def __post_init__(self):
-
+        """
+        Document this function.
+        """
         self.sampler = self._get_dataloader_sampler()
         shuffle = self.world_size == 1 if self.shuffle is None else self.shuffle
         num_workers = self.config.num_data_workers
@@ -89,24 +160,67 @@ class Dataloader:
 
     @property
     def input_shape(self) -> tuple:
+        """
+        Document this function.
+
+        Returns
+        -------
+        tuple
+            Description not yet provided.
+        """
         return self.dataset.get_input_shape()
 
     @property
     def target_shape(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return self.dataset.get_target_shape()
 
     @property
     def added_features_dim(self):
+        """
+        Document this function.
 
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return self.dataset.get_added_features_dim()
 
     @final
     def __iter__(self) -> Iterator[BatchDataABC]:
+        """
+        Document this function.
+
+        Returns
+        -------
+        Iterator[BatchDataABC]
+            Description not yet provided.
+        """
         return iter(self._torch_loader)
 
     @final
     def _get_dataloader_sampler(self, **kwargs) -> torch.utils.data.Sampler | None:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        **kwargs : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        torch.utils.data.Sampler | None
+            Description not yet provided.
+        """
         if self.world_size > 1:
             return DistributedSampler(
                 self.dataset,
@@ -121,15 +235,48 @@ class Dataloader:
 
     @final
     def __len__(self) -> int:
+        """
+        Document this function.
+
+        Returns
+        -------
+        int
+            Description not yet provided.
+        """
         return len(self._torch_loader)
 
     @final
     def set_epoch(self, epoch):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        epoch : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         if self.sampler is not None:
             self.sampler.set_epoch(epoch)
         return self
 
     @final
     def subset_loader(self, start_batch=0):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        start_batch : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return islice(iter(self), start_batch, None)

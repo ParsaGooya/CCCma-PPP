@@ -10,7 +10,25 @@ def setup_logger(
     rank: int = 0,
     level: int = logging.INFO,
 ) -> logging.Logger:
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    name : str
+        Description not yet provided.
+    log_dir : str | Path | None
+        Description not yet provided.
+    rank : int
+        Description not yet provided.
+    level : int
+        Description not yet provided.
+
+    Returns
+    -------
+    logging.Logger
+        Description not yet provided.
+    """
     logger = logging.getLogger(name)
     logger.setLevel(level)
 

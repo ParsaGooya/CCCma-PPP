@@ -24,13 +24,51 @@ from cccma_ppp.core.core_abc import GenerativeContext
 
 
 def set_seed(seed):
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    seed : Any
+        Description not yet provided.
+    """
     np.random.seed(seed)
     torch.manual_seed(seed)
 
 
 @dataclasses.dataclass
 class TrainConfig:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    experiment_dir : str
+        Description not yet provided.
+    max_epochs : int
+        Description not yet provided.
+    train_loader : TrainDataloaderConfig | None
+        Description not yet provided.
+    module : ModuleSelector | None
+        Description not yet provided.
+    losspipeline : LosspipelineConfig | None
+        Description not yet provided.
+    trainer : TrainerConfig | None
+        Description not yet provided.
+    optimization : OptimizerConfig | None
+        Description not yet provided.
+    weights : WeightsConfig | None
+        Description not yet provided.
+    log_every_n_epochs : int
+        Description not yet provided.
+    save_checkpoint : bool
+        Description not yet provided.
+    seed : int | None
+        Description not yet provided.
+    resume_dir : str | None
+        Description not yet provided.
+    """
+
     experiment_dir: str
     max_epochs: int
     train_loader: TrainDataloaderConfig | None
@@ -47,7 +85,14 @@ class TrainConfig:
     resume_dir: str | None = None
 
     def __post_init__(self):
+        """
+        Document this function.
 
+        Raises
+        ------
+        AssertionError
+            Description not yet provided.
+        """
         self._resolve_resuming()
         self._check_module_pipeline_compatability()
         self._check_IO_consistency()
@@ -60,7 +105,21 @@ class TrainConfig:
         self.experiment_dir = Path(self.experiment_dir)
 
     def _check_module_pipeline_compatability(self):
+        """
+        Document this function.
 
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+
+        Warns
+        -----
+        UserWarning
+            Description not yet provided.
+        """
         if self.module.GENERATOR is not None:
             if "crps" not in self.losspipeline.loss_types:
                 raise RuntimeError(
@@ -92,34 +151,66 @@ class TrainConfig:
                 )
 
     def _check_IO_consistency(self):
-
+        """
+        Document this function.
+        """
         input_metadata = self.train_loader.input_var_metadata
         output_metadata = self.train_loader.target_var_metadata
         _check_IO(input_metadata, self.module.NUM_INPUT_DIMS, "input")
         _check_IO(output_metadata, self.module.NUM_OUTPUT_DIMS, "output")
 
     def set_random_seed(self, rank: int):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        rank : int
+            Description not yet provided.
+        """
         if self.seed is not None:
             set_seed(self.seed + rank)
 
     @property
     def checkpoint_dir(self) -> str:
+        """
+        Document this function.
 
+        Returns
+        -------
+        str
+            Description not yet provided.
+        """
         return os.path.join(self.experiment_dir, "checkpoints")
 
     @property
     def log_dir(self) -> str:
+        """
+        Document this function.
 
+        Returns
+        -------
+        str
+            Description not yet provided.
+        """
         return os.path.join(self.experiment_dir, "logs")
 
     @property
     def figures_dir(self) -> str:
+        """
+        Document this function.
 
+        Returns
+        -------
+        str
+            Description not yet provided.
+        """
         return os.path.join(self.experiment_dir, "figures")
 
     def _prepare_runtime_variables(self):
-
+        """
+        Document this function.
+        """
         RuntimeContext.GLOBAL_EXP_DIR = str(self.experiment_dir)
         RuntimeContext.GLOBAL_CHECKPOINT_DIR = str(self.checkpoint_dir)
         RuntimeContext.GLOBAL_FIGURES_DIR = str(self.figures_dir)
@@ -128,7 +219,16 @@ class TrainConfig:
         RuntimeContext.TARGET_VAR_METADATA = self.train_loader.target_var_metadata
 
     def prepare_directory(self, distributed: Distributed, yaml_config: str = None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        distributed : Distributed
+            Description not yet provided.
+        yaml_config : str
+            Description not yet provided.
+        """
         self._prepare_runtime_variables()
 
         if distributed.is_root():
@@ -155,7 +255,14 @@ class TrainConfig:
         distributed.barrier()
 
     def _resolve_resuming(self):
+        """
+        Document this function.
 
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if self.resume_dir is not None:
             requested_experiment_dir = self.experiment_dir
             requested_max_epochs = self.max_epochs
@@ -193,7 +300,28 @@ class TrainConfig:
     def read_config_from_halted_experiment(
         self, resume_dir: str | Path, experiment_dir: str | Path, max_epochs: int
     ) -> "TrainConfig":
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        resume_dir : str | Path
+            Description not yet provided.
+        experiment_dir : str | Path
+            Description not yet provided.
+        max_epochs : int
+            Description not yet provided.
+
+        Returns
+        -------
+        'TrainConfig'
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         resume_dir = Path(resume_dir)
 
         if not resume_dir.is_dir():
@@ -210,7 +338,19 @@ class TrainConfig:
 
 
 def prepare_config(path: Path | str) -> dict:
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    path : Path | str
+        Description not yet provided.
+
+    Returns
+    -------
+    dict
+        Description not yet provided.
+    """
     with open(path) as f:
         data = yaml.safe_load(f)
     return data
@@ -219,8 +359,35 @@ def prepare_config(path: Path | str) -> dict:
 def build_trainer(
     config: TrainConfig, distributed: Distributed, logger: logging.Logger | None = None
 ):
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    config : TrainConfig
+        Description not yet provided.
+    distributed : Distributed
+        Description not yet provided.
+    logger : logging.Logger | None
+        Description not yet provided.
+
+    Returns
+    -------
+    Any
+        Description not yet provided.
+    """
 
     def log(msg, **kwargs):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        msg : Any
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
+        """
         if distributed.is_root():
             if logger is not None:
                 logger.info(msg, **kwargs)
@@ -284,7 +451,25 @@ def build_trainer(
 
 
 def _check_IO(metadata: dict, model_dims: int, which: str = "input"):
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    metadata : dict
+        Description not yet provided.
+    model_dims : int
+        Description not yet provided.
+    which : str
+        Description not yet provided.
+
+    Raises
+    ------
+    RuntimeError
+        Description not yet provided.
+    ValueError
+        Description not yet provided.
+    """
     if which not in ["input", "output"]:
         raise ValueError("only checks IO in data vs module.")
 

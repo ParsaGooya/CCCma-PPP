@@ -23,6 +23,23 @@ from cccma_ppp.generic.runtime import RuntimeContext
 
 @dataclasses.dataclass
 class infoclass:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    sizes : dict | None
+        Description not yet provided.
+    start_year : xr.DataArray | np.ndarray | str | int | None
+        Description not yet provided.
+    final_year : xr.DataArray | np.ndarray | str | int | None
+        Description not yet provided.
+    coords : dict
+        Description not yet provided.
+    spatial_mask : xr.Dataset
+        Description not yet provided.
+    """
+
     sizes: dict | None
     start_year: xr.DataArray | np.ndarray | str | int | None
     final_year: xr.DataArray | np.ndarray | str | int | None
@@ -31,6 +48,29 @@ class infoclass:
 
 
 class DataConfigABC(abc.ABC):
+    """
+    Document this class.
+
+    Attributes
+    ----------
+    paths : str
+        Description not yet provided.
+    names : list[str]
+        Description not yet provided.
+    preprocessing_pipeline : PreprocessingPipeline
+        Description not yet provided.
+    ensemble_list : list | None
+        Description not yet provided.
+    ensemble_mean : bool | None
+        Description not yet provided.
+    concat_dim : str
+        Description not yet provided.
+    file_type : str
+        Description not yet provided.
+    rename_dict : dict
+        Description not yet provided.
+    """
+
     paths: str
     names: list[str]
     preprocessing_pipeline: PreprocessingPipeline
@@ -41,6 +81,14 @@ class DataConfigABC(abc.ABC):
     rename_dict: dict
 
     def __init__(self):
+        """
+        Document this function.
+
+        Raises
+        ------
+        AttributeError
+            Description not yet provided.
+        """
         if not hasattr(self, "preprocessing_pipeline"):
             raise AttributeError(
                 f"{type(self).__name__} must define preprocessing_pipeline"
@@ -58,25 +106,44 @@ class DataConfigABC(abc.ABC):
     @property
     @abc.abstractmethod
     def TYPE(self) -> str:
-
+        """
+        Document this function.
+        """
         pass
 
     @classmethod
     @abc.abstractmethod
     def _allowed_dims(cls) -> frozenset[str]:
+        """
+        Document this function.
+        """
         pass
 
     @classmethod
     @abc.abstractmethod
     def _required_dims(cls) -> frozenset[str]:
+        """
+        Document this function.
+        """
         pass
 
     @final
     def _resolve_data(self):
+        """
+        Document this function.
+        """
         _resolve_data(self)
 
     @final
     def _get_ds_info(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return _get_ds_info(self)
 
     @final
@@ -88,7 +155,22 @@ class DataConfigABC(abc.ABC):
         save_path: Path | str | None = None,
         save_name: str | None = None,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        selection : dict
+            Description not yet provided.
+        mask : bool
+            Description not yet provided.
+        save : bool
+            Description not yet provided.
+        save_path : Path | str | None
+            Description not yet provided.
+        save_name : str | None
+            Description not yet provided.
+        """
         _base = _load_xarray_data(
             self.list_paths,
             names=self.names,
@@ -114,6 +196,19 @@ class DataConfigABC(abc.ABC):
 
     @final
     def load_preprocessor_pipeline(self, load_dir: Path | str | None = None):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        load_dir : Path | str | None
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if load_dir is None:
             load_dir = Path(RuntimeContext.GLOBAL_EXP_DIR) / "preprocessing_pipeline"
 
@@ -133,6 +228,23 @@ class DataConfigABC(abc.ABC):
 
 
 def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    dataconfig : DataConfigABC
+        Description not yet provided.
+    _do_checks : bool
+        Description not yet provided.
+
+    Raises
+    ------
+    FileNotFoundError
+        Description not yet provided.
+    ValueError
+        Description not yet provided.
+    """
     if not Path(dataconfig.paths).exists():
         raise FileNotFoundError(
             "The following file does not exist:\n" + str(dataconfig.paths)
@@ -195,6 +307,19 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
 
 
 def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    dataconfig : DataConfigABC
+        Description not yet provided.
+
+    Returns
+    -------
+    infoclass
+        Description not yet provided.
+    """
     if getattr(dataconfig, "list_paths", None) is None:
         list_paths = glob.glob(
             str(Path(dataconfig.paths).joinpath(dataconfig.file_type))

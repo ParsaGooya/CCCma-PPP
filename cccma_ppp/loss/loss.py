@@ -12,18 +12,49 @@ from cccma_ppp.core.core_abc import GenerativeContext
 
 @dataclasses.dataclass
 class LossStepConfig:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    name : str
+        Description not yet provided.
+    args : dict[str, object]
+        Description not yet provided.
+    """
+
     name: str
     args: dict[str, object] = dataclasses.field(default_factory=dict)
 
 
 @dataclasses.dataclass
 class LosspipelineConfig:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    loss_pipeline : list[LossStepConfig]
+        Description not yet provided.
+    loss_weights : list[float]
+        Description not yet provided.
+    reduction : Reduction
+        Description not yet provided.
+    """
+
     loss_pipeline: list[LossStepConfig]
     loss_weights: list[float] = None
     reduction: Reduction = "mean"
 
     def __post_init__(self):
+        """
+        Document this function.
 
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if not len(self.loss_pipeline) >= 1:
             raise ValueError("provide at least one loss term.")
 
@@ -60,13 +91,44 @@ class LosspipelineConfig:
         num_output_dimensions: int = 2,
         generative_context: GenerativeContext | None = None,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        weights : xr.DataArray
+            Description not yet provided.
+        num_output_dimensions : int
+            Description not yet provided.
+        generative_context : GenerativeContext | None
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return Losspipeline(
             self, weights, num_output_dimensions, generative_context=generative_context
         )
 
 
 class Losspipeline(nn.Module):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    config : LosspipelineConfig
+        Description not yet provided.
+    weights : xr.DataArray
+        Description not yet provided.
+    num_output_dimensions : int
+        Description not yet provided.
+    generative_context : GenerativeContext | None
+        Description not yet provided.
+    """
+
     registery: ClassVar[Registery] = Registery()
 
     def __init__(
@@ -76,7 +138,20 @@ class Losspipeline(nn.Module):
         num_output_dimensions: int = 2,
         generative_context: GenerativeContext | None = None,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        config : LosspipelineConfig
+            Description not yet provided.
+        weights : xr.DataArray
+            Description not yet provided.
+        num_output_dimensions : int
+            Description not yet provided.
+        generative_context : GenerativeContext | None
+            Description not yet provided.
+        """
         super().__init__()
         self._checked_dimensionality = False
         self.config = config
@@ -115,7 +190,19 @@ class Losspipeline(nn.Module):
 
     @classmethod
     def register(cls, name: str):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        name : str
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return cls.registery.register(name.lower())
 
     def forward(
@@ -126,7 +213,32 @@ class Losspipeline(nn.Module):
         print_loss=False,
         step_arguments: dict = None,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : Any
+            Description not yet provided.
+        target : Any
+            Description not yet provided.
+        target_mask : Any
+            Description not yet provided.
+        print_loss : Any
+            Description not yet provided.
+        step_arguments : dict
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        AssertionError
+            Description not yet provided.
+        """
         total_loss = None
         indiv_loses = {}
 

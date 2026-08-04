@@ -26,6 +26,35 @@ from cccma_ppp.core.selectors import cVAEModelSelector
 @cVAEModelSelector.register("mlp")
 @dataclasses.dataclass
 class cVAE_MLPConfig(cVAEmodelConfigABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    encoder_hidden_dims : list
+        Description not yet provided.
+    latent_size : int
+        Description not yet provided.
+    condition_embedding_dims : list | None
+        Description not yet provided.
+    condition_embedding_size : int | None
+        Description not yet provided.
+    decoder_hidden_dims : list
+        Description not yet provided.
+    condition_dependant_latent : bool
+        Description not yet provided.
+    condemb_to_decoder : bool
+        Description not yet provided.
+    batch_normalization : bool
+        Description not yet provided.
+    dropout_rate : float
+        Description not yet provided.
+    init_method : InitMethod
+        Description not yet provided.
+    activation : ActivationName
+        Description not yet provided.
+    """
+
     encoder_hidden_dims: list
     latent_size: int
     condition_embedding_dims: list | None = None
@@ -44,7 +73,14 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     GENERATOR: ClassVar[None] = None
 
     def __post_init__(self):
+        """
+        Document this function.
 
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         _validate_dropout(self.dropout_rate)
 
         if self.decoder_hidden_dims is None:
@@ -71,7 +107,23 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        input_shape : np.ndarray
+            Description not yet provided.
+        output_shape : np.ndarray | None
+            Description not yet provided.
+        added_features_dim : int
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return cVAE_MLP(
             config=self,
             input_shape=input_shape,
@@ -81,6 +133,21 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
 
 
 class cVAE_MLP(cVAEmodelsABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    config : cVAE_MLPConfig
+        Description not yet provided.
+    input_shape : np.ndarray | tuple
+        Description not yet provided.
+    output_shape : np.ndarray | tuple | None
+        Description not yet provided.
+    added_features_dim : int
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         config: cVAE_MLPConfig,
@@ -88,7 +155,25 @@ class cVAE_MLP(cVAEmodelsABC):
         output_shape: np.ndarray | tuple | None = None,
         added_features_dim: int = None,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        config : cVAE_MLPConfig
+            Description not yet provided.
+        input_shape : np.ndarray | tuple
+            Description not yet provided.
+        output_shape : np.ndarray | tuple | None
+            Description not yet provided.
+        added_features_dim : int
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         super().__init__()
 
         self.config = config
@@ -198,7 +283,19 @@ class cVAE_MLP(cVAEmodelsABC):
             self._initialize_weights(self.init_method)
 
     def forward(self, request: cVAEForwardRequest) -> cVAEOutput:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        request : cVAEForwardRequest
+            Description not yet provided.
+
+        Returns
+        -------
+        cVAEOutput
+            Description not yet provided.
+        """
         x = request.target
         x_mask = request.target_mask
         condition = request.condition
@@ -249,7 +346,24 @@ class cVAE_MLP(cVAEmodelsABC):
         self,
         request: cVAEPredictRequest,
     ) -> cVAEOutput:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        request : cVAEPredictRequest
+            Description not yet provided.
+
+        Returns
+        -------
+        cVAEOutput
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         condition = request.condition
         condition_mask = request.condition_mask
         added_features = request.added_features
@@ -327,7 +441,25 @@ class cVAE_MLP(cVAEmodelsABC):
         condition: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        x : torch.Tensor
+            Description not yet provided.
+        x_mask : torch.Tensor | None
+            Description not yet provided.
+        condition : torch.Tensor
+            Description not yet provided.
+        added_features : torch.Tensor
+            Description not yet provided.
+
+        Returns
+        -------
+        tuple[torch.Tensor]
+            Description not yet provided.
+        """
         if x_mask is not None:
             x = x * x_mask
 
@@ -356,7 +488,23 @@ class cVAE_MLP(cVAEmodelsABC):
         condition_mask: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        condition : torch.Tensor
+            Description not yet provided.
+        condition_mask : torch.Tensor
+            Description not yet provided.
+        added_features : torch.Tensor
+            Description not yet provided.
+
+        Returns
+        -------
+        tuple[torch.Tensor]
+            Description not yet provided.
+        """
         if added_features is not None:
             x_features = added_features.flatten(start_dim=1)
         else:
@@ -385,7 +533,23 @@ class cVAE_MLP(cVAEmodelsABC):
         condition: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> torch.Tensor:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        latent_samples : torch.Tensor
+            Description not yet provided.
+        condition : torch.Tensor
+            Description not yet provided.
+        added_features : torch.Tensor
+            Description not yet provided.
+
+        Returns
+        -------
+        torch.Tensor
+            Description not yet provided.
+        """
         sample_size, batch_size = latent_samples.shape[:-1]
 
         x_features = (

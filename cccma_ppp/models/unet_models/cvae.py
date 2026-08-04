@@ -56,6 +56,51 @@ from cccma_ppp.models.layers.utils import _get_normal
 @cVAEModelSelector.register("unet")
 @dataclasses.dataclass
 class cVAEUNetConfig(cVAEmodelConfigABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    channels : list[int]
+        Description not yet provided.
+    latent_size : int
+        Description not yet provided.
+    condition_embedding_channels : list | None
+        Description not yet provided.
+    condition_embedding_size : int | None
+        Description not yet provided.
+    bottleneck_dim : int | None
+        Description not yet provided.
+    latent_normalization : NormalizationMethod | None
+        Description not yet provided.
+    condition_dependant_latent : bool
+        Description not yet provided.
+    condemb_to_decoder : bool
+        Description not yet provided.
+    block_config : ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig
+        Description not yet provided.
+    upsampling_method : UpsamplingMethod
+        Description not yet provided.
+    upsampling_alignment_method : AlignmentMethod
+        Description not yet provided.
+    transpose_kernel_sizes : list[int | tuple[int, int]] | int
+        Description not yet provided.
+    add_skip_latent : bool
+        Description not yet provided.
+    mask_pooling : MaskPoolingMethod
+        Description not yet provided.
+    mask_fraction_threshold : float
+        Description not yet provided.
+    output_activation : OutputActivation
+        Description not yet provided.
+    output_block_hidden_channels : int
+        Description not yet provided.
+    init_method : InitMethod
+        Description not yet provided.
+    GENERATOR : GENERATORConfig | None
+        Description not yet provided.
+    """
+
     channels: list[int]
     latent_size: int
     condition_embedding_channels: list | None = None
@@ -89,7 +134,9 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
     NUM_OUTPUT_DIMS: ClassVar[int] = 3
 
     def __post_init__(self) -> None:
-
+        """
+        Document this function.
+        """
         _unet_config_checks(self)
 
         n_up_blocks = len(self.channels) - 1
@@ -109,6 +156,23 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int | None = None,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        input_shape : np.ndarray
+            Description not yet provided.
+        output_shape : np.ndarray | None
+            Description not yet provided.
+        added_features_dim : int | None
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return cVAEUNet(
             config=self,
             input_shape=input_shape,
@@ -118,6 +182,21 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
 
 
 class cVAEUNet(cVAEmodelsABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    config : cVAEUNetConfig
+        Description not yet provided.
+    input_shape : np.ndarray | tuple
+        Description not yet provided.
+    output_shape : np.ndarray | tuple | None
+        Description not yet provided.
+    added_features_dim : int | None
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         config: cVAEUNetConfig,
@@ -125,6 +204,27 @@ class cVAEUNet(cVAEmodelsABC):
         output_shape: np.ndarray | tuple | None = None,
         added_features_dim: int | None = None,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        config : cVAEUNetConfig
+            Description not yet provided.
+        input_shape : np.ndarray | tuple
+            Description not yet provided.
+        output_shape : np.ndarray | tuple | None
+            Description not yet provided.
+        added_features_dim : int | None
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+        """
         super().__init__()
 
         self.config = config
@@ -246,7 +346,27 @@ class cVAEUNet(cVAEmodelsABC):
         condition_mask: torch.Tensor | None = None,
         added_features: torch.Tensor | None = None,
     ) -> TensorMask:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        x : torch.Tensor
+            Description not yet provided.
+        x_mask : torch.Tensor | None
+            Description not yet provided.
+        condition : torch.Tensor | None
+            Description not yet provided.
+        condition_mask : torch.Tensor | None
+            Description not yet provided.
+        added_features : torch.Tensor | None
+            Description not yet provided.
+
+        Returns
+        -------
+        TensorMask
+            Description not yet provided.
+        """
         x_mask = _broadcast_mask(x_mask, x)
         if condition is not None:
             condition = _resize_tensor(
@@ -291,7 +411,19 @@ class cVAEUNet(cVAEmodelsABC):
         return TensorMask(tensor=x, mask=x_mask)
 
     def forward(self, request: cVAEForwardRequest) -> cVAEOutput:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        request : cVAEForwardRequest
+            Description not yet provided.
+
+        Returns
+        -------
+        cVAEOutput
+            Description not yet provided.
+        """
         x = request.target
         x_mask = request.target_mask
         condition = request.condition
@@ -344,7 +476,24 @@ class cVAEUNet(cVAEmodelsABC):
         self,
         request: cVAEPredictRequest,
     ) -> cVAEOutput:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        request : cVAEPredictRequest
+            Description not yet provided.
+
+        Returns
+        -------
+        cVAEOutput
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         condition = request.condition
         condition_mask = request.condition_mask
         added_features = request.added_features
@@ -425,7 +574,27 @@ class cVAEUNet(cVAEmodelsABC):
         condition_mask: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        x : torch.Tensor
+            Description not yet provided.
+        x_mask : torch.Tensor | None
+            Description not yet provided.
+        condition : torch.Tensor
+            Description not yet provided.
+        condition_mask : torch.Tensor
+            Description not yet provided.
+        added_features : torch.Tensor
+            Description not yet provided.
+
+        Returns
+        -------
+        tuple[torch.Tensor]
+            Description not yet provided.
+        """
         input = self._prepare_input(
             x=x,
             x_mask=x_mask,
@@ -444,7 +613,23 @@ class cVAEUNet(cVAEmodelsABC):
         condition_mask: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        condition : torch.Tensor
+            Description not yet provided.
+        condition_mask : torch.Tensor
+            Description not yet provided.
+        added_features : torch.Tensor
+            Description not yet provided.
+
+        Returns
+        -------
+        tuple[torch.Tensor]
+            Description not yet provided.
+        """
         input = self._prepare_input(
             x=condition,
             x_mask=condition_mask,
@@ -464,7 +649,23 @@ class cVAEUNet(cVAEmodelsABC):
         condition_embedding: torch.Tensor | None = None,
         num_output_samples: int = 0,
     ) -> torch.Tensor:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        latent_samples : torch.Tensor
+            Description not yet provided.
+        condition_embedding : torch.Tensor | None
+            Description not yet provided.
+        num_output_samples : int
+            Description not yet provided.
+
+        Returns
+        -------
+        torch.Tensor
+            Description not yet provided.
+        """
         sample_size, batch_size = latent_samples.shape[:-1]
 
         if all([condition_embedding is not None, self.condemb_to_decoder]):
@@ -495,6 +696,27 @@ class cVAEUNet(cVAEmodelsABC):
 
 
 class Recognition(nn.Module):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    input_channels : int
+        Description not yet provided.
+    input_spatial_shape : tuple[int, int]
+        Description not yet provided.
+    channels : list[int]
+        Description not yet provided.
+    bottleneck_dim : int
+        Description not yet provided.
+    latent_size : int
+        Description not yet provided.
+    config : cVAEUNetConfig
+        Description not yet provided.
+    get_log_var : bool
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         input_channels: int,
@@ -506,7 +728,26 @@ class Recognition(nn.Module):
         *,
         get_log_var: bool = True,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        input_channels : int
+            Description not yet provided.
+        input_spatial_shape : tuple[int, int]
+            Description not yet provided.
+        channels : list[int]
+            Description not yet provided.
+        bottleneck_dim : int
+            Description not yet provided.
+        latent_size : int
+            Description not yet provided.
+        config : cVAEUNetConfig
+            Description not yet provided.
+        get_log_var : bool
+            Description not yet provided.
+        """
         super().__init__()
 
         self.initial_mapping = build_conv_block(
@@ -551,6 +792,19 @@ class Recognition(nn.Module):
         self,
         input_shape: tuple[int, int],
     ) -> list[tuple[int, int]]:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        input_shape : tuple[int, int]
+            Description not yet provided.
+
+        Returns
+        -------
+        list[tuple[int, int]]
+            Description not yet provided.
+        """
         shape = tuple(input_shape)
         shapes = [shape]
 
@@ -564,7 +818,19 @@ class Recognition(nn.Module):
         self,
         input: TensorMask,
     ) -> LatentVector:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        input : TensorMask
+            Description not yet provided.
+
+        Returns
+        -------
+        LatentVector
+            Description not yet provided.
+        """
         input = self.initial_mapping(input)
 
         for down_block in self.down_blocks:
@@ -574,6 +840,25 @@ class Recognition(nn.Module):
 
 
 class Generation(nn.Module):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    latent_size : int
+        Description not yet provided.
+    channels : list[int]
+        Description not yet provided.
+    output_channels : int
+        Description not yet provided.
+    resize_shapes : list[tuple]
+        Description not yet provided.
+    bottleneck_dim : int
+        Description not yet provided.
+    config : cVAEUNetConfig
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         latent_size: int,
@@ -583,7 +868,24 @@ class Generation(nn.Module):
         bottleneck_dim: int,
         config: cVAEUNetConfig,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        latent_size : int
+            Description not yet provided.
+        channels : list[int]
+            Description not yet provided.
+        output_channels : int
+            Description not yet provided.
+        resize_shapes : list[tuple]
+            Description not yet provided.
+        bottleneck_dim : int
+            Description not yet provided.
+        config : cVAEUNetConfig
+            Description not yet provided.
+        """
         super().__init__()
         self.bottleneck_dim = bottleneck_dim
         self.bottleneck_shape = resize_shapes[0]
@@ -635,7 +937,21 @@ class Generation(nn.Module):
         latent_samples: torch.Tensor,
         num_output_samples: int = 0,
     ) -> torch.Tensor:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        latent_samples : torch.Tensor
+            Description not yet provided.
+        num_output_samples : int
+            Description not yet provided.
+
+        Returns
+        -------
+        torch.Tensor
+            Description not yet provided.
+        """
         batch_size = latent_samples.shape[0]
         x = self.combine_latent(latent_samples)
         x = x.reshape(-1, self.bottleneck_dim, *self.bottleneck_shape)

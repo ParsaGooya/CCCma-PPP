@@ -16,6 +16,25 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 
 class Monitor:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    cpu : bool
+        Description not yet provided.
+    ram : bool
+        Description not yet provided.
+    gpu0 : bool
+        Description not yet provided.
+    gpu1 : bool
+        Description not yet provided.
+    gpus : Iterable[int] | None
+        Description not yet provided.
+    interval : float
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         *,
@@ -26,6 +45,31 @@ class Monitor:
         gpus: Iterable[int] | None = None,
         interval: float = 0.1,
     ) -> None:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        cpu : bool
+            Description not yet provided.
+        ram : bool
+            Description not yet provided.
+        gpu0 : bool
+            Description not yet provided.
+        gpu1 : bool
+            Description not yet provided.
+        gpus : Iterable[int] | None
+            Description not yet provided.
+        interval : float
+            Description not yet provided.
+
+        Raises
+        ------
+        TypeError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+        """
         if interval <= 0:
             raise ValueError("interval must be greater than zero")
 
@@ -69,6 +113,9 @@ class Monitor:
             self._initialize_gpus()
 
     def _initialize_gpus(self) -> None:
+        """
+        Document this function.
+        """
         try:
             import pynvml
 
@@ -108,12 +155,23 @@ class Monitor:
             self._unavailable_gpus.update(self.gpu_indices)
 
     def _get_stack(self) -> list:
+        """
+        Document this function.
+
+        Returns
+        -------
+        list
+            Description not yet provided.
+        """
         thread_id = threading.get_ident()
 
         with self._lock:
             return self._thread_stacks.setdefault(thread_id, [])
 
     def _remove_empty_stack(self) -> None:
+        """
+        Document this function.
+        """
         thread_id = threading.get_ident()
 
         with self._lock:
@@ -123,10 +181,26 @@ class Monitor:
                 self._thread_stacks.pop(thread_id, None)
 
     def current_stage(self) -> str:
+        """
+        Document this function.
+
+        Returns
+        -------
+        str
+            Description not yet provided.
+        """
         stack = self._get_stack()
         return stack[-1] if stack else "root"
 
     def _current_sample_stage(self) -> str:
+        """
+        Document this function.
+
+        Returns
+        -------
+        str
+            Description not yet provided.
+        """
         sampler_thread_id = self._thread.ident if self._thread is not None else None
 
         with self._lock:
@@ -142,12 +216,41 @@ class Monitor:
         return " | ".join(sorted(set(stages)))
 
     def _ram_gb(self) -> float:
+        """
+        Document this function.
+
+        Returns
+        -------
+        float
+            Description not yet provided.
+        """
         return self._process.memory_info().rss / (1024**3)
 
     def _cpu(self) -> float:
+        """
+        Document this function.
+
+        Returns
+        -------
+        float
+            Description not yet provided.
+        """
         return float(self._process.cpu_percent(interval=None))
 
     def _gpu(self, index: int) -> tuple[float, float]:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        index : int
+            Description not yet provided.
+
+        Returns
+        -------
+        tuple[float, float]
+            Description not yet provided.
+        """
         if (
             self._pynvml is None
             or index in self._unavailable_gpus
@@ -186,6 +289,23 @@ class Monitor:
         event: str,
         span_id: str | None = None,
     ) -> dict[str, Any]:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        stage : str
+            Description not yet provided.
+        event : str
+            Description not yet provided.
+        span_id : str | None
+            Description not yet provided.
+
+        Returns
+        -------
+        dict[str, Any]
+            Description not yet provided.
+        """
         record: dict[str, Any] = {
             "t": time.time(),
             "stage": stage,
@@ -206,11 +326,39 @@ class Monitor:
         return record
 
     def _append_event(self, event: dict[str, Any]) -> None:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        event : dict[str, Any]
+            Description not yet provided.
+        """
         with self._lock:
             self._data.append(event)
 
     @contextmanager
     def span(self, name: str) -> Iterator:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        name : str
+            Description not yet provided.
+
+        Yields
+        ------
+        Iterator
+            Description not yet provided.
+
+        Raises
+        ------
+        TypeError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+        """
         if not isinstance(name, str):
             raise TypeError("span name must be a string")
 
@@ -263,17 +411,65 @@ class Monitor:
             self._remove_empty_stack()
 
     def observe(self, function: F) -> F:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        function : F
+            Description not yet provided.
+
+        Returns
+        -------
+        F
+            Description not yet provided.
+
+        Raises
+        ------
+        TypeError
+            Description not yet provided.
+        """
         if not callable(function):
             raise TypeError("observe expects a callable")
 
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
+            """
+            Document this function.
+
+            Parameters
+            ----------
+            *args : Any
+                Description not yet provided.
+            **kwargs : Any
+                Description not yet provided.
+
+            Returns
+            -------
+            Any
+                Description not yet provided.
+            """
             with self.span(function.__name__):
                 return function(*args, **kwargs)
 
         return cast(F, wrapper)
 
     def checkpoint(self, name: str) -> None:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        name : str
+            Description not yet provided.
+
+        Raises
+        ------
+        TypeError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+        """
         if not isinstance(name, str):
             raise TypeError("checkpoint name must be a string")
 
@@ -294,6 +490,14 @@ class Monitor:
         )
 
     def _collect_sample(self) -> dict[str, Any]:
+        """
+        Document this function.
+
+        Returns
+        -------
+        dict[str, Any]
+            Description not yet provided.
+        """
         sample = self._create_event(
             stage=self._current_sample_stage(),
             event="sample",
@@ -314,6 +518,9 @@ class Monitor:
         return sample
 
     def _sampler(self) -> None:
+        """
+        Document this function.
+        """
         if self.cpu_enabled:
             self._process.cpu_percent(interval=None)
 
@@ -331,6 +538,14 @@ class Monitor:
             self._stop_event.wait(wait_time)
 
     def start(self, *, clear: bool = False) -> None:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        clear : bool
+            Description not yet provided.
+        """
         if self.running:
             logger.warning("Monitoring is already running")
             return
@@ -356,6 +571,19 @@ class Monitor:
         )
 
     def stop(self, timeout: float | None = None) -> None:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        timeout : float | None
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if timeout is not None and timeout < 0:
             raise ValueError("timeout cannot be negative")
 
@@ -377,10 +605,26 @@ class Monitor:
 
     @property
     def running(self) -> bool:
+        """
+        Document this function.
+
+        Returns
+        -------
+        bool
+            Description not yet provided.
+        """
         return self._thread is not None and self._thread.is_alive()
 
     @property
     def metric_names(self) -> tuple[str, ...]:
+        """
+        Document this function.
+
+        Returns
+        -------
+        tuple[str, ...]
+            Description not yet provided.
+        """
         metrics: list[str] = []
 
         if self.cpu_enabled:
@@ -396,10 +640,21 @@ class Monitor:
         return tuple(metrics)
 
     def clear(self) -> None:
+        """
+        Document this function.
+        """
         with self._lock:
             self._data.clear()
 
     def get_dataframe(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         import pandas as pd
 
         with self._lock:
@@ -408,6 +663,14 @@ class Monitor:
         return pd.DataFrame(records)
 
     def __enter__(self) -> "Monitor":
+        """
+        Document this function.
+
+        Returns
+        -------
+        'Monitor'
+            Description not yet provided.
+        """
         self.start()
         return self
 
@@ -417,6 +680,23 @@ class Monitor:
         exception_value,
         traceback,
     ) -> bool:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        exception_type : Any
+            Description not yet provided.
+        exception_value : Any
+            Description not yet provided.
+        traceback : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        bool
+            Description not yet provided.
+        """
         self.stop()
         return False
 
@@ -426,6 +706,28 @@ class Monitor:
         process_variance: float = 1.0,
         measurement_variance: float = 25.0,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        values : Any
+            Description not yet provided.
+        process_variance : float
+            Description not yet provided.
+        measurement_variance : float
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         import numpy as np
 
         if process_variance < 0:
@@ -483,6 +785,28 @@ class Monitor:
         method: str | None = None,
         **kwargs,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        series : Any
+            Description not yet provided.
+        method : str | None
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if method is None:
             return series
 
@@ -544,6 +868,26 @@ class Monitor:
         smooth: str | None = None,
         **smooth_kwargs,
     ) -> None:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        ax : Any
+            Description not yet provided.
+        t : Any
+            Description not yet provided.
+        values : Any
+            Description not yet provided.
+        label : str
+            Description not yet provided.
+        color : str
+            Description not yet provided.
+        smooth : str | None
+            Description not yet provided.
+        **smooth_kwargs : Any
+            Description not yet provided.
+        """
         ax.plot(
             t,
             values,
@@ -575,6 +919,19 @@ class Monitor:
 
     @staticmethod
     def _metric_label(metric: str) -> tuple[str, str]:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        metric : str
+            Description not yet provided.
+
+        Returns
+        -------
+        tuple[str, str]
+            Description not yet provided.
+        """
         if metric == "cpu":
             return "CPU", "%"
 
@@ -592,6 +949,19 @@ class Monitor:
         return metric, ""
 
     def _available_metrics(self, samples) -> list:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        samples : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        list
+            Description not yet provided.
+        """
         return [
             metric
             for metric in self.metric_names
@@ -600,6 +970,19 @@ class Monitor:
 
     @staticmethod
     def _span_intervals(df) -> list[tuple[float, float, str]]:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        df : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        list[tuple[float, float, str]]
+            Description not yet provided.
+        """
         intervals: list[tuple[float, float, str]] = []
 
         if "span_id" not in df.columns:
@@ -638,6 +1021,36 @@ class Monitor:
         smooth=None,
         **smooth_kwargs,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        df : Any
+            Description not yet provided.
+        metrics : Any
+            Description not yet provided.
+        save_path : Any
+            Description not yet provided.
+        show : Any
+            Description not yet provided.
+        smooth : Any
+            Description not yet provided.
+        **smooth_kwargs : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        TypeError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+        """
         import matplotlib.pyplot as plt
 
         if df is None:
@@ -954,6 +1367,29 @@ def monitor(
     gpus: Iterable[int] | None = None,
     interval: float = 0.1,
 ) -> Monitor:
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    cpu : bool
+        Description not yet provided.
+    ram : bool
+        Description not yet provided.
+    gpu0 : bool
+        Description not yet provided.
+    gpu1 : bool
+        Description not yet provided.
+    gpus : Iterable[int] | None
+        Description not yet provided.
+    interval : float
+        Description not yet provided.
+
+    Returns
+    -------
+    Monitor
+        Description not yet provided.
+    """
     return Monitor(
         cpu=cpu,
         ram=ram,

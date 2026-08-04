@@ -13,6 +13,17 @@ from cccma_ppp.configs import supported_NN_dimensions_sorted
 
 @dataclasses.dataclass
 class PreprocessingPipeline:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    preprocessors_list : list[PreprocessingStepSelector]
+        Description not yet provided.
+    load_dir : str | Path
+        Description not yet provided.
+    """
+
     preprocessors_list: list[PreprocessingStepSelector] = dataclasses.field(
         default_factory=list
     )
@@ -20,7 +31,9 @@ class PreprocessingPipeline:
     num_instances: ClassVar[int] = 0
 
     def __post_init__(self):
-
+        """
+        Document this function.
+        """
         self.fitted = False
         self.reference_coords = None
         self.reference_var = None
@@ -32,7 +45,14 @@ class PreprocessingPipeline:
                 self.pipeline.append((step.name.lower(), step.get_preprocessor()))
 
     def set_name(self, name: str):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        name : str
+            Description not yet provided.
+        """
         self.name = name
 
     def fit(
@@ -43,7 +63,27 @@ class PreprocessingPipeline:
         save_name: str | None = None,
         save_path: Path | str | None = None,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        base_data : xr.Dataset | xr.DataArray
+            Description not yet provided.
+        mask : xr.DataArray
+            Description not yet provided.
+        save : bool
+            Description not yet provided.
+        save_name : str | None
+            Description not yet provided.
+        save_path : Path | str | None
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         if self.load_dir is None:
             data_processed = base_data
             self.fitted_based_year = base_data["year"].values
@@ -78,7 +118,26 @@ class PreprocessingPipeline:
         return self
 
     def transform(self, data: xr.DataArray, step_arguments=None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : xr.DataArray
+            Description not yet provided.
+        step_arguments : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if step_arguments is None:
             step_arguments = dict()
         for a in step_arguments.keys():
@@ -93,7 +152,26 @@ class PreprocessingPipeline:
         return data_processed
 
     def inverse_transform(self, data: xr.DataArray, step_arguments=None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : xr.DataArray
+            Description not yet provided.
+        step_arguments : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if step_arguments is None:
             step_arguments = dict()
         for a in step_arguments.keys():
@@ -109,7 +187,24 @@ class PreprocessingPipeline:
         return data_processed
 
     def to_dataset(self, data: xr.DataArray) -> xr.Dataset:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : xr.DataArray
+            Description not yet provided.
+
+        Returns
+        -------
+        xr.Dataset
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if len(data.channels) != len(self.reference_var):
             raise ValueError(
                 "The dataset does not match the preprocessing pipeline."
@@ -143,6 +238,26 @@ class PreprocessingPipeline:
         )
 
     def get_preprocessors(self, name=None):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        name : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+        """
         if not self.fitted:
             raise RuntimeError("Pipeline needs to be fitted first")
 
@@ -163,7 +278,23 @@ class PreprocessingPipeline:
         return self.fitted_preprocessors[idx.item()]
 
     def add_fitted_preprocessor(self, preprocessor, name, index=None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        preprocessor : Any
+            Description not yet provided.
+        name : Any
+            Description not yet provided.
+        index : Any
+            Description not yet provided.
+
+        Raises
+        ------
+        AssertionError
+            Description not yet provided.
+        """
         assert preprocessor.fitted, "The preprocessor must be fitted"
         if index is None:
             self.fitted_preprocessors.append(preprocessor)
@@ -173,6 +304,19 @@ class PreprocessingPipeline:
             self.steps.insert(index, name)
 
     def extract_output_coords_vars(self, base_data: xr.Dataset | xr.DataArray = None):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        base_data : xr.Dataset | xr.DataArray
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if not self.fitted:
             raise ValueError(
                 "Spatial coords can only be extracted for a fitted pipeline."
@@ -187,7 +331,24 @@ class PreprocessingPipeline:
         self.reference_var = list(base_data.data_vars)
 
     def load_from_memory(self, load_dir: str | Path):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        load_dir : str | Path
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         loaded = joblib.load(Path(load_dir))
 
         if not loaded.fitted:

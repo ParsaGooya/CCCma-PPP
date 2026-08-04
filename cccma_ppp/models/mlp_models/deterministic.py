@@ -31,6 +31,27 @@ AppendMode = Literal[1, 2, 3]
 @deterministicModelSelector.register("mlp")
 @dataclasses.dataclass
 class AutoencoderConfig(modelConfigABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    encoder_hidden_dims : list
+        Description not yet provided.
+    decoder_hidden_dims : list
+        Description not yet provided.
+    batch_normalization : bool
+        Description not yet provided.
+    dropout_rate : float
+        Description not yet provided.
+    append_mode : AppendMode
+        Description not yet provided.
+    init_method : InitMethod
+        Description not yet provided.
+    activation : ActivationName
+        Description not yet provided.
+    """
+
     encoder_hidden_dims: list
     decoder_hidden_dims: list = None
     batch_normalization: bool = False
@@ -44,7 +65,9 @@ class AutoencoderConfig(modelConfigABC):
     GENERATOR: ClassVar[None] = None
 
     def __post_init__(self):
-
+        """
+        Document this function.
+        """
         _validate_dropout(self.dropout_rate)
 
         if self.decoder_hidden_dims is None:
@@ -59,7 +82,23 @@ class AutoencoderConfig(modelConfigABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        input_shape : np.ndarray
+            Description not yet provided.
+        output_shape : np.ndarray | None
+            Description not yet provided.
+        added_features_dim : int
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return Autoencoder(
             config=self,
             input_shape=input_shape,
@@ -69,6 +108,21 @@ class AutoencoderConfig(modelConfigABC):
 
 
 class Autoencoder(deterministicmodelsABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    config : AutoencoderConfig
+        Description not yet provided.
+    input_shape : np.ndarray | tuple
+        Description not yet provided.
+    output_shape : np.ndarray | tuple | None
+        Description not yet provided.
+    added_features_dim : int
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         config: AutoencoderConfig,
@@ -76,7 +130,25 @@ class Autoencoder(deterministicmodelsABC):
         output_shape: np.ndarray | tuple | None = None,
         added_features_dim: int = None,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        config : AutoencoderConfig
+            Description not yet provided.
+        input_shape : np.ndarray | tuple
+            Description not yet provided.
+        output_shape : np.ndarray | tuple | None
+            Description not yet provided.
+        added_features_dim : int
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         super().__init__()
 
         self.config = config
@@ -151,6 +223,19 @@ class Autoencoder(deterministicmodelsABC):
             self._initialize_weights(self.init_method)
 
     def forward(self, request: DeterministicRequest) -> deterministicOutput:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        request : DeterministicRequest
+            Description not yet provided.
+
+        Returns
+        -------
+        deterministicOutput
+            Description not yet provided.
+        """
         x = request.input
         x_mask = request.input_mask
         added_features = request.added_features

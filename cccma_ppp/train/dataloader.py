@@ -18,6 +18,29 @@ from cccma_ppp.generic.distributed import Distributed
 
 @dataclasses.dataclass
 class BatchData(BatchDataABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    input : torch.Tensor
+        Description not yet provided.
+    target : torch.Tensor
+        Description not yet provided.
+    added_features : torch.Tensor
+        Description not yet provided.
+    metadata : list[dict] | None
+        Description not yet provided.
+    return_spatial_mask : bool
+        Description not yet provided.
+    reduce_spatial_mask : bool
+        Description not yet provided.
+    input_mask : torch.Tensor | None
+        Description not yet provided.
+    target_mask : torch.Tensor | None
+        Description not yet provided.
+    """
+
     input: torch.Tensor
     target: torch.Tensor
     added_features: torch.Tensor = None
@@ -34,7 +57,9 @@ class BatchData(BatchDataABC):
     )
 
     def __post_init__(self):
-
+        """
+        Document this function.
+        """
         if self.return_spatial_mask:
             if self.reduce_spatial_mask:
                 if type(self)._shared_input_mask is None:
@@ -58,6 +83,19 @@ class BatchData(BatchDataABC):
         self.target.nan_to_num_(nan=0.0)
 
     def to_device(self, device: torch.device | str):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        device : torch.device | str
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         self.input = self.input.to(device)
         self.target = self.target.to(device)
 
@@ -75,6 +113,35 @@ class BatchData(BatchDataABC):
 
 @dataclasses.dataclass
 class TrainDataloaderConfig(DataloaderConfigABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    dataset_config : TrainDatasetConfig
+        Description not yet provided.
+    batch_size : int
+        Description not yet provided.
+    time_features : list | None
+        Description not yet provided.
+    train_years : tuple | list
+        Description not yet provided.
+    num_validation_years : int
+        Description not yet provided.
+    num_data_workers : int
+        Description not yet provided.
+    prefetch_factor : int
+        Description not yet provided.
+    drop_last : bool
+        Description not yet provided.
+    load : bool
+        Description not yet provided.
+    return_spatial_mask : bool
+        Description not yet provided.
+    reduce_spatial_mask : bool
+        Description not yet provided.
+    """
+
     dataset_config: TrainDatasetConfig
     batch_size: int
     time_features: list | None = None
@@ -88,6 +155,14 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     reduce_spatial_mask: bool = False
 
     def __post_init__(self):
+        """
+        Document this function.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         super().__init__()
 
         self.time_features = AddedTimeFeatures(self.dataset_config, self.time_features)
@@ -114,7 +189,14 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
     @property
     def available_times(self):
+        """
+        Document this function.
 
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         if self.num_validation_years > 0:
             return self.dataset_config.available_times[: -self.num_validation_years]
         return self.dataset_config.available_times
@@ -122,6 +204,16 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     def setup_distributed(
         self, distributed: Distributed, load_path: Path | str | None = None
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        distributed : Distributed
+            Description not yet provided.
+        load_path : Path | str | None
+            Description not yet provided.
+        """
         self.rank = distributed.rank
         self.world_size = distributed.world_size
 
@@ -144,6 +236,26 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         return_metadata: bool = False,
         shuffle: bool | None = None,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        return_metadata : bool
+            Description not yet provided.
+        shuffle : bool | None
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if not self._setup:
             raise RuntimeError(
                 "Dataloader has to be setup for distributed training first by calling .setup_distributed()"
@@ -177,6 +289,33 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         shuffle: bool | None = None,
         supress_error: bool = True,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        return_metadata : bool
+            Description not yet provided.
+        shuffle : bool | None
+            Description not yet provided.
+        supress_error : bool
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+
+        Warns
+        -----
+        UserWarning
+            Description not yet provided.
+        """
         if not self._setup:
             raise RuntimeError(
                 "Dataloader has to be setup for distributed training first by calling .setup_distributed()"
@@ -214,14 +353,43 @@ class TrainDataloaderConfig(DataloaderConfigABC):
                 raise RuntimeError(msg)
 
     def get_weights(self, config: WeightsConfig | None = None):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        config : WeightsConfig | None
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return self.dataset_config.ds_operator.get_weights(config)
 
     @property
     def input_var_metadata(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return self.dataset_config.ds_operator.get_input_var_metadata()
 
     @property
     def target_var_metadata(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return self.dataset_config.ds_operator.get_target_var_metadata()
 
 
@@ -230,6 +398,23 @@ def collate_batch(
     return_spatial_mask: bool = False,
     reduce_spatial_mask: bool = False,
 ):
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    batch : Any
+        Description not yet provided.
+    return_spatial_mask : bool
+        Description not yet provided.
+    reduce_spatial_mask : bool
+        Description not yet provided.
+
+    Returns
+    -------
+    Any
+        Description not yet provided.
+    """
     metadata = None
 
     if isinstance(batch[0], tuple):

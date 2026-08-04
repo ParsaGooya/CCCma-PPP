@@ -22,6 +22,25 @@ from cccma_ppp.generic.runtime import RuntimeContext
 
 @dataclasses.dataclass
 class cVAEOutput(OutputABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    output : torch.Tensor
+        Description not yet provided.
+    mu : torch.Tensor | None
+        Description not yet provided.
+    log_var : torch.Tensor | None
+        Description not yet provided.
+    samples : torch.Tensor | None
+        Description not yet provided.
+    cond_mu : torch.Tensor | None
+        Description not yet provided.
+    cond_log_var : torch.Tensor | None
+        Description not yet provided.
+    """
+
     output: torch.Tensor
     mu: torch.Tensor | None
     log_var: torch.Tensor | None
@@ -33,6 +52,23 @@ class cVAEOutput(OutputABC):
 @ModuleSelector.register("cvae")
 @dataclasses.dataclass
 class cVAEConfig(moduleConfigABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    ModelConfig : cVAEModelSelector | None
+        Description not yet provided.
+    min_posterior_variance : float | None
+        Description not yet provided.
+    prior_flow_config : NormalizedFlowConfig | None
+        Description not yet provided.
+    combined_CGCN_weight : float
+        Description not yet provided.
+    load_dir : str | None
+        Description not yet provided.
+    """
+
     ModelConfig: cVAEModelSelector | None = None
     min_posterior_variance: float | None = None
     prior_flow_config: NormalizedFlowConfig | None = None
@@ -40,7 +76,21 @@ class cVAEConfig(moduleConfigABC):
     load_dir: str | None = None
 
     def __post_init__(self):
+        """
+        Document this function.
 
+        Raises
+        ------
+        AssertionError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+
+        Warns
+        -----
+        UserWarning
+            Description not yet provided.
+        """
         if self.load_dir is None:
             if self.ModelConfig is None:
                 raise ValueError("provide loading dir or model configurations")
@@ -74,7 +124,23 @@ class cVAEConfig(moduleConfigABC):
         output_shape: np.ndarray | tuple | None = None,
         added_features_dim: int = None,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        input_shape : np.ndarray | tuple
+            Description not yet provided.
+        output_shape : np.ndarray | tuple | None
+            Description not yet provided.
+        added_features_dim : int
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return cVAE(
             config=self,
             input_shape=input_shape,
@@ -83,7 +149,19 @@ class cVAEConfig(moduleConfigABC):
         )
 
     def _load_from_checkpoint(self, load_path: Path | str):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        load_path : Path | str
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         checkpoint_module, checkpoint_config = _load_config_from_checkpoint(
             Path(load_path)
         )
@@ -114,6 +192,21 @@ class cVAEConfig(moduleConfigABC):
 
 
 class cVAE(moduleABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    config : cVAEConfig
+        Description not yet provided.
+    input_shape : np.ndarray
+        Description not yet provided.
+    output_shape : np.ndarray | None
+        Description not yet provided.
+    added_features_dim : int
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         config: cVAEConfig,
@@ -121,7 +214,27 @@ class cVAE(moduleABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        config : cVAEConfig
+            Description not yet provided.
+        input_shape : np.ndarray
+            Description not yet provided.
+        output_shape : np.ndarray | None
+            Description not yet provided.
+        added_features_dim : int
+            Description not yet provided.
+
+        Raises
+        ------
+        AssertionError
+            Description not yet provided.
+        RuntimeError
+            Description not yet provided.
+        """
         super().__init__()
         self.config = config
         self.model_config = self.config.model_config
@@ -190,7 +303,19 @@ class cVAE(moduleABC):
             self._load_state_dict(self.config.load_dir)
 
     def init_loss_function(self, reconstruction_loss: Losspipeline):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        reconstruction_loss : Losspipeline
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if self.prior_flow_config is not None:
             if reconstruction_loss.reduction.lower() != "sum":
                 raise RuntimeError(
@@ -201,7 +326,26 @@ class cVAE(moduleABC):
         self.KLD = KLD(reduction=self.criterion.reduction).to(self._get_device())
 
     def _compute_loss(self, beta: float, data: BatchData):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        beta : float
+            Description not yet provided.
+        data : BatchData
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if self.criterion is None:
             raise RuntimeError(
                 "crieterion should be specified before training is possible. Hint: call .init_loss_function() method in your module first."
@@ -257,7 +401,21 @@ class cVAE(moduleABC):
         return total_loss, losses_dict
 
     def forward(self, data: BatchData, sample_size=1) -> cVAEOutput:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : BatchData
+            Description not yet provided.
+        sample_size : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        cVAEOutput
+            Description not yet provided.
+        """
         generator = self.model_config.GENERATOR
         output_sample_size = 0
         if not self.training and generator is not None:
@@ -284,6 +442,27 @@ class cVAE(moduleABC):
         latent_samples: torch.Tensor = None,
         output_sample_size: int = 0,
     ) -> cVAEOutput:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        data : BatchData
+            Description not yet provided.
+        sample_size : int
+            Description not yet provided.
+        nstds : int
+            Description not yet provided.
+        latent_samples : torch.Tensor
+            Description not yet provided.
+        output_sample_size : int
+            Description not yet provided.
+
+        Returns
+        -------
+        cVAEOutput
+            Description not yet provided.
+        """
         generator = self.model_config.GENERATOR
         if self.training and generator is not None:
             output_sample_size = generator.num_training_noise_samples

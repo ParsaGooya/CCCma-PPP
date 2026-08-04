@@ -11,27 +11,87 @@ from cccma_ppp.core.selectors import FlowSelector
 
 @dataclasses.dataclass
 class flowOutput:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    e_samples : torch.Tensor
+        Description not yet provided.
+    log_det : torch.Tensor
+        Description not yet provided.
+    """
+
     e_samples: torch.Tensor
     log_det: torch.Tensor
 
 
 @dataclasses.dataclass
 class NormalizedFlowConfig:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    list_flows : list[FlowSelector]
+        Description not yet provided.
+    flow_sample_size : int
+        Description not yet provided.
+    """
+
     list_flows: list[FlowSelector]
     flow_sample_size: int = 5000
 
     def build(self, latent_size: int, condition_size: int = None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        latent_size : int
+            Description not yet provided.
+        condition_size : int
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return NormalizedFlowModel(
             config=self, latent_size=latent_size, condition_size=condition_size
         )
 
 
 class NormalizedFlowModel(flowABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    config : NormalizedFlowConfig
+        Description not yet provided.
+    latent_size : Any
+        Description not yet provided.
+    condition_size : int
+        Description not yet provided.
+    """
+
     def __init__(
         self, config: NormalizedFlowConfig, latent_size, condition_size: int = None
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        config : NormalizedFlowConfig
+            Description not yet provided.
+        latent_size : Any
+            Description not yet provided.
+        condition_size : int
+            Description not yet provided.
+        """
         super().__init__()
 
         self.list_flows = config.list_flows
@@ -51,7 +111,21 @@ class NormalizedFlowModel(flowABC):
         self.flows = nn.ModuleList(self.flows)
 
     def forward(self, x, condition=None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        x : Any
+            Description not yet provided.
+        condition : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         bsz, _ = x.shape
         log_det = torch.zeros(bsz, device=x.device)
         for flow in self.flows:
@@ -61,7 +135,21 @@ class NormalizedFlowModel(flowABC):
         return flowOutput(e_samples=x, log_det=log_det)
 
     def inverse(self, z, condition=None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        z : Any
+            Description not yet provided.
+        condition : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         bsz, _ = z.shape
         log_det = torch.zeros(bsz, device=z.device)
         for flow in self.flows[::-1]:
@@ -73,8 +161,32 @@ class NormalizedFlowModel(flowABC):
 
 
 class FCNN(nn.Module):
-    def __init__(self, in_dim, out_dim, hidden_dim):
+    """
+    Document this class.
 
+    Parameters
+    ----------
+    in_dim : Any
+        Description not yet provided.
+    out_dim : Any
+        Description not yet provided.
+    hidden_dim : Any
+        Description not yet provided.
+    """
+
+    def __init__(self, in_dim, out_dim, hidden_dim):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        in_dim : Any
+            Description not yet provided.
+        out_dim : Any
+            Description not yet provided.
+        hidden_dim : Any
+            Description not yet provided.
+        """
         super().__init__()
         self.network = nn.Sequential(
             nn.Linear(in_dim, hidden_dim),
@@ -85,25 +197,71 @@ class FCNN(nn.Module):
         )
 
     def forward(self, x):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        x : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return self.network(x)
 
 
 @FlowSelector.register("maf")
 class MAF(flowABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    hidden_dim : Any
+        Description not yet provided.
+    base_network : Any
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         hidden_dim=16,
         base_network=FCNN,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        hidden_dim : Any
+            Description not yet provided.
+        base_network : Any
+            Description not yet provided.
+        """
         super().__init__()
         self.hidden_dim = hidden_dim
         self.base_network = base_network
         self._conditional = False
 
     def build(self, dim, condition_size=None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        dim : Any
+            Description not yet provided.
+        condition_size : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         self.dim = dim
 
         layers = []
@@ -126,10 +284,32 @@ class MAF(flowABC):
         return self
 
     def reset_parameters(self):
-
+        """
+        Document this function.
+        """
         init.uniform_(self.initial_param, -math.sqrt(0.5), math.sqrt(0.5))
 
     def forward(self, x, condition=None):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        x : Any
+            Description not yet provided.
+        condition : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if self._conditional:
             if condition is None:
                 raise ValueError(
@@ -159,6 +339,26 @@ class MAF(flowABC):
         return z.flip(dims=(1,)), log_det
 
     def inverse(self, z, condition=None):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        z : Any
+            Description not yet provided.
+        condition : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if self._conditional:
             if condition is None:
                 raise ValueError(
@@ -191,15 +391,49 @@ class MAF(flowABC):
 
 @FlowSelector.register("realnvp")
 class RealNVP(flowABC):
-    def __init__(self, hidden_dim=16, base_network=FCNN):
+    """
+    Document this class.
 
+    Parameters
+    ----------
+    hidden_dim : Any
+        Description not yet provided.
+    base_network : Any
+        Description not yet provided.
+    """
+
+    def __init__(self, hidden_dim=16, base_network=FCNN):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        hidden_dim : Any
+            Description not yet provided.
+        base_network : Any
+            Description not yet provided.
+        """
         super().__init__()
         self.hidden_dim = hidden_dim
         self.base_network = base_network
         self._conditional = False
 
     def build(self, dim, condition_size=None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        dim : Any
+            Description not yet provided.
+        condition_size : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         self.dim = dim
         added_features = condition_size if condition_size is not None else 0
         self.t1 = self.base_network(
@@ -221,6 +455,26 @@ class RealNVP(flowABC):
         return self
 
     def forward(self, x, condition=None):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        x : Any
+            Description not yet provided.
+        condition : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if self._conditional:
             if condition is None:
                 raise ValueError(
@@ -249,7 +503,26 @@ class RealNVP(flowABC):
         return z, log_det
 
     def inverse(self, z, condition=None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        z : Any
+            Description not yet provided.
+        condition : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if self._conditional:
             if condition is None:
                 raise ValueError(

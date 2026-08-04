@@ -15,6 +15,31 @@ CovarianceDim = Literal["spatial", "channel"]
 
 @Losspipeline.register("mse")
 class WeightedMSE(lossABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    weights : xr.DataArray
+        Description not yet provided.
+    reduction : Reduction
+        Description not yet provided.
+    num_output_dimensions : int
+        Description not yet provided.
+    low_ress_kernel_size : int
+        Description not yet provided.
+    generative_context : GenerativeContext | None
+        Description not yet provided.
+    hyperparam : Any
+        Description not yet provided.
+    min_threshold : Any
+        Description not yet provided.
+    max_threshold : Any
+        Description not yet provided.
+    **kwargs : Any
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         weights: xr.DataArray,
@@ -27,7 +52,37 @@ class WeightedMSE(lossABC):
         max_threshold=0,
         **kwargs,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        weights : xr.DataArray
+            Description not yet provided.
+        reduction : Reduction
+            Description not yet provided.
+        num_output_dimensions : int
+            Description not yet provided.
+        low_ress_kernel_size : int
+            Description not yet provided.
+        generative_context : GenerativeContext | None
+            Description not yet provided.
+        hyperparam : Any
+            Description not yet provided.
+        min_threshold : Any
+            Description not yet provided.
+        max_threshold : Any
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
+
+        Raises
+        ------
+        NotImplementedError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+        """
         super().__init__()
         self.reduction = reduction
         self.hyperparam = hyperparam
@@ -79,7 +134,19 @@ class WeightedMSE(lossABC):
         self.register_buffer("weights", weights)
 
     def _downsample(self, tensor: torch.Tensor) -> torch.Tensor:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        tensor : torch.Tensor
+            Description not yet provided.
+
+        Returns
+        -------
+        torch.Tensor
+            Description not yet provided.
+        """
         squeeze = False
         if len(tensor.shape) == self.num_output_dimensions:
             tensor = tensor.unsqueeze(0)
@@ -103,7 +170,30 @@ class WeightedMSE(lossABC):
         target_mask: torch.Tensor | None = None,
         print_loss=False,
     ) -> torch.Tensor:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : torch.Tensor
+            Description not yet provided.
+        target : torch.Tensor
+            Description not yet provided.
+        target_mask : torch.Tensor | None
+            Description not yet provided.
+        print_loss : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        torch.Tensor
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if self.generative_context.generator:
             _check_generator_structure(data, target)
             data = data.mean(0)
@@ -142,14 +232,40 @@ class WeightedMSE(lossABC):
         return loss
 
     def _print_loss(self, loss):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        loss : Any
+            Description not yet provided.
+        """
         if self.low_ress_kernel_size is not None:
             print(f"MSE_lowress : {loss.item():.5f}")
         else:
             print(f"MSE : {loss.item():.5f}")
 
     def _aggregate(self, loss, mask):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        loss : Any
+            Description not yet provided.
+        mask : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        NotImplementedError
+            Description not yet provided.
+        """
         weight = self.weights
         loss = loss * weight
         if mask is not None:
@@ -175,6 +291,25 @@ class WeightedMSE(lossABC):
 
 @Losspipeline.register("crps")
 class WeightedCRPS(lossABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    weights : xr.DataArray
+        Description not yet provided.
+    reduction : Reduction
+        Description not yet provided.
+    num_output_dimensions : int
+        Description not yet provided.
+    low_ress_kernel_size : int
+        Description not yet provided.
+    generative_context : GenerativeContext | None
+        Description not yet provided.
+    **kwargs : Any
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         weights: xr.DataArray,
@@ -184,7 +319,31 @@ class WeightedCRPS(lossABC):
         generative_context: GenerativeContext | None = None,
         **kwargs,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        weights : xr.DataArray
+            Description not yet provided.
+        reduction : Reduction
+            Description not yet provided.
+        num_output_dimensions : int
+            Description not yet provided.
+        low_ress_kernel_size : int
+            Description not yet provided.
+        generative_context : GenerativeContext | None
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
+
+        Raises
+        ------
+        NotImplementedError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+        """
         super().__init__()
         self.reduction = reduction
         self.num_output_dimensions = num_output_dimensions
@@ -234,7 +393,19 @@ class WeightedCRPS(lossABC):
         self.register_buffer("weights", weights)
 
     def _downsample(self, tensor: torch.Tensor) -> torch.Tensor:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        tensor : torch.Tensor
+            Description not yet provided.
+
+        Returns
+        -------
+        torch.Tensor
+            Description not yet provided.
+        """
         squeeze = False
         if len(tensor.shape) == self.num_output_dimensions:
             tensor = tensor.unsqueeze(0)
@@ -258,7 +429,30 @@ class WeightedCRPS(lossABC):
         target_mask: torch.Tensor | None = None,
         print_loss=False,
     ) -> torch.Tensor:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : torch.Tensor
+            Description not yet provided.
+        target : torch.Tensor
+            Description not yet provided.
+        target_mask : torch.Tensor | None
+            Description not yet provided.
+        print_loss : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        torch.Tensor
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if not self.generative_context.generator:
             raise RuntimeError(
                 "generator cannot be False as a step_argument in Losspipeline.forward()"
@@ -311,14 +505,40 @@ class WeightedCRPS(lossABC):
         return loss
 
     def _print_loss(self, loss):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        loss : Any
+            Description not yet provided.
+        """
         if self.low_ress_kernel_size is not None:
             print(f"CRPS_lowress : {loss.item():.5f}")
         else:
             print(f"CRPS : {loss.item():.5f}")
 
     def _aggregate(self, loss, mask):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        loss : Any
+            Description not yet provided.
+        mask : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        NotImplementedError
+            Description not yet provided.
+        """
         weight = self.weights
         loss = loss * weight
         if mask is not None:
@@ -344,6 +564,23 @@ class WeightedCRPS(lossABC):
 
 @Losspipeline.register("frobenius_norm")
 class Frobenius_norm(lossABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    weights : xr.DataArray
+        Description not yet provided.
+    reduction : Reduction
+        Description not yet provided.
+    num_output_dimensions : int
+        Description not yet provided.
+    generative_context : GenerativeContext | None
+        Description not yet provided.
+    covariance_dim : CovarianceDim
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         weights: xr.DataArray,
@@ -352,7 +589,22 @@ class Frobenius_norm(lossABC):
         generative_context: GenerativeContext | None = None,
         covariance_dim: CovarianceDim = "spatial",
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        weights : xr.DataArray
+            Description not yet provided.
+        reduction : Reduction
+            Description not yet provided.
+        num_output_dimensions : int
+            Description not yet provided.
+        generative_context : GenerativeContext | None
+            Description not yet provided.
+        covariance_dim : CovarianceDim
+            Description not yet provided.
+        """
         super().__init__()
 
         self.covariance_dim = covariance_dim
@@ -371,7 +623,28 @@ class Frobenius_norm(lossABC):
         target: torch.Tensor,
         print_loss=False,
     ) -> torch.Tensor:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        data : torch.Tensor
+            Description not yet provided.
+        target : torch.Tensor
+            Description not yet provided.
+        print_loss : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        torch.Tensor
+            Description not yet provided.
+
+        Raises
+        ------
+        AssertionError
+            Description not yet provided.
+        """
         if self.generative_context.generator:
             _check_generator_structure(data, target)
             data = data.mean(0)
@@ -417,11 +690,32 @@ class Frobenius_norm(lossABC):
         return loss
 
     def _print_loss(self, loss):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        loss : Any
+            Description not yet provided.
+        """
         print(f"FLN : {loss.item():.5f}")
 
     def _aggregate(self, loss, output_size=None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        loss : Any
+            Description not yet provided.
+        output_size : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         if output_size is None:
             output_size = self.output_size
 
@@ -437,7 +731,26 @@ class Frobenius_norm(lossABC):
 
 
 def _check_generator_structure(data: torch.Tensor, target: torch.Tensor):
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    data : torch.Tensor
+        Description not yet provided.
+    target : torch.Tensor
+        Description not yet provided.
+
+    Returns
+    -------
+    Any
+        Description not yet provided.
+
+    Raises
+    ------
+    ValueError
+        Description not yet provided.
+    """
     bool = data.shape[1:] == (1,) * (data.dim() - target.dim() - 1) + target.shape
     if bool:
         return True

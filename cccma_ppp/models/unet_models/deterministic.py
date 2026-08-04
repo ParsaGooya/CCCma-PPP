@@ -51,6 +51,39 @@ from cccma_ppp.models.unet_models.utils import _unet_config_checks, _repeat_tens
 @deterministicModelSelector.register("unet")
 @dataclasses.dataclass
 class UNetConfig(modelConfigABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    channels : list[int]
+        Description not yet provided.
+    bottleneck_dim : int | None
+        Description not yet provided.
+    block_config : ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig
+        Description not yet provided.
+    upsampling_method : UpsamplingMethod
+        Description not yet provided.
+    skip_alignment_method : AlignmentMethod
+        Description not yet provided.
+    transpose_kernel_sizes : list[int | tuple[int, int]] | int
+        Description not yet provided.
+    process_skip : bool
+        Description not yet provided.
+    mask_pooling : MaskPoolingMethod
+        Description not yet provided.
+    mask_fraction_threshold : float
+        Description not yet provided.
+    output_activation : OutputActivation
+        Description not yet provided.
+    output_block_hidden_channels : int | None
+        Description not yet provided.
+    init_method : InitMethod
+        Description not yet provided.
+    GENERATOR : GENERATORConfig | None
+        Description not yet provided.
+    """
+
     channels: list[int]
     bottleneck_dim: int | None = None
     block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig = (
@@ -76,7 +109,9 @@ class UNetConfig(modelConfigABC):
     NUM_OUTPUT_DIMS: ClassVar[int] = 3
 
     def __post_init__(self) -> None:
-
+        """
+        Document this function.
+        """
         _unet_config_checks(self)
 
         n_up_blocks = len(self.channels) - 1
@@ -90,6 +125,23 @@ class UNetConfig(modelConfigABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int | None = None,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        input_shape : np.ndarray
+            Description not yet provided.
+        output_shape : np.ndarray | None
+            Description not yet provided.
+        added_features_dim : int | None
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return UNet(
             config=self,
             input_shape=input_shape,
@@ -99,6 +151,21 @@ class UNetConfig(modelConfigABC):
 
 
 class UNet(deterministicmodelsABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    config : UNetConfig
+        Description not yet provided.
+    input_shape : np.ndarray | tuple
+        Description not yet provided.
+    output_shape : np.ndarray | tuple | None
+        Description not yet provided.
+    added_features_dim : int | None
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         config: UNetConfig,
@@ -106,6 +173,27 @@ class UNet(deterministicmodelsABC):
         output_shape: np.ndarray | tuple | None = None,
         added_features_dim: int | None = None,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        config : UNetConfig
+            Description not yet provided.
+        input_shape : np.ndarray | tuple
+            Description not yet provided.
+        output_shape : np.ndarray | tuple | None
+            Description not yet provided.
+        added_features_dim : int | None
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+        """
         super().__init__()
 
         self.config = config
@@ -250,7 +338,23 @@ class UNet(deterministicmodelsABC):
         x_mask: torch.Tensor | None,
         added_features: torch.Tensor | None,
     ) -> TensorMask:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        x : torch.Tensor
+            Description not yet provided.
+        x_mask : torch.Tensor | None
+            Description not yet provided.
+        added_features : torch.Tensor | None
+            Description not yet provided.
+
+        Returns
+        -------
+        TensorMask
+            Description not yet provided.
+        """
         x_mask = _broadcast_mask(x_mask, x)
 
         if added_features is not None:
@@ -269,7 +373,19 @@ class UNet(deterministicmodelsABC):
         return TensorMask(tensor=x, mask=x_mask)
 
     def forward(self, request: DeterministicRequest) -> deterministicOutput:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        request : DeterministicRequest
+            Description not yet provided.
+
+        Returns
+        -------
+        deterministicOutput
+            Description not yet provided.
+        """
         x = request.input
         x_mask = request.input_mask
         added_features = request.added_features

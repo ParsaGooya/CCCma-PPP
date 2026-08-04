@@ -17,12 +17,32 @@ spatialmethod = Literal["uniform", "cosine_lat"]
 
 @dataclasses.dataclass
 class WeightsConfig:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    spatial_method : spatialmethod
+        Description not yet provided.
+    variable_weights : dict[str, float] | None
+        Description not yet provided.
+    load_dir : Path | str | None
+        Description not yet provided.
+    """
+
     spatial_method: spatialmethod = "uniform"
     variable_weights: dict[str, float] | None = None
     load_dir: Path | str | None = None
 
     def __post_init__(self):
+        """
+        Document this function.
 
+        Raises
+        ------
+        FileNotFoundError
+            Description not yet provided.
+        """
         if self.load_dir is not None:
             if not Path(self.load_dir).exists():
                 raise FileNotFoundError(f"weights file not found at {self.load_dir}")
@@ -35,7 +55,32 @@ class WeightsConfig:
         save_path: Path | str | None = None,
         save_name: str | None = None,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        target_coords : dict
+            Description not yet provided.
+        Flattennanremover : Flattennanremove | None
+            Description not yet provided.
+        save : Any
+            Description not yet provided.
+        save_path : Path | str | None
+            Description not yet provided.
+        save_name : str | None
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if self.load_dir is not None:
             weights = xr.open_dataset(Path(self.load_dir))
             if isinstance(weights, xr.Dataset):
@@ -96,7 +141,19 @@ class WeightsConfig:
 
 
 def _unwrap_data_variables(dataset: xr.Dataset) -> xr.DataArray:
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    dataset : xr.Dataset
+        Description not yet provided.
+
+    Returns
+    -------
+    xr.DataArray
+        Description not yet provided.
+    """
     return xr.concat(
         [
             dataset[v].squeeze().expand_dims("channels", axis=0)
@@ -117,7 +174,35 @@ def _load_xarray_data(
     chunks: dict | None = None,
     load: bool = False,
 ):
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    paths : list[str]
+        Description not yet provided.
+    selection : dict | None
+        Description not yet provided.
+    names : list | None
+        Description not yet provided.
+    ensemble_mean : bool
+        Description not yet provided.
+    preprocessor : PreprocessingPipeline | None
+        Description not yet provided.
+    concat_dim : str
+        Description not yet provided.
+    rename_dict : dict | None
+        Description not yet provided.
+    chunks : dict | None
+        Description not yet provided.
+    load : bool
+        Description not yet provided.
+
+    Returns
+    -------
+    Any
+        Description not yet provided.
+    """
     ds = xr.open_mfdataset(
         paths, combine="nested", concat_dim=concat_dim, chunks=chunks
     )
@@ -149,7 +234,23 @@ def _create_train_mask(
     lead_times: list | xr.DataArray | np.ndarray | int,
     exclude_idx=0,
 ):
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    time : list | xr.DataArray
+        Description not yet provided.
+    lead_times : list | xr.DataArray | np.ndarray | int
+        Description not yet provided.
+    exclude_idx : Any
+        Description not yet provided.
+
+    Returns
+    -------
+    Any
+        Description not yet provided.
+    """
     if not isinstance(lead_times, int):
         lead_times = max(lead_times)
 
@@ -174,6 +275,14 @@ def _create_train_mask(
 
 @contextlib.contextmanager
 def suppress_stderr() -> Iterator[None]:
+    """
+    Document this function.
+
+    Yields
+    ------
+    None
+        Description not yet provided.
+    """
     stderr_fd = 2
     saved_stderr_fd = os.dup(stderr_fd)
 

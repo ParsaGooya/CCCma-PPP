@@ -28,6 +28,23 @@ from cccma_ppp.configs import supported_NN_dimensions_sorted, required_sample_di
 
 @dataclasses.dataclass
 class TrainDatasetConfig(DatasetConfigABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    model : ModelDataConfig
+        Description not yet provided.
+    observation : ObsDataConfig | None
+        Description not yet provided.
+    condition : ConditionDataConfig | None
+        Description not yet provided.
+    condition_method : str
+        Description not yet provided.
+    lead_months : lead_months_config | None
+        Description not yet provided.
+    """
+
     model: ModelDataConfig
     observation: ObsDataConfig | None = None
     condition: ConditionDataConfig | None = None
@@ -35,11 +52,32 @@ class TrainDatasetConfig(DatasetConfigABC):
     lead_months: lead_months_config | None = None
 
     def __post_init__(self):
+        """
+        Document this function.
+        """
         super().__init__()
 
         self._check_observation()
 
     def _check_observation(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+
+        Warns
+        -----
+        UserWarning
+            Description not yet provided.
+        """
         if self.observation is not None:
             for dim in [
                 dim
@@ -73,16 +111,38 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     @property
     def effective_input(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return self.model
 
     @property
     def ds_operator(self):
+        """
+        Document this function.
 
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return DatasetOperator(self)
 
     @property
     def get_common_time(self):
+        """
+        Document this function.
 
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         if self.observation is None:
             return self.model.year_range
 
@@ -91,7 +151,14 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     @property
     def available_times(self):
+        """
+        Document this function.
 
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return np.intersect1d(
             self.model.info.coords["year"].values, self.get_common_time
         )
@@ -103,6 +170,20 @@ class TrainDatasetConfig(DatasetConfigABC):
         save_path=None,
         save_name=None,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        train_years : Any
+            Description not yet provided.
+        save : Any
+            Description not yet provided.
+        save_path : Any
+            Description not yet provided.
+        save_name : Any
+            Description not yet provided.
+        """
         self.ds_operator.fit_preprocessors(
             train_years=train_years,
             save=save,
@@ -111,10 +192,27 @@ class TrainDatasetConfig(DatasetConfigABC):
         )
 
     def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        load_dir : Path | str | None
+            Description not yet provided.
+        """
         self.ds_operator.load_fitted_preprocessors(load_dir)
 
     def add_fitted_preprocessor(self, preprocessor, index=0):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        preprocessor : Any
+            Description not yet provided.
+        index : Any
+            Description not yet provided.
+        """
         self.ds_operator.add_fitted_preprocessor(preprocessor, index)
 
     def build_dataset(
@@ -125,6 +223,27 @@ class TrainDatasetConfig(DatasetConfigABC):
         return_metadata: bool = False,
         load: bool = False,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        years : np.ndarray
+            Description not yet provided.
+        time_features : AddedTimeFeatures
+            Description not yet provided.
+        mask : xr.DataArray | None
+            Description not yet provided.
+        return_metadata : bool
+            Description not yet provided.
+        load : bool
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return TrainDataset(
             config=self,
             requested_years=years,
@@ -137,6 +256,25 @@ class TrainDatasetConfig(DatasetConfigABC):
 
 @dataclasses.dataclass
 class TrainDataset(DatasetABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    config : TrainDatasetConfig
+        Description not yet provided.
+    requested_years : list[int] | tuple[int, ...] | np.ndarray
+        Description not yet provided.
+    time_features : AddedTimeFeatures
+        Description not yet provided.
+    mask : xr.DataArray | None
+        Description not yet provided.
+    return_metadata : bool
+        Description not yet provided.
+    load : bool
+        Description not yet provided.
+    """
+
     config: TrainDatasetConfig
     requested_years: list[int] | tuple[int, ...] | np.ndarray
     time_features: AddedTimeFeatures
@@ -145,6 +283,9 @@ class TrainDataset(DatasetABC):
     load: bool = False
 
     def __post_init__(self):
+        """
+        Document this function.
+        """
         super().__init__()
 
         if self.config.observation is not None:
@@ -156,10 +297,26 @@ class TrainDataset(DatasetABC):
 
     @property
     def _autoencoding_model_data(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return self.config.observation is None
 
     @property
     def _load_model(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return any(
             [
                 self._autoencoding_model_data,
@@ -169,6 +326,14 @@ class TrainDataset(DatasetABC):
 
     @property
     def _write_condition_to_input(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         if self.config._using_model_data_as_condition:
             return True
         else:
@@ -179,7 +344,14 @@ class TrainDataset(DatasetABC):
 
     @property
     def _concat_condition_to_input(self):
+        """
+        Document this function.
 
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return (
             self._write_condition_to_input is False
             and self.config.effective_condition is not None
@@ -189,6 +361,24 @@ class TrainDataset(DatasetABC):
         self,
         sample_coords: dict[str, np.ndarray],
     ) -> dict[str, np.ndarray] | None:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        sample_coords : dict[str, np.ndarray]
+            Description not yet provided.
+
+        Returns
+        -------
+        dict[str, np.ndarray] | None
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if self.observation_dataset is None:
             return None
 
@@ -223,7 +413,14 @@ class TrainDataset(DatasetABC):
         return indexes
 
     def get_target_shape(self):
+        """
+        Document this function.
 
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 
         if self.observation_dataset is not None:
@@ -254,7 +451,19 @@ class TrainDataset(DatasetABC):
             return self.get_input_shape()
 
     def _index_observation_dataset(self, ind: int) -> xr.DataArray | None:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        ind : int
+            Description not yet provided.
+
+        Returns
+        -------
+        xr.DataArray | None
+            Description not yet provided.
+        """
         if self.observation_dataset is None:
             return None
 
@@ -273,6 +482,19 @@ class TrainDataset(DatasetABC):
         return _unwrap_data_variables(obs)
 
     def __getitem__(self, ind):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        ind : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         selection = {dim: value[ind] for dim, value in self.sample_coords.items()}
 
         condition = self._index_condition_dataset(ind)

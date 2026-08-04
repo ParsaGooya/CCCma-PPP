@@ -18,6 +18,25 @@ from cccma_ppp.generic.runtime import RuntimeContext
 
 @dataclasses.dataclass
 class BatchData(BatchDataABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    input : torch.Tensor
+        Description not yet provided.
+    added_features : torch.Tensor
+        Description not yet provided.
+    metadata : list[dict] | None
+        Description not yet provided.
+    return_spatial_mask : bool
+        Description not yet provided.
+    reduce_spatial_mask : bool
+        Description not yet provided.
+    input_mask : torch.Tensor | None
+        Description not yet provided.
+    """
+
     input: torch.Tensor
     added_features: torch.Tensor = None
     metadata: list[dict] | None = None
@@ -29,7 +48,9 @@ class BatchData(BatchDataABC):
     )
 
     def __post_init__(self):
-
+        """
+        Document this function.
+        """
         if self.return_spatial_mask:
             if self.reduce_spatial_mask:
                 if type(self)._shared_input_mask is None:
@@ -45,7 +66,19 @@ class BatchData(BatchDataABC):
         self.input.nan_to_num_(nan=0.0)
 
     def to_device(self, device: torch.device | str) -> "BatchData":
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        device : torch.device | str
+            Description not yet provided.
+
+        Returns
+        -------
+        'BatchData'
+            Description not yet provided.
+        """
         self.input = self.input.to(device)
 
         if self.input_mask is not None:
@@ -59,6 +92,33 @@ class BatchData(BatchDataABC):
 
 @dataclasses.dataclass
 class InferenceDataloaderConfig(DataloaderConfigABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    dataset_config : InferenceDatasetConfig | None
+        Description not yet provided.
+    batch_size : int
+        Description not yet provided.
+    inference_years : tuple | list
+        Description not yet provided.
+    num_data_workers : int
+        Description not yet provided.
+    prefetch_factor : int | None
+        Description not yet provided.
+    drop_last : bool
+        Description not yet provided.
+    load : bool
+        Description not yet provided.
+    return_spatial_mask : bool
+        Description not yet provided.
+    reduce_spatial_mask : bool
+        Description not yet provided.
+    time_features : AddedTimeFeatures | None
+        Description not yet provided.
+    """
+
     dataset_config: InferenceDatasetConfig | None = None
     batch_size: int = 1
     inference_years: tuple | list = None
@@ -75,7 +135,9 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     )
 
     def __post_init__(self):
-
+        """
+        Document this function.
+        """
         super().__init__()
         self.train_dataset_config = None
 
@@ -83,6 +145,14 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
             _ = self._inference_years
 
     def _check_config(self):
+        """
+        Document this function.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if self.dataset_config is None:
             raise RuntimeError(
                 "dataset_config must be provided or read from train configs "
@@ -96,6 +166,14 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
             )
 
     def read_configs_from_train(self, train_dataloader_config: TrainDataloaderConfig):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        train_dataloader_config : TrainDataloaderConfig
+            Description not yet provided.
+        """
         if self.time_features is None:
             self.time_features = copy.deepcopy(train_dataloader_config.time_features)
 
@@ -107,6 +185,19 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
     @property
     def _inference_years(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if self.inference_years is None:
             return self.available_times
         else:
@@ -124,10 +215,31 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
     @property
     def available_times(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         self._check_config()
         return self.dataset_config.available_times
 
     def _input_preprocessor_exists(self, load_dir: Path | str = None):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        load_dir : Path | str
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         self._check_config()
         preprocessor_to_check = []
         exists = []
@@ -162,7 +274,18 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         distributed: Distributed,
         load_path: Path | str | None = None,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        train_loader_config : TrainDataloaderConfig
+            Description not yet provided.
+        distributed : Distributed
+            Description not yet provided.
+        load_path : Path | str | None
+            Description not yet provided.
+        """
         self._check_config()
         self.rank = distributed.rank
         self.world_size = distributed.world_size
@@ -185,6 +308,19 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         self._setup = True
 
     def build_inference_loader(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if not self._setup:
             raise RuntimeError(
                 "Dataloader has to be setup for distributed training first by calling .setup_distributed()"
@@ -208,11 +344,32 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
     @property
     def input_var_metadata(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         self._check_config()
         return self.dataset_config.ds_operator.get_input_var_metadata()
 
     @property
     def target_var_metadata(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if self.train_dataset_config is None:
             raise RuntimeError(
                 "output variables metadata cannot be read unless train dataloader "
@@ -226,6 +383,23 @@ def collate_batch(
     return_spatial_mask: bool = False,
     reduce_spatial_mask: bool = False,
 ):
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    batch : Any
+        Description not yet provided.
+    return_spatial_mask : bool
+        Description not yet provided.
+    reduce_spatial_mask : bool
+        Description not yet provided.
+
+    Returns
+    -------
+    Any
+        Description not yet provided.
+    """
     metadata = None
 
     if isinstance(batch[0], tuple):

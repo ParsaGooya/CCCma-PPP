@@ -1398,14 +1398,12 @@ def process_file(
             backup_path = path.with_suffix(path.suffix + ".bak")
 
             if backup_path.exists():
-                raise FileExistsError(
-                    f"Refusing to overwrite existing backup: {backup_path}"
+                print(f"USING EXISTING BACKUP: {backup_path}")
+            else:
+                shutil.copy2(
+                    path,
+                    backup_path,
                 )
-
-            shutil.copy2(
-                path,
-                backup_path,
-            )
 
         atomic_write(
             path,
