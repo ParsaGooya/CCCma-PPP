@@ -1,4 +1,4 @@
-experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_3
+experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_4
 max_epochs: 100
 train_loader:
     dataset_config:
@@ -46,7 +46,7 @@ train_loader:
     load: True
 
 module:
-    type :  deterministic
+    type :  cvae #deterministic
     config:
             # ModelConfig :
             #         type : MLP
@@ -70,11 +70,11 @@ module:
                                 name: convnext
                                 num_blocks: 2
                         output_block_hidden_channels: 32
-                        # latent_size: 1000
-                        # deterministic_guess_config:
-                        #     load_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_4/checkpoints/best.pt
-                        #     freeze_weights: True
-                        #     share_output_block: True    
+                        latent_size: 500
+                        deterministic_guess_config:
+                            load_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_3/checkpoints/best.pt
+                            freeze_weights: True
+                            share_output_block: True    
                         # GENERATOR: 
                         #         noise_level:  full
                         #         num_training_noise_samples: 10
@@ -88,9 +88,9 @@ losspipeline:
       reduction : mean
 
 trainer :
-    # beta_finder :
-    #           beta : 10
-    #           num_epoch_to_warmup : 10
+    beta_finder :
+              beta : 10
+              num_epoch_to_warmup : 10
 #     gradient_accumulation_steps: 2
     earlystoppingbuffer : 10
 
