@@ -488,14 +488,14 @@ class RunningCovariance:
         """
         x shape: [N, D]
         """
-        x = x.detach().float()
+        x = x.detach().double()
 
         batch_sum = x.sum(dim=0)
         batch_xxT = x.T @ x
         batch_count = torch.tensor(
             x.shape[0],
             device=x.device,
-            dtype=torch.float32,
+            dtype=torch.float64,
         )
 
         if self.sum_x is None:
@@ -513,12 +513,24 @@ class RunningCovariance:
         self.distributed.all_reduce_sum(self.sum_xxT)
         self.distributed.all_reduce_sum(self.count)
 
-    def finalize(self):
+    def finalize(self, print_checks = False):
         mean = self.sum_x / self.count
 
         if self.count <= 1:
             raise ValueError("Need at least two samples to compute covariance.")
 
         cov = (self.sum_xxT - self.count * torch.outer(mean, mean)) / (self.count - 1)
+
+        cov = 0.5 * (cov + cov.T)
+
+        if print_checks:
+            eigvals = torch.linalg.eigvalsh(cov.double())
+
+            print("symmetry error:", (cov - cov.T).abs().max())
+            print("minimum eigenvalue:", eigvals.min())
+            print("count:", self.count)
+            print("dimension:", cov.shape[-1])
+            print("N:", int(self.count.item()))
+            print("D:", cov.shape[-1])
 
         return mean.cpu(), cov.cpu()
