@@ -98,6 +98,7 @@ class PredictorABC(abc.ABC):
         def _sampler(sample_size: int | tuple[int, ...]):
             return self._sample(
                 torch.zeros_like(stats["residual_mean"]),
+                # stats["residual_mean"],
                 stats["residual_cov"],
                 sample_size,
             )
@@ -130,6 +131,7 @@ class PredictorABC(abc.ABC):
                     loc=mu,
                     covariance_matrix=cov + jitter * eye,
                 )
+                
             except ValueError:
                 jitter *= 10
 
