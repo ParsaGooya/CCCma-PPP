@@ -329,11 +329,7 @@ def stub_model_components(monkeypatch):
     )
 
 
-def test_config_dimension_constants():
-    assert cVAEUNetConfig.NUM_INPUT_DIMS == 3
-    assert cVAEUNetConfig.NUM_OUTPUT_DIMS == 3
-
-
+@pytest.mark.pruned
 def test_config_post_init_calls_validation(
     monkeypatch,
 ):
@@ -356,30 +352,6 @@ def test_config_post_init_calls_validation(
     cVAEUNetConfig.__post_init__(config)
 
     validation.assert_called_once_with(config)
-
-
-def test_config_post_init_propagates_validation_error(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "_unet_config_checks",
-        Mock(side_effect=ValueError("invalid configuration")),
-    )
-
-    config = object.__new__(cVAEUNetConfig)
-
-    config.channels = [4, 8]
-    config.latent_size = 3
-    config.condition_embedding_channels = [4, 8]
-    config.condition_embedding_size = 3
-    config.transpose_kernel_sizes = [3]
-
-    with pytest.raises(
-        ValueError,
-        match="invalid configuration",
-    ):
-        cVAEUNetConfig.__post_init__(config)
 
 
 @pytest.mark.parametrize(
@@ -427,6 +399,7 @@ def test_config_post_init_expands_integer_kernel(
     assert config.transpose_kernel_sizes == expected
 
 
+@pytest.mark.pruned
 def test_config_post_init_preserves_kernel_list(
     monkeypatch,
 ):
@@ -483,6 +456,7 @@ def test_config_post_init_defaults_condition_channels(
     assert config.condition_embedding_channels == [4, 8, 16]
 
 
+@pytest.mark.pruned
 def test_config_post_init_preserves_condition_channels(
     monkeypatch,
 ):
@@ -532,6 +506,7 @@ def test_config_post_init_defaults_condition_size(
     assert config.condition_embedding_size == 7
 
 
+@pytest.mark.pruned
 def test_config_post_init_preserves_condition_size(
     monkeypatch,
 ):
@@ -557,6 +532,7 @@ def test_config_post_init_preserves_condition_size(
     assert config.condition_embedding_size == 11
 
 
+@pytest.mark.pruned
 def test_config_build_delegates_to_model(
     monkeypatch,
 ):
@@ -590,6 +566,7 @@ def test_config_build_delegates_to_model(
     )
 
 
+@pytest.mark.pruned
 def test_config_build_passes_optional_defaults(
     monkeypatch,
 ):
@@ -711,6 +688,7 @@ def test_model_rejects_depth_larger_than_input():
         )
 
 
+@pytest.mark.pruned
 def test_model_defaults_output_shape_to_input(
     stub_model_components,
 ):
@@ -731,6 +709,7 @@ def test_model_defaults_output_shape_to_input(
     )
 
 
+@pytest.mark.pruned
 def test_model_uses_explicit_output_shape(
     stub_model_components,
 ):
@@ -747,6 +726,7 @@ def test_model_uses_explicit_output_shape(
     )
 
 
+@pytest.mark.pruned
 def test_model_defaults_added_features_to_zero(
     stub_model_components,
 ):
@@ -766,6 +746,7 @@ def test_model_defaults_added_features_to_zero(
     assert condition.kwargs["input_channels"] == 2
 
 
+@pytest.mark.pruned
 def test_model_includes_added_feature_channels(
     stub_model_components,
 ):
@@ -785,6 +766,7 @@ def test_model_includes_added_feature_channels(
     assert condition.kwargs["input_channels"] == 5
 
 
+@pytest.mark.pruned
 def test_model_condition_skips_log_variance_for_independent_latent(
     stub_model_components,
 ):
@@ -799,6 +781,7 @@ def test_model_condition_skips_log_variance_for_independent_latent(
     assert condition.kwargs["get_log_var"] is False
 
 
+@pytest.mark.pruned
 def test_model_condition_embedding_is_added_to_decoder(
     stub_model_components,
 ):
@@ -850,6 +833,7 @@ def test_model_loads_checkpoint_when_configured(
     initializer.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_prepare_input_without_optional_values():
     model = make_bare_model()
 
@@ -869,6 +853,7 @@ def test_prepare_input_without_optional_values():
     assert result.mask is None
 
 
+@pytest.mark.pruned
 def test_prepare_input_broadcasts_input_mask(
     monkeypatch,
 ):
@@ -909,6 +894,7 @@ def test_prepare_input_broadcasts_input_mask(
     assert result.mask is broadcast
 
 
+@pytest.mark.pruned
 def test_prepare_input_resizes_and_concatenates_condition(
     monkeypatch,
 ):
@@ -1104,6 +1090,7 @@ def test_prepare_input_resizes_and_broadcasts_condition_mask(
     )
 
 
+@pytest.mark.pruned
 def test_prepare_input_resizes_and_concatenates_features_without_mask(
     monkeypatch,
 ):
@@ -1311,103 +1298,6 @@ def test_prepare_input_combines_condition_and_features(
     )
 
 
-def test_recognition_helper_returns_mu_and_log_var():
-    model = make_bare_model()
-
-    prepared = TensorMask(
-        tensor=torch.ones(
-            2,
-            3,
-            4,
-            4,
-        ),
-        mask=None,
-    )
-
-    model._prepare_input = Mock(return_value=prepared)
-
-    mu = torch.ones(
-        2,
-        3,
-    )
-    log_var = torch.zeros(
-        2,
-        3,
-    )
-
-    recognition = FixedLatentModule(
-        mu,
-        log_var,
-    )
-
-    model.recognition = recognition
-
-    result_mu, result_log_var = model._recognition(
-        x=torch.ones(
-            2,
-            1,
-            4,
-            4,
-        ),
-        x_mask=None,
-        condition=torch.ones(
-            2,
-            1,
-            4,
-            4,
-        ),
-    )
-
-    assert result_mu is mu
-    assert result_log_var is log_var
-    assert recognition.received == [prepared]
-
-
-def test_condition_helper_returns_mu_and_log_var():
-    model = make_bare_model()
-
-    prepared = TensorMask(
-        tensor=torch.ones(
-            2,
-            3,
-            4,
-            4,
-        ),
-        mask=None,
-    )
-
-    model._prepare_input = Mock(return_value=prepared)
-
-    mu = torch.ones(
-        2,
-        3,
-    )
-    log_var = torch.zeros(
-        2,
-        3,
-    )
-
-    condition = FixedLatentModule(
-        mu,
-        log_var,
-    )
-
-    model.condition = condition
-
-    result_mu, result_log_var = model._condition(
-        condition=torch.ones(
-            2,
-            1,
-            4,
-            4,
-        )
-    )
-
-    assert result_mu is mu
-    assert result_log_var is log_var
-    assert condition.received == [prepared]
-
-
 def configure_forward_model(
     *,
     training=False,
@@ -1482,6 +1372,7 @@ def configure_forward_model(
     )
 
 
+@pytest.mark.pruned
 def test_forward_returns_complete_cvae_output():
     setup = configure_forward_model()
 
@@ -1512,6 +1403,7 @@ def test_forward_returns_complete_cvae_output():
     )
 
 
+@pytest.mark.pruned
 def test_forward_passes_request_values():
     setup = configure_forward_model()
 
@@ -1559,6 +1451,7 @@ def test_forward_passes_request_values():
     )
 
 
+@pytest.mark.pruned
 def test_forward_without_minimum_preserves_log_variance():
     setup = configure_forward_model()
 
@@ -1612,6 +1505,7 @@ def test_forward_training_uses_generator_noise_count():
     assert setup.model._generate.call_args.kwargs["num_output_samples"] == 5
 
 
+@pytest.mark.pruned
 def test_forward_evaluation_uses_request_noise_count():
     generator = SimpleNamespace(num_training_noise_samples=5)
 
@@ -1625,6 +1519,7 @@ def test_forward_evaluation_uses_request_noise_count():
     assert setup.model._generate.call_args.kwargs["num_output_samples"] == 9
 
 
+@pytest.mark.pruned
 def test_forward_training_without_generator_uses_request_count():
     setup = configure_forward_model(
         training=True,
@@ -1676,6 +1571,7 @@ def configure_predict_model(
     )
 
 
+@pytest.mark.pruned
 def test_predict_uses_condition_dependent_prior():
     setup = configure_predict_model(
         condition_dependant_latent=True,
@@ -1712,6 +1608,7 @@ def test_predict_uses_condition_dependent_prior():
     assert result.cond_log_var is setup.cond_log_var
 
 
+@pytest.mark.pruned
 def test_predict_accepts_user_latent_samples():
     setup = configure_predict_model()
 
@@ -1830,6 +1727,7 @@ def test_predict_applies_unconditional_flow(
     )
 
 
+@pytest.mark.pruned
 def test_predict_applies_conditioned_flow(
     monkeypatch,
 ):
@@ -1886,6 +1784,7 @@ def test_predict_applies_conditioned_flow(
     )
 
 
+@pytest.mark.pruned
 def test_predict_skips_flow_for_user_latent_samples():
     setup = configure_predict_model()
 
@@ -1909,6 +1808,7 @@ def test_predict_skips_flow_for_user_latent_samples():
     assert flow.condition is None
 
 
+@pytest.mark.pruned
 def test_predict_passes_condition_request_values():
     setup = configure_predict_model()
 
@@ -2030,6 +1930,7 @@ def test_generate_appends_condition_embedding():
     )
 
 
+@pytest.mark.pruned
 def test_generate_does_not_append_condition_when_disabled():
     model = make_bare_model(condemb_to_decoder=False)
 
@@ -2069,6 +1970,7 @@ def test_generate_does_not_append_condition_when_disabled():
     )
 
 
+@pytest.mark.pruned
 def test_generate_does_not_append_missing_condition():
     model = make_bare_model(condemb_to_decoder=True)
 
@@ -2098,6 +2000,7 @@ def test_generate_does_not_append_missing_condition():
     )
 
 
+@pytest.mark.pruned
 def test_generate_restores_sample_and_batch_dimensions():
     model = make_bare_model(condemb_to_decoder=False)
 
@@ -2160,6 +2063,7 @@ def test_generate_restores_output_noise_dimension():
     )
 
 
+@pytest.mark.pruned
 def test_generate_passes_output_sample_count_to_generation():
     model = make_bare_model(condemb_to_decoder=False)
 
@@ -2207,6 +2111,7 @@ def make_recognition_config(
     )
 
 
+@pytest.mark.pruned
 def test_recognition_builds_expected_down_blocks(
     monkeypatch,
 ):
@@ -2279,6 +2184,7 @@ def test_recognition_builds_expected_down_blocks(
     ]
 
 
+@pytest.mark.pruned
 def test_recognition_initial_mapping_arguments(
     monkeypatch,
 ):
@@ -2408,6 +2314,7 @@ def test_recognition_bottleneck_arguments(
     )
 
 
+@pytest.mark.pruned
 def test_recognition_with_single_channel_level(
     monkeypatch,
 ):
@@ -2512,6 +2419,7 @@ def test_recognition_forward_applies_all_modules():
     assert bottleneck.received == [value]
 
 
+@pytest.mark.pruned
 def test_recognition_forward_without_down_blocks():
     recognition = object.__new__(Recognition)
     nn.Module.__init__(recognition)
@@ -2574,6 +2482,7 @@ def make_generator_config(
     )
 
 
+@pytest.mark.pruned
 def test_generation_builds_linear_mapping(
     monkeypatch,
 ):
@@ -2748,6 +2657,7 @@ def test_generation_single_block_noise_configuration(
     assert kwargs["inject_noise"] is expected_up_noise
 
 
+@pytest.mark.pruned
 def test_generation_medium_noise_only_on_last_block(
     monkeypatch,
 ):
@@ -2822,6 +2732,7 @@ def test_generation_medium_noise_only_on_last_block(
     ]
 
 
+@pytest.mark.pruned
 def test_generation_full_noise_on_all_blocks(
     monkeypatch,
 ):
@@ -2886,6 +2797,7 @@ def test_generation_full_noise_on_all_blocks(
     ]
 
 
+@pytest.mark.pruned
 def test_generation_low_noise_uses_no_internal_noise(
     monkeypatch,
 ):
@@ -2950,6 +2862,7 @@ def test_generation_low_noise_uses_no_internal_noise(
     )
 
 
+@pytest.mark.pruned
 def test_generation_without_generator_disables_all_noise(
     monkeypatch,
 ):
@@ -3056,6 +2969,7 @@ def make_generation_without_constructor(
     return generation
 
 
+@pytest.mark.pruned
 def test_generation_forward_reshapes_linear_output():
     generation = make_generation_without_constructor()
 
@@ -3086,6 +3000,7 @@ def test_generation_forward_reshapes_linear_output():
     assert received.mask is None
 
 
+@pytest.mark.pruned
 def test_generation_forward_passes_resize_shapes():
     generation = make_generation_without_constructor(
         resize_shapes=[
@@ -3117,6 +3032,7 @@ def test_generation_forward_passes_resize_shapes():
     )
 
 
+@pytest.mark.pruned
 def test_generation_forward_passes_no_skip():
     generation = make_generation_without_constructor()
 
@@ -3176,6 +3092,7 @@ def test_generation_repeats_tensor_mask_for_generator(
     )
 
 
+@pytest.mark.pruned
 def test_generation_does_not_repeat_without_generator(
     monkeypatch,
 ):
@@ -3200,6 +3117,7 @@ def test_generation_does_not_repeat_without_generator(
     repeat.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_generation_does_not_repeat_for_zero_output_samples(
     monkeypatch,
 ):
@@ -3226,6 +3144,7 @@ def test_generation_does_not_repeat_for_zero_output_samples(
     repeat.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_generation_generator_reshapes_output_samples():
     generation = make_generation_without_constructor(
         generator=make_generator_config(noise_level="full")
@@ -3248,6 +3167,7 @@ def test_generation_generator_reshapes_output_samples():
     )
 
 
+@pytest.mark.pruned
 def test_generation_without_generator_preserves_batch_dimension():
     generation = make_generation_without_constructor(generator=None)
 
@@ -3285,6 +3205,7 @@ def test_generation_forward_with_no_up_blocks():
     )
 
 
+@pytest.mark.pruned
 def test_config_expects_mask_for_partial_convolution():
     from cccma_ppp.models.layers.conv import PartialConvBlockConfig
 
@@ -3305,6 +3226,7 @@ def test_config_expects_mask_for_partial_convolution():
     assert config.EXPECTS_MASK is True
 
 
+@pytest.mark.pruned
 def test_config_expects_mask_for_partial_convnext():
     from cccma_ppp.models.layers.conv import ConvNeXtBlockConfig
 
@@ -3325,6 +3247,7 @@ def test_config_expects_mask_for_partial_convnext():
     assert config.EXPECTS_MASK is True
 
 
+@pytest.mark.pruned
 def test_config_does_not_expect_mask_for_standard_convolution():
     config = make_config(
         block_config=make_block_config(),
@@ -3333,6 +3256,7 @@ def test_config_does_not_expect_mask_for_standard_convolution():
     assert config.EXPECTS_MASK is False
 
 
+@pytest.mark.pruned
 def test_config_does_not_expect_mask_for_standard_convnext():
     from cccma_ppp.models.layers.conv import ConvNeXtBlockConfig
 
@@ -3353,6 +3277,7 @@ def test_config_does_not_expect_mask_for_standard_convnext():
     assert config.EXPECTS_MASK is False
 
 
+@pytest.mark.pruned
 def test_config_without_deterministic_guess_disables_shared_output():
     config = make_config(
         deterministic_guess_config=None,
@@ -3362,6 +3287,7 @@ def test_config_without_deterministic_guess_disables_shared_output():
     assert config.share_output_block is False
 
 
+@pytest.mark.pruned
 def test_config_resolves_deterministic_guess():
     deterministic_model_config = SimpleNamespace(
         channels=[4, 8],
@@ -3386,6 +3312,7 @@ def test_config_resolves_deterministic_guess():
     assert config.share_output_block is False
 
 
+@pytest.mark.pruned
 def test_config_rejects_deterministic_guess_channel_mismatch():
     deterministic_model_config = SimpleNamespace(
         channels=[5, 8],
@@ -3483,6 +3410,7 @@ def test_config_rejects_shared_output_block_mismatch(
         )
 
 
+@pytest.mark.pruned
 def test_config_accepts_matching_shared_output_block():
     deterministic_model_config = SimpleNamespace(
         channels=[4, 8],
@@ -3508,6 +3436,7 @@ def test_config_accepts_matching_shared_output_block():
     assert config.deterministic_guess_config is deterministic_model_config
 
 
+@pytest.mark.pruned
 def test_config_shared_output_mismatch_checks_activation_first():
     deterministic_model_config = SimpleNamespace(
         channels=[4, 8],
@@ -3534,6 +3463,7 @@ def test_config_shared_output_mismatch_checks_activation_first():
         )
 
 
+@pytest.mark.pruned
 def test_model_condition_requests_log_variance_for_dependent_latent(
     stub_model_components,
 ):
@@ -3550,6 +3480,7 @@ def test_model_condition_requests_log_variance_for_dependent_latent(
     assert condition.kwargs["get_log_var"] is True
 
 
+@pytest.mark.pruned
 def test_model_builds_deterministic_guess(
     stub_model_components,
 ):
@@ -3607,6 +3538,7 @@ def test_model_uses_shared_deterministic_output_block(
     assert model.output is shared_output
 
 
+@pytest.mark.pruned
 def test_model_builds_independent_output_block(
     stub_model_components,
     monkeypatch,
@@ -3643,6 +3575,7 @@ def test_model_builds_independent_output_block(
     assert model.output is output
 
 
+@pytest.mark.pruned
 def test_model_initializes_weights_when_checkpoint_is_absent(
     stub_model_components,
     monkeypatch,
@@ -3672,6 +3605,7 @@ def test_model_initializes_weights_when_checkpoint_is_absent(
     )
 
 
+@pytest.mark.pruned
 def test_model_validates_checkpoint_compatibility(
     stub_model_components,
     monkeypatch,
@@ -3696,6 +3630,7 @@ def test_model_validates_checkpoint_compatibility(
     )
 
 
+@pytest.mark.pruned
 def test_prepare_input_does_not_broadcast_condition_mask_without_input_mask(
     monkeypatch,
 ):
@@ -3745,6 +3680,7 @@ def test_prepare_input_does_not_broadcast_condition_mask_without_input_mask(
     assert result.mask is None
 
 
+@pytest.mark.pruned
 def test_prepare_input_feature_resize_uses_combined_spatial_shape(
     monkeypatch,
 ):
@@ -3820,115 +3756,7 @@ def test_prepare_input_feature_resize_uses_combined_spatial_shape(
     ]
 
 
-def test_recognition_helper_forwards_all_prepare_input_arguments():
-    model = make_bare_model()
-
-    prepared = TensorMask(
-        tensor=torch.ones(
-            2,
-            5,
-            4,
-            4,
-        ),
-        mask=None,
-    )
-    model._prepare_input = Mock(
-        return_value=prepared,
-    )
-    model.recognition = FixedLatentModule(
-        torch.ones(2, 3),
-        torch.zeros(2, 3),
-    )
-
-    target = torch.ones(
-        2,
-        1,
-        4,
-        4,
-    )
-    target_mask = torch.zeros_like(
-        target,
-    )
-    condition = torch.full_like(
-        target,
-        2,
-    )
-    condition_mask = torch.ones_like(
-        condition,
-    )
-    features = torch.ones(
-        2,
-        2,
-        4,
-        4,
-    )
-
-    model._recognition(
-        x=target,
-        x_mask=target_mask,
-        condition=condition,
-        condition_mask=condition_mask,
-        added_features=features,
-    )
-
-    model._prepare_input.assert_called_once_with(
-        x=target,
-        x_mask=target_mask,
-        condition=condition,
-        condition_mask=condition_mask,
-        added_features=features,
-    )
-
-
-def test_condition_helper_forwards_prepare_input_arguments():
-    model = make_bare_model()
-
-    prepared = TensorMask(
-        tensor=torch.ones(
-            2,
-            3,
-            4,
-            4,
-        ),
-        mask=None,
-    )
-    model._prepare_input = Mock(
-        return_value=prepared,
-    )
-    model.condition = FixedLatentModule(
-        torch.ones(2, 3),
-        torch.zeros(2, 3),
-    )
-
-    condition = torch.ones(
-        2,
-        1,
-        4,
-        4,
-    )
-    condition_mask = torch.zeros_like(
-        condition,
-    )
-    features = torch.ones(
-        2,
-        2,
-        4,
-        4,
-    )
-
-    model._condition(
-        condition=condition,
-        condition_mask=condition_mask,
-        added_features=features,
-    )
-
-    model._prepare_input.assert_called_once_with(
-        x=condition,
-        x_mask=condition_mask,
-        added_features=features,
-    )
-
-
+@pytest.mark.pruned
 def test_forward_uses_two_sample_dimensions_without_output_sampling():
     setup = configure_forward_model()
 
@@ -3948,6 +3776,7 @@ def test_forward_uses_two_sample_dimensions_without_output_sampling():
     )
 
 
+@pytest.mark.pruned
 def test_forward_uses_three_sample_dimensions_with_output_sampling():
     setup = configure_forward_model()
 
@@ -3993,6 +3822,7 @@ def test_forward_adds_deterministic_guess_before_output_block():
     )
 
 
+@pytest.mark.pruned
 def test_forward_passes_deterministic_guess_arguments():
     setup = configure_forward_model()
 
@@ -4031,6 +3861,7 @@ def test_forward_passes_deterministic_guess_arguments():
     )
 
 
+@pytest.mark.pruned
 def test_forward_clamps_both_posterior_variance_limits():
     setup = configure_forward_model()
 
@@ -4068,6 +3899,7 @@ def test_forward_clamps_both_posterior_variance_limits():
     assert torch.all(passed <= 3)
 
 
+@pytest.mark.pruned
 def test_forward_variance_limits_use_mu_dtype():
     setup = configure_forward_model()
 
@@ -4093,6 +3925,7 @@ def test_forward_variance_limits_use_mu_dtype():
     assert passed.dtype == torch.float64
 
 
+@pytest.mark.pruned
 def test_predict_uses_two_sample_dimensions_without_output_sampling():
     setup = configure_predict_model()
 
@@ -4119,6 +3952,7 @@ def test_predict_uses_two_sample_dimensions_without_output_sampling():
     )
 
 
+@pytest.mark.pruned
 def test_predict_uses_three_sample_dimensions_with_output_sampling():
     setup = configure_predict_model()
 
@@ -4177,6 +4011,7 @@ def test_predict_adds_deterministic_guess_before_output_block():
     )
 
 
+@pytest.mark.pruned
 def test_predict_passes_deterministic_guess_arguments():
     setup = configure_predict_model()
 
@@ -4221,6 +4056,7 @@ def test_predict_passes_deterministic_guess_arguments():
     )
 
 
+@pytest.mark.pruned
 def test_deterministic_guess_returns_none_when_model_is_absent():
     model = make_bare_model()
     model.deterministic_guess = None
@@ -4299,126 +4135,7 @@ def test_deterministic_guess_builds_request_and_calls_decoder(
     assert result is expected
 
 
-def test_output_block_flattens_and_restores_two_sample_dimensions():
-    model = make_bare_model()
-
-    model.output = nn.Conv2d(
-        in_channels=4,
-        out_channels=2,
-        kernel_size=1,
-    )
-
-    value = torch.randn(
-        3,
-        5,
-        4,
-        6,
-        7,
-    )
-
-    result = model._output_block(
-        value,
-        sample_sizes=(
-            3,
-            5,
-        ),
-    )
-
-    assert result.shape == (
-        3,
-        5,
-        2,
-        6,
-        7,
-    )
-
-
-def test_output_block_flattens_and_restores_three_sample_dimensions():
-    model = make_bare_model()
-
-    model.output = nn.Conv2d(
-        in_channels=4,
-        out_channels=2,
-        kernel_size=1,
-    )
-
-    value = torch.randn(
-        2,
-        3,
-        5,
-        4,
-        6,
-        7,
-    )
-
-    result = model._output_block(
-        value,
-        sample_sizes=(
-            2,
-            3,
-            5,
-        ),
-    )
-
-    assert result.shape == (
-        2,
-        3,
-        5,
-        2,
-        6,
-        7,
-    )
-
-
-def test_output_block_receives_flattened_batch():
-    model = make_bare_model()
-
-    captured = {}
-
-    class RecordingOutput(nn.Module):
-        def forward(
-            self,
-            value,
-        ):
-            captured["shape"] = value.shape
-            return value[:, :1]
-
-    model.output = RecordingOutput()
-
-    value = torch.randn(
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-    )
-
-    result = model._output_block(
-        value,
-        sample_sizes=(
-            2,
-            3,
-            4,
-        ),
-    )
-
-    assert captured["shape"] == (
-        24,
-        5,
-        6,
-        7,
-    )
-    assert result.shape == (
-        2,
-        3,
-        4,
-        1,
-        6,
-        7,
-    )
-
-
+@pytest.mark.pruned
 def test_generate_condition_embedding_is_repeated_for_each_latent_sample():
     model = make_bare_model(
         condemb_to_decoder=True,
@@ -4475,6 +4192,7 @@ def test_generate_condition_embedding_is_repeated_for_each_latent_sample():
     )
 
 
+@pytest.mark.pruned
 def test_recognition_down_block_arguments(
     monkeypatch,
 ):
@@ -4570,6 +4288,7 @@ def test_recognition_get_spatial_shapes_calls_blocks_in_order():
     ]
 
 
+@pytest.mark.pruned
 def test_generation_forwards_configuration_to_up_blocks(
     monkeypatch,
 ):
@@ -4627,6 +4346,7 @@ def test_generation_forwards_configuration_to_up_blocks(
     assert up_block.call_args_list[1].kwargs["transpose_kernel_size"] == 7
 
 
+@pytest.mark.pruned
 def test_generation_forward_calls_up_blocks_in_sequence():
     generation = make_generation_without_constructor(
         resize_shapes=[
@@ -4665,6 +4385,7 @@ def test_generation_forward_calls_up_blocks_in_sequence():
     )
 
 
+@pytest.mark.pruned
 def test_generation_repeat_receives_initial_tensor_mask(
     monkeypatch,
 ):

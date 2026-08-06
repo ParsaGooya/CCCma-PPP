@@ -1,3 +1,4 @@
+import pytest
 import torch
 
 import cccma_ppp.generic.distributed as mod
@@ -14,6 +15,7 @@ class DummyDist:
         return True
 
 
+@pytest.mark.pruned
 def test_distributed_false(monkeypatch):
     monkeypatch.delenv("RANK", raising=False)
     monkeypatch.delenv("WORLD_SIZE", raising=False)
@@ -26,6 +28,7 @@ def test_distributed_false(monkeypatch):
     assert d.is_root()
 
 
+@pytest.mark.pruned
 def test_distributed_true(monkeypatch):
     monkeypatch.setenv("RANK", "1")
     monkeypatch.setenv("LOCAL_RANK", "0")
@@ -165,6 +168,7 @@ def test_broadcast_not_called(monkeypatch):
     d.broadcast(t)
 
 
+@pytest.mark.pruned
 def test_is_root():
     d = mod.Distributed()
     d.rank = 0
