@@ -54,7 +54,7 @@ class DummyTrainLoader:
     def setup_distributed(self, d):
         pass
 
-    def build_train_loader(self):
+    def build_train_loader(self, return_spatial_mask=False, **kwargs):
         class L:
             def __len__(self):
                 return 2
@@ -65,7 +65,7 @@ class DummyTrainLoader:
 
         return L()
 
-    def build_validation_loader(self):
+    def build_validation_loader(self, return_spatial_mask=False, **kwargs):
         return None
 
     def get_weights(self, w):
@@ -73,6 +73,7 @@ class DummyTrainLoader:
 
 
 class DummyModuleSelector:
+    EXPECTS_MASK = False
     type = "cvae"
     NUM_INPUT_DIMS = 4
     NUM_OUTPUT_DIMS = 1
@@ -346,7 +347,7 @@ def test_build_trainer_with_validation_loader(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     class Loader(DummyTrainLoader):
-        def build_validation_loader(self):
+        def build_validation_loader(self, return_spatial_mask=False):
             return [1]
 
     cfg.train_loader = Loader()
@@ -362,7 +363,7 @@ def test_build_trainer_without_validation_loader(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     class Loader(DummyTrainLoader):
-        def build_validation_loader(self):
+        def build_validation_loader(self, return_spatial_mask=False):
             return None
 
     cfg.train_loader = Loader()
@@ -1545,7 +1546,7 @@ def test_build_trainer_validation_loader_none(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     class Loader(DummyTrainLoader):
-        def build_validation_loader(self):
+        def build_validation_loader(self, return_spatial_mask=False):
             return None
 
     cfg.train_loader = Loader()
@@ -1561,7 +1562,7 @@ def test_build_trainer_validation_loader_present(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     class Loader(DummyTrainLoader):
-        def build_validation_loader(self):
+        def build_validation_loader(self, return_spatial_mask=False):
             return [1]
 
     cfg.train_loader = Loader()
@@ -2622,7 +2623,7 @@ def test_build_trainer_passes_validation_loader(tmp_path):
     received = {"loader": None}
 
     class Loader(DummyTrainLoader):
-        def build_validation_loader(self):
+        def build_validation_loader(self, return_spatial_mask=False):
             return ["val"]
 
     class T(DummyTrainer):

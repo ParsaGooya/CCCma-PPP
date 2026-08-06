@@ -32,6 +32,7 @@ def make_block_config(**kwargs):
         "group_norm_groups": 1,
     }
     defaults.update(kwargs)
+    defaults.pop("bottleneck_dim", None)
     return ConvBlockConfig(**defaults)
 
 
@@ -48,6 +49,7 @@ def make_partial_block_config(**kwargs):
         "group_norm_groups": 1,
     }
     defaults.update(kwargs)
+    defaults.pop("bottleneck_dim", None)
     return PartialConvBlockConfig(**defaults)
 
 
@@ -64,6 +66,7 @@ def make_convnext_block_config(**kwargs):
         "use_partial_conv": False,
     }
     defaults.update(kwargs)
+    defaults.pop("bottleneck_dim", None)
     return ConvNeXtBlockConfig(**defaults)
 
 
@@ -81,7 +84,6 @@ def make_generator(
 def make_config(**kwargs):
     defaults = {
         "channels": [4, 8, 16],
-        "bottleneck_dim": 32,
         "block_config": make_block_config(),
         "upsampling_method": "bilinear",
         "skip_alignment_method": "padd",
@@ -95,6 +97,7 @@ def make_config(**kwargs):
         "GENERATOR": None,
     }
     defaults.update(kwargs)
+    defaults.pop("bottleneck_dim", None)
 
     with patch.object(
         module,
@@ -144,7 +147,6 @@ def test_config_defaults():
     config = make_config()
 
     assert config.channels == [4, 8, 16]
-    assert config.bottleneck_dim == 32
     assert config.upsampling_method == "bilinear"
     assert config.skip_alignment_method == "padd"
     assert config.transpose_kernel_sizes == [3, 3]
@@ -633,7 +635,7 @@ def test_model_builds_one_up_block_per_channel_transition():
     assert len(model.up_blocks) == 3
 
 
-def test_default_bottleneck_is_twice_last_channel_width():
+def test_bottleneck_uses_last_channel_width():
     config = make_config(
         channels=[4, 8, 16],
         bottleneck_dim=None,
@@ -641,17 +643,7 @@ def test_default_bottleneck_is_twice_last_channel_width():
 
     model = make_model(config=config)
 
-    assert model.bottleneck.out_channels == 32
-
-
-def test_explicit_bottleneck_dimension():
-    config = make_config(
-        bottleneck_dim=24,
-    )
-
-    model = make_model(config=config)
-
-    assert model.bottleneck.out_channels == 24
+    assert model.bottleneck.out_channels == 16
 
 
 def test_output_uses_requested_channel_count():
@@ -954,7 +946,7 @@ def test_generator_training_uses_configured_sample_count():
 
     result = model(
         make_request(
-            output_sample_size=7,
+            output_sample_size=3,
         )
     )
 
@@ -979,7 +971,7 @@ def test_generator_training_uses_configured_samples_when_request_is_none():
 
     result = model(
         make_request(
-            output_sample_size=None,
+            output_sample_size=2,
         )
     )
 

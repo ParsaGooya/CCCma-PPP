@@ -1,3 +1,4 @@
+from unittest.mock import Mock
 import numpy as np
 import pytest
 import torch
@@ -686,12 +687,16 @@ def test_build_validation_loader_passes_years():
 
 def test_get_weights_default():
     config = make_config()
+    config.distributed = Mock()
+    config.distributed.is_root.return_value = True
 
     assert config.get_weights() == "w"
 
 
 def test_get_weights_with_argument():
     config = make_config()
+    config.distributed = Mock()
+    config.distributed.is_root.return_value = True
     weights_config = object()
 
     assert config.get_weights(weights_config) == "w"

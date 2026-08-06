@@ -3,45 +3,62 @@ import abc
 
 class PreprocessModuleABC(abc.ABC):
     """
-    Document this class.
+    Abstract base class for preprocessing modules.
     """
 
     @abc.abstractmethod
     def fit(self, data):
         """
-        Document this function.
+        Fit preprocessing parameters to data.
 
         Parameters
         ----------
-        data : Any
-            Description not yet provided.
+        data : object
+            Input data used to estimate preprocessing statistics.
+
+        Returns
+        -------
+        None
         """
+
         pass
 
     @abc.abstractmethod
     def transform(self, data, **kwargs):
         """
-        Document this function.
+        Apply preprocessing transformation.
 
         Parameters
         ----------
-        data : Any
-            Description not yet provided.
-        **kwargs : Any
-            Description not yet provided.
+        data : object
+            Input data to transform.
+        **kwargs : dict
+            Additional arguments for transformation.
+
+        Returns
+        -------
+        object
+            Transformed data.
         """
+
         pass
 
     @abc.abstractmethod
     def inverse_transform(self, data, **kwargs):
         """
-        Document this function.
+        Reverse preprocessing transformation.
 
         Parameters
         ----------
-        data : Any
-            Description not yet provided.
-        **kwargs : Any
-            Description not yet provided.
+        data : object
+            Transformed data.
+        **kwargs : dict
+            Additional arguments for inverse transformation.
+
+        Returns
+        -------
+        object
+            Data in original representation.
         """
+
         pass

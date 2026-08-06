@@ -9,7 +9,7 @@ from cccma_ppp.models.models_abc import (
 )
 
 from cccma_ppp.models.layers.mlp import build_mlp
-from cccma_ppp.core.deterministic_module import deterministicOutput
+from cccma_ppp.core.modules.deterministic import deterministicOutput
 
 
 from typing import ClassVar
@@ -32,24 +32,25 @@ AppendMode = Literal[1, 2, 3]
 @dataclasses.dataclass
 class AutoencoderConfig(modelConfigABC):
     """
-    Document this class.
+    Configuration for MLP-based deterministic autoencoder.
 
     Parameters
     ----------
-    encoder_hidden_dims : list
-        Description not yet provided.
-    decoder_hidden_dims : list
-        Description not yet provided.
-    batch_normalization : bool
-        Description not yet provided.
-    dropout_rate : float
-        Description not yet provided.
-    append_mode : AppendMode
-        Description not yet provided.
-    init_method : InitMethod
-        Description not yet provided.
-    activation : ActivationName
-        Description not yet provided.
+    encoder_hidden_dims : list of int
+        Hidden layer sizes for encoder.
+    decoder_hidden_dims : list of int or None, optional
+        Hidden layer sizes for decoder.
+    batch_normalization : bool, optional
+        Whether to use batch normalization.
+    dropout_rate : float or None, optional
+        Dropout probability.
+    append_mode : {1, 2, 3}, optional
+        Determines where additional features are appended:
+        1 = encoder input,
+        2 = decoder input,
+        3 = both encoder and decoder.
+    init_method : InitMethod, optional
+        Weight initialization method.
     """
 
     encoder_hidden_dims: list
@@ -62,12 +63,20 @@ class AutoencoderConfig(modelConfigABC):
 
     NUM_INPUT_DIMS: ClassVar[int] = 2
     NUM_OUTPUT_DIMS: ClassVar[int] = 2
+
     GENERATOR: ClassVar[None] = None
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize decoder dimensions.
+
+        Automatically mirrors encoder dimensions if not provided.
+
+        Returns
+        -------
+        None
         """
+
         _validate_dropout(self.dropout_rate)
 
         if self.decoder_hidden_dims is None:
@@ -76,6 +85,10 @@ class AutoencoderConfig(modelConfigABC):
             else:
                 self.decoder_hidden_dims = self.encoder_hidden_dims[::-1][1:]
 
+    @property
+    def EXPECTS_MASK(self) -> bool:
+        return False
+
     def build(
         self,
         input_shape: np.ndarray,
@@ -83,22 +96,23 @@ class AutoencoderConfig(modelConfigABC):
         added_features_dim: int = None,
     ):
         """
-        Document this function.
+        Build autoencoder model instance.
 
         Parameters
         ----------
         input_shape : np.ndarray
-            Description not yet provided.
-        output_shape : np.ndarray | None
-            Description not yet provided.
-        added_features_dim : int
-            Description not yet provided.
+            Input tensor shape.
+        output_shape : np.ndarray or None, optional
+            Output tensor shape.
+        added_features_dim : int or None, optional
+            Number of additional features.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        Autoencoder
+            Instantiated model.
         """
+
         return Autoencoder(
             config=self,
             input_shape=input_shape,
@@ -109,18 +123,21 @@ class AutoencoderConfig(modelConfigABC):
 
 class Autoencoder(deterministicmodelsABC):
     """
-    Document this class.
+    Deterministic MLP-based autoencoder.
+
+    Implements encoder-decoder architecture with optional feature
+    concatenation and regularization.
 
     Parameters
     ----------
     config : AutoencoderConfig
-        Description not yet provided.
-    input_shape : np.ndarray | tuple
-        Description not yet provided.
-    output_shape : np.ndarray | tuple | None
-        Description not yet provided.
-    added_features_dim : int
-        Description not yet provided.
+        Model configuration.
+    input_shape : np.ndarray
+        Input tensor shape.
+    output_shape : np.ndarray or None
+        Output tensor shape.
+    added_features_dim : int or None
+        Number of additional features.
     """
 
     def __init__(
@@ -131,27 +148,27 @@ class Autoencoder(deterministicmodelsABC):
         added_features_dim: int = None,
     ):
         """
-        Document this function.
+        Initialize autoencoder model.
 
         Parameters
         ----------
         config : AutoencoderConfig
-            Description not yet provided.
-        input_shape : np.ndarray | tuple
-            Description not yet provided.
-        output_shape : np.ndarray | tuple | None
-            Description not yet provided.
-        added_features_dim : int
-            Description not yet provided.
+            Model configuration.
+        input_shape : np.ndarray
+            Input shape.
+        output_shape : np.ndarray or None
+            Output shape.
+        added_features_dim : int or None
+            Number of additional features.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If shape or metadata mismatches occur.
         """
-        super().__init__()
 
-        self.config = config
+        super().__init__(config)
+
         self.batch_normalization = config.batch_normalization
         self.dropout_rate = config.dropout_rate
         self.init_method = config.init_method
@@ -224,17 +241,17 @@ class Autoencoder(deterministicmodelsABC):
 
     def forward(self, request: DeterministicRequest) -> deterministicOutput:
         """
-        Document this function.
+        Forward pass through the encoder/decoder.
 
         Parameters
         ----------
         request : DeterministicRequest
-            Description not yet provided.
+            Input request object.
 
         Returns
         -------
         deterministicOutput
-            Description not yet provided.
+            Reconstructed output tensor.
         """
         x = request.input
         x_mask = request.input_mask

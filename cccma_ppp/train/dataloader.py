@@ -19,26 +19,20 @@ from cccma_ppp.generic.distributed import Distributed
 @dataclasses.dataclass
 class BatchData(BatchDataABC):
     """
-    Document this class.
+    Container for batched training data.
 
     Parameters
     ----------
     input : torch.Tensor
-        Description not yet provided.
+        Input tensor.
     target : torch.Tensor
-        Description not yet provided.
-    added_features : torch.Tensor
-        Description not yet provided.
-    metadata : list[dict] | None
-        Description not yet provided.
-    return_spatial_mask : bool
-        Description not yet provided.
-    reduce_spatial_mask : bool
-        Description not yet provided.
-    input_mask : torch.Tensor | None
-        Description not yet provided.
-    target_mask : torch.Tensor | None
-        Description not yet provided.
+        Target tensor.
+    added_features : torch.Tensor or None, optional
+        Additional input features.
+    return_spatial_mask : bool, optional
+        Whether to compute and include spatial masks.
+    reduce_spatial_mask : bool, optional
+        Whether to reduce masks across batch dimension.
     """
 
     input: torch.Tensor
@@ -58,8 +52,13 @@ class BatchData(BatchDataABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Prepare batch data.
+
+        Returns
+        -------
+        None
         """
+
         if self.return_spatial_mask:
             if self.reduce_spatial_mask:
                 if type(self)._shared_input_mask is None:
@@ -84,17 +83,16 @@ class BatchData(BatchDataABC):
 
     def to_device(self, device: torch.device | str):
         """
-        Document this function.
+        Move batch data to specified device.
 
         Parameters
         ----------
-        device : torch.device | str
-            Description not yet provided.
+        device : torch.device or str
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        BatchData
+            Updated instance on target device.
         """
         self.input = self.input.to(device)
         self.target = self.target.to(device)
@@ -114,32 +112,24 @@ class BatchData(BatchDataABC):
 @dataclasses.dataclass
 class TrainDataloaderConfig(DataloaderConfigABC):
     """
-    Document this class.
+    Configuration for training and validation data loaders.
 
     Parameters
     ----------
-    dataset_config : TrainDatasetConfig
-        Description not yet provided.
+    dataset_config : DatasetConfig
+        Dataset configuration.
     batch_size : int
-        Description not yet provided.
-    time_features : list | None
-        Description not yet provided.
-    train_years : tuple | list
-        Description not yet provided.
-    num_validation_years : int
-        Description not yet provided.
-    num_data_workers : int
-        Description not yet provided.
-    prefetch_factor : int
-        Description not yet provided.
-    drop_last : bool
-        Description not yet provided.
-    load : bool
-        Description not yet provided.
-    return_spatial_mask : bool
-        Description not yet provided.
-    reduce_spatial_mask : bool
-        Description not yet provided.
+        Number of samples per batch.
+    train_years : tuple or list or None, optional
+        Range of training years.
+    num_validation_years : int, optional
+        Number of years reserved for validation.
+    num_data_workers : int, optional
+        Number of parallel data workers.
+    prefetch_factor : int, optional
+        Data prefetching factor.
+    drop_last : bool, optional
+        Whether to drop incomplete batches.
     """
 
     dataset_config: TrainDatasetConfig
@@ -151,17 +141,20 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     prefetch_factor: int = 2
     drop_last: bool = False
     load: bool = False
-    return_spatial_mask: bool = False
     reduce_spatial_mask: bool = False
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize dataloader configuration.
+
+        Returns
+        -------
+        None
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If requested training years are invalid.
         """
         super().__init__()
 
@@ -178,7 +171,8 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
             if not set(self.train_years).issubset(set(self.available_times)):
                 raise ValueError(
-                    f"the requested train years are not available: available years: [{self.available_times.min()},{self.available_times.max()}]"
+                    f"the requested train years are not available for {self.num_validation_years} "
+                    f"valodation years. Available years: [{self.available_times.min()},{self.available_times.max()}]"
                 )
 
             if self.num_validation_years > 0:
@@ -190,13 +184,14 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     @property
     def available_times(self):
         """
-        Document this function.
+        Training years excluding validation period.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        np.ndarray
+            Array of years used for training.
         """
+
         if self.num_validation_years > 0:
             return self.dataset_config.available_times[: -self.num_validation_years]
         return self.dataset_config.available_times
@@ -205,15 +200,20 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         self, distributed: Distributed, load_path: Path | str | None = None
     ):
         """
-        Document this function.
+        Prepare dataloader for distributed training.
 
         Parameters
         ----------
         distributed : Distributed
-            Description not yet provided.
-        load_path : Path | str | None
-            Description not yet provided.
+            Distributed training context.
+        save_path : pathlib.Path or str or None, optional
+            Path to save fitted preprocessors.
+
+        Returns
+        -------
+        None
         """
+        self.distributed = distributed
         self.rank = distributed.rank
         self.world_size = distributed.world_size
 
@@ -234,27 +234,28 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     def build_train_loader(
         self,
         return_metadata: bool = False,
+        return_spatial_mask: bool = False,
         shuffle: bool | None = None,
     ):
         """
-        Document this function.
+        Construct training dataloader.
 
         Parameters
         ----------
-        return_metadata : bool
-            Description not yet provided.
-        shuffle : bool | None
-            Description not yet provided.
+        return_metadata : bool, optional
+            Whether to return the metadata for selection (coords).
+        shuffle : bool, optional
+            Whether to shuffle the dataset chunk.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        Dataloader
+            Training dataloader.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If setup has not been called.
         """
         if not self._setup:
             raise RuntimeError(
@@ -281,40 +282,37 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             rank=self.rank,
             shuffle=shuffle,
             world_size=self.world_size,
+            return_spatial_mask=return_spatial_mask
         )
 
     def build_validation_loader(
         self,
         return_metadata: bool = False,
+        return_spatial_mask: bool = False,
         shuffle: bool | None = None,
         supress_error: bool = True,
     ):
         """
-        Document this function.
+        Construct validation dataloader.
 
         Parameters
         ----------
-        return_metadata : bool
-            Description not yet provided.
-        shuffle : bool | None
-            Description not yet provided.
-        supress_error : bool
-            Description not yet provided.
+        return_metadata : bool, optional
+            Whether to return the metadata for selection (coords).
+        shuffle : bool, optional
+            Whether to shuffle the dataset chunk.
+        supress_error : bool, optional
+            Whether to raise error if validation could not be built.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        Dataloader or None
+            Validation dataloader, or None if no validation years are specified.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
-
-        Warns
-        -----
-        UserWarning
-            Description not yet provided.
+            If setup has not been called.
         """
         if not self._setup:
             raise RuntimeError(
@@ -341,6 +339,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
                 rank=self.rank,
                 shuffle=shuffle,
                 world_size=self.world_size,
+                return_spatial_mask=return_spatial_mask
             )
 
         else:
@@ -354,41 +353,42 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
     def get_weights(self, config: WeightsConfig | None = None):
         """
-        Document this function.
+        Retrieve weights for loss computation.
 
         Parameters
         ----------
-        config : WeightsConfig | None
-            Description not yet provided.
+        config : WeightsConfig or None, optional
+            Configuration used to compute or retrieve weights.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        xr.DataArray
+            Weights for loss computation.
         """
-        return self.dataset_config.ds_operator.get_weights(config)
+        save = self.distributed.is_root()
+        weights = self.dataset_config.ds_operator.get_weights(config, save=save)
+        self.distributed.barrier()
+        return weights
 
     @property
     def input_var_metadata(self):
         """
-        Document this function.
+        Retrieve input variable metadata.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        dict
         """
         return self.dataset_config.ds_operator.get_input_var_metadata()
 
     @property
     def target_var_metadata(self):
         """
-        Document this function.
+        Retrieve target variable metadata.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        dict
         """
         return self.dataset_config.ds_operator.get_target_var_metadata()
 
@@ -399,21 +399,21 @@ def collate_batch(
     reduce_spatial_mask: bool = False,
 ):
     """
-    Document this function.
+    Collate dataset samples into a batch.
 
     Parameters
     ----------
-    batch : Any
-        Description not yet provided.
-    return_spatial_mask : bool
-        Description not yet provided.
-    reduce_spatial_mask : bool
-        Description not yet provided.
+    batch : list
+        List of dataset samples.
+    return_spatial_mask : bool, optional
+        Whether to include spatial masks.
+    reduce_spatial_mask : bool, optional
+        Whether to reduce masks across the batch.
 
     Returns
     -------
-    Any
-        Description not yet provided.
+    BatchData or tuple
+        Batched data, optionally paired with metadata.
     """
     metadata = None
 

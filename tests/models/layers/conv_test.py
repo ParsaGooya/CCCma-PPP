@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import pytest
 import torch
 import torch.nn as nn
@@ -10,6 +12,9 @@ from cccma_ppp.models.layers.conv import (
     ConvNeXtBlockConfig,
     ConvNeXtSingle,
     ConvSingle,
+    LatentBlock,
+    LatentLayer,
+    LatentVector,
     MaskPool2d,
     PartialConvBlock,
     PartialConvBlockConfig,
@@ -488,26 +493,6 @@ def test_partial_conv_single_positive_dropout_uses_dropout2d():
     assert isinstance(layer.dropout, nn.Dropout2d)
 
 
-def test_partial_conv_single_return_mask_false():
-    config = make_partial_config()
-    config.return_mask = False
-
-    layer = PartialConvSingle(
-        in_channels=3,
-        out_channels=4,
-        config=config,
-    )
-
-    mask = make_mask(channels=3)
-    result, returned_mask = layer(
-        make_tensor(channels=3),
-        mask,
-    )
-
-    assert result.shape == (2, 4, 8, 8)
-    assert returned_mask is mask
-
-
 def test_conv_block_builds_requested_number_of_stages():
     block = ConvBlock(
         in_channels=3,
@@ -754,30 +739,6 @@ def test_convnext_single_forward_standard_conv_preserves_mask():
 
     x = make_tensor(channels=4)
     mask = make_mask(channels=1)
-
-    result, result_mask = layer(
-        x,
-        mask,
-    )
-
-    assert result.shape == x.shape
-    assert result_mask is mask
-
-
-def test_convnext_single_partial_conv_return_mask_false():
-    config = make_convnext_config(
-        use_partial_conv=True,
-    )
-    config.return_mask = False
-
-    layer = ConvNeXtSingle(
-        channels=4,
-        config=config,
-        drop_path_rate=0.0,
-    )
-
-    x = make_tensor(channels=4)
-    mask = make_mask(channels=4)
 
     result, result_mask = layer(
         x,
@@ -1293,3 +1254,918 @@ def test_mask_pool_rejects_unsupported_method():
         match="Unsupported mask pooling method",
     ):
         pooling(torch.ones(1, 1, 4, 4))
+
+
+def test_conv_block_config_setup_generator_enables_noise():
+    config = make_conv_config()
+
+    result = config.setup_generator(
+        inject_noise=True,
+    )
+
+    assert result is config
+    assert config.inject_noise is True
+
+
+def test_conv_block_config_setup_generator_defaults_to_disabled():
+    config = make_conv_config().setup_generator()
+
+    assert config.inject_noise is False
+
+
+def test_partial_conv_config_setup_generator_enables_noise():
+    config = make_partial_config()
+
+    result = config.setup_generator(
+        inject_noise=True,
+    )
+
+    assert result is config
+    assert config.inject_noise is True
+
+
+def test_convnext_config_setup_generator_enables_noise():
+    config = make_convnext_config()
+
+    result = config.setup_generator(
+        inject_noise=True,
+    )
+
+    assert result is config
+    assert config.inject_noise is True
+
+
+def test_conv_single_noise_adds_input_channel():
+    config = make_conv_config().setup_generator(
+        inject_noise=True,
+    )
+
+    layer = ConvSingle(
+        in_channels=3,
+        out_channels=5,
+        config=config,
+    )
+
+    assert layer.inject_noise is True
+    assert layer.conv.in_channels == 4
+
+
+def test_conv_single_noise_injection_called(
+    monkeypatch,
+):
+    config = make_conv_config().setup_generator(
+        inject_noise=True,
+    )
+    layer = ConvSingle(
+        in_channels=3,
+        out_channels=4,
+        config=config,
+    )
+
+    calls = []
+
+    def fake_noise_injection(value):
+        calls.append(value)
+        noise = torch.zeros(
+            value.shape[0],
+            1,
+            value.shape[2],
+            value.shape[3],
+            dtype=value.dtype,
+            device=value.device,
+        )
+        return torch.cat(
+            [
+                value,
+                noise,
+            ],
+            dim=1,
+        )
+
+    monkeypatch.setattr(
+        module,
+        "_noise_injection",
+        fake_noise_injection,
+    )
+
+    value = make_tensor(
+        channels=3,
+    )
+    result = layer(value)
+
+    assert calls == [value]
+    assert result.shape == (
+        2,
+        4,
+        8,
+        8,
+    )
+
+
+def test_conv_single_forward_applies_layers_in_order():
+    layer = ConvSingle(
+        in_channels=3,
+        out_channels=3,
+        config=make_conv_config(),
+    )
+
+    calls = []
+
+    class RecordingLayer(nn.Module):
+        def __init__(
+            self,
+            name,
+            increment,
+        ):
+            super().__init__()
+            self.name = name
+            self.increment = increment
+
+        def forward(
+            self,
+            value,
+        ):
+            calls.append(self.name)
+            return value + self.increment
+
+    layer.conv = RecordingLayer(
+        "conv",
+        1,
+    )
+    layer.normalization = RecordingLayer(
+        "normalization",
+        2,
+    )
+    layer.activation = RecordingLayer(
+        "activation",
+        3,
+    )
+    layer.dropout = RecordingLayer(
+        "dropout",
+        4,
+    )
+
+    value = torch.zeros(
+        1,
+        3,
+        2,
+        2,
+    )
+    result = layer(value)
+
+    assert calls == [
+        "conv",
+        "normalization",
+        "activation",
+        "dropout",
+    ]
+    torch.testing.assert_close(
+        result,
+        torch.full_like(
+            value,
+            10,
+        ),
+    )
+
+
+def test_partial_conv_single_noise_adds_input_channel():
+    config = make_partial_config().setup_generator(
+        inject_noise=True,
+    )
+
+    layer = PartialConvSingle(
+        in_channels=3,
+        out_channels=4,
+        config=config,
+    )
+
+    assert layer.inject_noise is True
+    assert layer.conv.in_channels == 4
+
+
+def test_partial_conv_single_noise_expands_mask(
+    monkeypatch,
+):
+    config = make_partial_config().setup_generator(
+        inject_noise=True,
+    )
+    layer = PartialConvSingle(
+        in_channels=3,
+        out_channels=4,
+        config=config,
+    )
+
+    value = make_tensor(
+        channels=3,
+    )
+    mask = make_mask(
+        channels=3,
+    )
+
+    injected = torch.cat(
+        [
+            value,
+            torch.zeros(
+                value.shape[0],
+                1,
+                value.shape[2],
+                value.shape[3],
+            ),
+        ],
+        dim=1,
+    )
+    expanded_mask = torch.ones_like(injected)
+
+    noise_mock = Mock(
+        return_value=injected,
+    )
+    expand_mock = Mock(
+        return_value=expanded_mask,
+    )
+
+    monkeypatch.setattr(
+        module,
+        "_noise_injection",
+        noise_mock,
+    )
+    monkeypatch.setattr(
+        module,
+        "_expand_mask",
+        expand_mock,
+    )
+
+    result, result_mask = layer(
+        value,
+        mask,
+    )
+
+    noise_mock.assert_called_once_with(value)
+    expand_mock.assert_called_once_with(
+        injected,
+        mask,
+    )
+    assert result.shape == (
+        2,
+        4,
+        8,
+        8,
+    )
+    assert result_mask is not None
+
+
+def test_partial_conv_single_noise_does_not_expand_single_channel_mask(
+    monkeypatch,
+):
+    config = make_partial_config()
+    config.multi_channel = False
+    config.setup_generator(
+        inject_noise=True,
+    )
+
+    layer = PartialConvSingle(
+        in_channels=3,
+        out_channels=4,
+        config=config,
+    )
+
+    value = make_tensor(
+        channels=3,
+    )
+    injected = torch.cat(
+        [
+            value,
+            torch.zeros(
+                value.shape[0],
+                1,
+                value.shape[2],
+                value.shape[3],
+            ),
+        ],
+        dim=1,
+    )
+
+    monkeypatch.setattr(
+        module,
+        "_noise_injection",
+        Mock(return_value=injected),
+    )
+
+    expand_mock = Mock()
+    monkeypatch.setattr(
+        module,
+        "_expand_mask",
+        expand_mock,
+    )
+
+    result, _ = layer(
+        value,
+        make_mask(channels=1),
+    )
+
+    assert result.shape == (
+        2,
+        4,
+        8,
+        8,
+    )
+    expand_mock.assert_not_called()
+
+
+def test_convnext_single_noise_expands_pointwise_channels():
+    config = make_convnext_config(
+        expansion_ratio=3,
+    ).setup_generator(
+        inject_noise=True,
+    )
+
+    layer = ConvNeXtSingle(
+        channels=4,
+        config=config,
+        drop_path_rate=0.0,
+    )
+
+    assert layer.pointwise_1.in_channels == 5
+    assert layer.pointwise_1.out_channels == 12
+    assert layer.pointwise_2.in_channels == 13
+    assert layer.pointwise_2.out_channels == 4
+
+
+def test_convnext_single_noise_injected_twice(
+    monkeypatch,
+):
+    config = make_convnext_config(
+        use_partial_conv=False,
+    ).setup_generator(
+        inject_noise=True,
+    )
+
+    layer = ConvNeXtSingle(
+        channels=4,
+        config=config,
+        drop_path_rate=0.0,
+    )
+
+    calls = []
+
+    def fake_noise(value):
+        calls.append(value.shape)
+        noise = torch.zeros(
+            value.shape[0],
+            1,
+            value.shape[2],
+            value.shape[3],
+            dtype=value.dtype,
+            device=value.device,
+        )
+        return torch.cat(
+            [
+                value,
+                noise,
+            ],
+            dim=1,
+        )
+
+    monkeypatch.setattr(
+        module,
+        "_noise_injection",
+        fake_noise,
+    )
+
+    value = make_tensor(
+        channels=4,
+    )
+
+    result, result_mask = layer(
+        value,
+        None,
+    )
+
+    assert calls == [
+        torch.Size([2, 4, 8, 8]),
+        torch.Size([2, 8, 8, 8]),
+    ]
+    assert result.shape == value.shape
+    assert result_mask is None
+
+
+def test_convnext_single_layer_scale_is_applied():
+    config = make_convnext_config(
+        use_partial_conv=False,
+        expansion_ratio=1,
+        layer_scale_init=2.0,
+    )
+
+    layer = ConvNeXtSingle(
+        channels=2,
+        config=config,
+        drop_path_rate=0.0,
+    )
+
+    layer.depthwise = nn.Identity()
+    layer.normalization = nn.Identity()
+    layer.pointwise_1 = nn.Identity()
+    layer.activation = nn.Identity()
+    layer.dropout = nn.Identity()
+    layer.pointwise_2 = nn.Identity()
+    layer.drop_path = nn.Identity()
+
+    value = torch.ones(
+        1,
+        2,
+        2,
+        2,
+    )
+
+    result, _ = layer(
+        value,
+        None,
+    )
+
+    torch.testing.assert_close(
+        result,
+        torch.full_like(
+            value,
+            3.0,
+        ),
+    )
+
+
+def test_convnext_block_passes_output_through_every_block():
+    config = make_convnext_config(
+        use_partial_conv=False,
+        num_blocks=3,
+    )
+
+    block = ConvNeXtBlock(
+        in_channels=4,
+        out_channels=4,
+        config=config,
+    )
+
+    calls = []
+
+    class AddBlock(nn.Module):
+        def __init__(
+            self,
+            index,
+        ):
+            super().__init__()
+            self.index = index
+
+        def forward(
+            self,
+            value,
+            mask,
+        ):
+            calls.append(self.index)
+            return value + 1, mask
+
+    block.blocks = nn.ModuleList(
+        [
+            AddBlock(0),
+            AddBlock(1),
+            AddBlock(2),
+        ]
+    )
+
+    value = torch.zeros(
+        1,
+        4,
+        2,
+        2,
+    )
+    mask = torch.ones(
+        1,
+        1,
+        2,
+        2,
+    )
+
+    result = block(
+        TensorMask(
+            tensor=value,
+            mask=mask,
+        )
+    )
+
+    assert calls == [
+        0,
+        1,
+        2,
+    ]
+    torch.testing.assert_close(
+        result.tensor,
+        torch.full_like(
+            value,
+            3,
+        ),
+    )
+    assert result.mask is mask
+
+
+def test_latent_layer_without_normalization_uses_identity():
+    layer = LatentLayer(
+        input_shape=(
+            3,
+            4,
+            4,
+        ),
+        latent_size=5,
+        latent_normalization=None,
+    )
+
+    assert isinstance(
+        layer.normalization,
+        nn.Identity,
+    )
+
+
+def test_latent_layer_with_normalization_builds_sequence():
+    layer = LatentLayer(
+        input_shape=(
+            3,
+            4,
+            4,
+        ),
+        latent_size=5,
+        latent_normalization="layer",
+    )
+
+    assert isinstance(
+        layer.normalization,
+        nn.Sequential,
+    )
+    assert isinstance(
+        layer.normalization[-1],
+        nn.ReLU,
+    )
+
+
+def test_latent_layer_builds_expected_linear_dimensions():
+    layer = LatentLayer(
+        input_shape=(
+            3,
+            4,
+            5,
+        ),
+        latent_size=7,
+        latent_normalization=None,
+    )
+
+    assert layer.mu.in_features == 60
+    assert layer.mu.out_features == 7
+    assert layer.log_var.in_features == 60
+    assert layer.log_var.out_features == 7
+
+
+def test_latent_layer_can_disable_log_variance():
+    layer = LatentLayer(
+        input_shape=(
+            2,
+            3,
+            4,
+        ),
+        latent_size=5,
+        latent_normalization=None,
+        get_log_var=False,
+    )
+
+    assert layer.log_var is None
+
+    result = layer(
+        torch.randn(
+            3,
+            2,
+            3,
+            4,
+        )
+    )
+
+    assert isinstance(
+        result,
+        LatentVector,
+    )
+    assert result.mu.shape == (
+        3,
+        5,
+    )
+    assert result.log_var is None
+
+
+def test_latent_layer_forward_returns_mu_and_log_variance():
+    layer = LatentLayer(
+        input_shape=(
+            2,
+            3,
+            4,
+        ),
+        latent_size=5,
+        latent_normalization=None,
+        get_log_var=True,
+    )
+
+    result = layer(
+        torch.randn(
+            3,
+            2,
+            3,
+            4,
+        )
+    )
+
+    assert isinstance(
+        result,
+        LatentVector,
+    )
+    assert result.mu.shape == (
+        3,
+        5,
+    )
+    assert result.log_var.shape == (
+        3,
+        5,
+    )
+
+
+def test_latent_layer_flattens_only_nonbatch_dimensions(
+    monkeypatch,
+):
+    layer = LatentLayer(
+        input_shape=(
+            2,
+            3,
+            4,
+        ),
+        latent_size=5,
+        latent_normalization=None,
+    )
+
+    captured = {}
+
+    class RecordingLinear(nn.Module):
+        def forward(
+            self,
+            value,
+        ):
+            captured["shape"] = value.shape
+            return torch.zeros(
+                value.shape[0],
+                5,
+            )
+
+    layer.mu = RecordingLinear()
+    layer.log_var = None
+
+    layer(
+        torch.randn(
+            6,
+            2,
+            3,
+            4,
+        )
+    )
+
+    assert captured["shape"] == (
+        6,
+        24,
+    )
+
+
+def test_latent_block_uses_conv_block_group_norm_groups():
+    config = make_conv_config(
+        group_norm_groups=2,
+    )
+    conv_block = ConvBlock(
+        in_channels=4,
+        out_channels=4,
+        config=config,
+    )
+
+    latent_block = LatentBlock(
+        conv_block=conv_block,
+        input_shape=(
+            4,
+            2,
+            2,
+        ),
+        latent_size=3,
+        latent_normalization="group",
+    )
+
+    normalization = latent_block.latent_head.normalization[0]
+
+    assert isinstance(
+        normalization,
+        nn.GroupNorm,
+    )
+    assert normalization.num_groups == 2
+
+
+def test_latent_block_defaults_group_norm_groups_when_missing():
+    class Config:
+        pass
+
+    class Block(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.config = Config()
+
+        def forward(
+            self,
+            value,
+        ):
+            return value
+
+    latent_block = LatentBlock(
+        conv_block=Block(),
+        input_shape=(
+            8,
+            2,
+            2,
+        ),
+        latent_size=3,
+        latent_normalization="group",
+    )
+
+    normalization = latent_block.latent_head.normalization[0]
+
+    assert isinstance(
+        normalization,
+        nn.GroupNorm,
+    )
+    assert normalization.num_groups == 8
+
+
+def test_latent_block_delegates_tensor_to_latent_head():
+    class FakeConvBlock(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.config = make_conv_config()
+
+        def forward(
+            self,
+            value,
+        ):
+            return TensorMask(
+                tensor=value.tensor + 1,
+                mask=value.mask,
+            )
+
+    conv_block = FakeConvBlock()
+
+    latent_block = LatentBlock(
+        conv_block=conv_block,
+        input_shape=(
+            2,
+            2,
+            2,
+        ),
+        latent_size=3,
+        latent_normalization=None,
+    )
+
+    captured = {}
+
+    class RecordingHead(nn.Module):
+        def forward(
+            self,
+            value,
+        ):
+            captured["value"] = value
+            return LatentVector(
+                mu=torch.zeros(
+                    value.shape[0],
+                    3,
+                ),
+                log_var=None,
+            )
+
+    latent_block.latent_head = RecordingHead()
+
+    input_tensor = torch.zeros(
+        4,
+        2,
+        2,
+        2,
+    )
+
+    result = latent_block(
+        TensorMask(
+            tensor=input_tensor,
+            mask=None,
+        )
+    )
+
+    torch.testing.assert_close(
+        captured["value"],
+        input_tensor + 1,
+    )
+    assert result.mu.shape == (
+        4,
+        3,
+    )
+    assert result.log_var is None
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        "any",
+        "all",
+        "fraction",
+    ],
+)
+def test_mask_pool_output_shape_for_odd_dimensions(
+    method,
+):
+    pooling = MaskPool2d(
+        method=method,
+        fraction_threshold=0.5,
+    )
+
+    result = pooling(
+        torch.ones(
+            2,
+            3,
+            9,
+            11,
+        )
+    )
+
+    assert result.shape == (
+        2,
+        3,
+        5,
+        6,
+    )
+
+
+def test_mask_pool_fraction_boundary_is_inclusive():
+    pooling = MaskPool2d(
+        method="fraction",
+        fraction_threshold=0.5,
+    )
+
+    mask = torch.tensor(
+        [
+            [
+                [
+                    [1.0, 1.0],
+                    [0.0, 0.0],
+                ]
+            ]
+        ]
+    )
+
+    result = pooling(mask)
+
+    assert result.item() == pytest.approx(1.0)
+
+
+def test_mask_pool_fraction_uses_actual_border_count():
+    pooling = MaskPool2d(
+        method="fraction",
+        fraction_threshold=1.0,
+    )
+
+    mask = torch.ones(
+        1,
+        1,
+        2,
+        2,
+    )
+
+    result = pooling(mask)
+
+    assert result.item() == pytest.approx(1.0)
+
+
+def test_tensor_mask_dataclass_defaults_mask_to_none():
+    value = torch.ones(
+        1,
+        2,
+        3,
+        4,
+    )
+
+    result = TensorMask(
+        tensor=value,
+    )
+
+    assert result.tensor is value
+    assert result.mask is None
+
+
+def test_latent_vector_accepts_none_log_variance():
+    mu = torch.ones(
+        2,
+        3,
+    )
+
+    result = LatentVector(
+        mu=mu,
+        log_var=None,
+    )
+
+    assert result.mu is mu
+    assert result.log_var is None

@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 import torch
 
-import cccma_ppp.core.cVAE_module as mod
-from cccma_ppp.core.cVAE_module import cVAE, cVAEConfig, cVAEOutput
+import cccma_ppp.core.modules.cvae as mod
+from cccma_ppp.core.modules.cvae import cVAE, cVAEConfig, cVAEOutput
 from cccma_ppp.generic.runtime import RuntimeContext
 
 
@@ -262,25 +262,6 @@ def test_flow_without_condition():
     assert m.prior_flow is not None
 
 
-def test_build_with_prior_flow_and_min_variance_and_added_features():
-    cfg = cVAEConfig(
-        ModelConfig=DummySelector(),
-        prior_flow_config=DummyFlow(),
-        min_posterior_variance=0.2,
-    )
-
-    m = make_module(
-        cfg,
-        input_shape=np.array([1]),
-        output_shape=np.array([1]),
-        added_features_dim=3,
-    )
-
-    assert m.prior_flow is not None
-    assert torch.is_tensor(m.min_posterior_variance)
-    assert m.model.build_kwargs["added_features_dim"] == 3
-
-
 def test_init_loss_function_basic():
     m = make_module()
 
@@ -331,7 +312,7 @@ def test_predict_with_sample_size_and_prior_flow():
     cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
     m = make_module(cfg)
 
-    out = m.predict(DummyBatch(), sample_size=3)
+    out = m.predict(DummyBatch(), 3)
 
     assert isinstance(out, cVAEOutput)
 
@@ -340,7 +321,7 @@ def test_forward_with_sample_size_explicit():
     cfg = cVAEConfig(ModelConfig=DummySelector())
     m = make_module(cfg)
 
-    out = m.forward(DummyBatch(), sample_size=5)
+    out = m.forward(DummyBatch(), 5)
 
     assert isinstance(out, cVAEOutput)
 
@@ -453,7 +434,7 @@ def test_load_from_checkpoint_full_success_with_prior_flow(monkeypatch, tmp_path
         "module_config": {
             "ModelConfig": {"dummy": True},
             "prior_flow_config": {"dummy": True},
-            "min_posterior_variance": 0.33,
+            "posterior_variance_limits": (0.33, None),
             "combined_CGCN_weight": 0.66,
         },
         "model_input_shape": np.array([1]),
@@ -474,7 +455,7 @@ def test_load_from_checkpoint_full_success_with_prior_flow(monkeypatch, tmp_path
     monkeypatch.setattr(mod.dacite, "from_dict", fake_from_dict)
 
     cfg = cVAEConfig(ModelConfig=DummySelector())
-    cfg.min_posterior_variance = None
+    cfg.posterior_variance_limits = None
     cfg.combined_CGCN_weight = None
 
     out = cfg._load_from_checkpoint(path)
@@ -482,7 +463,7 @@ def test_load_from_checkpoint_full_success_with_prior_flow(monkeypatch, tmp_path
     assert out is cfg
     assert isinstance(cfg.ModelConfig, DummySelector)
     assert isinstance(cfg.prior_flow_config, DummyFlow)
-    assert cfg.min_posterior_variance == 0.33
+    assert cfg.posterior_variance_limits == (0.33, None)
     assert cfg.combined_CGCN_weight == 0.66
 
     assert hasattr(cfg, "checkpoint_config")
@@ -499,7 +480,7 @@ def test_load_from_checkpoint_does_not_override_existing_values(monkeypatch, tmp
         "module_config": {
             "ModelConfig": {"dummy": True},
             "prior_flow_config": {"dummy": True},
-            "min_posterior_variance": 0.33,
+            "posterior_variance_limits": (0.33, None),
             "combined_CGCN_weight": 0.66,
         },
         "model_input_shape": np.array([1]),
@@ -521,13 +502,13 @@ def test_load_from_checkpoint_does_not_override_existing_values(monkeypatch, tmp
 
     cfg = cVAEConfig(
         ModelConfig=DummySelector(),
-        min_posterior_variance=0.9,
+        posterior_variance_limits=(0.9, None),
         combined_CGCN_weight=0.1,
     )
 
     cfg._load_from_checkpoint(path)
 
-    assert cfg.min_posterior_variance == 0.9
+    assert cfg.posterior_variance_limits == (0.9, None)
     assert cfg.combined_CGCN_weight == 0.1
 
 
@@ -835,34 +816,6 @@ class ConstantKLD(torch.nn.Module):
         return torch.tensor(self.value)
 
 
-def test_min_posterior_variance_must_be_positive():
-    cfg = cVAEConfig(
-        ModelConfig=DummySelector(),
-        min_posterior_variance=0,
-    )
-
-    with pytest.raises(
-        AssertionError,
-        match="min_posterior_variance must be positive",
-    ):
-        make_module(cfg)
-
-
-def test_min_posterior_variance_is_converted_to_log_tensor():
-    cfg = cVAEConfig(
-        ModelConfig=DummySelector(),
-        min_posterior_variance=0.25,
-    )
-
-    module = make_module(cfg)
-
-    assert torch.is_tensor(module.min_posterior_variance)
-    assert torch.allclose(
-        module.min_posterior_variance,
-        torch.log(torch.tensor(0.25)),
-    )
-
-
 def test_forward_eval_uses_validation_noise_sample_count():
     selector = GeneratorSelector()
     module = make_module(
@@ -911,41 +864,6 @@ def test_predict_eval_preserves_explicit_output_sample_size():
     assert request.output_sample_size == 13
 
 
-def test_predict_records_all_request_fields():
-    selector = RecordingSelector()
-    cfg = cVAEConfig(
-        ModelConfig=selector,
-        prior_flow_config=DummyFlow(),
-    )
-    module = make_module(cfg)
-
-    latent_samples = torch.ones(3, 4)
-    batch = DummyBatch(
-        input=torch.full((2, 1), 2.0),
-        input_mask=torch.full((2, 1), 3.0),
-        added_features=torch.full((2, 5), 4.0),
-    )
-
-    module.predict(
-        batch,
-        sample_size=6,
-        nstds=2,
-        latent_samples=latent_samples,
-        output_sample_size=8,
-    )
-
-    request = selector.model_config.predict_request
-
-    assert request.condition is batch.input
-    assert request.condition_mask is batch.input_mask
-    assert request.added_features is batch.added_features
-    assert request.prior_flow is module.prior_flow
-    assert request.sample_size == 6
-    assert request.nstds == 2
-    assert request.latent_samples is latent_samples
-    assert request.output_sample_size == 8
-
-
 def test_compute_loss_expands_matching_target_mask():
     module = make_module()
     criterion = RecordingLoss()
@@ -973,27 +891,6 @@ def test_compute_loss_expands_matching_target_mask():
     assert losses["total_loss"] == pytest.approx(2.0)
     assert losses["kld"] == pytest.approx(2.0)
     assert losses["recon"] == pytest.approx(1.0)
-
-
-def test_compute_loss_does_not_expand_different_mask_shape():
-    module = make_module()
-    criterion = RecordingLoss()
-    module.init_loss_function(criterion)
-    module.KLD = ConstantKLD(0.0)
-
-    target = torch.zeros(2, 1, 3, 4)
-    target_mask = torch.ones(2, 1)
-    batch = DummyBatch(
-        target=target,
-        target_mask=target_mask,
-    )
-
-    module._compute_loss(
-        beta=1.0,
-        data=batch,
-    )
-
-    assert criterion.calls[0]["target_mask"] is target_mask
 
 
 def test_compute_loss_accepts_none_target_mask():

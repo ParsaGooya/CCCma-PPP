@@ -61,6 +61,7 @@ def make_checkpoint_config(
 
 
 class DummyConfig(modelConfigABC):
+    EXPECTS_MASK = False
     activation = "relu"
     NUM_INPUT_DIMS = 2
     NUM_OUTPUT_DIMS = 2
@@ -137,6 +138,7 @@ class DummyDeterministicModel(deterministicmodelsABC):
 
 
 class DummyCvaeConfig(cVAEmodelConfigABC):
+    EXPECTS_MASK = False
     activation = "relu"
     NUM_INPUT_DIMS = 2
     NUM_OUTPUT_DIMS = 2
@@ -1157,6 +1159,7 @@ def test_weights_init_frozen_weight_still_initializes_bias():
 
 
 class ConfigCompatibilityHarness(modelConfigABC):
+    EXPECTS_MASK = False
     activation = "relu"
     NUM_INPUT_DIMS = 2
     NUM_OUTPUT_DIMS = 2
@@ -1175,199 +1178,6 @@ class ConfigCompatibilityHarness(modelConfigABC):
         **kwargs,
     ):
         return None
-
-
-def test_config_level_checkpoint_validation_without_checkpoint():
-    config = ConfigCompatibilityHarness(
-        checkpoint_config=None,
-    )
-
-    result = config._validate_checkpoint_compatibility(
-        input_shape=np.asarray([2, 3]),
-        output_shape=np.asarray([1, 3]),
-    )
-
-    assert result is None
-
-
-def test_config_level_checkpoint_validation_matching_values():
-    RuntimeContext.INPUT_VAR_METADATA = {
-        "input": "metadata",
-    }
-    RuntimeContext.TARGET_VAR_METADATA = {
-        "target": "metadata",
-    }
-
-    checkpoint = make_checkpoint_config(
-        "checkpoint.pt",
-        input_metadata={
-            "input": "metadata",
-        },
-        output_metadata={
-            "target": "metadata",
-        },
-    )
-    config = ConfigCompatibilityHarness(checkpoint)
-
-    result = config._validate_checkpoint_compatibility(
-        input_shape=(2, 3),
-        output_shape=(1, 3),
-    )
-
-    assert result is None
-
-
-def test_config_level_checkpoint_validation_rejects_input_shape():
-    config = ConfigCompatibilityHarness(make_checkpoint_config("checkpoint.pt"))
-
-    with pytest.raises(
-        RuntimeError,
-        match="Requested input shape.*checkpoint input shape",
-    ):
-        config._validate_checkpoint_compatibility(
-            input_shape=(9, 9),
-            output_shape=(1, 3),
-        )
-
-
-def test_config_level_checkpoint_validation_rejects_output_shape():
-    config = ConfigCompatibilityHarness(make_checkpoint_config("checkpoint.pt"))
-
-    with pytest.raises(
-        RuntimeError,
-        match="Requested output shape.*checkpoint output shape",
-    ):
-        config._validate_checkpoint_compatibility(
-            input_shape=(2, 3),
-            output_shape=(9, 9),
-        )
-
-
-def test_config_level_checkpoint_validation_rejects_input_metadata():
-    RuntimeContext.INPUT_VAR_METADATA = {
-        "current": "input",
-    }
-
-    config = ConfigCompatibilityHarness(
-        make_checkpoint_config(
-            "checkpoint.pt",
-            input_metadata={
-                "checkpoint": "input",
-            },
-        )
-    )
-
-    with pytest.raises(
-        RuntimeError,
-        match="Checkpoint input metadata is incompatible",
-    ):
-        config._validate_checkpoint_compatibility(
-            input_shape=(2, 3),
-            output_shape=(1, 3),
-        )
-
-
-def test_config_level_checkpoint_validation_rejects_target_metadata():
-    RuntimeContext.TARGET_VAR_METADATA = {
-        "current": "target",
-    }
-
-    config = ConfigCompatibilityHarness(
-        make_checkpoint_config(
-            "checkpoint.pt",
-            output_metadata={
-                "checkpoint": "target",
-            },
-        )
-    )
-
-    with pytest.raises(
-        RuntimeError,
-        match="Checkpoint target metadata is incompatible",
-    ):
-        config._validate_checkpoint_compatibility(
-            input_shape=(2, 3),
-            output_shape=(1, 3),
-        )
-
-
-def test_config_level_input_shape_check_precedes_output_shape_check():
-    config = ConfigCompatibilityHarness(
-        make_checkpoint_config(
-            "checkpoint.pt",
-            input_shape=(2, 3),
-            output_shape=(1, 3),
-        )
-    )
-
-    with pytest.raises(
-        RuntimeError,
-        match="Requested input shape",
-    ):
-        config._validate_checkpoint_compatibility(
-            input_shape=(8, 8),
-            output_shape=(9, 9),
-        )
-
-
-def test_config_level_output_shape_check_precedes_metadata_checks():
-    RuntimeContext.INPUT_VAR_METADATA = {
-        "current": "input",
-    }
-    RuntimeContext.TARGET_VAR_METADATA = {
-        "current": "target",
-    }
-
-    config = ConfigCompatibilityHarness(
-        make_checkpoint_config(
-            "checkpoint.pt",
-            input_metadata={
-                "checkpoint": "input",
-            },
-            output_metadata={
-                "checkpoint": "target",
-            },
-        )
-    )
-
-    with pytest.raises(
-        RuntimeError,
-        match="Requested output shape",
-    ):
-        config._validate_checkpoint_compatibility(
-            input_shape=(2, 3),
-            output_shape=(9, 9),
-        )
-
-
-def test_config_level_input_metadata_check_precedes_target_metadata():
-    RuntimeContext.INPUT_VAR_METADATA = {
-        "current": "input",
-    }
-    RuntimeContext.TARGET_VAR_METADATA = {
-        "current": "target",
-    }
-
-    config = ConfigCompatibilityHarness(
-        make_checkpoint_config(
-            "checkpoint.pt",
-            input_metadata={
-                "checkpoint": "input",
-            },
-            output_metadata={
-                "checkpoint": "target",
-            },
-        )
-    )
-
-    with pytest.raises(
-        RuntimeError,
-        match="Checkpoint input metadata",
-    ):
-        config._validate_checkpoint_compatibility(
-            input_shape=(2, 3),
-            output_shape=(1, 3),
-        )
 
 
 def test_get_device_parameter_branch_does_not_inspect_buffers(

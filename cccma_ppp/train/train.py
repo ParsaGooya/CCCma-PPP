@@ -8,13 +8,14 @@ import dacite
 
 def get_parser() -> argparse.ArgumentParser:
     """
-    Document this function.
+    Create argument parser for training script.
 
     Returns
     -------
     argparse.ArgumentParser
-        Description not yet provided.
+        Configured parser expecting a YAML configuration path.
     """
+
     parser = argparse.ArgumentParser(description="Train model from config file")
 
     parser.add_argument(
@@ -28,13 +29,18 @@ def get_parser() -> argparse.ArgumentParser:
 
 def main(yaml_config: str):
     """
-    Document this function.
+    Run training from configuration file.
 
     Parameters
     ----------
     yaml_config : str
-        Description not yet provided.
+        Path to YAML configuration file.
+
+    Returns
+    -------
+    None
     """
+
     distributed = Distributed.get_instance()
 
     try:

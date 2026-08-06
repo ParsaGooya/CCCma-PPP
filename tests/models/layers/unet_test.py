@@ -1,6 +1,7 @@
 from copy import copy
 from unittest.mock import Mock
 
+import numpy as np
 import pytest
 import torch
 import torch.nn as nn
@@ -409,18 +410,6 @@ def make_down_block(
     )
 
 
-def test_down_block_without_skip_processor():
-    block = make_down_block(
-        return_skip=True,
-        process_skip=False,
-    )
-
-    assert block.return_skip is True
-    assert isinstance(block._block, ConvBlock)
-    assert block.skip_processor is None
-    assert isinstance(block.tensor_pool, nn.MaxPool2d)
-
-
 def test_down_block_with_skip_processor():
     block = make_down_block(
         return_skip=True,
@@ -438,274 +427,6 @@ def test_down_block_does_not_create_unused_skip_processor():
 
     assert block.return_skip is False
     assert block.skip_processor is None
-
-
-@pytest.mark.parametrize(
-    "method",
-    [
-        "any",
-        "all",
-        "fraction",
-    ],
-)
-def test_down_block_mask_pooling_configuration(
-    method,
-):
-    block = make_down_block(
-        mask_pooling=method,
-        mask_fraction_threshold=0.75,
-    )
-
-    assert block.mask_pool.method == method
-    assert block.mask_pool.fraction_threshold == pytest.approx(0.75)
-
-
-@pytest.mark.parametrize(
-    ("input_shape", "expected"),
-    [
-        (
-            (8, 10),
-            (4, 5),
-        ),
-        (
-            (9, 11),
-            (4, 5),
-        ),
-        (
-            (1, 1),
-            (0, 0),
-        ),
-    ],
-)
-def test_down_block_output_shape(
-    input_shape,
-    expected,
-):
-    block = make_down_block()
-
-    assert block.output_shape(input_shape) == expected
-
-
-def test_down_block_returns_downsampled_and_skip():
-    block = make_down_block(
-        return_skip=True,
-    )
-
-    convolved = TensorMask(
-        tensor=torch.ones(2, 5, 8, 8),
-        mask=None,
-    )
-
-    block._block = FixedTensorMaskModule(convolved)
-
-    value = make_tensor_mask(
-        channels=3,
-    )
-
-    downsampled, skip = block(value)
-
-    assert skip is convolved
-    assert downsampled.tensor.shape == (
-        2,
-        5,
-        4,
-        4,
-    )
-    assert downsampled.mask is None
-
-
-def test_down_block_returns_only_downsampled_when_skip_disabled():
-    block = make_down_block(
-        return_skip=False,
-    )
-
-    convolved = TensorMask(
-        tensor=torch.ones(2, 5, 8, 8),
-        mask=None,
-    )
-
-    block._block = FixedTensorMaskModule(convolved)
-
-    result = block(
-        make_tensor_mask(
-            channels=3,
-        )
-    )
-
-    assert isinstance(result, TensorMask)
-    assert result.tensor.shape == (
-        2,
-        5,
-        4,
-        4,
-    )
-
-
-def test_down_block_processes_skip_when_enabled():
-    block = make_down_block(
-        return_skip=True,
-        process_skip=True,
-    )
-
-    block._block = AddOneTensorMaskModule()
-    block.skip_processor = AddOneTensorMaskModule()
-
-    value = TensorMask(
-        tensor=torch.zeros(2, 3, 8, 8),
-        mask=None,
-    )
-
-    downsampled, skip = block(value)
-
-    torch.testing.assert_close(
-        skip.tensor,
-        torch.full_like(
-            skip.tensor,
-            2.0,
-        ),
-    )
-
-    torch.testing.assert_close(
-        downsampled.tensor,
-        torch.ones_like(
-            downsampled.tensor,
-        ),
-    )
-
-
-def test_down_block_skips_mask_pooling_when_mask_is_none(
-    monkeypatch,
-):
-    block = make_down_block()
-
-    block._block = IdentityTensorMaskModule()
-
-    mask_pool = Mock(side_effect=AssertionError("Mask pool should not be called."))
-
-    monkeypatch.setattr(
-        block.mask_pool,
-        "forward",
-        mask_pool,
-    )
-
-    downsampled, skip = block(
-        make_tensor_mask(
-            channels=3,
-            with_mask=False,
-        )
-    )
-
-    assert downsampled.mask is None
-    assert skip.mask is None
-    mask_pool.assert_not_called()
-
-
-@pytest.mark.parametrize(
-    ("method", "mask", "expected"),
-    [
-        (
-            "any",
-            torch.tensor(
-                [
-                    [
-                        [
-                            [0.0, 0.0],
-                            [0.0, 1.0],
-                        ]
-                    ]
-                ]
-            ),
-            1.0,
-        ),
-        (
-            "all",
-            torch.tensor(
-                [
-                    [
-                        [
-                            [1.0, 1.0],
-                            [1.0, 0.0],
-                        ]
-                    ]
-                ]
-            ),
-            0.0,
-        ),
-        (
-            "fraction",
-            torch.tensor(
-                [
-                    [
-                        [
-                            [1.0, 1.0],
-                            [1.0, 0.0],
-                        ]
-                    ]
-                ]
-            ),
-            1.0,
-        ),
-    ],
-)
-def test_down_block_pools_mask(
-    method,
-    mask,
-    expected,
-):
-    block = DownBlock(
-        in_channels=1,
-        out_channels=1,
-        block_config=make_conv_config(),
-        mask_pooling=method,
-        mask_fraction_threshold=0.5,
-        return_skip=True,
-    )
-
-    block._block = IdentityTensorMaskModule()
-
-    downsampled, skip = block(
-        TensorMask(
-            tensor=torch.ones(1, 1, 2, 2),
-            mask=mask,
-        )
-    )
-
-    assert downsampled.mask.item() == pytest.approx(expected)
-    assert skip.mask is mask
-
-
-def test_down_block_uses_max_pool_for_tensor():
-    block = DownBlock(
-        in_channels=1,
-        out_channels=1,
-        block_config=make_conv_config(),
-        mask_pooling="any",
-        mask_fraction_threshold=0.5,
-        return_skip=True,
-    )
-
-    block._block = IdentityTensorMaskModule()
-
-    tensor = torch.tensor(
-        [
-            [
-                [
-                    [1.0, 2.0],
-                    [3.0, 4.0],
-                ]
-            ]
-        ]
-    )
-
-    downsampled, skip = block(
-        TensorMask(
-            tensor=tensor,
-            mask=None,
-        )
-    )
-
-    assert skip.tensor is tensor
-    assert downsampled.tensor.item() == pytest.approx(4.0)
 
 
 def make_up_block(
@@ -1736,3 +1457,683 @@ def test_unet_output_preserves_float64():
     result = layer(tensor)
 
     assert result.dtype == torch.float64
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        make_partial_config(),
+        make_convnext_config(
+            use_partial_conv=True,
+        ),
+    ],
+)
+def test_down_block_uses_partial_convolution_downsampling(
+    config,
+):
+    block = DownBlock(
+        in_channels=3,
+        out_channels=5,
+        block_config=config,
+        mask_pooling="any",
+        mask_fraction_threshold=0.5,
+    )
+
+    assert block.use_partial_conv_downsample is True
+    assert isinstance(
+        block.tensor_downsample,
+        PartialConv2d,
+    )
+    assert block.tensor_downsample.in_channels == 3
+    assert block.tensor_downsample.out_channels == 5
+    assert block.tensor_downsample.kernel_size == (
+        3,
+        3,
+    )
+    assert block.tensor_downsample.stride == (
+        2,
+        2,
+    )
+    assert block.tensor_downsample.padding == (
+        1,
+        1,
+    )
+    assert block.tensor_downsample.multi_channel is True
+    assert block.tensor_downsample.return_mask is True
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        make_conv_config(),
+        make_convnext_config(
+            use_partial_conv=False,
+        ),
+    ],
+)
+def test_down_block_uses_standard_convolution_downsampling(
+    config,
+):
+    block = DownBlock(
+        in_channels=3,
+        out_channels=5,
+        block_config=config,
+        mask_pooling="any",
+        mask_fraction_threshold=0.5,
+    )
+
+    assert block.use_partial_conv_downsample is False
+    assert isinstance(
+        block.tensor_downsample,
+        nn.Conv2d,
+    )
+    assert not isinstance(
+        block.tensor_downsample,
+        PartialConv2d,
+    )
+    assert block.tensor_downsample.in_channels == 3
+    assert block.tensor_downsample.out_channels == 5
+
+
+def test_down_block_standard_forward_returns_downsampled_and_skip():
+    block = DownBlock(
+        in_channels=3,
+        out_channels=5,
+        block_config=make_conv_config(),
+        mask_pooling="any",
+        mask_fraction_threshold=0.5,
+        return_skip=True,
+    )
+
+    transformed = TensorMask(
+        tensor=torch.ones(
+            2,
+            3,
+            8,
+            8,
+        ),
+        mask=torch.ones(
+            2,
+            1,
+            8,
+            8,
+        ),
+    )
+    block._block = FixedTensorMaskModule(
+        transformed,
+    )
+
+    downsampled, skip = block(
+        make_tensor_mask(
+            channels=3,
+        )
+    )
+
+    assert skip is transformed
+    assert downsampled.tensor.shape == (
+        2,
+        5,
+        4,
+        4,
+    )
+    assert downsampled.mask is None
+
+
+def test_down_block_standard_forward_without_skip():
+    block = DownBlock(
+        in_channels=3,
+        out_channels=5,
+        block_config=make_conv_config(),
+        mask_pooling="any",
+        mask_fraction_threshold=0.5,
+        return_skip=False,
+    )
+
+    transformed = TensorMask(
+        tensor=torch.ones(
+            2,
+            3,
+            8,
+            8,
+        ),
+        mask=None,
+    )
+    block._block = FixedTensorMaskModule(
+        transformed,
+    )
+
+    result = block(
+        make_tensor_mask(
+            channels=3,
+        )
+    )
+
+    assert isinstance(
+        result,
+        TensorMask,
+    )
+    assert result.tensor.shape == (
+        2,
+        5,
+        4,
+        4,
+    )
+    assert result.mask is None
+
+
+def test_down_block_processes_skip_after_downsampling(
+    monkeypatch,
+):
+    block = DownBlock(
+        in_channels=3,
+        out_channels=5,
+        block_config=make_conv_config(),
+        mask_pooling="any",
+        mask_fraction_threshold=0.5,
+        return_skip=True,
+        process_skip=True,
+    )
+
+    events = []
+
+    class Transform(nn.Module):
+        def forward(
+            self,
+            value,
+        ):
+            events.append("block")
+            return TensorMask(
+                tensor=value.tensor + 1,
+                mask=value.mask,
+            )
+
+    class Downsample(nn.Module):
+        def forward(
+            self,
+            value,
+        ):
+            events.append("downsample")
+            return torch.zeros(
+                value.shape[0],
+                5,
+                value.shape[2] // 2,
+                value.shape[3] // 2,
+            )
+
+    class ProcessSkip(nn.Module):
+        def forward(
+            self,
+            value,
+        ):
+            events.append("skip_processor")
+            return TensorMask(
+                tensor=value.tensor + 1,
+                mask=value.mask,
+            )
+
+    block._block = Transform()
+    block.tensor_downsample = Downsample()
+    block.skip_processor = ProcessSkip()
+
+    downsampled, skip = block(
+        make_tensor_mask(
+            channels=3,
+            fill_value=0.0,
+        )
+    )
+
+    assert events == [
+        "block",
+        "downsample",
+        "skip_processor",
+    ]
+    torch.testing.assert_close(
+        skip.tensor,
+        torch.full_like(
+            skip.tensor,
+            2.0,
+        ),
+    )
+    torch.testing.assert_close(
+        downsampled.tensor,
+        torch.zeros_like(
+            downsampled.tensor,
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("input_shape", "expected"),
+    [
+        (
+            (8, 10),
+            (4, 5),
+        ),
+        (
+            (9, 11),
+            (5, 6),
+        ),
+        (
+            (1, 1),
+            (1, 1),
+        ),
+        (
+            (2, 3),
+            (1, 2),
+        ),
+        (
+            np.asarray([7, 8]),
+            (4, 4),
+        ),
+    ],
+)
+def test_down_block_output_shape_matches_strided_convolution(
+    input_shape,
+    expected,
+):
+    block = DownBlock(
+        in_channels=3,
+        out_channels=5,
+        block_config=make_conv_config(),
+        mask_pooling="any",
+        mask_fraction_threshold=0.5,
+    )
+
+    assert (
+        block.output_shape(
+            input_shape,
+        )
+        == expected
+    )
+
+
+def test_down_block_mask_pooling_arguments_are_currently_unused():
+    first = DownBlock(
+        in_channels=3,
+        out_channels=5,
+        block_config=make_conv_config(),
+        mask_pooling="any",
+        mask_fraction_threshold=0.0,
+    )
+    second = DownBlock(
+        in_channels=3,
+        out_channels=5,
+        block_config=make_conv_config(),
+        mask_pooling="fraction",
+        mask_fraction_threshold=1.0,
+    )
+
+    assert not hasattr(
+        first,
+        "mask_pool",
+    )
+    assert not hasattr(
+        second,
+        "mask_pool",
+    )
+
+
+def test_build_conv_block_forwards_latent_arguments(
+    monkeypatch,
+):
+    captured = {}
+
+    class FakeLatentBlock(nn.Module):
+        def __init__(
+            self,
+            **kwargs,
+        ):
+            super().__init__()
+            captured.update(kwargs)
+
+    monkeypatch.setattr(
+        module,
+        "LatentBlock",
+        FakeLatentBlock,
+    )
+
+    result = build_conv_block(
+        in_channels=3,
+        out_channels=5,
+        config=make_conv_config(),
+        latent_size=7,
+        block_output_shape=(
+            5,
+            4,
+            4,
+        ),
+        get_log_var=False,
+        latent_normalization="group",
+    )
+
+    assert isinstance(
+        result,
+        FakeLatentBlock,
+    )
+    assert isinstance(
+        captured["conv_block"],
+        ConvBlock,
+    )
+    assert captured["input_shape"] == (
+        5,
+        4,
+        4,
+    )
+    assert captured["latent_size"] == 7
+    assert captured["get_log_var"] is False
+    assert captured["latent_normalization"] == "group"
+
+
+def test_up_block_partial_effective_config_disables_mask_output():
+    config = make_partial_config()
+
+    block = UpBlock(
+        input_channels=4,
+        skip_channels=3,
+        out_channels=2,
+        block_config=config,
+        upsampling_method="bilinear",
+        skip_alignment_method="strict",
+        transpose_kernel_size=2,
+    )
+
+    assert config.multi_channel is True
+    assert config.return_mask is True
+    assert block._block.config.multi_channel is False
+    assert block._block.config.return_mask is False
+
+
+def test_up_block_convnext_partial_effective_config_disables_mask_output():
+    config = make_convnext_config(
+        use_partial_conv=True,
+    )
+
+    block = UpBlock(
+        input_channels=4,
+        skip_channels=3,
+        out_channels=2,
+        block_config=config,
+        upsampling_method="bilinear",
+        skip_alignment_method="strict",
+        transpose_kernel_size=2,
+    )
+
+    assert config.multi_channel is True
+    assert config.return_mask is True
+    assert block._block.config.multi_channel is False
+    assert block._block.config.return_mask is False
+
+
+def test_up_block_without_skip_or_resize_shape_currently_raises():
+    block = make_up_block(
+        skip_channels=None,
+    )
+
+    with pytest.raises(
+        UnboundLocalError,
+    ):
+        block(
+            make_tensor_mask(
+                channels=4,
+                height=4,
+                width=4,
+            ),
+            skip=None,
+            resize_shape=None,
+        )
+
+
+def test_up_block_ignores_resize_shape_when_skip_is_configured(
+    monkeypatch,
+):
+    block = make_up_block(
+        skip_channels=3,
+    )
+
+    align_mock = Mock(side_effect=lambda value, shape, *args: value)
+    monkeypatch.setattr(
+        module,
+        "align_to_skip",
+        align_mock,
+    )
+
+    block(
+        make_tensor_mask(
+            channels=4,
+            height=4,
+            width=4,
+        ),
+        skip=make_tensor_mask(
+            channels=3,
+            height=8,
+            width=8,
+        ),
+        resize_shape=(
+            99,
+            99,
+        ),
+    )
+
+    assert align_mock.call_args.args[1] == (
+        8,
+        8,
+    )
+
+
+def test_up_block_bilinear_projects_after_upsampling(
+    monkeypatch,
+):
+    block = make_up_block(
+        upsampling_method="bilinear",
+    )
+
+    events = []
+
+    class RecordingUpsample(nn.Module):
+        def forward(
+            self,
+            value,
+        ):
+            events.append(
+                (
+                    "upsample",
+                    value.shape,
+                )
+            )
+            return torch.zeros(
+                value.shape[0],
+                value.shape[1],
+                value.shape[2] * 2,
+                value.shape[3] * 2,
+            )
+
+    class RecordingProjection(nn.Module):
+        def forward(
+            self,
+            value,
+        ):
+            events.append(
+                (
+                    "projection",
+                    value.shape,
+                )
+            )
+            return torch.zeros(
+                value.shape[0],
+                2,
+                value.shape[2],
+                value.shape[3],
+            )
+
+    block.upsample = RecordingUpsample()
+    block.channel_projection = RecordingProjection()
+
+    block(
+        make_tensor_mask(
+            channels=4,
+            height=4,
+            width=4,
+        ),
+        make_tensor_mask(
+            channels=3,
+            height=8,
+            width=8,
+        ),
+    )
+
+    assert events == [
+        (
+            "upsample",
+            torch.Size(
+                [
+                    2,
+                    4,
+                    4,
+                    4,
+                ]
+            ),
+        ),
+        (
+            "projection",
+            torch.Size(
+                [
+                    2,
+                    4,
+                    8,
+                    8,
+                ]
+            ),
+        ),
+    ]
+
+
+def test_up_block_output_mask_is_cleared_before_block():
+    block = make_up_block(
+        skip_channels=3,
+    )
+
+    capture = CaptureTensorMaskModule()
+    block._block = capture
+
+    block(
+        make_tensor_mask(
+            channels=4,
+            height=4,
+            width=4,
+            with_mask=True,
+        ),
+        make_tensor_mask(
+            channels=3,
+            height=8,
+            width=8,
+            with_mask=True,
+        ),
+    )
+
+    assert capture.received[0].mask is None
+
+
+def test_up_block_resize_path_forwards_aligned_tensor_directly(
+    monkeypatch,
+):
+    block = make_up_block(
+        skip_channels=None,
+    )
+
+    aligned = torch.randn(
+        2,
+        2,
+        7,
+        9,
+    )
+    monkeypatch.setattr(
+        module,
+        "align_to_skip",
+        Mock(return_value=aligned),
+    )
+
+    capture = CaptureTensorMaskModule()
+    block._block = capture
+
+    result = block(
+        make_tensor_mask(
+            channels=4,
+            height=4,
+            width=4,
+        ),
+        resize_shape=(
+            7,
+            9,
+        ),
+    )
+
+    assert capture.received[0].tensor is aligned
+    assert capture.received[0].mask is None
+    assert result is capture.received[0]
+
+
+def test_unet_output_hidden_sigmoid_range():
+    layer = UNetOutput(
+        in_channels=4,
+        out_channels=2,
+        hidden_channels=6,
+        activation="sigmoid",
+    )
+
+    result = layer(
+        torch.randn(
+            2,
+            4,
+            8,
+            8,
+        )
+    )
+
+    assert torch.all(result >= 0)
+    assert torch.all(result <= 1)
+
+
+def test_unet_output_hidden_tanh_range():
+    layer = UNetOutput(
+        in_channels=4,
+        out_channels=2,
+        hidden_channels=6,
+        activation="tanh",
+    )
+
+    result = layer(
+        torch.randn(
+            2,
+            4,
+            8,
+            8,
+        )
+    )
+
+    assert torch.all(result >= -1)
+    assert torch.all(result <= 1)
+
+
+def test_unet_output_hidden_path_preserves_batch_and_spatial_dimensions():
+    layer = UNetOutput(
+        in_channels=3,
+        out_channels=7,
+        hidden_channels=5,
+        activation="identity",
+    )
+
+    result = layer(
+        torch.randn(
+            4,
+            3,
+            11,
+            13,
+        )
+    )
+
+    assert result.shape == (
+        4,
+        7,
+        11,
+        13,
+    )

@@ -20,6 +20,7 @@ def make_config(**overrides):
         "condition_embedding_size": 4,
         "condition_dependant_latent": True,
         "condemb_to_decoder": True,
+        "deterministic_guess_config": None,
         "mask_fraction_threshold": 0.5,
         "output_block_hidden_channels": 32,
         "GENERATOR": None,

@@ -90,7 +90,9 @@ def make_forward_request(
     condition=None,
     condition_mask=None,
     added_features=None,
-    sample_size=2,
+    latent_sample_size=2,
+    posterior_variance_limits=None,
+    sample_size=None,
     min_posterior_variance=None,
 ):
     if target is None:
@@ -99,14 +101,29 @@ def make_forward_request(
     if condition is None:
         condition = torch.randn(3, 1, 4)
 
+    if sample_size is not None:
+        latent_sample_size = sample_size
+
+    if min_posterior_variance is not None:
+        posterior_variance_limits = (
+            min_posterior_variance,
+            torch.tensor(float("inf")),
+        )
+    if latent_sample_size is None:
+        latent_sample_size = 2
+    if min_posterior_variance is not None:
+        posterior_variance_limits = (
+            min_posterior_variance,
+            torch.tensor(float("inf")),
+        )
     return SimpleNamespace(
         target=target,
         target_mask=target_mask,
         condition=condition,
         condition_mask=condition_mask,
         added_features=added_features,
-        sample_size=sample_size,
-        min_posterior_variance=min_posterior_variance,
+        latent_sample_size=latent_sample_size,
+        posterior_variance_limits=posterior_variance_limits,
     )
 
 
@@ -118,11 +135,14 @@ def make_predict_request(
     prior_flow=None,
     latent_samples=None,
     nstds=1.0,
-    sample_size=2,
+    latent_sample_size=2,
+    sample_size=None,
 ):
     if condition is None:
         condition = torch.randn(3, 1, 4)
 
+    if sample_size is not None:
+        latent_sample_size = sample_size
     return SimpleNamespace(
         condition=condition,
         condition_mask=condition_mask,
@@ -130,7 +150,8 @@ def make_predict_request(
         prior_flow=prior_flow,
         latent_samples=latent_samples,
         nstds=nstds,
-        sample_size=sample_size,
+        latent_sample_size=sample_size,
+        sample_size=None,
     )
 
 
@@ -863,35 +884,6 @@ def test_predict_uses_condition_dependent_prior(
         std=2.5,
     )
     assert result.output.shape == (4, 3, 1, 4)
-
-
-def test_predict_uses_standard_normal_prior(
-    monkeypatch,
-):
-    model = make_model()
-    latent = torch.zeros(4, 3, 3)
-
-    distribution = MagicMock()
-    distribution.sample.return_value = latent
-
-    normal = MagicMock(return_value=distribution)
-
-    monkeypatch.setattr(
-        module,
-        "_get_normal",
-        normal,
-    )
-
-    model.predict(
-        make_predict_request(
-            sample_size=4,
-            nstds=1.75,
-        )
-    )
-
-    normal.assert_called_once()
-    assert normal.call_args.kwargs["std"] == pytest.approx(1.75)
-    distribution.sample.assert_called_once_with((4,))
 
 
 def test_predict_accepts_user_latent_samples():

@@ -28,35 +28,15 @@ from cccma_ppp.configs import required_sample_dimensions, optional_sample_dimens
 
 @dataclasses.dataclass
 class WriterConfig:
-    """
-    Document this class.
-
-    Parameters
-    ----------
-    predictor : DeterministicPredictorConfig | cVAEPredictorConfig
-        Description not yet provided.
-    num_output_sampling : int | None
-        Description not yet provided.
-    get_trained_model_stats_from_validation : bool
-        Description not yet provided.
-    """
-
     predictor: DeterministicPredictorConfig | cVAEPredictorConfig = dataclasses.field(
         default_factory=DeterministicPredictorConfig
     )
 
-    num_output_sampling: int | None = None
+    num_output_sampling: int = 0
     get_trained_model_stats_from_validation: bool = False
 
     def __post_init__(self):
-        """
-        Document this function.
 
-        Raises
-        ------
-        ValueError
-            Description not yet provided.
-        """
         if self.num_output_sampling < 0:
             raise ValueError("num_output_sampling cannot be negative.")
 
@@ -68,32 +48,7 @@ class WriterConfig:
         post_processor: PreprocessingPipeline,
         output_dir: Path | str,
     ):
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        inference_data_loader : Dataloader
-            Description not yet provided.
-        train_dataloader_config : TrainDataloaderConfig
-            Description not yet provided.
-        module : moduleABC
-            Description not yet provided.
-        post_processor : PreprocessingPipeline
-            Description not yet provided.
-        output_dir : Path | str
-            Description not yet provided.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-
-        Raises
-        ------
-        RuntimeError
-            Description not yet provided.
-        """
         if self.predictor._type != module.config._type.lower():
             raise RuntimeError(
                 f"The provided selector config matches {self.predictor._type}"
@@ -111,25 +66,6 @@ class WriterConfig:
 
 
 class Writer:
-    """
-    Document this class.
-
-    Parameters
-    ----------
-    config : WriterConfig
-        Description not yet provided.
-    inference_data_loader : Dataloader
-        Description not yet provided.
-    train_dataloader_config : TrainDataloaderConfig
-        Description not yet provided.
-    module : moduleABC
-        Description not yet provided.
-    post_processor : PreprocessingPipeline
-        Description not yet provided.
-    output_dir : Path | str
-        Description not yet provided.
-    """
-
     def __init__(
         self,
         config: WriterConfig,
@@ -139,24 +75,7 @@ class Writer:
         post_processor: PreprocessingPipeline,
         output_dir: Path | str,
     ):
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        config : WriterConfig
-            Description not yet provided.
-        inference_data_loader : Dataloader
-            Description not yet provided.
-        train_dataloader_config : TrainDataloaderConfig
-            Description not yet provided.
-        module : moduleABC
-            Description not yet provided.
-        post_processor : PreprocessingPipeline
-            Description not yet provided.
-        output_dir : Path | str
-            Description not yet provided.
-        """
         self.config = config
         self.module = module
         self.output_dir = Path(output_dir)
@@ -171,21 +90,7 @@ class Writer:
         distributed: Distributed,
         logger: logging.Logger,
     ):
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        distributed : Distributed
-            Description not yet provided.
-        logger : logging.Logger
-            Description not yet provided.
-
-        Raises
-        ------
-        RuntimeError
-            Description not yet provided.
-        """
         self.logger = logger
         if self.logger is None:
             print("Logger is None. Print is used instead ... \n\n ")
@@ -237,25 +142,10 @@ class Writer:
 
     @property
     def train_stats_save_dir(self):
-        """
-        Document this function.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return Path(self.output_dir) / "training_variable_stats.pt"
 
     def predict(self):
-        """
-        Document this function.
 
-        Raises
-        ------
-        RuntimeError
-            Description not yet provided.
-        """
         if not self._setup:
             raise RuntimeError("Call setup_distributed() before predict().")
         self.log_root(logging.INFO, "Starting Inference Loop...")
@@ -269,9 +159,7 @@ class Writer:
         self.log_root(logging.INFO, f"Inference finished in {time_elapsed:.2f}s")
 
     def _predict(self):
-        """
-        Document this function.
-        """
+
         self.module.eval()
         loader = self.InferenceLoader
         do_post_process = True
@@ -292,9 +180,7 @@ class Writer:
             self.aggregate_predictions_to_netcdf(do_post_process)
 
     def _save_train_stats(self):
-        """
-        Document this function.
-        """
+
         if not self.train_stats_save_dir.exists():
             loader = self.build_train_loader(
                 from_validation=self.config.get_trained_model_stats_from_validation
@@ -326,23 +212,7 @@ class Writer:
         return_metadata: bool = False,
         shuffle: bool | None = None,
     ):
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        from_validation : bool
-            Description not yet provided.
-        return_metadata : bool
-            Description not yet provided.
-        shuffle : bool | None
-            Description not yet provided.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         self.TrainLoaderConfig.setup_distributed(
             self.distributed,
             load_path=Path(RuntimeContext.GLOBAL_EXP_DIR) / "preprocessing_pipeline",
@@ -358,14 +228,7 @@ class Writer:
             )
 
     def aggregate_train_stats(self, stats: dict[str, RunningCovariance]):
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        stats : dict[str, RunningCovariance]
-            Description not yet provided.
-        """
         for stat in stats.values():
             if stat.sum_x is not None:
                 stat.distributed_reduce()
@@ -391,17 +254,22 @@ class Writer:
 
     def log_root(self, level: int, msg: str, *args):
         """
-        Document this function.
+        Log message from root process.
 
         Parameters
         ----------
         level : int
-            Description not yet provided.
+            Logging level.
         msg : str
-            Description not yet provided.
-        *args : Any
-            Description not yet provided.
+            Message.
+        *args
+            Formatting arguments.
+
+        Returns
+        -------
+        None
         """
+
         if self.is_on_root:
             if self.logger is not None:
                 self.logger.log(level, msg, *args)
@@ -410,27 +278,11 @@ class Writer:
 
     @property
     def raw_module(self):
-        """
-        Document this function.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         if isinstance(self.module, torch.nn.parallel.DistributedDataParallel):
             return self.module.module
         return self.module
 
     def aggregate_predictions_to_netcdf(self, do_post_process: bool = True):
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        do_post_process : bool
-            Description not yet provided.
-        """
         if self.is_distributed:
             self.distributed.barrier()
 
@@ -458,27 +310,7 @@ def aggregate_predictions(
     logger_function: callable = None,
     cleanup_temp: bool = True,
 ):
-    """
-    Document this function.
 
-    Parameters
-    ----------
-    post_processor : PreprocessingPipeline | None
-        Description not yet provided.
-    output_dir : Path
-        Description not yet provided.
-    naming_convention : str
-        Description not yet provided.
-    logger_function : callable
-        Description not yet provided.
-    cleanup_temp : bool
-        Description not yet provided.
-
-    Raises
-    ------
-    RuntimeError
-        Description not yet provided.
-    """
     temp_save_dir = Path(output_dir) / "_temp"
     output_dir = Path(output_dir)
 
@@ -507,19 +339,6 @@ def aggregate_predictions(
     sample_coords = (*required_sample_dimensions, *optional_sample_dimensions)
 
     def _sort_sample_coords(ds):
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        ds : Any
-            Description not yet provided.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         sort_coords = [coord for coord in sample_coords if coord in ds.coords]
 
         for coord in sort_coords:
@@ -543,6 +362,7 @@ def aggregate_predictions(
                 if "year" in ds.dims:
                     ds_year_part = ds.sel(year=slice(year, year))
                 else:
+                    # Handles cases where year is an auxiliary coordinate.
                     ds_year_part = ds.where(
                         ds["year"] == year,
                         drop=True,
@@ -563,19 +383,42 @@ def aggregate_predictions(
         if not year_datasets:
             continue
 
-        ds_year = xr.combine_by_coords(
+        combined = xr.concat(
             year_datasets,
-            combine_attrs="override",
+            dim="lead_time",
+            coords="minimal",
+            compat="equals",
+            join="exact",
         )
 
-        ds_year = next(iter(ds_year.data_vars.values()))
-        ds_year = _sort_sample_coords(ds_year)
+        lead_times = combined["lead_time"].values
+        _, unique_indices = np.unique(
+            lead_times,
+            return_index=True,
+        )
+
+        if len(unique_indices) != len(lead_times):
+            combined = combined.isel(
+                lead_time=np.sort(unique_indices)
+            )
+
+        combined = combined.sortby("lead_time")
+
+        if "lead_time" in combined.indexes and not combined.indexes["lead_time"].is_monotonic_increasing:
+            raise RuntimeError(
+                f"Lead times remain non-monotonic for year {year}: "
+                f"{combined['lead_time'].values}"
+            )
+
+        ds_year = _sort_sample_coords(combined)
+        
 
         if post_processor is not None:
             ds_year = post_processor.to_dataset(ds_year)
             ds_year = post_processor.inverse_transform(ds_year)
         else:
             ds_year = ds_year.to_dataset(dim="channels")
+
 
         output_path = output_dir / f"{naming_convention}_{year}.nc"
         ds_year.to_netcdf(output_path)

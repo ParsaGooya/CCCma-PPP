@@ -29,20 +29,20 @@ from cccma_ppp.configs import supported_NN_dimensions_sorted, required_sample_di
 @dataclasses.dataclass
 class TrainDatasetConfig(DatasetConfigABC):
     """
-    Document this class.
+    Configuration for training dataset construction.
 
     Parameters
     ----------
     model : ModelDataConfig
-        Description not yet provided.
-    observation : ObsDataConfig | None
-        Description not yet provided.
-    condition : ConditionDataConfig | None
-        Description not yet provided.
-    condition_method : str
-        Description not yet provided.
-    lead_months : lead_months_config | None
-        Description not yet provided.
+        Model dataset configuration.
+    observation : ObsDataConfig or None, optional
+        Observation dataset configuration.
+    condition : ConditionDataConfig or None, optional
+        Conditioning dataset configuration.
+    condition_method : str or None, optional
+        Method for conditioning (e.g., "cross_ensemble", "same_member", "static").
+    lead_months : array-like or None, optional
+        Lead months to use.
     """
 
     model: ModelDataConfig
@@ -53,7 +53,11 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize and validate dataset configuration.
+
+        Returns
+        -------
+        self
         """
         super().__init__()
 
@@ -61,22 +65,16 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     def _check_observation(self):
         """
-        Document this function.
+        Validate observation dataset configuration.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        self
 
         Raises
         ------
-        ValueError
-            Description not yet provided.
-
-        Warns
-        -----
-        UserWarning
-            Description not yet provided.
+        AssertionError
+            If required observation data is missing.
         """
         if self.observation is not None:
             for dim in [
@@ -111,38 +109,30 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     @property
     def effective_input(self):
-        """
-        Document this function.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return self.model
 
     @property
     def ds_operator(self):
         """
-        Document this function.
+        Access dataset operator.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        DatasetOperator
         """
+
         return DatasetOperator(self)
 
     @property
     def get_common_time(self):
         """
-        Document this function.
+        Compute common time range.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        np.ndarray
         """
+
         if self.observation is None:
             return self.model.year_range
 
@@ -152,13 +142,13 @@ class TrainDatasetConfig(DatasetConfigABC):
     @property
     def available_times(self):
         """
-        Document this function.
+        Available training years.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        np.ndarray
         """
+
         return np.intersect1d(
             self.model.info.coords["year"].values, self.get_common_time
         )
@@ -171,18 +161,11 @@ class TrainDatasetConfig(DatasetConfigABC):
         save_name=None,
     ):
         """
-        Document this function.
+        Fit preprocessing pipeline.
 
-        Parameters
-        ----------
-        train_years : Any
-            Description not yet provided.
-        save : Any
-            Description not yet provided.
-        save_path : Any
-            Description not yet provided.
-        save_name : Any
-            Description not yet provided.
+        Returns
+        -------
+        None
         """
         self.ds_operator.fit_preprocessors(
             train_years=train_years,
@@ -193,26 +176,28 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         """
-        Document this function.
+        Load fitted preprocessors.
 
-        Parameters
-        ----------
-        load_dir : Path | str | None
-            Description not yet provided.
+        Returns
+        -------
+        None
         """
         self.ds_operator.load_fitted_preprocessors(load_dir)
 
     def add_fitted_preprocessor(self, preprocessor, index=0):
         """
-        Document this function.
+        Add fitted preprocessor.
 
         Parameters
         ----------
-        preprocessor : Any
-            Description not yet provided.
-        index : Any
-            Description not yet provided.
+        preprocessor : PreprocessModuleABC
+        index : int, optional
+
+        Returns
+        -------
+        None
         """
+
         self.ds_operator.add_fitted_preprocessor(preprocessor, index)
 
     def build_dataset(
@@ -224,25 +209,11 @@ class TrainDatasetConfig(DatasetConfigABC):
         load: bool = False,
     ):
         """
-        Document this function.
-
-        Parameters
-        ----------
-        years : np.ndarray
-            Description not yet provided.
-        time_features : AddedTimeFeatures
-            Description not yet provided.
-        mask : xr.DataArray | None
-            Description not yet provided.
-        return_metadata : bool
-            Description not yet provided.
-        load : bool
-            Description not yet provided.
+        Construct training dataset.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        TrainDataset
         """
         return TrainDataset(
             config=self,
@@ -257,22 +228,14 @@ class TrainDatasetConfig(DatasetConfigABC):
 @dataclasses.dataclass
 class TrainDataset(DatasetABC):
     """
-    Document this class.
+    Training dataset for model learning.
 
     Parameters
     ----------
     config : TrainDatasetConfig
-        Description not yet provided.
-    requested_years : list[int] | tuple[int, ...] | np.ndarray
-        Description not yet provided.
-    time_features : AddedTimeFeatures
-        Description not yet provided.
-    mask : xr.DataArray | None
-        Description not yet provided.
-    return_metadata : bool
-        Description not yet provided.
-    load : bool
-        Description not yet provided.
+    requested_years : array-like
+    mask : xr.DataArray or None, optional
+    return_metadata : bool, optional
     """
 
     config: TrainDatasetConfig
@@ -284,7 +247,18 @@ class TrainDataset(DatasetABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize dataset and load required data.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        RuntimeError
+            If preprocessors are not fitted.
+        ValueError
+            If requested years are invalid.
         """
         super().__init__()
 
@@ -298,24 +272,35 @@ class TrainDataset(DatasetABC):
     @property
     def _autoencoding_model_data(self):
         """
-        Document this function.
+        Whether model is used for autoencoding.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        bool
         """
         return self.config.observation is None
 
     @property
     def _load_model(self):
         """
-        Document this function.
+        Determine whether the model dataset should be loaded.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        bool
+            True if the model dataset needs to be loaded.
+
+        Notes
+        -----
+        This returns ``True`` in either of the following cases:
+
+        - A condition dataset different from the model dataset is provided
+        (i.e., ``_using_model_data_as_condition`` is ``False``), regardless
+        of whether observations are provided.
+        - No observation dataset is provided, meaning the model data is being
+        autoencoded (the condition method is already validated in the
+        configuration), regardless of whether a standalone condition dataset
+        is provided.
         """
         return any(
             [
@@ -327,12 +312,20 @@ class TrainDataset(DatasetABC):
     @property
     def _write_condition_to_input(self):
         """
-        Document this function.
+        Determine whether the condition data replaces the model input.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        bool
+            True if the condition data should be used as the sole input to the
+            machine learning model.
+
+        Notes
+        -----
+        This returns ``True`` in either of the following cases:
+
+        - No standalone condition dataset is provided, but a condition method is specified. In this case, ``_using_model_data_as_condition`` is ``True`` and the condition is derived from the model data. The model dataset will only be loaded if required.
+        - A standalone condition dataset is provided, but no observation dataset is available. In this case, the model data is being autoencoded, so both the model and condition datasets must be loaded.
         """
         if self.config._using_model_data_as_condition:
             return True
@@ -345,13 +338,24 @@ class TrainDataset(DatasetABC):
     @property
     def _concat_condition_to_input(self):
         """
-        Document this function.
+        Determine whether the condition data should be concatenated to the input.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        bool
+            True if the condition data should be concatenated to the model input.
+
+        Notes
+        -----
+        This returns ``True`` when all of the following datasets are available:
+
+        - A standalone condition dataset
+        - A model dataset
+        - An observation dataset
+
+        In this case, ``_write_condition_to_input`` is ``False`` and ``effective_condition`` is available separately from the model input.
         """
+
         return (
             self._write_condition_to_input is False
             and self.config.effective_condition is not None
@@ -362,22 +366,24 @@ class TrainDataset(DatasetABC):
         sample_coords: dict[str, np.ndarray],
     ) -> dict[str, np.ndarray] | None:
         """
-        Document this function.
+        Compute positional indexes for the observation dataset.
 
         Parameters
         ----------
         sample_coords : dict[str, np.ndarray]
-            Description not yet provided.
+            Sampling coordinate values for the model dataset. Must contain
+            ``year`` and ``lead_time``.
 
         Returns
         -------
-        dict[str, np.ndarray] | None
-            Description not yet provided.
+        dict[str, np.ndarray] or None
+            Positional observation indexes for each sample, or ``None`` when
+            no observation dataset is available.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            if a corresponding observation coordinate cannot be found.
         """
         if self.observation_dataset is None:
             return None
@@ -414,13 +420,13 @@ class TrainDataset(DatasetABC):
 
     def get_target_shape(self):
         """
-        Document this function.
+        Determine target shape.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        tuple
         """
+
         from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 
         if self.observation_dataset is not None:
@@ -452,18 +458,20 @@ class TrainDataset(DatasetABC):
 
     def _index_observation_dataset(self, ind: int) -> xr.DataArray | None:
         """
-        Document this function.
+        Select and preprocess one observation sample.
 
         Parameters
         ----------
         ind : int
-            Description not yet provided.
+            Sample index.
 
         Returns
         -------
-        xr.DataArray | None
-            Description not yet provided.
+        xr.DataArray or None
+            Preprocessed observation sample, or ``None`` when no observation
+            dataset is available.
         """
+
         if self.observation_dataset is None:
             return None
 
@@ -483,17 +491,16 @@ class TrainDataset(DatasetABC):
 
     def __getitem__(self, ind):
         """
-        Document this function.
+        Retrieve dataset sample.
 
         Parameters
         ----------
-        ind : Any
-            Description not yet provided.
+        ind : int
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        dict or tuple
+            Sample dictionary, optionally with metadata.
         """
         selection = {dim: value[ind] for dim, value in self.sample_coords.items()}
 

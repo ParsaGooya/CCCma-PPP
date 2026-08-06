@@ -20,3 +20,4 @@ cfg.ds_operator
 cccma_ppp/_internal/*
 *.py.bak
 docs/source/index.rst
+module.input_shape

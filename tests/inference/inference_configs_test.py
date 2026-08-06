@@ -36,6 +36,8 @@ class DummyDistributed:
 
 
 class DummyInferenceLoaderConfig:
+    target_var_metadata = None
+
     def __init__(
         self,
         dataset_config=None,
@@ -80,7 +82,7 @@ class DummyInferenceLoaderConfig:
             distributed,
         )
 
-    def build_inference_loader(self):
+    def build_inference_loader(self, return_spatial_mask=False):
         self.build_called = True
         return self.loader
 
@@ -117,6 +119,10 @@ class DummyTrainLoaderConfig:
 
 
 class DummyModule:
+    input_shape = (2, 3)
+    added_features_dim = 0
+    model_config = SimpleNamespace(EXPECTS_MASK=False)
+
     def __init__(self):
         self.loaded_state = None
         self.loaded_strict = None
@@ -693,7 +699,7 @@ def make_writer_config_fixture(tmp_path):
             / "observation_preprocessing_pipeline.joblib"
         ),
         output_dir=tmp_path / "inference",
-        load_module=lambda loader: module,
+        load_module=lambda loader=None: module,
     )
 
     return (
@@ -703,80 +709,6 @@ def make_writer_config_fixture(tmp_path):
         writer_config,
         module,
     )
-
-
-@pytest.mark.parametrize(
-    "root,with_logger",
-    [
-        (True, True),
-        (True, False),
-        (False, True),
-        (False, False),
-    ],
-)
-def test_build_writer_logging_matrix(
-    monkeypatch,
-    tmp_path,
-    capsys,
-    root,
-    with_logger,
-):
-    (
-        config,
-        inference_config,
-        train_loader,
-        writer_config,
-        module,
-    ) = make_writer_config_fixture(tmp_path)
-
-    postprocessor = object()
-
-    monkeypatch.setattr(
-        "cccma_ppp.inference.inference_configs.PreprocessingPipeline.load_from_memory",
-        lambda self, path: postprocessor,
-    )
-
-    logger_messages = []
-
-    logger = (
-        SimpleNamespace(info=lambda message, **kwargs: logger_messages.append(message))
-        if with_logger
-        else None
-    )
-
-    distributed = DummyDistributed(
-        root=root,
-    )
-
-    writer = build_writer(
-        config,
-        distributed,
-        logger,
-    )
-
-    assert writer is writer_config.writer
-    assert inference_config.setup_called
-    assert inference_config.build_called
-    assert module.device == torch.device("cpu")
-    assert writer_config.build_called
-
-    if root and with_logger:
-        assert logger_messages == [
-            "creating data loader ...",
-            "Loading saved module ...",
-            "Loading postprocessor ...",
-            "Creating writer ...",
-        ]
-        assert capsys.readouterr().out == ""
-    elif root and not with_logger:
-        output = capsys.readouterr().out
-        assert "creating data loader ..." in output
-        assert "Loading saved module ..." in output
-        assert "Loading postprocessor ..." in output
-        assert "Creating writer ..." in output
-    else:
-        assert logger_messages == []
-        assert capsys.readouterr().out == ""
 
 
 def test_build_writer_passes_all_writer_arguments(
@@ -891,7 +823,7 @@ def test_build_writer_propagates_module_load_error(
         _,
     ) = make_writer_config_fixture(tmp_path)
 
-    def fail_load(_):
+    def fail_load():
         raise FileNotFoundError("missing model")
 
     config.load_module = fail_load
@@ -1297,7 +1229,7 @@ def test_build_writer_propagates_loader_build_error(
         _,
     ) = make_writer_config_fixture(tmp_path)
 
-    def fail_build_loader():
+    def fail_build_loader(return_spatial_mask=False):
         raise RuntimeError("loader failed")
 
     inference_config.build_inference_loader = fail_build_loader

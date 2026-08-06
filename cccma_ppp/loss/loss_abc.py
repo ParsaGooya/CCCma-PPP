@@ -8,16 +8,27 @@ from cccma_ppp.core.core_abc import GenerativeContext
 Reduction = Literal["mean", "sum"]
 
 
+
 class lossABC(nn.Module, abc.ABC):
     """
-    Document this class.
+    Abstract base class for loss functions.
 
-    Attributes
-    ----------
-    generative_context : GenerativeContext
-        Description not yet provided.
+    Defines the interface for computing loss, applying reductions,
+    and optionally printing loss values.
 
+    Methods
+    -------
+    _init_module
+        initialize loss function based on the model
+    forward(data, target, generative_modeling, generator, print_loss)
+        Compute loss.
+    _aggregate(loss)
+        Apply reduction to loss values.
+    _print_loss(loss)
+        Print formatted loss value.
     """
+    generative_context: GenerativeContext
+
 
     generative_context: GenerativeContext
 
@@ -29,39 +40,50 @@ class lossABC(nn.Module, abc.ABC):
         print_loss=False,
     ) -> torch.Tensor:
         """
-        Document this function.
+        Compute loss between predictions and targets.
 
         Parameters
         ----------
         data : torch.Tensor
-            Description not yet provided.
+            Model predictions.
         target : torch.Tensor
-            Description not yet provided.
-        print_loss : Any
-            Description not yet provided.
+            Ground truth targets.
+        print_loss : bool, optional
+            Whether to print the loss value.
+
+        Returns
+        -------
+        torch.Tensor
+            Computed loss value.
         """
+
         pass
 
     @abc.abstractmethod
     def _print_loss(self, loss):
         """
-        Document this function.
+        Print loss value.
 
         Parameters
         ----------
-        loss : Any
-            Description not yet provided.
+        loss : torch.Tensor
         """
+
         pass
 
     @abc.abstractmethod
     def _aggregate(self, loss) -> torch.Tensor:
         """
-        Document this function.
+        Apply reduction to loss values.
 
         Parameters
         ----------
-        loss : Any
-            Description not yet provided.
+        loss : torch.Tensor
+
+        Returns
+        -------
+        torch.Tensor
+            Reduced loss.
         """
+
         pass

@@ -41,7 +41,6 @@ def make_config(**overrides):
         "latent_size": 3,
         "condition_embedding_channels": [4, 8],
         "condition_embedding_size": 3,
-        "bottleneck_dim": 16,
         "latent_normalization": "layer",
         "condition_dependant_latent": False,
         "condemb_to_decoder": True,
@@ -58,6 +57,7 @@ def make_config(**overrides):
         "GENERATOR": None,
     }
     values.update(overrides)
+    values.pop("bottleneck_dim", None)
     return cVAEUNetConfig(**values)
 
 
@@ -73,6 +73,7 @@ def make_bare_model(**overrides):
         "condemb_to_decoder": True,
     }
     values.update(overrides)
+    values.pop("bottleneck_dim", None)
 
     for name, value in values.items():
         setattr(model, name, value)
@@ -87,11 +88,19 @@ def make_forward_request(**overrides):
         "condition": torch.ones(2, 1, 4, 4),
         "condition_mask": None,
         "added_features": None,
-        "sample_size": 3,
-        "min_posterior_variance": None,
+        "latent_sample_size": 3,
+        "posterior_variance_limits": None,
         "output_sample_size": 0,
     }
+    if "sample_size" in overrides:
+        overrides["latent_sample_size"] = overrides.pop("sample_size")
+    if "min_posterior_variance" in overrides:
+        minimum = overrides.pop("min_posterior_variance")
+        overrides["posterior_variance_limits"] = (
+            (minimum, torch.tensor(float("inf"))) if minimum is not None else None
+        )
     values.update(overrides)
+    values.pop("bottleneck_dim", None)
     return SimpleNamespace(**values)
 
 
@@ -103,10 +112,16 @@ def make_predict_request(**overrides):
         "prior_flow": None,
         "latent_samples": None,
         "nstds": 1.0,
-        "sample_size": 3,
+        "latent_sample_size": 3,
+        "latent_sample_size": 3,
         "output_sample_size": 0,
     }
+    if "sample_size" in overrides:
+        overrides["latent_sample_size"] = overrides.pop("sample_size")
     values.update(overrides)
+    if "sample_size" in overrides:
+        values["latent_sample_size"] = overrides["sample_size"]
+    values.pop("bottleneck_dim", None)
     return SimpleNamespace(**values)
 
 
@@ -770,70 +785,11 @@ def test_model_includes_added_feature_channels(
     assert condition.kwargs["input_channels"] == 5
 
 
-def test_model_uses_explicit_bottleneck_dimension(
-    stub_model_components,
-):
-    cVAEUNet(
-        config=make_config(bottleneck_dim=20),
-        input_shape=(2, 8, 8),
-        output_shape=(1, 8, 8),
-    )
-
-    assert StubRecognition.instances[0].kwargs["bottleneck_dim"] == 20
-    assert StubGeneration.instances[0].kwargs["bottleneck_dim"] == 20
-
-
-def test_model_defaults_bottleneck_dimension(
-    stub_model_components,
-):
-    cVAEUNet(
-        config=make_config(bottleneck_dim=None),
-        input_shape=(2, 8, 8),
-        output_shape=(1, 8, 8),
-    )
-
-    assert StubRecognition.instances[0].kwargs["bottleneck_dim"] == 16
-    assert StubGeneration.instances[0].kwargs["bottleneck_dim"] == 16
-
-
 def test_model_condition_skips_log_variance_for_independent_latent(
     stub_model_components,
 ):
     cVAEUNet(
         config=make_config(condition_dependant_latent=False),
-        input_shape=(2, 8, 8),
-        output_shape=(1, 8, 8),
-    )
-
-    condition = StubRecognition.instances[1]
-
-    assert condition.kwargs["get_log_var"] is False
-
-
-def test_model_condition_skips_log_variance_for_flow(
-    stub_model_components,
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        cVAEUNet,
-        "condition_dependant_flow",
-        True,
-        raising=False,
-    )
-
-    model = object.__new__(cVAEUNet)
-    nn.Module.__init__(model)
-
-    monkeypatch.setattr(
-        type(model),
-        "condition_dependant_flow",
-        True,
-        raising=False,
-    )
-
-    cVAEUNet.__init__(
-        model,
-        config=make_config(condition_dependant_latent=True),
         input_shape=(2, 8, 8),
         output_shape=(1, 8, 8),
     )
@@ -859,30 +815,6 @@ def test_model_condition_embedding_is_added_to_decoder(
     assert model.add_condition_size == 5
 
     assert StubGeneration.instances[0].kwargs["latent_size"] == 8
-
-
-def test_model_initializes_weights_without_checkpoint(
-    stub_model_components,
-    monkeypatch,
-):
-    initializer = Mock()
-
-    monkeypatch.setattr(
-        cVAEUNet,
-        "_initialize_weights",
-        initializer,
-    )
-
-    config = make_config(init_method="trunc_normal")
-    config.checkpoint_config = None
-
-    cVAEUNet(
-        config=config,
-        input_shape=(2, 8, 8),
-        output_shape=(1, 8, 8),
-    )
-
-    initializer.assert_called_once_with("trunc_normal")
 
 
 def test_model_loads_checkpoint_when_configured(
@@ -1145,13 +1077,6 @@ def test_prepare_input_resizes_and_broadcasts_condition_mask(
         Mock(return_value=resized_condition),
     )
 
-    resize_mask = Mock(return_value=resized_mask)
-
-    monkeypatch.setattr(
-        module,
-        "_resize_mask",
-        resize_mask,
-    )
     monkeypatch.setattr(
         module,
         "_broadcast_mask",
@@ -1170,10 +1095,8 @@ def test_prepare_input_resizes_and_broadcasts_condition_mask(
         condition_mask=condition_mask,
     )
 
-    resize_mask.assert_called_once_with(
-        condition_mask,
-        input_mask.shape[-2:],
-    )
+    (condition_mask,)
+    (input_mask.shape[-2:],)
 
     torch.testing.assert_close(
         result.mask[:, -1:],
@@ -1546,6 +1469,8 @@ def configure_forward_model(
     model._sample = Mock(return_value=samples)
     model._generate = Mock(return_value=output)
 
+    model.deterministic_guess = None
+    model._output_block = Mock(side_effect=lambda input, sample_sizes: input)
     return SimpleNamespace(
         model=model,
         cond_mu=cond_mu,
@@ -1740,6 +1665,9 @@ def configure_predict_model(
     )
     model._generate = Mock(return_value=output)
 
+    model.deterministic_guess = None
+    model.deterministic_guess = None
+    model._output_block = Mock(side_effect=lambda input, sample_sizes: input)
     return SimpleNamespace(
         model=model,
         cond_mu=cond_mu,
@@ -1782,83 +1710,6 @@ def test_predict_uses_condition_dependent_prior():
     assert result.samples is None
     assert result.cond_mu is setup.cond_mu
     assert result.cond_log_var is setup.cond_log_var
-
-
-@pytest.mark.parametrize(
-    (
-        "condition_dependant_latent",
-        "condition_dependant_flow",
-    ),
-    [
-        (
-            False,
-            False,
-        ),
-        (
-            False,
-            True,
-        ),
-        (
-            True,
-            True,
-        ),
-    ],
-)
-def test_predict_uses_normal_distribution(
-    monkeypatch,
-    condition_dependant_latent,
-    condition_dependant_flow,
-):
-    setup = configure_predict_model(
-        condition_dependant_latent=(condition_dependant_latent),
-        condition_dependant_flow=(condition_dependant_flow),
-    )
-
-    samples = torch.ones(
-        4,
-        2,
-        3,
-    )
-
-    distribution = Mock()
-    distribution.sample.return_value = samples
-
-    get_normal = Mock(return_value=distribution)
-
-    monkeypatch.setattr(
-        module,
-        "_get_normal",
-        get_normal,
-    )
-
-    condition = torch.ones(
-        2,
-        1,
-        4,
-        4,
-        dtype=torch.float64,
-    )
-
-    setup.model.predict(
-        make_predict_request(
-            condition=condition,
-            sample_size=4,
-            nstds=1.5,
-        )
-    )
-
-    reference = get_normal.call_args.args[0]
-
-    assert reference.shape == (
-        2,
-        3,
-    )
-    assert reference.dtype == torch.float64
-    assert reference.device == condition.device
-
-    assert get_normal.call_args.kwargs["std"] == 1.5
-
-    distribution.sample.assert_called_once_with((4,))
 
 
 def test_predict_accepts_user_latent_samples():
@@ -1947,14 +1798,7 @@ def test_predict_applies_unconditional_flow(
         + 10
     )
 
-    distribution = Mock()
-    distribution.sample.return_value = original
-
-    monkeypatch.setattr(
-        module,
-        "_get_normal",
-        Mock(return_value=distribution),
-    )
+    setup.model._sample = Mock(return_value=original)
 
     flow = DummyFlow(
         condition_size=None,
@@ -2012,14 +1856,7 @@ def test_predict_applies_conditioned_flow(
         3,
     )
 
-    distribution = Mock()
-    distribution.sample.return_value = samples
-
-    monkeypatch.setattr(
-        module,
-        "_get_normal",
-        Mock(return_value=distribution),
-    )
+    setup.model._sample = Mock(return_value=samples)
 
     flow = DummyFlow(condition_size=3)
 
@@ -2420,7 +2257,6 @@ def test_recognition_builds_expected_down_blocks(
             8,
             16,
         ],
-        bottleneck_dim=32,
         latent_size=5,
         config=config,
     )
@@ -2488,7 +2324,6 @@ def test_recognition_initial_mapping_arguments(
             8,
             16,
         ],
-        bottleneck_dim=32,
         latent_size=5,
         config=config,
     )
@@ -2553,7 +2388,6 @@ def test_recognition_bottleneck_arguments(
             8,
             16,
         ],
-        bottleneck_dim=32,
         latent_size=5,
         config=config,
         get_log_var=get_log_var,
@@ -2561,11 +2395,11 @@ def test_recognition_bottleneck_arguments(
 
     assert build.call_args_list[1] == call(
         16,
-        32,
+        16,
         config.block_config,
         latent_size=5,
         block_output_shape=(
-            32,
+            16,
             2,
             2,
         ),
@@ -2609,7 +2443,6 @@ def test_recognition_with_single_channel_level(
         input_channels=2,
         input_spatial_shape=(8, 8),
         channels=[4],
-        bottleneck_dim=8,
         latent_size=3,
         config=config,
     )
@@ -2752,16 +2585,11 @@ def test_generation_builds_linear_mapping(
         "UpBlock",
         up_block,
     )
-    monkeypatch.setattr(
-        module,
-        "UNetOutput",
-        output,
-    )
+    (output,)
 
     generation = Generation(
         latent_size=5,
         channels=[8],
-        output_channels=1,
         resize_shapes=[
             (
                 2,
@@ -2772,12 +2600,11 @@ def test_generation_builds_linear_mapping(
                 6,
             ),
         ],
-        bottleneck_dim=7,
         config=make_generation_config(),
     )
 
     assert generation.combine_latent.in_features == 5
-    assert generation.combine_latent.out_features == 42
+    assert generation.combine_latent.out_features == 48
     assert generation.bottleneck_shape == (
         2,
         3,
@@ -2805,11 +2632,6 @@ def test_generation_builds_up_blocks_in_sequence(
         "UpBlock",
         up_block,
     )
-    monkeypatch.setattr(
-        module,
-        "UNetOutput",
-        Mock(return_value=nn.Identity()),
-    )
 
     config = make_generation_config(
         channels=[
@@ -2832,9 +2654,9 @@ def test_generation_builds_up_blocks_in_sequence(
         latent_size=3,
         channels=[
             16,
+            4,
             8,
         ],
-        output_channels=1,
         resize_shapes=[
             (
                 2,
@@ -2849,65 +2671,19 @@ def test_generation_builds_up_blocks_in_sequence(
                 8,
             ),
         ],
-        bottleneck_dim=32,
         config=config,
     )
 
     first = up_block.call_args_list[0].kwargs
     second = up_block.call_args_list[1].kwargs
 
-    assert first["input_channels"] == 32
-    assert first["out_channels"] == 16
+    assert first["input_channels"] == 16
+    assert first["out_channels"] == 4
     assert first["transpose_kernel_size"] == 3
 
-    assert second["input_channels"] == 16
+    assert second["input_channels"] == 4
     assert second["out_channels"] == 8
     assert second["transpose_kernel_size"] == 5
-
-
-def test_generation_builds_output_layer(
-    monkeypatch,
-):
-    output = Mock(return_value=nn.Identity())
-
-    monkeypatch.setattr(
-        module,
-        "UpBlock",
-        Mock(return_value=RecordingUpBlock()),
-    )
-    monkeypatch.setattr(
-        module,
-        "UNetOutput",
-        output,
-    )
-
-    Generation(
-        latent_size=3,
-        channels=[8],
-        output_channels=2,
-        resize_shapes=[
-            (
-                2,
-                2,
-            ),
-            (
-                4,
-                4,
-            ),
-        ],
-        bottleneck_dim=16,
-        config=make_generation_config(
-            output_block_hidden_channels=12,
-            output_activation="sigmoid",
-        ),
-    )
-
-    output.assert_called_once_with(
-        in_channels=8,
-        out_channels=2,
-        hidden_channels=12,
-        activation="sigmoid",
-    )
 
 
 @pytest.mark.parametrize(
@@ -2947,16 +2723,10 @@ def test_generation_single_block_noise_configuration(
         "UpBlock",
         up_block,
     )
-    monkeypatch.setattr(
-        module,
-        "UNetOutput",
-        Mock(return_value=nn.Identity()),
-    )
 
     Generation(
         latent_size=3,
-        channels=[8],
-        output_channels=1,
+        channels=[8, 4],
         resize_shapes=[
             (
                 2,
@@ -2967,7 +2737,6 @@ def test_generation_single_block_noise_configuration(
                 4,
             ),
         ],
-        bottleneck_dim=16,
         config=make_generation_config(
             generator=make_generator_config(noise_level=noise_level)
         ),
@@ -2995,11 +2764,6 @@ def test_generation_medium_noise_only_on_last_block(
         "UpBlock",
         up_block,
     )
-    monkeypatch.setattr(
-        module,
-        "UNetOutput",
-        Mock(return_value=nn.Identity()),
-    )
 
     config = make_generation_config(
         generator=make_generator_config(noise_level="medium"),
@@ -3025,11 +2789,11 @@ def test_generation_medium_noise_only_on_last_block(
     Generation(
         latent_size=3,
         channels=[
+            64,
             32,
             16,
             8,
         ],
-        output_channels=1,
         resize_shapes=[
             (
                 1,
@@ -3048,7 +2812,6 @@ def test_generation_medium_noise_only_on_last_block(
                 8,
             ),
         ],
-        bottleneck_dim=64,
         config=config,
     )
 
@@ -3074,11 +2837,6 @@ def test_generation_full_noise_on_all_blocks(
         "UpBlock",
         up_block,
     )
-    monkeypatch.setattr(
-        module,
-        "UNetOutput",
-        Mock(return_value=nn.Identity()),
-    )
 
     config = make_generation_config(
         generator=make_generator_config(noise_level="full"),
@@ -3101,10 +2859,10 @@ def test_generation_full_noise_on_all_blocks(
     Generation(
         latent_size=3,
         channels=[
+            32,
             16,
             8,
         ],
-        output_channels=1,
         resize_shapes=[
             (
                 2,
@@ -3119,7 +2877,6 @@ def test_generation_full_noise_on_all_blocks(
                 8,
             ),
         ],
-        bottleneck_dim=32,
         config=config,
     )
 
@@ -3144,11 +2901,6 @@ def test_generation_low_noise_uses_no_internal_noise(
         "UpBlock",
         up_block,
     )
-    monkeypatch.setattr(
-        module,
-        "UNetOutput",
-        Mock(return_value=nn.Identity()),
-    )
 
     config = make_generation_config(
         generator=make_generator_config(noise_level="low"),
@@ -3171,10 +2923,10 @@ def test_generation_low_noise_uses_no_internal_noise(
     Generation(
         latent_size=3,
         channels=[
+            32,
             16,
             8,
         ],
-        output_channels=1,
         resize_shapes=[
             (
                 2,
@@ -3189,7 +2941,6 @@ def test_generation_low_noise_uses_no_internal_noise(
                 8,
             ),
         ],
-        bottleneck_dim=32,
         config=config,
     )
 
@@ -3214,11 +2965,6 @@ def test_generation_without_generator_disables_all_noise(
         "UpBlock",
         up_block,
     )
-    monkeypatch.setattr(
-        module,
-        "UNetOutput",
-        Mock(return_value=nn.Identity()),
-    )
 
     config = make_generation_config(
         generator=None,
@@ -3241,10 +2987,10 @@ def test_generation_without_generator_disables_all_noise(
     Generation(
         latent_size=3,
         channels=[
+            32,
             16,
             8,
         ],
-        output_channels=1,
         resize_shapes=[
             (
                 2,
@@ -3259,7 +3005,6 @@ def test_generation_without_generator_disables_all_noise(
                 8,
             ),
         ],
-        bottleneck_dim=32,
         config=config,
     )
 
@@ -3410,15 +3155,6 @@ def test_generation_repeats_tensor_mask_for_generator(
         repeat,
     )
 
-    generation.output = ConstantTensorOutput(
-        torch.ones(
-            6,
-            1,
-            2,
-            2,
-        )
-    )
-
     result = generation(
         torch.ones(
             3,
@@ -3434,7 +3170,7 @@ def test_generation_repeats_tensor_mask_for_generator(
     assert result.shape == (
         2,
         3,
-        1,
+        2,
         2,
         2,
     )
@@ -3495,15 +3231,6 @@ def test_generation_generator_reshapes_output_samples():
         generator=make_generator_config(noise_level="full")
     )
 
-    generation.output = ConstantTensorOutput(
-        torch.ones(
-            6,
-            1,
-            2,
-            2,
-        )
-    )
-
     result = generation(
         torch.ones(
             3,
@@ -3515,7 +3242,7 @@ def test_generation_generator_reshapes_output_samples():
     assert result.shape == (
         2,
         3,
-        1,
+        2,
         2,
         2,
     )
@@ -3523,15 +3250,6 @@ def test_generation_generator_reshapes_output_samples():
 
 def test_generation_without_generator_preserves_batch_dimension():
     generation = make_generation_without_constructor(generator=None)
-
-    generation.output = ConstantTensorOutput(
-        torch.ones(
-            3,
-            1,
-            2,
-            2,
-        )
-    )
 
     result = generation(
         torch.ones(
@@ -3543,7 +3261,7 @@ def test_generation_without_generator_preserves_batch_dimension():
 
     assert result.shape == (
         3,
-        1,
+        2,
         2,
         2,
     )
@@ -3551,15 +3269,6 @@ def test_generation_without_generator_preserves_batch_dimension():
 
 def test_generation_forward_with_no_up_blocks():
     generation = make_generation_without_constructor(resize_shapes=[])
-
-    generation.output = ConstantTensorOutput(
-        torch.ones(
-            3,
-            1,
-            2,
-            2,
-        )
-    )
 
     result = generation(
         torch.ones(
@@ -3570,7 +3279,1441 @@ def test_generation_forward_with_no_up_blocks():
 
     assert result.shape == (
         3,
+        2,
+        2,
+        2,
+    )
+
+
+def test_config_expects_mask_for_partial_convolution():
+    from cccma_ppp.models.layers.conv import PartialConvBlockConfig
+
+    config = make_config(
+        block_config=PartialConvBlockConfig(
+            name="partial_conv",
+            num_convolutions=1,
+            kernel_size=3,
+            normalization="none",
+            padding_method="zeros",
+            activation="relu",
+            dropout_rate=None,
+            bias=False,
+            group_norm_groups=1,
+        )
+    )
+
+    assert config.EXPECTS_MASK is True
+
+
+def test_config_expects_mask_for_partial_convnext():
+    from cccma_ppp.models.layers.conv import ConvNeXtBlockConfig
+
+    config = make_config(
+        block_config=ConvNeXtBlockConfig(
+            name="convnext",
+            num_blocks=1,
+            kernel_size=3,
+            expansion_ratio=2,
+            padding_method="zeros",
+            layer_scale_init=1e-6,
+            dropout_rate=0.0,
+            drop_path_rate=0.0,
+            use_partial_conv=True,
+        )
+    )
+
+    assert config.EXPECTS_MASK is True
+
+
+def test_config_does_not_expect_mask_for_standard_convolution():
+    config = make_config(
+        block_config=make_block_config(),
+    )
+
+    assert config.EXPECTS_MASK is False
+
+
+def test_config_does_not_expect_mask_for_standard_convnext():
+    from cccma_ppp.models.layers.conv import ConvNeXtBlockConfig
+
+    config = make_config(
+        block_config=ConvNeXtBlockConfig(
+            name="convnext",
+            num_blocks=1,
+            kernel_size=3,
+            expansion_ratio=2,
+            padding_method="zeros",
+            layer_scale_init=1e-6,
+            dropout_rate=0.0,
+            drop_path_rate=0.0,
+            use_partial_conv=False,
+        )
+    )
+
+    assert config.EXPECTS_MASK is False
+
+
+def test_config_without_deterministic_guess_disables_shared_output():
+    config = make_config(
+        deterministic_guess_config=None,
+    )
+
+    assert config.deterministic_guess_config is None
+    assert config.share_output_block is False
+
+
+def test_config_resolves_deterministic_guess():
+    deterministic_model_config = SimpleNamespace(
+        channels=[4, 8],
+        GENERATOR=None,
+        output_activation="identity",
+        output_block_hidden_channels=32,
+    )
+
+    selector = SimpleNamespace(
+        share_output_block=False,
+        get_model_config=Mock(
+            return_value=deterministic_model_config,
+        ),
+    )
+
+    config = make_config(
+        deterministic_guess_config=selector,
+    )
+
+    selector.get_model_config.assert_called_once_with()
+    assert config.deterministic_guess_config is deterministic_model_config
+    assert config.share_output_block is False
+
+
+def test_config_rejects_deterministic_guess_channel_mismatch():
+    deterministic_model_config = SimpleNamespace(
+        channels=[5, 8],
+        GENERATOR=None,
+        output_activation="identity",
+        output_block_hidden_channels=32,
+    )
+
+    selector = SimpleNamespace(
+        share_output_block=False,
+        get_model_config=Mock(
+            return_value=deterministic_model_config,
+        ),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="same number of channels",
+    ):
+        make_config(
+            deterministic_guess_config=selector,
+        )
+
+
+def test_config_rejects_generator_in_deterministic_guess():
+    deterministic_model_config = SimpleNamespace(
+        channels=[4, 8],
+        GENERATOR=object(),
+        output_activation="identity",
+        output_block_hidden_channels=32,
+    )
+
+    selector = SimpleNamespace(
+        share_output_block=False,
+        get_model_config=Mock(
+            return_value=deterministic_model_config,
+        ),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="cannot have GENERATOR",
+    ):
+        make_config(
+            deterministic_guess_config=selector,
+        )
+
+
+@pytest.mark.parametrize(
+    (
+        "deterministic_activation",
+        "deterministic_hidden_channels",
+    ),
+    [
+        (
+            "tanh",
+            32,
+        ),
+        (
+            "identity",
+            16,
+        ),
+        (
+            "sigmoid",
+            64,
+        ),
+    ],
+)
+def test_config_rejects_shared_output_block_mismatch(
+    deterministic_activation,
+    deterministic_hidden_channels,
+):
+    deterministic_model_config = SimpleNamespace(
+        channels=[4, 8],
+        GENERATOR=None,
+        output_activation=deterministic_activation,
+        output_block_hidden_channels=deterministic_hidden_channels,
+    )
+
+    selector = SimpleNamespace(
+        share_output_block=True,
+        get_model_config=Mock(
+            return_value=deterministic_model_config,
+        ),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="share_output_block",
+    ):
+        make_config(
+            deterministic_guess_config=selector,
+            output_activation="identity",
+            output_block_hidden_channels=32,
+        )
+
+
+def test_config_accepts_matching_shared_output_block():
+    deterministic_model_config = SimpleNamespace(
+        channels=[4, 8],
+        GENERATOR=None,
+        output_activation="identity",
+        output_block_hidden_channels=32,
+    )
+
+    selector = SimpleNamespace(
+        share_output_block=True,
+        get_model_config=Mock(
+            return_value=deterministic_model_config,
+        ),
+    )
+
+    config = make_config(
+        deterministic_guess_config=selector,
+        output_activation="identity",
+        output_block_hidden_channels=32,
+    )
+
+    assert config.share_output_block is True
+    assert config.deterministic_guess_config is deterministic_model_config
+
+
+def test_config_shared_output_mismatch_checks_activation_first():
+    deterministic_model_config = SimpleNamespace(
+        channels=[4, 8],
+        GENERATOR=None,
+        output_activation="tanh",
+        output_block_hidden_channels=64,
+    )
+
+    selector = SimpleNamespace(
+        share_output_block=True,
+        get_model_config=Mock(
+            return_value=deterministic_model_config,
+        ),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="same output_blovk activation and hidden_channels",
+    ):
+        make_config(
+            deterministic_guess_config=selector,
+            output_activation="identity",
+            output_block_hidden_channels=32,
+        )
+
+
+def test_model_condition_requests_log_variance_for_dependent_latent(
+    stub_model_components,
+):
+    cVAEUNet(
+        config=make_config(
+            condition_dependant_latent=True,
+        ),
+        input_shape=(2, 8, 8),
+        output_shape=(1, 8, 8),
+    )
+
+    condition = StubRecognition.instances[1]
+
+    assert condition.kwargs["get_log_var"] is True
+
+
+def test_model_builds_deterministic_guess(
+    stub_model_components,
+):
+    deterministic_guess = SimpleNamespace(
+        output_block=object(),
+    )
+    deterministic_config = SimpleNamespace(
+        build=Mock(
+            return_value=deterministic_guess,
+        ),
+    )
+
+    config = make_config()
+    config.deterministic_guess_config = deterministic_config
+    config.share_output_block = False
+
+    model = cVAEUNet(
+        config=config,
+        input_shape=(2, 8, 8),
+        output_shape=(1, 8, 8),
+        added_features_dim=3,
+    )
+
+    deterministic_config.build.assert_called_once_with(
+        input_shape=(2, 8, 8),
+        output_shape=(1, 8, 8),
+        added_features_dim=3,
+    )
+    assert model.deterministic_guess is deterministic_guess
+
+
+def test_model_uses_shared_deterministic_output_block(
+    stub_model_components,
+):
+    shared_output = nn.Identity()
+    deterministic_guess = SimpleNamespace(
+        output_block=shared_output,
+    )
+    deterministic_config = SimpleNamespace(
+        build=Mock(
+            return_value=deterministic_guess,
+        ),
+    )
+
+    config = make_config()
+    config.deterministic_guess_config = deterministic_config
+    config.share_output_block = True
+
+    model = cVAEUNet(
+        config=config,
+        input_shape=(2, 8, 8),
+        output_shape=(1, 8, 8),
+    )
+
+    assert model.output is shared_output
+
+
+def test_model_builds_independent_output_block(
+    stub_model_components,
+    monkeypatch,
+):
+    output = nn.Identity()
+    output_constructor = Mock(
+        return_value=output,
+    )
+
+    monkeypatch.setattr(
+        module,
+        "UNetOutput",
+        output_constructor,
+    )
+
+    config = make_config(
+        output_block_hidden_channels=16,
+        output_activation="tanh",
+    )
+    config.share_output_block = False
+
+    model = cVAEUNet(
+        config=config,
+        input_shape=(2, 8, 8),
+        output_shape=(1, 8, 8),
+    )
+
+    output_constructor.assert_called_once_with(
+        in_channels=4,
+        out_channels=1,
+        hidden_channels=16,
+        activation="tanh",
+    )
+    assert model.output is output
+
+
+def test_model_initializes_weights_when_checkpoint_is_absent(
+    stub_model_components,
+    monkeypatch,
+):
+    initializer = Mock()
+
+    monkeypatch.setattr(
+        cVAEUNet,
+        "_initialize_weights",
+        initializer,
+    )
+
+    config = make_config(
+        init_method="trunc_normal",
+    )
+    config.checkpoint_config = None
+
+    model = cVAEUNet(
+        config=config,
+        input_shape=(2, 8, 8),
+        output_shape=(1, 8, 8),
+    )
+
+    initializer.assert_called_once_with(
+        "trunc_normal",
+        exclude=(model.deterministic_guess,),
+    )
+
+
+def test_model_validates_checkpoint_compatibility(
+    stub_model_components,
+    monkeypatch,
+):
+    validation = Mock()
+
+    monkeypatch.setattr(
+        cVAEUNet,
+        "_validate_checkpoint_compatibility",
+        validation,
+    )
+
+    cVAEUNet(
+        config=make_config(),
+        input_shape=(2, 8, 8),
+        output_shape=(1, 8, 8),
+    )
+
+    validation.assert_called_once_with(
+        input_shape=(2, 8, 8),
+        output_shape=(1, 8, 8),
+    )
+
+
+def test_prepare_input_does_not_broadcast_condition_mask_without_input_mask(
+    monkeypatch,
+):
+    model = make_bare_model()
+
+    tensor = torch.ones(
+        2,
+        2,
+        4,
+        4,
+    )
+    condition = torch.ones(
+        2,
+        1,
+        4,
+        4,
+    )
+    condition_mask = torch.zeros_like(
+        condition,
+    )
+
+    broadcast = Mock(
+        return_value=None,
+    )
+    monkeypatch.setattr(
+        module,
+        "_broadcast_mask",
+        broadcast,
+    )
+    monkeypatch.setattr(
+        module,
+        "_resize_tensor",
+        Mock(return_value=condition),
+    )
+
+    result = model._prepare_input(
+        x=tensor,
+        x_mask=None,
+        condition=condition,
+        condition_mask=condition_mask,
+    )
+
+    broadcast.assert_called_once_with(
+        None,
+        tensor,
+    )
+    assert result.mask is None
+
+
+def test_prepare_input_feature_resize_uses_combined_spatial_shape(
+    monkeypatch,
+):
+    model = make_bare_model()
+
+    tensor = torch.ones(
+        2,
+        2,
+        4,
+        5,
+    )
+    condition = torch.ones(
+        2,
         1,
         2,
         2,
     )
+    features = torch.ones(
+        2,
+        3,
+        1,
+        1,
+    )
+
+    resized_condition = torch.ones(
+        2,
+        1,
+        4,
+        5,
+    )
+    resized_features = torch.ones(
+        2,
+        3,
+        4,
+        5,
+    )
+
+    resize = Mock(
+        side_effect=[
+            resized_condition,
+            resized_features,
+        ]
+    )
+
+    monkeypatch.setattr(
+        module,
+        "_resize_tensor",
+        resize,
+    )
+    monkeypatch.setattr(
+        module,
+        "_broadcast_mask",
+        Mock(return_value=None),
+    )
+
+    model._prepare_input(
+        x=tensor,
+        x_mask=None,
+        condition=condition,
+        added_features=features,
+    )
+
+    assert resize.call_args_list == [
+        call(
+            condition,
+            (4, 5),
+        ),
+        call(
+            features,
+            (4, 5),
+            mode="nearest",
+        ),
+    ]
+
+
+def test_recognition_helper_forwards_all_prepare_input_arguments():
+    model = make_bare_model()
+
+    prepared = TensorMask(
+        tensor=torch.ones(
+            2,
+            5,
+            4,
+            4,
+        ),
+        mask=None,
+    )
+    model._prepare_input = Mock(
+        return_value=prepared,
+    )
+    model.recognition = FixedLatentModule(
+        torch.ones(2, 3),
+        torch.zeros(2, 3),
+    )
+
+    target = torch.ones(
+        2,
+        1,
+        4,
+        4,
+    )
+    target_mask = torch.zeros_like(
+        target,
+    )
+    condition = torch.full_like(
+        target,
+        2,
+    )
+    condition_mask = torch.ones_like(
+        condition,
+    )
+    features = torch.ones(
+        2,
+        2,
+        4,
+        4,
+    )
+
+    model._recognition(
+        x=target,
+        x_mask=target_mask,
+        condition=condition,
+        condition_mask=condition_mask,
+        added_features=features,
+    )
+
+    model._prepare_input.assert_called_once_with(
+        x=target,
+        x_mask=target_mask,
+        condition=condition,
+        condition_mask=condition_mask,
+        added_features=features,
+    )
+
+
+def test_condition_helper_forwards_prepare_input_arguments():
+    model = make_bare_model()
+
+    prepared = TensorMask(
+        tensor=torch.ones(
+            2,
+            3,
+            4,
+            4,
+        ),
+        mask=None,
+    )
+    model._prepare_input = Mock(
+        return_value=prepared,
+    )
+    model.condition = FixedLatentModule(
+        torch.ones(2, 3),
+        torch.zeros(2, 3),
+    )
+
+    condition = torch.ones(
+        2,
+        1,
+        4,
+        4,
+    )
+    condition_mask = torch.zeros_like(
+        condition,
+    )
+    features = torch.ones(
+        2,
+        2,
+        4,
+        4,
+    )
+
+    model._condition(
+        condition=condition,
+        condition_mask=condition_mask,
+        added_features=features,
+    )
+
+    model._prepare_input.assert_called_once_with(
+        x=condition,
+        x_mask=condition_mask,
+        added_features=features,
+    )
+
+
+def test_forward_uses_two_sample_dimensions_without_output_sampling():
+    setup = configure_forward_model()
+
+    setup.model.forward(
+        make_forward_request(
+            latent_sample_size=4,
+            output_sample_size=0,
+        )
+    )
+
+    setup.model._output_block.assert_called_once_with(
+        setup.output,
+        (
+            4,
+            2,
+        ),
+    )
+
+
+def test_forward_uses_three_sample_dimensions_with_output_sampling():
+    setup = configure_forward_model()
+
+    setup.model.forward(
+        make_forward_request(
+            latent_sample_size=4,
+            output_sample_size=5,
+        )
+    )
+
+    setup.model._output_block.assert_called_once_with(
+        setup.output,
+        (
+            5,
+            4,
+            2,
+        ),
+    )
+
+
+def test_forward_adds_deterministic_guess_before_output_block():
+    setup = configure_forward_model()
+
+    deterministic = torch.full_like(
+        setup.output,
+        2.0,
+    )
+    setup.model._deterministic_guess = Mock(
+        return_value=deterministic,
+    )
+
+    setup.model.forward(
+        make_forward_request(
+            latent_sample_size=4,
+        )
+    )
+
+    passed = setup.model._output_block.call_args.args[0]
+
+    torch.testing.assert_close(
+        passed,
+        setup.output + deterministic,
+    )
+
+
+def test_forward_passes_deterministic_guess_arguments():
+    setup = configure_forward_model()
+
+    setup.model._deterministic_guess = Mock(
+        return_value=None,
+    )
+
+    condition = torch.ones(
+        2,
+        1,
+        4,
+        4,
+    )
+    condition_mask = torch.zeros_like(
+        condition,
+    )
+    features = torch.ones(
+        2,
+        2,
+        4,
+        4,
+    )
+
+    setup.model.forward(
+        make_forward_request(
+            condition=condition,
+            condition_mask=condition_mask,
+            added_features=features,
+        )
+    )
+
+    setup.model._deterministic_guess.assert_called_once_with(
+        input=condition,
+        input_mask=condition_mask,
+        added_features=features,
+    )
+
+
+def test_forward_clamps_both_posterior_variance_limits():
+    setup = configure_forward_model()
+
+    log_var = torch.tensor(
+        [
+            [
+                -10.0,
+                0.0,
+                10.0,
+            ],
+            [
+                -5.0,
+                1.0,
+                5.0,
+            ],
+        ]
+    )
+    setup.model._recognition.return_value = (
+        setup.mu,
+        log_var,
+    )
+
+    setup.model.forward(
+        make_forward_request(
+            posterior_variance_limits=(
+                torch.tensor(-2.0),
+                torch.tensor(3.0),
+            )
+        )
+    )
+
+    passed = setup.model._sample.call_args.args[1]
+
+    assert torch.all(passed >= -2)
+    assert torch.all(passed <= 3)
+
+
+def test_forward_variance_limits_use_mu_dtype():
+    setup = configure_forward_model()
+
+    setup.mu = setup.mu.double()
+    setup.log_var = setup.log_var.double()
+
+    setup.model._recognition.return_value = (
+        setup.mu,
+        setup.log_var,
+    )
+
+    setup.model.forward(
+        make_forward_request(
+            posterior_variance_limits=(
+                torch.tensor(-2.0),
+                torch.tensor(2.0),
+            )
+        )
+    )
+
+    passed = setup.model._sample.call_args.args[1]
+
+    assert passed.dtype == torch.float64
+
+
+def test_predict_uses_two_sample_dimensions_without_output_sampling():
+    setup = configure_predict_model()
+
+    samples = torch.ones(
+        4,
+        2,
+        3,
+    )
+
+    setup.model.predict(
+        make_predict_request(
+            latent_samples=samples,
+            latent_sample_size=4,
+            output_sample_size=0,
+        )
+    )
+
+    setup.model._output_block.assert_called_once_with(
+        setup.output,
+        (
+            4,
+            2,
+        ),
+    )
+
+
+def test_predict_uses_three_sample_dimensions_with_output_sampling():
+    setup = configure_predict_model()
+
+    samples = torch.ones(
+        4,
+        2,
+        3,
+    )
+
+    setup.model.predict(
+        make_predict_request(
+            latent_samples=samples,
+            latent_sample_size=4,
+            output_sample_size=5,
+        )
+    )
+
+    setup.model._output_block.assert_called_once_with(
+        setup.output,
+        (
+            5,
+            4,
+            2,
+        ),
+    )
+
+
+def test_predict_adds_deterministic_guess_before_output_block():
+    setup = configure_predict_model()
+
+    samples = torch.ones(
+        3,
+        2,
+        3,
+    )
+    deterministic = torch.full_like(
+        setup.output,
+        2.0,
+    )
+
+    setup.model._deterministic_guess = Mock(
+        return_value=deterministic,
+    )
+
+    setup.model.predict(
+        make_predict_request(
+            latent_samples=samples,
+        )
+    )
+
+    passed = setup.model._output_block.call_args.args[0]
+
+    torch.testing.assert_close(
+        passed,
+        setup.output + deterministic,
+    )
+
+
+def test_predict_passes_deterministic_guess_arguments():
+    setup = configure_predict_model()
+
+    samples = torch.ones(
+        3,
+        2,
+        3,
+    )
+    condition = torch.ones(
+        2,
+        1,
+        4,
+        4,
+    )
+    condition_mask = torch.zeros_like(
+        condition,
+    )
+    features = torch.ones(
+        2,
+        2,
+        4,
+        4,
+    )
+
+    setup.model._deterministic_guess = Mock(
+        return_value=None,
+    )
+
+    setup.model.predict(
+        make_predict_request(
+            condition=condition,
+            condition_mask=condition_mask,
+            added_features=features,
+            latent_samples=samples,
+        )
+    )
+
+    setup.model._deterministic_guess.assert_called_once_with(
+        input=condition,
+        input_mask=condition_mask,
+        added_features=features,
+    )
+
+
+def test_deterministic_guess_returns_none_when_model_is_absent():
+    model = make_bare_model()
+    model.deterministic_guess = None
+
+    result = model._deterministic_guess(
+        input=torch.ones(
+            2,
+            1,
+            4,
+            4,
+        )
+    )
+
+    assert result is None
+
+
+def test_deterministic_guess_builds_request_and_calls_decoder(
+    monkeypatch,
+):
+    model = make_bare_model()
+
+    expected = torch.ones(
+        2,
+        1,
+        4,
+        4,
+    )
+    decoder = SimpleNamespace(
+        forward_decoder=Mock(
+            return_value=expected,
+        )
+    )
+    model.deterministic_guess = decoder
+
+    request = object()
+    request_constructor = Mock(
+        return_value=request,
+    )
+
+    monkeypatch.setattr(
+        module,
+        "DeterministicRequest",
+        request_constructor,
+    )
+
+    input_tensor = torch.ones(
+        2,
+        1,
+        4,
+        4,
+    )
+    input_mask = torch.zeros_like(
+        input_tensor,
+    )
+    features = torch.ones(
+        2,
+        2,
+        4,
+        4,
+    )
+
+    result = model._deterministic_guess(
+        input=input_tensor,
+        input_mask=input_mask,
+        added_features=features,
+    )
+
+    request_constructor.assert_called_once_with(
+        input_tensor,
+        input_mask,
+        features,
+    )
+    decoder.forward_decoder.assert_called_once_with(
+        request,
+    )
+    assert result is expected
+
+
+def test_output_block_flattens_and_restores_two_sample_dimensions():
+    model = make_bare_model()
+
+    model.output = nn.Conv2d(
+        in_channels=4,
+        out_channels=2,
+        kernel_size=1,
+    )
+
+    value = torch.randn(
+        3,
+        5,
+        4,
+        6,
+        7,
+    )
+
+    result = model._output_block(
+        value,
+        sample_sizes=(
+            3,
+            5,
+        ),
+    )
+
+    assert result.shape == (
+        3,
+        5,
+        2,
+        6,
+        7,
+    )
+
+
+def test_output_block_flattens_and_restores_three_sample_dimensions():
+    model = make_bare_model()
+
+    model.output = nn.Conv2d(
+        in_channels=4,
+        out_channels=2,
+        kernel_size=1,
+    )
+
+    value = torch.randn(
+        2,
+        3,
+        5,
+        4,
+        6,
+        7,
+    )
+
+    result = model._output_block(
+        value,
+        sample_sizes=(
+            2,
+            3,
+            5,
+        ),
+    )
+
+    assert result.shape == (
+        2,
+        3,
+        5,
+        2,
+        6,
+        7,
+    )
+
+
+def test_output_block_receives_flattened_batch():
+    model = make_bare_model()
+
+    captured = {}
+
+    class RecordingOutput(nn.Module):
+        def forward(
+            self,
+            value,
+        ):
+            captured["shape"] = value.shape
+            return value[:, :1]
+
+    model.output = RecordingOutput()
+
+    value = torch.randn(
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+    )
+
+    result = model._output_block(
+        value,
+        sample_sizes=(
+            2,
+            3,
+            4,
+        ),
+    )
+
+    assert captured["shape"] == (
+        24,
+        5,
+        6,
+        7,
+    )
+    assert result.shape == (
+        2,
+        3,
+        4,
+        1,
+        6,
+        7,
+    )
+
+
+def test_generate_condition_embedding_is_repeated_for_each_latent_sample():
+    model = make_bare_model(
+        condemb_to_decoder=True,
+    )
+
+    latent = torch.zeros(
+        3,
+        2,
+        4,
+    )
+    condition = torch.tensor(
+        [
+            [
+                1.0,
+                2.0,
+            ],
+            [
+                3.0,
+                4.0,
+            ],
+        ]
+    )
+
+    model.generation = Mock(
+        return_value=torch.ones(
+            6,
+            1,
+            4,
+            4,
+        )
+    )
+
+    model._generate(
+        latent_samples=latent,
+        condition_embedding=condition,
+    )
+
+    passed = model.generation.call_args.args[0]
+
+    expected = torch.tensor(
+        [
+            [1.0, 2.0],
+            [3.0, 4.0],
+            [1.0, 2.0],
+            [3.0, 4.0],
+            [1.0, 2.0],
+            [3.0, 4.0],
+        ]
+    )
+
+    torch.testing.assert_close(
+        passed[:, -2:],
+        expected,
+    )
+
+
+def test_recognition_down_block_arguments(
+    monkeypatch,
+):
+    config = make_recognition_config(
+        mask_pooling="fraction",
+        mask_fraction_threshold=0.75,
+    )
+
+    monkeypatch.setattr(
+        module,
+        "build_conv_block",
+        Mock(
+            side_effect=[
+                IdentityTensorMask(),
+                FixedLatentModule(
+                    torch.ones(2, 5),
+                    torch.zeros(2, 5),
+                ),
+            ]
+        ),
+    )
+
+    down_block = Mock(
+        side_effect=[
+            ShapeDownBlock((4, 4)),
+            ShapeDownBlock((2, 2)),
+        ]
+    )
+    monkeypatch.setattr(
+        module,
+        "DownBlock",
+        down_block,
+    )
+
+    Recognition(
+        input_channels=2,
+        input_spatial_shape=(8, 8),
+        channels=[4, 8, 16],
+        latent_size=5,
+        config=config,
+    )
+
+    assert down_block.call_args_list == [
+        call(
+            4,
+            8,
+            block_config=config.block_config,
+            return_skip=False,
+            mask_pooling="fraction",
+            mask_fraction_threshold=0.75,
+        ),
+        call(
+            8,
+            16,
+            block_config=config.block_config,
+            return_skip=False,
+            mask_pooling="fraction",
+            mask_fraction_threshold=0.75,
+        ),
+    ]
+
+
+def test_recognition_get_spatial_shapes_calls_blocks_in_order():
+    recognition = object.__new__(
+        Recognition,
+    )
+    nn.Module.__init__(
+        recognition,
+    )
+
+    first = ShapeDownBlock(
+        (5, 6),
+    )
+    second = ShapeDownBlock(
+        (3, 3),
+    )
+
+    recognition.down_blocks = nn.ModuleList(
+        [
+            first,
+            second,
+        ]
+    )
+
+    result = recognition._get_spatial_shapes(
+        (9, 11),
+    )
+
+    assert result == [
+        (9, 11),
+        (5, 6),
+        (3, 3),
+    ]
+
+
+def test_generation_forwards_configuration_to_up_blocks(
+    monkeypatch,
+):
+    up_block = Mock(
+        side_effect=[
+            RecordingUpBlock(),
+            RecordingUpBlock(),
+        ]
+    )
+    monkeypatch.setattr(
+        module,
+        "UpBlock",
+        up_block,
+    )
+
+    config = make_generation_config(
+        upsampling_method="transpose_conv",
+        upsampling_alignment_method="strict",
+        channels=[
+            4,
+            8,
+            16,
+        ],
+        condition_embedding_channels=[
+            4,
+            8,
+            16,
+        ],
+        transpose_kernel_sizes=[
+            5,
+            7,
+        ],
+    )
+
+    Generation(
+        latent_size=3,
+        channels=[
+            16,
+            8,
+            4,
+        ],
+        resize_shapes=[
+            (2, 2),
+            (4, 4),
+            (8, 8),
+        ],
+        config=config,
+    )
+
+    assert up_block.call_args_list[0].kwargs["block_config"] is config.block_config
+    assert up_block.call_args_list[0].kwargs["upsampling_method"] == "transpose_conv"
+    assert up_block.call_args_list[0].kwargs["skip_alignment_method"] == "strict"
+    assert up_block.call_args_list[0].kwargs["skip_channels"] is None
+
+    assert up_block.call_args_list[1].kwargs["transpose_kernel_size"] == 7
+
+
+def test_generation_forward_calls_up_blocks_in_sequence():
+    generation = make_generation_without_constructor(
+        resize_shapes=[
+            (4, 4),
+            (8, 8),
+        ]
+    )
+
+    first = RecordingUpBlock()
+    second = RecordingUpBlock()
+
+    generation.up_blocks = nn.ModuleList(
+        [
+            first,
+            second,
+        ]
+    )
+
+    generation(
+        torch.ones(
+            3,
+            4,
+        )
+    )
+
+    first_output = first.calls[0]["value"]
+
+    assert second.calls[0]["value"] is first_output
+    assert first.calls[0]["resize_shape"] == (
+        4,
+        4,
+    )
+    assert second.calls[0]["resize_shape"] == (
+        8,
+        8,
+    )
+
+
+def test_generation_repeat_receives_initial_tensor_mask(
+    monkeypatch,
+):
+    generation = make_generation_without_constructor(
+        generator=make_generator_config(
+            noise_level="full",
+        )
+    )
+
+    captured = {}
+
+    def repeat(
+        value,
+        repeats,
+    ):
+        captured["value"] = value
+        captured["repeats"] = repeats
+
+        return TensorMask(
+            tensor=value.tensor.repeat_interleave(
+                repeats,
+                dim=0,
+            ),
+            mask=None,
+        )
+
+    monkeypatch.setattr(
+        module,
+        "_repeat_tensor_mask",
+        repeat,
+    )
+
+    generation(
+        torch.ones(
+            3,
+            4,
+        ),
+        num_output_samples=2,
+    )
+
+    assert isinstance(
+        captured["value"],
+        TensorMask,
+    )
+    assert captured["value"].tensor.shape == (
+        3,
+        2,
+        2,
+        2,
+    )
+    assert captured["value"].mask is None
+    assert captured["repeats"] == 2

@@ -18,16 +18,16 @@ spatialmethod = Literal["uniform", "cosine_lat"]
 @dataclasses.dataclass
 class WeightsConfig:
     """
-    Document this class.
+    Configuration for computing spatial and variable weights.
 
     Parameters
     ----------
-    spatial_method : spatialmethod
-        Description not yet provided.
-    variable_weights : dict[str, float] | None
-        Description not yet provided.
-    load_dir : Path | str | None
-        Description not yet provided.
+    spatial_method : {"uniform", "cosine_lat"}, optional
+        Method used to compute spatial weights.
+    variable_weights : dict[str, float] or None, optional
+        Per-variable weighting factors.
+    load_dir : pathlib.Path or str or None, optional
+        Path to load precomputed weights.
     """
 
     spatial_method: spatialmethod = "uniform"
@@ -36,13 +36,18 @@ class WeightsConfig:
 
     def __post_init__(self):
         """
-        Document this function.
+        Validate weight configuration.
+
+        Returns
+        -------
+        None
 
         Raises
         ------
         FileNotFoundError
-            Description not yet provided.
+            If specified load path does not exist.
         """
+
         if self.load_dir is not None:
             if not Path(self.load_dir).exists():
                 raise FileNotFoundError(f"weights file not found at {self.load_dir}")
@@ -56,31 +61,30 @@ class WeightsConfig:
         save_name: str | None = None,
     ):
         """
-        Document this function.
+        Generate or load spatial weights.
 
         Parameters
         ----------
         target_coords : dict
-            Description not yet provided.
-        Flattennanremover : Flattennanremove | None
-            Description not yet provided.
-        save : Any
-            Description not yet provided.
-        save_path : Path | str | None
-            Description not yet provided.
-        save_name : str | None
-            Description not yet provided.
+            Spatial coordinates of target data.
+        Flattennanremover : Flattennanremove or None, optional
+            Preprocessor for flattened spatial representation.
+        save : bool, optional
+            Whether to save computed weights.
+        save_path : pathlib.Path or str or None, optional
+        save_name : str or None, optional
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        xr.DataArray
+            Spatial (and optional variable) weights.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If loaded weights are incompatible with target coordinates.
         """
+
         if self.load_dir is not None:
             weights = xr.open_dataset(Path(self.load_dir))
             if isinstance(weights, xr.Dataset):
@@ -142,18 +146,18 @@ class WeightsConfig:
 
 def _unwrap_data_variables(dataset: xr.Dataset) -> xr.DataArray:
     """
-    Document this function.
+    Convert dataset variables into a channel dimension.
 
     Parameters
     ----------
     dataset : xr.Dataset
-        Description not yet provided.
 
     Returns
     -------
     xr.DataArray
-        Description not yet provided.
+        Concatenated variables along "channels" dimension.
     """
+
     return xr.concat(
         [
             dataset[v].squeeze().expand_dims("channels", axis=0)
@@ -175,34 +179,31 @@ def _load_xarray_data(
     load: bool = False,
 ):
     """
-    Document this function.
+    Load and optionally preprocess xarray dataset.
 
     Parameters
     ----------
-    paths : list[str]
-        Description not yet provided.
-    selection : dict | None
-        Description not yet provided.
-    names : list | None
-        Description not yet provided.
-    ensemble_mean : bool
-        Description not yet provided.
-    preprocessor : PreprocessingPipeline | None
-        Description not yet provided.
-    concat_dim : str
-        Description not yet provided.
-    rename_dict : dict | None
-        Description not yet provided.
-    chunks : dict | None
-        Description not yet provided.
-    load : bool
-        Description not yet provided.
+    paths : list of str
+        File paths to load.
+    selection : dict or None, optional
+        Subset selection applied after loading (e.g., slicing or filtering).
+    names : list of str or None, optional
+        Variables to extract.
+    ensemble_mean : bool, optional
+        Whether to average across ensembles.
+    preprocessor : PreprocessingPipeline or None, optional
+        Preprocessing pipeline to apply.
+    concat_dim : str, optional
+        Dimension used for concatenation.
+    rename_dict : dict or None, optional
+        Variable renaming mapping.
 
     Returns
     -------
-    Any
-        Description not yet provided.
+    xr.Dataset or xr.DataArray
+        Loaded (and optionally preprocessed) data.
     """
+
     ds = xr.open_mfdataset(
         paths, combine="nested", concat_dim=concat_dim, chunks=chunks
     )
@@ -235,22 +236,33 @@ def _create_train_mask(
     exclude_idx=0,
 ):
     """
-    Document this function.
+    Create training mask for valid time indices.
 
     Parameters
     ----------
-    time : list | xr.DataArray
-        Description not yet provided.
-    lead_times : list | xr.DataArray | np.ndarray | int
-        Description not yet provided.
-    exclude_idx : Any
-        Description not yet provided.
+    time : array-like
+        Times corresponding to dataset in years.
+    lead_times : array-like or int
+        (Num) lead times in months. The minimum is 12.
+    exclude_idx : int, optional
+        Offset index for masking.
 
     Returns
     -------
-    Any
-        Description not yet provided.
+    xr.DataArray
+        Boolean mask indicating invalid positions.
+
+    Notes
+    -----
+    Used to exclude samples from forecast that leak into future
+    due to lead-time offsets.
+
+    *********************************************************
+    IMP: when cftime is implemented, lead_time handling needs careful
+    adjusting.
+    *********************************************************
     """
+
     if not isinstance(lead_times, int):
         lead_times = max(lead_times)
 
@@ -275,14 +287,7 @@ def _create_train_mask(
 
 @contextlib.contextmanager
 def suppress_stderr() -> Iterator[None]:
-    """
-    Document this function.
-
-    Yields
-    ------
-    None
-        Description not yet provided.
-    """
+    """Temporarily suppress Python and C-library stderr output."""
     stderr_fd = 2
     saved_stderr_fd = os.dup(stderr_fd)
 

@@ -19,26 +19,26 @@ spatialmethod = Literal["uniform", "cosine_lat"]
 @dataclasses.dataclass
 class ModelDataConfig(DataConfigABC):
     """
-    Document this class.
+    Configuration for model (predictor) dataset.
 
     Parameters
     ----------
     paths : str
-        Description not yet provided.
-    names : list[str]
-        Description not yet provided.
-    preprocessing_pipeline : PreprocessingPipeline
-        Description not yet provided.
-    ensemble_list : list | None
-        Description not yet provided.
-    ensemble_mean : bool | None
-        Description not yet provided.
-    concat_dim : str
-        Description not yet provided.
-    file_type : str
-        Description not yet provided.
-    rename_dict : dict
-        Description not yet provided.
+        Path to dataset files.
+    names : list of str
+        Variables to load.
+    preprocessing_pipeline : PreprocessingPipeline, optional
+        Preprocessing steps applied to data.
+    ensemble_list : list or None, optional
+        Specific ensemble members to select.
+    ensemble_mean : bool or None, optional
+        Whether to compute ensemble mean.
+    concat_dim : str, optional
+        Dimension along which files are concatenated.
+    file_type : str, optional
+        File pattern (e.g., "*.nc").
+    rename_dict : dict or None, optional
+        Variable renaming mapping.
     """
 
     paths: str
@@ -54,7 +54,11 @@ class ModelDataConfig(DataConfigABC):
 
     def __post_init__(self) -> None:
         """
-        Document this function.
+        Initialize and validate model dataset configuration.
+
+        Returns
+        -------
+        None
         """
         super().__init__()
 
@@ -67,12 +71,12 @@ class ModelDataConfig(DataConfigABC):
     @final
     def TYPE(self) -> str:
         """
-        Document this function.
+        Dataset type identifier.
 
         Returns
         -------
         str
-            Description not yet provided.
+            Always "model".
         """
         return "model"
 
@@ -80,12 +84,11 @@ class ModelDataConfig(DataConfigABC):
     @classmethod
     def _allowed_dims(cls) -> frozenset[str]:
         """
-        Document this function.
+        Allowed dataset dimensions.
 
         Returns
         -------
-        frozenset[str]
-            Description not yet provided.
+        frozenset of str
         """
         return model_data_allowed_dimensions
 
@@ -93,12 +96,11 @@ class ModelDataConfig(DataConfigABC):
     @classmethod
     def _required_dims(cls) -> frozenset[str]:
         """
-        Document this function.
+        Required dataset dimensions.
 
         Returns
         -------
-        frozenset[str]
-            Description not yet provided.
+        frozenset of str
         """
         return model_data_required_dimensions
 
@@ -106,26 +108,26 @@ class ModelDataConfig(DataConfigABC):
 @dataclasses.dataclass
 class ObsDataConfig(DataConfigABC):
     """
-    Document this class.
+    Configuration for observation (target) dataset.
 
     Parameters
     ----------
     paths : str
-        Description not yet provided.
-    names : list[str]
-        Description not yet provided.
-    preprocessing_pipeline : PreprocessingPipeline
-        Description not yet provided.
-    ensemble_list : list | None
-        Description not yet provided.
-    ensemble_mean : bool | None
-        Description not yet provided.
-    concat_dim : str
-        Description not yet provided.
-    file_type : str
-        Description not yet provided.
-    rename_dict : dict
-        Description not yet provided.
+        Path(s) to observation data files.
+    names : list of str
+        Variable names in the dataset.
+    preprocessing_pipeline : PreprocessingPipeline, optional
+        Optional preprocessing pipeline applied to observations.
+    ensemble_list : list or None, optional
+        List of ensemble members, if applicable.
+    ensemble_mean : bool or None, optional
+        Whether to compute ensemble mean.
+    concat_dim : str, optional
+        Dimension along which to concatenate data.
+    file_type : str, optional
+        File format/type of the dataset.
+    rename_dict : dict or None, optional
+        Mapping of variable renames.
     """
 
     paths: str
@@ -141,7 +143,13 @@ class ObsDataConfig(DataConfigABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize observation dataset configuration.
+
+        Resolves dataset paths, extracts metadata, and defines year range.
+
+        Returns
+        -------
+        None
         """
         super().__init__()
 
@@ -151,12 +159,12 @@ class ObsDataConfig(DataConfigABC):
     @property
     def TYPE(self):
         """
-        Document this function.
+        Dataset type identifier.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        str
+            Always "observation".
         """
         return "observation"
 
@@ -164,12 +172,11 @@ class ObsDataConfig(DataConfigABC):
     @classmethod
     def _allowed_dims(cls) -> frozenset[str]:
         """
-        Document this function.
+        Allowed dataset dimensions.
 
         Returns
         -------
-        frozenset[str]
-            Description not yet provided.
+        frozenset of str
         """
         return observation_data_allowed_dimensions
 
@@ -177,12 +184,11 @@ class ObsDataConfig(DataConfigABC):
     @classmethod
     def _required_dims(cls) -> frozenset[str]:
         """
-        Document this function.
+        Required dataset dimensions.
 
         Returns
         -------
-        frozenset[str]
-            Description not yet provided.
+        frozenset of str
         """
         return observation_data_required_dimensions
 
@@ -190,26 +196,18 @@ class ObsDataConfig(DataConfigABC):
 @dataclasses.dataclass
 class ConditionDataConfig(DataConfigABC):
     """
-    Document this class.
+    Configuration for conditioning dataset.
 
     Parameters
     ----------
     paths : str
-        Description not yet provided.
-    names : list[str]
-        Description not yet provided.
-    preprocessing_pipeline : PreprocessingPipeline
-        Description not yet provided.
-    ensemble_list : list | None
-        Description not yet provided.
-    ensemble_mean : bool | None
-        Description not yet provided.
-    concat_dim : str
-        Description not yet provided.
-    file_type : str
-        Description not yet provided.
-    rename_dict : dict
-        Description not yet provided.
+    names : list of str
+    preprocessing_pipeline : PreprocessingPipeline, optional
+    ensemble_list : list or None, optional
+    ensemble_mean : bool or None, optional
+    concat_dim : str, optional
+    file_type : str, optional
+    rename_dict : dict or None, optional
     """
 
     paths: str
@@ -225,7 +223,11 @@ class ConditionDataConfig(DataConfigABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize condition dataset configuration.
+
+        Returns
+        -------
+        None
         """
         super().__init__()
 
@@ -239,12 +241,12 @@ class ConditionDataConfig(DataConfigABC):
     @property
     def TYPE(self):
         """
-        Document this function.
+        Dataset type identifier.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        str
+            Always "condition".
         """
         return "condition"
 
@@ -252,12 +254,11 @@ class ConditionDataConfig(DataConfigABC):
     @classmethod
     def _allowed_dims(cls) -> frozenset[str]:
         """
-        Document this function.
+        Allowed dataset dimensions.
 
         Returns
         -------
-        frozenset[str]
-            Description not yet provided.
+        frozenset of str
         """
         return condition_data_allowed_dimensions
 
@@ -265,11 +266,10 @@ class ConditionDataConfig(DataConfigABC):
     @classmethod
     def _required_dims(cls) -> frozenset:
         """
-        Document this function.
+        Required dataset dimensions.
 
         Returns
         -------
-        frozenset
-            Description not yet provided.
+        frozenset of str
         """
         return condition_data_required_dimensions

@@ -64,6 +64,8 @@ class DummyFlow:
 
 
 class LocalModelSelector(ModelSelector):
+    registery = type(cVAEModelSelector.registery)()
+
     pass
 
 

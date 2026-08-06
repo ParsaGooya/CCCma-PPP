@@ -25,42 +25,17 @@ from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 @dataclasses.dataclass
 class InferenceDatasetConfig(DatasetConfigABC):
-    """
-    Document this class.
-
-    Parameters
-    ----------
-    model : ModelDataConfig | None
-        Description not yet provided.
-    condition : ConditionDataConfig | None
-        Description not yet provided.
-    condition_method : str
-        Description not yet provided.
-    lead_months : lead_months_config | None
-        Description not yet provided.
-    """
-
     model: ModelDataConfig | None = None
     condition: ConditionDataConfig | None = None
     condition_method: str = None
     lead_months: lead_months_config | None = None
 
     def __post_init__(self):
-        """
-        Document this function.
-        """
+
         super().__init__()
 
     @property
     def effective_input(self):
-        """
-        Document this function.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         if self.model is not None:
             return self.model
         else:
@@ -68,26 +43,11 @@ class InferenceDatasetConfig(DatasetConfigABC):
 
     @property
     def ds_operator(self):
-        """
-        Document this function.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return DatasetOperator(self)
 
     @property
     def available_times(self):
-        """
-        Document this function.
 
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         year_ranges = list()
         if self.condition is not None:
             year_ranges.append(
@@ -105,27 +65,10 @@ class InferenceDatasetConfig(DatasetConfigABC):
         return common
 
     def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        load_dir : Path | str | None
-            Description not yet provided.
-        """
         self.ds_operator.load_fitted_preprocessors(load_dir)
 
     def add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        preprocessor : PreprocessModuleABC
-            Description not yet provided.
-        index : Any
-            Description not yet provided.
-        """
         self.ds_operator.add_fitted_preprocessor(preprocessor, index)
 
     def build_dataset(
@@ -135,25 +78,6 @@ class InferenceDatasetConfig(DatasetConfigABC):
         return_metadata: bool = False,
         load: bool = False,
     ):
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        years : np.ndarray
-            Description not yet provided.
-        time_features : AddedTimeFeatures
-            Description not yet provided.
-        return_metadata : bool
-            Description not yet provided.
-        load : bool
-            Description not yet provided.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return InferenceDataset(
             config=self,
             requested_years=years,
@@ -165,25 +89,6 @@ class InferenceDatasetConfig(DatasetConfigABC):
 
 @dataclasses.dataclass
 class InferenceDataset(DatasetABC):
-    """
-    Document this class.
-
-    Parameters
-    ----------
-    config : InferenceDatasetConfig
-        Description not yet provided.
-    requested_years : list[int] | tuple[int, ...] | np.ndarray
-        Description not yet provided.
-    time_features : AddedTimeFeatures
-        Description not yet provided.
-    return_metadata : bool
-        Description not yet provided.
-    load : bool
-        Description not yet provided.
-    mask : xr.DataArray | None
-        Description not yet provided.
-    """
-
     config: InferenceDatasetConfig
     requested_years: list[int] | tuple[int, ...] | np.ndarray
     time_features: AddedTimeFeatures
@@ -196,21 +101,11 @@ class InferenceDataset(DatasetABC):
     )
 
     def __post_init__(self):
-        """
-        Document this function.
-        """
         super().__init__()
 
     @property
     def _load_model(self):
-        """
-        Document this function.
 
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return all(
             [
                 not self.config._using_model_data_as_condition,
@@ -220,47 +115,21 @@ class InferenceDataset(DatasetABC):
 
     @property
     def _write_condition_to_input(self):
-        """
-        Document this function.
 
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return any(
             [self.config._using_model_data_as_condition, self.config.model is None]
         )
 
     @property
     def _concat_condition_to_input(self):
-        """
-        Document this function.
 
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return (
             self._write_condition_to_input is False
             and self.config.condition is not None
         )
 
     def __getitem__(self, ind):
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        ind : Any
-            Description not yet provided.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         selection = {dim: value[ind] for dim, value in self.sample_coords.items()}
 
         condition = self._index_condition_dataset(ind)
@@ -292,24 +161,6 @@ class InferenceDataset(DatasetABC):
 def _from_train(
     train_dataset_config: TrainDatasetConfig,
 ) -> "InferenceDatasetConfig":
-    """
-    Document this function.
-
-    Parameters
-    ----------
-    train_dataset_config : TrainDatasetConfig
-        Description not yet provided.
-
-    Returns
-    -------
-    'InferenceDatasetConfig'
-        Description not yet provided.
-
-    Raises
-    ------
-    ValueError
-        Description not yet provided.
-    """
     import copy
 
     kwargs = {

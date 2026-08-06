@@ -2,7 +2,7 @@ import pytest
 import torch
 import numpy as np
 
-from cccma_ppp.core.deterministic_module import (
+from cccma_ppp.core.modules.deterministic import (
     deterministicOutput,
     deterministic,
     deterministicConfig,
@@ -52,7 +52,7 @@ def test_config_basic_initialization():
 
 
 def test_config_build_returns_built_module(monkeypatch):
-    import cccma_ppp.core.deterministic_module as mod
+    import cccma_ppp.core.modules.deterministic as mod
 
     setattr(mod, "deterministic", ConcreteDeterministic)
 
@@ -74,7 +74,7 @@ def test_load_checkpoint_missing_file():
 
 
 def test_load_checkpoint_success(monkeypatch, tmp_path):
-    import cccma_ppp.core.deterministic_module as mod
+    import cccma_ppp.core.modules.deterministic as mod
 
     ckpt_path = tmp_path / "checkpoint.pt"
 
@@ -206,7 +206,7 @@ def test_constructor_passes_shapes_to_model():
 
 
 def test_load_dir_input_metadata_mismatch(monkeypatch):
-    import cccma_ppp.core.deterministic_module as mod
+    import cccma_ppp.core.modules.deterministic as mod
 
     monkeypatch.setattr(mod.RuntimeContext, "INPUT_VAR_METADATA", {"current": "input"})
     monkeypatch.setattr(
@@ -227,7 +227,7 @@ def test_load_dir_input_metadata_mismatch(monkeypatch):
 
 
 def test_load_dir_output_metadata_mismatch(monkeypatch):
-    import cccma_ppp.core.deterministic_module as mod
+    import cccma_ppp.core.modules.deterministic as mod
 
     monkeypatch.setattr(mod.RuntimeContext, "INPUT_VAR_METADATA", {"current": "input"})
     monkeypatch.setattr(
@@ -248,7 +248,7 @@ def test_load_dir_output_metadata_mismatch(monkeypatch):
 
 
 def test_load_dir_input_shape_mismatch(monkeypatch):
-    import cccma_ppp.core.deterministic_module as mod
+    import cccma_ppp.core.modules.deterministic as mod
 
     monkeypatch.setattr(mod.RuntimeContext, "INPUT_VAR_METADATA", None)
     monkeypatch.setattr(mod.RuntimeContext, "TARGET_VAR_METADATA", None)
@@ -265,7 +265,7 @@ def test_load_dir_input_shape_mismatch(monkeypatch):
 
 
 def test_load_dir_output_shape_mismatch(monkeypatch):
-    import cccma_ppp.core.deterministic_module as mod
+    import cccma_ppp.core.modules.deterministic as mod
 
     monkeypatch.setattr(mod.RuntimeContext, "INPUT_VAR_METADATA", None)
     monkeypatch.setattr(mod.RuntimeContext, "TARGET_VAR_METADATA", None)
@@ -286,7 +286,7 @@ def test_load_dir_output_shape_mismatch(monkeypatch):
 
 
 def test_load_dir_success_calls_load_state_dict(monkeypatch):
-    import cccma_ppp.core.deterministic_module as mod
+    import cccma_ppp.core.modules.deterministic as mod
 
     monkeypatch.setattr(mod.RuntimeContext, "INPUT_VAR_METADATA", None)
     monkeypatch.setattr(mod.RuntimeContext, "TARGET_VAR_METADATA", None)
@@ -318,7 +318,7 @@ def test_load_dir_success_calls_load_state_dict(monkeypatch):
 
 
 def test_load_dir_success_with_explicit_output_shape(monkeypatch):
-    import cccma_ppp.core.deterministic_module as mod
+    import cccma_ppp.core.modules.deterministic as mod
 
     monkeypatch.setattr(mod.RuntimeContext, "INPUT_VAR_METADATA", None)
     monkeypatch.setattr(mod.RuntimeContext, "TARGET_VAR_METADATA", None)

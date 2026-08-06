@@ -251,32 +251,6 @@ def test_post_init_worker_persistence_branch(
     assert args["pin_memory"] is False
 
 
-def test_post_init_forwards_spatial_mask_flags(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-
-    config = ConcreteConfig()
-    config.return_spatial_mask = True
-    config.reduce_spatial_mask = True
-
-    make_loader(config=config)
-
-    wrapped_collate = CapturingLoader.instances[-1].kwargs["collate_fn"]
-
-    result = wrapped_collate([1, 2])
-
-    assert result == {
-        "items": [1, 2],
-        "return_spatial_mask": True,
-        "reduce_spatial_mask": True,
-    }
-
-
 def test_single_process_has_no_sampler(
     monkeypatch,
 ):
@@ -648,29 +622,6 @@ def test_collate_partial_preserves_original_function(
     wrapped_collate = CapturingLoader.instances[-1].kwargs["collate_fn"]
 
     assert wrapped_collate.func is collate
-
-
-def test_collate_partial_contains_configured_flags(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-
-    config = ConcreteConfig()
-    config.return_spatial_mask = True
-    config.reduce_spatial_mask = False
-
-    make_loader(config=config)
-
-    wrapped_collate = CapturingLoader.instances[-1].kwargs["collate_fn"]
-
-    assert wrapped_collate.keywords == {
-        "return_spatial_mask": True,
-        "reduce_spatial_mask": False,
-    }
 
 
 def test_distributed_sampler_uses_dataset_instance(

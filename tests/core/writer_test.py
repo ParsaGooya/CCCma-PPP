@@ -11,6 +11,7 @@ from cccma_ppp.core.writer import (
     WriterConfig,
     aggregate_predictions,
 )
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 class DummyBatch:
@@ -1761,3 +1762,707 @@ def test_aggregate_predictions_logger_receives_expected_messages(
     assert "Aggregating temporary prediction files" in calls[0][1]
     assert calls[-1][0] == logging.INFO
     assert "Saved aggregated predictions for year 2000" in calls[-1][1]
+
+
+class RecordingLoader:
+    def __init__(self, batches):
+        self.batches = batches
+        self.iterations = 0
+
+    def __iter__(self):
+        self.iterations += 1
+        yield from self.batches
+
+
+class EvalRecordingModule(DummyModule):
+    def __init__(self):
+        super().__init__()
+        self.eval_called = False
+
+    def eval(self):
+        self.eval_called = True
+        return self
+
+
+def make_predict_writer(
+    *,
+    loader=None,
+    predictor=None,
+    is_on_root=True,
+):
+    writer = object.__new__(Writer)
+
+    writer.module = EvalRecordingModule()
+    writer.InferenceLoader = loader or RecordingLoader(
+        [
+            DummyBatch(),
+        ]
+    )
+    writer.predictor = predictor or DummyPredictor()
+    writer.device = torch.device("cpu")
+    writer.is_on_root = is_on_root
+    writer.is_distributed = False
+    writer.output_dir = Path("/tmp")
+
+    return writer
+
+
+def test_writer_config_accepts_zero_output_sampling():
+    config = WriterConfig(
+        predictor=object(),
+        num_output_sampling=0,
+    )
+
+    assert config.num_output_sampling == 0
+
+
+def test_writer_config_accepts_positive_output_sampling():
+    config = WriterConfig(
+        predictor=object(),
+        num_output_sampling=7,
+    )
+
+    assert config.num_output_sampling == 7
+
+
+def test_train_stats_save_dir_uses_output_directory(
+    tmp_path,
+):
+    writer = object.__new__(Writer)
+    writer.output_dir = tmp_path
+
+    assert writer.train_stats_save_dir == (tmp_path / "training_variable_stats.pt")
+
+
+def test_build_train_loader_forwards_training_arguments(
+    tmp_path,
+):
+    RuntimeContext.GLOBAL_EXP_DIR = str(tmp_path)
+
+    captured = {}
+
+    class Config:
+        def setup_distributed(
+            self,
+            distributed,
+            **kwargs,
+        ):
+            captured["setup"] = (
+                distributed,
+                kwargs,
+            )
+
+        def build_train_loader(
+            self,
+            **kwargs,
+        ):
+            captured["build"] = kwargs
+            return "loader"
+
+    writer = object.__new__(Writer)
+    writer.TrainLoaderConfig = Config()
+    writer.distributed = object()
+
+    result = writer.build_train_loader(
+        return_metadata=True,
+        shuffle=False,
+    )
+
+    assert result == "loader"
+    assert captured["setup"] == (
+        writer.distributed,
+        {
+            "load_path": (tmp_path / "preprocessing_pipeline"),
+        },
+    )
+    assert captured["build"] == {
+        "return_metadata": True,
+        "shuffle": False,
+    }
+
+
+def test_build_train_loader_forwards_validation_arguments(
+    tmp_path,
+):
+    RuntimeContext.GLOBAL_EXP_DIR = str(tmp_path)
+
+    captured = {}
+
+    class Config:
+        def setup_distributed(
+            self,
+            distributed,
+            **kwargs,
+        ):
+            captured["setup"] = (
+                distributed,
+                kwargs,
+            )
+
+        def build_validation_loader(
+            self,
+            **kwargs,
+        ):
+            captured["build"] = kwargs
+            return "validation"
+
+    writer = object.__new__(Writer)
+    writer.TrainLoaderConfig = Config()
+    writer.distributed = object()
+
+    result = writer.build_train_loader(
+        from_validation=True,
+        return_metadata=True,
+        shuffle=True,
+    )
+
+    assert result == "validation"
+    assert captured["setup"][0] is writer.distributed
+    assert captured["setup"][1]["load_path"] == (tmp_path / "preprocessing_pipeline")
+    assert captured["build"] == {
+        "supress_error": False,
+        "return_metadata": True,
+        "shuffle": True,
+    }
+
+
+def test_predict_loop_evaluates_module_and_moves_batch():
+    batch = DummyBatch()
+    predictor = DummyPredictor()
+    loader = RecordingLoader([batch])
+
+    writer = make_predict_writer(
+        loader=loader,
+        predictor=predictor,
+    )
+
+    aggregated = []
+    writer.aggregate_predictions_to_netcdf = lambda value: aggregated.append(value)
+
+    writer._predict()
+
+    assert writer.module.eval_called is True
+    assert batch.device == torch.device("cpu")
+    assert predictor.infer_calls == [False]
+    assert aggregated == [True]
+
+
+def test_predict_loop_processes_every_batch():
+    batches = [
+        DummyBatch(),
+        DummyBatch(),
+        DummyBatch(),
+    ]
+    predictor = DummyPredictor()
+
+    writer = make_predict_writer(
+        loader=RecordingLoader(batches),
+        predictor=predictor,
+    )
+    writer.aggregate_predictions_to_netcdf = lambda value: None
+
+    writer._predict()
+
+    assert predictor.infer_calls == [
+        False,
+        False,
+        False,
+    ]
+
+    for batch in batches:
+        assert batch.device == torch.device("cpu")
+
+
+def test_predict_loop_latent_uses_training_loader():
+    inference_loader = RecordingLoader(
+        [
+            DummyBatch(),
+        ]
+    )
+    training_loader = RecordingLoader(
+        [
+            DummyBatch(),
+            DummyBatch(),
+        ]
+    )
+    predictor = DummyPredictor(
+        save_latent=True,
+    )
+
+    writer = make_predict_writer(
+        loader=inference_loader,
+        predictor=predictor,
+    )
+
+    captured = {}
+
+    def build_train_loader(**kwargs):
+        captured["kwargs"] = kwargs
+        return training_loader
+
+    writer.build_train_loader = build_train_loader
+    writer.aggregate_predictions_to_netcdf = lambda value: captured.setdefault(
+        "postprocess",
+        value,
+    )
+
+    writer._predict()
+
+    assert captured["kwargs"] == {
+        "return_metadata": True,
+        "shuffle": False,
+    }
+    assert captured["postprocess"] is False
+    assert inference_loader.iterations == 0
+    assert training_loader.iterations == 1
+    assert predictor.infer_calls == [
+        False,
+        False,
+    ]
+
+
+def test_predict_loop_nonlatent_uses_inference_loader():
+    inference_loader = RecordingLoader(
+        [
+            DummyBatch(),
+        ]
+    )
+    predictor = DummyPredictor(
+        save_latent=False,
+    )
+
+    writer = make_predict_writer(
+        loader=inference_loader,
+        predictor=predictor,
+    )
+
+    writer.build_train_loader = lambda **kwargs: pytest.fail(
+        "Training loader should not be built."
+    )
+
+    captured = []
+    writer.aggregate_predictions_to_netcdf = lambda value: captured.append(value)
+
+    writer._predict()
+
+    assert inference_loader.iterations == 1
+    assert captured == [True]
+
+
+def test_predict_loop_aggregates_after_all_batches():
+    events = []
+
+    class Predictor(DummyPredictor):
+        def _infer_on_batch(
+            self,
+            batch,
+            _getting_train_stats=False,
+        ):
+            events.append("infer")
+            return super()._infer_on_batch(
+                batch,
+                _getting_train_stats=_getting_train_stats,
+            )
+
+    writer = make_predict_writer(
+        loader=RecordingLoader(
+            [
+                DummyBatch(),
+                DummyBatch(),
+            ]
+        ),
+        predictor=Predictor(),
+    )
+    writer.aggregate_predictions_to_netcdf = lambda value: events.append("aggregate")
+
+    writer._predict()
+
+    assert events == [
+        "infer",
+        "infer",
+        "aggregate",
+    ]
+
+
+def test_predict_loop_propagates_predictor_error():
+    class FailingPredictor(DummyPredictor):
+        def _infer_on_batch(
+            self,
+            batch,
+            _getting_train_stats=False,
+        ):
+            raise RuntimeError("inference failed")
+
+    writer = make_predict_writer(
+        predictor=FailingPredictor(),
+    )
+    writer.aggregate_predictions_to_netcdf = lambda value: pytest.fail(
+        "Aggregation must not run after failure."
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="inference failed",
+    ):
+        writer._predict()
+
+
+def test_setup_distributed_does_not_mark_setup_after_predictor_error(
+    tmp_path,
+):
+    class FailingPredictorConfig(DummyPredictorConfig):
+        def build(
+            self,
+            module,
+            distributed,
+            output_dir,
+            num_output_sampling,
+        ):
+            raise RuntimeError("predictor failed")
+
+    config = WriterConfig(
+        predictor=FailingPredictorConfig(
+            DummyPredictor(),
+        ),
+    )
+
+    writer = Writer(
+        config,
+        DummyLoader(),
+        DummyTrainLoaderConfig(),
+        DummyModule(),
+        object(),
+        tmp_path,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="predictor failed",
+    ):
+        writer.setup_distributed(
+            DummyDistributed(),
+            DummyLogger(),
+        )
+
+    assert writer._setup is False
+
+
+def test_setup_distributed_logs_training_statistics_message(
+    tmp_path,
+    monkeypatch,
+):
+    predictor = DummyPredictor(
+        extract_training_vars=True,
+    )
+    logger = DummyLogger()
+
+    monkeypatch.setattr(
+        Writer,
+        "_save_train_stats",
+        lambda self: None,
+    )
+
+    writer = Writer(
+        WriterConfig(
+            predictor=DummyPredictorConfig(
+                predictor,
+            ),
+        ),
+        DummyLoader(),
+        DummyTrainLoaderConfig(),
+        DummyModule(),
+        object(),
+        tmp_path,
+    )
+
+    writer.setup_distributed(
+        DummyDistributed(),
+        logger,
+    )
+
+    assert any(
+        "extract training statistics" in message for _, message in logger.messages
+    )
+
+
+def test_aggregate_train_stats_does_not_finalize_inactive_stat(
+    tmp_path,
+):
+    class InactiveStat:
+        sum_x = None
+
+        def distributed_reduce(self):
+            pytest.fail("Inactive stat must not be reduced.")
+
+        def finalize(self):
+            pytest.fail("Inactive stat must not be finalized.")
+
+    writer = object.__new__(Writer)
+    writer.output_dir = tmp_path
+    writer.is_on_root = True
+    writer.is_distributed = False
+
+    writer.aggregate_train_stats(
+        {
+            "inactive": InactiveStat(),
+        }
+    )
+
+    assert (
+        torch.load(
+            writer.train_stats_save_dir,
+            weights_only=True,
+        )
+        == {}
+    )
+
+
+def test_aggregate_predictions_sorts_lead_times(
+    tmp_path,
+):
+    temp_dir = tmp_path / "_temp"
+    temp_dir.mkdir()
+
+    xr.DataArray(
+        [
+            [
+                [20.0],
+                [10.0],
+            ]
+        ],
+        dims=(
+            "year",
+            "lead_time",
+            "channels",
+        ),
+        coords={
+            "year": [2000],
+            "lead_time": [2, 1],
+            "channels": ["prediction"],
+        },
+        name="prediction",
+    ).to_netcdf(temp_dir / "prediction_rank0_0.nc")
+
+    aggregate_predictions(
+        None,
+        tmp_path,
+        cleanup_temp=False,
+    )
+
+    with xr.open_dataset(tmp_path / "prediction_2000.nc") as dataset:
+        assert dataset["lead_time"].values.tolist() == [
+            1,
+            2,
+        ]
+
+
+def test_aggregate_predictions_removes_duplicate_lead_times(
+    tmp_path,
+):
+    temp_dir = tmp_path / "_temp"
+    temp_dir.mkdir()
+
+    for rank, value in enumerate(
+        [
+            1.0,
+            2.0,
+        ]
+    ):
+        xr.DataArray(
+            [
+                [
+                    [value],
+                ]
+            ],
+            dims=(
+                "year",
+                "lead_time",
+                "channels",
+            ),
+            coords={
+                "year": [2000],
+                "lead_time": [1],
+                "channels": ["prediction"],
+            },
+            name="prediction",
+        ).to_netcdf(temp_dir / f"prediction_rank{rank}_0.nc")
+
+    aggregate_predictions(
+        None,
+        tmp_path,
+        cleanup_temp=False,
+    )
+
+    with xr.open_dataset(tmp_path / "prediction_2000.nc") as dataset:
+        assert dataset.sizes["lead_time"] == 1
+        assert dataset["lead_time"].values.tolist() == [1]
+
+
+def test_aggregate_predictions_postprocessor_call_order(
+    tmp_path,
+):
+    temp_dir = tmp_path / "_temp"
+    temp_dir.mkdir()
+
+    xr.DataArray(
+        [
+            [
+                [1.0],
+            ]
+        ],
+        dims=(
+            "year",
+            "lead_time",
+            "channels",
+        ),
+        coords={
+            "year": [2000],
+            "lead_time": [1],
+            "channels": ["prediction"],
+        },
+        name="prediction",
+    ).to_netcdf(temp_dir / "prediction_rank0_0.nc")
+
+    calls = []
+
+    class RecordingPostprocessor:
+        def to_dataset(
+            self,
+            value,
+        ):
+            calls.append("to_dataset")
+            return value.to_dataset(dim="channels")
+
+        def inverse_transform(
+            self,
+            value,
+        ):
+            calls.append("inverse_transform")
+            return value
+
+    aggregate_predictions(
+        RecordingPostprocessor(),
+        tmp_path,
+        cleanup_temp=False,
+    )
+
+    assert calls == [
+        "to_dataset",
+        "inverse_transform",
+    ]
+
+
+def test_aggregate_predictions_closes_loaded_year_parts(
+    tmp_path,
+    monkeypatch,
+):
+    temp_dir = tmp_path / "_temp"
+    temp_dir.mkdir()
+
+    xr.DataArray(
+        [
+            [
+                [1.0],
+            ]
+        ],
+        dims=(
+            "year",
+            "lead_time",
+            "channels",
+        ),
+        coords={
+            "year": [2000],
+            "lead_time": [1],
+            "channels": ["prediction"],
+        },
+        name="prediction",
+    ).to_netcdf(temp_dir / "prediction_rank0_0.nc")
+
+    close_calls = []
+    original_close = xr.DataArray.close
+
+    def recording_close(self):
+        close_calls.append(True)
+        return original_close(self)
+
+    monkeypatch.setattr(
+        xr.DataArray,
+        "close",
+        recording_close,
+    )
+
+    aggregate_predictions(
+        None,
+        tmp_path,
+        cleanup_temp=False,
+    )
+
+    assert close_calls
+
+
+def test_aggregate_predictions_cleanup_only_matching_files(
+    tmp_path,
+):
+    temp_dir = tmp_path / "_temp"
+    temp_dir.mkdir()
+
+    xr.DataArray(
+        [
+            [
+                [1.0],
+            ]
+        ],
+        dims=(
+            "year",
+            "lead_time",
+            "channels",
+        ),
+        coords={
+            "year": [2000],
+            "lead_time": [1],
+            "channels": ["prediction"],
+        },
+        name="prediction",
+    ).to_netcdf(temp_dir / "prediction_rank0_0.nc")
+
+    unrelated = temp_dir / "keep.txt"
+    unrelated.write_text("keep")
+
+    with pytest.raises(OSError):
+        aggregate_predictions(
+            None,
+            tmp_path,
+            cleanup_temp=True,
+        )
+
+    assert unrelated.exists()
+    assert not (temp_dir / "prediction_rank0_0.nc").exists()
+
+
+def test_aggregate_predictions_to_netcdf_nonroot_distributed_barriers(
+    monkeypatch,
+):
+    aggregate_mock = []
+
+    monkeypatch.setattr(
+        "cccma_ppp.core.writer.aggregate_predictions",
+        lambda *args: aggregate_mock.append(args),
+    )
+
+    distributed = DummyDistributed(
+        distributed=True,
+        root=False,
+    )
+
+    writer = object.__new__(Writer)
+    writer.distributed = distributed
+    writer.is_distributed = True
+    writer.is_on_root = False
+    writer.output_dir = Path("/tmp")
+    writer.post_processor = object()
+    writer.predictor = DummyPredictor()
+
+    writer.aggregate_predictions_to_netcdf()
+
+    assert distributed.barrier_called == 2
+    assert aggregate_mock == []
