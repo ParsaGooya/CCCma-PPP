@@ -6,7 +6,6 @@ import pytest
 import torch
 import torch.nn as nn
 
-import cccma_ppp.models.mlp_models.cvae as module
 from cccma_ppp.models.mlp_models.cvae import (
     cVAE_MLP,
     cVAE_MLPConfig,

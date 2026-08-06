@@ -2,7 +2,19 @@ from cccma_ppp.models.layers.conv import TensorMask
 
 
 def _unet_config_checks(config):
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    config : Any
+        Description not yet provided.
+
+    Raises
+    ------
+    ValueError
+        Description not yet provided.
+    """
     channels = config.channels
     transpose_kernel_sizes = config.transpose_kernel_sizes
 
@@ -72,9 +84,11 @@ def _unet_config_checks(config):
             raise ValueError(f"{key} must be a positive integer.")
 
     if getattr(config, "condition_dependant_latent", None) is not None:
-        if (not config.condition_dependant_latent and 
-            config.deterministic_guess_config is None and
-            not config.condemb_to_decoder):
+        if (
+            not config.condition_dependant_latent
+            and config.deterministic_guess_config is None
+            and not config.condemb_to_decoder
+        ):
             raise ValueError(
                 "condition embedding has to be passed to decoder for cVAE when latent is not condition dependant "
                 "and a deterministic guess does not exist."
@@ -99,6 +113,21 @@ def _repeat_tensor_mask(
     tensor_mask: TensorMask,
     repeats: int,
 ) -> TensorMask:
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    tensor_mask : TensorMask
+        Description not yet provided.
+    repeats : int
+        Description not yet provided.
+
+    Returns
+    -------
+    TensorMask
+        Description not yet provided.
+    """
     return TensorMask(
         tensor=tensor_mask.tensor.repeat_interleave(repeats, dim=0),
         mask=(

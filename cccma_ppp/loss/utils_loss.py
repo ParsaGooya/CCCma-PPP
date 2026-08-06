@@ -16,24 +16,28 @@ CovarianceDim = Literal["spatial", "channel"]
 @Losspipeline.register("mse")
 class WeightedMSE(lossABC):
     """
-    Weighted mean squared error loss.
+    Document this class.
 
     Parameters
     ----------
     weights : xr.DataArray
-        Spatial or variable weights.
-    reduction : {"mean", "sum"}, optional
-        Reduction method.
-    num_output_dimensions : int, optional
-        Number of output dimensions.
-    low_ress_kernel_size : int or None, optional
-        Kernel size for optional low-resolution downsampling.
-    hyperparam : float, optional
-        Scaling factor for asymmetric penalty.
-    min_threshold : float, optional
-        Lower threshold for asymmetric penalty.
-    max_threshold : float, optional
-        Upper threshold for asymmetric penalty.
+        Description not yet provided.
+    reduction : Reduction
+        Description not yet provided.
+    num_output_dimensions : int
+        Description not yet provided.
+    low_ress_kernel_size : int
+        Description not yet provided.
+    generative_context : GenerativeContext | None
+        Description not yet provided.
+    hyperparam : Any
+        Description not yet provided.
+    min_threshold : Any
+        Description not yet provided.
+    max_threshold : Any
+        Description not yet provided.
+    **kwargs : Any
+        Description not yet provided.
     """
 
     def __init__(
@@ -49,53 +53,36 @@ class WeightedMSE(lossABC):
         **kwargs,
     ):
         """
-        Initialize weighted MSE loss.
+        Document this function.
 
         Parameters
         ----------
         weights : xr.DataArray
-            Spatial or variable weights.
-        reduction : {"mean", "sum"}, optional
-            Reduction method applied to the loss.
-        num_output_dimensions : int, optional
-            Number of output dimensions.
-        low_ress_kernel_size : int or None, optional
-            Kernel size for downsampling.
-        generative_context: GenerativeContext
-            Generative context for the module paired with the loss function.
-        hyperparam : float, optional
-            Scaling factor for asymmetric penalty.
-        min_threshold : float, optional
-            Lower threshold for asymmetric weighting.
-        max_threshold : float, optional
-            Upper threshold for asymmetric weighting.
-
-        Returns
-        -------
-        None
+            Description not yet provided.
+        reduction : Reduction
+            Description not yet provided.
+        num_output_dimensions : int
+            Description not yet provided.
+        low_ress_kernel_size : int
+            Description not yet provided.
+        generative_context : GenerativeContext | None
+            Description not yet provided.
+        hyperparam : Any
+            Description not yet provided.
+        min_threshold : Any
+            Description not yet provided.
+        max_threshold : Any
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
 
         Raises
         ------
-        ValueError
-            If kernel size is not odd.
         NotImplementedError
-            If unsupported number of output dimensions is used.
-
-        Notes
-        -----
-        Expected weight tensor layouts:
-
-        - With channels: ``(C, O1, ..., On)``
-        - Without channels: ``(O1, ..., On)``
-
-        where:
-
-        - ``C`` is the channel dimension
-        - ``O1 ... On`` are spatial/output dimensions
-
-        If channels are not present, a singleton channel dimension may be temporarily added during low-resolution downsampling.
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
         """
-
         super().__init__()
         self.reduction = reduction
         self.hyperparam = hyperparam
@@ -148,31 +135,18 @@ class WeightedMSE(lossABC):
 
     def _downsample(self, tensor: torch.Tensor) -> torch.Tensor:
         """
-        Apply pooling for downsampling.
+        Document this function.
 
         Parameters
         ----------
         tensor : torch.Tensor
+            Description not yet provided.
 
         Returns
         -------
         torch.Tensor
-
-        Notes
-        -----
-        Expected input shapes:
-
-        - Static weights/masks:
-        ``(C, O1, ..., On)``
-        - Batched tensors:
-        ``(B, C, O1, ..., On)``
-        - Generative tensors:
-        ``(Z, B, C, O1, ..., On)``
-
-        The method temporarily inserts a batch dimension for static weight tensors so that PyTorch pooling operators can be applied. The original dimensionality is restored before returning.
-
+            Description not yet provided.
         """
-
         squeeze = False
         if len(tensor.shape) == self.num_output_dimensions:
             tensor = tensor.unsqueeze(0)
@@ -197,41 +171,29 @@ class WeightedMSE(lossABC):
         print_loss=False,
     ) -> torch.Tensor:
         """
-        Compute weighted MSE loss.
+        Document this function.
 
         Parameters
         ----------
         data : torch.Tensor
-            Model predictions.
+            Description not yet provided.
         target : torch.Tensor
-            Ground truth values.
-        target_mask : torch.Tensor or None, optional
-            Mask applied to targets.
-        print_loss : bool, optional
-            Whether to print loss.
+            Description not yet provided.
+        target_mask : torch.Tensor | None
+            Description not yet provided.
+        print_loss : Any
+            Description not yet provided.
 
         Returns
         -------
         torch.Tensor
-            Loss value.
+            Description not yet provided.
 
         Raises
         ------
         RuntimeError
-            If shapes do not match.
-
-        Notes
-        -----
-        Expected tensor shapes are:
-
-        - Standard mode: ``(B, C, ...)``
-        - Generator mode: ``(E, B, C, ...)``
-        - Generative modeling mode: ``(Z, B, C, ...)``
-        - Generator + generative modeling: ``(E, Z, B, C, ...)``
-
-        where ``E`` is the ensemble/sample dimension, ``Z`` is the latent sample dimension, ``B`` is batch size, and ``C`` is the channel dimension.
+            Description not yet provided.
         """
-
         if self.generative_context.generator:
             _check_generator_structure(data, target)
             data = data.mean(0)
@@ -271,17 +233,13 @@ class WeightedMSE(lossABC):
 
     def _print_loss(self, loss):
         """
-        Print MSE loss.
+        Document this function.
 
         Parameters
         ----------
-        loss : torch.Tensor
-
-        Returns
-        -------
-        None
+        loss : Any
+            Description not yet provided.
         """
-
         if self.low_ress_kernel_size is not None:
             print(f"MSE_lowress : {loss.item():.5f}")
         else:
@@ -289,31 +247,25 @@ class WeightedMSE(lossABC):
 
     def _aggregate(self, loss, mask):
         """
-        Apply weighting, masking, and reduction.
+        Document this function.
 
         Parameters
         ----------
-        loss : torch.Tensor
-        mask : torch.Tensor or None
+        loss : Any
+            Description not yet provided.
+        mask : Any
+            Description not yet provided.
 
         Returns
         -------
-        torch.Tensor
+        Any
+            Description not yet provided.
 
-        Notes
-        -----
-        Expected loss shape before reduction:
-
-        ``(B, C, O1, ..., On)``
-
-        or, for generative modeling:
-
-        ``(Z, B, C, O1, ..., On)``
-
-        Weights are broadcast across all leading dimensions and applied
-        along the channel and spatial dimensions.
+        Raises
+        ------
+        NotImplementedError
+            Description not yet provided.
         """
-
         weight = self.weights
         loss = loss * weight
         if mask is not None:
@@ -340,23 +292,22 @@ class WeightedMSE(lossABC):
 @Losspipeline.register("crps")
 class WeightedCRPS(lossABC):
     """
-    Weighted continuous ranked probability score (CRPS).
-
-    Designed for probabilistic predictions with multiple samples.
+    Document this class.
 
     Parameters
     ----------
     weights : xr.DataArray
-        Spatial/feature weights applied to the loss.
-    reduction : {"mean", "sum"}, optional
-        Reduction method applied to the loss.
-    num_output_dimensions : int, optional
-        Number of output dimensions.
-    low_ress_kernel_size : int or None, optional
-        Kernel size for low-resolution smoothing (if used).
-    generative_context : GenerativeContext
-        Generative modeling context based on the module.
-        Default values are set to False.
+        Description not yet provided.
+    reduction : Reduction
+        Description not yet provided.
+    num_output_dimensions : int
+        Description not yet provided.
+    low_ress_kernel_size : int
+        Description not yet provided.
+    generative_context : GenerativeContext | None
+        Description not yet provided.
+    **kwargs : Any
+        Description not yet provided.
     """
 
     def __init__(
@@ -369,37 +320,30 @@ class WeightedCRPS(lossABC):
         **kwargs,
     ):
         """
-        Initialize weighted CRPS loss.
+        Document this function.
 
         Parameters
         ----------
         weights : xr.DataArray
-            Spatial or variable weights.
-        reduction : {"mean", "sum"}, optional
-            Reduction method applied to the loss.
-        num_output_dimensions : int, optional
-            Number of output dimensions.
-        low_ress_kernel_size : int or None, optional
-            Kernel size for downsampling.
-        generative_context: GenerativeContext
-            Generative context for the module paired with the loss function.
-
-        Returns
-        -------
-        None
+            Description not yet provided.
+        reduction : Reduction
+            Description not yet provided.
+        num_output_dimensions : int
+            Description not yet provided.
+        low_ress_kernel_size : int
+            Description not yet provided.
+        generative_context : GenerativeContext | None
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
 
         Raises
         ------
-        ValueError
-            If kernel size is not odd.
         NotImplementedError
-            If unsupported number of output dimensions is used.
-
-        Notes
-        -----
-        Both `weights` and the internally constructed `weights_mask` are expected to follow the shape `(C, ...)`, where `C` is the channel dimension.
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
         """
-
         super().__init__()
         self.reduction = reduction
         self.num_output_dimensions = num_output_dimensions
@@ -450,19 +394,18 @@ class WeightedCRPS(lossABC):
 
     def _downsample(self, tensor: torch.Tensor) -> torch.Tensor:
         """
-        Downsample tensor using average pooling.
+        Document this function.
 
         Parameters
         ----------
         tensor : torch.Tensor
-            Input tensor to be downsampled.
+            Description not yet provided.
 
         Returns
         -------
         torch.Tensor
-            Downsampled tensor with the same dimensionality as input.
+            Description not yet provided.
         """
-
         squeeze = False
         if len(tensor.shape) == self.num_output_dimensions:
             tensor = tensor.unsqueeze(0)
@@ -487,57 +430,29 @@ class WeightedCRPS(lossABC):
         print_loss=False,
     ) -> torch.Tensor:
         """
-        Compute CRPS loss.
+        Document this function.
 
         Parameters
         ----------
         data : torch.Tensor
-            Ensemble predictions (samples).
+            Description not yet provided.
         target : torch.Tensor
-            Ground truth.
-        target_mask : torch.Tensor or None, optional
-        print_loss : bool, optional
+            Description not yet provided.
+        target_mask : torch.Tensor | None
+            Description not yet provided.
+        print_loss : Any
+            Description not yet provided.
 
         Returns
         -------
         torch.Tensor
+            Description not yet provided.
 
         Raises
         ------
         RuntimeError
-            If generator flag is False.
-
-        Notes
-        -----
-        CRPS requires an ensemble of predictions. The first dimension of ``data`` is interpreted as the ensemble/sample dimension.
-
-        Expected tensor layouts:
-
-        Standard ensemble prediction:
-
-        - ``data``:
-        ``(E, B, C, O1, ..., On)``
-        - ``target``:
-        ``(B, C, O1, ..., On)``
-
-        Generative modeling:
-
-        - ``data``:
-        ``(E, Z, B, C, O1, ..., On)``
-        - ``target``:
-        ``(Z, B, C, O1, ..., On)``
-
-        where:
-
-        - ``E`` = ensemble/sample dimension
-        - ``Z`` = latent realization dimension
-        - ``B`` = batch dimension
-        - ``C`` = channel dimension
-        - ``O1...On`` = output dimensions
-
-        where ``E`` is the ensemble size.
+            Description not yet provided.
         """
-
         if not self.generative_context.generator:
             raise RuntimeError(
                 "generator cannot be False as a step_argument in Losspipeline.forward()"
@@ -591,17 +506,13 @@ class WeightedCRPS(lossABC):
 
     def _print_loss(self, loss):
         """
-        Print CRPS loss.
+        Document this function.
 
         Parameters
         ----------
-        loss : torch.Tensor
-
-        Returns
-        -------
-        None
+        loss : Any
+            Description not yet provided.
         """
-
         if self.low_ress_kernel_size is not None:
             print(f"CRPS_lowress : {loss.item():.5f}")
         else:
@@ -609,18 +520,25 @@ class WeightedCRPS(lossABC):
 
     def _aggregate(self, loss, mask):
         """
-        Apply weighting, masking, and reduction.
+        Document this function.
 
         Parameters
         ----------
-        loss : torch.Tensor
-        mask : torch.Tensor or None
+        loss : Any
+            Description not yet provided.
+        mask : Any
+            Description not yet provided.
 
         Returns
         -------
-        torch.Tensor
-        """
+        Any
+            Description not yet provided.
 
+        Raises
+        ------
+        NotImplementedError
+            Description not yet provided.
+        """
         weight = self.weights
         loss = loss * weight
         if mask is not None:
@@ -647,21 +565,20 @@ class WeightedCRPS(lossABC):
 @Losspipeline.register("frobenius_norm")
 class Frobenius_norm(lossABC):
     """
-    Frobenius norm loss between covariance matrices.
+    Document this class.
 
     Parameters
     ----------
     weights : xr.DataArray
-        Spatial/feature weights applied to the loss.
-    reduction : {"mean", "sum"}, optional
-        Reduction method applied to the loss.
-    num_output_dimensions : int, optional
-        Number of output dimensions.
-    generative_context : GenerativeContext
-        Generative modeling context based on the module.
-        Default values are set to False.
-    covariance_dim : {"spatial", "channel"}, optional
-        Dimension along which covariance is computed.
+        Description not yet provided.
+    reduction : Reduction
+        Description not yet provided.
+    num_output_dimensions : int
+        Description not yet provided.
+    generative_context : GenerativeContext | None
+        Description not yet provided.
+    covariance_dim : CovarianceDim
+        Description not yet provided.
     """
 
     def __init__(
@@ -673,27 +590,21 @@ class Frobenius_norm(lossABC):
         covariance_dim: CovarianceDim = "spatial",
     ):
         """
-        Initialize Frobenius norm loss size    Initialize Frobenius norm loss.
-        based on spatial dimensions.
+        Document this function.
 
         Parameters
         ----------
         weights : xr.DataArray
-            Reference weights used to infer output dimensionality.
-        reduction : {"mean", "sum"}, optional
-            Reduction method applied to the loss.
-        num_output_dimensions : int, optional
-            Number of output dimensions.
-        covariance_dim : {"spatial", "channel"}, optional
-            Dimension along which covariance is computed.
-        generative_context: GenerativeContext
-            Generative context for the module paired with the loss function.
-
-        Returns
-        -------
-        None
+            Description not yet provided.
+        reduction : Reduction
+            Description not yet provided.
+        num_output_dimensions : int
+            Description not yet provided.
+        generative_context : GenerativeContext | None
+            Description not yet provided.
+        covariance_dim : CovarianceDim
+            Description not yet provided.
         """
-
         super().__init__()
 
         self.covariance_dim = covariance_dim
@@ -713,50 +624,27 @@ class Frobenius_norm(lossABC):
         print_loss=False,
     ) -> torch.Tensor:
         """
-        Compute Frobenius norm of covariance difference.
+        Document this function.
 
         Parameters
         ----------
         data : torch.Tensor
+            Description not yet provided.
         target : torch.Tensor
-        print_loss : bool, optional
+            Description not yet provided.
+        print_loss : Any
+            Description not yet provided.
 
         Returns
         -------
         torch.Tensor
+            Description not yet provided.
 
-        Notes
-        -----
-        Expected tensor layouts:
-
-        Standard mode:
-
-        - ``data``:
-        ``(B, C, O1, ..., On)``
-        - ``target``:
-        ``(B, C, O1, ..., On)``
-
-        Generative modeling:
-
-        - ``data``:
-        ``(Z, B, C, O1, ..., On)``
-        - ``target``:
-        ``(Z, B, C, O1, ..., On)``
-
-        Processing steps:
-
-        1. Spatial dimensions ``O1...On`` are flattened into a single
-        feature dimension.
-        2. If generative modeling is enabled, the latent dimension ``Z``
-        is merged with the batch dimension.
-        3. Covariance matrices are computed either:
-
-        - across spatial features (``covariance_dim="spatial"``)
-        - across channels (``covariance_dim="channel"``)
-
-        4. The Frobenius norm of the covariance difference is returned.
+        Raises
+        ------
+        AssertionError
+            Description not yet provided.
         """
-
         if self.generative_context.generator:
             _check_generator_structure(data, target)
             data = data.mean(0)
@@ -803,33 +691,31 @@ class Frobenius_norm(lossABC):
 
     def _print_loss(self, loss):
         """
-        Print Frobenius norm loss.
+        Document this function.
 
         Parameters
         ----------
-        loss : torch.Tensor
-
-        Returns
-        -------
-        None
+        loss : Any
+            Description not yet provided.
         """
-
         print(f"FLN : {loss.item():.5f}")
 
     def _aggregate(self, loss, output_size=None):
         """
-        Apply normalization and reduction.
+        Document this function.
 
         Parameters
         ----------
-        loss : torch.Tensor
-        output_size : int or None, optional
+        loss : Any
+            Description not yet provided.
+        output_size : Any
+            Description not yet provided.
 
         Returns
         -------
-        torch.Tensor
+        Any
+            Description not yet provided.
         """
-
         if output_size is None:
             output_size = self.output_size
 
@@ -846,53 +732,25 @@ class Frobenius_norm(lossABC):
 
 def _check_generator_structure(data: torch.Tensor, target: torch.Tensor):
     """
-    Validate generator output structure.
+    Document this function.
 
     Parameters
     ----------
     data : torch.Tensor
-        Generated samples.
+        Description not yet provided.
     target : torch.Tensor
-        Target tensor.
+        Description not yet provided.
 
     Returns
     -------
-    bool
+    Any
+        Description not yet provided.
 
     Raises
     ------
     ValueError
-        If structure is inconsistent.
-
-    Notes
-    -----
-    Generator outputs must contain exactly one additional leading
-    ensemble/sample dimension compared to the target.
-
-    Valid examples:
-
-    - target:
-    ``(B, C, O1, O2)``
-    - data:
-    ``(E, B, C, O1, O2)``
-
-    Generative example:
-
-    - target:
-    ``(Z, B, C, O1, O2)``
-    - data:
-    ``(E, Z, B, C, O1, O2)``
-
-    Invalid examples:
-
-    - data:
-    ``(B, E, C, O1, O2)``
-    - data:
-    ``(E, C, O1, O2)``
-
-    The ensemble dimension must always be the left-most dimension.
+        Description not yet provided.
     """
-
     bool = data.shape[1:] == (1,) * (data.dim() - target.dim() - 1) + target.shape
     if bool:
         return True

@@ -24,20 +24,20 @@ from cccma_ppp.generic.runtime import RuntimeContext
 @dataclasses.dataclass
 class infoclass:
     """
-    Container for dataset metadata.
+    Document this class.
 
     Parameters
     ----------
-    sizes : dict or None
-        Sizes of non-spatial dataset dimensions.
-    start_year : xr.DataArray or np.ndarray or str or int or None
-        Earliest available year.
-    final_year : xr.DataArray or np.ndarray or str or int or None
-        Latest available year.
+    sizes : dict | None
+        Description not yet provided.
+    start_year : xr.DataArray | np.ndarray | str | int | None
+        Description not yet provided.
+    final_year : xr.DataArray | np.ndarray | str | int | None
+        Description not yet provided.
     coords : dict
-        Spatial and ensemble coordinates.
-    spatial_mask : xr.Dataset or None, optional
-        Optional spatial mask.
+        Description not yet provided.
+    spatial_mask : xr.Dataset
+        Description not yet provided.
     """
 
     sizes: dict | None
@@ -49,7 +49,26 @@ class infoclass:
 
 class DataConfigABC(abc.ABC):
     """
-    Abstract base class for dataset configuration.
+    Document this class.
+
+    Attributes
+    ----------
+    paths : str
+        Description not yet provided.
+    names : list[str]
+        Description not yet provided.
+    preprocessing_pipeline : PreprocessingPipeline
+        Description not yet provided.
+    ensemble_list : list | None
+        Description not yet provided.
+    ensemble_mean : bool | None
+        Description not yet provided.
+    concat_dim : str
+        Description not yet provided.
+    file_type : str
+        Description not yet provided.
+    rename_dict : dict
+        Description not yet provided.
     """
 
     paths: str
@@ -63,18 +82,12 @@ class DataConfigABC(abc.ABC):
 
     def __init__(self):
         """
-        Initialize data configuration.
-
-        Ensures preprocessing pipeline exists and assigns its name.
-
-        Returns
-        -------
-        None
+        Document this function.
 
         Raises
         ------
         AttributeError
-            If preprocessing_pipeline is not defined.
+            Description not yet provided.
         """
         if not hasattr(self, "preprocessing_pipeline"):
             raise AttributeError(
@@ -94,25 +107,15 @@ class DataConfigABC(abc.ABC):
     @abc.abstractmethod
     def TYPE(self) -> str:
         """
-        Type identifier for dataset.
-
-        Returns
-        -------
-        str
+        Document this function.
         """
-
         pass
 
     @classmethod
     @abc.abstractmethod
     def _allowed_dims(cls) -> frozenset[str]:
         """
-        Allowed dataset dimensions.
-
-        Returns
-        -------
-        frozenset of str
-            Set of allowed dataset dimension names.
+        Document this function.
         """
         pass
 
@@ -120,33 +123,26 @@ class DataConfigABC(abc.ABC):
     @abc.abstractmethod
     def _required_dims(cls) -> frozenset[str]:
         """
-        Required dataset dimensions.
-
-        Returns
-        -------
-        frozenset of str
+        Document this function.
         """
         pass
 
     @final
     def _resolve_data(self):
         """
-        Validate dataset files and structure.
-
-        Returns
-        -------
-        None
+        Document this function.
         """
         _resolve_data(self)
 
     @final
     def _get_ds_info(self):
         """
-        Extract dataset metadata.
+        Document this function.
 
         Returns
         -------
-        infoclass
+        Any
+            Description not yet provided.
         """
         return _get_ds_info(self)
 
@@ -160,24 +156,21 @@ class DataConfigABC(abc.ABC):
         save_name: str | None = None,
     ):
         """
-        Fit preprocessing pipeline on dataset.
+        Document this function.
 
         Parameters
         ----------
         selection : dict
-            Subset selection for dataset.
-        mask : bool, optional
-            Whether to apply training mask.
-        save : bool, optional
-            Whether to save pipeline.
-        save_path : pathlib.Path or str or None, optional
-        save_name : str or None, optional
-
-        Returns
-        -------
-        None
+            Description not yet provided.
+        mask : bool
+            Description not yet provided.
+        save : bool
+            Description not yet provided.
+        save_path : Path | str | None
+            Description not yet provided.
+        save_name : str | None
+            Description not yet provided.
         """
-
         _base = _load_xarray_data(
             self.list_paths,
             names=self.names,
@@ -204,20 +197,17 @@ class DataConfigABC(abc.ABC):
     @final
     def load_preprocessor_pipeline(self, load_dir: Path | str | None = None):
         """
-        Load fitted preprocessing pipeline.
+        Document this function.
 
         Parameters
         ----------
-        load_dir : pathlib.Path or str or None
-
-        Returns
-        -------
-        None
+        load_dir : Path | str | None
+            Description not yet provided.
 
         Raises
         ------
         RuntimeError
-            If loaded pipeline is not fitted.
+            Description not yet provided.
         """
         if load_dir is None:
             load_dir = Path(RuntimeContext.GLOBAL_EXP_DIR) / "preprocessing_pipeline"
@@ -239,22 +229,21 @@ class DataConfigABC(abc.ABC):
 
 def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
     """
-    Validate dataset files and dimensions.
+    Document this function.
 
     Parameters
     ----------
     dataconfig : DataConfigABC
-
-    Returns
-    -------
-    None
+        Description not yet provided.
+    _do_checks : bool
+        Description not yet provided.
 
     Raises
     ------
     FileNotFoundError
-        If data files do not exist.
+        Description not yet provided.
     ValueError
-        If dataset dimensions or variables are invalid.
+        Description not yet provided.
     """
     if not Path(dataconfig.paths).exists():
         raise FileNotFoundError(
@@ -319,16 +308,17 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
 
 def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
     """
-    Extract dataset metadata information.
+    Document this function.
 
     Parameters
     ----------
     dataconfig : DataConfigABC
+        Description not yet provided.
 
     Returns
     -------
     infoclass
-        Metadata describing dataset dimensions and coordinates.
+        Description not yet provided.
     """
     if getattr(dataconfig, "list_paths", None) is None:
         list_paths = glob.glob(

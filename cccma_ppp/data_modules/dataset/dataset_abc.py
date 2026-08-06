@@ -28,16 +28,16 @@ from cccma_ppp.data_modules.utils import (
 @dataclasses.dataclass
 class lead_months_config:
     """
-    Configuration for selecting lead months.
+    Document this class.
 
     Parameters
     ----------
-    list_months : list of int or None, optional
-        Explicit list of lead months.
-    start : int, optional
-        Start of lead month range (inclusive).
-    end : int or None, optional
-        End of lead month range (inclusive).
+    list_months : list | None
+        Description not yet provided.
+    start : int
+        Description not yet provided.
+    end : int
+        Description not yet provided.
     """
 
     list_months: list | None = None
@@ -46,16 +46,12 @@ class lead_months_config:
 
     def __post_init__(self):
         """
-        Validate lead month configuration.
-
-        Returns
-        -------
-        None
+        Document this function.
 
         Raises
         ------
         ValueError
-            If neither list nor range is properly specified.
+            Description not yet provided.
         """
         if self.list_months is None:
             if self.end is None:
@@ -66,26 +62,32 @@ class lead_months_config:
 
     def build_lead_months(self):
         """
-        Construct lead month array.
+        Document this function.
 
         Returns
         -------
-        np.ndarray or list
-            Lead months defined either explicitly or as a range.
+        Any
+            Description not yet provided.
         """
         return self.list_months or np.arange(self.start, self.end + 1)
 
 
 class DatasetConfigABC(abc.ABC):
     """
-    Abstract base class for dataset configuration.
+    Document this class.
 
     Attributes
     ----------
-    model : ModelDataConfig or None
-    condition : ConditionDataConfig or None
-    condition_method : str or None
-    lead_months : lead_months_config or None
+    model : ModelDataConfig | None
+        Description not yet provided.
+    condition : ConditionDataConfig | None
+        Description not yet provided.
+    condition_method : str | None
+        Description not yet provided.
+    lead_months : lead_months_config | None
+        Description not yet provided.
+    _effective_condition : ConditionDataConfig | ModelDataConfig | None
+        Description not yet provided.
     """
 
     _VALID_CONDITION_METHODS: ClassVar[frozenset[str]] = frozenset(
@@ -100,11 +102,12 @@ class DatasetConfigABC(abc.ABC):
 
     def __init__(self):
         """
-        Initialize dataset configuration.
+        Document this function.
 
-        Returns
-        -------
-        None
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
         """
         self._fitted_preprocessors: bool = False
         self._effective_condition: ConditionDataConfig | ModelDataConfig | None = None
@@ -129,16 +132,17 @@ class DatasetConfigABC(abc.ABC):
     @final
     def _check_required_input_source(self):
         """
-        Ensure at least one input source is provided.
+        Document this function.
 
         Returns
         -------
-        self
+        Any
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If both model and condition are missing.
+            Description not yet provided.
         """
         if self.model is None and self.condition is None:
             raise ValueError(
@@ -150,23 +154,12 @@ class DatasetConfigABC(abc.ABC):
     @final
     def _check_model_vs_condition(self):
         """
-        Validate compatibility between model and condition datasets.
-
-        Returns
-        -------
-        None
+        Document this function.
 
         Raises
         ------
         ValueError
-            If condition data does not span the same time range as model data for non static condition methods.
-        ValueError
-            If condition data does not provide sufficient lead-time coverage for non static condition methods.
-        ValueError
-            If condition data and model data do not have similar ensembles for same_member condition methods.
-        ValueError
-            If spatial coordinates (lat/lon) between model and condition differ
-            when observation-based correction is applied.
+            Description not yet provided.
         """
         if all(
             [
@@ -238,16 +231,17 @@ class DatasetConfigABC(abc.ABC):
     @final
     def _check_condition_method(self):
         """
-        Validate conditioning method.
+        Document this function.
 
         Returns
         -------
-        self
+        Any
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If condition method is not supported.
+            Description not yet provided.
         """
         if self.condition_method is not None:
             if self.condition_method.lower() not in self._VALID_CONDITION_METHODS:
@@ -258,6 +252,19 @@ class DatasetConfigABC(abc.ABC):
         return self
 
     def _check_model(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if self.model is not None:
             if self.condition_method.lower() == "same_member":
                 if self.model.ensemble_mean:
@@ -268,6 +275,19 @@ class DatasetConfigABC(abc.ABC):
         return self
 
     def _check_condition(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if self.effective_condition is not None:
             if self.condition_method is None:
                 raise ValueError(
@@ -321,11 +341,7 @@ class DatasetConfigABC(abc.ABC):
     @final
     def _resolve_lead_months(self):
         """
-        Resolve lead month configuration.
-
-        Returns
-        -------
-        None
+        Document this function.
         """
         if self.lead_months is not None and isinstance(
             self.lead_months, lead_months_config
@@ -336,11 +352,7 @@ class DatasetConfigABC(abc.ABC):
     @abc.abstractmethod
     def available_times(self):
         """
-        Available times for dataset creation.
-
-        Returns
-        -------
-        np.ndarray
+        Document this function.
         """
         pass
 
@@ -348,22 +360,19 @@ class DatasetConfigABC(abc.ABC):
     @abc.abstractmethod
     def ds_operator(self):
         """
-        Dataset operator instance.
-
-        Returns
-        -------
-        DatasetOperator
+        Document this function.
         """
         pass
 
     @property
     def input_lead_months(self) -> int:
         """
-        Coords of lead months in input dataset.
+        Document this function.
 
         Returns
         -------
         int
+            Description not yet provided.
         """
         time_dim, lead_time_dim = required_sample_dimensions
         return self.effective_input.info.coords[lead_time_dim].values
@@ -371,33 +380,21 @@ class DatasetConfigABC(abc.ABC):
     @property
     @abc.abstractmethod
     def effective_input(self) -> ConditionDataConfig | ModelDataConfig | None:
-
+        """
+        Document this function.
+        """
         pass
 
     @final
     @property
     def _using_model_data_as_condition(self) -> bool:
         """
-        Determine whether the model data is reused as the condition.
+        Document this function.
 
         Returns
         -------
         bool
-            True if the condition data is derived from or identical to the
-            model data.
-
-        Notes
-        -----
-        When this returns ``True``, loading separate model and condition
-        datasets can be avoided when unnecessary.
-
-        This returns ``True`` in either of the following cases:
-
-        1. No condition dataset is provided, but a ``condition_method`` is
-        specified (except when ``condition_method == "static"``).
-
-        2. A condition dataset is provided, but it references the same files,
-        variables, and ensemble members as the model dataset.
+            Description not yet provided.
         """
         if self.condition is None:
             return self.condition_method.lower() in {
@@ -419,22 +416,24 @@ class DatasetConfigABC(abc.ABC):
     @property
     def effective_condition(self) -> ConditionDataConfig | ModelDataConfig | None:
         """
-        Effective conditioning dataset.
+        Document this function.
 
         Returns
         -------
-        ConditionDataConfig or ModelDataConfig or None
+        ConditionDataConfig | ModelDataConfig | None
+            Description not yet provided.
         """
         return self._effective_condition
 
     @final
     def _model_as_condition(self) -> ModelDataConfig:
         """
-        Create model-based condition configuration.
+        Document this function.
 
         Returns
         -------
         ModelDataConfig
+            Description not yet provided.
         """
         ensemble_mean = self.condition_method.lower() == "ensemble_mean"
         return ModelDataConfig(
@@ -451,11 +450,12 @@ class DatasetConfigABC(abc.ABC):
     @final
     def _resolve_condition(self):
         """
-        Resolve effective condition dataset.
+        Document this function.
 
         Returns
         -------
-        self
+        Any
+            Description not yet provided.
         """
         if self.condition is not None:
             self._effective_condition = self.condition
@@ -469,22 +469,36 @@ class DatasetConfigABC(abc.ABC):
     @abc.abstractmethod
     def build_dataset(self):
         """
-        Build dataset instance.
-
-        Returns
-        -------
-        Dataset
+        Document this function.
         """
         pass
 
 
 @dataclasses.dataclass
 class AddedTimeFeatures:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    reference_config : DatasetConfigABC
+        Description not yet provided.
+    time_features : list[str] | None
+        Description not yet provided.
+    """
+
     reference_config: DatasetConfigABC
     time_features: list[str] | None = None
 
     def __post_init__(self):
+        """
+        Document this function.
 
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         self.time_dim, self.lead_time_dim = required_sample_dimensions
         self.feature_indices = {
             self.time_dim: 0,
@@ -509,22 +523,24 @@ class AddedTimeFeatures:
         input: xr.DataArray,
     ) -> np.ndarray | None:
         """
-        Generate time-based features.
+        Document this function.
 
         Parameters
         ----------
-        selection : dict
-            Selection coords of the sample
-
+        selection : dict[str, int | float]
+            Description not yet provided.
         input : xr.DataArray
-            Input data used for shape alignment.
+            Description not yet provided.
 
         Returns
         -------
-        np.ndarray or None
-            Array of time features.
+        np.ndarray | None
+            Description not yet provided.
 
-        Broadcasts features to match spatial input dimensions if needed.
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
         """
         if self.time_features is None:
             return
@@ -565,9 +581,30 @@ class AddedTimeFeatures:
         return time_features
 
     def __len__(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return len(self.time_features)
 
     def __eq__(self, other):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        other : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         if not isinstance(other, AddedTimeFeatures):
             return NotImplemented
 
@@ -583,6 +620,31 @@ class AddedTimeFeatures:
 
 
 class DatasetABC(Dataset, abc.ABC):
+    """
+    Document this class.
+
+    Attributes
+    ----------
+    config : DatasetConfigABC
+        Description not yet provided.
+    requested_years : list[int] | tuple[int, ...] | np.ndarray
+        Description not yet provided.
+    mask : xr.DataArray | None
+        Description not yet provided.
+    time_features : AddedTimeFeatures
+        Description not yet provided.
+    return_metadata : bool
+        Description not yet provided.
+    load : bool
+        Description not yet provided.
+    model_dataset : xr.DataArray | None
+        Description not yet provided.
+    observation_dataset : xr.DataArray | None
+        Description not yet provided.
+    condition_dataset : xr.DataArray | None
+        Description not yet provided.
+    """
+
     config: DatasetConfigABC
     requested_years: list[int] | tuple[int, ...] | np.ndarray
     mask: xr.DataArray | None
@@ -594,7 +656,9 @@ class DatasetABC(Dataset, abc.ABC):
     condition_dataset: xr.DataArray | None
 
     def __init__(self):
-
+        """
+        Document this function.
+        """
         self._check_init()
         self._resolve_mask()
         self._prepare_sampling_mask(self._sampling_times_selectors)
@@ -619,7 +683,16 @@ class DatasetABC(Dataset, abc.ABC):
 
     @final
     def _check_init(self):
+        """
+        Document this function.
 
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+        """
         if not self.config._fitted_preprocessors:
             raise RuntimeError(
                 "Make sure to fit preprocessors first!. Hint:  TrainDatasetConfig._fit_preprocessors()"
@@ -631,7 +704,14 @@ class DatasetABC(Dataset, abc.ABC):
 
     @final
     def _resolve_mask(self):
+        """
+        Document this function.
 
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if self.mask is None:
             mask = _create_train_mask(
                 time=self.config.available_times,
@@ -648,31 +728,61 @@ class DatasetABC(Dataset, abc.ABC):
 
     @property
     def _sampling_times_selectors(self) -> dict:
+        """
+        Document this function.
 
+        Returns
+        -------
+        dict
+            Description not yet provided.
+        """
         time_dim, lead_time_dim = required_sample_dimensions
         return {time_dim: self.requested_years, lead_time_dim: self.config.lead_months}
 
     @property
     @abc.abstractmethod
     def _load_model(self) -> bool:
-
+        """
+        Document this function.
+        """
         pass
 
     @property
     @abc.abstractmethod
     def _write_condition_to_input(self):
-
+        """
+        Document this function.
+        """
         pass
 
     @property
     @abc.abstractmethod
     def _concat_condition_to_input(self):
-
+        """
+        Document this function.
+        """
         pass
 
     @final
     def _prepare_sampling_mask(self, sampling_times_selectors: dict):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        sampling_times_selectors : dict
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         missing = set(required_sample_dimensions) - sampling_times_selectors.keys()
 
         if missing:
@@ -700,13 +810,20 @@ class DatasetABC(Dataset, abc.ABC):
     @final
     def _load_xarray_data(self, config: DataConfigABC, load: bool = False):
         """
-        Load dataset from xarray sources.
+        Document this function.
+
+        Parameters
+        ----------
+        config : DataConfigABC
+            Description not yet provided.
+        load : bool
+            Description not yet provided.
 
         Returns
         -------
-        xr.DataArray
+        Any
+            Description not yet provided.
         """
-
         return _load_xarray_data(
             config.list_paths,
             names=config.names,
@@ -722,13 +839,13 @@ class DatasetABC(Dataset, abc.ABC):
     @final
     def get_sampling_coords(self):
         """
-        Compute coordinates for sampling the datasets.
+        Document this function.
 
         Returns
         -------
-        dict
+        Any
+            Description not yet provided.
         """
-
         mask = (
             self.mask.stack(batch=dict(self.mask.sizes).keys())
             .transpose("batch", ...)
@@ -746,18 +863,22 @@ class DatasetABC(Dataset, abc.ABC):
         sample_coords: dict[str, np.ndarray],
     ) -> dict[str, np.ndarray] | None:
         """
-        Convert sampling coordinates to positional model-dataset indexes.
+        Document this function.
 
         Parameters
         ----------
         sample_coords : dict[str, np.ndarray]
-            Mapping from dimension names to coordinate values for each sample.
+            Description not yet provided.
 
         Returns
         -------
-        dict[str, np.ndarray] or None
-            Positional indexes for each dimension, or None if no model dataset
-            is loaded.
+        dict[str, np.ndarray] | None
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
         """
         if not self._load_model:
             return None
@@ -786,25 +907,22 @@ class DatasetABC(Dataset, abc.ABC):
         sample_coords: dict[str, np.ndarray],
     ) -> dict[str, np.ndarray] | None:
         """
-        Compute positional indexes for the conditioning dataset.
+        Document this function.
 
         Parameters
         ----------
         sample_coords : dict[str, np.ndarray]
-            Sampling coordinate values for the model dataset.
+            Description not yet provided.
 
         Returns
         -------
-        dict[str, np.ndarray] or None
-            Positional conditioning indexes for each sample, or ``None`` when
-            no conditioning dataset is available or the condition is static.
+        dict[str, np.ndarray] | None
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If required sampling coordinates are missing, if ``same_member`` is
-            requested without ensemble coordinates, or if any conditioning
-            coordinates cannot be found.
+            Description not yet provided.
         """
         if (
             self.condition_dataset is None
@@ -848,13 +966,13 @@ class DatasetABC(Dataset, abc.ABC):
     @final
     def get_input_shape(self) -> tuple:
         """
-        Determine input shape.
+        Document this function.
 
         Returns
         -------
         tuple
+            Description not yet provided.
         """
-
         from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 
         checklist = [
@@ -884,24 +1002,30 @@ class DatasetABC(Dataset, abc.ABC):
 
     @final
     def get_added_features_dim(self):
+        """
+        Document this function.
 
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return len(self.time_features)
 
     @final
     def _index_condition_dataset(self, ind: int) -> xr.DataArray | None:
         """
-        Select and preprocess one conditioning sample.
+        Document this function.
 
         Parameters
         ----------
         ind : int
-            Sample index.
+            Description not yet provided.
 
         Returns
         -------
-        xr.DataArray or None
-            Preprocessed conditioning sample, or ``None`` when no conditioning
-            dataset is available.
+        xr.DataArray | None
+            Description not yet provided.
         """
         if self.condition_dataset is None:
             return None
@@ -930,17 +1054,17 @@ class DatasetABC(Dataset, abc.ABC):
     @final
     def _index_model_dataset(self, ind: int) -> xr.DataArray | None:
         """
-        Select and preprocess one model sample.
+        Document this function.
 
         Parameters
         ----------
         ind : int
-            Sample index.
+            Description not yet provided.
 
         Returns
         -------
-        xr.DataArray or None
-            Preprocessed model sample, or ``None`` when model data are not loaded.
+        xr.DataArray | None
+            Description not yet provided.
         """
         if not self._load_model:
             return None
@@ -956,16 +1080,30 @@ class DatasetABC(Dataset, abc.ABC):
 
     @staticmethod
     def _compute(*arrays) -> tuple:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        *arrays : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        tuple
+            Description not yet provided.
+        """
         with suppress_stderr(), dask.config.set(scheduler="synchronous"):
             return dask.compute(*arrays)
 
     @final
     def __len__(self):
         """
-        Dataset length.
+        Document this function.
 
         Returns
         -------
-        int
+        Any
+            Description not yet provided.
         """
         return len(next(iter(self.sample_coords.values())))
