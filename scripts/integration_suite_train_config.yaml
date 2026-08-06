@@ -32,14 +32,14 @@ train_loader:
     condition_method: ensemble_mean
     lead_months:
       start: 1
-      end: 60
+      end: 12
 
   batch_size: 10
   time_features:
   - year
 
-  train_years: [ 1961, 1961 ]
-  num_validation_years: 5
+  train_years: [ 1961, 1966 ]
+  num_validation_years: 1
   prefetch_factor: 4
   num_data_workers: 4
   reduce_spatial_mask: True
