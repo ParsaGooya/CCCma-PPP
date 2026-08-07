@@ -229,7 +229,7 @@ class WeightedMSE(lossABC):
         - Generative modeling mode: ``(Z, B, C, ...)``
         - Generator + generative modeling: ``(E, Z, B, C, ...)``
 
-        where ``E`` is the ensemble/sample dimension, ``Z`` is the latent sample dimension, ``B`` is batch size, and ``C`` is the channel dimension.
+        where ``E`` is the output sample dimension, ``Z`` is the latent sample dimension, ``B`` is batch size, and ``C`` is the channel dimension.
         """
 
         if self.generative_context.generator:
@@ -492,7 +492,7 @@ class WeightedCRPS(lossABC):
         Parameters
         ----------
         data : torch.Tensor
-            Ensemble predictions (samples).
+            Output ensemble predictions (samples).
         target : torch.Tensor
             Ground truth.
         target_mask : torch.Tensor or None, optional
@@ -513,7 +513,7 @@ class WeightedCRPS(lossABC):
 
         Expected tensor layouts:
 
-        Standard ensemble prediction:
+        Standard output ensemble prediction:
 
         - ``data``:
         ``(E, B, C, O1, ..., On)``
@@ -529,13 +529,13 @@ class WeightedCRPS(lossABC):
 
         where:
 
-        - ``E`` = ensemble/sample dimension
+        - ``E`` = output ensemble/sample dimension
         - ``Z`` = latent realization dimension
         - ``B`` = batch dimension
         - ``C`` = channel dimension
         - ``O1...On`` = output dimensions
 
-        where ``E`` is the ensemble size.
+        where ``E`` is the output ensemble size.
         """
 
         if not self.generative_context.generator:
@@ -867,7 +867,7 @@ def _check_generator_structure(data: torch.Tensor, target: torch.Tensor):
     Notes
     -----
     Generator outputs must contain exactly one additional leading
-    ensemble/sample dimension compared to the target.
+    output ensemble/sample dimension compared to the target.
 
     Valid examples:
 

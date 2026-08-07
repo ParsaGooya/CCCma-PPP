@@ -90,8 +90,8 @@ class DatasetOperator:
                 self.config.init_time_dim: train_times,
                 self.config.lead_time_dim: self.config.model.info.coords[self.config.lead_time_dim],
             }
-            if self.config.model.info.coords.get("ensembles") is not None:
-                selection["ensembles"] = self.config.model.info.coords["ensembles"]
+            if self.config.model.info.coords.get(self.config.realization_dim) is not None:
+                selection[self.config.realization_dim] = self.config.model.info.coords[self.config.realization_dim]
 
             self.config.model.fit_preprocessor_pipeline(
                 selection=selection,
@@ -103,9 +103,9 @@ class DatasetOperator:
 
         if self.config_observation is not None:
             selection = {self.config.init_time_dim: train_times}
-            if self.config_observation.info.coords.get("ensembles") is not None:
-                selection["ensembles"] = self.config_observation.info.coords[
-                    "ensembles"
+            if self.config_observation.info.coords.get(self.config.realization_dim) is not None:
+                selection[self.config.realization_dim] = self.config_observation.info.coords[
+                    self.config.realization_dim
                 ]
 
             self.config_observation.fit_preprocessor_pipeline(
@@ -123,11 +123,11 @@ class DatasetOperator:
                     ],
                 }
                 if (
-                    self.config.effective_condition.info.coords.get("ensembles")
+                    self.config.effective_condition.info.coords.get(self.config.realization_dim)
                     is not None
                 ):
-                    selection["ensembles"] = (
-                        self.config.effective_condition.info.coords["ensembles"]
+                    selection[self.config.realization_dim] = (
+                        self.config.effective_condition.info.coords[self.config.realization_dim]
                     )
 
             self.config.effective_condition.fit_preprocessor_pipeline(
@@ -412,7 +412,7 @@ def _build_chunks(config: DataConfigABC | None = None):
     if config is None:
         return
     required_sample_dimensions = (config.init_time_dim, config.lead_time_dim)
-    sample_dims = (*required_sample_dimensions, *config.optional_sample_dimensions)
+    sample_dims = (*required_sample_dimensions, config.realization_dim)
 
     chunks = {dim: 1 for dim in sample_dims if dim in config.info.coords}
 

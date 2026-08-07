@@ -6,7 +6,9 @@ lead_time_resolution:
   ##must be month or day
   "month"
 
-optional_sample_dimensions: [ "ensembles" ]
+realization_dim: 
+  "ensembles" 
+
 supported_NN_dimensions_sorted: [ "sequence", "lev", "lat", "lon" ]
 
 model_data_allowed_dimensions: [ "time", "lead_time", "ensembles", "sequence", "lev", "lat", "lon" ]

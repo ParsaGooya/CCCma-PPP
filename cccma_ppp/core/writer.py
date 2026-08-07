@@ -23,7 +23,7 @@ from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.inference.predictors.deterministic import DeterministicPredictorConfig
 from cccma_ppp.inference.predictors.cvae import cVAEPredictorConfig
 
-from cccma_ppp.configs import required_sample_dimensions, optional_sample_dimensions
+from cccma_ppp.configs import required_sample_dimensions, realization_dim
 
 init_time_dim, lead_time_dim = required_sample_dimensions
 
@@ -292,6 +292,8 @@ class Writer:
             post_processor = None
 
         naming_convention = "prediction"
+        if self.config.num_output_sampling > 0:
+            naming_convention += "_output_ensemble"
         if getattr(self.predictor, "save_latent", False):
             naming_convention = "latent"
 
@@ -314,7 +316,7 @@ def aggregate_predictions(
     cleanup_temp: bool = True,
     init_time_dim: str = init_time_dim,
     lead_time_dim: str = lead_time_dim,
-    optional_sample_dimensions: tuple[str, ...] = optional_sample_dimensions,
+    optional_sample_dimensions: tuple[str, ...] = (realization_dim,),
 ):
     """
     Aggregate temporary inference batches into one file per

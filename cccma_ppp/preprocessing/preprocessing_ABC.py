@@ -2,6 +2,7 @@ import abc
 from typing import ClassVar, final
 import xarray as xr
 from cccma_ppp.configs import (required_sample_dimensions,
+                               realization_dim,
                                lead_time_unit,
                                lead_time_resolution)
 
@@ -21,6 +22,7 @@ class PreprocessModuleABC(abc.ABC):
     lead_time_resolution: ClassVar[lead_time_unit] = lead_time_resolution
     init_time_dim: ClassVar[int] = init_time_dim
     lead_time_dim: ClassVar[int] = lead_time_dim
+    realization_dim: ClassVar[int] = realization_dim
     supported_frequencies: ClassVar = {None, "year", "month", "day"}
 
     
@@ -92,12 +94,12 @@ class PreprocessModuleABC(abc.ABC):
         reduction_dims = self.dims
 
         if (
-            "ensembles" in data.dims
+            self.realization_dim in data.dims
             and reduction_dims is not None
-            and "ensembles" not in reduction_dims
+            and self.realization_dim not in reduction_dims
         ):
             self.large_ensemble = True
-            reduction_dims = ("ensembles", *reduction_dims)
+            reduction_dims = (self.realization_dim, *reduction_dims)
 
         return reduction_dims
     

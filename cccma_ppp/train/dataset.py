@@ -508,9 +508,9 @@ class TrainDataset(DatasetABC):
             dim: [indexes[ind]] for dim, indexes in self.obs_indexes.items()
         }
 
-        if "ensembles" in self.observation_dataset.dims:
-            selection["ensembles"] = [
-                np.random.randint(self.observation_dataset.sizes["ensembles"])
+        if self.config.realization_dim in self.observation_dataset.dims:
+            selection[self.config.realization_dim] = [
+                np.random.randint(self.observation_dataset.sizes[self.config.realization_dim])
             ]
 
         obs = self.observation_dataset.isel(**selection)

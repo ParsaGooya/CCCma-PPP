@@ -11,8 +11,8 @@ with open(CONFIG_DIR / "configs.yaml") as f:
 
 
 required_sample_dimensions = tuple(data["required_sample_dimensions"])
-optional_sample_dimensions = tuple(data["optional_sample_dimensions"])
 lead_time_resolution = data["lead_time_resolution"]
+realization_dim = data["realization_dim"]
 supported_NN_dimensions_sorted = tuple(data["supported_NN_dimensions_sorted"])
 
 if lead_time_resolution not in ["day", 'month']:

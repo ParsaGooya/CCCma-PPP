@@ -13,7 +13,7 @@ import dataclasses
 from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.configs import (
     required_sample_dimensions,
-    optional_sample_dimensions,
+    realization_dim,
     supported_NN_dimensions_sorted,
 )
 
@@ -41,7 +41,7 @@ class infoclass:
     final_time : xr.DataArray or np.ndarray or str or int or None
         Latest available time.
     coords : dict
-        Spatial and ensemble coordinates.
+        Spatial and ensembles coordinates.
     """
 
     sizes: dict | None
@@ -59,7 +59,7 @@ class DataConfigABC(abc.ABC):
     paths: str
     names: list[str]
     preprocessing_pipeline: PreprocessingPipeline
-    ensemble_list: list | None
+    realization_list: list | None
     ensemble_mean: bool | None
     concat_dim: str
     file_type: str
@@ -67,7 +67,7 @@ class DataConfigABC(abc.ABC):
 
     init_time_dim: ClassVar[str] = init_time_dim
     lead_time_dim: ClassVar[str] = lead_time_dim
-    optional_sample_dimensions: ClassVar[tuple] = optional_sample_dimensions
+    realization_dim: ClassVar[str] = realization_dim
     supported_NN_dimensions: ClassVar[tuple] = supported_NN_dimensions_sorted
 
 
@@ -92,7 +92,7 @@ class DataConfigABC(abc.ABC):
             )
 
         self._check_ensemble = False
-        if self.ensemble_list is not None:
+        if self.realization_list is not None:
             self._check_ensemble = True
 
         self.preprocessing_pipeline.set_name(self.TYPE)
@@ -302,9 +302,9 @@ def _resolve_data(dataconfig: DataConfigABC,
                     )
 
                 if dataconfig._check_ensemble:
-                    if "ensembles" not in ds.dims:
+                    if dataconfig.realization_dim not in ds.dims:
                         raise ValueError(
-                            f"Cannot select ensemble_list as ensembles dim does not exist in {p}"
+                            f"Cannot select realization_list as {dataconfig.realization_dim} dim does not exist in {p}"
                         )
 
                 invalid = ds_dims - dataconfig._allowed_dims()
@@ -369,8 +369,8 @@ def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
         rename_dict=dataconfig.rename_dict,
     )
 
-    if dataconfig.ensemble_list is not None:
-        ds = ds.sel(ensembles=dataconfig.ensemble_list)
+    if dataconfig.realization_list is not None:
+        ds = ds.sel({dataconfig.realization_dim : dataconfig.realization_list})
 
     if init_time_dim in ds.dims:
         start_time, final_time = ds[init_time_dim].min().values, ds[init_time_dim].max().values
@@ -380,7 +380,7 @@ def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
     sizes = {
         dim: dict(ds.sizes).get(dim)
         for dim in dict(ds.sizes).keys()
-        if (dim in (init_time_dim, lead_time_dim) or dim in dataconfig.optional_sample_dimensions)
+        if (dim in (init_time_dim, lead_time_dim) or dim in (dataconfig.realization_dim,))
     }
     if not sizes:
         sizes = None

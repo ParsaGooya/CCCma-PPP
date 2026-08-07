@@ -35,7 +35,7 @@ class ModelDataConfig(DataConfigABC):
         Variables to load.
     preprocessing_pipeline : PreprocessingPipeline, optional
         Preprocessing steps applied to data.
-    ensemble_list : list or None, optional
+    realization_list : list or None, optional
         Specific ensemble members to select.
     ensemble_mean : bool or None, optional
         Whether to compute ensemble mean.
@@ -52,7 +52,7 @@ class ModelDataConfig(DataConfigABC):
     preprocessing_pipeline: PreprocessingPipeline = dataclasses.field(
         default_factory=PreprocessingPipeline
     )
-    ensemble_list: list | None = None
+    realization_list: list | None = None
     ensemble_mean: bool | None = True
     concat_dim: str = init_time_dim
     file_type: str = "*.nc"
@@ -125,7 +125,7 @@ class ObsDataConfig(DataConfigABC):
         Variable names in the dataset.
     preprocessing_pipeline : PreprocessingPipeline, optional
         Optional preprocessing pipeline applied to observations.
-    ensemble_list : list or None, optional
+    realization_list : list or None, optional
         List of ensemble members, if applicable.
     ensemble_mean : bool or None, optional
         Whether to compute ensemble mean.
@@ -142,7 +142,7 @@ class ObsDataConfig(DataConfigABC):
     preprocessing_pipeline: PreprocessingPipeline = dataclasses.field(
         default_factory=PreprocessingPipeline
     )
-    ensemble_list: list | None = None
+    realization_list: list | None = None
     ensemble_mean: bool | None = True
     concat_dim: str = init_time_dim
     file_type: str = "*.nc"
@@ -210,7 +210,7 @@ class ConditionDataConfig(DataConfigABC):
     paths : str
     names : list of str
     preprocessing_pipeline : PreprocessingPipeline, optional
-    ensemble_list : list or None, optional
+    realization_list : list or None, optional
     ensemble_mean : bool or None, optional
     concat_dim : str, optional
     file_type : str, optional
@@ -222,7 +222,7 @@ class ConditionDataConfig(DataConfigABC):
     preprocessing_pipeline: PreprocessingPipeline = dataclasses.field(
         default_factory=PreprocessingPipeline
     )
-    ensemble_list: list | None = None
+    realization_list: list | None = None
     ensemble_mean: bool | None = True
     concat_dim: str = init_time_dim
     file_type: str = "*.nc"

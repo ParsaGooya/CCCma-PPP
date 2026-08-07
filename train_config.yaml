@@ -38,6 +38,9 @@ train_loader:
     batch_size: 10
     time_features :
                     - time
+                    - lead_time
+                    - month_sin
+                    - month_cos
                     
     train_years_slice : [1961, 2015]
     num_validation_years : 5
@@ -47,7 +50,7 @@ train_loader:
     load: True
 
 module:
-    type :  cvae #deterministic
+    type :  deterministic
     config:
             # ModelConfig :
             #         type : MLP
@@ -71,7 +74,7 @@ module:
                                 name: convnext
                                 num_blocks: 2
                         output_block_hidden_channels: 32
-                        latent_size: 500
+                        # latent_size: 500
                         # deterministic_guess_config:
                         #     load_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_3/checkpoints/best.pt
                         #     freeze_weights: True
@@ -89,9 +92,9 @@ losspipeline:
       reduction : mean
 
 trainer :
-    beta_finder :
-              beta : 10
-              num_epoch_to_warmup : 10
+    # beta_finder :
+    #           beta : 10
+    #           num_epoch_to_warmup : 10
 #     gradient_accumulation_steps: 2
     earlystoppingbuffer : 10
 
@@ -102,7 +105,7 @@ optimization :
         optimizer_type : adam
         lr_scheduler_config :
                     min_lr : 0.00001
-                    warmup_epochs : 2
+                    warmup_epochs : 1
                     total_epochs: 10
                     hold_min_lr: True
 

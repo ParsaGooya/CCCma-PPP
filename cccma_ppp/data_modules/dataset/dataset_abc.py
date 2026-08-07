@@ -18,7 +18,7 @@ from cccma_ppp.configs import (
     lead_time_resolution,
     supported_NN_dimensions_sorted,
     required_sample_dimensions,
-    optional_sample_dimensions,
+    realization_dim,
 )
 
 from cccma_ppp.data_modules.utils import (
@@ -106,9 +106,9 @@ class DatasetConfigABC(abc.ABC):
 
     init_time_dim: ClassVar[str] = init_time_dim
     lead_time_dim: ClassVar[str] = lead_time_dim
+    realization_dim: ClassVar[str] = realization_dim
     lead_time_resolution: ClassVar[str] = lead_time_resolution 
     supported_NN_dimensions: ClassVar[tuple] = supported_NN_dimensions_sorted
-    optional_sample_dimensions: ClassVar[tuple] = optional_sample_dimensions
 
     def __init__(self):
         """
@@ -177,7 +177,7 @@ class DatasetConfigABC(abc.ABC):
         ValueError
             If condition data does not provide sufficient lead-time coverage for non static condition methods.
         ValueError
-            If condition data and model data do not have similar ensembles for same_member condition methods.
+            If condition data and model data do not have similar ensemble members for same_member condition methods.
         ValueError
             If spatial coordinates (lat/lon) between model and condition differ
             when observation-based correction is applied.
@@ -219,17 +219,17 @@ class DatasetConfigABC(abc.ABC):
             if self.condition_method.lower() == "same_member":
                 if any(
                     [
-                        self.model.info.coords.get("ensembles") is None,
-                        self.effective_condition.info.coords.get("ensembles") is None,
+                        self.model.info.coords.get(self.realization_dim) is None,
+                        self.effective_condition.info.coords.get(self.realization_dim) is None,
                     ]
                 ):
                     raise ValueError(
-                        "Condition data and model data must have ensembles "
+                        f"Condition data and model data must have {self.realization_dim} "
                         "dims and coords."
                     )
 
-                if not self.model.info.coords["ensembles"].equals(
-                    self.condition.info.coords["ensembles"]
+                if not self.model.info.coords[self.realization_dim].equals(
+                    self.condition.info.coords[self.realization_dim]
                 ):
                     raise ValueError(
                         "Condition data should have the same ensemble members"
@@ -300,9 +300,9 @@ class DatasetConfigABC(abc.ABC):
                     raise ValueError(
                         "condition ensemble_mean cannot be True for cross_ensemble or same_member conditioning."
                     )
-                if self.effective_condition.info.coords.get("ensembles") is None:
+                if self.effective_condition.info.coords.get(self.realization_dim) is None:
                     raise ValueError(
-                        "For cross_ensemble or same_member conditioning an ensembles dim must exist in the condition."
+                        f"For cross_ensemble or same_member conditioning a {self.realization_dim} dim must exist in the condition."
                     )
             elif self.condition_method.lower() == "ensemble_mean":
                 if self.effective_condition.ensemble_mean is not True:
@@ -310,9 +310,9 @@ class DatasetConfigABC(abc.ABC):
                         "Ensemble mean must be True for ensemble_mean conditioning."
                     )
             else:
-                if self.effective_condition.ensemble_list is not None:
+                if self.effective_condition.realization_list is not None:
                     raise ValueError(
-                        'For "static" conditioning fields cannot specify ensemble list.'
+                        'For "static" conditioning fields cannot specify realization list.'
                     )
                 if self._using_model_data_as_condition:
                     raise ValueError(
@@ -322,13 +322,13 @@ class DatasetConfigABC(abc.ABC):
             if self.condition_method.lower() == "static":
                 checklist = [
                     dim in self.effective_condition.info.coords
-                    for dim in ((self.init_time_dim, self.lead_time_dim) + self.optional_sample_dimensions)
+                    for dim in ((self.init_time_dim, self.lead_time_dim, self.realization_dim))
                 ]
                 if any(checklist):
                     raise ValueError(
                         "For static condition method the condition dataset cannot have"
                         f"any of the sampling dimensions and coords "
-                        f"{((self.init_time_dim, self.lead_time_dim) + self.optional_sample_dimensions)}"
+                        f"{((self.init_time_dim, self.lead_time_dim, self.realization_dim))}"
                     )
 
         else:
@@ -430,7 +430,7 @@ class DatasetConfigABC(abc.ABC):
             return (
                 self.condition.paths == self.model.paths
                 and self.condition.names == self.model.names
-                and self.condition.ensemble_list == self.model.ensemble_list
+                and self.condition.realization_list == self.model.realization_list
             )
 
         return False
@@ -461,7 +461,7 @@ class DatasetConfigABC(abc.ABC):
             paths=self.model.paths,
             names=self.model.names,
             preprocessing_pipeline=self.model.preprocessing_pipeline,
-            ensemble_list=self.model.ensemble_list,
+            realization_list=self.model.realization_list,
             concat_dim=self.model.concat_dim,
             file_type=self.model.file_type,
             ensemble_mean=ensemble_mean,
@@ -852,16 +852,12 @@ class DatasetABC(Dataset, abc.ABC):
             {dim: sampling_times_selectors[dim] for dim in (self.config.init_time_dim, self.config.lead_time_dim)}
         )
 
-        for dim in self.config.optional_sample_dimensions:
-            if dim not in self.config.effective_input.info.coords:
-                continue
+        if (not self.config.effective_input.ensemble_mean
+            and self.config.realization_dim in self.config.effective_input.info.coords):
+                
+            coords = self.config.effective_input.info.coords[self.config.realization_dim]
 
-            if dim == "ensembles" and self.config.effective_input.ensemble_mean:
-                continue
-
-            coords = self.config.effective_input.info.coords[dim]
-
-            mask = mask.expand_dims({dim: coords}, axis=0)
+            mask = mask.expand_dims({self.config.realization_dim: coords}, axis=0)
 
         self.mask = mask.where(~mask)
 
@@ -884,8 +880,8 @@ class DatasetABC(Dataset, abc.ABC):
             config.list_paths,
             names=config.names,
             ensemble_mean=config.ensemble_mean,
-            selection={"ensembles": config.info.coords["ensembles"]}
-            if config.info.coords.get("ensembles") is not None
+            selection={config.realization_dim: config.info.coords[config.realization_dim]}
+            if config.info.coords.get(config.realization_dim) is not None
             else None,
             concat_dim=config.concat_dim,
             rename_dict=config.rename_dict,
@@ -992,16 +988,16 @@ class DatasetABC(Dataset, abc.ABC):
         condition_coords = {
             dim: np.asarray(values)
             for dim, values in sample_coords.items()
-            if dim in self.condition_dataset.dims and dim != "ensembles"
+            if dim in self.condition_dataset.dims and dim != self.config.realization_dim 
         }
 
         if self.config.condition_method.lower() == "same_member":
-            if "ensembles" not in sample_coords:
+            if self.config.realization_dim not in sample_coords:
                 raise ValueError(
-                    "'same_member' conditioning requires ensemble coordinates."
+                    f"'same_member' conditioning requires {self.config.realization_dim} coordinates."
                 )
 
-            condition_coords["ensembles"] = np.asarray(sample_coords["ensembles"])
+            condition_coords[self.config.realization_dim] = np.asarray(sample_coords[self.config.realization_dim])
 
         indexes = {
             dim: self.condition_dataset.indexes[dim].get_indexer(values)
@@ -1092,8 +1088,8 @@ class DatasetABC(Dataset, abc.ABC):
             }
 
             if self.config.condition_method.lower() == "cross_ensemble":
-                selection["ensembles"] = [
-                    np.random.randint(self.condition_dataset.sizes["ensembles"])
+                selection[self.config.realization_dim] = [
+                    np.random.randint(self.condition_dataset.sizes[self.config.realization_dim])
                 ]
 
         condition = self.condition_dataset.isel(**selection)

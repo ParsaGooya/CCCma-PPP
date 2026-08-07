@@ -12,6 +12,7 @@ from collections.abc import Iterator
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 from cccma_ppp.configs import (supported_NN_dimensions_sorted, 
                                required_sample_dimensions, 
+                               realization_dim,
                                lead_time_unit,
                                lead_time_resolution)
 
@@ -55,6 +56,7 @@ def _load_xarray_data(
     load: bool = False,
     add_time_auxiliary_coords: bool = False,
     init_time_dim: str = init_time_dim,
+    realization_dim: str = realization_dim,
     supported_NN_dimensions_sorted: tuple = supported_NN_dimensions_sorted
 ):
     """
@@ -101,8 +103,8 @@ def _load_xarray_data(
 
     ds = ds.sel(selection) if selection is not None else ds
 
-    if "ensembles" in ds.coords and ensemble_mean:
-        ds = ds.mean("ensembles")
+    if realization_dim in ds.coords and ensemble_mean:
+        ds = ds.mean(realization_dim)
 
     if names is not None:
         ds = ds[names]
