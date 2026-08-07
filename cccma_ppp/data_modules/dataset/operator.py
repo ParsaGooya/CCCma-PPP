@@ -1,16 +1,15 @@
 import numpy as np
+import datetime
+import cftime
 from pathlib import Path
 import xarray as xr
+from collections.abc import Sequence
 
 from cccma_ppp.data_modules.data.data_abc import DataConfigABC
 from cccma_ppp.data_modules.dataset.dataset_abc import DatasetConfigABC
-from cccma_ppp.data_modules.utils import WeightsConfig
+from cccma_ppp.data_modules.utils import  _validate_time_sequence
+from cccma_ppp.data_modules.weights import WeightsConfig
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
-from cccma_ppp.configs import (
-    supported_NN_dimensions_sorted,
-    required_sample_dimensions,
-    optional_sample_dimensions,
-)
 
 
 class DatasetOperator:
@@ -52,7 +51,11 @@ class DatasetOperator:
 
     def fit_preprocessors(
         self,
-        train_years: np.ndarray | list | tuple,
+        train_times: (Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
+            | np.ndarray
+            | xr.DataArray
+            | slice
+        ),
         save=False,
         save_path: Path | str | None = None,
         save_name: str | None = None,
@@ -62,8 +65,9 @@ class DatasetOperator:
 
         Parameters
         ----------
-        train_years : array-like
-            Training years used for fitting.
+        train_times : array-like
+            Training times used for fitting. Values must be either NumPy
+            datetime64 or cftime datetime objects.
         save : bool, optional
             Whether to persist fitted pipelines.
         save_path : pathlib.Path or str or None, optional
@@ -77,11 +81,14 @@ class DatasetOperator:
         -----
         Applies fitting to model, observation, and condition datasets.
         """
-        time_dim, lead_time_dim = required_sample_dimensions
+
+        if not isinstance(train_times, slice):
+            _validate_time_sequence(train_times)
+
         if self.config.model is not None:
             selection = {
-                "year": train_years,
-                "lead_time": self.config.model.info.coords[lead_time_dim],
+                self.config.init_time_dim: train_times,
+                self.config.lead_time_dim: self.config.model.info.coords[self.config.lead_time_dim],
             }
             if self.config.model.info.coords.get("ensembles") is not None:
                 selection["ensembles"] = self.config.model.info.coords["ensembles"]
@@ -95,7 +102,7 @@ class DatasetOperator:
             )
 
         if self.config_observation is not None:
-            selection = {"year": train_years}
+            selection = {self.config.init_time_dim: train_times}
             if self.config_observation.info.coords.get("ensembles") is not None:
                 selection["ensembles"] = self.config_observation.info.coords[
                     "ensembles"
@@ -110,9 +117,9 @@ class DatasetOperator:
                 selection = {}
             else:
                 selection = {
-                    "year": train_years,
-                    "lead_time": self.config.effective_condition.info.coords[
-                        lead_time_dim
+                    self.config.init_time_dim: train_times,
+                    self.config.lead_time_dim: self.config.effective_condition.info.coords[
+                        self.config.lead_time_dim
                     ],
                 }
                 if (
@@ -246,7 +253,7 @@ class DatasetOperator:
 
         target_coords = {}
         for dim in [
-            dim for dim in supported_NN_dimensions_sorted if dim in ref.info.coords
+            dim for dim in self.config.supported_NN_dimensions if dim in ref.info.coords
         ]:
             target_coords[dim] = ref.info.coords[dim]
 
@@ -294,7 +301,7 @@ class DatasetOperator:
 
             for dim in [
                 dim
-                for dim in supported_NN_dimensions_sorted
+                for dim in self.config.supported_NN_dimensions
                 if dim in self.config.model.info.coords
             ]:
                 NN_dims.append(dim)
@@ -314,7 +321,7 @@ class DatasetOperator:
 
             for dim in [
                 dim
-                for dim in supported_NN_dimensions_sorted
+                for dim in self.config.supported_NN_dimensions
                 if dim in self.config.effective_condition.info.coords
             ]:
                 NN_dims.append(dim)
@@ -353,7 +360,7 @@ class DatasetOperator:
 
             for dim in [
                 dim
-                for dim in supported_NN_dimensions_sorted
+                for dim in self.config.supported_NN_dimensions
                 if dim in self.config.model.info.coords
             ]:
                 NN_dims.append(dim)
@@ -365,7 +372,7 @@ class DatasetOperator:
 
             for dim in [
                 dim
-                for dim in supported_NN_dimensions_sorted
+                for dim in self.config.supported_NN_dimensions
                 if dim in self.config_observation.info.coords
             ]:
                 NN_dims.append(dim)
@@ -404,8 +411,8 @@ def _build_chunks(config: DataConfigABC | None = None):
 
     if config is None:
         return
-
-    sample_dims = (*required_sample_dimensions, *optional_sample_dimensions)
+    required_sample_dimensions = (config.init_time_dim, config.lead_time_dim)
+    sample_dims = (*required_sample_dimensions, *config.optional_sample_dimensions)
 
     chunks = {dim: 1 for dim in sample_dims if dim in config.info.coords}
 

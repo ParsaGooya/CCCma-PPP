@@ -3,11 +3,15 @@ import xarray as xr
 import torch
 import dataclasses
 import warnings
+import cftime
+import datetime
+import calendar
 from pathlib import Path
+from collections.abc import Sequence
 
 from cccma_ppp.data_modules.dataset.dataset_abc import (
     DatasetConfigABC,
-    lead_months_config,
+    lead_time_config,
 )
 from cccma_ppp.data_modules.dataset.dataset_abc import (
     DatasetABC,
@@ -20,10 +24,11 @@ from cccma_ppp.data_modules.data.data_configs import (
     ConditionDataConfig,
 )
 
-from cccma_ppp.data_modules.utils import _unwrap_data_variables
+from cccma_ppp.data_modules.utils import (add_lead_times, 
+                                          _unwrap_data_variables)
 
 
-from cccma_ppp.configs import supported_NN_dimensions_sorted, required_sample_dimensions
+from cccma_ppp.configs import lead_time_resolution
 
 
 @dataclasses.dataclass
@@ -41,15 +46,15 @@ class TrainDatasetConfig(DatasetConfigABC):
         Conditioning dataset configuration.
     condition_method : str or None, optional
         Method for conditioning (e.g., "cross_ensemble", "same_member", "static").
-    lead_months : array-like or None, optional
-        Lead months to use.
+    lead_times : lead_time_config or None, optional
+        Lead times to use.
     """
 
     model: ModelDataConfig
     observation: ObsDataConfig | None = None
     condition: ConditionDataConfig | None = None
     condition_method: str = None
-    lead_months: lead_months_config | None = None
+    lead_times: lead_time_config | None = None
 
     def __post_init__(self):
         """
@@ -79,7 +84,7 @@ class TrainDatasetConfig(DatasetConfigABC):
         if self.observation is not None:
             for dim in [
                 dim
-                for dim in supported_NN_dimensions_sorted
+                for dim in self.supported_NN_dimensions
                 if dim in self.observation.info.coords
             ]:
                 if dim in self.model.info.coords:
@@ -98,6 +103,13 @@ class TrainDatasetConfig(DatasetConfigABC):
                         f"observation data has NN dim {dim} which is not present in model data.\n"
                         "======================================================================\n"
                     )
+
+                if self.model.info.time_coords_type != self.observation.info.time_coords_type:
+
+                    raise ValueError(
+                        "Observation data and model data must have the same"
+                        f" cftime/datetime type time coordinates."
+                    )                      
 
         else:
             if self.condition_method is None:
@@ -134,31 +146,36 @@ class TrainDatasetConfig(DatasetConfigABC):
         """
 
         if self.observation is None:
-            return self.model.year_range
+            return self.model.time_range
 
         else:
-            return np.intersect1d(self.model.year_range, self.observation.year_range)
+            return self.model.time_range.intersection(
+                self.observation.time_range
+            )
 
     @property
     def available_times(self):
         """
-        Available training years.
+        Available training times.
 
         Returns
         -------
         np.ndarray
         """
-
-        return np.intersect1d(
-            self.model.info.coords["year"].values, self.get_common_time
+        return self.get_common_time.intersection(
+            self.model.info.coords[self.init_time_dim].to_index()
         )
 
     def fit_preprocessors(
         self,
-        train_years,
-        save=False,
-        save_path=None,
-        save_name=None,
+        train_times: (Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
+            | np.ndarray
+            | xr.DataArray
+            | slice
+        ),
+        save: bool = False,
+        save_path: str | Path | None =None,
+        save_name: str | None = None,
     ):
         """
         Fit preprocessing pipeline.
@@ -168,7 +185,7 @@ class TrainDatasetConfig(DatasetConfigABC):
         None
         """
         self.ds_operator.fit_preprocessors(
-            train_years=train_years,
+            train_times=train_times,
             save=save,
             save_path=save_path,
             save_name=save_name,
@@ -202,7 +219,11 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     def build_dataset(
         self,
-        years: np.ndarray,
+        times: (
+            Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
+            | np.ndarray
+            | xr.DataArray
+        ),
         time_features: AddedTimeFeatures,
         mask: xr.DataArray | None = None,
         return_metadata: bool = False,
@@ -217,7 +238,7 @@ class TrainDatasetConfig(DatasetConfigABC):
         """
         return TrainDataset(
             config=self,
-            requested_years=years,
+            requested_times=times,
             time_features=time_features,
             mask=mask,
             return_metadata=return_metadata,
@@ -233,13 +254,19 @@ class TrainDataset(DatasetABC):
     Parameters
     ----------
     config : TrainDatasetConfig
-    requested_years : array-like
+    requested_times : 
+        Sequence-like or xr.DataArray 
+        Items must be datetime or cftime objects.
     mask : xr.DataArray or None, optional
     return_metadata : bool, optional
     """
 
     config: TrainDatasetConfig
-    requested_years: list[int] | tuple[int, ...] | np.ndarray
+    requested_times:(
+        Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
+        | np.ndarray
+        | xr.DataArray
+    )
     time_features: AddedTimeFeatures
     mask: xr.DataArray | None = None
     return_metadata: bool = False
@@ -258,13 +285,13 @@ class TrainDataset(DatasetABC):
         RuntimeError
             If preprocessors are not fitted.
         ValueError
-            If requested years are invalid.
+            If requested times are invalid.
         """
         super().__init__()
 
         if self.config.observation is not None:
             self.observation_dataset = self._load_xarray_data(
-                self.config.observation, load=self.load
+                self.config.observation, load=self.load, add_time_auxiliary_coords= True
             )
 
         self.obs_indexes = self.get_obs_indexes(self.sample_coords)
@@ -372,7 +399,7 @@ class TrainDataset(DatasetABC):
         ----------
         sample_coords : dict[str, np.ndarray]
             Sampling coordinate values for the model dataset. Must contain
-            ``year`` and ``lead_time``.
+            ``init_time_dim`` and ``lead_time_dim`` consistent with cccma_ppp.configs.
 
         Returns
         -------
@@ -388,15 +415,17 @@ class TrainDataset(DatasetABC):
         if self.observation_dataset is None:
             return None
 
-        time_dim, lead_time_dim = required_sample_dimensions
-        model_years = np.asarray(sample_coords[time_dim])
-        lead_times = np.asarray(sample_coords[lead_time_dim])
+        model_times = np.asarray(sample_coords[self.config.init_time_dim])
+        lead_times = np.asarray(sample_coords[self.config.lead_time_dim])
 
-        offset_years, months = np.divmod(lead_times - 0.5, 12)
+        observation_times = add_lead_times(
+            init_times=model_times,
+            lead_times=lead_times,
+            lead_time_resolution=lead_time_resolution,
+        )
 
         observation_coords = {
-            "year": model_years + offset_years,
-            "month": months + 0.5,
+            self.config.init_time_dim: observation_times,
         }
 
         indexes = {
@@ -447,7 +476,7 @@ class TrainDataset(DatasetABC):
             else:
                 out_shape = tuple(
                     self.config.observation.info.coords[dim].size
-                    for dim in supported_NN_dimensions_sorted
+                    for dim in self.config.supported_NN_dimensions
                     if dim in self.config.observation.info.coords
                 )
 
@@ -476,7 +505,7 @@ class TrainDataset(DatasetABC):
             return None
 
         selection = {
-            dim: [int(indexes[ind])] for dim, indexes in self.obs_indexes.items()
+            dim: [indexes[ind]] for dim, indexes in self.obs_indexes.items()
         }
 
         if "ensembles" in self.observation_dataset.dims:
@@ -517,7 +546,7 @@ class TrainDataset(DatasetABC):
         elif self._concat_condition_to_input:
             input = xr.concat([input, condition], dim="channels")
 
-        time_features_array = self.time_features(selection, input)
+        added_features_array = self.time_features(ind, input)
 
         input_array, target_array = self._compute(
             input.data,
@@ -527,8 +556,8 @@ class TrainDataset(DatasetABC):
         datadict = dict(
             input=torch.as_tensor(input_array, dtype=torch.float32),
             target=torch.as_tensor(target_array, dtype=torch.float32),
-            added_features=torch.tensor(time_features_array, dtype=torch.float32)
-            if time_features_array is not None
+            added_features=torch.tensor(added_features_array, dtype=torch.float32)
+            if added_features_array is not None
             else None,
         )
 
@@ -536,3 +565,8 @@ class TrainDataset(DatasetABC):
             return datadict, selection
         else:
             return datadict
+
+
+
+
+

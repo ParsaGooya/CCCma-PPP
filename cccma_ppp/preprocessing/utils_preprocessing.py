@@ -2,12 +2,18 @@ import numpy as np
 import xarray as xr
 from pathlib import Path
 import joblib
+from typing import ClassVar, Literal
 
 from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.configs import supported_NN_dimensions_sorted, required_sample_dimensions
+from cccma_ppp.data_modules.utils import add_lead_times
+from cccma_ppp.configs import (supported_NN_dimensions_sorted, 
+                               required_sample_dimensions,
+                               lead_time_unit)
 
+init_time_dim, lead_time_dim = required_sample_dimensions
+TemporalFrequency = Literal["year", "month", "day"]
 
 @PreprocessingStepSelector.register("normalizer")
 class Normalizer(PreprocessModuleABC):
@@ -16,31 +22,40 @@ class Normalizer(PreprocessModuleABC):
 
     Parameters
     ----------
-    dims : list of str or None, optional
-        Dimensions along which normalization statistics are computed.
+    dims : list[str] or None, optional
+        Dimensions over which normalization statistics are computed.
+
+    frequency : {"year", "month", "day"} or None, optional
+        Valid-time frequency used to group statistics.
+
+        - ``None``: no temporal grouping.
+        - ``"year"``: group by valid year.
+        - ``"month"``: group by valid month.
+        - ``"day"``: group by valid day of year.
+
     """
 
-    def __init__(self, dims: list | None = None, **kwargs) -> None:
-        """
-        Initialize normalizer.
+    def __init__(
+        self,
+        dims: list[str] | None = None,
+        frequency: TemporalFrequency | None = None,
+        **kwargs,
+    ) -> None:
 
-        Parameters
-        ----------
-        dims : list of str or None, optional
-            Dimensions over which min and max are computed.
+        self.min: xr.DataArray | xr.Dataset | None = None
+        self.max: xr.DataArray | xr.Dataset | None = None
 
-        Returns
-        -------
-        None
-        """
+        self.dims = tuple(dims) if dims is not None else None
+        self.frequency = frequency
 
-        self.min = None
-        self.max = None
-        self.dims = dims
+        self.large_ensemble = False
         self.fitted = False
 
-        if self.dims is not None:
-            self.dims = tuple(self.dims)
+        if self.frequency not in self.supported_frequencies:
+            raise ValueError(
+                f"Unsupported frequency {self.frequency!r}. "
+                f"Expected one of {self.supported_frequencies}."
+            )
 
     def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
         """
@@ -58,27 +73,39 @@ class Normalizer(PreprocessModuleABC):
         self
         """
 
-        if all(["ensembles" in data.dims, self.dims is not None]):
-            if "ensembles" not in self.dims:
-                self.large_ensemble = True
-                self.dims = (
-                    "ensembles",
-                    *self.dims,
-                )
+        reduction_dims = self._get_reduction_dims(data)
 
-        if mask is not None:
-            data_masked = data.where(~np.isnan(mask))
+        if self.frequency is None:
+            self.min = data.min(reduction_dims).load()
+            self.max = data.max(reduction_dims).load()
+
         else:
-            data_masked = data
+            grouped_data = self._add_grouping_coordinate(data)
 
-        self.min = data_masked.min(self.dims).load()
-        self.max = data_masked.max(self.dims).load()
+            self.min = (
+                grouped_data
+                .groupby(self.frequency)
+                .min(dim=reduction_dims)
+                .load()
+            )
+
+            self.max = (
+                grouped_data
+                .groupby(self.frequency)
+                .max(dim=reduction_dims)
+                .load()
+            )
+
         self.fitted = True
         return self
 
     def transform(self, data: xr.DataArray):
         """
         Apply min-max normalization.
+
+        If the temporal auxiliary coordinate already exists on ``data``,
+        it is used directly. Otherwise, the coordinate is derived from
+        ``init_time``.
 
         Parameters
         ----------
@@ -89,13 +116,27 @@ class Normalizer(PreprocessModuleABC):
         xr.DataArray
             Normalized data.
         """
+        self._check_fitted()
 
-        data_normalized = (data - self.min) / (self.max - self.min)
-        return data_normalized
+        minimum = self._align_stat_for_transform(
+            data=data,
+            stat=self.min,
+        )
+
+        maximum = self._align_stat_for_transform(
+            data=data,
+            stat=self.max,
+        )
+
+        return (data - minimum) / (maximum - minimum)
 
     def inverse_transform(self, data: xr.DataArray):
         """
         Reverse normalization.
+
+        Temporal statistics will be aligned using valid forecast times, 
+        if the data has lead_time and stats has init_time but no lead_time so
+        lead time is taken into account.
 
         Parameters
         ----------
@@ -107,11 +148,21 @@ class Normalizer(PreprocessModuleABC):
         xr.DataArray
             Data in original scale.
         """
-        max = align_stat_data_lead_time_inverse_transform(data, self.max)
-        min = align_stat_data_lead_time_inverse_transform(data, self.min)
+        self._check_fitted()
 
-        data_raw = data * (max - min) + min
-        return data_raw
+        minimum = align_stat_data_lead_time_inverse_transform(
+            ds=data,
+            stat=self.min,
+            lead_time_resolution=self.lead_time_resolution,
+        )
+
+        maximum = align_stat_data_lead_time_inverse_transform(
+            ds=data,
+            stat=self.max,
+            lead_time_resolution=self.lead_time_resolution,
+        )
+
+        return data * (maximum - minimum) + minimum
 
 
 @PreprocessingStepSelector.register("standardizer")
@@ -123,9 +174,23 @@ class Standardizer(PreprocessModuleABC):
     ----------
     dims : list of str or None, optional
         Dimensions along which mean and std are computed.
+
+    frequency : {"year", "month", "day"} or None, optional
+        Temporal grouping derived from the initialization-time coordinate.
+
+        - ``None``: no temporal grouping.
+        - ``"year"``: group by initialization year.
+        - ``"month"``: group by initialization month.
+        - ``"day"``: group by initialization day of year.
+
     """
 
-    def __init__(self, dims: list | None = None, **kwargs) -> None:
+    def __init__(
+        self,
+        dims: list[str] | None = None,
+        frequency: TemporalFrequency | None = None,
+        **kwargs,
+    ) -> None:
         """
         Initialize standardizer.
 
@@ -137,14 +202,20 @@ class Standardizer(PreprocessModuleABC):
         -------
         None
         """
+        self.mean: xr.Dataset | xr.DataArray | None = None
+        self.std: xr.Dataset | xr.DataArray | None = None
 
-        self.mean = None
-        self.std = None
-        self.dims = dims
+        self.dims = tuple(dims) if dims is not None else None
+        self.frequency = frequency
+
+        self.large_ensemble = False
         self.fitted = False
 
-        if self.dims is not None:
-            self.dims = tuple(self.dims)
+        if self.frequency not in self.supported_frequencies:
+            raise ValueError(
+                f"Unsupported frequency {self.frequency!r}. "
+                f"Expected one of {self.supported_frequencies}."
+            )
 
     def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
         """
@@ -160,22 +231,34 @@ class Standardizer(PreprocessModuleABC):
         self
         """
 
-        if all(["ensembles" in data.dims, self.dims is not None]):
-            if "ensembles" not in self.dims:
-                self.large_ensemble = True
-                self.dims = (
-                    "ensembles",
-                    *self.dims,
-                )
+        reduction_dims = self._get_reduction_dims(data)
 
         if mask is not None:
-            data_masked = data.where(~np.isnan(mask))
-        else:
-            data_masked = data
+            data = data.where(~np.isnan(mask))
 
-        self.mean = data_masked.mean(self.dims).load()
-        std = data_masked.std(self.dims).load()
+        if self.frequency is None:
+            self.mean = data.mean(reduction_dims).load()
+            std = data.std(reduction_dims).load()
+
+        else:
+            grouped_data = self._add_grouping_coordinate(data)
+
+            self.mean = (
+                grouped_data
+                .groupby(self.frequency)
+                .mean(dim=reduction_dims)
+                .load()
+            )
+
+            std = (
+                grouped_data
+                .groupby(self.frequency)
+                .std(dim=reduction_dims)
+                .load()
+            )
+
         self.std = std.where(std > 0)
+
         self.fitted = True
         return self
 
@@ -193,9 +276,19 @@ class Standardizer(PreprocessModuleABC):
             Standardized data.
         """
 
-        data_standardized = (data - self.mean) / self.std
+        self._check_fitted()
 
-        return data_standardized
+        mean = self._align_stat_for_transform(
+            data=data,
+            stat=self.mean,
+        )
+
+        std = self._align_stat_for_transform(
+            data=data,
+            stat=self.std,
+        )
+
+        return (data - mean) / std
 
     def inverse_transform(self, data: xr.DataArray):
         """
@@ -210,12 +303,21 @@ class Standardizer(PreprocessModuleABC):
         xr.DataArray
             Original scale data.
         """
-        std = align_stat_data_lead_time_inverse_transform(data, self.std)
-        mean = align_stat_data_lead_time_inverse_transform(data, self.mean)
+        self._check_fitted()
 
-        data_raw = data * std + mean
+        mean = align_stat_data_lead_time_inverse_transform(
+            ds=data,
+            stat=self.mean,
+            lead_time_resolution=self.lead_time_resolution,
+        )
 
-        return data_raw
+        std = align_stat_data_lead_time_inverse_transform(
+            ds=data,
+            stat=self.std,
+            lead_time_resolution=self.lead_time_resolution,
+        )
+
+        return data * std + mean
 
 
 @PreprocessingStepSelector.register("anomalies")
@@ -229,23 +331,30 @@ class AnomaliesScaler(PreprocessModuleABC):
     ----------
     dims : list of str or None, optional
         Dimensions used to compute mean.
+
+    frequency : {"year", "month", "day"} or None, optional
+        Valid-time frequency used to group statistics.
+
+        - ``None``: no temporal grouping.
+        - ``"year"``: group by valid year.
+        - ``"month"``: group by valid month.
+        - ``"day"``: group by valid day of year.
+
     """
 
-    def __init__(self, dims: list | None = None, **kwargs) -> None:
-        """
-        Initialize anomaly scaler.
+    def __init__(
+        self,
+        dims: list[str] | None = None,
+        frequency: TemporalFrequency | None = None,
+        **kwargs,
+    ) -> None:
 
-        Parameters
-        ----------
-        dims : list of str or None, optional
+        self.mean: xr.DataArray | xr.Dataset | None = None
 
-        Returns
-        -------
-        None
-        """
+        self.dims = tuple(dims) if dims is not None else None
+        self.frequency = frequency
 
-        self.mean = None
-        self.dims = dims
+        self.large_ensemble = False
         self.fitted = False
 
         if self.dims is not None:
@@ -264,21 +373,24 @@ class AnomaliesScaler(PreprocessModuleABC):
         -------
         self
         """
-
-        if all(["ensembles" in data.dims, self.dims is not None]):
-            if "ensembles" not in self.dims:
-                self.large_ensemble = True
-                self.dims = (
-                    "ensembles",
-                    *self.dims,
-                )
+        reduction_dims = self._get_reduction_dims(data)
 
         if mask is not None:
-            data_masked = data.where(~np.isnan(mask))
-        else:
-            data_masked = data
+            data = data.where(~np.isnan(mask))
 
-        self.mean = data_masked.mean(self.dims).load()
+        if self.frequency is None:
+            self.mean = data.mean(reduction_dims).load()
+
+        else:
+            grouped_data = self._add_grouping_coordinate(data)
+
+            self.mean = (
+                grouped_data
+                .groupby(self.frequency)
+                .mean(dim=reduction_dims)
+                .load()
+            )
+
         self.fitted = True
         return self
 
@@ -296,8 +408,14 @@ class AnomaliesScaler(PreprocessModuleABC):
             Anomaly values.
         """
 
-        data_anomalies = data - self.mean
-        return data_anomalies
+        self._check_fitted()
+
+        mean = self._align_stat_for_transform(
+            data=data,
+            stat=self.mean,
+        )
+       
+        return data - mean
 
     def inverse_transform(self, data: xr.DataArray):
         """
@@ -313,10 +431,15 @@ class AnomaliesScaler(PreprocessModuleABC):
             Reconstructed data.
         """
 
-        mean = align_stat_data_lead_time_inverse_transform(data, self.mean)
-        data_raw = data + mean
+        self._check_fitted()
 
-        return data_raw
+        mean = align_stat_data_lead_time_inverse_transform(
+            ds=data,
+            stat=self.mean,
+            lead_time_resolution=self.lead_time_resolution,
+        )
+
+        return data + mean
 
 
 @PreprocessingStepSelector.register("flattener")
@@ -329,6 +452,7 @@ class Flattennanremove(PreprocessModuleABC):
     load_dir : pathlib.Path or str or None, optional
         Path to a previously fitted preprocessor.
     """
+    supported_NN_dimensions_sorted: ClassVar[tuple] = supported_NN_dimensions_sorted
 
     def __init__(self, load_dir: Path | str = None, **kwargs):
         """
@@ -394,7 +518,7 @@ class Flattennanremove(PreprocessModuleABC):
         reference = target if target is not None else data
 
         self.NN_dims = [
-            dim for dim in supported_NN_dimensions_sorted if dim in reference.dims
+            dim for dim in self.supported_NN_dimensions_sorted if dim in reference.dims
         ]
 
         missing_from_data = [dim for dim in self.NN_dims if dim not in data.dims]
@@ -548,150 +672,152 @@ class Flattennanremove(PreprocessModuleABC):
 def align_stat_data_lead_time_inverse_transform(
     ds: xr.DataArray,
     stat: xr.DataArray,
+    lead_time_resolution: lead_time_unit = "month",
+    init_time_dim: str = init_time_dim,
+    lead_time_dim: str = lead_time_dim,
 ) -> xr.DataArray:
     """
-    Align fitted temporal statistics with forecast lead-time data.
-    The fitted statistic may contain a ``year`` dimension, a ``month``
-    dimension, both, or neither. If temporal dimensions are present,
-    the statistic is expanded over the initialization-year and lead-time
-    dimensions of ``ds``.
+    Align fitted temporal statistics to forecast target times.
 
-    Assumptions
-    -----------
-    - ``ds[time_dim]`` contains initialization years.
+    This is primarily needed when a preprocessing pipeline fitted to
+    observations is inverse-applied to forecast data.
 
-    - ``ds[lead_time_dim]`` contains monthly leads 1, 2, 3, ...
+    Lead times are assumed to be one-based:
 
-    - Lead 1 corresponds to January of the initialization year.
-
-    - ``stat["month"]`` contains 12 entries ordered from January to
-      December.
+    - lead_time=1 corresponds to init_time
+    - lead_time=2 corresponds to one period after init_time
 
     Parameters
     ----------
     ds : xr.DataArray
-        Forecast data containing initialization-year and lead-time
-        dimensions.
+        Data containing initialization-time and lead-time coordinates.
+
     stat : xr.DataArray
-        Fitted statistic, such as mean, standard deviation, minimum,
-        or maximum.
+        Fitted statistic. It may contain:
+
+        - init_time
+        - lead_time
+        - year
+        - month
+        - day
+        - no temporal dimensions
+
+    lead_time_resolution : {"month", "day"}
+        Temporal unit represented by one lead-time increment.
+
     Returns
     -------
     xr.DataArray
-        Statistic aligned with the temporal structure of ``ds``.
-
-    Raises
-    ------
-    ValueError
-        If required dimensions are missing, lead times are invalid,
-        monthly statistics do not contain 12 entries, or the statistic
-        does not contain all required valid years.
+        Statistic aligned to the temporal dimensions of ``ds``.
     """
-    time_dim, lead_time_dim = required_sample_dimensions
 
-    if time_dim not in ds.dims:
-        raise ValueError(
-            f"Data must contain the time dimension {time_dim!r}. "
-            f"Found dimensions: {ds.dims}."
-        )
-
-    if lead_time_dim not in ds.dims:
-        raise ValueError(
-            f"Data must contain the lead-time dimension "
-            f"{lead_time_dim!r}. Found dimensions: {ds.dims}."
-        )
-
-    has_year = "year" in stat.dims
-    has_month = "month" in stat.dims
-    has_lead_time = lead_time_dim in stat.dims
-
-    if has_lead_time:
-        if has_year:
-            stat = stat.rename({"year": time_dim})
+    # If the statistic already depends on lead time, its temporal
+    # structure matches the forecast structure directly.
+    if lead_time_dim in stat.dims:
         return stat
 
-    if not has_year and not has_month:
-        return stat
-
-    initialization_years = np.asarray(ds[time_dim].values)
-    lead_times = np.asarray(ds[lead_time_dim].values)
-    lead_month_offsets = lead_times.astype(np.int64) - 1
-
-    year_offsets = lead_month_offsets // 12
-    valid_month_positions = lead_month_offsets % 12
-
-    valid_years = initialization_years[:, np.newaxis] + year_offsets[np.newaxis, :]
-
-    valid_month_positions = np.broadcast_to(
-        valid_month_positions[np.newaxis, :],
-        valid_years.shape,
-    )
-
-    temporal_dims = (time_dim, lead_time_dim)
-
-    temporal_coords = {
-        time_dim: ds[time_dim],
-        lead_time_dim: ds[lead_time_dim],
+    temporal_stat_dims = {
+        init_time_dim,
+        "year",
+        "month",
+        "day",
     }
 
-    valid_month_position_da = xr.DataArray(
-        valid_month_positions,
+    # Nothing temporal needs to be aligned.
+    if temporal_stat_dims.isdisjoint(stat.dims):
+        return stat
+
+    if init_time_dim not in ds.coords:
+        raise ValueError(
+            f"Data must contain the initialization-time coordinate "
+            f"{init_time_dim!r}."
+        )
+
+    
+    init_times = np.asarray(ds[init_time_dim].values)
+
+    if init_times.ndim != 1:
+        raise ValueError(
+            f"Coordinate {init_time_dim!r} must be one-dimensional."
+        )
+
+
+    if lead_time_dim in ds.dims:
+        lead_times = np.asarray(ds[lead_time_dim].values)
+
+        if lead_times.ndim != 1:
+            raise ValueError(
+                f"Coordinate {lead_time_dim!r} must be one-dimensional."
+            )
+
+        init_time_grid, lead_time_grid = np.meshgrid(
+            init_times,
+            lead_times,
+            indexing="ij",
+        )
+
+        target_times = add_lead_times(
+            init_times=init_time_grid.reshape(-1),
+            lead_times=lead_time_grid.reshape(-1),
+            lead_time_resolution=lead_time_resolution,
+        ).reshape(init_time_grid.shape)
+
+        temporal_dims = (init_time_dim, lead_time_dim)
+        temporal_coords = {
+            init_time_dim: ds[init_time_dim],
+            lead_time_dim: ds[lead_time_dim],
+        }
+
+    else:
+        # For observations, init_time is already the valid/target time.
+        target_times = init_times
+
+        temporal_dims = (init_time_dim,)
+        temporal_coords = {
+            init_time_dim: ds[init_time_dim],
+        }
+
+
+    target_time = xr.DataArray(
+        target_times,
         dims=temporal_dims,
         coords=temporal_coords,
+        name="target_time",
     )
 
     rename_dims = {}
-
-    if has_year:
-        rename_dims["year"] = "__stat_year"
-
-    if has_month:
-        rename_dims["month"] = "__stat_month"
-
-    aligned_stat = stat.rename(rename_dims)
     indexers = {}
 
-    if has_year:
-        stat_year_index = stat.indexes["year"]
-        year_positions = stat_year_index.get_indexer(valid_years.reshape(-1)).reshape(
-            valid_years.shape
-        )
+    if init_time_dim in stat.dims:
+        rename_dims[init_time_dim] = "__stat_time"
+        indexers["__stat_time"] = target_time
 
-        missing_year_mask = year_positions < 0
+    if "year" in stat.dims:
+        rename_dims["year"] = "__stat_year"
+        indexers["__stat_year"] = target_time.dt.year
 
-        if missing_year_mask.any():
-            missing_years = np.unique(valid_years[missing_year_mask])
+    if "month" in stat.dims:
+        rename_dims["month"] = "__stat_month"
+        indexers["__stat_month"] = target_time.dt.month
 
-            raise ValueError(
-                "The fitted statistic does not contain all valid years "
-                "required by the forecast. Missing years: "
-                f"{missing_years.tolist()}."
-            )
+    if "day" in stat.dims:
+        rename_dims["day"] = "__stat_day"
+        indexers["__stat_day"] = target_time.dt.dayofyear
 
-        indexers["__stat_year"] = xr.DataArray(
-            year_positions,
-            dims=temporal_dims,
-            coords=temporal_coords,
-        )
+    aligned_stat = stat.rename(rename_dims).sel(indexers)
 
-    if has_month:
-        if stat.sizes["month"] != 12:
-            raise ValueError(
-                "A monthly statistic must contain exactly 12 month "
-                f"entries, but found {stat.sizes['month']}."
-            )
-
-        indexers["__stat_month"] = valid_month_position_da
-
-    aligned_stat = aligned_stat.isel(indexers)
-
-    auxiliary_coords = [
+    temporary_coords = [
         coord
-        for coord in ("__stat_year", "__stat_month")
+        for coord in (
+            "__stat_time",
+            "__stat_year",
+            "__stat_month",
+            "__stat_day",
+        )
         if coord in aligned_stat.coords
     ]
 
-    if auxiliary_coords:
-        aligned_stat = aligned_stat.drop_vars(auxiliary_coords)
+    if temporary_coords:
+        aligned_stat = aligned_stat.drop_vars(temporary_coords)
 
-    return aligned_stat
+    return aligned_stat.assign_coords(temporal_coords)

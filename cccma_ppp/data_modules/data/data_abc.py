@@ -1,10 +1,13 @@
 import abc
-from typing import final
+from typing import final, ClassVar, Literal
 from pathlib import Path
 import gc
 import glob
 import xarray as xr
 import numpy as np
+import pandas as pd
+import datetime
+import cftime
 import dataclasses
 
 from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
@@ -17,10 +20,13 @@ from cccma_ppp.configs import (
 from cccma_ppp.data_modules.utils import (
     _load_xarray_data,
     _create_train_mask,
+    _validate_time_sequence,
 )
 from cccma_ppp.generic.runtime import RuntimeContext
 
+TimeTypes = Literal["datetime", "cftime"]
 
+init_time_dim, lead_time_dim = required_sample_dimensions
 @dataclasses.dataclass
 class infoclass:
     """
@@ -30,21 +36,19 @@ class infoclass:
     ----------
     sizes : dict or None
         Sizes of non-spatial dataset dimensions.
-    start_year : xr.DataArray or np.ndarray or str or int or None
-        Earliest available year.
-    final_year : xr.DataArray or np.ndarray or str or int or None
-        Latest available year.
+    start_time : xr.DataArray or np.ndarray or str or int or None
+        Earliest available time.
+    final_time : xr.DataArray or np.ndarray or str or int or None
+        Latest available time.
     coords : dict
         Spatial and ensemble coordinates.
-    spatial_mask : xr.Dataset or None, optional
-        Optional spatial mask.
     """
 
     sizes: dict | None
-    start_year: xr.DataArray | np.ndarray | str | int | None
-    final_year: xr.DataArray | np.ndarray | str | int | None
+    start_time: xr.DataArray | np.ndarray | str | int | None
+    final_time: xr.DataArray | np.ndarray | str | int | None
     coords: dict
-    spatial_mask: xr.Dataset = None
+    time_coords_type: TimeTypes 
 
 
 class DataConfigABC(abc.ABC):
@@ -60,6 +64,12 @@ class DataConfigABC(abc.ABC):
     concat_dim: str
     file_type: str
     rename_dict: dict
+
+    init_time_dim: ClassVar[str] = init_time_dim
+    lead_time_dim: ClassVar[str] = lead_time_dim
+    optional_sample_dimensions: ClassVar[tuple] = optional_sample_dimensions
+    supported_NN_dimensions: ClassVar[tuple] = supported_NN_dimensions_sorted
+
 
     def __init__(self):
         """
@@ -177,7 +187,7 @@ class DataConfigABC(abc.ABC):
         -------
         None
         """
-
+        
         _base = _load_xarray_data(
             self.list_paths,
             names=self.names,
@@ -187,7 +197,7 @@ class DataConfigABC(abc.ABC):
             rename_dict=self.rename_dict,
         )
 
-        _mask = _create_train_mask(_base.year, _base.lead_time) if mask else None
+        _mask = _create_train_mask(_base[self.init_time_dim], _base[self.lead_time_dim]) if mask else None
 
         self.preprocessing_pipeline.fit(
             base_data=_base.load(),
@@ -237,7 +247,8 @@ class DataConfigABC(abc.ABC):
             )
 
 
-def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
+def _resolve_data(dataconfig: DataConfigABC, 
+                  _do_checks: bool = True) -> None:
     """
     Validate dataset files and dimensions.
 
@@ -277,6 +288,13 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
 
                 ds_dims = set(ds.dims)
 
+                if dataconfig.init_time_dim not in ds_dims:
+                    if dataconfig.init_time_dim not in ds.coords:
+                        raise ValueError(
+                            f"The required initialization time ({dataconfig.init_time_dim} ) must be a dimension or at least a coordinate of individual data "
+                            "file which will be a dimension after concatenation."
+                        )
+                    
                 invalid = dataconfig._required_dims() - ds_dims
                 if invalid:
                     raise ValueError(
@@ -300,7 +318,7 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
                         f'"coordinates for {list(ds.dims)} does not exist. Available coords: {list(ds.coords.keys())} for {p}'
                     )
 
-                if not set(supported_NN_dimensions_sorted).intersection(ds_dims):
+                if not set(dataconfig.supported_NN_dimensions).intersection(ds_dims):
                     raise ValueError(
                         f'"None of the supported NN dimensions exist in {p}'
                     )
@@ -310,6 +328,10 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
                 ]
                 if missing:
                     raise ValueError(f"{p} is missing variables: {missing}")
+
+
+                time = ds.coords[dataconfig.init_time_dim]
+                _validate_time_sequence(time)
 
                 ds.close()
                 gc.collect()
@@ -330,6 +352,9 @@ def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
     infoclass
         Metadata describing dataset dimensions and coordinates.
     """
+    init_time_dim = dataconfig.init_time_dim
+    lead_time_dim = dataconfig.lead_time_dim
+
     if getattr(dataconfig, "list_paths", None) is None:
         list_paths = glob.glob(
             str(Path(dataconfig.paths).joinpath(dataconfig.file_type))
@@ -347,24 +372,76 @@ def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
     if dataconfig.ensemble_list is not None:
         ds = ds.sel(ensembles=dataconfig.ensemble_list)
 
-    if "year" in ds.dims:
-        start_year, final_year = ds.year.min().values, ds.year.max().values
+    if init_time_dim in ds.dims:
+        start_time, final_time = ds[init_time_dim].min().values, ds[init_time_dim].max().values
     else:
-        start_year = final_year = None
+        start_time = final_time = None
 
     sizes = {
         dim: dict(ds.sizes).get(dim)
         for dim in dict(ds.sizes).keys()
-        if (dim in required_sample_dimensions or dim in optional_sample_dimensions)
+        if (dim in (init_time_dim, lead_time_dim) or dim in dataconfig.optional_sample_dimensions)
     }
     if not sizes:
         sizes = None
 
     coords = {dim: dict(ds.coords).get(dim) for dim in ds.coords}
 
+    time_coords_type = get_time_representation(ds[init_time_dim])
+
     ds.close()
     del ds
 
     return infoclass(
-        start_year=start_year, final_year=final_year, sizes=sizes, coords=coords
+        start_time=start_time, 
+        final_time=final_time, 
+        sizes=sizes, coords=coords, 
+        time_coords_type=time_coords_type
+    )
+
+
+
+
+
+def get_time_representation(
+    time: xr.DataArray | pd.DatetimeIndex | xr.CFTimeIndex,
+) -> TimeTypes:
+    """
+    Determine whether a time coordinate uses numpy/pandas datetimes
+    or CFTime datetimes.
+
+    Parameters
+    ----------
+    time : xr.DataArray, pandas.DatetimeIndex, or xr.CFTimeIndex
+        Time coordinate or index.
+
+    Returns
+    -------
+    {"datetime", "cftime"}
+        Representation used by the time coordinate.
+
+
+    """
+    if isinstance(time, xr.DataArray):
+        values = time.values
+
+        first = values[0]
+
+        if isinstance(first, cftime.datetime):
+            return "cftime"
+
+        if (
+            isinstance(first, np.datetime64)
+            or isinstance(first, datetime.datetime)
+        ):
+            return "datetime"
+
+    elif isinstance(time, xr.CFTimeIndex):
+        return "cftime"
+
+    elif isinstance(time, pd.DatetimeIndex):
+        return "datetime"
+
+    raise TypeError(
+        "Time coordinate must use either datetime or cftime objects."
     )

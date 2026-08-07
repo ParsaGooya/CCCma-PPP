@@ -1,11 +1,12 @@
 import dataclasses
 import torch
+import xarray as xr
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler
 from functools import partial
 import abc
 from typing import final, ClassVar
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from itertools import islice
 
 
@@ -14,6 +15,9 @@ from cccma_ppp.data_modules.dataset.dataset_abc import (
     AddedTimeFeatures,
 )
 
+from cccma_ppp.configs import required_sample_dimensions
+
+init_time_dim, lead_time_dim = required_sample_dimensions
 
 class BatchDataABC(abc.ABC):
     """
@@ -74,6 +78,9 @@ class DataloaderConfigABC(abc.ABC):
     return_spatial_mask: bool
     reduce_spatial_mask: bool
 
+    init_time_dim: ClassVar[str] = init_time_dim
+    lead_time_dim: ClassVar[str] = lead_time_dim
+
     def __init__(self):
         self._setup = False
         self.pin_memory = False
@@ -102,6 +109,55 @@ class DataloaderConfigABC(abc.ABC):
     def available_times(self):
 
         pass
+
+    @final
+    def select_requested_times(
+        self,
+        requested_slice: slice,
+        ) -> xr.DataArray:
+    
+            
+        if isinstance(self.available_times, xr.DataArray):
+            times = self.available_times
+        else:
+            times = xr.DataArray(
+                self.available_times,
+                dims=(self.init_time_dim,),
+                coords={self.init_time_dim: self.available_times},
+            )
+
+        times = times.sortby(self.init_time_dim)
+
+        available_start = times.dt.year.min().item()
+        available_stop = times.dt.year.max().item()
+
+        if (
+            eval(requested_slice.start) is not None
+            and eval(requested_slice.start) < available_start
+        ):
+            raise ValueError(
+                f"Requested start time {int(requested_slice.start)} is before "
+                f"the first available time {available_start}."
+            )
+
+        if (
+            eval(requested_slice.stop )is not None
+            and eval(requested_slice.stop) > available_stop
+        ):
+            raise ValueError(
+                f"Requested stop time {eval(requested_slice.stop)} is after "
+                f"the final available time {available_stop}."
+            )
+
+        selected = times.sel({self.init_time_dim: requested_slice})
+
+        if selected.size == 0:
+            raise ValueError(
+                "No available times fall inside the requested range "
+                f"[{requested_slice.start}, {requested_slice.stop}]."
+            )
+
+        return selected
 
 
 @dataclasses.dataclass

@@ -68,7 +68,7 @@ class BatchData(BatchDataABC):
 class InferenceDataloaderConfig(DataloaderConfigABC):
     dataset_config: InferenceDatasetConfig | None = None
     batch_size: int = 1
-    inference_years: tuple | list = None
+    inference_years_slice: tuple | list = None
     num_data_workers: int = 0
     prefetch_factor: int | None = None
     drop_last: bool = False
@@ -86,7 +86,11 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         self.train_dataset_config = None
 
         if self.dataset_config is not None:
-            _ = self._inference_years
+            _ = self._inference_times
+        
+        self.inference_years_slice = (slice(
+            *[str(item) for item in self.inference_years_slice]
+        ) if self.inference_years_slice is not None else None)
 
     def _check_config(self):
         if self.dataset_config is None:
@@ -108,25 +112,17 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         if self.dataset_config is None:
             self.dataset_config = _from_train(train_dataloader_config.dataset_config)
 
-        _ = self._inference_years
+        _ = self._inference_times
         self.train_dataset_config = train_dataloader_config.dataset_config
 
     @property
-    def _inference_years(self):
-        if self.inference_years is None:
+    def _inference_times(self):
+        if self.inference_years_slice is None:
             return self.available_times
         else:
-            inference_years = np.arange(
-                self.inference_years[0], self.inference_years[1] + 1
+            return self.select_requested_times(
+                requested_slice=self.inference_years_slice,
             )
-
-            if not set(inference_years).issubset(set(self.available_times)):
-                raise ValueError(
-                    f"the requested inference years are not available:"
-                    f"available years: [{self.available_times.min()},{self.available_times.max()}]"
-                )
-
-            return inference_years
 
     @property
     def available_times(self):
@@ -177,7 +173,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         if not self._input_preprocessor_exists(load_path):
             if distributed.is_root():
                 train_loader_config.dataset_config.fit_preprocessors(
-                    train_loader_config.dataset_config.train_years,
+                    train_loader_config.train_times,
                     save=True,
                     save_path=load_path,
                 )
@@ -199,7 +195,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
             )
 
         inference_dataset = self.dataset_config.build_dataset(
-            years=self._inference_years,
+            times=self._inference_times,
             time_features=self.time_features,
             return_metadata=True,
             load=self.load,

@@ -1,13 +1,16 @@
 import dataclasses
 from pathlib import Path
+from collections.abc import Sequence
 import numpy as np
 import xarray as xr
 import torch
+import cftime
+import datetime
 
 from cccma_ppp.data_modules.dataset.dataset_abc import (
     DatasetConfigABC,
     DatasetABC,
-    lead_months_config,
+    lead_time_config,
     AddedTimeFeatures,
 )
 
@@ -18,7 +21,6 @@ from cccma_ppp.data_modules.data.data_configs import (
     ConditionDataConfig,
 )
 
-
 from cccma_ppp.train.dataset import TrainDatasetConfig
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
@@ -28,7 +30,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
     model: ModelDataConfig | None = None
     condition: ConditionDataConfig | None = None
     condition_method: str = None
-    lead_months: lead_months_config | None = None
+    lead_times: lead_time_config | None = None
 
     def __post_init__(self):
 
@@ -48,19 +50,19 @@ class InferenceDatasetConfig(DatasetConfigABC):
     @property
     def available_times(self):
 
-        year_ranges = list()
+        time_ranges = list()
         if self.condition is not None:
-            year_ranges.append(
-                self.condition.info.coords["year"].values,
+            time_ranges.append(
+                self.condition.info.coords[self.init_time_dim].to_index(),
             )
         if self.model is not None:
-            year_ranges.append(
-                self.model.info.coords["year"].values,
+            time_ranges.append(
+                self.model.info.coords[self.init_time_dim].to_index(),
             )
 
-        common = year_ranges[0]
-        for yr in year_ranges[1:]:
-            common = np.intersect1d(common, yr)
+        common = time_ranges[0]
+        for tr in time_ranges[1:]:
+            common = common.intersection(tr)
 
         return common
 
@@ -73,14 +75,18 @@ class InferenceDatasetConfig(DatasetConfigABC):
 
     def build_dataset(
         self,
-        years: np.ndarray,
+        times: (
+            Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
+            | np.ndarray
+            | xr.DataArray
+        ),
         time_features: AddedTimeFeatures,
         return_metadata: bool = False,
         load: bool = False,
     ):
         return InferenceDataset(
             config=self,
-            requested_years=years,
+            requested_times=times,
             time_features=time_features,
             return_metadata=return_metadata,
             load=load,
@@ -90,7 +96,11 @@ class InferenceDatasetConfig(DatasetConfigABC):
 @dataclasses.dataclass
 class InferenceDataset(DatasetABC):
     config: InferenceDatasetConfig
-    requested_years: list[int] | tuple[int, ...] | np.ndarray
+    requested_times:(
+        Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
+        | np.ndarray
+        | xr.DataArray
+    )
     time_features: AddedTimeFeatures
     return_metadata: bool = False
     load: bool = False
@@ -141,14 +151,14 @@ class InferenceDataset(DatasetABC):
         elif self._concat_condition_to_input:
             input = xr.concat([input, condition], dim="channels")
 
-        time_features_array = self.time_features(selection, input)
+        added_features_array = self.time_features(ind, input)
 
         (input_array,) = self._compute(input.data)
 
         datadict = dict(
             input=torch.as_tensor(input_array, dtype=torch.float32),
-            added_features=torch.tensor(time_features_array, dtype=torch.float32)
-            if time_features_array is not None
+            added_features=torch.tensor(added_features_array, dtype=torch.float32)
+            if added_features_array is not None
             else None,
         )
 
@@ -165,7 +175,7 @@ def _from_train(
 
     kwargs = {
         "condition_method": train_dataset_config.condition_method,
-        "lead_months": copy.deepcopy(train_dataset_config.lead_months),
+        "lead_times": copy.deepcopy(train_dataset_config.lead_times),
     }
 
     train_has_observation = train_dataset_config.observation is not None

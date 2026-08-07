@@ -6,7 +6,8 @@ from pathlib import Path
 
 
 from cccma_ppp.train.dataset import TrainDatasetConfig
-from cccma_ppp.data_modules.utils import _create_train_mask, WeightsConfig
+from cccma_ppp.data_modules.utils import _create_train_mask
+from cccma_ppp.data_modules.weights import WeightsConfig
 from cccma_ppp.data_modules.dataset.dataset_abc import AddedTimeFeatures
 from cccma_ppp.data_modules.dataloader import (
     Dataloader,
@@ -120,8 +121,8 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         Dataset configuration.
     batch_size : int
         Number of samples per batch.
-    train_years : tuple or list or None, optional
-        Range of training years.
+    train_years_slice : tuple or list or None, optional
+        Slice arguments for training years.
     num_validation_years : int, optional
         Number of years reserved for validation.
     num_data_workers : int, optional
@@ -135,7 +136,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     dataset_config: TrainDatasetConfig
     batch_size: int
     time_features: list | None = None
-    train_years: tuple | list = None
+    train_years_slice: tuple | list = None
     num_validation_years: int = 0
     num_data_workers: int = 0
     prefetch_factor: int = 2
@@ -160,40 +161,42 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
         self.time_features = AddedTimeFeatures(self.dataset_config, self.time_features)
 
-        if self.train_years is None:
-            self.train_years = self.available_times
-            if self.num_validation_years > 0:
-                self.validation_years = self.dataset_config.available_times[
-                    -self.num_validation_years :
-                ]
+        if self.train_years_slice is None:
+            self.train_times = self.available_times
         else:
-            self.train_years = np.arange(self.train_years[0], self.train_years[1] + 1)
 
-            if not set(self.train_years).issubset(set(self.available_times)):
-                raise ValueError(
-                    f"the requested train years are not available for {self.num_validation_years} "
-                    f"valodation years. Available years: [{self.available_times.min()},{self.available_times.max()}]"
-                )
+            self.train_years_slice = slice(
+                *[str(item) for item in self.train_years_slice]
+            )
 
-            if self.num_validation_years > 0:
-                self.validation_years = np.arange(
-                    self.train_years[-1] + 1,
-                    self.train_years[-1] + 1 + self.num_validation_years,
-                )
+            self.train_times = self.select_requested_times(
+                requested_slice=self.train_years_slice,
+            )
+
+        if self.num_validation_years > 0:
+
+            last_train_year = self.train_times[-1].dt.year
+
+            validation_mask = np.asarray(
+                [t.dt.year > last_train_year - self.num_validation_years
+                for t in self.train_times]
+            )
+
+            self.validation_times = self.train_times[validation_mask]
+            self.train_times = self.train_times[~validation_mask]    
 
     @property
     def available_times(self):
         """
-        Training years excluding validation period.
+        Available training times given the dataset configs.
 
         Returns
         -------
         np.ndarray
-            Array of years used for training.
+            Array of times available for training.
+            The items are cftime or datetime objects.
         """
 
-        if self.num_validation_years > 0:
-            return self.dataset_config.available_times[: -self.num_validation_years]
         return self.dataset_config.available_times
 
     def setup_distributed(
@@ -219,7 +222,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
         if distributed.is_root():
             if load_path is None:
-                self.dataset_config.fit_preprocessors(self.train_years, save=True)
+                self.dataset_config.fit_preprocessors(self.train_times, save=True)
 
         distributed.barrier()
 
@@ -263,12 +266,12 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             )
 
         train_mask = _create_train_mask(
-            time=self.train_years,
-            lead_times=self.dataset_config.input_lead_months,
+            init_times=self.train_times,
+            lead_times=self.dataset_config.input_lead_times,
         )
 
         train_dataset = self.dataset_config.build_dataset(
-            years=self.train_years,
+            times=self.train_times,
             mask=train_mask,
             time_features=self.time_features,
             return_metadata=return_metadata,
@@ -307,7 +310,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         Returns
         -------
         Dataloader or None
-            Validation dataloader, or None if no validation years are specified.
+            Validation dataloader, or None if no number of validation years are specified.
 
         Raises
         ------
@@ -321,11 +324,11 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
         if self.num_validation_years > 0:
             validation_mask = _create_train_mask(
-                time=self.validation_years,
-                lead_times=self.dataset_config.input_lead_months,
+                init_times=self.validation_times,
+                lead_times=self.dataset_config.input_lead_times,
             )
             validation_dataset = self.dataset_config.build_dataset(
-                years=self.validation_years,
+                times=self.validation_times,
                 time_features=self.time_features,
                 mask=validation_mask,
                 return_metadata=return_metadata,

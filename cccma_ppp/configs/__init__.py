@@ -1,5 +1,8 @@
 import yaml
 from pathlib import Path
+from typing import Literal
+
+lead_time_unit = Literal["day", "month"]
 
 CONFIG_DIR = Path(__file__).parent
 
@@ -9,7 +12,13 @@ with open(CONFIG_DIR / "configs.yaml") as f:
 
 required_sample_dimensions = tuple(data["required_sample_dimensions"])
 optional_sample_dimensions = tuple(data["optional_sample_dimensions"])
+lead_time_resolution = data["lead_time_resolution"]
 supported_NN_dimensions_sorted = tuple(data["supported_NN_dimensions_sorted"])
+
+if lead_time_resolution not in ["day", 'month']:
+    raise ValueError(
+        f"lead_time_resolution must be in {lead_time_resolution}."
+    )
 
 model_data_allowed_dimensions = frozenset(
     set(data["model_data_allowed_dimensions"])

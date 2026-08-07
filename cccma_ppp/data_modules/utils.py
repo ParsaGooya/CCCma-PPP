@@ -1,147 +1,23 @@
 import numpy as np
 import xarray as xr
-import dataclasses
-from pathlib import Path
 import os
 from typing import Literal
+from collections.abc import Sequence
 import contextlib
+import datetime
+import cftime
+import calendar
 from collections.abc import Iterator
 
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
-from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
-from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.configs import supported_NN_dimensions_sorted, required_sample_dimensions
+from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
+from cccma_ppp.configs import (supported_NN_dimensions_sorted, 
+                               required_sample_dimensions, 
+                               lead_time_unit,
+                               lead_time_resolution)
 
 spatialmethod = Literal["uniform", "cosine_lat"]
+init_time_dim, lead_time_dim = required_sample_dimensions
 
-
-@dataclasses.dataclass
-class WeightsConfig:
-    """
-    Configuration for computing spatial and variable weights.
-
-    Parameters
-    ----------
-    spatial_method : {"uniform", "cosine_lat"}, optional
-        Method used to compute spatial weights.
-    variable_weights : dict[str, float] or None, optional
-        Per-variable weighting factors.
-    load_dir : pathlib.Path or str or None, optional
-        Path to load precomputed weights.
-    """
-
-    spatial_method: spatialmethod = "uniform"
-    variable_weights: dict[str, float] | None = None
-    load_dir: Path | str | None = None
-
-    def __post_init__(self):
-        """
-        Validate weight configuration.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        FileNotFoundError
-            If specified load path does not exist.
-        """
-
-        if self.load_dir is not None:
-            if not Path(self.load_dir).exists():
-                raise FileNotFoundError(f"weights file not found at {self.load_dir}")
-
-    def build_weights(
-        self,
-        target_coords: dict,
-        Flattennanremover: Flattennanremove | None = None,
-        save=True,
-        save_path: Path | str | None = None,
-        save_name: str | None = None,
-    ):
-        """
-        Generate or load spatial weights.
-
-        Parameters
-        ----------
-        target_coords : dict
-            Spatial coordinates of target data.
-        Flattennanremover : Flattennanremove or None, optional
-            Preprocessor for flattened spatial representation.
-        save : bool, optional
-            Whether to save computed weights.
-        save_path : pathlib.Path or str or None, optional
-        save_name : str or None, optional
-
-        Returns
-        -------
-        xr.DataArray
-            Spatial (and optional variable) weights.
-
-        Raises
-        ------
-        ValueError
-            If loaded weights are incompatible with target coordinates.
-        """
-
-        if self.load_dir is not None:
-            weights = xr.open_dataset(Path(self.load_dir))
-            if isinstance(weights, xr.Dataset):
-                weights = _unwrap_data_variables(weights)
-
-            msg = f"the loaded weights from {self.load_dir} must have coordinates that match the target coordinates"
-
-            for coord in target_coords:
-                if coord not in weights.coords:
-                    raise ValueError(msg)
-                if not weights.coords[coord].equals(target_coords[coord]):
-                    raise ValueError(msg)
-
-        else:
-            coords = xr.DataArray(dims=tuple(target_coords), coords=target_coords)
-
-            dims = tuple(coords.sizes)
-            shape = tuple(coords.sizes[dim] for dim in dims)
-
-            weights = xr.DataArray(
-                np.ones(shape, dtype=np.float32),
-                dims=dims,
-                coords=coords.coords,
-                name="weights",
-            )
-
-            if self.spatial_method == "cosine_lat" and "lat" in weights.coords:
-                latitude_weights = np.cos(np.deg2rad(weights.coords["lat"]))
-                weights = weights * latitude_weights
-
-            if self.variable_weights is not None:
-                variable_weights = xr.DataArray(
-                    list(self.variable_weights.values()),
-                    dims=("channels",),
-                    coords={"channels": list(self.variable_weights)},
-                    name="variable_weights",
-                )
-
-                weights = variable_weights * weights
-
-        if self.load_dir is None and save:
-            save_path = (
-                Path(save_path)
-                if save_path is not None
-                else Path(RuntimeContext.GLOBAL_EXP_DIR)
-            )
-            save_name = save_name or "spatial_weights.nc"
-
-            if not os.path.isdir(save_path):
-                os.makedirs(save_path)
-
-            weights.to_netcdf(save_path / save_name)
-
-        if Flattennanremover is not None:
-            weights = Flattennanremover.transform(weights)
-
-        return weights
 
 
 def _unwrap_data_variables(dataset: xr.Dataset) -> xr.DataArray:
@@ -172,36 +48,48 @@ def _load_xarray_data(
     selection: dict | None = None,
     names: list | None = None,
     ensemble_mean: bool = False,
-    preprocessor: PreprocessingPipeline | None = None,
+    preprocessor: PreprocessModuleABC | None = None,
     concat_dim: str = "year",
     rename_dict: dict | None = None,
     chunks: dict | None = None,
     load: bool = False,
+    add_time_auxiliary_coords: bool = False,
+    init_time_dim: str = init_time_dim,
+    supported_NN_dimensions_sorted: tuple = supported_NN_dimensions_sorted
 ):
     """
-    Load and optionally preprocess xarray dataset.
+    Load and optionally preprocess an xarray dataset.
 
     Parameters
     ----------
-    paths : list of str
+    paths : list[str]
         File paths to load.
     selection : dict or None, optional
-        Subset selection applied after loading (e.g., slicing or filtering).
-    names : list of str or None, optional
+        Subset selection applied after loading.
+    names : list[str] or None, optional
         Variables to extract.
     ensemble_mean : bool, optional
         Whether to average across ensembles.
-    preprocessor : PreprocessingPipeline or None, optional
+    preprocessor : PreprocessModuleABC or None, optional
         Preprocessing pipeline to apply.
     concat_dim : str, optional
         Dimension used for concatenation.
     rename_dict : dict or None, optional
-        Variable renaming mapping.
+        Variable or dimension renaming mapping.
+    chunks : dict or None, optional
+        Chunking passed to ``xr.open_mfdataset``.
+    load : bool, optional
+        Whether to load the result into memory.
+    add_time_auxiliary_coords : bool, optional
+        Whether to add ``year``, ``month``, and ``day`` coordinates
+        derived from ``init_time``. Here, ``day`` represents day of year.
+    init_time_dim : str, optional
+        Name of the initialization-time dimension.
 
     Returns
     -------
     xr.Dataset or xr.DataArray
-        Loaded (and optionally preprocessed) data.
+        Loaded and optionally preprocessed data.
     """
 
     ds = xr.open_mfdataset(
@@ -213,11 +101,42 @@ def _load_xarray_data(
 
     ds = ds.sel(selection) if selection is not None else ds
 
-    if "ensembles" in ds.coords:
-        ds = ds.mean("ensembles") if ensemble_mean else ds
+    if "ensembles" in ds.coords and ensemble_mean:
+        ds = ds.mean("ensembles")
 
     if names is not None:
         ds = ds[names]
+
+    if add_time_auxiliary_coords:
+        if init_time_dim not in ds.coords:
+            raise ValueError(
+                "Cannot add temporal auxiliary coordinates because "
+                f"{init_time_dim!r} is not present in the data coordinates."
+            )
+
+        init_time = ds.coords[init_time_dim]
+
+        _validate_time_sequence(init_time)
+
+        if init_time.ndim != 1 or init_time.dims != (init_time_dim,):
+            raise ValueError(
+                f"Coordinate {init_time_dim!r} must be one-dimensional "
+                f"over dimension {init_time_dim!r}, but found dimensions "
+                f"{init_time.dims}."
+            )
+
+        try:
+            ds = ds.assign_coords(
+                year=init_time.dt.year,
+                month=init_time.dt.month,
+                day=init_time.dt.dayofyear,
+            )
+        except (AttributeError, TypeError) as exc:
+            raise TypeError(
+                f"Coordinate {init_time_dim!r} must contain datetime64 "
+                "or cftime datetime values to derive year, month, and day."
+            ) from exc
+
     if preprocessor is not None:
         ds = preprocessor.transform(ds)
 
@@ -231,58 +150,225 @@ def _load_xarray_data(
 
 
 def _create_train_mask(
-    time: list | xr.DataArray,
-    lead_times: list | xr.DataArray | np.ndarray | int,
-    exclude_idx=0,
-):
+    init_times: (
+    Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
+    | np.ndarray
+    | xr.DataArray
+    ),
+    lead_times: Sequence | xr.DataArray | np.ndarray | int,
+    lead_time_resolution: lead_time_unit = lead_time_resolution,
+    init_time_dim: str = init_time_dim,
+    lead_time_dim: str = lead_time_dim
+) -> xr.DataArray:
     """
-    Create training mask for valid time indices.
+    Create a mask for forecast samples whose valid time extends beyond
+    the final initialization time.
 
     Parameters
     ----------
-    time : array-like
-        Times corresponding to dataset in years.
+    init_times : array-like
+        Forecast initialization times. Values must be either NumPy
+        datetime64 or cftime datetime objects.
+
     lead_times : array-like or int
-        (Num) lead times in months. The minimum is 12.
-    exclude_idx : int, optional
-        Offset index for masking.
+        One-based lead-time values. If an integer is provided, it is
+        interpreted as the number of lead times, producing
+        ``1, ..., lead_times``.
+
+    lead_time_resolution : {"month", "day"}
+        Temporal resolution represented by one lead-time increment.
 
     Returns
     -------
     xr.DataArray
-        Boolean mask indicating invalid positions.
+        Boolean mask with dimensions ``(init_time, lead_time)``.
+        True indicates a sample whose valid time exceeds the final
+        initialization time.
 
     Notes
     -----
-    Used to exclude samples from forecast that leak into future
-    due to lead-time offsets.
+    Lead times are assumed to be one-based:
 
-    *********************************************************
-    IMP: when cftime is implemented, lead_time handling needs careful
-    adjusting.
-    *********************************************************
+    - lead_time=1 corresponds to init_time
+    - lead_time=2 corresponds to one period after init_time
     """
 
-    if not isinstance(lead_times, int):
-        lead_times = max(lead_times)
+    _validate_time_sequence(init_times)
 
-    lead_times = np.arange(1, max(lead_times, 12) + 1)
+    init_times = xr.DataArray(
+        init_times,
+        dims=(init_time_dim,),
+    )
 
-    mask = np.full((len(time), len(lead_times)), False, dtype=bool)
-    x = np.arange(0, 12 * mask.shape[0], 12)
-    y = np.arange(1, mask.shape[1] + 1)
-    idx_array = x[..., None] + y
 
-    mask[idx_array > idx_array[-1, exclude_idx + 11]] = True
+    if isinstance(lead_times, int):
+        if lead_times < 1:
+            raise ValueError("'lead_times' must be at least 1.")
 
-    time_dim, lead_time_dim = required_sample_dimensions
+        lead_times = np.arange(1, lead_times + 1)
+    else:
+        lead_times = np.asarray(lead_times)
+
+        if lead_times.ndim != 1 or lead_times.size == 0:
+            raise ValueError("'lead_times' must be a non-empty 1D array.")
+
+        if np.any(lead_times < 1):
+            raise ValueError("Lead times must be one-based and at least 1.")
+
+    target_times = _calculate_target_times(
+        init_times=init_times,
+        lead_times=lead_times,
+        lead_time_resolution=lead_time_resolution,
+    )
+
+    cutoff_time = init_times.max().values
+
+    mask = target_times > cutoff_time
 
     return xr.DataArray(
         mask,
-        dims=required_sample_dimensions,
-        coords={time_dim: time, lead_time_dim: lead_times},
+        dims=(init_time_dim, lead_time_dim),
+        coords={
+            init_time_dim: init_times.values,
+            lead_time_dim: lead_times,
+        },
         name="mask",
     )
+
+
+def _calculate_target_times(
+    init_times: xr.DataArray,
+    lead_times: np.ndarray,
+    lead_time_resolution: lead_time_unit,
+) -> np.ndarray:
+    """
+    Calculate valid times for every init-time and lead-time combination.
+    """
+    offsets = lead_times.astype(int) - 1
+
+    first_time = init_times.values[0]
+    is_cftime = isinstance(first_time, cftime.datetime)
+
+    if lead_time_resolution == "day":
+        valid_times = [
+            [
+                init_time + datetime.timedelta(days=int(offset))
+                if is_cftime
+                else init_time + np.timedelta64(int(offset), "D")
+                for offset in offsets
+            ]
+            for init_time in init_times.values
+        ]
+
+        return np.asarray(
+            valid_times,
+            dtype=object if is_cftime else None,
+        )
+
+    if lead_time_resolution == "month":
+        valid_times = [
+            [
+                _add_months(init_time, int(offset))
+                for offset in offsets
+            ]
+            for init_time in init_times.values
+        ]
+
+        return np.asarray(
+            valid_times,
+            dtype=object if is_cftime else "datetime64[ns]",
+        )
+
+    else:
+        raise ValueError(
+            f"Invalid lead_time_resolution {lead_time_resolution}. Must be in " \
+            "['day', 'month']. "
+        )
+
+
+def _add_months(
+    time: np.datetime64 | cftime.datetime,
+    n_months: int,
+) -> np.datetime64 | cftime.datetime:
+    """
+    Add calendar months while preserving the time representation.
+    """
+    is_cftime = isinstance(time, cftime.datetime)
+
+    calendar = (
+        time.calendar
+        if is_cftime
+        else "proleptic_gregorian"
+    )
+
+    return xr.date_range(
+        start=time,
+        periods=n_months + 1,
+        freq="MS",
+        calendar=calendar,
+        use_cftime=is_cftime,
+    )[-1]
+
+
+
+    
+def _validate_time_sequence(
+    times_sequence: Sequence | np.ndarray | xr.DataArray,
+) -> None:
+
+
+    values = (
+        times_sequence.values
+        if isinstance(times_sequence, xr.DataArray)
+        else np.asarray(times_sequence)
+    )
+
+    if values.ndim != 1:
+        raise ValueError("'times_sequence' must be one-dimensional.")
+
+    if values.size == 0:
+        raise ValueError("'times_sequence' cannot be empty.")
+
+    first = values[0]
+
+    is_cftime = isinstance(first, cftime.datetime)
+    is_numpy_datetime = isinstance(first, np.datetime64)
+    is_python_datetime = isinstance(first, datetime.datetime)
+
+    if not (is_cftime or is_numpy_datetime or is_python_datetime):
+        raise TypeError(
+            "'time_sequence' must contain cftime.datetime, "
+            "numpy.datetime64, or datetime.datetime objects."
+        )
+
+    if is_cftime:
+        if not all(isinstance(value, cftime.datetime) for value in values):
+            raise TypeError(
+                "'time_sequence' cannot mix cftime objects with "
+                "other datetime types."
+            )
+
+        calendars = {value.calendar for value in values}
+
+        if len(calendars) > 1:
+            raise ValueError(
+                "'time_sequence' contains multiple CF calendars: "
+                f"{calendars}."
+            )
+
+    elif is_numpy_datetime:
+        if not np.issubdtype(values.dtype, np.datetime64):
+            raise TypeError(
+                "'time_sequence' cannot mix numpy.datetime64 values "
+                "with other datetime types."
+            )
+
+    else:
+        if not all(isinstance(value, datetime.datetime) for value in values):
+            raise TypeError(
+                "'time_sequence' cannot mix datetime.datetime values "
+                "with other datetime types."
+            )
 
 
 @contextlib.contextmanager
@@ -298,3 +384,192 @@ def suppress_stderr() -> Iterator[None]:
     finally:
         os.dup2(saved_stderr_fd, stderr_fd)
         os.close(saved_stderr_fd)
+
+
+
+
+
+def add_lead_times(
+    init_times: np.ndarray | xr.DataArray,
+    lead_times: np.ndarray | xr.DataArray,
+    lead_time_resolution: lead_time_unit = 'month',
+) -> np.ndarray:
+    """
+    Compute target times for paired initialization and lead-time values.
+
+    Lead times are one-based:
+        lead_time=1 -> initialization time
+        lead_time=2 -> one period after initialization
+    """
+    init_times = np.asarray(init_times)
+    lead_times = np.asarray(lead_times)
+
+    if init_times.ndim != 1 or lead_times.ndim != 1:
+        raise ValueError("'init_times' and 'lead_times' must be one-dimensional.")
+
+    if init_times.shape != lead_times.shape:
+        raise ValueError(
+            "'init_times' and 'lead_times' must have the same shape."
+        )
+
+    if not np.issubdtype(lead_times.dtype, np.integer):
+        if not np.all(lead_times == lead_times.astype(int)):
+            raise ValueError("Lead times must contain integer values.")
+
+        lead_times = lead_times.astype(int)
+
+    if np.any(lead_times < 1):
+        raise ValueError("Lead times must be one-based and at least 1.")
+
+    offsets = lead_times.astype(int) - 1
+
+    first_time = init_times[0]
+
+    if isinstance(first_time, cftime.datetime):
+        valid_times = [
+            _add_cftime_offset(
+                init_time=init_time,
+                offset=int(offset),
+                resolution=lead_time_resolution,
+            )
+            for init_time, offset in zip(init_times, offsets)
+        ]
+
+        return np.asarray(valid_times, dtype=object)
+
+    if np.issubdtype(init_times.dtype, np.datetime64):
+        if lead_time_resolution == "day":
+            return init_times + offsets.astype("timedelta64[D]")
+
+        if lead_time_resolution == "month":
+            # This assumes monthly coordinates represent month starts.
+            month_times = init_times.astype("datetime64[M]")
+            return month_times + offsets.astype("timedelta64[M]")
+
+        raise ValueError(
+            f"Unsupported lead-time resolution: {lead_time_resolution!r}."
+        )
+
+    raise TypeError(
+        "'init_times' must contain numpy.datetime64 or cftime.datetime values."
+    )
+
+
+def _add_cftime_offset(
+    init_time: cftime.datetime,
+    offset: int,
+    resolution: lead_time_unit,
+) -> cftime.datetime:
+    if resolution == "day":
+        return init_time + datetime.timedelta(days=offset)
+
+    if resolution != "month":
+        raise ValueError(
+            f"Unsupported lead-time resolution: {resolution!r}."
+        )
+
+    total_months = init_time.year * 12 + init_time.month - 1 + offset
+
+    target_year, zero_based_month = divmod(total_months, 12)
+    target_month = zero_based_month + 1
+
+    # Preserve the original day when possible, but clamp it for shorter months.
+    target_day = min(
+        init_time.day,
+        _days_in_cftime_month(
+            year=target_year,
+            month=target_month,
+            calendar_name=init_time.calendar,
+        ),
+    )
+
+    return type(init_time)(
+        target_year,
+        target_month,
+        target_day,
+        init_time.hour,
+        init_time.minute,
+        init_time.second,
+        init_time.microsecond,
+    )  
+
+
+def _days_in_cftime_month(
+    year: int,
+    month: int,
+    calendar_name: str,
+) -> int:
+    if calendar_name == "360_day":
+        return 30
+
+    if calendar_name in {"noleap", "365_day"}:
+        month_lengths = (
+            31, 28, 31, 30, 31, 30,
+            31, 31, 30, 31, 30, 31,
+        )
+        return month_lengths[month - 1]
+
+    if calendar_name in {"all_leap", "366_day"}:
+        month_lengths = (
+            31, 29, 31, 30, 31, 30,
+            31, 31, 30, 31, 30, 31,
+        )
+        return month_lengths[month - 1]
+
+    return calendar.monthrange(year, month)[1]
+
+
+def assign_datetime_init_time(
+    ds: xr.Dataset | xr.DataArray,
+    init_time_dim: str = init_time_dim,
+    calendar: str | None = None,
+) -> xr.Dataset | xr.DataArray:
+    """
+    Replace an integer year coordinate with a datetime coordinate.
+
+    Parameters
+    ----------
+    ds : xr.Dataset or xr.DataArray
+        Input object containing an integer year coordinate.
+    init_time_dim : str, optional
+        Name of the initialization-time coordinate.
+    calendar : str or None, optional
+        CF calendar to use. If None, numpy.datetime64 is used.
+        Otherwise a CFTimeIndex is created.
+
+    Returns
+    -------
+    xr.Dataset or xr.DataArray
+        Object with the integer year coordinate replaced by datetime
+        values corresponding to January 1st of each year.
+    """
+    if init_time_dim not in ds.coords:
+        raise ValueError(
+            f"{init_time_dim!r} is not a coordinate."
+        )
+
+    years = np.asarray(ds.coords[init_time_dim].values)
+    if years.ndim == 0:  
+        years = np.array([years])
+
+    if not np.issubdtype(years.dtype, np.integer):
+        raise TypeError(
+            f"{init_time_dim!r} must contain integer years."
+        )
+
+    if calendar is None:
+        times = np.array(
+            [np.datetime64(f"{year:04d}-01-01") for year in years ]
+        )
+    else:
+        times = xr.date_range(
+            start=f"{years.min():04d}-01-01",
+            periods=len(years),
+            freq="YS",
+            calendar=calendar,
+            use_cftime=True,
+        )
+
+    return ds.assign_coords(
+        {init_time_dim: (init_time_dim, times)}
+    )

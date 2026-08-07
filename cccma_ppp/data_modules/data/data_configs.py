@@ -1,10 +1,16 @@
 import numpy as np
+import xarray as xr
 import dataclasses
 from typing import final, Literal
+import cftime
+import datetime
 
 from cccma_ppp.data_modules.data.data_abc import DataConfigABC
 from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.configs import (
+    lead_time_unit,
+    lead_time_resolution,
+    required_sample_dimensions,
     model_data_allowed_dimensions,
     model_data_required_dimensions,
     observation_data_allowed_dimensions,
@@ -14,7 +20,7 @@ from cccma_ppp.configs import (
 )
 
 spatialmethod = Literal["uniform", "cosine_lat"]
-
+init_time_dim, lead_time_dim = required_sample_dimensions
 
 @dataclasses.dataclass
 class ModelDataConfig(DataConfigABC):
@@ -48,7 +54,7 @@ class ModelDataConfig(DataConfigABC):
     )
     ensemble_list: list | None = None
     ensemble_mean: bool | None = True
-    concat_dim: str = "year"
+    concat_dim: str = init_time_dim
     file_type: str = "*.nc"
     rename_dict: dict = None
 
@@ -62,9 +68,10 @@ class ModelDataConfig(DataConfigABC):
         """
         super().__init__()
 
-        self.year_range = np.arange(
-            self.info.start_year,
-            self.info.final_year + self.info.sizes["lead_time"] // 12,
+        self.time_range = build_time_range(
+            init_time=self.info.coords[self.init_time_dim],
+            n_lead_times=self.info.coords[self.lead_time_dim].max().item(),
+            lead_time_resolution=lead_time_resolution,
         )
 
     @property
@@ -137,7 +144,7 @@ class ObsDataConfig(DataConfigABC):
     )
     ensemble_list: list | None = None
     ensemble_mean: bool | None = True
-    concat_dim: str = "year"
+    concat_dim: str = init_time_dim
     file_type: str = "*.nc"
     rename_dict: dict = None
 
@@ -153,7 +160,7 @@ class ObsDataConfig(DataConfigABC):
         """
         super().__init__()
 
-        self.year_range = np.arange(self.info.start_year, self.info.final_year + 1)
+        self.time_range = build_time_range(self.info.coords[init_time_dim])
 
     @final
     @property
@@ -217,7 +224,7 @@ class ConditionDataConfig(DataConfigABC):
     )
     ensemble_list: list | None = None
     ensemble_mean: bool | None = True
-    concat_dim: str = "year"
+    concat_dim: str = init_time_dim
     file_type: str = "*.nc"
     rename_dict: dict = None
 
@@ -231,10 +238,11 @@ class ConditionDataConfig(DataConfigABC):
         """
         super().__init__()
 
-        if self.info.start_year is not None and self.info.final_year is not None:
-            self.year_range = np.arange(
-                self.info.start_year,
-                self.info.final_year + self.info.sizes["lead_time"] // 12,
+        if self.info.start_time is not None and self.info.final_time is not None:
+            self.time_range = build_time_range(
+                init_time=self.info.coords[init_time_dim],
+                n_lead_times=self.info.coords[lead_time_dim].max().item(),
+                lead_time_resolution=lead_time_resolution,
             )
 
     @final
@@ -273,3 +281,68 @@ class ConditionDataConfig(DataConfigABC):
         frozenset of str
         """
         return condition_data_required_dimensions
+
+
+
+
+
+def build_time_range(
+    init_time: xr.DataArray,
+    n_lead_times: int = 1,
+    lead_time_resolution: lead_time_unit = "month",
+) -> xr.CFTimeIndex | np.ndarray:
+    """
+    Build the complete time range covered by initialization and lead times.
+
+    Lead time is assumed to be one-based:
+        lead_time=1 -> initialization period
+        lead_time=2 -> next period
+    """
+    if init_time.size == 0:
+        raise ValueError("'init_time' cannot be empty.")
+
+    if n_lead_times < 1:
+        raise ValueError("'n_lead_times' must be at least 1.")
+
+    first_value = init_time.values[0]
+
+    is_cftime = isinstance(first_value, cftime.datetime)
+    is_datetime64 = np.issubdtype(init_time.dtype, np.datetime64)
+
+    if not (is_cftime or is_datetime64):
+        raise TypeError(
+            "'init_time' must contain either numpy.datetime64 "
+            "or cftime.datetime objects."
+        )
+
+    frequency = {
+        "month": "MS",
+        "day": "D",
+    }[lead_time_resolution]
+
+    start_time = init_time.min().item()
+    final_init_time = init_time.max().item()
+
+    calendar = (
+        final_init_time.calendar
+        if is_cftime
+        else "proleptic_gregorian"
+    )
+
+    # The last valid time is n_lead_times - 1 periods after the
+    # final initialization time.
+    final_time = xr.date_range(
+        start=final_init_time,
+        periods=n_lead_times,
+        freq=frequency,
+        calendar=calendar,
+        use_cftime=is_cftime,
+    )[-1]
+
+    return xr.date_range(
+        start=start_time,
+        end=final_time,
+        freq=frequency,
+        calendar=calendar,
+        use_cftime=is_cftime,
+    )
