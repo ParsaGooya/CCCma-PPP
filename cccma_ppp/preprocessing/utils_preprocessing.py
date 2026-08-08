@@ -383,7 +383,7 @@ class AnomaliesScaler(PreprocessModuleABC):
 
         else:
             grouped_data = self._add_grouping_coordinate(data)
-
+            
             self.mean = (
                 grouped_data
                 .groupby(self.frequency)

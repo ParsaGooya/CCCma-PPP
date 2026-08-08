@@ -198,7 +198,7 @@ class DatasetConfigABC(abc.ABC):
                     if self.condition.info.coords.get(dim) is None:
                         raise ValueError(
                             "Condition data should be available"
-                            " on the same dimestions as model data."
+                            f" on the same {dim} dimestions as model data."
                         )
 
                     if not set(self.model.info.coords[dim].values).issubset(
@@ -467,6 +467,48 @@ class DatasetConfigABC(abc.ABC):
             ensemble_mean=ensemble_mean,
             rename_dict=self.model.rename_dict,
         )
+
+    @final
+    def get_input_times(self, requested_times: (Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
+            | np.ndarray
+            | xr.DataArray
+        )
+    ):
+        """
+        Select the available input times within the requested_times
+
+        Parameters
+        ----------
+        requested_times : array-like
+            Training times used for fitting. Values must be either NumPy
+            datetime64 or cftime datetime objects.
+
+        Returns
+        -------
+        xr.DataArray containing input times within requested_times.           
+        """
+        missing = [
+            t for t in requested_times.values
+            if t not in self.available_times
+        ]
+
+        if missing:
+            raise ValueError(
+                f"The following requested_times are unavailable: {missing}"
+            )
+
+        if not isinstance(requested_times, xr.DataArray):
+            requested_times = xr.DataArray(
+                requested_times,
+                dims=(self.init_time_dim,),
+                coords={self.init_time_dim: requested_times},
+            )
+        
+        input_times = self.effective_input.info.coords[self.init_time_dim].to_index()
+        return requested_times.sel(
+            {self.init_time_dim: requested_times.to_index().intersection(input_times)}
+        )
+
 
     @final
     def _resolve_condition(self):
@@ -738,10 +780,10 @@ class AddedTimeFeatures:
 class DatasetABC(Dataset, abc.ABC):
     config: DatasetConfigABC
     requested_times: (
-    Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
-    | np.ndarray
-    | xr.DataArray
-)
+        Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
+        | np.ndarray
+        | xr.DataArray
+    )
     mask: xr.DataArray | None
     time_features: AddedTimeFeatures
     return_metadata: bool
@@ -820,7 +862,7 @@ class DatasetABC(Dataset, abc.ABC):
     @property
     def _sampling_times_selectors(self) -> dict:
 
-        return {self.config.init_time_dim: self.requested_times, self.config.lead_time_dim: self.config.lead_times}
+        return {self.config.init_time_dim: self.config.get_input_times(self.requested_times), self.config.lead_time_dim: self.config.lead_times}
 
     @property
     @abc.abstractmethod

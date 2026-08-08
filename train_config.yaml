@@ -25,6 +25,7 @@ train_loader:
                             - name : anomalies
                               args:
                                     dims: [time]
+                                    frequency: month
                             # - name : flattener
 
             concat_dim : time

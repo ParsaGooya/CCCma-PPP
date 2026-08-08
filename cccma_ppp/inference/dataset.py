@@ -50,18 +50,18 @@ class InferenceDatasetConfig(DatasetConfigABC):
     @property
     def available_times(self):
 
-        time_ranges = list()
+        time_coords = list()
         if self.condition is not None:
-            time_ranges.append(
+            time_coords.append(
                 self.condition.info.coords[self.init_time_dim].to_index(),
             )
         if self.model is not None:
-            time_ranges.append(
+            time_coords.append(
                 self.model.info.coords[self.init_time_dim].to_index(),
             )
 
-        common = time_ranges[0]
-        for tr in time_ranges[1:]:
+        common = time_coords[0]
+        for tr in time_coords[1:]:
             common = common.intersection(tr)
 
         return common

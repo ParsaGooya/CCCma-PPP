@@ -49,12 +49,12 @@ class DatasetOperator:
         if hasattr(self.config, "observation"):
             return self.config.observation
 
+
     def fit_preprocessors(
         self,
         train_times: (Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
             | np.ndarray
             | xr.DataArray
-            | slice
         ),
         save=False,
         save_path: Path | str | None = None,
@@ -81,13 +81,23 @@ class DatasetOperator:
         -----
         Applies fitting to model, observation, and condition datasets.
         """
+        missing = [
+            t for t in train_times.values
+            if t not in self.config.available_times
+        ]
 
+        if missing:
+            raise ValueError(
+                f"The following train_times are unavailable: {missing}"
+            )
+        
         if not isinstance(train_times, slice):
             _validate_time_sequence(train_times)
 
         if self.config.model is not None:
+
             selection = {
-                self.config.init_time_dim: train_times,
+                self.config.init_time_dim: self.config.get_input_times(train_times),
                 self.config.lead_time_dim: self.config.model.info.coords[self.config.lead_time_dim],
             }
             if self.config.model.info.coords.get(self.config.realization_dim) is not None:
@@ -116,8 +126,9 @@ class DatasetOperator:
             if self.config.condition_method.lower() == "static":
                 selection = {}
             else:
+                
                 selection = {
-                    self.config.init_time_dim: train_times,
+                    self.config.init_time_dim: self.config.get_input_times(train_times),
                     self.config.lead_time_dim: self.config.effective_condition.info.coords[
                         self.config.lead_time_dim
                     ],

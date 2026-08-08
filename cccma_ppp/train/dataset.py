@@ -160,12 +160,15 @@ class TrainDatasetConfig(DatasetConfigABC):
 
         Returns
         -------
-        np.ndarray
+        pandas.DatetimeIndex or xr.CFTimeIndex
         """
-        return self.get_common_time.intersection(
-            self.model.info.coords[self.init_time_dim].to_index()
-        )
+        model_times = self.model.info.coords[self.init_time_dim].to_index()
 
+        return self.get_common_time[
+            (self.get_common_time >= model_times.min())
+            & (self.get_common_time <= model_times.max())
+        ]
+    
     def fit_preprocessors(
         self,
         train_times: (Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
