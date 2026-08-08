@@ -158,11 +158,27 @@ class TrainDatasetConfig(DatasetConfigABC):
         """
         Available training times.
 
+        Note
+        -------
+        If the model init_time resolution is year,
+        maintains that entire year rather than cutting
+        at the specific last init_time. 
+
         Returns
         -------
         pandas.DatetimeIndex or xr.CFTimeIndex
         """
         model_times = self.model.info.coords[self.init_time_dim].to_index()
+        time_freq = self.model.info.init_time_freq
+
+        if time_freq == "year":
+            max_year = model_times.year.max()
+            min_year = model_times.year.min()
+
+            return self.get_common_time[
+                (self.get_common_time.year >= min_year)
+                & (self.get_common_time.year <= max_year)
+            ]
 
         return self.get_common_time[
             (self.get_common_time >= model_times.min())

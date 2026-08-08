@@ -7,6 +7,7 @@ import contextlib
 import datetime
 import cftime
 import calendar
+import pandas as pd
 from collections.abc import Iterator
 
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
@@ -15,10 +16,13 @@ from cccma_ppp.configs import (supported_NN_dimensions_sorted,
                                realization_dim,
                                lead_time_unit,
                                lead_time_resolution)
+                               
 
+TimeTypes = Literal["datetime", "cftime"]
+TimeFrequency = Literal["day", "month", "year"]
 spatialmethod = Literal["uniform", "cosine_lat"]
-init_time_dim, lead_time_dim = required_sample_dimensions
 
+init_time_dim, lead_time_dim = required_sample_dimensions
 
 
 def _unwrap_data_variables(dataset: xr.Dataset) -> xr.DataArray:
@@ -200,6 +204,7 @@ def _create_train_mask(
     init_times = xr.DataArray(
         init_times,
         dims=(init_time_dim,),
+        coords={init_time_dim: init_times},
     )
 
 
@@ -223,19 +228,28 @@ def _create_train_mask(
         lead_time_resolution=lead_time_resolution,
     )
 
-    cutoff_time = init_times.max().values
-
-    mask = target_times > cutoff_time
-
-    return xr.DataArray(
-        mask,
+    target_times = xr.DataArray(
+        target_times,
         dims=(init_time_dim, lead_time_dim),
         coords={
-            init_time_dim: init_times.values,
+            init_time_dim: init_times[init_time_dim],
             lead_time_dim: lead_times,
         },
-        name="mask",
     )
+
+    time_resolution = infer_time_resolution(
+        init_times.coords[init_time_dim].to_index()
+    )
+    if time_resolution == "year":
+        cutoff_year = int(init_times.dt.year.max().item())
+        mask = target_times.dt.year > cutoff_year
+    
+    else:
+        cutoff_time = init_times.max().values
+        mask = target_times > cutoff_time
+
+    mask.name = "mask"
+    return mask
 
 
 def _calculate_target_times(
@@ -575,3 +589,79 @@ def assign_datetime_init_time(
     return ds.assign_coords(
         {init_time_dim: (init_time_dim, times)}
     )
+
+
+
+
+def get_time_representation(
+    time: xr.DataArray | pd.DatetimeIndex | xr.CFTimeIndex,
+) -> TimeTypes:
+    """
+    Determine whether a time coordinate uses numpy/pandas datetimes
+    or CFTime datetimes.
+
+    Parameters
+    ----------
+    time : xr.DataArray, pandas.DatetimeIndex, or xr.CFTimeIndex
+        Time coordinate or index.
+
+    Returns
+    -------
+    {"datetime", "cftime"}
+        Representation used by the time coordinate.
+
+
+    """
+    if isinstance(time, xr.DataArray):
+        values = time.values
+
+        first = values[0]
+
+        if isinstance(first, cftime.datetime):
+            return "cftime"
+
+        if (
+            isinstance(first, np.datetime64)
+            or isinstance(first, datetime.datetime)
+        ):
+            return "datetime"
+
+    elif isinstance(time, xr.CFTimeIndex):
+        return "cftime"
+
+    elif isinstance(time, pd.DatetimeIndex):
+        return "datetime"
+
+    raise TypeError(
+        "Time coordinate must use either datetime or cftime objects."
+    )
+
+
+
+
+def infer_time_resolution(
+    times: pd.DatetimeIndex | xr.CFTimeIndex,
+) -> TimeFrequency:
+    """
+    Infer the temporal resolution from the minimum spacing between
+    consecutive timestamps.
+    """
+    if len(times) < 2:
+        raise ValueError(
+            "At least two timestamps are required to infer the resolution."
+        )
+
+    deltas = [
+        (t2 - t1).days
+        for t1, t2 in zip(times[:-1], times[1:])
+    ]
+
+    min_delta = min(deltas)
+
+    if min_delta < 28:
+        return "day"
+
+    if min_delta < 365:
+        return "month"
+
+    return "year"

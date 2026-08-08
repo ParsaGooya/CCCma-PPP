@@ -1,13 +1,10 @@
 import abc
-from typing import final, ClassVar, Literal
+from typing import final, ClassVar
 from pathlib import Path
 import gc
 import glob
 import xarray as xr
 import numpy as np
-import pandas as pd
-import datetime
-import cftime
 import dataclasses
 
 from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
@@ -21,10 +18,14 @@ from cccma_ppp.data_modules.utils import (
     _load_xarray_data,
     _create_train_mask,
     _validate_time_sequence,
+    infer_time_resolution,
+    get_time_representation,
+    TimeTypes,
+    TimeFrequency
 )
 from cccma_ppp.generic.runtime import RuntimeContext
 
-TimeTypes = Literal["datetime", "cftime"]
+
 
 init_time_dim, lead_time_dim = required_sample_dimensions
 @dataclasses.dataclass
@@ -49,6 +50,7 @@ class infoclass:
     final_time: xr.DataArray | np.ndarray | str | int | None
     coords: dict
     time_coords_type: TimeTypes 
+    init_time_freq: TimeFrequency
 
 
 class DataConfigABC(abc.ABC):
@@ -389,59 +391,19 @@ def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
 
     time_coords_type = get_time_representation(ds[init_time_dim])
 
+    time_freq = infer_time_resolution(ds.coords[init_time_dim].to_index())
+
     ds.close()
     del ds
 
     return infoclass(
         start_time=start_time, 
         final_time=final_time, 
-        sizes=sizes, coords=coords, 
-        time_coords_type=time_coords_type
+        sizes=sizes, 
+        coords=coords, 
+        time_coords_type=time_coords_type,
+        init_time_freq=time_freq
     )
 
 
 
-
-
-def get_time_representation(
-    time: xr.DataArray | pd.DatetimeIndex | xr.CFTimeIndex,
-) -> TimeTypes:
-    """
-    Determine whether a time coordinate uses numpy/pandas datetimes
-    or CFTime datetimes.
-
-    Parameters
-    ----------
-    time : xr.DataArray, pandas.DatetimeIndex, or xr.CFTimeIndex
-        Time coordinate or index.
-
-    Returns
-    -------
-    {"datetime", "cftime"}
-        Representation used by the time coordinate.
-
-
-    """
-    if isinstance(time, xr.DataArray):
-        values = time.values
-
-        first = values[0]
-
-        if isinstance(first, cftime.datetime):
-            return "cftime"
-
-        if (
-            isinstance(first, np.datetime64)
-            or isinstance(first, datetime.datetime)
-        ):
-            return "datetime"
-
-    elif isinstance(time, xr.CFTimeIndex):
-        return "cftime"
-
-    elif isinstance(time, pd.DatetimeIndex):
-        return "datetime"
-
-    raise TypeError(
-        "Time coordinate must use either datetime or cftime objects."
-    )
