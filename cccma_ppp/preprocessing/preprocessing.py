@@ -8,9 +8,10 @@ import xarray as xr
 
 from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
-from cccma_ppp.configs import supported_NN_dimensions_sorted
+from cccma_ppp.configs import (supported_NN_dimensions_sorted,
+                                required_sample_dimensions)
 
-
+init_time_dim, lead_time_dim = required_sample_dimensions
 @dataclasses.dataclass
 class PreprocessingPipeline:
     """
@@ -29,6 +30,17 @@ class PreprocessingPipeline:
     )
     load_dir: str | Path = None
     num_instances: ClassVar[int] = 0
+
+
+    init_time_time: str = dataclasses.field(
+        init=False, default=init_time_dim
+    )
+    lead_time_time: str = dataclasses.field(
+        init=False, default=lead_time_dim
+    )
+    supported_NN_dimensions: tuple[str] = dataclasses.field(
+        init=False, default=supported_NN_dimensions_sorted
+    )
 
     def __post_init__(self):
         """
@@ -86,7 +98,7 @@ class PreprocessingPipeline:
         """
         if self.load_dir is None:
             data_processed = base_data
-            self.fitted_based_year = base_data["year"].values
+            self.fitted_based_time = base_data[self.init_time_time].values
             self.steps = []
             self.fitted_preprocessors = []
 
@@ -324,7 +336,7 @@ class PreprocessingPipeline:
 
         self.reference_coords = {
             dim: base_data[dim]
-            for dim in supported_NN_dimensions_sorted
+            for dim in self.supported_NN_dimensions
             if dim in base_data.dims
         }
 
@@ -359,7 +371,7 @@ class PreprocessingPipeline:
         self.steps = loaded.steps
         self.fitted_preprocessors = loaded.fitted_preprocessors
         self.fitted = loaded.fitted
-        self.fitted_based_year = loaded.fitted_based_year
+        self.fitted_based_time = loaded.fitted_based_time
         self.reference_coords = loaded.reference_coords
         self.reference_var = loaded.reference_var
         self.name = loaded.name
