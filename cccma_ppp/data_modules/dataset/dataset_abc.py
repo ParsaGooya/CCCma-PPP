@@ -12,8 +12,8 @@ from collections.abc import Sequence
 from cccma_ppp.data_modules.data.data_configs import (
     ModelDataConfig,
     ConditionDataConfig,
-    DataConfigABC,
 )
+
 from cccma_ppp.configs import (
     lead_time_resolution,
     supported_NN_dimensions_sorted,
@@ -24,7 +24,6 @@ from cccma_ppp.configs import (
 from cccma_ppp.data_modules.utils import (
     _validate_time_sequence,
     _unwrap_data_variables,
-    _load_xarray_data,
     _create_train_mask,
     suppress_stderr,
     add_lead_times
@@ -192,17 +191,17 @@ class DatasetConfigABC(abc.ABC):
             if self.condition_method.lower() != "static":
                 for dim in [
                     dim
-                    for dim in self.model.info.coords
+                    for dim in self.model.coords
                     if dim in (self.init_time_dim, self.lead_time_dim)
                 ]:
-                    if self.condition.info.coords.get(dim) is None:
+                    if self.condition.coords.get(dim) is None:
                         raise ValueError(
                             "Condition data should be available"
                             f" on the same {dim} dimestions as model data."
                         )
 
-                    if not set(self.model.info.coords[dim].values).issubset(
-                        set(self.condition.info.coords[dim].values)
+                    if not set(self.model.coords[dim].values).issubset(
+                        set(self.condition.coords[dim].values)
                     ):
                         raise ValueError(
                             "Condition data should be available"
@@ -219,8 +218,8 @@ class DatasetConfigABC(abc.ABC):
             if self.condition_method.lower() == "same_member":
                 if any(
                     [
-                        self.model.info.coords.get(self.realization_dim) is None,
-                        self.effective_condition.info.coords.get(self.realization_dim) is None,
+                        self.model.coords.get(self.realization_dim) is None,
+                        self.effective_condition.coords.get(self.realization_dim) is None,
                     ]
                 ):
                     raise ValueError(
@@ -228,8 +227,8 @@ class DatasetConfigABC(abc.ABC):
                         "dims and coords."
                     )
 
-                if not self.model.info.coords[self.realization_dim].equals(
-                    self.condition.info.coords[self.realization_dim]
+                if not self.model.coords[self.realization_dim].equals(
+                    self.condition.coords[self.realization_dim]
                 ):
                     raise ValueError(
                         "Condition data should have the same ensemble members"
@@ -239,17 +238,17 @@ class DatasetConfigABC(abc.ABC):
             if getattr(self, "observation", None) is not None:
                 for dim in [
                     dim
-                    for dim in self.model.info.coords
+                    for dim in self.model.coords
                     if dim in self.supported_NN_dimensions
                 ]:
-                    if self.condition.info.coords.get(dim, None) is None:
+                    if self.condition.coords.get(dim, None) is None:
                         raise ValueError(
                             "model and condition data must have the same NN dims."
                             / "when bias correcting to observations"
                         )
 
-                    if not self.condition.info.coords.get(dim).equals(
-                        self.model.info.coords.get(dim)
+                    if not self.condition.coords.get(dim).equals(
+                        self.model.coords.get(dim)
                     ):
                         raise ValueError(
                             f"model and condition data do not have the same {dim} cooridnates."
@@ -300,7 +299,7 @@ class DatasetConfigABC(abc.ABC):
                     raise ValueError(
                         "condition ensemble_mean cannot be True for cross_ensemble or same_member conditioning."
                     )
-                if self.effective_condition.info.coords.get(self.realization_dim) is None:
+                if self.effective_condition.coords.get(self.realization_dim) is None:
                     raise ValueError(
                         f"For cross_ensemble or same_member conditioning a {self.realization_dim} dim must exist in the condition."
                     )
@@ -321,7 +320,7 @@ class DatasetConfigABC(abc.ABC):
 
             if self.condition_method.lower() == "static":
                 checklist = [
-                    dim in self.effective_condition.info.coords
+                    dim in self.effective_condition.coords
                     for dim in ((self.init_time_dim, self.lead_time_dim, self.realization_dim))
                 ]
                 if any(checklist):
@@ -386,7 +385,7 @@ class DatasetConfigABC(abc.ABC):
         -------
         int
         """
-        return self.effective_input.info.coords[self.lead_time_dim].values
+        return self.effective_input.coords[self.lead_time_dim].values
 
     @property
     @abc.abstractmethod
@@ -504,7 +503,7 @@ class DatasetConfigABC(abc.ABC):
                 coords={self.init_time_dim: requested_times},
             )
         
-        input_times = self.effective_input.info.coords[self.init_time_dim].to_index()
+        input_times = self.effective_input.coords[self.init_time_dim].to_index()
         return requested_times.sel(
             {self.init_time_dim: requested_times.to_index().intersection(input_times)}
         )
@@ -788,9 +787,6 @@ class DatasetABC(Dataset, abc.ABC):
     time_features: AddedTimeFeatures
     return_metadata: bool
     load: bool
-    model_dataset: xr.DataArray | None
-    observation_dataset: xr.DataArray | None
-    condition_dataset: xr.DataArray | None
 
     def __init__(self):
 
@@ -798,18 +794,14 @@ class DatasetABC(Dataset, abc.ABC):
         self._resolve_mask()
         self._prepare_sampling_mask(self._sampling_times_selectors)
 
-        self.model_dataset = None
-        self.condition_dataset = None
-        self.observation_dataset = None
-
         if self._load_model:
-            self.model_dataset = self._load_xarray_data(
-                self.config.model, load=self.load, add_time_auxiliary_coords=True
+            self.config.model.open_xarray_data(
+                load=self.load, add_time_auxiliary_coords=True
             )
 
         if self.config.effective_condition is not None:
-            self.condition_dataset = self._load_xarray_data(
-                self.config.effective_condition, load=self.load, add_time_auxiliary_coords=True
+            self.config.effective_condition.open_xarray_data(
+                load=self.load, add_time_auxiliary_coords=True
             )
 
         self.sample_coords = self.get_sampling_coords()
@@ -895,41 +887,15 @@ class DatasetABC(Dataset, abc.ABC):
         )
 
         if (not self.config.effective_input.ensemble_mean
-            and self.config.realization_dim in self.config.effective_input.info.coords):
+            and self.config.realization_dim in self.config.effective_input.coords):
                 
-            coords = self.config.effective_input.info.coords[self.config.realization_dim]
+            coords = self.config.effective_input.coords[self.config.realization_dim]
 
             mask = mask.expand_dims({self.config.realization_dim: coords}, axis=0)
 
         self.mask = mask.where(~mask)
 
         return self
-
-    @final
-    def _load_xarray_data(self, 
-                          config: DataConfigABC, 
-                          load: bool = False, 
-                          add_time_auxiliary_coords: bool = False):
-        """
-        Load dataset from xarray sources.
-
-        Returns
-        -------
-        xr.DataArray
-        """
-
-        return _load_xarray_data(
-            config.list_paths,
-            names=config.names,
-            ensemble_mean=config.ensemble_mean,
-            selection={config.realization_dim: config.info.coords[config.realization_dim]}
-            if config.info.coords.get(config.realization_dim) is not None
-            else None,
-            concat_dim=config.concat_dim,
-            rename_dict=config.rename_dict,
-            add_time_auxiliary_coords=add_time_auxiliary_coords,
-            load=load,
-        )
 
     @final
     def get_sampling_coords(self):
@@ -978,7 +944,7 @@ class DatasetABC(Dataset, abc.ABC):
             return None
 
         indexes = {
-            dim: self.model_dataset.indexes[dim].get_indexer(values)
+            dim: self.config.model.indexes[dim].get_indexer(values)
             for dim, values in sample_coords.items()
         }
 
@@ -1022,7 +988,7 @@ class DatasetABC(Dataset, abc.ABC):
             coordinates cannot be found.
         """
         if (
-            self.condition_dataset is None
+            self.config.effective_condition is None
             or self.config.condition_method.lower() == "static"
         ):
             return None
@@ -1030,7 +996,7 @@ class DatasetABC(Dataset, abc.ABC):
         condition_coords = {
             dim: np.asarray(values)
             for dim, values in sample_coords.items()
-            if dim in self.condition_dataset.dims and dim != self.config.realization_dim 
+            if dim in self.config.effective_condition.dims and dim != self.config.realization_dim 
         }
 
         if self.config.condition_method.lower() == "same_member":
@@ -1042,7 +1008,7 @@ class DatasetABC(Dataset, abc.ABC):
             condition_coords[self.config.realization_dim] = np.asarray(sample_coords[self.config.realization_dim])
 
         indexes = {
-            dim: self.condition_dataset.indexes[dim].get_indexer(values)
+            dim: self.config.effective_condition.indexes[dim].get_indexer(values)
             for dim, values in condition_coords.items()
         }
 
@@ -1090,9 +1056,9 @@ class DatasetABC(Dataset, abc.ABC):
 
         else:
             in_shape = tuple(
-                self.config.effective_input.info.coords[dim].size
+                self.config.effective_input.coords[dim].size
                 for dim in self.config.supported_NN_dimensions
-                if dim in self.config.effective_input.info.coords
+                if dim in self.config.effective_input.coords
             )
 
         return tuple([len_names, *in_shape])
@@ -1118,7 +1084,7 @@ class DatasetABC(Dataset, abc.ABC):
             Preprocessed conditioning sample, or ``None`` when no conditioning
             dataset is available.
         """
-        if self.condition_dataset is None:
+        if self.config.effective_condition is None:
             return None
 
         if self.config.condition_method.lower() == "static":
@@ -1131,15 +1097,11 @@ class DatasetABC(Dataset, abc.ABC):
 
             if self.config.condition_method.lower() == "cross_ensemble":
                 selection[self.config.realization_dim] = [
-                    np.random.randint(self.condition_dataset.sizes[self.config.realization_dim])
+                    np.random.randint(self.config.effective_condition.sizes[self.config.realization_dim])
                 ]
 
-        condition = self.condition_dataset.isel(**selection)
+        condition = self.config.effective_condition.isel(**selection)
         
-        condition = self.config.effective_condition.preprocessing_pipeline.transform(
-            condition
-        )
-
         return _unwrap_data_variables(condition)
 
     @final
@@ -1164,8 +1126,7 @@ class DatasetABC(Dataset, abc.ABC):
             dim: [int(indexes[ind])] for dim, indexes in self.model_indexes.items()
         }
 
-        model = self.model_dataset.isel(**selection)
-        model = self.config.model.preprocessing_pipeline.transform(model)
+        model = self.config.model.isel(**selection)
 
         return _unwrap_data_variables(model)
 

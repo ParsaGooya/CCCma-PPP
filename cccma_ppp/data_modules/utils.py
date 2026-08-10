@@ -240,9 +240,17 @@ def _create_train_mask(
     time_resolution = infer_time_resolution(
         init_times.coords[init_time_dim].to_index()
     )
+    
     if time_resolution == "year":
+
         cutoff_year = int(init_times.dt.year.max().item())
         mask = target_times.dt.year > cutoff_year
+
+    elif (time_resolution == "month" 
+          and lead_time_resolution == 'day'):
+        
+        cutoff_year = int(init_times.dt.month.max().item())
+        mask = target_times.dt.month > cutoff_year        
     
     else:
         cutoff_time = init_times.max().values

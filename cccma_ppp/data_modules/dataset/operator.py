@@ -98,10 +98,10 @@ class DatasetOperator:
 
             selection = {
                 self.config.init_time_dim: self.config.get_input_times(train_times),
-                self.config.lead_time_dim: self.config.model.info.coords[self.config.lead_time_dim],
+                self.config.lead_time_dim: self.config.model.coords[self.config.lead_time_dim],
             }
-            if self.config.model.info.coords.get(self.config.realization_dim) is not None:
-                selection[self.config.realization_dim] = self.config.model.info.coords[self.config.realization_dim]
+            if self.config.model.coords.get(self.config.realization_dim) is not None:
+                selection[self.config.realization_dim] = self.config.model.coords[self.config.realization_dim]
 
             self.config.model.fit_preprocessor_pipeline(
                 selection=selection,
@@ -113,8 +113,8 @@ class DatasetOperator:
 
         if self.config_observation is not None:
             selection = {self.config.init_time_dim: train_times}
-            if self.config_observation.info.coords.get(self.config.realization_dim) is not None:
-                selection[self.config.realization_dim] = self.config_observation.info.coords[
+            if self.config_observation.coords.get(self.config.realization_dim) is not None:
+                selection[self.config.realization_dim] = self.config_observation.coords[
                     self.config.realization_dim
                 ]
 
@@ -129,16 +129,16 @@ class DatasetOperator:
                 
                 selection = {
                     self.config.init_time_dim: self.config.get_input_times(train_times),
-                    self.config.lead_time_dim: self.config.effective_condition.info.coords[
+                    self.config.lead_time_dim: self.config.effective_condition.coords[
                         self.config.lead_time_dim
                     ],
                 }
                 if (
-                    self.config.effective_condition.info.coords.get(self.config.realization_dim)
+                    self.config.effective_condition.coords.get(self.config.realization_dim)
                     is not None
                 ):
                     selection[self.config.realization_dim] = (
-                        self.config.effective_condition.info.coords[self.config.realization_dim]
+                        self.config.effective_condition.coords[self.config.realization_dim]
                     )
 
             self.config.effective_condition.fit_preprocessor_pipeline(
@@ -264,9 +264,9 @@ class DatasetOperator:
 
         target_coords = {}
         for dim in [
-            dim for dim in self.config.supported_NN_dimensions if dim in ref.info.coords
+            dim for dim in self.config.supported_NN_dimensions if dim in ref.coords
         ]:
-            target_coords[dim] = ref.info.coords[dim]
+            target_coords[dim] = ref.coords[dim]
 
         from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 
@@ -313,7 +313,7 @@ class DatasetOperator:
             for dim in [
                 dim
                 for dim in self.config.supported_NN_dimensions
-                if dim in self.config.model.info.coords
+                if dim in self.config.model.coords
             ]:
                 NN_dims.append(dim)
 
@@ -333,7 +333,7 @@ class DatasetOperator:
             for dim in [
                 dim
                 for dim in self.config.supported_NN_dimensions
-                if dim in self.config.effective_condition.info.coords
+                if dim in self.config.effective_condition.coords
             ]:
                 NN_dims.append(dim)
 
@@ -372,7 +372,7 @@ class DatasetOperator:
             for dim in [
                 dim
                 for dim in self.config.supported_NN_dimensions
-                if dim in self.config.model.info.coords
+                if dim in self.config.model.coords
             ]:
                 NN_dims.append(dim)
 
@@ -384,7 +384,7 @@ class DatasetOperator:
             for dim in [
                 dim
                 for dim in self.config.supported_NN_dimensions
-                if dim in self.config_observation.info.coords
+                if dim in self.config_observation.coords
             ]:
                 NN_dims.append(dim)
 
@@ -425,6 +425,6 @@ def _build_chunks(config: DataConfigABC | None = None):
     required_sample_dimensions = (config.init_time_dim, config.lead_time_dim)
     sample_dims = (*required_sample_dimensions, config.realization_dim)
 
-    chunks = {dim: 1 for dim in sample_dims if dim in config.info.coords}
+    chunks = {dim: 1 for dim in sample_dims if dim in config.coords}
 
     return chunks

@@ -53,11 +53,11 @@ class InferenceDatasetConfig(DatasetConfigABC):
         time_coords = list()
         if self.condition is not None:
             time_coords.append(
-                self.condition.info.coords[self.init_time_dim].to_index(),
+                self.condition.coords[self.init_time_dim].to_index(),
             )
         if self.model is not None:
             time_coords.append(
-                self.model.info.coords[self.init_time_dim].to_index(),
+                self.model.coords[self.init_time_dim].to_index(),
             )
 
         common = time_coords[0]

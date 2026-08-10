@@ -69,8 +69,8 @@ class ModelDataConfig(DataConfigABC):
         super().__init__()
 
         self.time_range = build_time_range(
-            init_time=self.info.coords[self.init_time_dim],
-            n_lead_times=self.info.coords[self.lead_time_dim].max().item(),
+            init_time=self.coords[self.init_time_dim],
+            n_lead_times=self.coords[self.lead_time_dim].max().item(),
             lead_time_resolution=lead_time_resolution,
         )
 
@@ -160,7 +160,12 @@ class ObsDataConfig(DataConfigABC):
         """
         super().__init__()
 
-        self.time_range = build_time_range(self.info.coords[init_time_dim])
+        self.time_range = build_time_range(self.coords[init_time_dim])
+        if self.init_time_frequency != self.lead_time_resolution:
+            raise RuntimeError(
+                "Observation data must have same temporal frequency as the " \
+                f"lead time. Got {self.init_time_frequency } vs {self.lead_time_resolution}"
+            )
 
     @final
     @property
@@ -240,8 +245,8 @@ class ConditionDataConfig(DataConfigABC):
 
         if self.info.start_time is not None and self.info.final_time is not None:
             self.time_range = build_time_range(
-                init_time=self.info.coords[init_time_dim],
-                n_lead_times=self.info.coords[lead_time_dim].max().item(),
+                init_time=self.coords[init_time_dim],
+                n_lead_times=self.coords[lead_time_dim].max().item(),
                 lead_time_resolution=lead_time_resolution,
             )
 

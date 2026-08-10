@@ -85,11 +85,11 @@ class TrainDatasetConfig(DatasetConfigABC):
             for dim in [
                 dim
                 for dim in self.supported_NN_dimensions
-                if dim in self.observation.info.coords
+                if dim in self.observation.coords
             ]:
-                if dim in self.model.info.coords:
-                    if not self.observation.info.coords[dim].equals(
-                        self.model.info.coords[dim]
+                if dim in self.model.coords:
+                    if not self.observation.coords[dim].equals(
+                        self.model.coords[dim]
                     ):
                         warnings.warn(
                             "\n=====================================================================\n"
@@ -168,8 +168,8 @@ class TrainDatasetConfig(DatasetConfigABC):
         -------
         pandas.DatetimeIndex or xr.CFTimeIndex
         """
-        model_times = self.model.info.coords[self.init_time_dim].to_index()
-        time_freq = self.model.info.init_time_freq
+        model_times = self.model.coords[self.init_time_dim].to_index()
+        time_freq = self.model.init_time_frequency
 
         if time_freq == "year":
             max_year = model_times.year.max()
@@ -309,8 +309,8 @@ class TrainDataset(DatasetABC):
         super().__init__()
 
         if self.config.observation is not None:
-            self.observation_dataset = self._load_xarray_data(
-                self.config.observation, load=self.load, add_time_auxiliary_coords= True
+            self.config.observation.open_xarray_data(
+                load=self.load, add_time_auxiliary_coords= True
             )
 
         self.obs_indexes = self.get_obs_indexes(self.sample_coords)
@@ -431,7 +431,7 @@ class TrainDataset(DatasetABC):
         ValueError
             if a corresponding observation coordinate cannot be found.
         """
-        if self.observation_dataset is None:
+        if self.config.observation is None:
             return None
 
         model_times = np.asarray(sample_coords[self.config.init_time_dim])
@@ -448,7 +448,7 @@ class TrainDataset(DatasetABC):
         }
 
         indexes = {
-            dim: self.observation_dataset.indexes[dim].get_indexer(values)
+            dim: self.config.observation.indexes[dim].get_indexer(values)
             for dim, values in observation_coords.items()
         }
 
@@ -477,7 +477,7 @@ class TrainDataset(DatasetABC):
 
         from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 
-        if self.observation_dataset is not None:
+        if self.config.observation is not None:
             checklist = [
                 isinstance(item, Flattennanremove)
                 for item in self.config.observation.preprocessing_pipeline.fitted_preprocessors
@@ -494,9 +494,9 @@ class TrainDataset(DatasetABC):
 
             else:
                 out_shape = tuple(
-                    self.config.observation.info.coords[dim].size
+                    self.config.observation.coords[dim].size
                     for dim in self.config.supported_NN_dimensions
-                    if dim in self.config.observation.info.coords
+                    if dim in self.config.observation.coords
                 )
 
             return tuple([len_names, *out_shape])
@@ -520,20 +520,20 @@ class TrainDataset(DatasetABC):
             dataset is available.
         """
 
-        if self.observation_dataset is None:
+        if self.config.observation is None:
             return None
 
         selection = {
             dim: [indexes[ind]] for dim, indexes in self.obs_indexes.items()
         }
 
-        if self.config.realization_dim in self.observation_dataset.dims:
+        if (not self.config.observation.ensemble_mean and
+            self.config.realization_dim in self.config.observation.dims):
             selection[self.config.realization_dim] = [
-                np.random.randint(self.observation_dataset.sizes[self.config.realization_dim])
+                np.random.randint(self.config.observation.data.sizes[self.config.realization_dim])
             ]
 
-        obs = self.observation_dataset.isel(**selection)
-        obs = self.config.observation.preprocessing_pipeline.transform(obs)
+        obs = self.config.observation.isel(**selection)
 
         return _unwrap_data_variables(obs)
 
