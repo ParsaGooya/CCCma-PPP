@@ -310,22 +310,27 @@ class DataConfigABC(abc.ABC):
 
         return self.preprocessing_pipeline.transform(ds)
 
+    @final
     @property
     def coords(self) -> Mapping[str, int]:
         return self.info.coords
 
+    @final
     @property
     def sizes(self) -> Mapping[str, int]:
         return self.info.sizes
         
+    @final
     @property
     def dims(self) -> tuple[str, ...] | Mapping[str, int]:
         return self.info.dims
 
+    @final
     @property
     def init_time_frequency(self) -> str:
         return self.info.init_time_freq
 
+    @final
     @property
     def indexes(self) -> Mapping[str, pd.Index]:
         self._check_opened()
