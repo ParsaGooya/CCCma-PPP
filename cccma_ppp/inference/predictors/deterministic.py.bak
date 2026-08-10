@@ -17,7 +17,6 @@ from cccma_ppp.data_modules.dataloader import BatchDataABC
 
 @dataclasses.dataclass
 class DeterministicPredictorConfig:
-
     _type: ClassVar[str] = "deterministic"
 
     def build(
@@ -27,13 +26,13 @@ class DeterministicPredictorConfig:
         output_dir: Path | str,
         num_output_sampling: int = 0,
     ):
+
         return DetermninisticPredictor(
             self, module, distributed, output_dir, num_output_sampling
         )
 
 
 class DetermninisticPredictor(PredictorABC):
-
     def __init__(
         self,
         config: DeterministicPredictorConfig,
@@ -42,6 +41,7 @@ class DetermninisticPredictor(PredictorABC):
         output_dir: Path | str,
         num_output_sampling: int = 0,
     ):
+
         self.config = config
         self.module = module
         self.num_output_sampling = num_output_sampling
@@ -75,6 +75,7 @@ class DetermninisticPredictor(PredictorABC):
         batch: BatchDataABC,
         _getting_train_stats: bool = False,
     ) -> deterministicOutput | dict[str, RunningCovariance]:
+
         clear_memory()
         self.raw_module.eval()
 
@@ -92,8 +93,13 @@ class DetermninisticPredictor(PredictorABC):
                 stats = self._update_train_stats(output, batch)
                 return stats
 
+            if self.num_output_covariance_sampling > 0:
+                num_output_sampling = 0
+            else: 
+                num_output_sampling = self.num_output_sampling
+
             output = self.raw_module.predict(
-                data=batch, output_sample_size=self.num_output_sampling
+                data=batch, output_sample_size=num_output_sampling
             )
 
             if self.num_output_covariance_sampling > 0:
@@ -114,6 +120,7 @@ class DetermninisticPredictor(PredictorABC):
         output: deterministicOutput,
         data: BatchDataABC,
     ) -> dict[str, RunningCovariance]:
+
         prediction = output.output
         target = data.target
         residual = target - prediction
@@ -128,6 +135,7 @@ class DetermninisticPredictor(PredictorABC):
         output: deterministicOutput,
         metadata: list[dict],
     ):
+
         prediction = output.output
 
         if self.num_output_sampling == 0:

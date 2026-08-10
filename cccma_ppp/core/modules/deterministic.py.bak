@@ -20,7 +20,6 @@ from cccma_ppp.generic.runtime import RuntimeContext
 
 @dataclasses.dataclass
 class deterministicOutput(OutputABC):
-
     output: torch.Tensor
 
 
@@ -28,11 +27,11 @@ class deterministicOutput(OutputABC):
 @ModuleSelector.register("default")
 @dataclasses.dataclass
 class deterministicConfig(moduleConfigABC):
-
     ModelConfig: deterministicModelSelector | None = None
     load_dir: str | None = None
 
     def __post_init__(self):
+
         if self.load_dir is None:
             if self.ModelConfig is None:
                 raise ValueError("provide loading dir or model configurations")
@@ -50,6 +49,7 @@ class deterministicConfig(moduleConfigABC):
         output_shape: np.ndarray | tuple | None = None,
         added_features_dim: int = None,
     ):
+
         return deterministic(
             config=self,
             input_shape=input_shape,
@@ -58,6 +58,7 @@ class deterministicConfig(moduleConfigABC):
         )
 
     def _load_from_checkpoint(self, load_path: Path | str):
+
         checkpoint_module, checkpoint_config = _load_config_from_checkpoint(
             Path(load_path)
         )
@@ -74,7 +75,6 @@ class deterministicConfig(moduleConfigABC):
 
 
 class deterministic(moduleABC):
-
     def __init__(
         self,
         config: deterministicConfig,
@@ -82,6 +82,7 @@ class deterministic(moduleABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
+
         super().__init__()
         self.config = config
         self.model_config = config.model_config
@@ -130,9 +131,11 @@ class deterministic(moduleABC):
             self._load_state_dict(self.config.load_dir)
 
     def init_loss_function(self, reconstruction_loss: Losspipeline):
+
         self.criterion = reconstruction_loss.to(self._get_device())
 
     def _compute_loss(self, data: BatchData):
+
         if self.criterion is None:
             raise RuntimeError(
                 "Criterion should be specified before training is possible. Hint: call .init_loss_function() method in your module first."
@@ -172,6 +175,7 @@ class deterministic(moduleABC):
     def predict(
         self, data: BatchData, output_sample_size: int = 0
     ) -> deterministicOutput:
+
         return self.forward(
             DeterministicRequest(
                 input=data.input,

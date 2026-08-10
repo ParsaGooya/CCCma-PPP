@@ -23,6 +23,7 @@ class NormalizedFlowConfig:
     flow_sample_size: int = 5000
 
     def build(self, latent_size: int, condition_size: int = None):
+
         return NormalizedFlowModel(
             config=self, latent_size=latent_size, condition_size=condition_size
         )
@@ -33,6 +34,7 @@ class NormalizedFlowModel(flowABC):
     def __init__(
         self, config: NormalizedFlowConfig, latent_size, condition_size: int = None
     ):
+
         super().__init__()
 
         self.list_flows = config.list_flows
@@ -52,6 +54,7 @@ class NormalizedFlowModel(flowABC):
         self.flows = nn.ModuleList(self.flows)
 
     def forward(self, x, condition=None):
+
         bsz, _ = x.shape
         log_det = torch.zeros(bsz, device=x.device)
         for flow in self.flows:
@@ -61,6 +64,7 @@ class NormalizedFlowModel(flowABC):
         return flowOutput(e_samples=x, log_det=log_det)
 
     def inverse(self, z, condition=None):
+
         bsz, _ = z.shape
         log_det = torch.zeros(bsz, device=z.device)
         for flow in self.flows[::-1]:
@@ -74,6 +78,7 @@ class NormalizedFlowModel(flowABC):
 class FCNN(nn.Module):
 
     def __init__(self, in_dim, out_dim, hidden_dim):
+
         super().__init__()
         self.network = nn.Sequential(
             nn.Linear(in_dim, hidden_dim),
@@ -84,6 +89,7 @@ class FCNN(nn.Module):
         )
 
     def forward(self, x):
+
         return self.network(x)
 
 
@@ -95,12 +101,14 @@ class MAF(flowABC):
         hidden_dim=16,
         base_network=FCNN,
     ):
+
         super().__init__()
         self.hidden_dim = hidden_dim
         self.base_network = base_network
         self._conditional = False
 
     def build(self, dim, condition_size=None):
+
         self.dim = dim
 
         layers = []
@@ -123,6 +131,7 @@ class MAF(flowABC):
         return self
 
     def reset_parameters(self):
+
         init.uniform_(self.initial_param, -math.sqrt(0.5), math.sqrt(0.5))
 
     def forward(self, x, condition=None):
@@ -189,12 +198,14 @@ class MAF(flowABC):
 class RealNVP(flowABC):
 
     def __init__(self, hidden_dim=16, base_network=FCNN):
+
         super().__init__()
         self.hidden_dim = hidden_dim
         self.base_network = base_network
         self._conditional = False
 
     def build(self, dim, condition_size=None):
+
         self.dim = dim
         added_features = condition_size if condition_size is not None else 0
         self.t1 = self.base_network(
@@ -244,6 +255,7 @@ class RealNVP(flowABC):
         return z, log_det
 
     def inverse(self, z, condition=None):
+
         if self._conditional:
             if condition is None:
                 raise ValueError(

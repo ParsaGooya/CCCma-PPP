@@ -44,6 +44,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     GENERATOR: ClassVar[None] = None
 
     def __post_init__(self):
+
         _validate_dropout(self.dropout_rate)
 
         if self.decoder_hidden_dims is None:
@@ -74,6 +75,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
+
         return cVAE_MLP(
             config=self,
             input_shape=input_shape,
@@ -91,6 +93,7 @@ class cVAE_MLP(cVAEmodelsABC):
         output_shape: np.ndarray | tuple | None = None,
         added_features_dim: int = None,
     ):
+
         super().__init__(config)
 
         self.encoder_hidden_dims = config.encoder_hidden_dims
@@ -194,6 +197,7 @@ class cVAE_MLP(cVAEmodelsABC):
             self._initialize_weights(self.init_method)
 
     def forward(self, request: cVAEForwardRequest) -> cVAEOutput:
+
         x = request.target
         x_mask = request.target_mask
         condition = request.condition
@@ -216,10 +220,11 @@ class cVAE_MLP(cVAEmodelsABC):
 
         if posterior_variance_limits is not None:
             log_var = torch.clamp(
-                log_var,
-                min=posterior_variance_limits[0].type_as(mu),
+                log_var, 
+                min=posterior_variance_limits[0].type_as(mu), 
                 max=posterior_variance_limits[1].type_as(mu),
             )
+
 
         latent_samples = self._sample(mu, log_var, latent_sample_size)
 
@@ -246,6 +251,7 @@ class cVAE_MLP(cVAEmodelsABC):
         self,
         request: cVAEPredictRequest,
     ) -> cVAEOutput:
+
         condition = request.condition
         added_features = request.added_features
         latent_sample_size = request.latent_sample_size
@@ -254,7 +260,7 @@ class cVAE_MLP(cVAEmodelsABC):
         _shape_model_output = (latent_sample_size, B, C, -1)
 
         latent_samples, cond_mu, cond_log_var = self._sample_prior(request)
-
+        
         output = self._generate(
             latent_samples, condition=cond_mu, added_features=added_features
         )
@@ -275,6 +281,7 @@ class cVAE_MLP(cVAEmodelsABC):
         condition: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
+
         if x_mask is not None:
             x = x * x_mask
 
@@ -303,6 +310,7 @@ class cVAE_MLP(cVAEmodelsABC):
         condition_mask: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
+
         if added_features is not None:
             x_features = added_features.flatten(start_dim=1)
         else:
@@ -331,6 +339,7 @@ class cVAE_MLP(cVAEmodelsABC):
         condition: torch.Tensor = None,
         added_features: torch.Tensor = None,
     ) -> torch.Tensor:
+
         latent_sample_size, batch_size = latent_samples.shape[:-1]
 
         x_features = (
@@ -342,9 +351,7 @@ class cVAE_MLP(cVAEmodelsABC):
             latent_samples = torch.cat(
                 [
                     latent_samples,
-                    x_features.unsqueeze(0).expand(
-                        (latent_sample_size, *x_features.shape)
-                    ),
+                    x_features.unsqueeze(0).expand((latent_sample_size, *x_features.shape)),
                 ],
                 dim=-1,
             )
@@ -360,9 +367,7 @@ class cVAE_MLP(cVAEmodelsABC):
 
         feature_size = latent_samples.shape[-1]
 
-        latent_samples = latent_samples.reshape(
-            latent_sample_size * batch_size, feature_size
-        )
+        latent_samples = latent_samples.reshape(latent_sample_size * batch_size, feature_size)
         out = self.decoder(latent_samples)
 
         return out.reshape(latent_sample_size, batch_size, -1)

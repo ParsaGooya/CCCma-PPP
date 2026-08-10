@@ -42,7 +42,6 @@ class LatentVector:
 
 
 class ConvBlockConfigABC(abc.ABC):
-
     def __init__(self):
         self.inject_noise: bool = False
 
@@ -51,6 +50,7 @@ class ConvBlockConfigABC(abc.ABC):
         self,
         inject_noise: bool = False,
     ):
+
         self.inject_noise = inject_noise
 
         return self
@@ -132,7 +132,6 @@ class ConvNeXtBlockConfig(ConvBlockConfigABC):
 
 
 class ConvSingle(nn.Module):
-
     def __init__(
         self,
         in_channels: int,
@@ -221,6 +220,7 @@ class PartialConvSingle(nn.Module):
         x: torch.Tensor,
         mask: torch.Tensor | None,
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
+
         if self.inject_noise:
             x = _noise_injection(x)
             if self.multi_channel:
@@ -307,6 +307,7 @@ class ConvNeXtSingle(nn.Module):
         x: torch.Tensor,
         mask: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
+
         residual = x
 
         if self.use_partial_conv:
@@ -337,7 +338,6 @@ class ConvNeXtSingle(nn.Module):
 
 
 class ConvBlock(nn.Module):
-
     def __init__(
         self,
         in_channels: int,
@@ -496,7 +496,6 @@ class ConvNeXtBlock(nn.Module):
 
 
 class LatentBlock(nn.Module):
-
     def __init__(
         self,
         conv_block: ConvNeXtBlock | PartialConvBlock | ConvBlock,
@@ -519,6 +518,7 @@ class LatentBlock(nn.Module):
         )
 
     def forward(self, input: TensorMask) -> LatentVector:
+
         features = self.conv_block(input)
         return self.latent_head(features.tensor)
 
@@ -542,29 +542,28 @@ class MaskPool2d(nn.Module):
             return F.max_pool2d(mask, kernel_size=3, stride=2, padding=1)
 
         if self.method == "all":
-            invalid = F.max_pool2d(1.0 - mask, kernel_size=3, stride=2, padding=1)
+            invalid = F.max_pool2d(
+                1.0 - mask,
+                kernel_size=3,
+                stride=2,
+                padding=1
+            )
             return 1.0 - invalid
 
         if self.method == "fraction":
-            sum_pool = (
-                F.avg_pool2d(
-                    mask,
-                    kernel_size=3,
-                    stride=2,
-                    padding=1,
-                )
-                * 9
-            )
+            sum_pool = F.avg_pool2d(
+                mask,
+                kernel_size=3,
+                stride=2,
+                padding=1,
+            ) * 9
 
-            count_pool = (
-                F.avg_pool2d(
-                    torch.ones_like(mask),
-                    kernel_size=3,
-                    stride=2,
-                    padding=1,
-                )
-                * 9
-            )
+            count_pool = F.avg_pool2d(
+                torch.ones_like(mask),
+                kernel_size=3,
+                stride=2,
+                padding=1,
+            ) * 9
 
             fraction = sum_pool / count_pool
             return (fraction >= self.fraction_threshold).to(mask.dtype)
@@ -573,7 +572,6 @@ class MaskPool2d(nn.Module):
 
 
 class LatentLayer(nn.Module):
-
     def __init__(
         self,
         input_shape: tuple[int, int, int],
@@ -583,18 +581,17 @@ class LatentLayer(nn.Module):
         get_log_var: bool = True,
         group_norm_groups: int = 8,
     ):
+
         super().__init__()
 
         input_channels = input_shape[0]
-        self.normalization = (
-            nn.Sequential(
-                _build_normalization(
-                    latent_normalization,
-                    input_channels,
-                    group_norm_groups=group_norm_groups,
-                ),
-                nn.ReLU(inplace=True),
-            )
+        self.normalization = (nn.Sequential(
+            _build_normalization(
+                latent_normalization,
+                input_channels,
+                group_norm_groups=group_norm_groups,
+            ),
+            nn.ReLU(inplace=True))
             if latent_normalization is not None
             else nn.Identity()
         )
@@ -605,6 +602,7 @@ class LatentLayer(nn.Module):
         self.log_var = nn.Linear(flattened_size, latent_size) if get_log_var else None
 
     def forward(self, x: torch.Tensor) -> LatentVector:
+
         x = self.normalization(x)
 
         x = x.flatten(start_dim=1)

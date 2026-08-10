@@ -22,6 +22,7 @@ class MetricsAggregator:
     num_epochs_seen: int = 0
 
     def __post_init__(self):
+
         self.loss_terms = defaultdict(float)
         self.lr_values = 0.0
         self.kwargs_terms = defaultdict(float)
@@ -59,6 +60,7 @@ class MetricsAggregator:
         lr: torch.Tensor | int | float | None = None,
         kwargs: dict[str, torch.Tensor | int | float] | None = None,
     ) -> None:
+
         for name, value in loss_dict.items():
             if value is None:
                 continue
@@ -91,6 +93,7 @@ class MetricsAggregator:
 
     @torch.no_grad()
     def _dist_compute(self) -> dict[str, float]:
+
         logs = {}
 
         for name in sorted(self.loss_terms):
@@ -105,6 +108,7 @@ class MetricsAggregator:
         return logs
 
     def _dist_average(self, tensor: float) -> float:
+
         local = torch.tensor(
             [tensor, self.num_batches_seen],
             dtype=torch.float64,
@@ -127,6 +131,7 @@ class MetricsAggregator:
         replace_index: int = None,
         time_elapsed: float = None,
     ):
+
         if not self._aggregated_across_ranks:
             raise RuntimeError(
                 "Call _dist_compute() before record_epoch(), so losses are "
@@ -161,6 +166,7 @@ class MetricsAggregator:
         return logs
 
     def reset_batch_losses(self):
+
         if self.epochs_submitted:
             self.loss_terms = defaultdict(float)
             self.kwargs_terms = defaultdict(float)
@@ -180,6 +186,7 @@ class MetricsAggregator:
         plot_dir: str | Path | None = None,
         figsize=(8, 5),
     ) -> None:
+
         if plot_dir is None:
             plot_dir = Path(RuntimeContext.GLOBAL_FIGURES_DIR)
         else:
@@ -323,6 +330,7 @@ class MetricsAggregator:
         plt.close()
 
     def state_dict(self):
+
         return {
             "name": self.name,
             "epoch_metric_terms": self.epoch_metric_terms,
@@ -331,6 +339,7 @@ class MetricsAggregator:
         }
 
     def load_state_dict(self, state_dict):
+
         self.name = state_dict.get("name")
         self.epoch_metric_terms = state_dict.get("epoch_metric_terms", None)
         self.epoch_times = state_dict.get("epoch_times", None)
@@ -340,21 +349,20 @@ class MetricsAggregator:
 
 @dataclasses.dataclass
 class RunningCovariance:
-
     distributed: Distributed
     sum_x: torch.Tensor | None = None
     sum_xxT: torch.Tensor | None = None
     count: torch.Tensor | None = None
 
     def update(self, x: torch.Tensor):
-        x = x.detach().float()
+        x = x.detach().double()
 
         batch_sum = x.sum(dim=0)
         batch_xxT = x.T @ x
         batch_count = torch.tensor(
             x.shape[0],
             device=x.device,
-            dtype=torch.float32,
+            dtype=torch.float64,
         )
 
         if self.sum_x is None:
@@ -367,16 +375,29 @@ class RunningCovariance:
             self.count += batch_count
 
     def distributed_reduce(self):
+
         self.distributed.all_reduce_sum(self.sum_x)
         self.distributed.all_reduce_sum(self.sum_xxT)
         self.distributed.all_reduce_sum(self.count)
 
-    def finalize(self):
+    def finalize(self, print_checks = False):
         mean = self.sum_x / self.count
 
         if self.count <= 1:
             raise ValueError("Need at least two samples to compute covariance.")
 
         cov = (self.sum_xxT - self.count * torch.outer(mean, mean)) / (self.count - 1)
+
+        cov = 0.5 * (cov + cov.T)
+
+        if print_checks:
+            eigvals = torch.linalg.eigvalsh(cov.double())
+
+            print("symmetry error:", (cov - cov.T).abs().max())
+            print("minimum eigenvalue:", eigvals.min())
+            print("count:", self.count)
+            print("dimension:", cov.shape[-1])
+            print("N:", int(self.count.item()))
+            print("D:", cov.shape[-1])
 
         return mean.cpu(), cov.cpu()

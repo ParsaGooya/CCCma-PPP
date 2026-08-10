@@ -9,7 +9,6 @@ experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_
 inference_loader:
 
     batch_size: 12
-    inference_years_slice : [2015, 2020]
+    inference_years_slice: [ 2015, 2020 ]
     num_data_workers: 0
     load: True
-

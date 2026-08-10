@@ -37,9 +37,9 @@ class DummyDataConfig:
         self.preprocessing_pipeline = DummyPipeline(name)
 
         coords = {
-            "year": xr.DataArray(
+            "time": xr.DataArray(
                 np.asarray(years),
-                dims=("year",),
+                dims=("time",),
             ),
             "lead_time": xr.DataArray(
                 np.arange(1, lead_time + 1),
@@ -114,7 +114,7 @@ def make_config(
     model=None,
     condition=None,
     condition_method=None,
-    lead_months=None,
+    lead_times=None,
     effective_condition=None,
     using_model_as_condition=False,
 ):
@@ -123,7 +123,7 @@ def make_config(
     config.model = model
     config.condition = condition
     config.condition_method = condition_method
-    config.lead_months = lead_months
+    config.lead_times = lead_times
     config._effective_condition = effective_condition
     config._using_model_data_as_condition_override = using_model_as_condition
     config._fitted_preprocessors = True
@@ -228,7 +228,7 @@ def make_train_config(
     model=None,
     condition=None,
     condition_method="static",
-    lead_months=None,
+    lead_times=None,
 ):
     return SimpleNamespace(
         observation=observation,
@@ -237,7 +237,7 @@ def make_train_config(
         model=model,
         condition=condition,
         condition_method=condition_method,
-        lead_months=(np.asarray([1, 2]) if lead_months is None else lead_months),
+        lead_times=(np.asarray([1, 2]) if lead_times is None else lead_times),
     )
 
 
@@ -253,7 +253,6 @@ def test_effective_input_prefers_model():
     assert config.effective_input is model
 
 
-@pytest.mark.pruned
 def test_effective_input_returns_model_without_condition():
     model = DummyDataConfig("model")
 
@@ -276,7 +275,6 @@ def test_effective_input_falls_back_to_condition():
     assert config.effective_input is condition
 
 
-@pytest.mark.pruned
 def test_effective_input_returns_none_without_sources():
     config = make_config(
         model=None,
@@ -286,7 +284,6 @@ def test_effective_input_returns_none_without_sources():
     assert config.effective_input is None
 
 
-@pytest.mark.pruned
 def test_available_times_model_only():
     config = make_config(
         model=DummyDataConfig(
@@ -301,7 +298,6 @@ def test_available_times_model_only():
     )
 
 
-@pytest.mark.pruned
 def test_available_times_condition_only():
     config = make_config(
         condition=DummyDataConfig(
@@ -334,7 +330,6 @@ def test_available_times_intersects_model_and_condition():
     )
 
 
-@pytest.mark.pruned
 def test_available_times_empty_intersection():
     config = make_config(
         model=DummyDataConfig(
@@ -350,7 +345,6 @@ def test_available_times_empty_intersection():
     assert config.available_times.size == 0
 
 
-@pytest.mark.pruned
 def test_available_times_uses_info_coordinate_values():
     model = DummyDataConfig(
         "model",
@@ -361,7 +355,7 @@ def test_available_times_uses_info_coordinate_values():
         years=(2001, 2002, 2003),
     )
 
-    model.info.coords["year"] = xr.DataArray(
+    model.info.coords["time"] = xr.DataArray(
         np.asarray([2000, 2002]),
         dims=("year",),
     )
@@ -377,7 +371,6 @@ def test_available_times_uses_info_coordinate_values():
     )
 
 
-@pytest.mark.pruned
 def test_available_times_preserves_single_source_order():
     model = DummyDataConfig(
         "model",
@@ -394,7 +387,6 @@ def test_available_times_preserves_single_source_order():
     )
 
 
-@pytest.mark.pruned
 def test_available_times_intersection_is_sorted():
     model = DummyDataConfig(
         "model",
@@ -515,7 +507,6 @@ def test_concat_condition_to_input_truth_table(
     assert dataset._concat_condition_to_input is expected
 
 
-@pytest.mark.pruned
 def test_getitem_model_only():
     dataset = make_dataset(
         config=make_dataset_config(
@@ -605,7 +596,6 @@ def test_getitem_model_used_as_condition():
     )
 
 
-@pytest.mark.pruned
 def test_getitem_condition_only():
     dataset = make_dataset(
         config=make_dataset_config(
@@ -690,7 +680,6 @@ def test_getitem_concatenates_model_and_condition():
     )
 
 
-@pytest.mark.pruned
 def test_getitem_condition_replacement_precedes_concat():
     dataset = make_dataset(
         config=make_dataset_config(
@@ -724,7 +713,6 @@ def test_getitem_condition_replacement_precedes_concat():
     )
 
 
-@pytest.mark.pruned
 def test_getitem_time_features_receive_final_model_input():
     features = FakeTimeFeatures(
         result=np.asarray(
@@ -761,10 +749,7 @@ def test_getitem_time_features_receive_final_model_input():
 
     selection, feature_input = features.calls[0]
 
-    assert selection == {
-        "year": 2000.0,
-        "lead_time": 1.0,
-    }
+    assert selection == 0
 
     xr.testing.assert_equal(
         feature_input,
@@ -783,7 +768,6 @@ def test_getitem_time_features_receive_final_model_input():
     )
 
 
-@pytest.mark.pruned
 def test_getitem_time_features_receive_condition_input():
     features = FakeTimeFeatures(result=np.asarray([2000.0]))
 
@@ -818,7 +802,6 @@ def test_getitem_time_features_receive_condition_input():
     )
 
 
-@pytest.mark.pruned
 def test_getitem_time_features_receive_concatenated_input():
     features = FakeTimeFeatures(result=np.asarray([1.0]))
 
@@ -860,7 +843,6 @@ def test_getitem_time_features_receive_concatenated_input():
     ]
 
 
-@pytest.mark.pruned
 def test_getitem_without_time_features_returns_none():
     dataset = make_dataset(
         time_features=FakeTimeFeatures(None),
@@ -882,7 +864,6 @@ def test_getitem_without_time_features_returns_none():
     assert result["added_features"] is None
 
 
-@pytest.mark.pruned
 def test_getitem_converts_tensors_to_float32():
     dataset = make_dataset(
         time_features=FakeTimeFeatures(
@@ -916,7 +897,6 @@ def test_getitem_converts_tensors_to_float32():
     assert result["added_features"].dtype == torch.float32
 
 
-@pytest.mark.pruned
 def test_getitem_without_metadata_returns_dictionary():
     dataset = make_dataset(
         return_metadata=False,
@@ -975,7 +955,6 @@ def test_getitem_with_metadata_returns_tuple():
     }
 
 
-@pytest.mark.pruned
 def test_getitem_uses_requested_sample_index():
     dataset = make_dataset(
         return_metadata=True,
@@ -1024,7 +1003,6 @@ def test_getitem_uses_requested_sample_index():
     dataset._index_condition_dataset.assert_called_once_with(1)
 
 
-@pytest.mark.pruned
 def test_getitem_passes_input_data_to_dask_compute():
     dataset = make_dataset()
 
@@ -1104,7 +1082,6 @@ def test_from_train_model_used_as_condition():
     assert "condition" not in result
 
 
-@pytest.mark.pruned
 def test_from_train_model_condition_branch_precedes_condition_branch():
     model = DummyDataConfig("model")
     condition = DummyDataConfig("condition")
@@ -1154,7 +1131,6 @@ def test_from_train_observation_and_independent_condition():
     assert result["condition"].names == ["condition"]
 
 
-@pytest.mark.pruned
 def test_from_train_condition_without_observation():
     model = DummyDataConfig("model")
     condition = DummyDataConfig("condition")
@@ -1179,7 +1155,6 @@ def test_from_train_condition_without_observation():
     assert result["condition"].names == ["condition"]
 
 
-@pytest.mark.pruned
 def test_from_train_unresolvable_configuration_raises():
     train_config = make_train_config(
         observation=None,
@@ -1196,7 +1171,6 @@ def test_from_train_unresolvable_configuration_raises():
         _from_train(train_config)
 
 
-@pytest.mark.pruned
 def test_from_train_copies_condition_method():
     model = DummyDataConfig("model")
 
@@ -1216,7 +1190,6 @@ def test_from_train_copies_condition_method():
     assert result["condition_method"] == "ensemble_mean"
 
 
-@pytest.mark.pruned
 def test_from_train_copies_none_condition_method():
     model = DummyDataConfig("model")
 
@@ -1236,15 +1209,14 @@ def test_from_train_copies_none_condition_method():
     assert result["condition_method"] is None
 
 
-@pytest.mark.pruned
-def test_from_train_deepcopies_lead_months():
+def test_from_train_deepcopies_lead_times():
     model = DummyDataConfig("model")
-    lead_months = np.asarray([1, 3, 6])
+    lead_times = np.asarray([1, 3, 6])
 
     train_config = make_train_config(
         observation=object(),
         model=model,
-        lead_months=lead_months,
+        lead_times=lead_times,
     )
 
     with patch.object(
@@ -1255,22 +1227,21 @@ def test_from_train_deepcopies_lead_months():
         result = _from_train(train_config)
 
     np.testing.assert_array_equal(
-        result["lead_months"],
-        lead_months,
+        result["lead_times"],
+        lead_times,
     )
 
-    assert result["lead_months"] is not lead_months
+    assert result["lead_times"] is not lead_times
 
 
-@pytest.mark.pruned
-def test_from_train_preserves_none_lead_months():
+def test_from_train_preserves_none_lead_times():
     model = DummyDataConfig("model")
 
     train_config = make_train_config(
         observation=object(),
         model=model,
     )
-    train_config.lead_months = None
+    train_config.lead_times = None
 
     with patch.object(
         module,
@@ -1279,10 +1250,9 @@ def test_from_train_preserves_none_lead_months():
     ):
         result = _from_train(train_config)
 
-    assert result["lead_months"] is None
+    assert result["lead_times"] is None
 
 
-@pytest.mark.pruned
 def test_from_train_deepcopies_model():
     model = DummyDataConfig("model")
 
@@ -1305,7 +1275,6 @@ def test_from_train_deepcopies_model():
     assert copied_model.preprocessing_pipeline is not (model.preprocessing_pipeline)
 
 
-@pytest.mark.pruned
 def test_from_train_deepcopies_condition():
     model = DummyDataConfig("model")
     condition = DummyDataConfig("condition")
@@ -1333,7 +1302,6 @@ def test_from_train_deepcopies_condition():
     )
 
 
-@pytest.mark.pruned
 def test_from_train_does_not_copy_time_features():
     model = DummyDataConfig("model")
 
@@ -1356,19 +1324,18 @@ def test_from_train_does_not_copy_time_features():
     assert "time_features" not in result
 
 
-@pytest.mark.pruned
 def test_from_train_does_not_mutate_training_config():
     model = DummyDataConfig("model")
-    lead_months = np.asarray([1, 2])
+    lead_times = np.asarray([1, 2])
 
     train_config = make_train_config(
         observation=object(),
         model=model,
-        lead_months=lead_months,
+        lead_times=lead_times,
     )
 
     original_model = train_config.model
-    original_lead_months = train_config.lead_months.copy()
+    original_lead_times = train_config.lead_times.copy()
 
     with patch.object(
         module,
@@ -1380,12 +1347,11 @@ def test_from_train_does_not_mutate_training_config():
     assert train_config.model is original_model
 
     np.testing.assert_array_equal(
-        train_config.lead_months,
-        original_lead_months,
+        train_config.lead_times,
+        original_lead_times,
     )
 
 
-@pytest.mark.pruned
 def test_from_train_constructs_inference_config():
     model = DummyDataConfig("model")
 
@@ -1393,7 +1359,7 @@ def test_from_train_constructs_inference_config():
         observation=object(),
         model=model,
         condition_method=None,
-        lead_months=np.asarray([1, 2]),
+        lead_times=np.asarray([1, 2]),
     )
 
     with patch.object(
@@ -1411,7 +1377,7 @@ def test_from_train_constructs_inference_config():
     assert kwargs["condition_method"] is None
 
     np.testing.assert_array_equal(
-        kwargs["lead_months"],
+        kwargs["lead_times"],
         [1, 2],
     )
 

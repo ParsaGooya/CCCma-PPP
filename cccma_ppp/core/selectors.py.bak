@@ -11,7 +11,6 @@ from cccma_ppp.core.registery import Registery
 from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.models.models_abc import modelABC, flowABC, CheckpointConfig
 
-
 @dataclasses.dataclass
 class ModuleSelector:
 
@@ -20,30 +19,38 @@ class ModuleSelector:
     registery: ClassVar[Registery] = Registery()
 
     def __post_init__(self):
+
         self._module_config = self.registery.get(self.type.lower(), self.config)
 
     @classmethod
     def register(cls, name: str) -> Callable[..., moduleABC]:
+
         return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
+
         return cls.registery.available()
+    
 
     @property
     def NUM_INPUT_DIMS(self) -> int:
+
         return self._module_config.model_config.NUM_INPUT_DIMS
 
     @property
     def NUM_OUTPUT_DIMS(self) -> int:
+
         return self._module_config.model_config.NUM_OUTPUT_DIMS
 
     @property
     def GENERATOR(self) -> bool:
+
         return self._module_config.model_config.GENERATOR
 
     @property
     def EXPECTS_MASK(self) -> bool:
+
         return self._module_config.model_config.EXPECTS_MASK
 
     def build_module(
@@ -52,11 +59,13 @@ class ModuleSelector:
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
+
         return self._module_config.build(
             input_shape=input_shape,
             output_shape=output_shape,
             added_features_dim=added_features_dim,
         )
+
 
 
 @dataclasses.dataclass
@@ -70,6 +79,7 @@ class ModelSelector:
     registery: ClassVar[Registery]
 
     def __post_init__(self):
+
         self.checkpoint_config = None
 
         if all([self.config is None, self.load_dir is None]):
@@ -94,13 +104,16 @@ class ModelSelector:
 
     @classmethod
     def register(cls, name: str) -> Callable[..., modelABC]:
+
         return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
+
         return cls.registery.available()
 
     def get_model_config(self):
+
         model_config = self.registery.get(self.type.lower(), self.config)
         if self.checkpoint_config is not None:
             model_config._add_checkpoint_config(self.checkpoint_config)
@@ -118,6 +131,7 @@ class deterministicModelSelector(ModelSelector):
     registery: ClassVar[Registery] = Registery()
 
 
+
 @dataclasses.dataclass
 class FlowSelector:
 
@@ -126,27 +140,32 @@ class FlowSelector:
     registery: ClassVar[Registery] = Registery()
 
     def __post_init__(self):
+
         pass
 
     @classmethod
     def register(cls, name: str) -> Callable[..., flowABC]:
+
         return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
+
         return cls.registery.available()
 
     def get_model(self):
+
         return self.registery.get(self.type.lower(), self.args)
 
 
 def _load_config_from_checkpoint(load_path: Path | str, strict: bool = True):
+
     if not Path(load_path).exists():
         raise FileNotFoundError(f"Checkpoint not found: {load_path}")
 
-    checkpoint = torch.load(
-        Path(load_path), weights_only=False, map_location=torch.device("cpu")
-    )
+    checkpoint = torch.load(Path(load_path), 
+                            weights_only=False, 
+                            map_location=torch.device('cpu'))
 
     checkpoint_module = checkpoint.get("module_config")
     checkpoint_input_shape = checkpoint.get("input_shape")

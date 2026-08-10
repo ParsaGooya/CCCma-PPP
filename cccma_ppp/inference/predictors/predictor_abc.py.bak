@@ -13,7 +13,6 @@ from cccma_ppp.generic.aggregator import RunningCovariance
 
 
 class PredictorABC(abc.ABC):
-
     output_dir: str | Path
     output_sampler: Callable[..., torch.Tensor] | None
     num_output_covariance_sampling: int | None
@@ -47,6 +46,7 @@ class PredictorABC(abc.ABC):
     @final
     @property
     def raw_module(self):
+
         if isinstance(self.module, torch.nn.parallel.DistributedDataParallel):
             return self.module.module
         return self.module
@@ -59,6 +59,7 @@ class PredictorABC(abc.ABC):
         sample_size: tuple,
         reshape_size: tuple,
     ) -> OutputABC:
+
         if self.output_sampler is None:
             self.output_sampler = self.build_output_sampler()
 
@@ -89,6 +90,7 @@ class PredictorABC(abc.ABC):
         def _sampler(sample_size: int | tuple[int, ...]):
             return self._sample(
                 torch.zeros_like(stats["residual_mean"]),
+                                         
                 stats["residual_cov"],
                 sample_size,
             )
@@ -108,8 +110,10 @@ class PredictorABC(abc.ABC):
         if std <= 0:
             raise ValueError(f"std must be positive, got {std}.")
 
+                                                                                
         cov = cov * (std**2)
 
+                                                                      
         jitter = 1e-6
         eye = torch.eye(cov.shape[-1], device=self.device, dtype=cov.dtype)
 
@@ -119,6 +123,7 @@ class PredictorABC(abc.ABC):
                     loc=mu,
                     covariance_matrix=cov + jitter * eye,
                 )
+                
             except ValueError:
                 jitter *= 10
 

@@ -13,12 +13,15 @@ class PreprocessingStepSelector:
     registery: ClassVar[Registery] = Registery()
 
     def get_preprocessor(self):
+
         return self.registery.get(self.name.lower(), self.args)
 
     @classmethod
     def register(cls, name: str) -> Callable[..., PreprocessModuleABC]:
+
         return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
+
         return cls.registery.available()

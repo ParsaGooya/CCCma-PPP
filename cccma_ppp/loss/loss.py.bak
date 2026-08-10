@@ -25,6 +25,7 @@ class LosspipelineConfig:
     reduction: Reduction = "mean"
 
     def __post_init__(self):
+
         if not len(self.loss_pipeline) >= 1:
             raise ValueError("provide at least one loss term.")
 
@@ -61,6 +62,7 @@ class LosspipelineConfig:
         num_output_dimensions: int = 2,
         generative_context: GenerativeContext | None = None,
     ):
+
         return Losspipeline(
             self, weights, num_output_dimensions, generative_context=generative_context
         )
@@ -77,6 +79,7 @@ class Losspipeline(nn.Module):
         num_output_dimensions: int = 2,
         generative_context: GenerativeContext | None = None,
     ):
+
         super().__init__()
         self._checked_dimensionality = False
         self.config = config
@@ -115,6 +118,7 @@ class Losspipeline(nn.Module):
 
     @classmethod
     def register(cls, name: str):
+
         return cls.registery.register(name.lower())
 
     def forward(
@@ -125,6 +129,7 @@ class Losspipeline(nn.Module):
         print_loss=False,
         step_arguments: dict = None,
     ):
+
         total_loss = None
         indiv_loses = {}
 

@@ -8,9 +8,10 @@ from cccma_ppp.core.core_abc import GenerativeContext
 Reduction = Literal["mean", "sum"]
 
 
-class lossABC(nn.Module, abc.ABC):
 
+class lossABC(nn.Module, abc.ABC):
     generative_context: GenerativeContext
+
 
     generative_context: GenerativeContext
 
@@ -21,12 +22,15 @@ class lossABC(nn.Module, abc.ABC):
         target: torch.Tensor,
         print_loss=False,
     ) -> torch.Tensor:
+
         pass
 
     @abc.abstractmethod
     def _print_loss(self, loss):
+
         pass
 
     @abc.abstractmethod
     def _aggregate(self, loss) -> torch.Tensor:
+
         pass

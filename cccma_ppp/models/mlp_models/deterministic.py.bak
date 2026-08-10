@@ -46,6 +46,7 @@ class AutoencoderConfig(modelConfigABC):
     GENERATOR: ClassVar[None] = None
 
     def __post_init__(self):
+
         _validate_dropout(self.dropout_rate)
 
         if self.decoder_hidden_dims is None:
@@ -64,6 +65,7 @@ class AutoencoderConfig(modelConfigABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
+
         return Autoencoder(
             config=self,
             input_shape=input_shape,
@@ -81,6 +83,7 @@ class Autoencoder(deterministicmodelsABC):
         output_shape: np.ndarray | tuple | None = None,
         added_features_dim: int = None,
     ):
+
         super().__init__(config)
 
         self.batch_normalization = config.batch_normalization

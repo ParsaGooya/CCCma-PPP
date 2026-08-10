@@ -17,7 +17,6 @@ from cccma_ppp.models.layers.utils import _sample
 
 @dataclasses.dataclass
 class GENERATORConfig:
-
     noise_level: NoiseLevel = "full"
     num_training_noise_samples: int = 10
     num_validation_noise_samples: int | None = None
@@ -43,10 +42,12 @@ class flowABC(nn.Module, abc.ABC):
 
     @abc.abstractmethod
     def forward(self, x, condition=None):
+
         pass
 
     @abc.abstractmethod
     def inverse(self, z, condition=None):
+
         pass
 
 
@@ -59,31 +60,38 @@ class modelConfigABC(abc.ABC):
     EXPECTS_MASK: bool
 
     def __init_subclass__(cls):
+
         super().__init_subclass__()
         cls.checkpoint_config = None
 
     @final
     def _add_checkpoint_config(self, checkpoint_config: CheckpointConfig) -> None:
+
         self.checkpoint_config = checkpoint_config
 
     @final
     @property
     def NUM_INPUT_DIMS(self) -> int:
+
         return self.NUM_INPUT_DIMS
 
     @final
     @property
     def NUM_OUTPUT_DIMS(self) -> int:
+
         return self.NUM_OUTPUT_DIMS
 
     @final
     @property
     def GENERATOR(self) -> bool:
+
         return getattr(self, "GENERATOR", None)
 
+    
     @property
     @abc.abstractmethod
     def EXPECTS_MASK(self) -> bool:
+
         pass
 
     @abc.abstractmethod
@@ -94,6 +102,7 @@ class modelConfigABC(abc.ABC):
         added_features_dim: int = None,
         **kwargs,
     ):
+
         pass
 
 
@@ -151,11 +160,13 @@ class modelABC(nn.Module, abc.ABC):
 
     @abc.abstractmethod
     def forward(self):
+
         pass
 
     @final
-    def _initialize_weights(
-        self, init_method="trunc_normal", exclude: tuple[nn.Module, ...] = ()
+    def _initialize_weights(self, 
+                            init_method="trunc_normal",
+                            exclude: tuple[nn.Module, ...] = ()
     ) -> None:
         excluded = {id(module) for module in exclude}
 
@@ -172,6 +183,7 @@ class modelABC(nn.Module, abc.ABC):
 
     @final
     def _get_device(self) -> torch.device:
+
         param = next(self.parameters(), None)
 
         if param is not None:
@@ -186,6 +198,7 @@ class modelABC(nn.Module, abc.ABC):
 
     @final
     def _load_state_dict(self, checkpoint_config: CheckpointConfig):
+
         if not Path(checkpoint_config.load_path).exists():
             raise FileNotFoundError(
                 f"Checkpoint not found: {checkpoint_config.load_path}"
@@ -209,6 +222,8 @@ class modelABC(nn.Module, abc.ABC):
         gc.collect()
 
         if checkpoint_config.freeze_weights:
+                                             
+                                             
             self.requires_grad_(False)
 
 
@@ -224,6 +239,7 @@ class DeterministicRequest:
 class deterministicmodelsABC(modelABC):
 
     def __init__(self, config: modelConfigABC):
+
         super().__init__()
         self.config = config
         self.generative_modeling = False
@@ -233,6 +249,7 @@ class deterministicmodelsABC(modelABC):
         self,
         request: DeterministicRequest,
     ) -> OutputABC:
+
         pass
 
 
@@ -245,15 +262,17 @@ class cVAEmodelConfigABC(modelConfigABC):
     condemb_to_decoder: bool
 
     def _resolve_flow_settings(self, condition_dependant_flow: bool = False):
+
         self.condition_dependant_flow = condition_dependant_flow
 
-        if self.condition_dependant_latent and not self.condition_dependant_flow:
-            if self.latent_size != self.condition_embedding_size:
-                raise ValueError(
-                    f"for condition dependent latent when prior flow is off, "
-                    f"condition embedding size ({self.condition_embedding_size}) "
-                    f"must equal latent size ({self.latent_size})."
-                )
+        if (self.condition_dependant_latent and 
+            not self.condition_dependant_flow):
+                if self.latent_size != self.condition_embedding_size:
+                    raise ValueError(
+                        f"for condition dependent latent when prior flow is off, "
+                        f"condition embedding size ({self.condition_embedding_size}) "
+                        f"must equal latent size ({self.latent_size})."
+                    )
 
         return self
 
@@ -287,18 +306,18 @@ class cVAEPredictRequest:
 class cVAEmodelsABC(modelABC):
 
     def __init__(self, config: cVAEmodelConfigABC):
+
         super().__init__()
         self.generative_modeling = True
         self.config = config
-        self.condition_dependant_flow = getattr(
-            self.config, "condition_dependant_flow", False
-        )
+        self.condition_dependant_flow = self.config.condition_dependant_flow
 
     @abc.abstractmethod
     def forward(
         self,
         request: cVAEForwardRequest,
     ) -> OutputABC:
+
         pass
 
     @abc.abstractmethod
@@ -306,36 +325,44 @@ class cVAEmodelsABC(modelABC):
         self,
         request: cVAEPredictRequest,
     ) -> OutputABC:
+
         pass
 
     @abc.abstractmethod
     def _recognition(self) -> tuple[torch.Tensor, ...]:
+
         pass
 
     @abc.abstractmethod
     def _condition(self) -> tuple[torch.Tensor, ...]:
+
         pass
 
     @abc.abstractmethod
     def _generate(self) -> torch.Tensor:
+
         pass
 
     @final
     def _sample(self, mu, log_var, sample_size=1, std=1):
+
         var = torch.exp(log_var) + 1e-4
         return _sample(mu, var, sample_size, std)
 
     @final
-    def _sample_prior(
-        self, request: cVAEPredictRequest
+    def _sample_prior(self, 
+                      request: cVAEPredictRequest
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor | None]:
-        condition = request.condition
-        latent_samples = request.latent_samples
-        latent_sample_size = request.latent_sample_size
-        condition_mask = request.condition_mask
-        added_features = request.added_features
-        prior_flow = request.prior_flow
-        nstds = request.nstds
+
+
+        condition= request.condition
+        latent_samples= request.latent_samples
+        latent_sample_size= request.latent_sample_size
+        condition_mask= request.condition_mask
+        added_features= request.added_features
+        prior_flow= request.prior_flow
+        nstds= request.nstds
+
 
         B, C = condition.shape[:2]
         latent_ref_tensor = torch.zeros(
@@ -365,8 +392,8 @@ class cVAEmodelsABC(modelABC):
 
                 if prior_flow.condition_size is not None:
                     cond = (
-                        cond_mu.unsqueeze(0)
-                        .expand(latent_sample_size, -1, -1)
+                        cond_mu.unsqueeze(0)             
+                        .expand(latent_sample_size, -1, -1)             
                         .reshape(latent_sample_size * batch_size, -1)
                     )
 
@@ -376,9 +403,7 @@ class cVAEmodelsABC(modelABC):
 
                 flow_output = prior_flow.inverse(latent_samples, cond)
                 latent_samples = flow_output.e_samples
-                latent_samples = latent_samples.reshape(
-                    latent_sample_size, batch_size, -1
-                )
+                latent_samples = latent_samples.reshape(latent_sample_size, batch_size, -1)
         else:
             expected_shape = (latent_sample_size, *latent_ref_tensor.shape)
             if not latent_samples.shape == expected_shape:
@@ -387,10 +412,12 @@ class cVAEmodelsABC(modelABC):
                     f"but expected shape {(expected_shape)}"
                 )
 
-        return latent_samples, cond_mu, cond_log_var
+        return  latent_samples, cond_mu, cond_log_var
+
 
 
 def weights_init(m, method: InitMethod = "xavier"):
+
     if not isinstance(m, (nn.Linear, nn.Conv1d, nn.Conv2d, nn.Conv3d)):
         return
 

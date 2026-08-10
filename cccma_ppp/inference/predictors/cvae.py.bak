@@ -19,7 +19,6 @@ from cccma_ppp.data_modules.dataloader import BatchDataABC
 
 @dataclasses.dataclass
 class cVAEPredictorConfig:
-
     num_latent_samples: int
     nstds: float = 1.0
     infer_latent_samples_from_training: bool = False
@@ -48,11 +47,11 @@ class cVAEPredictorConfig:
         output_dir: Path | str,
         num_output_sampling: int = 0,
     ):
+
         return cVAEPredictor(self, module, distributed, output_dir, num_output_sampling)
 
 
 class cVAEPredictor(PredictorABC):
-
     def __init__(
         self,
         config: cVAEPredictorConfig,
@@ -61,6 +60,7 @@ class cVAEPredictor(PredictorABC):
         output_dir: Path | str,
         num_output_sampling: int = 0,
     ):
+
         self.config = config
         self.module = module
         self.num_output_sampling = num_output_sampling
@@ -112,6 +112,7 @@ class cVAEPredictor(PredictorABC):
         batch: BatchDataABC,
         _getting_train_stats: bool = False,
     ) -> cVAEOutput | dict[str, RunningCovariance]:
+
         clear_memory()
         self.raw_module.eval()
         latent_samples = None
@@ -151,8 +152,8 @@ class cVAEPredictor(PredictorABC):
             )
 
             if self.num_output_covariance_sampling > 0:
-                sample_size = output.output.shape[:2]
-                reshape_size = output.output.shape[2:]
+                sample_size = output.output.shape[:2]         
+                reshape_size = output.output.shape[2:]           
                 output = self.add_decoder_noise(
                     output,
                     self.num_output_covariance_sampling,
@@ -168,6 +169,7 @@ class cVAEPredictor(PredictorABC):
         output: cVAEOutput,
         data: BatchDataABC,
     ) -> dict[str, RunningCovariance]:
+
         if self.extract_posterior_samples:
             if output.samples is None:
                 raise RuntimeError(

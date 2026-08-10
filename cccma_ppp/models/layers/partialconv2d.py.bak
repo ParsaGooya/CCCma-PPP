@@ -1,11 +1,21 @@
+                                                                               
+                      
+ 
+                                                              
+ 
+                                                   
+                                                                               
+
 import torch
 import torch.nn.functional as F
 from torch import nn
+                                              
 
 
 class PartialConv2d(nn.Conv2d):
-
     def __init__(self, *args, **kwargs):
+
+                                                  
         self.multi_channel = kwargs.pop("multi_channel", False)
         self.return_mask = kwargs.pop("return_mask", False)
 
@@ -48,6 +58,7 @@ class PartialConv2d(nn.Conv2d):
                 weight_maskUpdater = self.weight_maskUpdater.to(input)
 
                 if mask_in is None:
+                                                            
                     if self.multi_channel:
                         mask = torch.ones(
                             input.data.shape[0],
@@ -72,8 +83,9 @@ class PartialConv2d(nn.Conv2d):
                     groups=1,
                 )
 
+                                                                   
                 self.mask_ratio = self.slide_winsize / (self.update_mask + 1e-8)
-
+                                                                                         
                 self.update_mask = torch.clamp(self.update_mask, 0, 1)
                 self.mask_ratio = torch.mul(self.mask_ratio, self.update_mask)
 

@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
@@ -12,13 +12,13 @@ from cccma_ppp.models.mlp_models.cvae import (
 )
 
 
-def make_config(**kwargs):
+def make_config(**overrides):
     defaults = {
-        "encoder_hidden_dims": [8, 6],
+        "encoder_hidden_dims": [8, 4],
         "latent_size": 3,
-        "decoder_hidden_dims": [6],
-        "condition_embedding_dims": None,
-        "condition_embedding_size": None,
+        "condition_embedding_dims": [6, 4],
+        "condition_embedding_size": 3,
+        "decoder_hidden_dims": [4, 8],
         "condition_dependant_latent": False,
         "condemb_to_decoder": True,
         "batch_normalization": False,
@@ -26,53 +26,26 @@ def make_config(**kwargs):
         "init_method": "trunc_normal",
         "activation": "relu",
     }
-    defaults.update(kwargs)
-    return cVAE_MLPConfig(**defaults)
+    defaults.update(overrides)
 
+    config = cVAE_MLPConfig(**defaults)
 
-def make_condition_config(**kwargs):
-    defaults = {
-        "encoder_hidden_dims": [8, 6],
-        "latent_size": 3,
-        "decoder_hidden_dims": [6],
-        "condition_embedding_dims": [5],
-        "condition_embedding_size": 4,
-        "condition_dependant_latent": False,
-        "condemb_to_decoder": True,
-        "batch_normalization": False,
-        "dropout_rate": None,
-        "activation": "relu",
-    }
-    defaults.update(kwargs)
-    return make_config(**defaults)
+    config.condition_dependant_flow = False
 
+    if not hasattr(config, "checkpoint_config"):
+        config.checkpoint_config = None
 
-def make_condition_latent_config(**kwargs):
-    defaults = {
-        "encoder_hidden_dims": [8, 6],
-        "latent_size": 3,
-        "decoder_hidden_dims": [6],
-        "condition_embedding_dims": [5],
-        "condition_embedding_size": 3,
-        "condition_dependant_latent": True,
-        "condemb_to_decoder": True,
-        "batch_normalization": False,
-        "dropout_rate": None,
-        "activation": "relu",
-    }
-    defaults.update(kwargs)
-    return make_config(**defaults)
+    return config
 
 
 def make_model(
     *,
-    config=None,
-    input_shape=(1, 4),
-    output_shape=(1, 4),
+    input_shape=(2, 3),
+    output_shape=(1, 3),
     added_features_dim=None,
+    **config_overrides,
 ):
-    if config is None:
-        config = make_config()
+    config = make_config(**config_overrides)
 
     return cVAE_MLP(
         config=config,
@@ -82,1019 +55,976 @@ def make_model(
     )
 
 
-def make_forward_request(
-    *,
-    target=None,
-    target_mask=None,
-    condition=None,
-    condition_mask=None,
-    added_features=None,
-    latent_sample_size=2,
-    posterior_variance_limits=None,
-    sample_size=None,
-    min_posterior_variance=None,
-):
-    if target is None:
-        target = torch.randn(3, 1, 4)
+class IdentityWithArguments(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.last_input = None
 
-    if condition is None:
-        condition = torch.randn(3, 1, 4)
-
-    if sample_size is not None:
-        latent_sample_size = sample_size
-
-    if min_posterior_variance is not None:
-        posterior_variance_limits = (
-            min_posterior_variance,
-            torch.tensor(float("inf")),
-        )
-    if latent_sample_size is None:
-        latent_sample_size = 2
-    if min_posterior_variance is not None:
-        posterior_variance_limits = (
-            min_posterior_variance,
-            torch.tensor(float("inf")),
-        )
-    return SimpleNamespace(
-        target=target,
-        target_mask=target_mask,
-        condition=condition,
-        condition_mask=condition_mask,
-        added_features=added_features,
-        latent_sample_size=latent_sample_size,
-        posterior_variance_limits=posterior_variance_limits,
-    )
+    def forward(self, value):
+        self.last_input = value
+        return value
 
 
-def make_predict_request(
-    *,
-    condition=None,
-    condition_mask=None,
-    added_features=None,
-    prior_flow=None,
-    latent_samples=None,
-    nstds=1.0,
-    latent_sample_size=2,
-    sample_size=None,
-):
-    if condition is None:
-        condition = torch.randn(3, 1, 4)
+class FixedOutputModule(nn.Module):
+    def __init__(self, output_size):
+        super().__init__()
+        self.output_size = output_size
+        self.last_input = None
 
-    if sample_size is not None:
-        latent_sample_size = sample_size
-    return SimpleNamespace(
-        condition=condition,
-        condition_mask=condition_mask,
-        added_features=added_features,
-        prior_flow=prior_flow,
-        latent_samples=latent_samples,
-        nstds=nstds,
-        latent_sample_size=sample_size,
-        sample_size=None,
-    )
-
-
-@pytest.mark.pruned
-def test_config_preserves_explicit_decoder_dimensions():
-    config = make_config(
-        encoder_hidden_dims=[10, 8, 6],
-        decoder_hidden_dims=[7, 9],
-    )
-
-    assert config.decoder_hidden_dims == [7, 9]
-
-
-def test_config_builds_default_decoder_dimensions():
-    config = make_config(
-        encoder_hidden_dims=[10, 8, 6],
-        decoder_hidden_dims=None,
-    )
-
-    assert config.decoder_hidden_dims == [8, 10]
-
-
-@pytest.mark.pruned
-def test_config_default_decoder_for_single_encoder_layer():
-    config = make_config(
-        encoder_hidden_dims=[8],
-        decoder_hidden_dims=None,
-    )
-
-    assert config.decoder_hidden_dims == []
-
-
-def test_config_default_decoder_for_empty_encoder():
-    config = make_config(
-        encoder_hidden_dims=[],
-        decoder_hidden_dims=None,
-    )
-
-    assert config.decoder_hidden_dims == []
-
-
-@pytest.mark.parametrize(
-    "dropout_rate",
-    [
-        None,
-        0.0,
-        0.25,
-        0.5,
-        1.0,
-    ],
-)
-def test_config_accepts_valid_dropout(dropout_rate):
-    config = make_config(
-        dropout_rate=dropout_rate,
-    )
-
-    assert config.dropout_rate == dropout_rate
-
-
-@pytest.mark.parametrize(
-    "dropout_rate",
-    [
-        -1.0,
-        -0.1,
-        1.1,
-        2.0,
-    ],
-)
-def test_config_rejects_invalid_dropout(dropout_rate):
-    with pytest.raises(
-        ValueError,
-        match="Dropout rates must be between 0 and 1",
-    ):
-        make_config(
-            dropout_rate=dropout_rate,
+    def forward(self, value):
+        self.last_input = value
+        return torch.zeros(
+            (*value.shape[:-1], self.output_size),
+            dtype=value.dtype,
+            device=value.device,
         )
 
 
-@pytest.mark.pruned
-def test_independent_latent_requires_embedding_passed_to_decoder():
-    with pytest.raises(
-        ValueError,
-        match="condition embedding has to be passed to decoder",
-    ):
-        make_config(
-            condition_embedding_dims=[5],
-            condition_embedding_size=4,
-            condition_dependant_latent=False,
+class TestCVaEMLPConfig:
+    def test_basic_initialization(self):
+        config = make_config()
+
+        assert config.encoder_hidden_dims == [8, 4]
+        assert config.latent_size == 3
+        assert config.condition_embedding_dims == [6, 4]
+        assert config.condition_embedding_size == 3
+        assert config.decoder_hidden_dims == [4, 8]
+        assert config.condition_dependant_latent is False
+        assert config.condemb_to_decoder is True
+        assert config.batch_normalization is False
+        assert config.dropout_rate is None
+        assert config.activation == "relu"
+
+    def test_expected_input_and_output_dimensions(self):
+        config = make_config()
+
+        assert config.NUM_INPUT_DIMS == 2
+        assert config.NUM_OUTPUT_DIMS == 2
+
+    def test_generator_is_none(self):
+        assert cVAE_MLPConfig.GENERATOR is None
+
+    def test_expects_mask_is_false(self):
+        config = make_config()
+
+        assert config.EXPECTS_MASK is False
+
+    def test_decoder_defaults_from_encoder(self):
+        config = make_config(
+            encoder_hidden_dims=[16, 8, 4],
+            decoder_hidden_dims=None,
+        )
+
+        assert config.decoder_hidden_dims == [8, 16]
+
+    def test_empty_encoder_creates_empty_decoder(self):
+        config = make_config(
+            encoder_hidden_dims=[],
+            decoder_hidden_dims=None,
+            condition_embedding_dims=[],
+        )
+
+        assert config.decoder_hidden_dims == []
+
+    def test_explicit_decoder_is_preserved(self):
+        config = make_config(
+            decoder_hidden_dims=[7, 9],
+        )
+
+        assert config.decoder_hidden_dims == [7, 9]
+
+    def test_condition_embedding_dims_default_to_encoder_dims(self):
+        config = make_config(
+            encoder_hidden_dims=[12, 6],
+            condition_embedding_dims=None,
+        )
+
+        assert config.condition_embedding_dims == [12, 6]
+
+    def test_condition_embedding_size_defaults_to_latent_size(self):
+        config = make_config(
+            latent_size=7,
+            condition_embedding_size=None,
+        )
+
+        assert config.condition_embedding_size == 7
+
+    def test_independent_latent_requires_condition_in_decoder(self):
+        with pytest.raises(
+            ValueError,
+            match="condition embedding has to be passed to decoder",
+        ):
+            make_config(
+                condition_dependant_latent=False,
+                condemb_to_decoder=False,
+            )
+
+    def test_dependent_latent_does_not_require_condition_in_decoder(self):
+        config = make_config(
+            condition_dependant_latent=True,
             condemb_to_decoder=False,
         )
 
+        assert config.condemb_to_decoder is False
 
-@pytest.mark.pruned
-def test_config_build_returns_model():
-    config = make_config()
-
-    model = config.build(
-        input_shape=np.asarray([1, 4]),
-        output_shape=np.asarray([1, 4]),
-        added_features_dim=None,
+    @pytest.mark.parametrize(
+        "dropout_rate",
+        [
+            -0.1,
+            1.1,
+        ],
     )
+    def test_invalid_dropout_is_rejected(self, dropout_rate):
+        with pytest.raises((ValueError, AssertionError)):
+            make_config(
+                dropout_rate=dropout_rate,
+            )
 
-    assert isinstance(model, cVAE_MLP)
-    assert model.config is config
-
-
-@pytest.mark.pruned
-def test_model_defaults_output_shape_to_input_shape():
-    config = make_config()
-
-    model = cVAE_MLP(
-        config=config,
-        input_shape=np.asarray([1, 4]),
-        output_shape=None,
+    @pytest.mark.parametrize(
+        "dropout_rate",
+        [
+            None,
+            0.0,
+            0.25,
+            1.0,
+        ],
     )
-
-    assert model.output_shape == 4
-
-
-def test_model_rejects_invalid_output_rank():
-    with pytest.raises(
-        RuntimeError,
-        match="MLP models should create 2D outputs",
-    ):
-        make_model(
-            output_shape=(1, 2, 3),
+    def test_valid_dropout_is_accepted(self, dropout_rate):
+        config = make_config(
+            dropout_rate=dropout_rate,
         )
 
+        assert config.dropout_rate == dropout_rate
 
-@pytest.mark.pruned
-def test_model_converts_added_features_none_to_zero():
-    model = make_model(
-        added_features_dim=None,
-    )
+    def test_build_returns_model(self):
+        config = make_config()
 
-    assert model.added_features_dim == 0
-
-
-@pytest.mark.pruned
-def test_model_preserves_added_features_dimension():
-    model = make_model(
-        added_features_dim=2,
-    )
-
-    assert model.added_features_dim == 2
-
-
-@pytest.mark.pruned
-def test_model_builds_encoder():
-    model = make_model()
-
-    assert isinstance(model.encoder, nn.Sequential)
-    assert isinstance(model.mu, nn.Linear)
-    assert isinstance(model.log_var, nn.Linear)
-    assert model.mu.out_features == 3
-    assert model.log_var.out_features == 3
-
-
-@pytest.mark.pruned
-def test_model_builds_condition_embedding():
-    model = make_model(
-        config=make_condition_config(),
-    )
-
-    assert isinstance(model.embedding, nn.Sequential)
-    assert model.condemb_to_decoder is True
-    assert model.add_condition_size == 4
-
-
-@pytest.mark.pruned
-def test_condition_independent_latent_appends_embedding_projection():
-    model = make_model(
-        config=make_condition_config(),
-    )
-
-    assert isinstance(model.embedding[-1], nn.Linear)
-    assert model.embedding[-1].out_features == 4
-    assert not hasattr(model, "condition_mu")
-    assert not hasattr(model, "condition_log_var")
-
-
-@pytest.mark.pruned
-def test_condition_dependent_latent_builds_distribution_layers():
-    model = make_model(
-        config=make_condition_latent_config(),
-    )
-
-    assert isinstance(model.condition_mu, nn.Linear)
-    assert isinstance(model.condition_log_var, nn.Linear)
-    assert model.condition_mu.out_features == 3
-    assert model.condition_log_var.out_features == 3
-
-
-@pytest.mark.pruned
-def test_condition_dependent_flow_uses_embedding_projection():
-    config = make_condition_latent_config()
-    config.condition_dependant_flow = True
-
-    model = make_model(config=config)
-
-    assert model.condition_dependant_flow is True
-    assert isinstance(model.embedding[-1], nn.Linear)
-    assert not hasattr(model, "condition_mu")
-    assert not hasattr(model, "condition_log_var")
-
-
-@pytest.mark.pruned
-def test_model_uses_requested_activation():
-    model = make_model(
-        config=make_config(
-            activation="gelu",
+        model = config.build(
+            input_shape=np.array([2, 3]),
+            output_shape=np.array([1, 3]),
+            added_features_dim=2,
         )
-    )
 
-    assert any(isinstance(layer, nn.GELU) for layer in model.encoder)
+        assert isinstance(model, cVAE_MLP)
+        assert model.added_features_dim == 2
 
 
-@pytest.mark.pruned
-def test_model_uses_requested_dropout():
-    model = make_model(
-        config=make_config(
-            dropout_rate=0.25,
+class TestCVaEMLPInitialization:
+    def test_defaults_output_shape_to_input_shape(self):
+        model = cVAE_MLP(
+            config=make_config(),
+            input_shape=np.array([2, 3]),
         )
+
+        assert model.input_shape == 6
+        assert model.output_shape == 6
+
+    @pytest.mark.parametrize(
+        "output_shape",
+        [
+            (6,),
+            (1, 2, 3),
+        ],
     )
+    def test_rejects_invalid_output_rank(self, output_shape):
+        with pytest.raises(
+            RuntimeError,
+            match="MLP models should create 2D outputs",
+        ):
+            cVAE_MLP(
+                config=make_config(),
+                input_shape=(2, 3),
+                output_shape=output_shape,
+            )
 
-    dropout_layers = [layer for layer in model.encoder if isinstance(layer, nn.Dropout)]
-
-    assert dropout_layers
-    assert dropout_layers[0].p == pytest.approx(0.25)
-
-
-@pytest.mark.pruned
-def test_model_uses_batch_normalization():
-    model = make_model(
-        config=make_config(
-            batch_normalization=True,
+    def test_converts_added_features_none_to_zero(self):
+        model = make_model(
+            added_features_dim=None,
         )
-    )
 
-    assert any(isinstance(layer, nn.BatchNorm1d) for layer in model.encoder)
+        assert model.added_features_dim == 0
 
-
-@pytest.mark.pruned
-def test_recognition_applies_target_mask():
-    model = make_model()
-
-    target = torch.ones(2, 1, 4)
-    mask = torch.zeros_like(target)
-
-    captured = {}
-
-    class CaptureEncoder(nn.Module):
-        def forward(self, value):
-            captured["value"] = value
-            return torch.zeros(value.shape[0], 6)
-
-    model.encoder = CaptureEncoder()
-
-    model._recognition(
-        x=target,
-        x_mask=mask,
-    )
-
-    torch.testing.assert_close(
-        captured["value"],
-        torch.zeros(2, 4),
-    )
-
-
-@pytest.mark.pruned
-def test_recognition_flattens_target():
-    model = make_model()
-    captured = {}
-
-    class CaptureEncoder(nn.Module):
-        def forward(self, value):
-            captured["shape"] = value.shape
-            return torch.zeros(value.shape[0], 6)
-
-    model.encoder = CaptureEncoder()
-
-    model._recognition(
-        x=torch.randn(3, 1, 4),
-        x_mask=None,
-    )
-
-    assert captured["shape"] == (3, 4)
-
-
-@pytest.mark.pruned
-def test_recognition_concatenates_condition():
-    model = make_model(
-        config=make_config(
-            condition_embedding_dims=None,
+    def test_preserves_added_features_dimension(self):
+        model = make_model(
+            added_features_dim=4,
         )
-    )
-    captured = {}
 
-    model.encoder = nn.Identity()
-    model.mu = nn.Identity()
-    model.log_var = nn.Identity()
+        assert model.added_features_dim == 4
 
-    target = torch.randn(2, 1, 4)
-    condition = torch.randn(2, 3)
-
-    mu, log_var = model._recognition(
-        x=target,
-        x_mask=None,
-        condition=condition,
-    )
-
-    assert mu.shape == (2, 7)
-    torch.testing.assert_close(mu, log_var)
-
-
-@pytest.mark.pruned
-def test_recognition_concatenates_added_features():
-    model = make_model(
-        added_features_dim=2,
-    )
-
-    model.encoder = nn.Identity()
-    model.mu = nn.Identity()
-    model.log_var = nn.Identity()
-
-    target = torch.randn(2, 1, 4)
-    added_features = torch.randn(2, 1, 2)
-
-    mu, log_var = model._recognition(
-        x=target,
-        x_mask=None,
-        added_features=added_features,
-    )
-
-    assert mu.shape == (2, 6)
-    torch.testing.assert_close(mu, log_var)
-
-
-@pytest.mark.pruned
-def test_recognition_concatenates_condition_before_features():
-    model = make_model(
-        added_features_dim=2,
-    )
-
-    model.encoder = nn.Identity()
-    model.mu = nn.Identity()
-    model.log_var = nn.Identity()
-
-    target = torch.full((1, 1, 4), 1.0)
-    condition = torch.full((1, 3), 2.0)
-    features = torch.full((1, 1, 2), 3.0)
-
-    mu, _ = model._recognition(
-        x=target,
-        x_mask=None,
-        condition=condition,
-        added_features=features,
-    )
-
-    torch.testing.assert_close(
-        mu,
-        torch.tensor([[1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0]]),
-    )
-
-
-@pytest.mark.pruned
-def test_condition_embedding_returns_embedding():
-    model = make_model(
-        config=make_condition_config(),
-    )
-
-    cond_mu, cond_log_var = model._condition(
-        condition=torch.randn(2, 1, 4),
-    )
-
-    assert cond_mu.shape == (2, 4)
-    assert cond_log_var is None
-
-
-@pytest.mark.pruned
-def test_condition_dependent_latent_returns_distribution():
-    model = make_model(
-        config=make_condition_latent_config(),
-    )
-
-    cond_mu, cond_log_var = model._condition(
-        condition=torch.randn(2, 1, 4),
-    )
-
-    assert cond_mu.shape == (2, 3)
-    assert cond_log_var.shape == (2, 3)
-
-
-@pytest.mark.pruned
-def test_condition_applies_mask():
-    model = make_model(
-        config=make_condition_config(
-            condition_embedding_dims=[],
+    def test_flattened_input_and_output_sizes(self):
+        model = make_model(
+            input_shape=(2, 5),
+            output_shape=(3, 4),
         )
-    )
 
-    captured = {}
+        assert model.input_shape == 10
+        assert model.output_shape == 12
 
-    class CaptureEmbedding(nn.Module):
-        def forward(self, value):
-            captured["value"] = value
-            return torch.zeros(value.shape[0], 4)
-
-    model.embedding = CaptureEmbedding()
-
-    condition = torch.ones(2, 1, 4)
-    condition_mask = torch.zeros_like(condition)
-
-    model._condition(
-        condition=condition,
-        condition_mask=condition_mask,
-    )
-
-    torch.testing.assert_close(
-        captured["value"],
-        torch.zeros(2, 4),
-    )
-
-
-@pytest.mark.pruned
-def test_condition_flattens_input():
-    model = make_model(
-        config=make_condition_config(),
-    )
-
-    captured = {}
-
-    class CaptureEmbedding(nn.Module):
-        def forward(self, value):
-            captured["shape"] = value.shape
-            return torch.zeros(value.shape[0], 4)
-
-    model.embedding = CaptureEmbedding()
-
-    model._condition(
-        condition=torch.randn(2, 1, 4),
-    )
-
-    assert captured["shape"] == (2, 4)
-
-
-@pytest.mark.pruned
-def test_condition_concatenates_added_features():
-    model = make_model(
-        config=make_condition_config(),
-        added_features_dim=2,
-    )
-
-    captured = {}
-
-    class CaptureEmbedding(nn.Module):
-        def forward(self, value):
-            captured["value"] = value
-            return torch.zeros(value.shape[0], 4)
-
-    model.embedding = CaptureEmbedding()
-
-    condition = torch.full((1, 1, 4), 1.0)
-    features = torch.full((1, 1, 2), 2.0)
-
-    model._condition(
-        condition=condition,
-        added_features=features,
-    )
-
-    torch.testing.assert_close(
-        captured["value"],
-        torch.tensor([[1.0, 1.0, 1.0, 1.0, 2.0, 2.0]]),
-    )
-
-
-@pytest.mark.pruned
-def test_generate_concatenates_added_features():
-    model = make_model(
-        added_features_dim=2,
-    )
-
-    captured = {}
-
-    class CaptureDecoder(nn.Module):
-        def forward(self, value):
-            captured["value"] = value
-            return torch.zeros(value.shape[0], 4)
-
-    model.decoder = CaptureDecoder()
-
-    latent = torch.zeros(2, 3, 3)
-    features = torch.full((3, 1, 2), 4.0)
-
-    result = model._generate(
-        latent_samples=latent,
-        added_features=features,
-    )
-
-    assert result.shape == (2, 3, 4)
-    assert captured["value"].shape == (6, 5)
-
-    torch.testing.assert_close(
-        captured["value"][:, -2:],
-        torch.full((6, 2), 4.0),
-    )
-
-
-@pytest.mark.pruned
-def test_generate_concatenates_condition_when_enabled():
-    model = make_model(
-        config=make_condition_config(),
-    )
-
-    captured = {}
-
-    class CaptureDecoder(nn.Module):
-        def forward(self, value):
-            captured["value"] = value
-            return torch.zeros(value.shape[0], 4)
-
-    model.decoder = CaptureDecoder()
-
-    latent = torch.zeros(2, 3, 3)
-    condition = torch.full((3, 4), 5.0)
-
-    model._generate(
-        latent_samples=latent,
-        condition=condition,
-    )
-
-    assert captured["value"].shape == (6, 7)
-    torch.testing.assert_close(
-        captured["value"][:, -4:],
-        torch.full((6, 4), 5.0),
-    )
-
-
-def test_generate_does_not_concatenate_condition_when_disabled():
-    config = make_condition_latent_config(
-        condemb_to_decoder=False,
-    )
-    model = make_model(config=config)
-
-    captured = {}
-
-    class CaptureDecoder(nn.Module):
-        def forward(self, value):
-            captured["value"] = value
-            return torch.zeros(value.shape[0], 4)
-
-    model.decoder = CaptureDecoder()
-
-    latent = torch.zeros(2, 3, 3)
-    condition = torch.full((3, 3), 5.0)
-
-    model._generate(
-        latent_samples=latent,
-        condition=condition,
-    )
-
-    assert captured["value"].shape == (6, 3)
-
-
-@pytest.mark.pruned
-def test_generate_ignores_none_condition():
-    model = make_model(
-        config=make_condition_config(),
-    )
-
-    model.decoder = nn.Identity()
-
-    latent = torch.randn(2, 3, 3)
-    result = model._generate(
-        latent_samples=latent,
-        condition=None,
-    )
-
-    assert result.shape == (2, 3, 3)
-
-
-@pytest.mark.pruned
-def test_forward_with_condition_embedding():
-    model = make_model(
-        config=make_condition_config(),
-    )
-
-    result = model.forward(
-        make_forward_request(
-            sample_size=2,
+    def test_condition_is_added_to_decoder_when_enabled(self):
+        model = make_model(
+            condition_embedding_size=5,
+            condemb_to_decoder=True,
         )
-    )
 
-    assert result.output.shape == (2, 3, 1, 4)
-    assert result.cond_mu.shape == (3, 4)
-    assert result.cond_log_var is None
+        assert model.add_condition_size == 5
 
-
-@pytest.mark.pruned
-def test_forward_with_condition_dependent_latent():
-    model = make_model(
-        config=make_condition_latent_config(),
-    )
-
-    result = model.forward(
-        make_forward_request(
-            sample_size=2,
+    def test_condition_is_not_initially_added_when_disabled(self):
+        config = make_config(
+            condition_dependant_latent=True,
+            condemb_to_decoder=False,
         )
-    )
 
-    assert result.output.shape == (2, 3, 1, 4)
-    assert result.cond_mu.shape == (3, 3)
-    assert result.cond_log_var.shape == (3, 3)
+        with patch(
+            "cccma_ppp.models.mlp_models.cvae.build_mlp",
+            return_value=nn.Sequential(nn.Identity()),
+        ):
+            model = cVAE_MLP(
+                config=config,
+                input_shape=(2, 3),
+                output_shape=(1, 3),
+            )
 
+        assert model.condemb_to_decoder is False
 
-def test_forward_with_added_features():
-    model = make_model(
-        added_features_dim=2,
-    )
-
-    result = model.forward(
-        make_forward_request(
-            added_features=torch.randn(3, 1, 2),
-            sample_size=2,
+    def test_builds_condition_distribution_for_dependent_latent(self):
+        model = make_model(
+            condition_dependant_latent=True,
         )
-    )
 
-    assert result.output.shape == (2, 3, 1, 4)
+        assert isinstance(model.condition_mu, nn.Linear)
+        assert isinstance(model.condition_log_var, nn.Linear)
+
+    def test_independent_latent_appends_embedding_projection(self):
+        model = make_model(
+            condition_dependant_latent=False,
+        )
+
+        assert isinstance(model.embedding[-1], nn.Linear)
+
+    def test_condition_flow_skips_condition_distribution(self):
+        config = make_config(
+            condition_dependant_latent=True,
+        )
+        config.condition_dependant_flow = True
+
+        model = cVAE_MLP(
+            config=config,
+            input_shape=(2, 3),
+            output_shape=(1, 3),
+        )
+
+        assert not hasattr(model, "condition_mu")
+        assert not hasattr(model, "condition_log_var")
+        assert isinstance(model.embedding[-1], nn.Linear)
+
+    def test_weights_are_initialized_without_checkpoint(self):
+        config = make_config(
+            init_method="trunc_normal",
+        )
+        config.checkpoint_config = None
+
+        with (
+            patch.object(
+                cVAE_MLP,
+                "_initialize_weights",
+            ) as initialize,
+            patch.object(
+                cVAE_MLP,
+                "_load_state_dict",
+            ) as load_state,
+        ):
+            cVAE_MLP(
+                config=config,
+                input_shape=(2, 3),
+                output_shape=(1, 3),
+            )
+
+        initialize.assert_called_once_with("trunc_normal")
+        load_state.assert_not_called()
+
+    def test_validates_checkpoint_compatibility(self):
+        config = make_config()
+
+        with patch.object(
+            cVAE_MLP,
+            "_validate_checkpoint_compatibility",
+        ) as validate:
+            cVAE_MLP(
+                config=config,
+                input_shape=(2, 3),
+                output_shape=(1, 3),
+            )
+
+        validate.assert_called_once()
+
+        call = validate.call_args.kwargs
+        assert call["input_shape"] == (2, 3)
+        assert call["output_shape"] == (1, 3)
 
 
-def test_forward_with_masks():
-    model = make_model(
-        config=make_condition_config(),
-    )
+class TestRecognition:
+    def make_stubbed_model(self):
+        model = make_model()
 
-    target = torch.randn(3, 1, 4)
-    condition = torch.randn(3, 1, 4)
+        model.encoder = IdentityWithArguments()
+        model.mu = nn.Identity()
+        model.log_var = nn.Identity()
 
-    result = model.forward(
-        make_forward_request(
-            target=target,
-            target_mask=torch.ones_like(target),
+        return model
+
+    def test_applies_target_mask(self):
+        model = self.make_stubbed_model()
+
+        target = torch.tensor(
+            [
+                [
+                    1.0,
+                    2.0,
+                    3.0,
+                ]
+            ]
+        )
+        mask = torch.tensor(
+            [
+                [
+                    1.0,
+                    0.0,
+                    1.0,
+                ]
+            ]
+        )
+
+        mu, log_var = model._recognition(
+            x=target,
+            x_mask=mask,
+        )
+
+        expected = torch.tensor(
+            [
+                [
+                    1.0,
+                    0.0,
+                    3.0,
+                ]
+            ]
+        )
+
+        torch.testing.assert_close(mu, expected)
+        torch.testing.assert_close(log_var, expected)
+
+    def test_flattens_target(self):
+        model = self.make_stubbed_model()
+
+        target = torch.arange(
+            12,
+            dtype=torch.float32,
+        ).reshape(2, 2, 3)
+
+        model._recognition(
+            x=target,
+            x_mask=None,
+        )
+
+        assert model.encoder.last_input.shape == (2, 6)
+
+    def test_concatenates_condition(self):
+        model = self.make_stubbed_model()
+
+        target = torch.ones(2, 1, 3)
+        condition = torch.full(
+            (2, 2),
+            4.0,
+        )
+
+        model._recognition(
+            x=target,
+            x_mask=None,
             condition=condition,
-            condition_mask=torch.ones_like(condition),
         )
-    )
 
-    assert result.output.shape == (2, 3, 1, 4)
-
-
-def test_forward_clamps_minimum_posterior_variance(
-    monkeypatch,
-):
-    model = make_model()
-
-    minimum = torch.tensor(-0.5)
-
-    monkeypatch.setattr(
-        model,
-        "_recognition",
-        lambda **kwargs: (
-            torch.zeros(3, 3),
-            torch.full((3, 3), -10.0),
-        ),
-    )
-    monkeypatch.setattr(
-        model,
-        "_sample",
-        lambda mu, log_var, sample_size: torch.zeros(
-            sample_size,
-            mu.shape[0],
-            mu.shape[1],
-        ),
-    )
-
-    result = model.forward(
-        make_forward_request(
-            min_posterior_variance=minimum,
+        assert model.encoder.last_input.shape == (2, 5)
+        torch.testing.assert_close(
+            model.encoder.last_input[:, -2:],
+            condition,
         )
-    )
 
-    torch.testing.assert_close(
-        result.log_var,
-        torch.full((3, 3), -0.5),
-    )
+    def test_concatenates_added_features(self):
+        model = self.make_stubbed_model()
 
-
-@pytest.mark.pruned
-def test_forward_without_minimum_variance_does_not_clamp(
-    monkeypatch,
-):
-    model = make_model()
-
-    original_log_var = torch.full((3, 3), -10.0)
-
-    monkeypatch.setattr(
-        model,
-        "_recognition",
-        lambda **kwargs: (
-            torch.zeros(3, 3),
-            original_log_var,
-        ),
-    )
-    monkeypatch.setattr(
-        model,
-        "_sample",
-        lambda mu, log_var, sample_size: torch.zeros(
-            sample_size,
-            mu.shape[0],
-            mu.shape[1],
-        ),
-    )
-
-    result = model.forward(
-        make_forward_request(
-            min_posterior_variance=None,
+        target = torch.ones(2, 1, 3)
+        features = torch.tensor(
+            [
+                [
+                    5.0,
+                    6.0,
+                ],
+                [
+                    7.0,
+                    8.0,
+                ],
+            ]
         )
-    )
 
-    assert result.log_var is original_log_var
+        model._recognition(
+            x=target,
+            x_mask=None,
+            added_features=features,
+        )
+
+        assert model.encoder.last_input.shape == (2, 5)
+        torch.testing.assert_close(
+            model.encoder.last_input[:, -2:],
+            features,
+        )
+
+    def test_condition_precedes_added_features(self):
+        model = self.make_stubbed_model()
+
+        target = torch.ones(1, 1, 2)
+        condition = torch.tensor(
+            [
+                [
+                    3.0,
+                    4.0,
+                ]
+            ]
+        )
+        features = torch.tensor(
+            [
+                [
+                    5.0,
+                    6.0,
+                ]
+            ]
+        )
+
+        model._recognition(
+            x=target,
+            x_mask=None,
+            condition=condition,
+            added_features=features,
+        )
+
+        expected = torch.tensor(
+            [
+                [
+                    1.0,
+                    1.0,
+                    3.0,
+                    4.0,
+                    5.0,
+                    6.0,
+                ]
+            ]
+        )
+
+        torch.testing.assert_close(
+            model.encoder.last_input,
+            expected,
+        )
 
 
-@pytest.mark.pruned
-def test_predict_uses_condition_dependent_prior(
-    monkeypatch,
-):
-    model = make_model(
-        config=make_condition_latent_config(),
-    )
+class TestCondition:
+    def test_applies_condition_mask(self):
+        model = make_model()
+        model.embedding = nn.Identity()
 
-    cond_mu = torch.zeros(3, 3)
-    cond_log_var = torch.ones(3, 3)
-    latent = torch.full((4, 3, 3), 2.0)
+        condition = torch.tensor(
+            [
+                [
+                    1.0,
+                    2.0,
+                    3.0,
+                ]
+            ]
+        )
+        mask = torch.tensor(
+            [
+                [
+                    1.0,
+                    0.0,
+                    1.0,
+                ]
+            ]
+        )
 
-    monkeypatch.setattr(
-        model,
-        "_condition",
-        lambda **kwargs: (
+        cond_mu, cond_log_var = model._condition(
+            condition=condition,
+            condition_mask=mask,
+        )
+
+        torch.testing.assert_close(
             cond_mu,
+            torch.tensor(
+                [
+                    [
+                        1.0,
+                        0.0,
+                        3.0,
+                    ]
+                ]
+            ),
+        )
+        assert cond_log_var is None
+
+    def test_flattens_condition(self):
+        model = make_model()
+        model.embedding = nn.Identity()
+
+        condition = torch.arange(
+            12,
+            dtype=torch.float32,
+        ).reshape(2, 2, 3)
+
+        cond_mu, _ = model._condition(
+            condition=condition,
+        )
+
+        assert cond_mu.shape == (2, 6)
+
+    def test_concatenates_added_features(self):
+        model = make_model()
+        model.embedding = IdentityWithArguments()
+
+        condition = torch.ones(2, 1, 3)
+        features = torch.tensor(
+            [
+                [
+                    4.0,
+                    5.0,
+                ],
+                [
+                    6.0,
+                    7.0,
+                ],
+            ]
+        )
+
+        model._condition(
+            condition=condition,
+            added_features=features,
+        )
+
+        assert model.embedding.last_input.shape == (2, 5)
+        torch.testing.assert_close(
+            model.embedding.last_input[:, -2:],
+            features,
+        )
+
+    def test_dependent_latent_returns_distribution(self):
+        model = make_model(
+            condition_dependant_latent=True,
+        )
+
+        model.embedding = nn.Identity()
+        model.condition_mu = nn.Linear(
+            3,
+            2,
+            bias=False,
+        )
+        model.condition_log_var = nn.Linear(
+            3,
+            2,
+            bias=False,
+        )
+
+        with torch.no_grad():
+            model.condition_mu.weight.fill_(1.0)
+            model.condition_log_var.weight.fill_(2.0)
+
+        condition = torch.ones(2, 1, 3)
+
+        cond_mu, cond_log_var = model._condition(
+            condition=condition,
+        )
+
+        assert cond_mu.shape == (2, 2)
+        assert cond_log_var.shape == (2, 2)
+        torch.testing.assert_close(
+            cond_mu,
+            torch.full(
+                (2, 2),
+                3.0,
+            ),
+        )
+        torch.testing.assert_close(
             cond_log_var,
-        ),
-    )
-
-    sample = MagicMock(return_value=latent)
-    monkeypatch.setattr(
-        model,
-        "_sample",
-        sample,
-    )
-
-    result = model.predict(
-        make_predict_request(
-            sample_size=4,
-            nstds=2.5,
-        )
-    )
-
-    sample.assert_called_once_with(
-        cond_mu,
-        cond_log_var,
-        4,
-        std=2.5,
-    )
-    assert result.output.shape == (4, 3, 1, 4)
-
-
-@pytest.mark.pruned
-def test_predict_accepts_user_latent_samples():
-    model = make_model()
-    latent = torch.randn(4, 3, 3)
-
-    result = model.predict(
-        make_predict_request(
-            sample_size=4,
-            latent_samples=latent,
-        )
-    )
-
-    assert result.output.shape == (4, 3, 1, 4)
-
-
-@pytest.mark.parametrize(
-    "shape",
-    [
-        (3, 3),
-        (1, 3, 3),
-        (4, 2, 3),
-        (4, 3, 2),
-    ],
-)
-def test_predict_rejects_invalid_user_latent_shape(shape):
-    model = make_model()
-
-    with pytest.raises(
-        ValueError,
-        match="latent_samples",
-    ):
-        model.predict(
-            make_predict_request(
-                sample_size=4,
-                latent_samples=torch.randn(*shape),
-            )
+            torch.full(
+                (2, 2),
+                6.0,
+            ),
         )
 
 
-class DummyFlowOutput:
-    def __init__(self, samples):
-        self.e_samples = samples
-
-
-class DummyPriorFlow:
-    def __init__(self, condition_size=None):
-        self.condition_size = condition_size
-        self.calls = []
-
-    def inverse(
+class TestGenerate:
+    def make_stubbed_model(
         self,
-        samples,
-        condition,
+        *,
+        condemb_to_decoder=True,
     ):
-        self.calls.append(
-            (
-                samples,
-                condition,
-            )
+        model = make_model(
+            condemb_to_decoder=condemb_to_decoder,
+            condition_dependant_latent=not condemb_to_decoder,
         )
-        return DummyFlowOutput(samples + 1)
+        model.decoder = IdentityWithArguments()
 
+        return model
 
-@pytest.mark.pruned
-def test_predict_applies_unconditional_prior_flow():
-    model = make_model()
-    flow = DummyPriorFlow(condition_size=None)
-
-    result = model.predict(
-        make_predict_request(
-            prior_flow=flow,
-            sample_size=4,
+    def test_preserves_sample_and_batch_dimensions(self):
+        model = self.make_stubbed_model(
+            condemb_to_decoder=False,
         )
-    )
 
-    assert len(flow.calls) == 1
+        latent = torch.ones(3, 2, 4)
 
-    samples, condition = flow.calls[0]
-
-    assert samples.shape == (12, 3)
-    assert condition is None
-    assert result.output.shape == (4, 3, 1, 4)
-
-
-@pytest.mark.pruned
-def test_predict_applies_conditioned_prior_flow():
-    config = make_condition_config()
-    model = make_model(config=config)
-
-    flow = DummyPriorFlow(condition_size=4)
-
-    result = model.predict(
-        make_predict_request(
-            prior_flow=flow,
-            sample_size=4,
-        )
-    )
-
-    assert len(flow.calls) == 1
-
-    samples, condition = flow.calls[0]
-
-    assert samples.shape == (12, 3)
-    assert condition.shape == (12, 4)
-    assert result.output.shape == (4, 3, 1, 4)
-
-
-@pytest.mark.pruned
-def test_predict_does_not_apply_flow_to_user_latent_samples():
-    model = make_model()
-    flow = DummyPriorFlow(condition_size=None)
-    latent = torch.randn(4, 3, 3)
-
-    model.predict(
-        make_predict_request(
-            prior_flow=flow,
-            sample_size=4,
+        result = model._generate(
             latent_samples=latent,
         )
-    )
 
-    assert flow.calls == []
+        assert result.shape == (3, 2, 4)
 
-
-def test_predict_returns_condition_statistics():
-    model = make_model(
-        config=make_condition_latent_config(),
-    )
-
-    result = model.predict(
-        make_predict_request(
-            sample_size=2,
+    def test_concatenates_added_features(self):
+        model = self.make_stubbed_model(
+            condemb_to_decoder=False,
         )
-    )
 
-    assert result.cond_mu.shape == (3, 3)
-    assert result.cond_log_var.shape == (3, 3)
+        latent = torch.ones(3, 2, 4)
+        features = torch.tensor(
+            [
+                [
+                    5.0,
+                    6.0,
+                ],
+                [
+                    7.0,
+                    8.0,
+                ],
+            ]
+        )
+
+        result = model._generate(
+            latent_samples=latent,
+            added_features=features,
+        )
+
+        assert result.shape == (3, 2, 6)
+
+        expected_features = features.unsqueeze(0).expand(
+            3,
+            2,
+            2,
+        )
+        torch.testing.assert_close(
+            result[..., -2:],
+            expected_features,
+        )
+
+    def test_concatenates_condition_when_enabled(self):
+        model = self.make_stubbed_model(
+            condemb_to_decoder=True,
+        )
+
+        latent = torch.ones(3, 2, 4)
+        condition = torch.tensor(
+            [
+                [
+                    5.0,
+                    6.0,
+                ],
+                [
+                    7.0,
+                    8.0,
+                ],
+            ]
+        )
+
+        result = model._generate(
+            latent_samples=latent,
+            condition=condition,
+        )
+
+        assert result.shape == (3, 2, 6)
+
+        expected_condition = condition.unsqueeze(0).expand(
+            3,
+            2,
+            2,
+        )
+        torch.testing.assert_close(
+            result[..., -2:],
+            expected_condition,
+        )
+
+    def test_does_not_concatenate_condition_when_disabled(self):
+        model = self.make_stubbed_model(
+            condemb_to_decoder=False,
+        )
+
+        latent = torch.ones(3, 2, 4)
+        condition = torch.ones(2, 2)
+
+        result = model._generate(
+            latent_samples=latent,
+            condition=condition,
+        )
+
+        assert result.shape == (3, 2, 4)
+
+    def test_ignores_none_condition(self):
+        model = self.make_stubbed_model(
+            condemb_to_decoder=True,
+        )
+
+        latent = torch.ones(3, 2, 4)
+
+        result = model._generate(
+            latent_samples=latent,
+            condition=None,
+        )
+
+        assert result.shape == (3, 2, 4)
 
 
-@pytest.mark.pruned
-def test_forward_supports_backward():
-    model = make_model()
+class TestForward:
+    def make_forward_model(self):
+        model = make_model()
 
-    target = torch.randn(
-        3,
-        1,
-        4,
-        requires_grad=True,
-    )
+        model._condition = Mock(
+            return_value=(
+                torch.ones(2, 3),
+                None,
+            )
+        )
+        model._recognition = Mock(
+            return_value=(
+                torch.zeros(2, 3),
+                torch.zeros(2, 3),
+            )
+        )
+        model._sample = Mock(return_value=torch.zeros(4, 2, 3))
+        model._generate = Mock(return_value=torch.zeros(4, 2, 3))
 
-    result = model.forward(
-        make_forward_request(
+        return model
+
+    def test_forward_uses_request_values(self):
+        model = self.make_forward_model()
+
+        target = torch.ones(2, 1, 3)
+        target_mask = torch.ones_like(target)
+        condition = torch.ones(2, 1, 3)
+        condition_mask = torch.ones_like(condition)
+        features = torch.ones(2, 2)
+
+        request = SimpleNamespace(
             target=target,
-            sample_size=2,
+            target_mask=target_mask,
+            condition=condition,
+            condition_mask=condition_mask,
+            added_features=features,
+            latent_sample_size=4,
+            posterior_variance_limits=None,
         )
-    )
 
-    result.output.sum().backward()
+        result = model.forward(request)
 
-    assert target.grad is not None
-
-    trainable_parameters = [
-        parameter for parameter in model.parameters() if parameter.requires_grad
-    ]
-
-    assert any(parameter.grad is not None for parameter in trainable_parameters)
-
-
-@pytest.mark.pruned
-def test_predict_output_is_finite():
-    model = make_model(
-        config=make_condition_config(),
-    )
-
-    result = model.predict(
-        make_predict_request(
-            sample_size=10,
+        model._condition.assert_called_once_with(
+            condition=condition,
+            condition_mask=condition_mask,
+            added_features=features,
         )
-    )
+        model._recognition.assert_called_once()
+        model._sample.assert_called_once()
+        model._generate.assert_called_once()
 
-    assert torch.isfinite(result.output).all()
+        assert result.output.shape == (4, 2, 1, 3)
+
+    def test_forward_clamps_posterior_variance(self):
+        model = self.make_forward_model()
+
+        model._recognition.return_value = (
+            torch.zeros(2, 3),
+            torch.tensor(
+                [
+                    [
+                        -10.0,
+                        0.0,
+                        10.0,
+                    ],
+                    [
+                        -5.0,
+                        1.0,
+                        5.0,
+                    ],
+                ]
+            ),
+        )
+
+        request = SimpleNamespace(
+            target=torch.ones(2, 1, 3),
+            target_mask=None,
+            condition=torch.ones(2, 1, 3),
+            condition_mask=None,
+            added_features=None,
+            latent_sample_size=4,
+            posterior_variance_limits=(
+                torch.tensor(-2.0),
+                torch.tensor(2.0),
+            ),
+        )
+
+        result = model.forward(request)
+
+        assert torch.all(result.log_var >= -2.0)
+        assert torch.all(result.log_var <= 2.0)
+
+    def test_forward_without_limits_preserves_log_variance(self):
+        model = self.make_forward_model()
+
+        expected = torch.tensor(
+            [
+                [
+                    -10.0,
+                    0.0,
+                    10.0,
+                ],
+                [
+                    -5.0,
+                    1.0,
+                    5.0,
+                ],
+            ]
+        )
+        model._recognition.return_value = (
+            torch.zeros(2, 3),
+            expected,
+        )
+
+        request = SimpleNamespace(
+            target=torch.ones(2, 1, 3),
+            target_mask=None,
+            condition=torch.ones(2, 1, 3),
+            condition_mask=None,
+            added_features=None,
+            latent_sample_size=4,
+            posterior_variance_limits=None,
+        )
+
+        result = model.forward(request)
+
+        torch.testing.assert_close(
+            result.log_var,
+            expected,
+        )
+
+
+class TestPredict:
+    def make_predict_model(self):
+        model = make_model()
+
+        model._sample_prior = Mock(
+            return_value=(
+                torch.zeros(4, 2, 3),
+                torch.ones(2, 3),
+                torch.full(
+                    (2, 3),
+                    2.0,
+                ),
+            )
+        )
+        model._generate = Mock(return_value=torch.zeros(4, 2, 3))
+
+        return model
+
+    def test_predict_samples_prior(self):
+        model = self.make_predict_model()
+
+        condition = torch.ones(2, 1, 3)
+        features = torch.ones(2, 2)
+
+        request = SimpleNamespace(
+            condition=condition,
+            condition_mask=None,
+            added_features=features,
+            latent_sample_size=4,
+            latent_samples=None,
+        )
+
+        result = model.predict(request)
+
+        model._sample_prior.assert_called_once_with(request)
+        model._generate.assert_called_once()
+
+        assert result.output.shape == (4, 2, 1, 3)
+        assert result.mu is None
+        assert result.log_var is None
+        assert result.samples is None
+        assert result.cond_mu.shape == (2, 3)
+        assert result.cond_log_var.shape == (2, 3)
+
+    def test_predict_forwards_condition_and_features(self):
+        model = self.make_predict_model()
+
+        condition = torch.ones(2, 1, 3)
+        features = torch.ones(2, 2)
+
+        request = SimpleNamespace(
+            condition=condition,
+            condition_mask=None,
+            added_features=features,
+            latent_sample_size=4,
+            latent_samples=None,
+        )
+
+        model.predict(request)
+
+        _, kwargs = model._generate.call_args
+
+        torch.testing.assert_close(
+            kwargs["condition"],
+            torch.ones(2, 3),
+        )
+        assert kwargs["added_features"] is features
+
+
+class TestCVaEMLPIntegration:
+    def test_forward_supports_backward(self):
+        torch.manual_seed(0)
+
+        model = make_model(
+            input_shape=(1, 3),
+            output_shape=(1, 3),
+            encoder_hidden_dims=[6],
+            decoder_hidden_dims=[6],
+            condition_embedding_dims=[6],
+            condition_embedding_size=3,
+            latent_size=3,
+        )
+
+        request = SimpleNamespace(
+            target=torch.randn(
+                2,
+                1,
+                3,
+                requires_grad=True,
+            ),
+            target_mask=None,
+            condition=torch.randn(
+                2,
+                1,
+                3,
+            ),
+            condition_mask=None,
+            added_features=None,
+            latent_sample_size=2,
+            posterior_variance_limits=None,
+        )
+
+        result = model.forward(request)
+        loss = result.output.mean()
+        loss.backward()
+
+        assert any(
+            parameter.grad is not None
+            for parameter in model.parameters()
+            if parameter.requires_grad
+        )

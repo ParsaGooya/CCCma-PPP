@@ -30,6 +30,7 @@ class TrainerConfig:
     grad_clip: float | None = None
 
     def __post_init__(self):
+
         if self.grad_clip is not None:
             assert self.grad_clip > 0
 
@@ -41,6 +42,7 @@ class TrainerConfig:
         module: moduleABC,
         max_epochs: int,
     ):
+
         self.num_train_batches = len(train_data_loader)
         if validation_data_loader is not None:
             self.num_validation_batches = len(validation_data_loader)
@@ -73,6 +75,7 @@ class Trainer:
         max_epochs: int,
         validation_data_loader: Dataloader | None = None,
     ):
+
         self.config = config
         self.optimizer = optimizer
         self.module = module
@@ -92,9 +95,7 @@ class Trainer:
             self.beta_finder = self.config.beta_finder
 
         self.num_batches = len(self.TrainLoader)
-        self.remainder_batch_size = (
-            self.num_batches % self.config.gradient_accumulation_steps
-        )
+        self.remainder_batch_size = self.num_batches % self.config.gradient_accumulation_steps
 
         self._setup = False
         self._skip_training = False
@@ -106,6 +107,7 @@ class Trainer:
         log_every_n_epochs: int = 1,
         save_checkpoint: bool = True,
     ):
+
         self.save_checkpoint = save_checkpoint
         self.log_every_n_epochs = log_every_n_epochs
 
@@ -187,6 +189,7 @@ class Trainer:
         self.log_root(logging.INFO, "Trainer setup complete.")
 
     def train(self):
+
         if not self._setup:
             raise RuntimeError("Call setup_distributed() before predict().")
 
@@ -233,7 +236,7 @@ class Trainer:
                     )
 
             if self.is_distributed:
-                self.distributed.barrier()
+                    self.distributed.barrier()
 
             if self.is_on_root:
                 if (self._epochs_trained) % self.log_every_n_epochs == 0:
@@ -248,7 +251,9 @@ class Trainer:
 
             should_stop = self._should_stop_early()
             if self.is_distributed:
-                stop_tensor = torch.tensor(int(should_stop), device=self.device)
+                stop_tensor = torch.tensor(
+                    int(should_stop), device=self.device
+                )
                 self.distributed.broadcast(stop_tensor, src=0)
                 should_stop = bool(stop_tensor.item())
 
@@ -305,6 +310,7 @@ class Trainer:
         self.log_root(logging.INFO, f"Training finished in {time_elapsed:.2f}s")
 
     def _train_on_epoch(self):
+
         self.TrainLoader.set_epoch(self._epochs_trained)
         self.module.train()
 
@@ -317,16 +323,12 @@ class Trainer:
             current_lr = self.optimizer.learning_rate
             current_accumulation_size = (
                 self.remainder_batch_size
-                if (
-                    self.remainder_batch_size != 0
-                    and batch_id >= self.num_batches - self.remainder_batch_size
-                )
+                if (self.remainder_batch_size != 0 and 
+                batch_id >= self.num_batches - self.remainder_batch_size)
                 else self.config.gradient_accumulation_steps
             )
-
-            batch_loss_dict, kwargs = self._train_on_batch(
-                batch, current_accumulation_size
-            )
+                
+            batch_loss_dict, kwargs = self._train_on_batch(batch, current_accumulation_size)
 
             self.train_aggregator.record(batch_loss_dict, current_lr, kwargs)
 
@@ -337,8 +339,11 @@ class Trainer:
         return time_elapsed
 
     def _train_on_batch(self, batch, accumulation_size: int):
+
         batch.to_device(self.device)
         kwargs = {}
+
+
 
         if hasattr(self, "beta_finder"):
             beta = self.beta_finder(self.global_step)
@@ -361,6 +366,7 @@ class Trainer:
 
     @torch.no_grad()
     def _validate_on_epoch(self):
+
         if self.ValidationLoader is None:
             raise RuntimeError(
                 "ValidationLoader is None, but validation was requested."
@@ -377,8 +383,10 @@ class Trainer:
 
             self.validation_aggregator.record(batch_loss_dict)
 
+        
     @torch.no_grad()
     def _validate_on_batch(self, batch):
+
         batch.to_device(self.device)
         kwargs = {}
 
@@ -394,6 +402,7 @@ class Trainer:
         return loss_dict
 
     def _optimizer_step(self):
+
         if self.config.grad_clip is not None:
             self.scaler.unscale_(self.optimizer.optimizer)
             torch.nn.utils.clip_grad_norm_(
@@ -413,6 +422,7 @@ class Trainer:
         self.optimizer.zero_grad(set_to_none=True)
 
     def _is_improved(self, validation_loss: float | torch.Tensor) -> bool:
+
         if isinstance(validation_loss, torch.Tensor):
             validation_loss = validation_loss.item()
 
@@ -427,6 +437,7 @@ class Trainer:
         return validation_loss < self._best_validation_loss - required_improvement
 
     def _should_stop_early(self) -> bool:
+
         if self.ValidationLoader is None:
             return False
 
@@ -439,6 +450,7 @@ class Trainer:
         return self.earlystopping_counter >= self.config.earlystoppingbuffer
 
     def _log_epoch(self, train_logs, validation_logs=None):
+
         elapsed_time = time.time() - self.start_time_train
         msg = (
             f"Epoch {self._epochs_trained}/{self.max_epochs} | "
@@ -459,6 +471,7 @@ class Trainer:
     def _save_checkpoint(
         self, name: str, train_logs: dict, validation_logs: dict | None = None
     ):
+
         checkpoint = {
             "epoch": self._epochs_trained,
             "global_step": self.global_step,
@@ -486,6 +499,7 @@ class Trainer:
         torch.save(checkpoint, path)
 
     def _load_checkpoint(self, path: str | Path | None = None, strict: bool = True):
+
         if path is None:
             path = Path(self.checkpoint_dir) / "best.pt"
         else:
@@ -528,11 +542,13 @@ class Trainer:
 
     @property
     def raw_module(self):
+
         if isinstance(self.module, torch.nn.parallel.DistributedDataParallel):
             return self.module.module
         return self.module
 
     def log_root(self, level: int, msg: str, *args):
+
         if self.is_on_root:
             if self.logger is not None:
                 self.logger.log(level, msg, *args)
@@ -541,6 +557,7 @@ class Trainer:
 
 
 def clear_memory():
+
     gc.collect()
 
     if torch.cuda.is_available():

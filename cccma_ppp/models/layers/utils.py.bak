@@ -16,6 +16,7 @@ def align_to_skip(
     mode: AlignmentMethod = "padd",
     padding_mode: PaddingMethod = "zeros",
 ) -> torch.Tensor:
+
     if x.shape[-2:] == skip_shape:
         return x
 
@@ -83,6 +84,7 @@ def _broadcast_mask(
     mask: torch.Tensor | None,
     reference: torch.Tensor,
 ) -> torch.Tensor | None:
+
     if mask is None:
         return None
 
@@ -90,6 +92,7 @@ def _broadcast_mask(
         mask = mask.unsqueeze(0).unsqueeze(0)
 
     elif mask.ndim == 3:
+                                        
         mask = mask.unsqueeze(0)
 
     if mask.ndim != 4:
@@ -121,6 +124,7 @@ def _merge_masks(
     spatial_size: tuple[int, int],
     reference: torch.Tensor,
 ) -> torch.Tensor | None:
+
     if input_mask is None and skip_mask is None:
         return None
 
@@ -169,12 +173,14 @@ def _resize_tensor(
 
 
 def _sample(mu, var, sample_size=1, std=1):
+
     out = mu + torch.sqrt(var) * _get_normal(var, std).sample((sample_size,))
 
     return out
 
 
 def _get_normal(ref_tensor, std=1):
+
     return torch.distributions.Normal(
         torch.zeros_like(ref_tensor), torch.ones_like(ref_tensor) * std
     )
@@ -191,6 +197,7 @@ def _noise_injection(ref_tensor: torch.Tensor):
 
 
 def _expand_mask(x: torch.Tensor, mask: torch.Tensor):
+
     n = x.shape[1] - mask.shape[1]
 
     noise_mask = torch.ones(

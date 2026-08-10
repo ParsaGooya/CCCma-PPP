@@ -8,13 +8,13 @@ from cccma_ppp.core.core_abc import moduleABC
 
 @dataclasses.dataclass
 class LRSchedulerConfig:
-
     min_lr: float = 0.0
     warmup_epochs: int = 0
     total_epochs: int = None
     hold_min_lr: bool = True
 
     def __post_init__(self):
+
         assert self.min_lr >= 0
         assert self.warmup_epochs >= 0
 
@@ -24,6 +24,7 @@ class LRSchedulerConfig:
         num_batches: int,
         gradient_accumulation_steps: int = 1,
     ):
+
         if self.total_epochs is None or self.total_epochs <= 0:
             raise ValueError("total_epochs must be positive.")
 
@@ -48,7 +49,6 @@ class LRSchedulerConfig:
 
 @dataclasses.dataclass
 class OptimizerConfig:
-
     lr: float = 0.0001
     weight_decay: float = 0
     optimizer_type: str = "adam"
@@ -60,6 +60,7 @@ class OptimizerConfig:
     }
 
     def __post_init__(self):
+
         if self.weight_decay < 0:
             raise ValueError("weight_decay has to be positive")
         self.optimizer = None
@@ -71,6 +72,7 @@ class OptimizerConfig:
         max_epochs: int = None,
         gradient_accumulation_steps: int = 1,
     ):
+
         if self.lr_scheduler_config is not None:
             if self.lr_scheduler_config.total_epochs is None:
                 if max_epochs is None:
@@ -90,7 +92,6 @@ class OptimizerConfig:
 
 
 class OptimizerWrapper:
-
     def __init__(
         self,
         config: OptimizerConfig,
@@ -129,21 +130,25 @@ class OptimizerWrapper:
         return self.optimizer.param_groups[0]["lr"]
 
     def step(self):
+
         if self.optimizer is None:
             raise RuntimeError("Optimizer must be built before step().")
 
         self.optimizer.step()
 
     def scheduler_step(self):
+
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
 
     def zero_grad(self, set_to_none=True, **kwargs):
+
         if self.optimizer is None:
             raise RuntimeError("Optimizer must be built before zero_grad().")
         self.optimizer.zero_grad(set_to_none=set_to_none, **kwargs)
 
     def state_dict(self):
+
         if self.optimizer is None:
             raise RuntimeError("Optimizer must be built before state_dict().")
 
@@ -157,6 +162,7 @@ class OptimizerWrapper:
         }
 
     def load_state_dict(self, state_dict):
+
         if self.optimizer is None:
             raise RuntimeError("Optimizer must be built before load_state_dict().")
 
@@ -167,8 +173,8 @@ class OptimizerWrapper:
 
 
 class CosineAnnealingLRScheduler:
-
     def __init__(self, config: LRSchedulerConfig, optimizer: torch.optim.Optimizer):
+
         self.config = config
         self.optimizer = optimizer
         self.num_steps = 0
@@ -198,6 +204,7 @@ class CosineAnnealingLRScheduler:
             )
 
     def step(self):
+
         if not hasattr(self, "scheduler"):
             raise RuntimeError("Scheduler must be built before stepping.")
 
@@ -214,12 +221,14 @@ class CosineAnnealingLRScheduler:
             self.num_steps += 1
 
     def state_dict(self):
+
         if not hasattr(self, "scheduler"):
             raise RuntimeError("Scheduler must be built before stepping.")
 
         return self.scheduler.state_dict()
 
     def load_state_dict(self, state_dict):
+
         if not hasattr(self, "scheduler"):
             raise RuntimeError("Scheduler must be built before stepping.")
 

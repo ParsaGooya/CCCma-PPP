@@ -1,9 +1,12 @@
-from unittest.mock import Mock
+from unittest.mock import MagicMock
 
+import numpy as np
 import pytest
 import torch
+import xarray as xr
+from torch.utils.data import Dataset
+from torch.utils.data.distributed import DistributedSampler
 
-import cccma_ppp.data_modules.dataloader as module
 from cccma_ppp.data_modules.dataloader import (
     BatchDataABC,
     Dataloader,
@@ -11,829 +14,817 @@ from cccma_ppp.data_modules.dataloader import (
 )
 
 
-class ConcreteBatch(BatchDataABC):
-    def __init__(self):
-        self.input = torch.tensor([1.0])
-        self.target = None
-        self.added_features = None
+INIT_TIME_DIM = DataloaderConfigABC.init_time_dim
+LEAD_TIME_DIM = DataloaderConfigABC.lead_time_dim
 
-    def to_device(self, device):
+
+def make_available_times():
+    values = np.array(
+        [
+            "2000-01-01",
+            "2001-01-01",
+            "2002-01-01",
+            "2003-01-01",
+        ],
+        dtype="datetime64[ns]",
+    )
+
+    return xr.DataArray(
+        values,
+        dims=(INIT_TIME_DIM,),
+        coords={
+            INIT_TIME_DIM: values,
+        },
+        name=INIT_TIME_DIM,
+    )
+
+
+class ConcreteBatchData(BatchDataABC):
+    def __init__(
+        self,
+        input,
+        target=None,
+        added_features=None,
+        metadata=None,
+    ):
+        self.input = input
+        self.target = target
+        self.added_features = added_features
+        self.metadata = metadata
+
+    def to_device(
+        self,
+        device,
+    ):
         self.input = self.input.to(device)
+
+        if self.target is not None:
+            self.target = self.target.to(device)
+
+        if self.added_features is not None:
+            self.added_features = self.added_features.to(device)
+
         return self
 
 
-class ConcreteConfig(DataloaderConfigABC):
+class ConcreteDataloaderConfig(DataloaderConfigABC):
     def __init__(
         self,
         *,
-        batch_size=2,
+        available_times=None,
         num_data_workers=0,
-        prefetch_factor=7,
-        drop_last=False,
+        batch_size=2,
+        prefetch_factor=2,
         pin_memory=True,
+        reduce_spatial_mask=False,
+        drop_last=False,
     ):
-        self.batch_size = batch_size
+        self.dataset_config = MagicMock()
         self.num_data_workers = num_data_workers
+        self.batch_size = batch_size
         self.prefetch_factor = prefetch_factor
-        self.drop_last = drop_last
         self.pin_memory = pin_memory
+        self.reduce_spatial_mask = reduce_spatial_mask
+        self.drop_last = drop_last
+        self.return_spatial_mask = False
         self.time_features = None
 
-        self.pin_memory = pin_memory
-        self.time_features = None
-        self.return_spatial_mask = False
-        self.reduce_spatial_mask = False
+        self._available_times = (
+            make_available_times() if available_times is None else available_times
+        )
 
         super().__init__()
 
     @property
     def available_times(self):
-        return [2000, 2001]
+        return self._available_times
 
     def setup_distributed(self):
-        self.setup = True
+        self._setup = True
         return self
 
 
-class ConcreteDataset(torch.utils.data.Dataset):
-    def __init__(self, size=5):
+class DummyDataset(Dataset):
+    def __init__(
+        self,
+        size=5,
+        input_shape=(2, 3, 4),
+        target_shape=(1, 3, 4),
+        added_features_dim=2,
+    ):
         self.size = size
+        self._input_shape = input_shape
+        self._target_shape = target_shape
+        self._added_features_dim = added_features_dim
 
     def __len__(self):
         return self.size
 
     def __getitem__(self, index):
-        return index
+        return {
+            "index": index,
+            "input": torch.tensor(
+                [float(index)],
+                dtype=torch.float32,
+            ),
+            "target": torch.tensor(
+                [float(index + 1)],
+                dtype=torch.float32,
+            ),
+        }
 
     def get_input_shape(self):
-        return (2, 3)
+        return self._input_shape
 
     def get_target_shape(self):
-        return (1,)
+        return self._target_shape
 
-    def get_added_features_dims(self):
-        return 4
+    def get_added_features_dim(self):
+        return self._added_features_dim
 
 
-def collate(
+def collate_batch(
     batch,
+    *,
     return_spatial_mask=False,
     reduce_spatial_mask=False,
 ):
     return {
-        "items": batch,
+        "indexes": [item["index"] for item in batch],
+        "input": torch.stack([item["input"] for item in batch]),
+        "target": torch.stack([item["target"] for item in batch]),
         "return_spatial_mask": return_spatial_mask,
         "reduce_spatial_mask": reduce_spatial_mask,
     }
 
 
-class CapturingLoader:
-    instances = []
+class TestBatchDataABC:
+    def test_to_device_moves_tensors(self):
+        batch = ConcreteBatchData(
+            input=torch.tensor(
+                [
+                    1.0,
+                    2.0,
+                ]
+            ),
+            target=torch.tensor(
+                [
+                    3.0,
+                ]
+            ),
+            added_features=torch.tensor(
+                [
+                    4.0,
+                ]
+            ),
+        )
 
-    def __init__(self, dataset, **kwargs):
-        self.dataset = dataset
-        self.kwargs = kwargs
-        self.values = [
-            "batch-0",
-            "batch-1",
-            "batch-2",
+        result = batch.to_device("cpu")
+
+        assert result is batch
+        assert batch.input.device.type == "cpu"
+        assert batch.target.device.type == "cpu"
+        assert batch.added_features.device.type == "cpu"
+
+    def test_to_device_handles_optional_values(self):
+        batch = ConcreteBatchData(
+            input=torch.tensor(
+                [
+                    1.0,
+                ]
+            ),
+            target=None,
+            added_features=None,
+        )
+
+        result = batch.to_device("cpu")
+
+        assert result is batch
+        assert batch.target is None
+        assert batch.added_features is None
+
+    def test_metadata_is_preserved(self):
+        metadata = [
+            {
+                "year": 2000,
+            }
         ]
-        self.__class__.instances.append(self)
 
-    def __iter__(self):
-        return iter(self.values)
+        batch = ConcreteBatchData(
+            input=torch.tensor(
+                [
+                    1.0,
+                ]
+            ),
+            metadata=metadata,
+        )
 
-    def __len__(self):
-        return len(self.values)
-
-
-class CapturingSampler:
-    instances = []
-
-    def __init__(self, dataset, **kwargs):
-        self.dataset = dataset
-        self.kwargs = kwargs
-        self.epochs = []
-        self.__class__.instances.append(self)
-
-    def set_epoch(self, epoch):
-        self.epochs.append(epoch)
+        assert batch.metadata is metadata
 
 
-@pytest.fixture(autouse=True)
-def reset_captures():
-    CapturingLoader.instances.clear()
-    CapturingSampler.instances.clear()
+class TestDataloaderConfigABC:
+    def test_initial_state(self):
+        config = ConcreteDataloaderConfig(
+            num_data_workers=1,
+            pin_memory=True,
+        )
+
+        assert config._setup is False
+
+        assert config.pin_memory is False
+
+    def test_zero_workers_disables_prefetch_factor(self):
+        config = ConcreteDataloaderConfig(
+            num_data_workers=0,
+            prefetch_factor=4,
+        )
+
+        assert config.prefetch_factor is None
+
+    def test_nonzero_workers_preserves_prefetch_factor(self):
+        config = ConcreteDataloaderConfig(
+            num_data_workers=2,
+            prefetch_factor=4,
+        )
+
+        assert config.prefetch_factor == 4
+
+    def test_setup_distributed(self):
+        config = ConcreteDataloaderConfig()
+
+        result = config.setup_distributed()
+
+        assert result is config
+        assert config._setup is True
+
+    def test_select_requested_times_from_data_array(self):
+        config = ConcreteDataloaderConfig()
+
+        result = config.select_requested_times(
+            slice(
+                "2001",
+                "2002",
+            )
+        )
+
+        assert isinstance(
+            result,
+            xr.DataArray,
+        )
+        assert np.array_equal(
+            result.values,
+            np.array(
+                [
+                    "2001-01-01",
+                    "2002-01-01",
+                ],
+                dtype="datetime64[ns]",
+            ),
+        )
+
+    def test_select_requested_times_from_numpy_array(self):
+        available = make_available_times().values[::-1]
+
+        config = ConcreteDataloaderConfig(
+            available_times=available,
+        )
+
+        result = config.select_requested_times(
+            slice(
+                "2000",
+                "2001",
+            )
+        )
+
+        assert np.array_equal(
+            result.values,
+            np.array(
+                [
+                    "2000-01-01",
+                    "2001-01-01",
+                ],
+                dtype="datetime64[ns]",
+            ),
+        )
+
+    def test_select_requested_times_sorts_available_times(self):
+        available = make_available_times().isel(
+            {
+                INIT_TIME_DIM: [
+                    3,
+                    1,
+                    2,
+                    0,
+                ]
+            }
+        )
+
+        config = ConcreteDataloaderConfig(
+            available_times=available,
+        )
+
+        result = config.select_requested_times(
+            slice(
+                "2000",
+                "2003",
+            )
+        )
+
+        assert np.array_equal(
+            result.values,
+            make_available_times().values,
+        )
+
+    def test_select_requested_times_rejects_early_start(self):
+        config = ConcreteDataloaderConfig()
+
+        with pytest.raises(
+            ValueError,
+            match="before the first available time",
+        ):
+            config.select_requested_times(
+                slice(
+                    "1999",
+                    "2001",
+                )
+            )
+
+    def test_select_requested_times_rejects_late_stop(self):
+        config = ConcreteDataloaderConfig()
+
+        with pytest.raises(
+            ValueError,
+            match="after the final available time",
+        ):
+            config.select_requested_times(
+                slice(
+                    "2001",
+                    "2004",
+                )
+            )
+
+    def test_select_requested_times_rejects_empty_selection(self):
+        available = xr.DataArray(
+            np.array(
+                [
+                    "2000-01-01",
+                    "2002-01-01",
+                ],
+                dtype="datetime64[ns]",
+            ),
+            dims=(INIT_TIME_DIM,),
+            coords={
+                INIT_TIME_DIM: np.array(
+                    [
+                        "2000-01-01",
+                        "2002-01-01",
+                    ],
+                    dtype="datetime64[ns]",
+                ),
+            },
+        )
+
+        config = ConcreteDataloaderConfig(
+            available_times=available,
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="No available times fall inside",
+        ):
+            config.select_requested_times(
+                slice(
+                    "2001",
+                    "2001",
+                )
+            )
+
+    def test_select_requested_times_full_available_range(self):
+        config = ConcreteDataloaderConfig()
+
+        result = config.select_requested_times(
+            slice(
+                "2000",
+                "2003",
+            )
+        )
+
+        assert np.array_equal(
+            result.values,
+            make_available_times().values,
+        )
+
+    def test_select_requested_times_single_year(self):
+        config = ConcreteDataloaderConfig()
+
+        result = config.select_requested_times(
+            slice(
+                "2002",
+                "2002",
+            )
+        )
+
+        assert result.size == 1
+        assert result.values[0] == np.datetime64("2002-01-01")
 
 
-def make_loader(**kwargs):
-    return Dataloader(
-        config=kwargs.pop(
-            "config",
-            ConcreteConfig(),
-        ),
-        dataset=kwargs.pop(
-            "dataset",
-            ConcreteDataset(),
-        ),
-        collate_fn=kwargs.pop(
-            "collate_fn",
-            collate,
-        ),
-        **kwargs,
-    )
+class TestDataloader:
+    def test_creates_torch_dataloader(self):
+        config = ConcreteDataloaderConfig(
+            num_data_workers=0,
+            batch_size=2,
+        )
+        dataset = DummyDataset(
+            size=5,
+        )
 
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            shuffle=False,
+        )
 
-@pytest.mark.parametrize(
-    (
-        "workers",
-        "requested_prefetch",
-        "expected_prefetch",
-    ),
-    [
-        (0, 9, None),
-        (1, 9, 9),
-        (4, None, None),
-    ],
-)
-def test_config_init_prefetch_worker_branches(
-    workers,
-    requested_prefetch,
-    expected_prefetch,
-):
-    config = ConcreteConfig(
-        num_data_workers=workers,
-        prefetch_factor=requested_prefetch,
-    )
+        assert loader._torch_loader.batch_size == 2
+        assert loader._torch_loader.num_workers == 0
+        assert loader._torch_loader.prefetch_factor is None
+        assert loader._torch_loader.persistent_workers is False
+        assert loader._torch_loader.timeout == 0
 
-    assert config.prefetch_factor is expected_prefetch or (
-        config.prefetch_factor == expected_prefetch
-    )
-    assert config._setup is False
-    assert config.pin_memory is False
+    def test_local_loader_has_no_sampler(self):
+        config = ConcreteDataloaderConfig()
+        dataset = DummyDataset()
 
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            world_size=1,
+            shuffle=False,
+        )
 
-@pytest.mark.parametrize(
-    (
-        "world_size",
-        "explicit_shuffle",
-        "expected_shuffle",
-    ),
-    [
-        (1, None, True),
-        (2, None, False),
-        (1, False, False),
-        (2, True, True),
-    ],
-)
-def test_post_init_shuffle_branches(
-    monkeypatch,
-    world_size,
-    explicit_shuffle,
-    expected_shuffle,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-    monkeypatch.setattr(
-        module,
-        "DistributedSampler",
-        CapturingSampler,
-    )
+        assert loader.sampler is None
 
-    make_loader(
-        world_size=world_size,
-        shuffle=explicit_shuffle,
-    )
+    def test_distributed_loader_uses_distributed_sampler(self):
+        config = ConcreteDataloaderConfig(
+            drop_last=True,
+        )
+        dataset = DummyDataset(
+            size=8,
+        )
 
-    args = CapturingLoader.instances[-1].kwargs
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            rank=1,
+            world_size=2,
+            shuffle=False,
+        )
 
-    assert args["shuffle"] is expected_shuffle
+        assert isinstance(
+            loader.sampler,
+            DistributedSampler,
+        )
+        assert loader.sampler.num_replicas == 2
+        assert loader.sampler.rank == 1
+        assert loader.sampler.shuffle is False
+        assert loader.sampler.drop_last is True
 
+    def test_distributed_sampler_defaults_to_shuffle(self):
+        config = ConcreteDataloaderConfig()
+        dataset = DummyDataset(
+            size=8,
+        )
 
-@pytest.mark.parametrize(
-    (
-        "workers",
-        "expected_persistent",
-    ),
-    [
-        (0, False),
-        (1, True),
-        (3, True),
-    ],
-)
-def test_post_init_worker_persistence_branch(
-    monkeypatch,
-    workers,
-    expected_persistent,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            rank=0,
+            world_size=2,
+            shuffle=None,
+        )
 
-    config = ConcreteConfig(
-        num_data_workers=workers,
-        prefetch_factor=2,
-    )
+        assert isinstance(
+            loader.sampler,
+            DistributedSampler,
+        )
+        assert loader.sampler.shuffle is True
 
-    make_loader(config=config)
+    def test_explicit_shuffle_is_used_for_local_loader(self):
+        config = ConcreteDataloaderConfig()
+        dataset = DummyDataset()
 
-    args = CapturingLoader.instances[-1].kwargs
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            shuffle=False,
+        )
 
-    assert args["num_workers"] == workers
-    assert args["persistent_workers"] is expected_persistent
-    assert args["prefetch_factor"] == (None if workers == 0 else 2)
+        assert loader._torch_loader.sampler is not None
 
-    assert args["pin_memory"] is False
+        assert type(loader._torch_loader.sampler).__name__ == "SequentialSampler"
 
+    def test_default_local_shuffle_is_true(self):
+        config = ConcreteDataloaderConfig()
+        dataset = DummyDataset()
 
-@pytest.mark.pruned
-def test_single_process_has_no_sampler(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-    monkeypatch.setattr(
-        module,
-        "DistributedSampler",
-        CapturingSampler,
-    )
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            world_size=1,
+            shuffle=None,
+        )
 
-    loader = make_loader(world_size=1)
+        assert type(loader._torch_loader.sampler).__name__ == "RandomSampler"
 
-    assert loader.sampler is None
-    assert CapturingSampler.instances == []
+    def test_collate_receives_spatial_mask_arguments(self):
+        config = ConcreteDataloaderConfig(
+            batch_size=2,
+            reduce_spatial_mask=True,
+        )
+        dataset = DummyDataset(
+            size=2,
+        )
 
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            shuffle=False,
+            return_spatial_mask=True,
+        )
 
-@pytest.mark.pruned
-def test_distributed_sampler_receives_all_arguments(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-    monkeypatch.setattr(
-        module,
-        "DistributedSampler",
-        CapturingSampler,
-    )
+        batch = next(iter(loader))
 
-    config = ConcreteConfig(
-        drop_last=True,
-    )
+        assert batch["return_spatial_mask"] is True
+        assert batch["reduce_spatial_mask"] is True
 
-    loader = make_loader(
-        config=config,
-        world_size=4,
-        rank=2,
-    )
+    def test_iteration(self):
+        config = ConcreteDataloaderConfig(
+            batch_size=2,
+        )
+        dataset = DummyDataset(
+            size=4,
+        )
 
-    sampler = loader.sampler
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            shuffle=False,
+        )
 
-    assert sampler is CapturingSampler.instances[-1]
-    assert sampler.kwargs == {
-        "num_replicas": 4,
-        "rank": 2,
-        "shuffle": True,
-        "drop_last": True,
-    }
+        batches = list(loader)
 
-
-@pytest.mark.pruned
-def test_sampler_helper_forwards_extra_kwargs(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-    monkeypatch.setattr(
-        module,
-        "DistributedSampler",
-        CapturingSampler,
-    )
-
-    loader = make_loader(world_size=1)
-
-    loader.world_size = 2
-    loader.rank = 1
-
-    sampler = loader._get_dataloader_sampler(
-        seed=123,
-    )
-
-    assert sampler.kwargs["seed"] == 123
-    assert sampler.kwargs["num_replicas"] == 2
-    assert sampler.kwargs["rank"] == 1
-
-
-def test_set_epoch_no_sampler_returns_same_loader(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-
-    loader = make_loader(world_size=1)
-
-    assert loader.set_epoch(7) is loader
-
-
-def test_set_epoch_distributed_delegates(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-    monkeypatch.setattr(
-        module,
-        "DistributedSampler",
-        CapturingSampler,
-    )
-
-    loader = make_loader(world_size=2)
-
-    assert loader.set_epoch(7) is loader
-    assert loader.sampler.epochs == [7]
-
-
-@pytest.mark.pruned
-def test_shape_and_feature_properties_delegate_to_dataset(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-
-    dataset = Mock()
-    dataset.get_input_shape.return_value = (8, 9)
-    dataset.get_target_shape.return_value = (2,)
-    dataset.get_added_features_dim.return_value = 6
-
-    loader = make_loader(dataset=dataset)
-
-    assert loader.input_shape == (8, 9)
-    assert loader.target_shape == (2,)
-    assert loader.added_features_dim == 6
-
-    dataset.get_input_shape.assert_called_once_with()
-    dataset.get_target_shape.assert_called_once_with()
-    dataset.get_added_features_dim.assert_called_once_with()
-
-
-@pytest.mark.pruned
-def test_iter_and_len_delegate_to_torch_loader(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-
-    loader = make_loader()
-
-    assert list(loader) == [
-        "batch-0",
-        "batch-1",
-        "batch-2",
-    ]
-    assert len(loader) == 3
-
-
-@pytest.mark.parametrize(
-    (
-        "start",
-        "expected",
-    ),
-    [
-        (
+        assert len(batches) == 2
+        assert batches[0]["indexes"] == [
             0,
-            [
-                "batch-0",
-                "batch-1",
-                "batch-2",
-            ],
-        ),
-        (
             1,
-            [
-                "batch-1",
-                "batch-2",
-            ],
-        ),
-        (3, []),
-        (99, []),
-    ],
-)
-def test_subset_loader_start_branches(
-    monkeypatch,
-    start,
-    expected,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-
-    loader = make_loader()
-
-    assert list(loader.subset_loader(start)) == expected
-
-
-@pytest.mark.pruned
-def test_config_available_times_property():
-    config = ConcreteConfig()
-
-    assert config.available_times == [2000, 2001]
-
-
-@pytest.mark.pruned
-def test_config_setup_distributed_returns_self():
-    config = ConcreteConfig()
-
-    result = config.setup_distributed()
-
-    assert result is config
-    assert config.setup is True
-
-
-@pytest.mark.pruned
-def test_config_init_sets_setup_false():
-    config = ConcreteConfig()
-
-    assert config._setup is False
-
-
-@pytest.mark.pruned
-def test_config_init_always_sets_pin_memory_false():
-    config = ConcreteConfig(
-        pin_memory=True,
-    )
-
-    assert config.pin_memory is False
-
-
-@pytest.mark.pruned
-def test_config_zero_workers_clears_prefetch_factor():
-    config = ConcreteConfig(
-        num_data_workers=0,
-        prefetch_factor=8,
-    )
-
-    assert config.prefetch_factor is None
-
-
-@pytest.mark.pruned
-def test_config_nonzero_workers_preserves_prefetch_factor():
-    config = ConcreteConfig(
-        num_data_workers=2,
-        prefetch_factor=8,
-    )
-
-    assert config.prefetch_factor == 8
-
-
-@pytest.mark.parametrize(
-    ("workers", "expected_timeout"),
-    [
-        (0, 0),
-        (1, 60),
-        (4, 60),
-    ],
-)
-def test_post_init_worker_timeout_branches(
-    monkeypatch,
-    workers,
-    expected_timeout,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-
-    config = ConcreteConfig(
-        num_data_workers=workers,
-        prefetch_factor=2,
-    )
-
-    make_loader(config=config)
-
-    kwargs = CapturingLoader.instances[-1].kwargs
-
-    assert kwargs["timeout"] == expected_timeout
-
-
-@pytest.mark.pruned
-def test_post_init_forwards_basic_loader_arguments(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-
-    dataset = ConcreteDataset(size=7)
-    config = ConcreteConfig(
-        batch_size=3,
-        num_data_workers=0,
-        drop_last=True,
-    )
-
-    loader = make_loader(
-        config=config,
-        dataset=dataset,
-    )
-
-    captured = CapturingLoader.instances[-1]
-
-    assert captured.dataset is dataset
-    assert captured.kwargs["batch_size"] == 3
-    assert captured.kwargs["sampler"] is loader.sampler
-    assert captured.kwargs["num_workers"] == 0
-    assert captured.kwargs["prefetch_factor"] is None
-    assert captured.kwargs["persistent_workers"] is False
-    assert captured.kwargs["timeout"] == 0
-
-
-@pytest.mark.pruned
-def test_post_init_forwards_config_pin_memory_value(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-
-    config = ConcreteConfig()
-    config.pin_memory = True
-
-    make_loader(config=config)
-
-    kwargs = CapturingLoader.instances[-1].kwargs
-
-    assert kwargs["pin_memory"] is True
-
-
-@pytest.mark.pruned
-def test_post_init_default_spatial_mask_flags(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-
-    config = ConcreteConfig()
-    config.return_spatial_mask = False
-    config.reduce_spatial_mask = False
-
-    make_loader(config=config)
-
-    wrapped_collate = CapturingLoader.instances[-1].kwargs["collate_fn"]
-
-    result = wrapped_collate([1, 2])
-
-    assert result == {
-        "items": [1, 2],
-        "return_spatial_mask": False,
-        "reduce_spatial_mask": False,
-    }
-
-
-@pytest.mark.pruned
-def test_collate_partial_preserves_original_function(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-
-    make_loader()
-
-    wrapped_collate = CapturingLoader.instances[-1].kwargs["collate_fn"]
-
-    assert wrapped_collate.func is collate
-
-
-@pytest.mark.pruned
-def test_distributed_sampler_uses_dataset_instance(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-    monkeypatch.setattr(
-        module,
-        "DistributedSampler",
-        CapturingSampler,
-    )
-
-    dataset = ConcreteDataset()
-
-    loader = make_loader(
-        dataset=dataset,
-        world_size=2,
-    )
-
-    assert loader.sampler.dataset is dataset
-
-
-@pytest.mark.pruned
-def test_sampler_helper_single_process_ignores_extra_kwargs(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-    monkeypatch.setattr(
-        module,
-        "DistributedSampler",
-        CapturingSampler,
-    )
-
-    loader = make_loader(world_size=1)
-
-    sampler = loader._get_dataloader_sampler(
-        seed=123,
-    )
-
-    assert sampler is None
-    assert CapturingSampler.instances == []
-
-
-@pytest.mark.pruned
-def test_set_epoch_accepts_zero_epoch(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-    monkeypatch.setattr(
-        module,
-        "DistributedSampler",
-        CapturingSampler,
-    )
-
-    loader = make_loader(world_size=2)
-
-    result = loader.set_epoch(0)
-
-    assert result is loader
-    assert loader.sampler.epochs == [0]
-
-
-@pytest.mark.pruned
-def test_set_epoch_accepts_negative_epoch(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-    monkeypatch.setattr(
-        module,
-        "DistributedSampler",
-        CapturingSampler,
-    )
-
-    loader = make_loader(world_size=2)
-
-    loader.set_epoch(-1)
-
-    assert loader.sampler.epochs == [-1]
-
-
-@pytest.mark.pruned
-def test_subset_loader_default_starts_at_first_batch(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-
-    loader = make_loader()
-
-    assert list(loader.subset_loader()) == [
-        "batch-0",
-        "batch-1",
-        "batch-2",
-    ]
-
-
-@pytest.mark.pruned
-def test_iter_returns_underlying_loader_iterator(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-
-    loader = make_loader()
-
-    iterator = iter(loader)
-
-    assert next(iterator) == "batch-0"
-    assert next(iterator) == "batch-1"
-    assert next(iterator) == "batch-2"
-
-    with pytest.raises(StopIteration):
-        next(iterator)
-
-
-@pytest.mark.pruned
-def test_len_returns_zero_for_empty_capturing_loader(
-    monkeypatch,
-):
-    class EmptyLoader(CapturingLoader):
-        def __init__(self, dataset, **kwargs):
-            super().__init__(dataset, **kwargs)
-            self.values = []
-
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        EmptyLoader,
-    )
-
-    loader = make_loader()
-
-    assert len(loader) == 0
-    assert list(loader) == []
-
-
-@pytest.mark.pruned
-def test_shape_properties_return_none_when_dataset_returns_none(
-    monkeypatch,
-):
-    monkeypatch.setattr(
-        module,
-        "DataLoader",
-        CapturingLoader,
-    )
-
-    dataset = Mock()
-    dataset.get_input_shape.return_value = None
-    dataset.get_target_shape.return_value = None
-    dataset.get_added_features_dim.return_value = None
-
-    loader = make_loader(dataset=dataset)
-
-    assert loader.input_shape is None
-    assert loader.target_shape is None
-    assert loader.added_features_dim is None
-
-    original_input_mask = BatchDataABC._shared_input_mask
-    original_target_mask = BatchDataABC._shared_target_mask
-
-    input_mask = torch.ones(1)
-    target_mask = torch.zeros(1)
-
-    try:
-        ConcreteBatch._shared_input_mask = input_mask
-        ConcreteBatch._shared_target_mask = target_mask
-
-        first = ConcreteBatch()
-        second = ConcreteBatch()
-
-        assert first._shared_input_mask is input_mask
-        assert second._shared_input_mask is input_mask
-        assert first._shared_target_mask is target_mask
-        assert second._shared_target_mask is target_mask
-    finally:
-        ConcreteBatch._shared_input_mask = original_input_mask
-        ConcreteBatch._shared_target_mask = original_target_mask
+        ]
+        assert batches[1]["indexes"] == [
+            2,
+            3,
+        ]
+
+    def test_length_with_complete_batches(self):
+        config = ConcreteDataloaderConfig(
+            batch_size=2,
+            drop_last=False,
+        )
+        dataset = DummyDataset(
+            size=6,
+        )
+
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            shuffle=False,
+        )
+
+        assert len(loader) == 3
+
+    def test_length_includes_partial_batch(self):
+        config = ConcreteDataloaderConfig(
+            batch_size=2,
+            drop_last=False,
+        )
+        dataset = DummyDataset(
+            size=5,
+        )
+
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            shuffle=False,
+        )
+
+        assert len(loader) == 3
+
+    def test_input_shape_delegates_to_dataset(self):
+        config = ConcreteDataloaderConfig()
+        dataset = DummyDataset(
+            input_shape=(
+                4,
+                16,
+                32,
+            )
+        )
+
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            shuffle=False,
+        )
+
+        assert loader.input_shape == (
+            4,
+            16,
+            32,
+        )
+
+    def test_target_shape_delegates_to_dataset(self):
+        config = ConcreteDataloaderConfig()
+        dataset = DummyDataset(
+            target_shape=(
+                2,
+                16,
+                32,
+            )
+        )
+
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            shuffle=False,
+        )
+
+        assert loader.target_shape == (
+            2,
+            16,
+            32,
+        )
+
+    def test_added_features_dim_delegates_to_dataset(self):
+        config = ConcreteDataloaderConfig()
+        dataset = DummyDataset(
+            added_features_dim=6,
+        )
+
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            shuffle=False,
+        )
+
+        assert loader.added_features_dim == 6
+
+    def test_set_epoch_for_distributed_sampler(self):
+        config = ConcreteDataloaderConfig()
+        dataset = DummyDataset(
+            size=8,
+        )
+
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            rank=0,
+            world_size=2,
+            shuffle=False,
+        )
+
+        result = loader.set_epoch(4)
+
+        assert loader.sampler.epoch == 4
+        assert result is loader
+
+    def test_set_epoch_without_sampler(self):
+        config = ConcreteDataloaderConfig()
+        dataset = DummyDataset()
+
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            world_size=1,
+            shuffle=False,
+        )
+
+        result = loader.set_epoch(4)
+
+        assert result is loader
+
+    def test_subset_loader_skips_batches(self):
+        config = ConcreteDataloaderConfig(
+            batch_size=2,
+        )
+        dataset = DummyDataset(
+            size=6,
+        )
+
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            shuffle=False,
+        )
+
+        remaining = list(
+            loader.subset_loader(
+                start_batch=1,
+            )
+        )
+
+        assert len(remaining) == 2
+        assert remaining[0]["indexes"] == [
+            2,
+            3,
+        ]
+        assert remaining[1]["indexes"] == [
+            4,
+            5,
+        ]
+
+    def test_subset_loader_from_zero_returns_every_batch(self):
+        config = ConcreteDataloaderConfig(
+            batch_size=2,
+        )
+        dataset = DummyDataset(
+            size=4,
+        )
+
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            shuffle=False,
+        )
+
+        assert (
+            len(
+                list(
+                    loader.subset_loader(
+                        start_batch=0,
+                    )
+                )
+            )
+            == 2
+        )
+
+    def test_subset_loader_past_end_is_empty(self):
+        config = ConcreteDataloaderConfig(
+            batch_size=2,
+        )
+        dataset = DummyDataset(
+            size=4,
+        )
+
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            shuffle=False,
+        )
+
+        assert (
+            list(
+                loader.subset_loader(
+                    start_batch=10,
+                )
+            )
+            == []
+        )
+
+    def test_get_sampler_accepts_additional_arguments(self):
+        config = ConcreteDataloaderConfig()
+        dataset = DummyDataset(
+            size=8,
+        )
+
+        loader = Dataloader(
+            config=config,
+            dataset=dataset,
+            collate_fn=collate_batch,
+            rank=0,
+            world_size=2,
+            shuffle=False,
+        )
+
+        sampler = loader._get_dataloader_sampler(
+            seed=42,
+        )
+
+        assert isinstance(
+            sampler,
+            DistributedSampler,
+        )
+        assert sampler.seed == 42

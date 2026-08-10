@@ -24,10 +24,14 @@ def get_parser() -> argparse.ArgumentParser:
 
 
 def main(yaml_config: str):
+
     distributed = Distributed.get_instance()
 
     try:
         config_data = prepare_config(yaml_config)
+
+               
+                                               
 
         config = dacite.from_dict(
             data_class=InferenceConfig,
@@ -54,3 +58,9 @@ def main(yaml_config: str):
 
     finally:
         distributed.cleanup()
+
+
+                            
+                           
+                                
+                       

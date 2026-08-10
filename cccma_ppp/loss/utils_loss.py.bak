@@ -28,6 +28,7 @@ class WeightedMSE(lossABC):
         max_threshold=0,
         **kwargs,
     ):
+
         super().__init__()
         self.reduction = reduction
         self.hyperparam = hyperparam
@@ -79,6 +80,7 @@ class WeightedMSE(lossABC):
         self.register_buffer("weights", weights)
 
     def _downsample(self, tensor: torch.Tensor) -> torch.Tensor:
+
         squeeze = False
         if len(tensor.shape) == self.num_output_dimensions:
             tensor = tensor.unsqueeze(0)
@@ -102,6 +104,7 @@ class WeightedMSE(lossABC):
         target_mask: torch.Tensor | None = None,
         print_loss=False,
     ) -> torch.Tensor:
+
         if self.generative_context.generator:
             _check_generator_structure(data, target)
             data = data.mean(0)
@@ -140,12 +143,14 @@ class WeightedMSE(lossABC):
         return loss
 
     def _print_loss(self, loss):
+
         if self.low_ress_kernel_size is not None:
             print(f"MSE_lowress : {loss.item():.5f}")
         else:
             print(f"MSE : {loss.item():.5f}")
 
     def _aggregate(self, loss, mask):
+
         weight = self.weights
         loss = loss * weight
         if mask is not None:
@@ -181,6 +186,7 @@ class WeightedCRPS(lossABC):
         generative_context: GenerativeContext | None = None,
         **kwargs,
     ):
+
         super().__init__()
         self.reduction = reduction
         self.num_output_dimensions = num_output_dimensions
@@ -230,6 +236,7 @@ class WeightedCRPS(lossABC):
         self.register_buffer("weights", weights)
 
     def _downsample(self, tensor: torch.Tensor) -> torch.Tensor:
+
         squeeze = False
         if len(tensor.shape) == self.num_output_dimensions:
             tensor = tensor.unsqueeze(0)
@@ -253,6 +260,7 @@ class WeightedCRPS(lossABC):
         target_mask: torch.Tensor | None = None,
         print_loss=False,
     ) -> torch.Tensor:
+
         if not self.generative_context.generator:
             raise RuntimeError(
                 "generator cannot be False as a step_argument in Losspipeline.forward()"
@@ -305,12 +313,14 @@ class WeightedCRPS(lossABC):
         return loss
 
     def _print_loss(self, loss):
+
         if self.low_ress_kernel_size is not None:
             print(f"CRPS_lowress : {loss.item():.5f}")
         else:
             print(f"CRPS : {loss.item():.5f}")
 
     def _aggregate(self, loss, mask):
+
         weight = self.weights
         loss = loss * weight
         if mask is not None:
@@ -345,6 +355,7 @@ class Frobenius_norm(lossABC):
         generative_context: GenerativeContext | None = None,
         covariance_dim: CovarianceDim = "spatial",
     ):
+
         super().__init__()
 
         self.covariance_dim = covariance_dim
@@ -363,6 +374,7 @@ class Frobenius_norm(lossABC):
         target: torch.Tensor,
         print_loss=False,
     ) -> torch.Tensor:
+
         if self.generative_context.generator:
             _check_generator_structure(data, target)
             data = data.mean(0)
@@ -408,9 +420,11 @@ class Frobenius_norm(lossABC):
         return loss
 
     def _print_loss(self, loss):
+
         print(f"FLN : {loss.item():.5f}")
 
     def _aggregate(self, loss, output_size=None):
+
         if output_size is None:
             output_size = self.output_size
 
@@ -426,6 +440,7 @@ class Frobenius_norm(lossABC):
 
 
 def _check_generator_structure(data: torch.Tensor, target: torch.Tensor):
+
     bool = data.shape[1:] == (1,) * (data.dim() - target.dim() - 1) + target.shape
     if bool:
         return True

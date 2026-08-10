@@ -52,6 +52,7 @@ from cccma_ppp.models.unet_models.utils import _unet_config_checks, _repeat_tens
 @dataclasses.dataclass
 class UNetConfig(modelConfigABC):
 
+
     channels: list[int]
     block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig = (
         field(default_factory=ConvBlockConfig)
@@ -76,6 +77,7 @@ class UNetConfig(modelConfigABC):
     NUM_OUTPUT_DIMS: ClassVar[int] = 3
 
     def __post_init__(self) -> None:
+
         _unet_config_checks(self)
 
         n_up_blocks = len(self.channels) - 1
@@ -85,10 +87,11 @@ class UNetConfig(modelConfigABC):
 
     @property
     def EXPECTS_MASK(self) -> bool:
-        return isinstance(self.block_config, PartialConvBlockConfig) or getattr(
-            self.block_config, "use_partial_conv", False
+        return (
+            isinstance(self.block_config, PartialConvBlockConfig)
+            or getattr(self.block_config, "use_partial_conv", False)
         )
-
+    
     def build(
         self,
         input_shape: np.ndarray,
@@ -104,7 +107,6 @@ class UNetConfig(modelConfigABC):
 
 
 class UNet(deterministicmodelsABC):
-
     def __init__(
         self,
         config: UNetConfig,
@@ -140,6 +142,10 @@ class UNet(deterministicmodelsABC):
                     "needs output_block_hidden_channels to process output after "
                     "interpolation."
                 )
+                                                                           
+                                                                           
+                                                              
+               
 
         min_spatial_size = int(min(input_shape[-2:]))
 
@@ -173,7 +179,7 @@ class UNet(deterministicmodelsABC):
         output_channels = output_shape[0]
 
         channels = config.channels
-
+        
         self.initial_mapping = build_conv_block(
             input_channels,
             channels[0],
@@ -210,8 +216,7 @@ class UNet(deterministicmodelsABC):
         up_blocks: list[nn.Module] = []
         for index, skip_channels in enumerate(reversed_skips):
             inject_noise = generator_enabled and (
-                config.GENERATOR.noise_level != "medium"
-                or index == len(reversed_skips) - 1
+                config.GENERATOR.noise_level != "medium" or index == len(reversed_skips) - 1
             )
 
             out_channels = skip_channels
@@ -251,6 +256,7 @@ class UNet(deterministicmodelsABC):
         x_mask: torch.Tensor | None,
         added_features: torch.Tensor | None,
     ) -> TensorMask:
+
         x_mask = _broadcast_mask(x_mask, x)
 
         if added_features is not None:
@@ -269,6 +275,8 @@ class UNet(deterministicmodelsABC):
         return TensorMask(tensor=x, mask=x_mask)
 
     def forward(self, request: DeterministicRequest) -> deterministicOutput:
+
+
         num_output_samples = request.output_sample_size
         batch_size = request.input.shape[0]
 
@@ -285,6 +293,7 @@ class UNet(deterministicmodelsABC):
         return deterministicOutput(output=output)
 
     def forward_decoder(self, request: DeterministicRequest) -> torch.Tensor:
+    
         x = request.input
         x_mask = request.input_mask
         added_features = request.added_features
@@ -307,6 +316,7 @@ class UNet(deterministicmodelsABC):
             skips.append(skip)
 
         input = self.bottleneck(input)
+    
 
         if self.config.GENERATOR is not None and num_output_samples > 0:
             input = _repeat_tensor_mask(
@@ -331,6 +341,7 @@ class UNet(deterministicmodelsABC):
         )
 
         return output_tensor
+
 
     @property
     def output_block(self) -> UNetOutput:

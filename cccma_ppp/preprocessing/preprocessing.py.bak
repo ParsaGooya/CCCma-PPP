@@ -33,17 +33,19 @@ class PreprocessingPipeline:
     )
 
     def __post_init__(self):
+
         self.fitted = False
         self.reference_coords = None
         self.reference_var = None
-        self.num_instances += 1
+        type(self).num_instances += 1
         if self.load_dir is None:
-            self.name = f"instance_{self.num_instances}"
+            self.name = f"instance_{type(self).num_instances}"
             self.pipeline = []
             for step in self.preprocessors_list:
                 self.pipeline.append((step.name.lower(), step.get_preprocessor()))
 
     def set_name(self, name: str):
+
         self.name = name
 
     def fit(
@@ -54,6 +56,7 @@ class PreprocessingPipeline:
         save_name: str | None = None,
         save_path: Path | str | None = None,
     ):
+
         if self.load_dir is None:
             data_processed = base_data
             self.fitted_based_time = base_data[self.init_time_time].values
@@ -88,6 +91,7 @@ class PreprocessingPipeline:
         return self
 
     def transform(self, data: xr.DataArray, step_arguments=None):
+
         if step_arguments is None:
             step_arguments = dict()
         for a in step_arguments.keys():
@@ -102,6 +106,7 @@ class PreprocessingPipeline:
         return data_processed
 
     def inverse_transform(self, data: xr.DataArray, step_arguments=None):
+
         if step_arguments is None:
             step_arguments = dict()
         for a in step_arguments.keys():
@@ -117,6 +122,7 @@ class PreprocessingPipeline:
         return data_processed
 
     def to_dataset(self, data: xr.DataArray) -> xr.Dataset:
+
         if len(data.channels) != len(self.reference_var):
             raise ValueError(
                 "The dataset does not match the preprocessing pipeline."
@@ -170,6 +176,7 @@ class PreprocessingPipeline:
         return self.fitted_preprocessors[idx.item()]
 
     def add_fitted_preprocessor(self, preprocessor, name, index=None):
+
         assert preprocessor.fitted, "The preprocessor must be fitted"
         if index is None:
             self.fitted_preprocessors.append(preprocessor)
@@ -190,9 +197,10 @@ class PreprocessingPipeline:
             if dim in base_data.dims
         }
 
-        self.reference_var = list(base_data.data_vars)
+        self.reference_var = list(base_data.data_vars) if isinstance(base_data, xr.Dataset) else ([base_data.name] if base_data.name is not None else [])
 
     def load_from_memory(self, load_dir: str | Path):
+
         loaded = joblib.load(Path(load_dir))
 
         if not loaded.fitted:

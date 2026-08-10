@@ -10,7 +10,6 @@ import dataclasses
 
 
 class moduleConfigABC(abc.ABC):
-
     _type: ClassVar[str | None] = None
 
     @classmethod
@@ -25,36 +24,43 @@ class moduleConfigABC(abc.ABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int = None,
     ):
+
         pass
 
     @abc.abstractmethod
     def _load_from_checkpoint(self):
+
         pass
 
 
 class moduleABC(nn.Module, abc.ABC):
-
     def __init__(self):
+
         super().__init__()
 
     @abc.abstractmethod
     def init_loss_function(self, reconstruction_loss: nn.Module, **kwargs):
+
         pass
 
     @abc.abstractmethod
     def _compute_loss(self):
+
         pass
 
     @abc.abstractmethod
     def forward(self):
+
         pass
 
     @abc.abstractmethod
     def predict(self):
+
         pass
 
     @final
     def _get_device(self):
+
         param = next(self.parameters(), None)
 
         if param is not None:
@@ -69,6 +75,7 @@ class moduleABC(nn.Module, abc.ABC):
 
     @final
     def _load_state_dict(self, load_path: Path | str, strict: bool = True):
+
         if not Path(load_path).exists():
             raise FileNotFoundError(f"Checkpoint not found: {load_path}")
 
@@ -81,8 +88,8 @@ class moduleABC(nn.Module, abc.ABC):
 
 
 class GenerativeContext:
-
     def __init__(self, module: moduleABC | None = None):
+
         if module is not None:
             self.generator = getattr(module.model_config, "GENERATOR", None) is not None
             self.generative_modeling = getattr(
@@ -96,5 +103,4 @@ class GenerativeContext:
 
 @dataclasses.dataclass
 class OutputABC:
-
     output: torch.Tensor

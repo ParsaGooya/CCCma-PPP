@@ -1,21 +1,28 @@
 import abc
 from typing import ClassVar, final
 import xarray as xr
-from cccma_ppp.configs import (required_sample_dimensions,
-                               realization_dim,
-                               lead_time_unit,
-                               lead_time_resolution)
+from cccma_ppp.configs import (
+    required_sample_dimensions,
+    realization_dim,
+    lead_time_unit,
+    lead_time_resolution,
+)
 
 init_time_dim, lead_time_dim = required_sample_dimensions
+
+
 class PreprocessModuleABC(abc.ABC):
     """
-    Abstract base class for preprocessing modules.
+    Document this class.
 
-    Classvar:
-        lead_time_resolution : {"month", "day"}, optional
-            Temporal unit represented by one lead-time increment.
+    Attributes
+    ----------
+    large_ensemble : bool
+        Description not yet provided.
+    fitted : bool
+        Description not yet provided.
     """
-    
+
     large_ensemble: bool
     fitted: bool
 
@@ -25,62 +32,44 @@ class PreprocessModuleABC(abc.ABC):
     realization_dim: ClassVar[int] = realization_dim
     supported_frequencies: ClassVar = {None, "year", "month", "day"}
 
-    
     @abc.abstractmethod
     def fit(self, data):
         """
-        Fit preprocessing parameters to data.
+        Document this function.
 
         Parameters
         ----------
-        data : object
-            Input data used to estimate preprocessing statistics.
-
-        Returns
-        -------
-        None
+        data : Any
+            Description not yet provided.
         """
-
         pass
 
     @abc.abstractmethod
     def transform(self, data, **kwargs):
         """
-        Apply preprocessing transformation.
+        Document this function.
 
         Parameters
         ----------
-        data : object
-            Input data to transform.
-        **kwargs : dict
-            Additional arguments for transformation.
-
-        Returns
-        -------
-        object
-            Transformed data.
+        data : Any
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
         """
-
         pass
 
     @abc.abstractmethod
     def inverse_transform(self, data, **kwargs):
         """
-        Reverse preprocessing transformation.
+        Document this function.
 
         Parameters
         ----------
-        data : object
-            Transformed data.
-        **kwargs : dict
-            Additional arguments for inverse transformation.
-
-        Returns
-        -------
-        object
-            Data in original representation.
+        data : Any
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
         """
-
         pass
 
     @final
@@ -89,7 +78,17 @@ class PreprocessModuleABC(abc.ABC):
         data: xr.Dataset | xr.DataArray,
     ) -> tuple[str, ...] | None:
         """
-        Resolve the dimensions reduced during fitting.
+        Document this function.
+
+        Parameters
+        ----------
+        data : xr.Dataset | xr.DataArray
+            Description not yet provided.
+
+        Returns
+        -------
+        tuple[str, ...] | None
+            Description not yet provided.
         """
         reduction_dims = self.dims
 
@@ -102,17 +101,31 @@ class PreprocessModuleABC(abc.ABC):
             reduction_dims = (self.realization_dim, *reduction_dims)
 
         return reduction_dims
-    
+
     @final
     def _add_grouping_coordinate(
         self,
         data: xr.Dataset | xr.DataArray,
     ) -> xr.Dataset | xr.DataArray:
         """
-        Derive and attach the temporal coordinate used during fitting.
+        Document this function.
 
+        Parameters
+        ----------
+        data : xr.Dataset | xr.DataArray
+            Description not yet provided.
+
+        Returns
+        -------
+        xr.Dataset | xr.DataArray
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
         """
-        if (self.frequency is None or self.init_time_dim not in self.dims):
+        if self.frequency is None or self.init_time_dim not in self.dims:
             return data
 
         init_time = data[self.init_time_dim]
@@ -127,13 +140,9 @@ class PreprocessModuleABC(abc.ABC):
             grouping_coord = init_time.dt.dayofyear
 
         else:
-            raise RuntimeError(
-                f"Unexpected temporal frequency {self.frequency!r}."
-            )
+            raise RuntimeError(f"Unexpected temporal frequency {self.frequency!r}.")
 
-        return data.assign_coords(
-            {self.frequency: grouping_coord}
-        )
+        return data.assign_coords({self.frequency: grouping_coord})
 
     @final
     def _align_stat_for_transform(
@@ -142,21 +151,34 @@ class PreprocessModuleABC(abc.ABC):
         stat: xr.DataArray,
     ) -> xr.DataArray:
         """
-        Align a fitted statistic for forward transformation.
+        Document this function.
 
-        This alignment depends only on initialization time. 
+        Parameters
+        ----------
+        data : xr.DataArray
+            Description not yet provided.
+        stat : xr.DataArray
+            Description not yet provided.
+
+        Returns
+        -------
+        xr.DataArray
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
         """
-        if (self.frequency is None or self.init_time_dim not in self.dims):
+        if self.frequency is None or self.init_time_dim not in self.dims:
             return stat
 
-        # If the temporal auxilary coordinates were added while loading data
-        # transform survives sample selection.
         if self.frequency in data.coords:
             temporal_indexer = data.coords[self.frequency]
 
         else:
-            # Generic fallback: derive the indexer from init_time.
-
             if self.init_time_dim not in data.coords:
                 raise ValueError(
                     f"Data must contain either the auxiliary coordinate "
@@ -176,17 +198,20 @@ class PreprocessModuleABC(abc.ABC):
                 temporal_indexer = init_time.dt.dayofyear
 
             else:
-                raise RuntimeError(
-                    f"Unexpected temporal frequency {self.frequency!r}."
-                )
+                raise RuntimeError(f"Unexpected temporal frequency {self.frequency!r}.")
 
-        return stat.sel(
-            {self.frequency: temporal_indexer}
-        )
-
+        return stat.sel({self.frequency: temporal_indexer})
 
     @final
     def _check_fitted(self) -> None:
+        """
+        Document this function.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if not self.fitted:
             raise RuntimeError(
                 "The preprocessor must be fitted before calling "
