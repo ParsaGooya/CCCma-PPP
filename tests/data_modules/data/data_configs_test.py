@@ -109,6 +109,7 @@ def expected_monthly_range(
     )
 
 
+@pytest.mark.pruned
 def test_model_data_config_basic():
     with patch_common():
         cfg = ModelDataConfig(
@@ -120,6 +121,7 @@ def test_model_data_config_basic():
     assert cfg.names == ["var"]
 
 
+@pytest.mark.pruned
 def test_model_data_config_type():
     with patch_common():
         cfg = ModelDataConfig(
@@ -130,6 +132,7 @@ def test_model_data_config_type():
     assert cfg.TYPE == "model"
 
 
+@pytest.mark.pruned
 def test_model_data_config_check_realization_false():
     with patch_common():
         cfg = ModelDataConfig(
@@ -141,6 +144,7 @@ def test_model_data_config_check_realization_false():
     assert cfg.realization_list is None
 
 
+@pytest.mark.pruned
 def test_model_data_config_check_realization_true():
     with patch_common():
         cfg = ModelDataConfig(
@@ -153,6 +157,7 @@ def test_model_data_config_check_realization_true():
     assert cfg.realization_list == [0]
 
 
+@pytest.mark.pruned
 def test_model_data_config_time_range():
     info = DummyInfo(
         init_times=make_init_times(
@@ -179,6 +184,7 @@ def test_model_data_config_time_range():
     )
 
 
+@pytest.mark.pruned
 def test_model_data_config_time_range_extended():
     info = DummyInfo(
         init_times=make_init_times(
@@ -197,6 +203,7 @@ def test_model_data_config_time_range_extended():
     assert cfg.time_range[-1] == np.datetime64("2006-12-01")
 
 
+@pytest.mark.pruned
 def test_model_data_config_uses_maximum_lead_time():
     info = DummyInfo(
         init_times=make_init_times(
@@ -230,6 +237,7 @@ def test_model_data_config_uses_maximum_lead_time():
     assert mock_build.call_args.kwargs["lead_time_resolution"] == lead_time_resolution
 
 
+@pytest.mark.pruned
 def test_model_data_config_resolve_called():
     called = {
         "resolve": False,
@@ -251,6 +259,7 @@ def test_model_data_config_resolve_called():
     assert called["resolve"] is True
 
 
+@pytest.mark.pruned
 def test_model_data_config_get_info_called():
     called = {
         "info": False,
@@ -273,6 +282,7 @@ def test_model_data_config_get_info_called():
     assert called["info"] is True
 
 
+@pytest.mark.pruned
 def test_obs_data_config_basic():
     with patch_common():
         cfg = ObsDataConfig(
@@ -284,6 +294,7 @@ def test_obs_data_config_basic():
     assert cfg.names == ["var"]
 
 
+@pytest.mark.pruned
 def test_obs_data_config_type():
     with patch_common():
         cfg = ObsDataConfig(
@@ -294,6 +305,7 @@ def test_obs_data_config_type():
     assert cfg.TYPE == "observation"
 
 
+@pytest.mark.pruned
 def test_obs_data_config_check_realization_false():
     with patch_common():
         cfg = ObsDataConfig(
@@ -305,6 +317,7 @@ def test_obs_data_config_check_realization_false():
     assert cfg.realization_list is None
 
 
+@pytest.mark.pruned
 def test_obs_data_config_check_realization_true():
     with patch_common():
         cfg = ObsDataConfig(
@@ -317,6 +330,7 @@ def test_obs_data_config_check_realization_true():
     assert cfg.realization_list == [0]
 
 
+@pytest.mark.pruned
 def test_obs_data_config_time_range():
     info = DummyInfo(
         init_times=make_init_times(
@@ -342,6 +356,7 @@ def test_obs_data_config_time_range():
     )
 
 
+@pytest.mark.pruned
 def test_obs_data_config_uses_default_single_lead_time():
     info = DummyInfo()
 
@@ -363,6 +378,7 @@ def test_obs_data_config_uses_default_single_lead_time():
     )
 
 
+@pytest.mark.pruned
 def test_obs_data_config_resolve_called():
     called = {
         "resolve": False,
@@ -384,6 +400,7 @@ def test_obs_data_config_resolve_called():
     assert called["resolve"] is True
 
 
+@pytest.mark.pruned
 def test_obs_data_config_get_info_called():
     called = {
         "info": False,
@@ -406,6 +423,7 @@ def test_obs_data_config_get_info_called():
     assert called["info"] is True
 
 
+@pytest.mark.pruned
 def test_condition_data_config_basic():
     with patch_common():
         cfg = ConditionDataConfig(
@@ -417,6 +435,7 @@ def test_condition_data_config_basic():
     assert cfg.names == ["var"]
 
 
+@pytest.mark.pruned
 def test_condition_data_config_type():
     with patch_common():
         cfg = ConditionDataConfig(
@@ -427,6 +446,7 @@ def test_condition_data_config_type():
     assert cfg.TYPE == "condition"
 
 
+@pytest.mark.pruned
 def test_condition_data_config_check_realization_false():
     with patch_common():
         cfg = ConditionDataConfig(
@@ -450,6 +470,7 @@ def test_condition_data_config_check_realization_true():
     assert cfg.realization_list == [0]
 
 
+@pytest.mark.pruned
 def test_condition_data_config_time_range():
     info = DummyInfo(
         init_times=make_init_times(
@@ -476,6 +497,7 @@ def test_condition_data_config_time_range():
     )
 
 
+@pytest.mark.pruned
 def test_condition_data_config_time_range_extended():
     info = DummyInfo(
         init_times=make_init_times(
@@ -512,6 +534,7 @@ def test_condition_data_config_none_time_range():
     )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "start_time,final_time",
     [
@@ -550,6 +573,7 @@ def test_condition_data_config_requires_both_time_bounds(
     )
 
 
+@pytest.mark.pruned
 def test_condition_data_config_uses_maximum_lead_time():
     info = DummyInfo(
         lead_times=make_lead_times(
@@ -579,6 +603,7 @@ def test_condition_data_config_uses_maximum_lead_time():
     assert mock_build.call_args.kwargs["lead_time_resolution"] == lead_time_resolution
 
 
+@pytest.mark.pruned
 def test_condition_data_config_resolve_called():
     called = {
         "resolve": False,
@@ -600,6 +625,7 @@ def test_condition_data_config_resolve_called():
     assert called["resolve"] is True
 
 
+@pytest.mark.pruned
 def test_condition_data_config_get_info_called():
     called = {
         "info": False,
@@ -622,6 +648,7 @@ def test_condition_data_config_get_info_called():
     assert called["info"] is True
 
 
+@pytest.mark.pruned
 def test_build_time_range_monthly_datetime64():
     init_time = xr.DataArray(
         np.array(
@@ -654,6 +681,7 @@ def test_build_time_range_monthly_datetime64():
     )
 
 
+@pytest.mark.pruned
 def test_build_time_range_daily_datetime64():
     init_time = xr.DataArray(
         np.array(
@@ -686,6 +714,7 @@ def test_build_time_range_daily_datetime64():
     )
 
 
+@pytest.mark.pruned
 def test_build_time_range_single_lead_time():
     init_time = xr.DataArray(
         np.array(
@@ -718,6 +747,7 @@ def test_build_time_range_single_lead_time():
     )
 
 
+@pytest.mark.pruned
 def test_build_time_range_cftime():
     init_time = xr.DataArray(
         [
@@ -815,6 +845,7 @@ def test_build_time_range_invalid_time_type():
         )
 
 
+@pytest.mark.pruned
 def test_build_time_range_invalid_resolution():
     init_time = make_init_times()
 

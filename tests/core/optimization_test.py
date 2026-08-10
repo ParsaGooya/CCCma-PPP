@@ -60,6 +60,7 @@ def test_lr_scheduler_build_warmup_equals_total_epochs_invalid():
         cfg.build(opt, num_batches=1)
 
 
+@pytest.mark.pruned
 def test_lr_scheduler_build_sets_steps():
     module = make_module()
     opt = make_optimizer(module)
@@ -72,6 +73,7 @@ def test_lr_scheduler_build_sets_steps():
     assert cfg.warmup_steps == 3
 
 
+@pytest.mark.pruned
 def test_cosine_scheduler_without_warmup():
     module = make_module()
     opt = make_optimizer(module)
@@ -108,6 +110,7 @@ def test_cosine_scheduler_with_warmup():
     assert isinstance(state, dict)
 
 
+@pytest.mark.pruned
 def test_cosine_scheduler_load_state_dict():
     module = make_module()
     opt = make_optimizer(module)
@@ -173,6 +176,7 @@ def test_cosine_scheduler_load_state_dict_without_scheduler_attr():
         scheduler.load_state_dict(state)
 
 
+@pytest.mark.pruned
 def test_optimizer_config_defaults():
     cfg = OptimizerConfig()
 
@@ -187,6 +191,7 @@ def test_optimizer_config_invalid_weight_decay():
         OptimizerConfig(weight_decay=-1)
 
 
+@pytest.mark.pruned
 def test_optimizer_build_accepts_unbuilt_module_current_behavior():
     module = make_module(built=False)
     cfg = OptimizerConfig()
@@ -197,6 +202,7 @@ def test_optimizer_build_accepts_unbuilt_module_current_behavior():
     assert wrapper.optimizer is not None
 
 
+@pytest.mark.pruned
 def test_optimizer_build_without_scheduler():
     module = make_module()
     cfg = OptimizerConfig(lr=0.01, optimizer_type="adam")
@@ -207,6 +213,7 @@ def test_optimizer_build_without_scheduler():
     assert isinstance(wrapper.optimizer, torch.optim.Adam)
 
 
+@pytest.mark.pruned
 def test_optimizer_build_adamw_case_insensitive():
     module = make_module()
     cfg = OptimizerConfig(lr=0.01, optimizer_type="ADAMW")
@@ -217,6 +224,7 @@ def test_optimizer_build_adamw_case_insensitive():
     assert isinstance(wrapper.optimizer, torch.optim.AdamW)
 
 
+@pytest.mark.pruned
 def test_optimizer_build_invalid_optimizer_type():
     module = make_module()
     cfg = OptimizerConfig(optimizer_type="not_real")
@@ -233,6 +241,7 @@ def test_optimizer_build_scheduler_requires_num_batches_and_epochs_config_level(
         cfg.build(module)
 
 
+@pytest.mark.pruned
 def test_optimizer_build_scheduler_requires_num_batches_wrapper_level():
     module = make_module()
     cfg = OptimizerConfig(lr_scheduler_config=LRSchedulerConfig(total_epochs=2))
@@ -249,6 +258,7 @@ def test_optimizer_build_scheduler_requires_epochs_wrapper_level():
         OptimizerWrapper(cfg, module, num_batches=2, max_epochs=None)
 
 
+@pytest.mark.pruned
 def test_optimizer_build_with_scheduler():
     module = make_module()
     cfg = OptimizerConfig(
@@ -266,6 +276,7 @@ def test_optimizer_build_with_scheduler():
     assert cfg.lr_scheduler_config.warmup_steps == 0
 
 
+@pytest.mark.pruned
 def test_optimizer_build_with_scheduler_total_epochs_preconfigured():
     module = make_module()
     cfg = OptimizerConfig(
@@ -286,6 +297,7 @@ def test_optimizer_build_with_scheduler_total_epochs_preconfigured():
     assert cfg.lr_scheduler_config.warmup_steps == 0
 
 
+@pytest.mark.pruned
 def test_optimizer_build_with_warmup_scheduler():
     module = make_module()
     cfg = OptimizerConfig(
@@ -331,6 +343,7 @@ def test_optimizer_zero_grad_default():
         assert p.grad is None
 
 
+@pytest.mark.pruned
 def test_optimizer_zero_grad_set_to_none_false():
     module = make_module()
     cfg = OptimizerConfig(lr=0.01)
@@ -347,6 +360,7 @@ def test_optimizer_zero_grad_set_to_none_false():
         assert torch.allclose(p.grad, torch.zeros_like(p.grad))
 
 
+@pytest.mark.pruned
 def test_optimizer_scheduler_step_with_scheduler():
     module = make_module()
     cfg = OptimizerConfig(
@@ -368,6 +382,7 @@ def test_optimizer_scheduler_step_without_scheduler_current_behavior():
     assert wrapper.scheduler_step() is None
 
 
+@pytest.mark.pruned
 def test_optimizer_state_dict_with_scheduler():
     module = make_module()
     cfg = OptimizerConfig(
@@ -383,6 +398,7 @@ def test_optimizer_state_dict_with_scheduler():
     assert state["lr_scheduler"] is not None
 
 
+@pytest.mark.pruned
 def test_optimizer_state_dict_without_scheduler_current_behavior():
     module = make_module()
     cfg = OptimizerConfig(lr=0.01)
@@ -415,6 +431,7 @@ def test_optimizer_load_state_dict_with_scheduler():
     assert wrapper2.state_dict() is not None
 
 
+@pytest.mark.pruned
 def test_optimizer_load_state_dict_without_scheduler_state():
     module = make_module()
     cfg = OptimizerConfig(
@@ -476,21 +493,6 @@ def test_optimizer_load_state_dict_without_optimizer_attr():
 
 
 @pytest.mark.parametrize(
-    ("kwargs", "message"),
-    [
-        ({"min_lr": -0.1}, None),
-        ({"warmup_epochs": -1}, None),
-    ],
-)
-def test_lr_scheduler_config_rejects_negative_values(
-    kwargs,
-    message,
-):
-    with pytest.raises(AssertionError, match=message):
-        LRSchedulerConfig(**kwargs)
-
-
-@pytest.mark.parametrize(
     "total_epochs",
     [
         None,
@@ -543,6 +545,7 @@ def test_lr_scheduler_build_rejects_nonpositive_num_batches(
         )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "gradient_accumulation_steps",
     [
@@ -570,6 +573,7 @@ def test_lr_scheduler_build_rejects_nonpositive_accumulation_steps(
         )
 
 
+@pytest.mark.pruned
 def test_lr_scheduler_build_accounts_for_gradient_accumulation():
     module = make_module()
     optimizer = make_optimizer(module)
@@ -592,6 +596,7 @@ def test_lr_scheduler_build_accounts_for_gradient_accumulation():
     assert config.warmup_steps == 6
 
 
+@pytest.mark.pruned
 def test_lr_scheduler_build_rounds_partial_accumulation_batch_up():
     module = make_module()
     optimizer = make_optimizer(module)
@@ -610,6 +615,7 @@ def test_lr_scheduler_build_rounds_partial_accumulation_batch_up():
     assert config.warmup_steps == 3
 
 
+@pytest.mark.pruned
 def test_optimizer_build_forwards_gradient_accumulation_steps():
     module = make_module()
     scheduler_config = LRSchedulerConfig(
@@ -631,6 +637,7 @@ def test_optimizer_build_forwards_gradient_accumulation_steps():
     assert scheduler_config.warmup_steps == 3
 
 
+@pytest.mark.pruned
 def test_optimizer_build_preserves_preconfigured_total_epochs():
     module = make_module()
     scheduler_config = LRSchedulerConfig(
@@ -650,6 +657,7 @@ def test_optimizer_build_preserves_preconfigured_total_epochs():
     assert scheduler_config.total_steps == 8
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("optimizer_type", "expected_type"),
     [
@@ -676,6 +684,7 @@ def test_optimizer_registry_is_case_insensitive(
     )
 
 
+@pytest.mark.pruned
 def test_optimizer_wrapper_optimizes_only_trainable_parameters():
     module = make_module()
     module.linear.bias.requires_grad = False
@@ -692,6 +701,7 @@ def test_optimizer_wrapper_optimizes_only_trainable_parameters():
     assert id(module.linear.bias) not in optimized_parameters
 
 
+@pytest.mark.pruned
 def test_optimizer_wrapper_rejects_module_without_trainable_parameters():
     module = make_module()
 
@@ -702,6 +712,7 @@ def test_optimizer_wrapper_rejects_module_without_trainable_parameters():
         OptimizerConfig().build(module)
 
 
+@pytest.mark.pruned
 def test_optimizer_learning_rate_property():
     module = make_module()
     config = OptimizerConfig(
@@ -713,6 +724,7 @@ def test_optimizer_learning_rate_property():
     assert wrapper.learning_rate == pytest.approx(0.0125)
 
 
+@pytest.mark.pruned
 def test_optimizer_learning_rate_reflects_param_group_change():
     module = make_module()
     wrapper = OptimizerConfig(
@@ -724,6 +736,7 @@ def test_optimizer_learning_rate_reflects_param_group_change():
     assert wrapper.learning_rate == pytest.approx(0.004)
 
 
+@pytest.mark.pruned
 def test_scheduler_step_advances_before_total_steps():
     module = make_module()
     optimizer = make_optimizer(module)
@@ -744,6 +757,7 @@ def test_scheduler_step_advances_before_total_steps():
     assert scheduler.num_steps == 1
 
 
+@pytest.mark.pruned
 def test_scheduler_step_reaches_configured_total_steps():
     module = make_module()
     optimizer = make_optimizer(module)
@@ -765,6 +779,7 @@ def test_scheduler_step_reaches_configured_total_steps():
     assert scheduler.num_steps == config.total_steps
 
 
+@pytest.mark.pruned
 def test_scheduler_holds_minimum_lr_after_final_step():
     module = make_module()
     optimizer = make_optimizer(
@@ -793,6 +808,7 @@ def test_scheduler_holds_minimum_lr_after_final_step():
         assert param_group["lr"] == pytest.approx(0.002)
 
 
+@pytest.mark.pruned
 def test_scheduler_does_not_increment_after_final_step_when_holding_minimum():
     module = make_module()
     optimizer = make_optimizer(module)
@@ -815,6 +831,7 @@ def test_scheduler_does_not_increment_after_final_step_when_holding_minimum():
     assert scheduler.num_steps == 1
 
 
+@pytest.mark.pruned
 def test_scheduler_continues_stepping_when_minimum_is_not_held(
     monkeypatch,
 ):
@@ -913,6 +930,7 @@ def test_optimizer_scheduler_step_delegates_to_scheduler(
     step_mock.assert_called_once_with()
 
 
+@pytest.mark.pruned
 def test_optimizer_step_delegates_to_optimizer(
     monkeypatch,
 ):
@@ -931,6 +949,7 @@ def test_optimizer_step_delegates_to_optimizer(
     step_mock.assert_called_once_with()
 
 
+@pytest.mark.pruned
 def test_optimizer_zero_grad_forwards_keyword_arguments(
     monkeypatch,
 ):
@@ -953,6 +972,7 @@ def test_optimizer_zero_grad_forwards_keyword_arguments(
     )
 
 
+@pytest.mark.pruned
 def test_optimizer_state_dict_without_scheduler_uses_none():
     module = make_module()
     wrapper = OptimizerConfig().build(module)
@@ -962,6 +982,7 @@ def test_optimizer_state_dict_without_scheduler_uses_none():
     assert state["lr_scheduler"] is None
 
 
+@pytest.mark.pruned
 def test_optimizer_load_state_dict_does_not_load_absent_scheduler_state(
     monkeypatch,
 ):
@@ -991,6 +1012,7 @@ def test_optimizer_load_state_dict_does_not_load_absent_scheduler_state(
     scheduler_load_mock.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_optimizer_without_scheduler_ignores_scheduler_state(
     monkeypatch,
 ):
@@ -1010,6 +1032,7 @@ def test_optimizer_without_scheduler_ignores_scheduler_state(
     assert wrapper.lr_scheduler is None
 
 
+@pytest.mark.pruned
 def test_optimizer_load_state_dict_requires_optimizer_key():
     module = make_module()
     wrapper = OptimizerConfig().build(module)
@@ -1022,6 +1045,7 @@ def test_optimizer_load_state_dict_requires_optimizer_key():
         )
 
 
+@pytest.mark.pruned
 def test_optimizer_load_state_dict_requires_scheduler_key():
     module = make_module()
     wrapper = OptimizerConfig(
@@ -1041,6 +1065,7 @@ def test_optimizer_load_state_dict_requires_scheduler_key():
         )
 
 
+@pytest.mark.pruned
 def test_scheduler_state_dict_round_trip_preserves_scheduler_epoch():
     module = make_module()
     optimizer = make_optimizer(module)

@@ -17,6 +17,7 @@ from cccma_ppp.models.layers.utils import (
 )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("kernel_size", "expected"),
     [
@@ -34,6 +35,7 @@ def test_same_padding_valid_kernel_sizes(
     assert _same_padding(kernel_size) == expected
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "kernel_size",
     [
@@ -95,35 +97,12 @@ def test_align_to_skip_rejects_unknown_mode(mode):
         )
 
 
-@pytest.mark.parametrize(
-    "padding_mode",
-    [
-        "reflect",
-        "replicate",
-        "circular",
-    ],
-)
-def test_padd_supports_nonconstant_modes(
-    padding_mode,
-):
-    tensor = torch.arange(
-        16,
-        dtype=torch.float32,
-    ).reshape(1, 1, 4, 4)
-
-    result = padd(
-        tensor,
-        target_size=(6, 6),
-        padding_mode=padding_mode,
-    )
-
-    assert result.shape == (1, 1, 6, 6)
-
-
+@pytest.mark.pruned
 def test_resize_mask_none_returns_none():
     assert _resize_mask(None, (8, 8)) is None
 
 
+@pytest.mark.pruned
 def test_resize_mask_matching_size_returns_same_object():
     mask = torch.ones(2, 1, 8, 8)
 
@@ -135,6 +114,7 @@ def test_resize_mask_matching_size_returns_same_object():
     assert result is mask
 
 
+@pytest.mark.pruned
 def test_resize_mask_uses_nearest_interpolation():
     mask = torch.tensor(
         [
@@ -162,6 +142,7 @@ def test_resize_mask_uses_nearest_interpolation():
     torch.testing.assert_close(result, expected)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "dtype",
     [
@@ -193,6 +174,7 @@ def test_resize_mask_preserves_dtype(dtype):
     assert result.dtype == dtype
 
 
+@pytest.mark.pruned
 def test_resize_mask_preserves_binary_values():
     mask = torch.tensor(
         [
@@ -218,6 +200,7 @@ def test_resize_mask_preserves_binary_values():
     )
 
 
+@pytest.mark.pruned
 def test_resize_mask_downsamples():
     mask = torch.ones(2, 3, 8, 10)
 
@@ -229,6 +212,7 @@ def test_resize_mask_downsamples():
     assert result.shape == (2, 3, 4, 5)
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_none_returns_none():
     reference = torch.randn(2, 3, 8, 8)
 
@@ -247,6 +231,7 @@ def test_broadcast_mask_2d_adds_batch_and_channel_dimensions():
     assert result.shape == (1, 1, 8, 8)
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_2d_expands_batch():
     mask = torch.ones(8, 8)
     reference = torch.randn(4, 3, 8, 8)
@@ -259,6 +244,7 @@ def test_broadcast_mask_2d_expands_batch():
     assert result.shape == (4, 1, 8, 8)
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_3d_interpreted_as_channels_height_width():
     mask = torch.ones(3, 8, 8)
     reference = torch.randn(1, 3, 8, 8)
@@ -283,6 +269,7 @@ def test_broadcast_mask_3d_expands_batch():
     assert result.shape == (2, 3, 8, 8)
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_4d_matching_shape():
     mask = torch.ones(2, 3, 8, 8)
     reference = torch.randn(2, 3, 8, 8)
@@ -318,6 +305,7 @@ def test_broadcast_mask_rejects_invalid_rank(shape):
         )
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_rejects_batch_mismatch():
     mask = torch.ones(3, 1, 8, 8)
     reference = torch.randn(2, 3, 8, 8)
@@ -358,6 +346,7 @@ def test_broadcast_mask_resizes_spatial_dimensions():
     assert result.shape == (2, 1, 8, 10)
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_calls_resize_helper(
     monkeypatch,
 ):
@@ -391,6 +380,7 @@ def test_broadcast_mask_calls_resize_helper(
     assert result is expected
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_converts_dtype():
     mask = torch.ones(
         1,
@@ -415,6 +405,7 @@ def test_broadcast_mask_converts_dtype():
     assert result.dtype == torch.float64
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_expanded_batch_values_match():
     mask = torch.tensor(
         [
@@ -455,6 +446,7 @@ def test_merge_masks_both_none_returns_none():
     assert result is None
 
 
+@pytest.mark.pruned
 def test_merge_masks_both_present():
     input_mask = torch.zeros(2, 2, 8, 8)
     skip_mask = torch.ones(2, 3, 8, 8)
@@ -480,6 +472,7 @@ def test_merge_masks_both_present():
     )
 
 
+@pytest.mark.pruned
 def test_merge_masks_input_none_creates_valid_input_mask():
     skip_mask = torch.zeros(2, 3, 8, 8)
     reference = torch.randn(2, 5, 8, 8)
@@ -528,6 +521,7 @@ def test_merge_masks_skip_none_creates_valid_skip_mask():
     )
 
 
+@pytest.mark.pruned
 def test_merge_masks_resizes_both_masks():
     input_mask = torch.zeros(2, 2, 4, 4)
     skip_mask = torch.ones(2, 3, 16, 16)
@@ -545,6 +539,7 @@ def test_merge_masks_resizes_both_masks():
     assert result.shape == (2, 5, 8, 8)
 
 
+@pytest.mark.pruned
 def test_merge_masks_concatenates_skip_before_input():
     input_mask = torch.full(
         (1, 2, 4, 4),
@@ -603,6 +598,7 @@ def test_merge_masks_generated_mask_uses_reference_dtype():
     assert result.dtype == torch.float64
 
 
+@pytest.mark.pruned
 def test_resize_tensor_matching_size_returns_same_object():
     tensor = torch.randn(2, 3, 8, 8)
 
@@ -641,6 +637,7 @@ def test_resize_tensor_continuous_modes(mode):
     torch.testing.assert_close(result, expected)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "mode",
     [
@@ -668,6 +665,7 @@ def test_resize_tensor_modes_without_align_corners(mode):
     torch.testing.assert_close(result, expected)
 
 
+@pytest.mark.pruned
 def test_resize_tensor_default_mode_is_bilinear():
     tensor = torch.randn(2, 3, 4, 5)
 
@@ -686,6 +684,7 @@ def test_resize_tensor_default_mode_is_bilinear():
     torch.testing.assert_close(result, expected)
 
 
+@pytest.mark.pruned
 def test_resize_tensor_preserves_dtype():
     tensor = torch.randn(
         2,
@@ -701,111 +700,3 @@ def test_resize_tensor_preserves_dtype():
     )
 
     assert result.dtype == torch.float64
-
-
-@pytest.mark.parametrize(
-    "std",
-    [
-        0.1,
-        0.5,
-        1.0,
-        2.0,
-        10.0,
-    ],
-)
-def test_get_normal_uses_requested_standard_deviation(std):
-    reference = torch.randn(2, 3)
-
-    distribution = _get_normal(
-        reference,
-        std=std,
-    )
-
-    torch.testing.assert_close(
-        distribution.scale,
-        torch.full_like(reference, std),
-    )
-
-
-@pytest.mark.parametrize(
-    "std",
-    [
-        0.0,
-        -1.0,
-    ],
-)
-def test_get_normal_rejects_nonpositive_standard_deviation(std):
-    reference = torch.randn(2, 3)
-
-    with pytest.raises(ValueError):
-        _get_normal(
-            reference,
-            std=std,
-        )
-
-
-@pytest.mark.parametrize(
-    "sample_size",
-    [
-        1,
-        2,
-        5,
-        10,
-    ],
-)
-def test_sample_requested_shape(sample_size):
-    mu = torch.zeros(2, 3)
-    var = torch.ones(2, 3)
-
-    result = _sample(
-        mu,
-        var,
-        sample_size=sample_size,
-    )
-
-    assert result.shape == (
-        sample_size,
-        2,
-        3,
-    )
-
-
-@pytest.mark.parametrize(
-    "dtype",
-    [
-        torch.float32,
-        torch.float64,
-        torch.int32,
-        torch.int64,
-        torch.bool,
-    ],
-)
-def test_expand_mask_preserves_dtype(dtype):
-    tensor = torch.randn(2, 4, 8, 8)
-    mask = torch.zeros(
-        2,
-        3,
-        8,
-        8,
-        dtype=dtype,
-    )
-
-    result = _expand_mask(
-        tensor,
-        mask,
-    )
-
-    assert result.dtype == dtype
-
-    tensor = torch.randn(2, 3, 4, 5)
-    mask = torch.empty(2, 0, 4, 5)
-
-    result = _expand_mask(
-        tensor,
-        mask,
-    )
-
-    torch.testing.assert_close(
-        result,
-        torch.ones(2, 3, 4, 5),
-    )

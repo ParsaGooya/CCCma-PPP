@@ -124,6 +124,7 @@ class RecordingOutput(nn.Module):
 
 
 class TestCVAEUNetConfig:
+    @pytest.mark.pruned
     def test_basic_initialization(self):
         config = make_config()
 
@@ -134,6 +135,7 @@ class TestCVAEUNetConfig:
         assert config.NUM_INPUT_DIMS == 3
         assert config.NUM_OUTPUT_DIMS == 3
 
+    @pytest.mark.pruned
     def test_transpose_kernel_integer_is_expanded(self):
         config = make_config(
             channels=[
@@ -154,6 +156,7 @@ class TestCVAEUNetConfig:
             5,
         ]
 
+    @pytest.mark.pruned
     def test_transpose_kernel_list_is_preserved(self):
         config = make_config(
             channels=[
@@ -201,6 +204,7 @@ class TestCVAEUNetConfig:
 
         assert config.condition_embedding_size == 7
 
+    @pytest.mark.pruned
     def test_without_deterministic_guess_disables_shared_output(self):
         config = make_config(
             deterministic_guess_config=None,
@@ -208,6 +212,7 @@ class TestCVAEUNetConfig:
 
         assert config.share_output_block is False
 
+    @pytest.mark.pruned
     def test_expects_mask_with_regular_convolution(self):
         config = make_config(
             block_config=ConvBlockConfig(name="conv"),
@@ -215,6 +220,7 @@ class TestCVAEUNetConfig:
 
         assert config.EXPECTS_MASK is False
 
+    @pytest.mark.pruned
     def test_expects_mask_with_partial_convolution(self):
         config = make_config(
             block_config=PartialConvBlockConfig(name="conv"),
@@ -222,6 +228,7 @@ class TestCVAEUNetConfig:
 
         assert config.EXPECTS_MASK is True
 
+    @pytest.mark.pruned
     def test_expects_mask_with_partial_conv_attribute(self):
         block_config = SimpleNamespace(
             use_partial_conv=True,
@@ -232,6 +239,7 @@ class TestCVAEUNetConfig:
 
         assert config.EXPECTS_MASK is True
 
+    @pytest.mark.pruned
     def test_build_returns_model(self):
         config = make_config()
 
@@ -519,6 +527,7 @@ class TestCVAEUNetInitialization:
             8,
         )
 
+    @pytest.mark.pruned
     def test_preserves_explicit_output_shape(self):
         model = make_model(
             output_shape=(
@@ -534,6 +543,7 @@ class TestCVAEUNetInitialization:
             8,
         )
 
+    @pytest.mark.pruned
     def test_defaults_added_features_to_zero(self):
         model = make_model(
             added_features_dim=None,
@@ -541,6 +551,7 @@ class TestCVAEUNetInitialization:
 
         assert model.added_features_dim == 0
 
+    @pytest.mark.pruned
     def test_preserves_added_features_dimension(self):
         model = make_model(
             added_features_dim=3,
@@ -548,6 +559,7 @@ class TestCVAEUNetInitialization:
 
         assert model.added_features_dim == 3
 
+    @pytest.mark.pruned
     def test_recognition_input_channels(self):
         model = make_model(
             input_shape=(
@@ -565,6 +577,7 @@ class TestCVAEUNetInitialization:
 
         assert model.recognition.initial_mapping is not None
 
+    @pytest.mark.pruned
     def test_condition_requests_log_variance_for_dependent_latent(self):
         with patch(
             "cccma_ppp.models.unet_models.cvae.Recognition",
@@ -617,6 +630,7 @@ class TestCVAEUNetInitialization:
         condition_call = recognition.call_args_list[1]
         assert condition_call.kwargs["get_log_var"] is True
 
+    @pytest.mark.pruned
     def test_condition_skips_log_variance_for_independent_latent(self):
         with patch(
             "cccma_ppp.models.unet_models.cvae.Recognition",
@@ -669,6 +683,7 @@ class TestCVAEUNetInitialization:
         condition_call = recognition.call_args_list[1]
         assert condition_call.kwargs["get_log_var"] is False
 
+    @pytest.mark.pruned
     def test_condition_flow_skips_log_variance(self):
         config = make_config(
             condition_dependant_latent=True,
@@ -724,6 +739,7 @@ class TestCVAEUNetInitialization:
         condition_call = recognition.call_args_list[1]
         assert condition_call.kwargs["get_log_var"] is False
 
+    @pytest.mark.pruned
     def test_initializes_weights_without_checkpoint(self):
         config = make_config()
         config.checkpoint_config = None
@@ -751,6 +767,7 @@ class TestCVAEUNetInitialization:
             exclude=(model.deterministic_guess,),
         )
 
+    @pytest.mark.pruned
     def test_validates_checkpoint_compatibility(self):
         with patch.object(
             cVAEUNet,
@@ -785,6 +802,7 @@ class TestCVAEUNetInitialization:
 
 
 class TestPrepareInput:
+    @pytest.mark.pruned
     def test_returns_tensor_mask(self):
         model = make_model()
         x = torch.randn(
@@ -806,6 +824,7 @@ class TestPrepareInput:
         assert result.tensor is x
         assert result.mask is None
 
+    @pytest.mark.pruned
     def test_resizes_and_concatenates_condition(self):
         model = make_model()
 
@@ -860,6 +879,7 @@ class TestPrepareInput:
 
         assert torch.all(result.mask == 1)
 
+    @pytest.mark.pruned
     def test_resizes_and_concatenates_added_features(self):
         model = make_model()
 
@@ -927,6 +947,7 @@ class TestPrepareInput:
 
 
 class TestRecognitionAndCondition:
+    @pytest.mark.pruned
     def test_recognition_returns_mu_and_log_var(self):
         model = make_model()
 
@@ -966,6 +987,7 @@ class TestRecognitionAndCondition:
             TensorMask,
         )
 
+    @pytest.mark.pruned
     def test_condition_returns_embedding_statistics(self):
         model = make_model()
 
@@ -1135,6 +1157,7 @@ class TestDeterministicGuess:
 
 
 class TestOutputBlock:
+    @pytest.mark.pruned
     def test_flattens_and_restores_sample_dimensions(self):
         model = make_model()
         output = RecordingOutput()
@@ -1260,6 +1283,7 @@ class TestForward:
         values.update(overrides)
         return SimpleNamespace(**values)
 
+    @pytest.mark.pruned
     def test_forward_returns_cvae_output(self):
         model = self.make_stubbed_model()
 
@@ -1463,6 +1487,7 @@ class TestPredict:
         values.update(overrides)
         return SimpleNamespace(**values)
 
+    @pytest.mark.pruned
     def test_predict_returns_cvae_output(self):
         model = self.make_stubbed_model()
         request = self.make_request()
@@ -1551,6 +1576,7 @@ class TestPredict:
 
 
 class TestRecognitionModule:
+    @pytest.mark.pruned
     def test_spatial_shapes_include_each_downsampling_level(self):
         recognition = Recognition(
             input_channels=2,
@@ -1706,6 +1732,7 @@ class TestGenerationModule:
             config=config,
         )
 
+    @pytest.mark.pruned
     def test_initializes_bottleneck_metadata(self):
         generation = self.make_generation()
 
@@ -1721,6 +1748,7 @@ class TestGenerationModule:
             )
         ]
 
+    @pytest.mark.pruned
     def test_builds_one_up_block_per_resize_shape(self):
         generation = self.make_generation()
 
@@ -1765,6 +1793,7 @@ import cccma_ppp.models.unet_models.cvae as cvae_module
 
 
 class TestAdditionalCVAEUNetConfig:
+    @pytest.mark.pruned
     def test_build_forwards_all_arguments(self, monkeypatch):
         config = make_config()
         built = object()
@@ -1792,6 +1821,7 @@ class TestAdditionalCVAEUNetConfig:
             added_features_dim=3,
         )
 
+    @pytest.mark.pruned
     def test_false_partial_conv_attribute_does_not_expect_mask(self):
         config = object.__new__(cVAEUNetConfig)
         config.block_config = SimpleNamespace(
@@ -1823,6 +1853,7 @@ class TestAdditionalCVAEUNetConfig:
 
 
 class TestAdditionalCVAEUNetInitialization:
+    @pytest.mark.pruned
     def test_condition_embedding_increases_generation_latent_size(self):
         with (
             patch.object(
@@ -1868,6 +1899,7 @@ class TestAdditionalCVAEUNetInitialization:
 
         assert generation.call_args.kwargs["latent_size"] == 8
 
+    @pytest.mark.pruned
     def test_recognition_and_condition_channel_counts(self):
         with (
             patch.object(
@@ -1911,6 +1943,7 @@ class TestAdditionalCVAEUNetInitialization:
         assert recognition.call_args_list[0].kwargs["input_channels"] == 9
         assert recognition.call_args_list[1].kwargs["input_channels"] == 6
 
+    @pytest.mark.pruned
     def test_depth_equal_to_spatial_limit_is_allowed(self):
         model = make_model(
             input_shape=(2, 4, 4),
@@ -1928,6 +1961,7 @@ class TestAdditionalCVAEUNetInitialization:
 
 
 class TestAdditionalPrepareInput:
+    @pytest.mark.pruned
     def test_condition_mask_is_ignored_without_input_mask(self):
         model = make_model()
 
@@ -1950,6 +1984,7 @@ class TestAdditionalPrepareInput:
 
         assert result.mask is None
 
+    @pytest.mark.pruned
     def test_added_features_use_nearest_resize(self, monkeypatch):
         model = make_model()
         features = torch.ones(
@@ -2021,6 +2056,7 @@ class TestAdditionalPrepareInput:
 
 
 class TestAdditionalGenerate:
+    @pytest.mark.pruned
     def test_generate_without_condition_embedding(self):
         model = make_model(
             condemb_to_decoder=True,
@@ -2054,6 +2090,7 @@ class TestAdditionalGenerate:
 
 
 class TestAdditionalForwardPredict:
+    @pytest.mark.pruned
     def test_forward_eval_keeps_requested_output_samples(self):
         helper = TestForward()
         model = helper.make_stubbed_model()
@@ -2091,6 +2128,7 @@ class TestAdditionalForwardPredict:
             (2, 4, 2),
         )
 
+    @pytest.mark.pruned
     def test_predict_passes_condition_to_deterministic_guess(self):
         helper = TestPredict()
         model = helper.make_stubbed_model()
@@ -2130,6 +2168,7 @@ class TestAdditionalForwardPredict:
 
 
 class TestAdditionalOutputBlock:
+    @pytest.mark.pruned
     def test_output_block_can_change_channels(self):
         model = make_model()
 
@@ -2160,6 +2199,7 @@ class TestAdditionalOutputBlock:
 
 
 class TestAdditionalRecognition:
+    @pytest.mark.pruned
     def test_get_spatial_shapes_calls_each_block(self):
         recognition = object.__new__(Recognition)
         nn.Module.__init__(recognition)
