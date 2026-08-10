@@ -1,13 +1,16 @@
 import dataclasses
 from pathlib import Path
+from collections.abc import Sequence
 import numpy as np
 import xarray as xr
 import torch
+import cftime
+import datetime
 
 from cccma_ppp.data_modules.dataset.dataset_abc import (
     DatasetConfigABC,
     DatasetABC,
-    lead_months_config,
+    lead_time_config,
     AddedTimeFeatures,
 )
 
@@ -18,49 +21,23 @@ from cccma_ppp.data_modules.data.data_configs import (
     ConditionDataConfig,
 )
 
-
 from cccma_ppp.train.dataset import TrainDatasetConfig
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 
 @dataclasses.dataclass
 class InferenceDatasetConfig(DatasetConfigABC):
-    """
-    Document this class.
-
-    Parameters
-    ----------
-    model : ModelDataConfig | None
-        Description not yet provided.
-    condition : ConditionDataConfig | None
-        Description not yet provided.
-    condition_method : str
-        Description not yet provided.
-    lead_months : lead_months_config | None
-        Description not yet provided.
-    """
-
     model: ModelDataConfig | None = None
     condition: ConditionDataConfig | None = None
     condition_method: str = None
-    lead_months: lead_months_config | None = None
+    lead_times: lead_time_config | None = None
 
     def __post_init__(self):
-        """
-        Document this function.
-        """
+
         super().__init__()
 
     @property
     def effective_input(self):
-        """
-        Document this function.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         if self.model is not None:
             return self.model
         else:
@@ -68,95 +45,48 @@ class InferenceDatasetConfig(DatasetConfigABC):
 
     @property
     def ds_operator(self):
-        """
-        Document this function.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return DatasetOperator(self)
 
     @property
     def available_times(self):
-        """
-        Document this function.
 
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
-        year_ranges = list()
+        time_coords = list()
         if self.condition is not None:
-            year_ranges.append(
-                self.condition.info.coords["year"].values,
+            time_coords.append(
+                self.condition.info.coords[self.init_time_dim].to_index(),
             )
         if self.model is not None:
-            year_ranges.append(
-                self.model.info.coords["year"].values,
+            time_coords.append(
+                self.model.info.coords[self.init_time_dim].to_index(),
             )
 
-        common = year_ranges[0]
-        for yr in year_ranges[1:]:
-            common = np.intersect1d(common, yr)
+        common = time_coords[0]
+        for tr in time_coords[1:]:
+            common = common.intersection(tr)
 
         return common
 
     def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        load_dir : Path | str | None
-            Description not yet provided.
-        """
         self.ds_operator.load_fitted_preprocessors(load_dir)
 
     def add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        preprocessor : PreprocessModuleABC
-            Description not yet provided.
-        index : Any
-            Description not yet provided.
-        """
         self.ds_operator.add_fitted_preprocessor(preprocessor, index)
 
     def build_dataset(
         self,
-        years: np.ndarray,
+        times: (
+            Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
+            | np.ndarray
+            | xr.DataArray
+        ),
         time_features: AddedTimeFeatures,
         return_metadata: bool = False,
         load: bool = False,
     ):
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        years : np.ndarray
-            Description not yet provided.
-        time_features : AddedTimeFeatures
-            Description not yet provided.
-        return_metadata : bool
-            Description not yet provided.
-        load : bool
-            Description not yet provided.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return InferenceDataset(
             config=self,
-            requested_years=years,
+            requested_times=times,
             time_features=time_features,
             return_metadata=return_metadata,
             load=load,
@@ -165,27 +95,12 @@ class InferenceDatasetConfig(DatasetConfigABC):
 
 @dataclasses.dataclass
 class InferenceDataset(DatasetABC):
-    """
-    Document this class.
-
-    Parameters
-    ----------
-    config : InferenceDatasetConfig
-        Description not yet provided.
-    requested_years : list[int] | tuple[int, ...] | np.ndarray
-        Description not yet provided.
-    time_features : AddedTimeFeatures
-        Description not yet provided.
-    return_metadata : bool
-        Description not yet provided.
-    load : bool
-        Description not yet provided.
-    mask : xr.DataArray | None
-        Description not yet provided.
-    """
-
     config: InferenceDatasetConfig
-    requested_years: list[int] | tuple[int, ...] | np.ndarray
+    requested_times:(
+        Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
+        | np.ndarray
+        | xr.DataArray
+    )
     time_features: AddedTimeFeatures
     return_metadata: bool = False
     load: bool = False
@@ -196,21 +111,11 @@ class InferenceDataset(DatasetABC):
     )
 
     def __post_init__(self):
-        """
-        Document this function.
-        """
         super().__init__()
 
     @property
     def _load_model(self):
-        """
-        Document this function.
 
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return all(
             [
                 not self.config._using_model_data_as_condition,
@@ -220,47 +125,21 @@ class InferenceDataset(DatasetABC):
 
     @property
     def _write_condition_to_input(self):
-        """
-        Document this function.
 
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return any(
             [self.config._using_model_data_as_condition, self.config.model is None]
         )
 
     @property
     def _concat_condition_to_input(self):
-        """
-        Document this function.
 
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return (
             self._write_condition_to_input is False
             and self.config.condition is not None
         )
 
     def __getitem__(self, ind):
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        ind : Any
-            Description not yet provided.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         selection = {dim: value[ind] for dim, value in self.sample_coords.items()}
 
         condition = self._index_condition_dataset(ind)
@@ -272,14 +151,14 @@ class InferenceDataset(DatasetABC):
         elif self._concat_condition_to_input:
             input = xr.concat([input, condition], dim="channels")
 
-        time_features_array = self.time_features(selection, input)
+        added_features_array = self.time_features(ind, input)
 
         (input_array,) = self._compute(input.data)
 
         datadict = dict(
             input=torch.as_tensor(input_array, dtype=torch.float32),
-            added_features=torch.tensor(time_features_array, dtype=torch.float32)
-            if time_features_array is not None
+            added_features=torch.tensor(added_features_array, dtype=torch.float32)
+            if added_features_array is not None
             else None,
         )
 
@@ -292,29 +171,11 @@ class InferenceDataset(DatasetABC):
 def _from_train(
     train_dataset_config: TrainDatasetConfig,
 ) -> "InferenceDatasetConfig":
-    """
-    Document this function.
-
-    Parameters
-    ----------
-    train_dataset_config : TrainDatasetConfig
-        Description not yet provided.
-
-    Returns
-    -------
-    'InferenceDatasetConfig'
-        Description not yet provided.
-
-    Raises
-    ------
-    ValueError
-        Description not yet provided.
-    """
     import copy
 
     kwargs = {
         "condition_method": train_dataset_config.condition_method,
-        "lead_months": copy.deepcopy(train_dataset_config.lead_months),
+        "lead_times": copy.deepcopy(train_dataset_config.lead_times),
     }
 
     train_has_observation = train_dataset_config.observation is not None

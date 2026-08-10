@@ -85,8 +85,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss.loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">Losspipeline</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.loss.loss_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">lossABC</span><span class="p">,</span> <span class="n">Reduction</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.core_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">GenerativeContext</span>
-
 
 <span class="n">CovarianceDim</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">,</span> <span class="s2">&quot;channel&quot;</span><span class="p">]</span>
 
@@ -96,28 +94,24 @@
 <span class="nd">@Losspipeline</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">WeightedMSE</span><span class="p">(</span><span class="n">lossABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
+<span class="sd">    Weighted mean squared error loss.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    weights : xr.DataArray</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    reduction : Reduction</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    num_output_dimensions : int</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    low_ress_kernel_size : int</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    generative_context : GenerativeContext | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    hyperparam : Any</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    min_threshold : Any</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    max_threshold : Any</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    **kwargs : Any</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">        Spatial or variable weights.</span>
+<span class="sd">    reduction : {&quot;mean&quot;, &quot;sum&quot;}, optional</span>
+<span class="sd">        Reduction method.</span>
+<span class="sd">    num_output_dimensions : int, optional</span>
+<span class="sd">        Number of spatial/output dimensions.</span>
+<span class="sd">    low_ress_kernel_size : int or None, optional</span>
+<span class="sd">        Kernel size for optional low-resolution downsampling.</span>
+<span class="sd">    hyperparam : float, optional</span>
+<span class="sd">        Scaling factor for asymmetric penalty.</span>
+<span class="sd">    min_threshold : float, optional</span>
+<span class="sd">        Lower threshold for asymmetric penalty.</span>
+<span class="sd">    max_threshold : float, optional</span>
+<span class="sd">        Upper threshold for asymmetric penalty.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -126,43 +120,57 @@
         <span class="n">reduction</span><span class="p">:</span> <span class="n">Reduction</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
         <span class="n">num_output_dimensions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
         <span class="n">low_ress_kernel_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">generative_context</span><span class="p">:</span> <span class="n">GenerativeContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">hyperparam</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
         <span class="n">min_threshold</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="n">max_threshold</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Initialize weighted MSE loss.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        weights : xr.DataArray</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        reduction : Reduction</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        num_output_dimensions : int</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        low_ress_kernel_size : int</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        generative_context : GenerativeContext | None</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        hyperparam : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        min_threshold : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        max_threshold : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        **kwargs : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            Spatial or variable weights.</span>
+<span class="sd">        reduction : {&quot;mean&quot;, &quot;sum&quot;}, optional</span>
+<span class="sd">            Reduction method applied to the loss.</span>
+<span class="sd">        num_output_dimensions : int, optional</span>
+<span class="sd">            Number of spatial/output dimensions.</span>
+<span class="sd">        low_ress_kernel_size : int or None, optional</span>
+<span class="sd">            Kernel size for downsampling.</span>
+<span class="sd">        hyperparam : float, optional</span>
+<span class="sd">            Scaling factor for asymmetric penalty.</span>
+<span class="sd">        min_threshold : float, optional</span>
+<span class="sd">            Lower threshold for asymmetric weighting.</span>
+<span class="sd">        max_threshold : float, optional</span>
+<span class="sd">            Upper threshold for asymmetric weighting.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
-<span class="sd">        NotImplementedError</span>
-<span class="sd">            Description not yet provided.</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If kernel size is not odd.</span>
+<span class="sd">        NotImplementedError</span>
+<span class="sd">            If unsupported number of output dimensions is used.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Expected weight tensor layouts:</span>
+
+<span class="sd">        - With channels: ``(C, O1, ..., On)``</span>
+<span class="sd">        - Without channels: ``(O1, ..., On)``</span>
+
+<span class="sd">        where:</span>
+
+<span class="sd">        - ``C`` is the channel dimension</span>
+<span class="sd">        - ``O1 ... On`` are spatial/output dimensions</span>
+
+<span class="sd">        If channels are not present, a singleton channel dimension may be temporarily added during low-resolution downsampling.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reduction</span> <span class="o">=</span> <span class="n">reduction</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hyperparam</span> <span class="o">=</span> <span class="n">hyperparam</span>
@@ -170,11 +178,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">max_threshold</span> <span class="o">=</span> <span class="n">max_threshold</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">=</span> <span class="n">num_output_dimensions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">low_ress_kernel_size</span> <span class="o">=</span> <span class="n">low_ress_kernel_size</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">generative_context</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">generative_context</span>
-            <span class="k">if</span> <span class="n">generative_context</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">else</span> <span class="n">GenerativeContext</span><span class="p">()</span>
-        <span class="p">)</span>
 
         <span class="n">has_channels</span> <span class="o">=</span> <span class="s2">&quot;channels&quot;</span> <span class="ow">in</span> <span class="n">weights</span><span class="o">.</span><span class="n">dims</span>
 
@@ -191,10 +194,10 @@
                 <span class="n">weights_mask</span> <span class="o">=</span> <span class="n">weights_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
                 <span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">average_pool</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">avg_pool1d</span>
 
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">average_pool</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">avg_pool2d</span>
 
             <span class="k">else</span><span class="p">:</span>
@@ -215,20 +218,33 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_downsample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Apply pooling for downsampling.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        tensor : torch.Tensor</span>
-<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        torch.Tensor</span>
-<span class="sd">            Description not yet provided.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Expected input shapes:</span>
+
+<span class="sd">        - Static weights/masks:</span>
+<span class="sd">        ``(C, O1, ..., On)``</span>
+<span class="sd">        - Batched tensors:</span>
+<span class="sd">        ``(B, C, O1, ..., On)``</span>
+<span class="sd">        - Generative tensors:</span>
+<span class="sd">        ``(Z, B, C, O1, ..., On)``</span>
+
+<span class="sd">        The method temporarily inserts a batch dimension for static weight tensors so that PyTorch pooling operators can be applied. The original dimensionality is restored before returning.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">squeeze</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">tensor</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">squeeze</span> <span class="o">=</span> <span class="kc">True</span>
 
@@ -250,33 +266,51 @@
         <span class="n">data</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
         <span class="n">target_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">generative_modeling</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">generator</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">print_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Compute weighted MSE loss.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        data : torch.Tensor</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            Model predictions.</span>
 <span class="sd">        target : torch.Tensor</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        target_mask : torch.Tensor | None</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        print_loss : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            Ground truth values.</span>
+<span class="sd">        target_mask : torch.Tensor or None, optional</span>
+<span class="sd">            Mask applied to targets.</span>
+<span class="sd">        generative_modeling : bool, optional</span>
+<span class="sd">            Whether inputs contain sample dimension.</span>
+<span class="sd">        generator : bool, optional</span>
+<span class="sd">            Whether predictions come from generator samples.</span>
+<span class="sd">        print_loss : bool, optional</span>
+<span class="sd">            Whether to print loss.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        torch.Tensor</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            Loss value.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If shapes do not match.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Expected tensor shapes are:</span>
+
+<span class="sd">        - Standard mode: ``(B, C, ...)``</span>
+<span class="sd">        - Generator mode: ``(E, B, C, ...)``</span>
+<span class="sd">        - Generative modeling mode: ``(Z, B, C, ...)``</span>
+<span class="sd">        - Generator + generative modeling: ``(E, Z, B, C, ...)``</span>
+
+<span class="sd">        where ``E`` is the ensemble/sample dimension, ``Z`` is the latent sample dimension, ``B`` is batch size, and ``C`` is the channel dimension.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generative_context</span><span class="o">.</span><span class="n">generator</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">generator</span><span class="p">:</span>
             <span class="n">_check_generator_structure</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
@@ -289,7 +323,7 @@
         <span class="n">y_hat</span> <span class="o">=</span> <span class="n">data</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">low_ress_kernel_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generative_context</span><span class="o">.</span><span class="n">generative_modeling</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">generative_modeling</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">target_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">target_mask</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
                     <span class="n">target_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">target_mask</span><span class="p">,</span> <span class="n">start_dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
                 <span class="n">y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">start_dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -316,13 +350,17 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_print_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Print MSE loss.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        loss : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        loss : torch.Tensor</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">low_ress_kernel_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MSE_lowress : </span><span class="si">{</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -330,25 +368,31 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_aggregate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Apply weighting, masking, and reduction.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        loss : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        mask : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        loss : torch.Tensor</span>
+<span class="sd">        mask : torch.Tensor or None</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        torch.Tensor</span>
 
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        NotImplementedError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Expected loss shape before reduction:</span>
+
+<span class="sd">        ``(B, C, O1, ..., On)``</span>
+
+<span class="sd">        or, for generative modeling:</span>
+
+<span class="sd">        ``(Z, B, C, O1, ..., On)``</span>
+
+<span class="sd">        Weights are broadcast across all leading dimensions and applied</span>
+<span class="sd">        along the channel and spatial dimensions.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span>
         <span class="n">loss</span> <span class="o">=</span> <span class="n">loss</span> <span class="o">*</span> <span class="n">weight</span>
         <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -361,7 +405,7 @@
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduction</span> <span class="o">==</span> <span class="s2">&quot;sum&quot;</span><span class="p">:</span>
             <span class="n">loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
                 <span class="n">loss</span><span class="p">,</span>
-                <span class="n">dim</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="o">-</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)),</span>
+                <span class="n">dim</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="o">-</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)),</span>
             <span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 
         <span class="k">else</span><span class="p">:</span>
@@ -378,22 +422,20 @@
 <span class="nd">@Losspipeline</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;crps&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">WeightedCRPS</span><span class="p">(</span><span class="n">lossABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
+<span class="sd">    Weighted continuous ranked probability score (CRPS).</span>
+
+<span class="sd">    Designed for probabilistic predictions with multiple samples.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    weights : xr.DataArray</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    reduction : Reduction</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    num_output_dimensions : int</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    low_ress_kernel_size : int</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    generative_context : GenerativeContext | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    **kwargs : Any</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">        Spatial/feature weights applied to the loss.</span>
+<span class="sd">    reduction : {&quot;mean&quot;, &quot;sum&quot;}, optional</span>
+<span class="sd">        Reduction method applied to the loss.</span>
+<span class="sd">    num_output_dimensions : int, optional</span>
+<span class="sd">        Number of output dimensions.</span>
+<span class="sd">    low_ress_kernel_size : int or None, optional</span>
+<span class="sd">        Kernel size for low-resolution smoothing (if used).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -402,43 +444,42 @@
         <span class="n">reduction</span><span class="p">:</span> <span class="n">Reduction</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
         <span class="n">num_output_dimensions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
         <span class="n">low_ress_kernel_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">generative_context</span><span class="p">:</span> <span class="n">GenerativeContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Initialize weighted CRPS loss.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        weights : xr.DataArray</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        reduction : Reduction</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        num_output_dimensions : int</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        low_ress_kernel_size : int</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        generative_context : GenerativeContext | None</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        **kwargs : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            Spatial or variable weights.</span>
+<span class="sd">        reduction : {&quot;mean&quot;, &quot;sum&quot;}, optional</span>
+<span class="sd">            Reduction method applied to the loss.</span>
+<span class="sd">        num_output_dimensions : int, optional</span>
+<span class="sd">            Number of spatial/output dimensions.</span>
+<span class="sd">        low_ress_kernel_size : int or None, optional</span>
+<span class="sd">            Kernel size for downsampling.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
-<span class="sd">        NotImplementedError</span>
-<span class="sd">            Description not yet provided.</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If kernel size is not odd.</span>
+<span class="sd">        NotImplementedError</span>
+<span class="sd">            If unsupported number of output dimensions is used.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Both `weights` and the internally constructed `weights_mask` are expected to follow the shape `(C, ...)`, where `C` is the channel dimension.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reduction</span> <span class="o">=</span> <span class="n">reduction</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">=</span> <span class="n">num_output_dimensions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">low_ress_kernel_size</span> <span class="o">=</span> <span class="n">low_ress_kernel_size</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">generative_context</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">generative_context</span>
-            <span class="k">if</span> <span class="n">generative_context</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">else</span> <span class="n">GenerativeContext</span><span class="p">()</span>
-        <span class="p">)</span>
 
         <span class="n">has_channels</span> <span class="o">=</span> <span class="s2">&quot;channels&quot;</span> <span class="ow">in</span> <span class="n">weights</span><span class="o">.</span><span class="n">dims</span>
 
@@ -455,10 +496,10 @@
                 <span class="n">weights_mask</span> <span class="o">=</span> <span class="n">weights_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
                 <span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">average_pool</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">avg_pool1d</span>
 
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">average_pool</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">avg_pool2d</span>
 
             <span class="k">else</span><span class="p">:</span>
@@ -480,20 +521,21 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_downsample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Downsample tensor using average pooling.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        tensor : torch.Tensor</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            Input tensor to be downsampled.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        torch.Tensor</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            Downsampled tensor with the same dimensionality as input.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">squeeze</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">tensor</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">squeeze</span> <span class="o">=</span> <span class="kc">True</span>
 
@@ -515,39 +557,62 @@
         <span class="n">data</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
         <span class="n">target_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">generative_modeling</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">generator</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">print_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Compute CRPS loss.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        data : torch.Tensor</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            Ensemble predictions (samples).</span>
 <span class="sd">        target : torch.Tensor</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        target_mask : torch.Tensor | None</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        print_loss : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            Ground truth.</span>
+<span class="sd">        target_mask : torch.Tensor or None, optional</span>
+<span class="sd">        generative_modeling : bool, optional</span>
+<span class="sd">        generator : bool, optional</span>
+<span class="sd">        print_loss : bool, optional</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        torch.Tensor</span>
-<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If generator flag is False.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        CRPS requires an ensemble of predictions. The first dimension of ``data`` is interpreted as the ensemble/sample dimension.</span>
+
+<span class="sd">        Expected tensor layouts:</span>
+
+<span class="sd">        Standard ensemble prediction:</span>
+<span class="sd">        - ``data``: ``(E, B, C, O1, ..., On)``</span>
+<span class="sd">        - ``target``: ``(B, C, O1, ..., On)``</span>
+
+<span class="sd">        Generative modeling:</span>
+<span class="sd">        - ``data``: ``(E, Z, B, C, O1, ..., On)``</span>
+<span class="sd">        - ``target``: ``(Z, B, C, O1, ..., On)``</span>
+
+<span class="sd">        Where:</span>
+<span class="sd">        - ``E`` = ensemble size</span>
+<span class="sd">        - ``Z`` = latent realization dimension</span>
+<span class="sd">        - ``B`` = batch dimension</span>
+<span class="sd">        - ``C`` = channel dimension</span>
+<span class="sd">        - ``O1...On`` = spatial/output dimensions</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">generative_context</span><span class="o">.</span><span class="n">generator</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">generator</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s2">&quot;generator cannot be False as a step_argument in Losspipeline.forward()&quot;</span>
             <span class="p">)</span>
         <span class="n">_check_generator_structure</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generative_context</span><span class="o">.</span><span class="n">generative_modeling</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">generative_modeling</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">target_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">target_mask</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
                 <span class="n">target_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">target_mask</span><span class="p">,</span> <span class="n">start_dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">start_dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -595,13 +660,17 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_print_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Print CRPS loss.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        loss : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        loss : torch.Tensor</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">low_ress_kernel_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CRPS_lowress : </span><span class="si">{</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -609,25 +678,18 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_aggregate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Apply weighting, masking, and reduction.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        loss : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        mask : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        loss : torch.Tensor</span>
+<span class="sd">        mask : torch.Tensor or None</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        NotImplementedError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        torch.Tensor</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span>
         <span class="n">loss</span> <span class="o">=</span> <span class="n">loss</span> <span class="o">*</span> <span class="n">weight</span>
         <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -640,7 +702,7 @@
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduction</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;sum&quot;</span><span class="p">:</span>
             <span class="n">loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
                 <span class="n">loss</span><span class="p">,</span>
-                <span class="n">dim</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="o">-</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)),</span>
+                <span class="n">dim</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="o">-</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)),</span>
             <span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 
         <span class="k">else</span><span class="p">:</span>
@@ -657,20 +719,18 @@
 <span class="nd">@Losspipeline</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;frobenius_norm&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Frobenius_norm</span><span class="p">(</span><span class="n">lossABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
+<span class="sd">    Frobenius norm loss between covariance matrices.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    weights : xr.DataArray</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    reduction : Reduction</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    num_output_dimensions : int</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    generative_context : GenerativeContext | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    covariance_dim : CovarianceDim</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">        Spatial/feature weights applied to the loss.</span>
+<span class="sd">    reduction : {&quot;mean&quot;, &quot;sum&quot;}, optional</span>
+<span class="sd">        Reduction method applied to the loss.</span>
+<span class="sd">    num_output_dimensions : int, optional</span>
+<span class="sd">        Number of output dimensions.</span>
+<span class="sd">    covariance_dim : {&quot;spatial&quot;, &quot;channel&quot;}, optional</span>
+<span class="sd">        Dimension along which covariance is computed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -678,36 +738,34 @@
         <span class="n">weights</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span>
         <span class="n">reduction</span><span class="p">:</span> <span class="n">Reduction</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
         <span class="n">num_output_dimensions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
-        <span class="n">generative_context</span><span class="p">:</span> <span class="n">GenerativeContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">covariance_dim</span><span class="p">:</span> <span class="n">CovarianceDim</span> <span class="o">=</span> <span class="s2">&quot;spatial&quot;</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Initialize Frobenius norm loss size    Initialize Frobenius norm loss.</span>
+<span class="sd">        based on spatial dimensions.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        weights : xr.DataArray</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        reduction : Reduction</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        num_output_dimensions : int</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        generative_context : GenerativeContext | None</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        covariance_dim : CovarianceDim</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            Reference weights used to infer output dimensionality.</span>
+<span class="sd">        reduction : {&quot;mean&quot;, &quot;sum&quot;}, optional</span>
+<span class="sd">            Reduction method applied to the loss.</span>
+<span class="sd">        num_output_dimensions : int, optional</span>
+<span class="sd">            Number of spatial/output dimensions.</span>
+<span class="sd">        covariance_dim : {&quot;spatial&quot;, &quot;channel&quot;}, optional</span>
+<span class="sd">            Dimension along which covariance is computed.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">covariance_dim</span> <span class="o">=</span> <span class="n">covariance_dim</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">=</span> <span class="n">num_output_dimensions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reduction</span> <span class="o">=</span> <span class="n">reduction</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">generative_context</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">generative_context</span>
-            <span class="k">if</span> <span class="n">generative_context</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">else</span> <span class="n">GenerativeContext</span><span class="p">()</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="p">:])</span>
 
 <div class="viewcode-block" id="Frobenius_norm.forward">
 <a class="viewcode-back" href="../../../api/cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.utils_loss.Frobenius_norm.forward">[docs]</a>
@@ -715,42 +773,57 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">generative_modeling</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">generator</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">print_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Compute Frobenius norm of covariance difference.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        data : torch.Tensor</span>
-<span class="sd">            Description not yet provided.</span>
 <span class="sd">        target : torch.Tensor</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        print_loss : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        generative_modeling : bool, optional</span>
+<span class="sd">        generator : bool, optional</span>
+<span class="sd">        print_loss : bool, optional</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        torch.Tensor</span>
-<span class="sd">            Description not yet provided.</span>
 
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        AssertionError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Expected tensor layouts:</span>
+
+<span class="sd">        Standard mode:</span>
+<span class="sd">        - ``data``: ``(B, C, O1, ..., On)``</span>
+<span class="sd">        - ``target``: ``(B, C, O1, ..., On)``</span>
+
+<span class="sd">        Generative modeling:</span>
+<span class="sd">        - ``data``: ``(Z, B, C, O1, ..., On)``</span>
+<span class="sd">        - ``target``: ``(Z, B, C, O1, ..., On)``</span>
+
+<span class="sd">        Processing steps:</span>
+
+<span class="sd">        1. Spatial dimensions ``O1...On`` are flattened into a single feature dimension.</span>
+<span class="sd">        2. If generative modeling is enabled, the latent dimension ``Z`` is merged with the batch dimension.</span>
+<span class="sd">        3. Covariance matrices are computed either:</span>
+<span class="sd">        - across spatial features (``covariance_dim=&quot;spatial&quot;``)</span>
+<span class="sd">        - across channels (``covariance_dim=&quot;channel&quot;``)</span>
+<span class="sd">        4. The Frobenius norm of the covariance difference is returned.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generative_context</span><span class="o">.</span><span class="n">generator</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">generator</span><span class="p">:</span>
             <span class="n">_check_generator_structure</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
         <span class="k">assert</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">target</span><span class="o">.</span><span class="n">shape</span>
 
-        <span class="n">y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">start_dim</span><span class="o">=-</span><span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">end_dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">y_hat</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span>
-            <span class="n">data</span><span class="p">,</span> <span class="n">start_dim</span><span class="o">=-</span><span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">end_dim</span><span class="o">=-</span><span class="mi">1</span>
-        <span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">start_dim</span><span class="o">=-</span><span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span><span class="p">,</span> <span class="n">end_dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">y_hat</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">start_dim</span><span class="o">=-</span><span class="bp">self</span><span class="o">.</span><span class="n">num_output_dimensions</span><span class="p">,</span> <span class="n">end_dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generative_context</span><span class="o">.</span><span class="n">generative_modeling</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">generative_modeling</span><span class="p">:</span>
             <span class="n">y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">start_dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">y_hat</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">y_hat</span><span class="p">,</span> <span class="n">start_dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
@@ -786,31 +859,33 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_print_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Print Frobenius norm loss.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        loss : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        loss : torch.Tensor</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FLN : </span><span class="si">{</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">:</span><span class="s2">.5f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_aggregate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">output_size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Apply normalization and reduction.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        loss : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        output_size : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        loss : torch.Tensor</span>
+<span class="sd">        output_size : int or None, optional</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        torch.Tensor</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="n">output_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">output_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span>
 
@@ -828,25 +903,53 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_generator_structure</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this function.</span>
+<span class="sd">    Validate generator output structure.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    data : torch.Tensor</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">        Generated samples.</span>
 <span class="sd">    target : torch.Tensor</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">        Target tensor.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    Any</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">    bool</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">        If structure is inconsistent.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Generator outputs must contain exactly one additional leading</span>
+<span class="sd">    ensemble/sample dimension compared to the target.</span>
+
+<span class="sd">    Valid examples:</span>
+
+<span class="sd">    - target:</span>
+<span class="sd">    ``(B, C, O1, O2)``</span>
+<span class="sd">    - data:</span>
+<span class="sd">    ``(E, B, C, O1, O2)``</span>
+
+<span class="sd">    Generative example:</span>
+
+<span class="sd">    - target:</span>
+<span class="sd">    ``(Z, B, C, O1, O2)``</span>
+<span class="sd">    - data:</span>
+<span class="sd">    ``(E, Z, B, C, O1, O2)``</span>
+
+<span class="sd">    Invalid examples:</span>
+
+<span class="sd">    - data:</span>
+<span class="sd">    ``(B, E, C, O1, O2)``</span>
+<span class="sd">    - data:</span>
+<span class="sd">    ``(E, C, O1, O2)``</span>
+
+<span class="sd">    The ensemble dimension must always be the left-most dimension.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="nb">bool</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">-</span> <span class="n">target</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">target</span><span class="o">.</span><span class="n">shape</span>
     <span class="k">if</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span>

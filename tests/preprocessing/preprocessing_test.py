@@ -164,6 +164,7 @@ def reset_pipeline_counter():
     PreprocessingPipeline.num_instances = original
 
 
+@pytest.mark.pruned
 def test_pipeline_defaults():
     pipeline = PreprocessingPipeline()
 
@@ -176,6 +177,7 @@ def test_pipeline_defaults():
     assert pipeline.pipeline == []
 
 
+@pytest.mark.pruned
 def test_pipeline_assigns_unique_default_names():
     first = PreprocessingPipeline()
     second = PreprocessingPipeline()
@@ -186,6 +188,7 @@ def test_pipeline_assigns_unique_default_names():
     assert third.name == "instance_1"
 
 
+@pytest.mark.pruned
 def test_pipeline_constructs_preprocessors():
     first_preprocessor = DummyPreprocessor()
     second_preprocessor = DummyPreprocessor()
@@ -220,6 +223,7 @@ def test_pipeline_constructs_preprocessors():
     assert second_selector.get_calls == 1
 
 
+@pytest.mark.pruned
 def test_pipeline_with_load_dir_does_not_construct_steps(
     tmp_path,
 ):
@@ -240,6 +244,7 @@ def test_pipeline_with_load_dir_does_not_construct_steps(
     assert not hasattr(pipeline, "name")
 
 
+@pytest.mark.pruned
 def test_set_name():
     pipeline = PreprocessingPipeline()
 
@@ -249,6 +254,7 @@ def test_set_name():
     assert pipeline.name == "model"
 
 
+@pytest.mark.pruned
 def test_fit_empty_pipeline_returns_self():
     pipeline = PreprocessingPipeline()
     data = make_dataset()
@@ -264,6 +270,7 @@ def test_fit_empty_pipeline_returns_self():
     assert pipeline.fitted_preprocessors == []
 
 
+@pytest.mark.pruned
 def test_fit_records_fitted_years():
     pipeline = PreprocessingPipeline()
     data = make_dataset()
@@ -337,6 +344,7 @@ def test_fit_calls_preprocessors_in_order():
     )
 
 
+@pytest.mark.pruned
 def test_fit_passes_mask_to_each_preprocessor():
     first = DummyPreprocessor()
     second = DummyPreprocessor()
@@ -373,6 +381,7 @@ def test_fit_passes_mask_to_each_preprocessor():
     assert second.fit_calls[0]["mask"] is mask
 
 
+@pytest.mark.pruned
 def test_fit_extracts_reference_metadata(
     monkeypatch,
 ):
@@ -438,6 +447,7 @@ def test_fit_saves_pipeline_with_default_path(
     )
 
 
+@pytest.mark.pruned
 def test_fit_saves_pipeline_with_custom_path_and_name(
     tmp_path,
     monkeypatch,
@@ -470,6 +480,7 @@ def test_fit_saves_pipeline_with_custom_path_and_name(
     )
 
 
+@pytest.mark.pruned
 def test_fit_preserves_existing_save_directory(
     tmp_path,
     monkeypatch,
@@ -497,6 +508,7 @@ def test_fit_preserves_existing_save_directory(
     dump_mock.assert_called_once()
 
 
+@pytest.mark.pruned
 def test_fit_does_not_save_when_disabled(
     monkeypatch,
 ):
@@ -557,6 +569,7 @@ def test_transform_empty_pipeline_returns_input():
     assert result is data
 
 
+@pytest.mark.pruned
 def test_transform_applies_steps_in_order():
     first = DummyPreprocessor(
         transform_offset=1.0,
@@ -596,6 +609,7 @@ def test_transform_applies_steps_in_order():
     )
 
 
+@pytest.mark.pruned
 def test_transform_passes_step_arguments():
     first = DummyPreprocessor(
         transform_offset=1.0,
@@ -644,6 +658,7 @@ def test_transform_passes_step_arguments():
     }
 
 
+@pytest.mark.pruned
 def test_transform_uses_empty_arguments_for_unspecified_step():
     preprocessor = DummyPreprocessor()
 
@@ -687,6 +702,7 @@ def test_inverse_transform_empty_pipeline_returns_input():
     assert result is data
 
 
+@pytest.mark.pruned
 def test_inverse_transform_applies_steps_in_reverse_order():
     first = DummyPreprocessor(
         transform_offset=1.0,
@@ -934,6 +950,7 @@ def test_add_fitted_preprocessor_inserts_at_index():
     ]
 
 
+@pytest.mark.pruned
 def test_add_fitted_preprocessor_requires_fitted_object():
     pipeline = make_fitted_pipeline([])
 
@@ -959,6 +976,7 @@ def test_extract_output_coords_requires_fitted_pipeline():
         pipeline.extract_output_coords_vars(make_dataset())
 
 
+@pytest.mark.pruned
 def test_extract_output_coords_uses_supported_dimensions(
     monkeypatch,
 ):
@@ -995,6 +1013,7 @@ def test_extract_output_coords_uses_supported_dimensions(
     )
 
 
+@pytest.mark.pruned
 def test_extract_output_coords_records_dataset_variables():
     pipeline = PreprocessingPipeline()
     pipeline.fitted = True
@@ -1186,6 +1205,7 @@ def test_load_from_memory_copies_pipeline_state(
     assert pipeline.name == "loaded"
 
 
+@pytest.mark.pruned
 def test_load_from_memory_accepts_string_path(
     tmp_path,
     monkeypatch,

@@ -1,0 +1,100 @@
+import abc
+import numpy as np
+import torch
+import torch.nn as nn
+from typing import final
+import gc
+from pathlib import Path
+from typing import ClassVar
+import dataclasses
+
+
+class moduleConfigABC(abc.ABC):
+
+    _type: ClassVar[str | None] = None
+
+    @classmethod
+    def check_registered(cls):
+        if cls._type is None:
+            raise RuntimeError(f"{cls.__name__} has not been registered.")
+
+    @abc.abstractmethod
+    def build(
+        self,
+        input_shape: np.ndarray,
+        output_shape: np.ndarray | None = None,
+        added_features_dim: int = None,
+    ):
+        pass
+
+    @abc.abstractmethod
+    def _load_from_checkpoint(self):
+        pass
+
+
+class moduleABC(nn.Module, abc.ABC):
+
+    def __init__(self):
+        super().__init__()
+
+    @abc.abstractmethod
+    def init_loss_function(self, reconstruction_loss: nn.Module, **kwargs):
+        pass
+
+    @abc.abstractmethod
+    def _compute_loss(self):
+        pass
+
+    @abc.abstractmethod
+    def forward(self):
+        pass
+
+    @abc.abstractmethod
+    def predict(self):
+        pass
+
+    @final
+    def _get_device(self):
+        param = next(self.parameters(), None)
+
+        if param is not None:
+            return param.device
+
+        buffer = next(self.buffers(), None)
+
+        if buffer is not None:
+            return buffer.device
+
+        return torch.device("cpu")
+
+    @final
+    def _load_state_dict(self, load_path: Path | str, strict: bool = True):
+        if not Path(load_path).exists():
+            raise FileNotFoundError(f"Checkpoint not found: {load_path}")
+
+        checkpoint = torch.load(
+            Path(load_path), map_location=self._get_device(), weights_only=True
+        )
+        self.load_state_dict(checkpoint["module"], strict=strict)
+        del checkpoint
+        gc.collect()
+
+
+class GenerativeContext:
+
+    def __init__(self, module: moduleABC | None = None):
+        if module is not None:
+            self.generator = getattr(module.model_config, "GENERATOR", None) is not None
+            self.generative_modeling = getattr(
+                module.model, "generative_modeling", False
+            )
+
+        else:
+            self.generator = False
+            self.generative_modeling = False
+
+
+@dataclasses.dataclass
+class OutputABC:
+
+    output: torch.Tensor

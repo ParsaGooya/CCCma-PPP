@@ -13,109 +13,48 @@ from cccma_ppp.generic.aggregator import RunningCovariance
 
 
 class PredictorABC(abc.ABC):
-    """
-    Document this class.
-
-    Attributes
-    ----------
-    output_dir : str | Path
-        Description not yet provided.
-    output_sampler : Callable[..., torch.Tensor] | None
-        Description not yet provided.
-    num_output_covariance_sampling : int | None
-        Description not yet provided.
-    """
-
     output_dir: str | Path
     output_sampler: Callable[..., torch.Tensor] | None
     num_output_covariance_sampling: int | None
 
     @property
     def temp_save_dir(self):
-        """
-        Document this function.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return Path(self.output_dir) / "_temp"
 
     @property
     @abc.abstractmethod
     def extract_training_vars(self) -> bool:
-        """
-        Document this function.
-        """
         pass
 
     @property
     def stats(self) -> dict[str, RunningCovariance]:
-        """
-        Document this function.
-
-        Returns
-        -------
-        dict[str, RunningCovariance]
-            Description not yet provided.
-        """
         if self.extract_training_vars:
             return self._stats
 
     @abc.abstractmethod
     def _infer_on_batch(self, batch: BatchDataABC, _getting_train_stats: bool = False):
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        batch : BatchDataABC
-            Description not yet provided.
-        _getting_train_stats : bool
-            Description not yet provided.
-        """
         pass
 
     @abc.abstractmethod
     def _batch_to_netcdf(self, output: OutputABC, metadata: list[dict]):
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        output : OutputABC
-            Description not yet provided.
-        metadata : list[dict]
-            Description not yet provided.
-        """
         pass
 
     @abc.abstractmethod
     def _update_train_stats(self, output: OutputABC, batch: BatchDataABC):
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        output : OutputABC
-            Description not yet provided.
-        batch : BatchDataABC
-            Description not yet provided.
-        """
         pass
 
     @final
     @property
     def raw_module(self):
         """
-        Document this function.
+        Access underlying module (unwrap DDP if needed).
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        moduleABC
+            Raw model instance.
         """
+
         if isinstance(self.module, torch.nn.parallel.DistributedDataParallel):
             return self.module.module
         return self.module
@@ -128,25 +67,7 @@ class PredictorABC(abc.ABC):
         sample_size: tuple,
         reshape_size: tuple,
     ) -> OutputABC:
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        output : OutputABC
-            Description not yet provided.
-        num_output_samples : int
-            Description not yet provided.
-        sample_size : tuple
-            Description not yet provided.
-        reshape_size : tuple
-            Description not yet provided.
-
-        Returns
-        -------
-        OutputABC
-            Description not yet provided.
-        """
         if self.output_sampler is None:
             self.output_sampler = self.build_output_sampler()
 
@@ -164,19 +85,6 @@ class PredictorABC(abc.ABC):
 
     @final
     def build_output_sampler(self) -> Callable[..., torch.Tensor]:
-        """
-        Document this function.
-
-        Returns
-        -------
-        Callable[..., torch.Tensor]
-            Description not yet provided.
-
-        Raises
-        ------
-        ValueError
-            Description not yet provided.
-        """
         stats_path = self.output_dir / "training_variable_stats.pt"
 
         if not stats_path.exists():
@@ -188,21 +96,9 @@ class PredictorABC(abc.ABC):
         stats = torch.load(stats_path, map_location=self.device)
 
         def _sampler(sample_size: int | tuple[int, ...]):
-            """
-            Document this function.
-
-            Parameters
-            ----------
-            sample_size : int | tuple[int, ...]
-                Description not yet provided.
-
-            Returns
-            -------
-            Any
-                Description not yet provided.
-            """
             return self._sample(
                 torch.zeros_like(stats["residual_mean"]),
+                # stats["residual_mean"],
                 stats["residual_cov"],
                 sample_size,
             )
@@ -216,38 +112,16 @@ class PredictorABC(abc.ABC):
         cov: torch.Tensor,
         std: float = 1.0,
     ) -> torch.distributions.MultivariateNormal:
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        mu : torch.Tensor
-            Description not yet provided.
-        cov : torch.Tensor
-            Description not yet provided.
-        std : float
-            Description not yet provided.
-
-        Returns
-        -------
-        torch.distributions.MultivariateNormal
-            Description not yet provided.
-
-        Raises
-        ------
-        RuntimeError
-            Description not yet provided.
-        ValueError
-            Description not yet provided.
-        """
         mu = mu.detach().to(self.device).float()
         cov = cov.detach().to(self.device).float()
 
         if std <= 0:
             raise ValueError(f"std must be positive, got {std}.")
 
+        # Widen/narrow spread. Scaling std by k means covariance scales by k**2.
         cov = cov * (std**2)
 
+        # Numerical stability for nearly-singular covariance matrices.
         jitter = 1e-6
         eye = torch.eye(cov.shape[-1], device=self.device, dtype=cov.dtype)
 
@@ -257,6 +131,7 @@ class PredictorABC(abc.ABC):
                     loc=mu,
                     covariance_matrix=cov + jitter * eye,
                 )
+                
             except ValueError:
                 jitter *= 10
 
@@ -273,25 +148,6 @@ class PredictorABC(abc.ABC):
         sample_size: int | tuple[int, ...] = 1,
         std: float = 1.0,
     ) -> torch.Tensor:
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        mu : torch.Tensor
-            Description not yet provided.
-        cov : torch.Tensor
-            Description not yet provided.
-        sample_size : int | tuple[int, ...]
-            Description not yet provided.
-        std : float
-            Description not yet provided.
-
-        Returns
-        -------
-        torch.Tensor
-            Description not yet provided.
-        """
         dist = self._get_multinormal(mu=mu, cov=cov, std=std)
 
         if isinstance(sample_size, int):
@@ -311,33 +167,6 @@ def save_batch_to_netcdf(
     assign_coords: dict = None,
     attrs: dict = None,
 ):
-    """
-    Document this function.
-
-    Parameters
-    ----------
-    prediction : torch.Tensor
-        Description not yet provided.
-    metadata : list[dict]
-        Description not yet provided.
-    num_output_dims : int
-        Description not yet provided.
-    save_name : str
-        Description not yet provided.
-    save_dir : str | Path
-        Description not yet provided.
-    extra_dims_sorted : list[str] | None
-        Description not yet provided.
-    assign_coords : dict
-        Description not yet provided.
-    attrs : dict
-        Description not yet provided.
-
-    Raises
-    ------
-    ValueError
-        Description not yet provided.
-    """
     prediction = prediction.detach().float().cpu()
 
     if extra_dims_sorted is None:

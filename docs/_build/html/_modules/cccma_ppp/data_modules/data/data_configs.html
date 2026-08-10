@@ -82,43 +82,36 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.data_modules.data.data_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataConfigABC</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.preprocessing.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreprocessingPipeline</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.configs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">model_data_allowed_dimensions</span><span class="p">,</span>
-    <span class="n">model_data_required_dimensions</span><span class="p">,</span>
-    <span class="n">observation_data_allowed_dimensions</span><span class="p">,</span>
-    <span class="n">observation_data_required_dimensions</span><span class="p">,</span>
-    <span class="n">condition_data_allowed_dimensions</span><span class="p">,</span>
-    <span class="n">condition_data_required_dimensions</span><span class="p">,</span>
-<span class="p">)</span>
+
 
 <span class="n">spatialmethod</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span> <span class="s2">&quot;cosine_lat&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="ModelDataConfig">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.train.dataset.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.train.datasets.html#cccma_ppp.data_modules.data.data_configs.ModelDataConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ModelDataConfig</span><span class="p">(</span><span class="n">DataConfigABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
+<span class="sd">    Configuration for model (predictor) dataset.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    paths : str</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    names : list[str]</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    preprocessing_pipeline : PreprocessingPipeline</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    ensemble_list : list | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    ensemble_mean : bool | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    concat_dim : str</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    file_type : str</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    rename_dict : dict</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">        Path to dataset files.</span>
+<span class="sd">    names : list of str</span>
+<span class="sd">        Variables to load.</span>
+<span class="sd">    preprocessing_pipeline : PreprocessingPipeline, optional</span>
+<span class="sd">        Preprocessing steps applied to data.</span>
+<span class="sd">    ensemble_list : list or None, optional</span>
+<span class="sd">        Specific ensemble members to select.</span>
+<span class="sd">    ensemble_mean : bool or None, optional</span>
+<span class="sd">        Whether to compute ensemble mean.</span>
+<span class="sd">    concat_dim : str, optional</span>
+<span class="sd">        Dimension along which files are concatenated.</span>
+<span class="sd">    file_type : str, optional</span>
+<span class="sd">        File pattern (e.g., &quot;.nc&quot;).</span>
+<span class="sd">    rename_dict : dict or None, optional</span>
+<span class="sd">        Variable renaming mapping.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">paths</span><span class="p">:</span> <span class="nb">str</span>
@@ -134,10 +127,19 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Initialize and validate model dataset configuration.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_ensemble</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensemble_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_ensemble</span> <span class="o">=</span> <span class="kc">True</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ds_info</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">year_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">start_year</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">final_year</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">&quot;lead_time&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">12</span><span class="p">,</span>
@@ -147,12 +149,12 @@
     <span class="nd">@final</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">TYPE</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Dataset type identifier.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        str</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            Always &quot;model&quot;.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;model&quot;</span>
 
@@ -160,55 +162,53 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_allowed_dims</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Allowed dataset dimensions.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        frozenset[str]</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        frozenset of str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">model_data_allowed_dimensions</span>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">&quot;year&quot;</span><span class="p">,</span> <span class="s2">&quot;lead_time&quot;</span><span class="p">,</span> <span class="s2">&quot;ensembles&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">})</span>
 
     <span class="nd">@final</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_required_dims</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Required dataset dimensions.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        frozenset[str]</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        frozenset of str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">model_data_required_dimensions</span></div>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">&quot;lead_time&quot;</span><span class="p">,</span> <span class="s2">&quot;ensembles&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">})</span></div>
 
 
 
 <div class="viewcode-block" id="ObsDataConfig">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.train.dataset.html#cccma_ppp.data_modules.data.data_configs.ObsDataConfig">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.train.datasets.html#cccma_ppp.data_modules.data.data_configs.ObsDataConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ObsDataConfig</span><span class="p">(</span><span class="n">DataConfigABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
+<span class="sd">    Configuration for observation (target) dataset.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    paths : str</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    names : list[str]</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    preprocessing_pipeline : PreprocessingPipeline</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    ensemble_list : list | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    ensemble_mean : bool | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    concat_dim : str</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    file_type : str</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    rename_dict : dict</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">        Path(s) to observation data files.</span>
+<span class="sd">    names : list of str</span>
+<span class="sd">        Variable names in the dataset.</span>
+<span class="sd">    preprocessing_pipeline : PreprocessingPipeline, optional</span>
+<span class="sd">        Optional preprocessing pipeline applied to observations.</span>
+<span class="sd">    ensemble_list : list or None, optional</span>
+<span class="sd">        List of ensemble members, if applicable.</span>
+<span class="sd">    ensemble_mean : bool or None, optional</span>
+<span class="sd">        Whether to compute ensemble mean.</span>
+<span class="sd">    concat_dim : str, optional</span>
+<span class="sd">        Dimension along which to concatenate data.</span>
+<span class="sd">    file_type : str, optional</span>
+<span class="sd">        File format/type of the dataset.</span>
+<span class="sd">    rename_dict : dict or None, optional</span>
+<span class="sd">        Mapping of variable renames.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">paths</span><span class="p">:</span> <span class="nb">str</span>
@@ -224,22 +224,33 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Initialize observation dataset configuration.</span>
+
+<span class="sd">        Resolves dataset paths, extracts metadata, and defines year range.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_ensemble</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensemble_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_ensemble</span> <span class="o">=</span> <span class="kc">True</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ds_info</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">year_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">start_year</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">final_year</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
     <span class="nd">@final</span>
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">TYPE</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Dataset type identifier.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        str</span>
+<span class="sd">            Always &quot;observation&quot;.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;observation&quot;</span>
 
@@ -247,55 +258,45 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_allowed_dims</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Allowed dataset dimensions.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        frozenset[str]</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        frozenset of str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">observation_data_allowed_dimensions</span>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">&quot;year&quot;</span><span class="p">,</span> <span class="s2">&quot;month&quot;</span><span class="p">,</span> <span class="s2">&quot;ensembles&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">})</span>
 
     <span class="nd">@final</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_required_dims</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Required dataset dimensions.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        frozenset[str]</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        frozenset of str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">observation_data_required_dimensions</span></div>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">&quot;month&quot;</span><span class="p">,</span> <span class="s2">&quot;ensembles&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">})</span></div>
 
 
 
 <div class="viewcode-block" id="ConditionDataConfig">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.train.dataset.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.train.datasets.html#cccma_ppp.data_modules.data.data_configs.ConditionDataConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ConditionDataConfig</span><span class="p">(</span><span class="n">DataConfigABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
+<span class="sd">    Configuration for conditioning dataset.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    paths : str</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    names : list[str]</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    preprocessing_pipeline : PreprocessingPipeline</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    ensemble_list : list | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    ensemble_mean : bool | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    concat_dim : str</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    file_type : str</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    rename_dict : dict</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">    names : list of str</span>
+<span class="sd">    preprocessing_pipeline : PreprocessingPipeline, optional</span>
+<span class="sd">    ensemble_list : list or None, optional</span>
+<span class="sd">    ensemble_mean : bool or None, optional</span>
+<span class="sd">    concat_dim : str, optional</span>
+<span class="sd">    file_type : str, optional</span>
+<span class="sd">    rename_dict : dict or None, optional</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">paths</span><span class="p">:</span> <span class="nb">str</span>
@@ -311,10 +312,19 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Initialize condition dataset configuration.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_ensemble</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ensemble_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_ensemble</span> <span class="o">=</span> <span class="kc">True</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ds_info</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">start_year</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">final_year</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">year_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">start_year</span><span class="p">,</span>
@@ -325,12 +335,12 @@
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">TYPE</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Dataset type identifier.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        str</span>
+<span class="sd">            Always &quot;condition&quot;.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;condition&quot;</span>
 
@@ -338,27 +348,25 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_allowed_dims</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Allowed dataset dimensions.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        frozenset[str]</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        frozenset of str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">condition_data_allowed_dimensions</span>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">&quot;year&quot;</span><span class="p">,</span> <span class="s2">&quot;lead_time&quot;</span><span class="p">,</span> <span class="s2">&quot;ensembles&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">})</span>
 
     <span class="nd">@final</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_required_dims</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Required dataset dimensions.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        frozenset</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        frozenset of str</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">condition_data_required_dimensions</span></div>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">})</span></div>
 
 </pre></div>
 

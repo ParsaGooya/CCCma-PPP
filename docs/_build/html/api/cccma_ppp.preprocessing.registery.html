@@ -19,7 +19,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="cccma_ppp.preprocessing.selector module" href="cccma_ppp.preprocessing.selector.html" />
+    <link rel="next" title="cccma_ppp.preprocessing.utils_preprocessing module" href="cccma_ppp.preprocessing.utils_preprocessing.html" />
     <link rel="prev" title="cccma_ppp.preprocessing.preprocessing_ABC module" href="cccma_ppp.preprocessing.preprocessing_ABC.html" /> 
 </head>
 
@@ -53,7 +53,6 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="cccma_ppp.html">cccma_ppp package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="cccma_ppp.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.configs.html">cccma_ppp.configs package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.core.html">cccma_ppp.core package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.html">cccma_ppp.data_modules package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.generic.html">cccma_ppp.generic package</a></li>
@@ -67,6 +66,7 @@
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.train.html">cccma_ppp.train package</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.html#submodules">Submodules</a></li>
 </ul>
 </li>
 </ul>
@@ -103,17 +103,17 @@
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.preprocessing.registery.</span></span><span class="sig-name descname"><span class="pre">Registery</span></span><a class="reference internal" href="../_modules/cccma_ppp/preprocessing/registery.html#Registery"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Document this class.</p>
+<p>Registry for mapping string names to classes.</p>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">available</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/preprocessing/registery.html#Registery.available"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Available registered names.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Description not yet provided.</p>
+<dd class="field-odd"><p>Registered identifiers.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Any</p>
+<dd class="field-even"><p>list of str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -121,22 +121,23 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/preprocessing/registery.html#Registery.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Retrieve and optionally instantiate a registered class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>Any</em>) – Description not yet provided.</p></li>
-<li><p><strong>config</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Name of the registered class.</p></li>
+<li><p><strong>config</strong> (<em>dict</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Initialization arguments.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Instantiated object if config is provided,
+otherwise the class itself.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p>object</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – If the name is not registered.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -144,16 +145,16 @@
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/preprocessing/registery.html#Registery.register"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Document this function.</p>
+<dd><p>Register a class under a given name.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>Any</em>) – Description not yet provided.</p>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Identifier used to register the class.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Description not yet provided.</p>
+<dd class="field-even"><p>Decorator that registers the class.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Any</p>
+<dd class="field-odd"><p>Callable</p>
 </dd>
 </dl>
 </dd></dl>
@@ -167,7 +168,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="cccma_ppp.preprocessing.preprocessing_ABC.html" class="btn btn-neutral float-left" title="cccma_ppp.preprocessing.preprocessing_ABC module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="cccma_ppp.preprocessing.selector.html" class="btn btn-neutral float-right" title="cccma_ppp.preprocessing.selector module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="cccma_ppp.preprocessing.utils_preprocessing.html" class="btn btn-neutral float-right" title="cccma_ppp.preprocessing.utils_preprocessing module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

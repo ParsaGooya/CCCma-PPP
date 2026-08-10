@@ -23,24 +23,12 @@ from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.inference.predictors.deterministic import DeterministicPredictorConfig
 from cccma_ppp.inference.predictors.cvae import cVAEPredictorConfig
 
-from cccma_ppp.configs import required_sample_dimensions, optional_sample_dimensions
+from cccma_ppp.configs import required_sample_dimensions, realization_dim
 
+init_time_dim, lead_time_dim = required_sample_dimensions
 
 @dataclasses.dataclass
 class WriterConfig:
-    """
-    Document this class.
-
-    Parameters
-    ----------
-    predictor : DeterministicPredictorConfig | cVAEPredictorConfig
-        Description not yet provided.
-    num_output_sampling : int
-        Description not yet provided.
-    get_trained_model_stats_from_validation : bool
-        Description not yet provided.
-    """
-
     predictor: DeterministicPredictorConfig | cVAEPredictorConfig = dataclasses.field(
         default_factory=DeterministicPredictorConfig
     )
@@ -49,14 +37,7 @@ class WriterConfig:
     get_trained_model_stats_from_validation: bool = False
 
     def __post_init__(self):
-        """
-        Document this function.
 
-        Raises
-        ------
-        ValueError
-            Description not yet provided.
-        """
         if self.num_output_sampling < 0:
             raise ValueError("num_output_sampling cannot be negative.")
 
@@ -68,32 +49,7 @@ class WriterConfig:
         post_processor: PreprocessingPipeline,
         output_dir: Path | str,
     ):
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        inference_data_loader : Dataloader
-            Description not yet provided.
-        train_dataloader_config : TrainDataloaderConfig
-            Description not yet provided.
-        module : moduleABC
-            Description not yet provided.
-        post_processor : PreprocessingPipeline
-            Description not yet provided.
-        output_dir : Path | str
-            Description not yet provided.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-
-        Raises
-        ------
-        RuntimeError
-            Description not yet provided.
-        """
         if self.predictor._type != module.config._type.lower():
             raise RuntimeError(
                 f"The provided selector config matches {self.predictor._type}"
@@ -111,25 +67,6 @@ class WriterConfig:
 
 
 class Writer:
-    """
-    Document this class.
-
-    Parameters
-    ----------
-    config : WriterConfig
-        Description not yet provided.
-    inference_data_loader : Dataloader
-        Description not yet provided.
-    train_dataloader_config : TrainDataloaderConfig
-        Description not yet provided.
-    module : moduleABC
-        Description not yet provided.
-    post_processor : PreprocessingPipeline
-        Description not yet provided.
-    output_dir : Path | str
-        Description not yet provided.
-    """
-
     def __init__(
         self,
         config: WriterConfig,
@@ -139,24 +76,7 @@ class Writer:
         post_processor: PreprocessingPipeline,
         output_dir: Path | str,
     ):
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        config : WriterConfig
-            Description not yet provided.
-        inference_data_loader : Dataloader
-            Description not yet provided.
-        train_dataloader_config : TrainDataloaderConfig
-            Description not yet provided.
-        module : moduleABC
-            Description not yet provided.
-        post_processor : PreprocessingPipeline
-            Description not yet provided.
-        output_dir : Path | str
-            Description not yet provided.
-        """
         self.config = config
         self.module = module
         self.output_dir = Path(output_dir)
@@ -171,21 +91,7 @@ class Writer:
         distributed: Distributed,
         logger: logging.Logger,
     ):
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        distributed : Distributed
-            Description not yet provided.
-        logger : logging.Logger
-            Description not yet provided.
-
-        Raises
-        ------
-        RuntimeError
-            Description not yet provided.
-        """
         self.logger = logger
         if self.logger is None:
             print("Logger is None. Print is used instead ... \n\n ")
@@ -237,25 +143,10 @@ class Writer:
 
     @property
     def train_stats_save_dir(self):
-        """
-        Document this function.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return Path(self.output_dir) / "training_variable_stats.pt"
 
     def predict(self):
-        """
-        Document this function.
 
-        Raises
-        ------
-        RuntimeError
-            Description not yet provided.
-        """
         if not self._setup:
             raise RuntimeError("Call setup_distributed() before predict().")
         self.log_root(logging.INFO, "Starting Inference Loop...")
@@ -269,9 +160,7 @@ class Writer:
         self.log_root(logging.INFO, f"Inference finished in {time_elapsed:.2f}s")
 
     def _predict(self):
-        """
-        Document this function.
-        """
+
         self.module.eval()
         loader = self.InferenceLoader
         do_post_process = True
@@ -292,9 +181,7 @@ class Writer:
             self.aggregate_predictions_to_netcdf(do_post_process)
 
     def _save_train_stats(self):
-        """
-        Document this function.
-        """
+
         if not self.train_stats_save_dir.exists():
             loader = self.build_train_loader(
                 from_validation=self.config.get_trained_model_stats_from_validation
@@ -326,23 +213,7 @@ class Writer:
         return_metadata: bool = False,
         shuffle: bool | None = None,
     ):
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        from_validation : bool
-            Description not yet provided.
-        return_metadata : bool
-            Description not yet provided.
-        shuffle : bool | None
-            Description not yet provided.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         self.TrainLoaderConfig.setup_distributed(
             self.distributed,
             load_path=Path(RuntimeContext.GLOBAL_EXP_DIR) / "preprocessing_pipeline",
@@ -358,14 +229,7 @@ class Writer:
             )
 
     def aggregate_train_stats(self, stats: dict[str, RunningCovariance]):
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        stats : dict[str, RunningCovariance]
-            Description not yet provided.
-        """
         for stat in stats.values():
             if stat.sum_x is not None:
                 stat.distributed_reduce()
@@ -391,17 +255,22 @@ class Writer:
 
     def log_root(self, level: int, msg: str, *args):
         """
-        Document this function.
+        Log message from root process.
 
         Parameters
         ----------
         level : int
-            Description not yet provided.
+            Logging level.
         msg : str
-            Description not yet provided.
-        *args : Any
-            Description not yet provided.
+            Message.
+        *args
+            Formatting arguments.
+
+        Returns
+        -------
+        None
         """
+
         if self.is_on_root:
             if self.logger is not None:
                 self.logger.log(level, msg, *args)
@@ -410,27 +279,11 @@ class Writer:
 
     @property
     def raw_module(self):
-        """
-        Document this function.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         if isinstance(self.module, torch.nn.parallel.DistributedDataParallel):
             return self.module.module
         return self.module
 
     def aggregate_predictions_to_netcdf(self, do_post_process: bool = True):
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        do_post_process : bool
-            Description not yet provided.
-        """
         if self.is_distributed:
             self.distributed.barrier()
 
@@ -439,6 +292,8 @@ class Writer:
             post_processor = None
 
         naming_convention = "prediction"
+        if self.config.num_output_sampling > 0:
+            naming_convention += "_output_ensemble"
         if getattr(self.predictor, "save_latent", False):
             naming_convention = "latent"
 
@@ -451,168 +306,240 @@ class Writer:
             self.distributed.barrier()
 
 
+
+
 def aggregate_predictions(
     post_processor: PreprocessingPipeline | None,
     output_dir: Path,
     naming_convention: str = "prediction",
     logger_function: callable = None,
     cleanup_temp: bool = True,
+    init_time_dim: str = init_time_dim,
+    lead_time_dim: str = lead_time_dim,
+    optional_sample_dimensions: tuple[str, ...] = (realization_dim,),
 ):
     """
-    Document this function.
-
-    Parameters
-    ----------
-    post_processor : PreprocessingPipeline | None
-        Description not yet provided.
-    output_dir : Path
-        Description not yet provided.
-    naming_convention : str
-        Description not yet provided.
-    logger_function : callable
-        Description not yet provided.
-    cleanup_temp : bool
-        Description not yet provided.
-
-    Raises
-    ------
-    RuntimeError
-        Description not yet provided.
+    Aggregate temporary inference batches into one file per
+    initialization year.
     """
-    temp_save_dir = Path(output_dir) / "_temp"
     output_dir = Path(output_dir)
+    temp_save_dir = output_dir / "_temp"
 
-    temp_files = sorted(temp_save_dir.glob(f"{naming_convention}_rank*_*.nc"))
+    temp_files = sorted(
+        temp_save_dir.glob(f"{naming_convention}_rank*_*.nc")
+    )
 
     if not temp_files:
-        raise RuntimeError(f"No temporary prediction files found in {temp_save_dir}")
+        raise RuntimeError(
+            f"No temporary prediction files found in {temp_save_dir}."
+        )
 
-    years = set()
+    # Collect initialization times while preserving DatetimeIndex or
+    # CFTimeIndex behavior.
+    all_times = None
 
     for path in temp_files:
-        with xr.open_dataset(path) as ds:
-            if "year" not in ds.coords:
-                raise RuntimeError(f"{path} does not contain a 'year' coordinate.")
+        with xr.open_dataarray(path) as data:
+            if init_time_dim not in data.coords:
+                raise RuntimeError(
+                    f"{path} does not contain the coordinate "
+                    f"{init_time_dim!r}."
+                )
 
-            years.update(np.asarray(ds["year"].values).reshape(-1).tolist())
+            time_index = data.coords[init_time_dim].to_index()
 
-    years = sorted(years)
+            all_times = (
+                time_index
+                if all_times is None
+                else all_times.union(time_index)
+            )
+
+    if all_times is None or len(all_times) == 0:
+        raise RuntimeError(
+            "Temporary prediction files contain no initialization times."
+        )
+
+    all_times = all_times.sort_values()
+
+    # Works for both datetime64-backed DatetimeIndex and CFTimeIndex.
+    all_times_da = xr.DataArray(
+        all_times,
+        dims=(init_time_dim,),
+        coords={init_time_dim: all_times},
+    )
+
+    initialization_years = np.asarray(
+        all_times_da.dt.year.values
+    )
+
+    years = np.unique(initialization_years)
 
     if logger_function is not None:
         logger_function(
             logging.INFO,
-            "Aggregating temporary prediction files year-by-year: ",
+            "Aggregating temporary prediction files year-by-year.",
         )
 
-    sample_coords = (*required_sample_dimensions, *optional_sample_dimensions)
+    sample_coords = (
+        init_time_dim,
+        lead_time_dim,
+        *optional_sample_dimensions,
+    )
 
-    def _sort_sample_coords(ds):
-        """
-        Document this function.
+    def _sort_sample_coords(
+        data: xr.DataArray | xr.Dataset,
+    ) -> xr.DataArray | xr.Dataset:
+        for coord in sample_coords:
+            if coord in data.coords:
+                data = data.sortby(coord)
 
-        Parameters
-        ----------
-        ds : Any
-            Description not yet provided.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
-        sort_coords = [coord for coord in sample_coords if coord in ds.coords]
-
-        for coord in sort_coords:
-            ds = ds.sortby(coord)
-
-        return ds
+        return data
 
     for year in tqdm(years, desc="Saving years ..."):
+        year_times = all_times[
+            initialization_years == year
+        ]
+
         year_datasets = []
 
-        for path in temp_files:
-            with xr.open_dataarray(path) as ds:
-                if "year" not in ds.coords:
-                    raise RuntimeError(f"{path} does not contain a 'year' coordinate.")
+        for time in year_times:
+            time_datasets = []
 
-                available_years = np.asarray(ds["year"].values).reshape(-1)
-
-                if year not in available_years:
-                    continue
-
-                if "year" in ds.dims:
-                    ds_year_part = ds.sel(year=slice(year, year))
-                else:
-                    ds_year_part = ds.where(
-                        ds["year"] == year,
-                        drop=True,
-                    )
-
-                for dim in [dim for dim in sample_coords if dim != "year"]:
-                    if dim in ds_year_part.dims:
-                        ds_year_part = ds_year_part.dropna(
-                            dim=dim,
-                            how="all",
+            for path in temp_files:
+                with xr.open_dataarray(path) as data:
+                    if init_time_dim not in data.coords:
+                        raise RuntimeError(
+                            f"{path} does not contain the coordinate "
+                            f"{init_time_dim!r}."
                         )
 
-                ds_year_part = ds_year_part.load()
-                ds_year_part = _sort_sample_coords(ds_year_part)
+                    available_times = data.coords[
+                        init_time_dim
+                    ].to_index()
 
-                year_datasets.append(ds_year_part)
+                    if time not in available_times:
+                        continue
+
+                    data_time_part = data.sel(
+                        {init_time_dim: slice(time, time)}
+                    )
+
+                    for dim in sample_coords:
+                        if (
+                            dim != init_time_dim
+                            and dim in data_time_part.dims
+                        ):
+                            data_time_part = data_time_part.dropna(
+                                dim=dim,
+                                how="all",
+                            )
+
+                    data_time_part = _sort_sample_coords(
+                        data_time_part.load()
+                    )
+
+                    time_datasets.append(data_time_part)
+
+            if not time_datasets:
+                continue
+
+            combined_time = xr.concat(
+                time_datasets,
+                dim=lead_time_dim,
+                coords="minimal",
+                compat="equals",
+                join="exact",
+            )
+
+            lead_times = np.asarray(
+                combined_time[lead_time_dim].values
+            )
+
+            _, unique_indices = np.unique(
+                lead_times,
+                return_index=True,
+            )
+
+            if len(unique_indices) != len(lead_times):
+                combined_time = combined_time.isel(
+                    {
+                        lead_time_dim: np.sort(
+                            unique_indices
+                        )
+                    }
+                )
+
+            combined_time = combined_time.sortby(
+                lead_time_dim
+            )
+
+            if not combined_time.indexes[
+                lead_time_dim
+            ].is_monotonic_increasing:
+                raise RuntimeError(
+                    "Lead times remain non-monotonic for "
+                    f"initialization time {time}: "
+                    f"{combined_time[lead_time_dim].values}"
+                )
+
+            data_time = _sort_sample_coords(combined_time)
+
+            if post_processor is not None:
+                data_time = post_processor.to_dataset(
+                    data_time
+                )
+                data_time = post_processor.inverse_transform(
+                    data_time
+                )
+            else:
+                data_time = data_time.to_dataset(
+                    dim="channels"
+                )
+
+            year_datasets.append(data_time)
 
         if not year_datasets:
             continue
 
-        combined = xr.concat(
+        data_year = xr.concat(
             year_datasets,
-            dim="lead_time",
+            dim=init_time_dim,
             coords="minimal",
             compat="equals",
             join="exact",
         )
 
-        lead_times = combined["lead_time"].values
-        _, unique_indices = np.unique(
-            lead_times,
-            return_index=True,
-        )
+        data_year = _sort_sample_coords(data_year)
 
-        if len(unique_indices) != len(lead_times):
-            combined = combined.isel(lead_time=np.sort(unique_indices))
-
-        combined = combined.sortby("lead_time")
-
-        if (
-            "lead_time" in combined.indexes
-            and not combined.indexes["lead_time"].is_monotonic_increasing
-        ):
+        if not data_year.indexes[
+            init_time_dim
+        ].is_monotonic_increasing:
             raise RuntimeError(
-                f"Lead times remain non-monotonic for year {year}: "
-                f"{combined['lead_time'].values}"
+                "Initialization times remain non-monotonic for "
+                f"year {year}: "
+                f"{data_year[init_time_dim].values}"
             )
 
-        ds_year = _sort_sample_coords(combined)
+        output_path = (
+            output_dir
+            / f"{naming_convention}_{int(year)}.nc"
+        )
 
-        if post_processor is not None:
-            ds_year = post_processor.to_dataset(ds_year)
-            ds_year = post_processor.inverse_transform(ds_year)
-        else:
-            ds_year = ds_year.to_dataset(dim="channels")
+        data_year.to_netcdf(output_path)
+        data_year.close()
 
-        output_path = output_dir / f"{naming_convention}_{year}.nc"
-        ds_year.to_netcdf(output_path)
-        ds_year.close()
-
-        for ds in year_datasets:
-            ds.close()
+        for data in year_datasets:
+            data.close()
 
         if logger_function is not None:
             logger_function(
                 logging.INFO,
-                f"Saved aggregated predictions for year {year}: {output_path}",
+                "Saved aggregated predictions for "
+                f"initialization year {year}: {output_path}",
             )
 
     if cleanup_temp:
         for path in temp_files:
             path.unlink()
-        os.rmdir(temp_save_dir)
+
+        temp_save_dir.rmdir()

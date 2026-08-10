@@ -13,7 +13,6 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   cccma_ppp.configs
    cccma_ppp.core
    cccma_ppp.data_modules
    cccma_ppp.generic
@@ -22,3 +21,11 @@ Subpackages
    cccma_ppp.models
    cccma_ppp.preprocessing
    cccma_ppp.train
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cccma_ppp.monitoring

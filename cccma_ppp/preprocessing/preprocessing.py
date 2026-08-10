@@ -15,14 +15,15 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 @dataclasses.dataclass
 class PreprocessingPipeline:
     """
-    Document this class.
+    Sequential preprocessing pipeline, supports fitting,
+    transformation, inverse transformation, and persistence.
 
     Parameters
     ----------
-    preprocessors_list : list[PreprocessingStepSelector]
-        Description not yet provided.
-    load_dir : str | Path
-        Description not yet provided.
+    preprocessors_list : list of PreprocessingStepSelector, optional
+        List of preprocessing steps.
+    load_dir : str or pathlib.Path or None, optional
+        Path to load a previously fitted pipeline.
     """
 
     preprocessors_list: list[PreprocessingStepSelector] = dataclasses.field(
@@ -44,8 +45,15 @@ class PreprocessingPipeline:
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize preprocessing pipeline.
+
+        Constructs pipeline steps or prepares for loading from disk.
+
+        Returns
+        -------
+        None
         """
+
         self.fitted = False
         self.reference_coords = None
         self.reference_var = None
@@ -58,13 +66,17 @@ class PreprocessingPipeline:
 
     def set_name(self, name: str):
         """
-        Document this function.
+        Set pipeline name.
 
         Parameters
         ----------
         name : str
-            Description not yet provided.
+
+        Returns
+        -------
+        None
         """
+
         self.name = name
 
     def fit(
@@ -76,26 +88,27 @@ class PreprocessingPipeline:
         save_path: Path | str | None = None,
     ):
         """
-        Document this function.
+        Fit preprocessing pipeline.
 
         Parameters
         ----------
-        base_data : xr.Dataset | xr.DataArray
-            Description not yet provided.
-        mask : xr.DataArray
-            Description not yet provided.
-        save : bool
-            Description not yet provided.
-        save_name : str | None
-            Description not yet provided.
-        save_path : Path | str | None
-            Description not yet provided.
+        base_data : xr.DataArray, optional
+            Input data used for fitting.
+        mask : xr.DataArray or None, optional
+            Optional mask applied during fitting.
+        save : bool, optional
+            Whether to save fitted pipeline.
+        save_name : str or None, optional
+            Filename for saving pipeline.
+        save_path : pathlib.Path or str or None, optional
+            Directory for saving pipeline.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        PreprocessingPipeline
+            Fitted pipeline.
         """
+
         if self.load_dir is None:
             data_processed = base_data
             self.fitted_based_time = base_data[self.init_time_time].values
@@ -131,25 +144,26 @@ class PreprocessingPipeline:
 
     def transform(self, data: xr.DataArray, step_arguments=None):
         """
-        Document this function.
+        Apply preprocessing pipeline.
 
         Parameters
         ----------
-        data : xr.DataArray
-            Description not yet provided.
-        step_arguments : Any
-            Description not yet provided.
+        data : xarray.DataArray
+            Input data.
+        step_arguments : dict or None, optional
+            Per-step arguments for transformation.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        xarray.DataArray
+            Processed data.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If step arguments refer to unknown steps.
         """
+
         if step_arguments is None:
             step_arguments = dict()
         for a in step_arguments.keys():
@@ -165,25 +179,26 @@ class PreprocessingPipeline:
 
     def inverse_transform(self, data: xr.DataArray, step_arguments=None):
         """
-        Document this function.
+        Reverse preprocessing pipeline.
 
         Parameters
         ----------
-        data : xr.DataArray
-            Description not yet provided.
-        step_arguments : Any
-            Description not yet provided.
+        data : xarray.DataArray
+            Transformed data.
+        step_arguments : dict or None, optional
+            Per-step arguments for inverse transformation.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        xarray.DataArray
+            Original representation.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If step arguments refer to unknown steps.
         """
+
         if step_arguments is None:
             step_arguments = dict()
         for a in step_arguments.keys():
@@ -200,23 +215,26 @@ class PreprocessingPipeline:
 
     def to_dataset(self, data: xr.DataArray) -> xr.Dataset:
         """
-        Document this function.
+        Write the transformed data array based to dataset
+        on the base dataset used for fitting the pipeline.
 
         Parameters
         ----------
-        data : xr.DataArray
-            Description not yet provided.
+        data : xarray.DataArray
+            Transformed data.
 
         Returns
         -------
-        xr.Dataset
-            Description not yet provided.
-
+        xarray.DataArray
+            cooridnates corrected.
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If the dara array does not have at least the same number
+            of dimensions as the base dataset.
+
         """
+
         if len(data.channels) != len(self.reference_var):
             raise ValueError(
                 "The dataset does not match the preprocessing pipeline."
@@ -251,24 +269,24 @@ class PreprocessingPipeline:
 
     def get_preprocessors(self, name=None):
         """
-        Document this function.
+        Retrieve fitted preprocessors.
 
         Parameters
         ----------
-        name : Any
-            Description not yet provided.
+        name : str or None, optional
+            Specific step name.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        list or PreprocessModuleABC
+            All preprocessors or a specific one.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If pipeline is not fitted.
         ValueError
-            Description not yet provided.
+            If step is not found.
         """
         if not self.fitted:
             raise RuntimeError("Pipeline needs to be fitted first")
@@ -291,22 +309,27 @@ class PreprocessingPipeline:
 
     def add_fitted_preprocessor(self, preprocessor, name, index=None):
         """
-        Document this function.
+        Add fitted preprocessor to pipeline.
 
         Parameters
         ----------
-        preprocessor : Any
-            Description not yet provided.
-        name : Any
-            Description not yet provided.
-        index : Any
-            Description not yet provided.
+        preprocessor : PreprocessModuleABC
+            Fitted preprocessor instance.
+        name : str
+            Name of the step.
+        index : int or None, optional
+            Position to insert step.
+
+        Returns
+        -------
+        None
 
         Raises
         ------
         AssertionError
-            Description not yet provided.
+            If preprocessor is not fitted.
         """
+
         assert preprocessor.fitted, "The preprocessor must be fitted"
         if index is None:
             self.fitted_preprocessors.append(preprocessor)
@@ -317,17 +340,17 @@ class PreprocessingPipeline:
 
     def extract_output_coords_vars(self, base_data: xr.Dataset | xr.DataArray = None):
         """
-        Document this function.
+        Save the reference coordinates and variable names
+        for the writer to use.
 
         Parameters
         ----------
-        base_data : xr.Dataset | xr.DataArray
-            Description not yet provided.
+        base_data : xr.DataArray
+            Data on which the pipeline is fit.
 
-        Raises
-        ------
-        ValueError
-            Description not yet provided.
+        Returns
+        -------
+        None
         """
         if not self.fitted:
             raise ValueError(
@@ -344,23 +367,23 @@ class PreprocessingPipeline:
 
     def load_from_memory(self, load_dir: str | Path):
         """
-        Document this function.
+        Load fitted pipeline from disk.
 
         Parameters
         ----------
-        load_dir : str | Path
-            Description not yet provided.
+        load_dir : str or pathlib.Path
+            Path to saved pipeline.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        None
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If loaded pipeline is not fitted.
         """
+
         loaded = joblib.load(Path(load_dir))
 
         if not loaded.fitted:

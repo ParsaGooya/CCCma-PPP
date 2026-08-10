@@ -1,81 +1,107 @@
 import numpy as np
+import datetime
+import cftime
 from pathlib import Path
 import xarray as xr
+from collections.abc import Sequence
 
 from cccma_ppp.data_modules.data.data_abc import DataConfigABC
 from cccma_ppp.data_modules.dataset.dataset_abc import DatasetConfigABC
-from cccma_ppp.data_modules.utils import WeightsConfig
+from cccma_ppp.data_modules.utils import  _validate_time_sequence
+from cccma_ppp.data_modules.weights import WeightsConfig
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
-from cccma_ppp.configs import (
-    supported_NN_dimensions_sorted,
-    required_sample_dimensions,
-    optional_sample_dimensions,
-)
 
 
 class DatasetOperator:
     """
-    Document this class.
+    Class for managing dataset-level operations.
 
     Parameters
     ----------
     config : DatasetConfigABC
-        Description not yet provided.
+        Dataset configuration.
     """
 
     def __init__(self, config: DatasetConfigABC):
         """
-        Document this function.
+        Initialize dataset operator.
 
         Parameters
         ----------
         config : DatasetConfigABC
-            Description not yet provided.
+
+        Returns
+        -------
+        None
         """
         self.config = config
 
     @property
     def config_observation(self):
         """
-        Document this function.
+        Observation dataset configuration if available.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        ObsDataConfig or None
+            Observation configuration if present, otherwise None.
         """
         if hasattr(self.config, "observation"):
             return self.config.observation
 
+
     def fit_preprocessors(
         self,
-        train_years: np.ndarray | list | tuple,
+        train_times: (Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
+            | np.ndarray
+            | xr.DataArray
+        ),
         save=False,
         save_path: Path | str | None = None,
         save_name: str | None = None,
     ):
         """
-        Document this function.
+        Fit preprocessing pipelines for all datasets.
 
         Parameters
         ----------
-        train_years : np.ndarray | list | tuple
-            Description not yet provided.
-        save : Any
-            Description not yet provided.
-        save_path : Path | str | None
-            Description not yet provided.
-        save_name : str | None
-            Description not yet provided.
+        train_times : array-like
+            Training times used for fitting. Values must be either NumPy
+            datetime64 or cftime datetime objects.
+        save : bool, optional
+            Whether to persist fitted pipelines.
+        save_path : pathlib.Path or str or None, optional
+        save_name : str or None, optional
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Applies fitting to model, observation, and condition datasets.
         """
-        time_dim, lead_time_dim = required_sample_dimensions
+        missing = [
+            t for t in train_times.values
+            if t not in self.config.available_times
+        ]
+
+        if missing:
+            raise ValueError(
+                f"The following train_times are unavailable: {missing}"
+            )
+        
+        if not isinstance(train_times, slice):
+            _validate_time_sequence(train_times)
+
         if self.config.model is not None:
+
             selection = {
-                "year": train_years,
-                "lead_time": self.config.model.info.coords[lead_time_dim],
+                self.config.init_time_dim: self.config.get_input_times(train_times),
+                self.config.lead_time_dim: self.config.model.info.coords[self.config.lead_time_dim],
             }
-            if self.config.model.info.coords.get("ensembles") is not None:
-                selection["ensembles"] = self.config.model.info.coords["ensembles"]
+            if self.config.model.info.coords.get(self.config.realization_dim) is not None:
+                selection[self.config.realization_dim] = self.config.model.info.coords[self.config.realization_dim]
 
             self.config.model.fit_preprocessor_pipeline(
                 selection=selection,
@@ -86,10 +112,10 @@ class DatasetOperator:
             )
 
         if self.config_observation is not None:
-            selection = {"year": train_years}
-            if self.config_observation.info.coords.get("ensembles") is not None:
-                selection["ensembles"] = self.config_observation.info.coords[
-                    "ensembles"
+            selection = {self.config.init_time_dim: train_times}
+            if self.config_observation.info.coords.get(self.config.realization_dim) is not None:
+                selection[self.config.realization_dim] = self.config_observation.info.coords[
+                    self.config.realization_dim
                 ]
 
             self.config_observation.fit_preprocessor_pipeline(
@@ -100,18 +126,19 @@ class DatasetOperator:
             if self.config.condition_method.lower() == "static":
                 selection = {}
             else:
+                
                 selection = {
-                    "year": train_years,
-                    "lead_time": self.config.effective_condition.info.coords[
-                        lead_time_dim
+                    self.config.init_time_dim: self.config.get_input_times(train_times),
+                    self.config.lead_time_dim: self.config.effective_condition.info.coords[
+                        self.config.lead_time_dim
                     ],
                 }
                 if (
-                    self.config.effective_condition.info.coords.get("ensembles")
+                    self.config.effective_condition.info.coords.get(self.config.realization_dim)
                     is not None
                 ):
-                    selection["ensembles"] = (
-                        self.config.effective_condition.info.coords["ensembles"]
+                    selection[self.config.realization_dim] = (
+                        self.config.effective_condition.info.coords[self.config.realization_dim]
                     )
 
             self.config.effective_condition.fit_preprocessor_pipeline(
@@ -126,13 +153,17 @@ class DatasetOperator:
 
     def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         """
-        Document this function.
+        Load fitted preprocessing pipelines.
 
         Parameters
         ----------
-        load_dir : Path | str | None
-            Description not yet provided.
+        load_dir : pathlib.Path or str or None
+
+        Returns
+        -------
+        None
         """
+
         if self.config.model is not None:
             self.config.model.load_preprocessor_pipeline(load_dir)
 
@@ -146,22 +177,25 @@ class DatasetOperator:
 
     def add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
         """
-        Document this function.
+        Add a fitted preprocessor to all relevant pipelines.
 
         Parameters
         ----------
         preprocessor : PreprocessModuleABC
-            Description not yet provided.
-        index : Any
-            Description not yet provided.
+        index : int, optional
+
+        Returns
+        -------
+        None
 
         Raises
         ------
-        AssertionError
-            Description not yet provided.
         TypeError
-            Description not yet provided.
+            If preprocessor type is invalid.
+        AssertionError
+            If preprocessor is not fitted.
         """
+
         if not isinstance(preprocessor, PreprocessModuleABC):
             raise TypeError(
                 f"preprocessor must be an instance of ProcessorConfig, "
@@ -190,30 +224,30 @@ class DatasetOperator:
         save_name: str | None = None,
     ) -> xr.DataArray:
         """
-        Document this function.
+        Compute spatial and variable weights.
 
         Parameters
         ----------
-        config : WeightsConfig | None
-            Description not yet provided.
-        save : bool
-            Description not yet provided.
-        save_path : Path | str | None
-            Description not yet provided.
-        save_name : str | None
-            Description not yet provided.
+        config : WeightsConfig or None, optional
+            Configuration controlling weight computation.
+        save : bool, optional
+            Whether to save computed weights.
+        save_path : pathlib.Path or str or None, optional
+            Directory where weights should be saved.
+        save_name : str or None, optional
+            Filename for saved weights.
 
         Returns
         -------
         xr.DataArray
-            Description not yet provided.
+            Computed spatial and variable weights.
 
         Raises
         ------
-        RuntimeError
-            Description not yet provided.
         ValueError
-            Description not yet provided.
+            If no valid dataset is available.
+        RuntimeError
+            If variable weights do not match expected variables.
         """
         if config is None:
             config = WeightsConfig()
@@ -230,7 +264,7 @@ class DatasetOperator:
 
         target_coords = {}
         for dim in [
-            dim for dim in supported_NN_dimensions_sorted if dim in ref.info.coords
+            dim for dim in self.config.supported_NN_dimensions if dim in ref.info.coords
         ]:
             target_coords[dim] = ref.info.coords[dim]
 
@@ -260,13 +294,14 @@ class DatasetOperator:
 
     def get_input_var_metadata(self) -> dict:
         """
-        Document this function.
+        Retrieve metadata for input variables.
 
         Returns
         -------
         dict
-            Description not yet provided.
+            Variable names and preprocessing steps.
         """
+
         metadata = dict(variables=list(), preprocessors=list())
         NN_dims = []
 
@@ -277,7 +312,7 @@ class DatasetOperator:
 
             for dim in [
                 dim
-                for dim in supported_NN_dimensions_sorted
+                for dim in self.config.supported_NN_dimensions
                 if dim in self.config.model.info.coords
             ]:
                 NN_dims.append(dim)
@@ -297,7 +332,7 @@ class DatasetOperator:
 
             for dim in [
                 dim
-                for dim in supported_NN_dimensions_sorted
+                for dim in self.config.supported_NN_dimensions
                 if dim in self.config.effective_condition.info.coords
             ]:
                 NN_dims.append(dim)
@@ -308,18 +343,18 @@ class DatasetOperator:
 
     def get_target_var_metadata(self):
         """
-        Document this function.
+        Retrieve metadata for target variables.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        dict
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If no target data is available.
         """
+
         metadata = dict(variables=list(), preprocessors=list())
         NN_dims = []
 
@@ -336,7 +371,7 @@ class DatasetOperator:
 
             for dim in [
                 dim
-                for dim in supported_NN_dimensions_sorted
+                for dim in self.config.supported_NN_dimensions
                 if dim in self.config.model.info.coords
             ]:
                 NN_dims.append(dim)
@@ -348,7 +383,7 @@ class DatasetOperator:
 
             for dim in [
                 dim
-                for dim in supported_NN_dimensions_sorted
+                for dim in self.config.supported_NN_dimensions
                 if dim in self.config_observation.info.coords
             ]:
                 NN_dims.append(dim)
@@ -361,19 +396,16 @@ class DatasetOperator:
         self, metadata: dict, dataconfig: DataConfigABC
     ):
         """
-        Document this function.
+        Update metadata with dataset configuration information.
 
         Parameters
         ----------
         metadata : dict
-            Description not yet provided.
         dataconfig : DataConfigABC
-            Description not yet provided.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        dict
         """
         preprocessor_names = [
             processor[0].lower()
@@ -387,23 +419,11 @@ class DatasetOperator:
 
 
 def _build_chunks(config: DataConfigABC | None = None):
-    """
-    Document this function.
 
-    Parameters
-    ----------
-    config : DataConfigABC | None
-        Description not yet provided.
-
-    Returns
-    -------
-    Any
-        Description not yet provided.
-    """
     if config is None:
         return
-
-    sample_dims = (*required_sample_dimensions, *optional_sample_dimensions)
+    required_sample_dimensions = (config.init_time_dim, config.lead_time_dim)
+    sample_dims = (*required_sample_dimensions, config.realization_dim)
 
     chunks = {dim: 1 for dim in sample_dims if dim in config.info.coords}
 

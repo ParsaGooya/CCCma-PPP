@@ -85,24 +85,25 @@
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">RuntimeContext</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
+<span class="sd">    Global runtime configuration for experiment-level settings.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    GLOBAL_EXP_DIR : Path | str | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    GLOBAL_CHECKPOINT_DIR : Path | str | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    GLOBAL_FIGURES_DIR : Path | str | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    GLOBAL_LOG_DIR : Path | str | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    GLOBAL_OUTPUT_DIR : Path | str | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    INPUT_VAR_METADATA : dict | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    TARGET_VAR_METADATA : dict | None</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">    GLOBAL_EXP_DIR : pathlib.Path or str or None, optional</span>
+<span class="sd">        Root directory for experiment outputs.</span>
+<span class="sd">    GLOBAL_CHECKPOINT_DIR : pathlib.Path or str or None, optional</span>
+<span class="sd">        Directory for saving model checkpoints.</span>
+<span class="sd">    GLOBAL_FIGURES_DIR : pathlib.Path or str or None, optional</span>
+<span class="sd">        Directory for saving figures and plots.</span>
+<span class="sd">    GLOBAL_LOG_DIR : pathlib.Path or str or None, optional</span>
+<span class="sd">        Directory for log files.</span>
+<span class="sd">    GLOBAL_OUTPUT_DIR : pathlib.Path or str or None, optional</span>
+<span class="sd">        General output directory for experiment artifacts.</span>
+
+<span class="sd">    INPUT_VAR_METADATA : dict or None, optional</span>
+<span class="sd">        Metadata describing input variables and preprocessing steps.</span>
+<span class="sd">    TARGET_VAR_METADATA : dict or None, optional</span>
+<span class="sd">        Metadata describing target variables and preprocessing steps.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">GLOBAL_EXP_DIR</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>

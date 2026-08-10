@@ -17,22 +17,28 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 class Monitor:
     """
-    Document this class.
+    Monitor process and GPU resource utilization.
 
     Parameters
     ----------
-    cpu : bool
-        Description not yet provided.
-    ram : bool
-        Description not yet provided.
-    gpu0 : bool
-        Description not yet provided.
-    gpu1 : bool
-        Description not yet provided.
-    gpus : Iterable[int] | None
-        Description not yet provided.
-    interval : float
-        Description not yet provided.
+    cpu : bool, optional
+        Whether to monitor process CPU utilization.
+    ram : bool, optional
+        Whether to monitor process resident memory utilization.
+    gpu0 : bool, optional
+        Whether to monitor NVIDIA GPU device 0.
+    gpu1 : bool, optional
+        Whether to monitor NVIDIA GPU device 1.
+    gpus : iterable of int or None, optional
+        NVIDIA GPU device indices to monitor. This can be used instead of,
+        or together with, ``gpu0`` and ``gpu1``.
+    interval : float, optional
+        Sampling interval in seconds.
+
+    Raises
+    ------
+    ValueError
+        If the sampling interval is not positive or a GPU index is negative.
     """
 
     def __init__(
@@ -45,31 +51,6 @@ class Monitor:
         gpus: Iterable[int] | None = None,
         interval: float = 0.1,
     ) -> None:
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        cpu : bool
-            Description not yet provided.
-        ram : bool
-            Description not yet provided.
-        gpu0 : bool
-            Description not yet provided.
-        gpu1 : bool
-            Description not yet provided.
-        gpus : Iterable[int] | None
-            Description not yet provided.
-        interval : float
-            Description not yet provided.
-
-        Raises
-        ------
-        TypeError
-            Description not yet provided.
-        ValueError
-            Description not yet provided.
-        """
         if interval <= 0:
             raise ValueError("interval must be greater than zero")
 
@@ -114,7 +95,11 @@ class Monitor:
 
     def _initialize_gpus(self) -> None:
         """
-        Document this function.
+        Initialize NVIDIA GPU monitoring.
+
+        Returns
+        -------
+        None
         """
         try:
             import pynvml
@@ -156,12 +141,12 @@ class Monitor:
 
     def _get_stack(self) -> list:
         """
-        Document this function.
+        Retrieve the stage stack for the calling thread.
 
         Returns
         -------
-        list
-            Description not yet provided.
+        list of str
+            Stack of active monitoring stages for the calling thread.
         """
         thread_id = threading.get_ident()
 
@@ -170,7 +155,11 @@ class Monitor:
 
     def _remove_empty_stack(self) -> None:
         """
-        Document this function.
+        Remove the calling thread's stage stack if it is empty.
+
+        Returns
+        -------
+        None
         """
         thread_id = threading.get_ident()
 
@@ -182,24 +171,24 @@ class Monitor:
 
     def current_stage(self) -> str:
         """
-        Document this function.
+        Get the active stage for the calling thread.
 
         Returns
         -------
         str
-            Description not yet provided.
+            Active stage name. Returns ``"root"`` if no stage is active.
         """
         stack = self._get_stack()
         return stack[-1] if stack else "root"
 
     def _current_sample_stage(self) -> str:
         """
-        Document this function.
+        Determine the active stage associated with a resource sample.
 
         Returns
         -------
         str
-            Description not yet provided.
+            Active application stage or ``"root"``.
         """
         sampler_thread_id = self._thread.ident if self._thread is not None else None
 
@@ -217,39 +206,40 @@ class Monitor:
 
     def _ram_gb(self) -> float:
         """
-        Document this function.
+        Get current process memory usage.
 
         Returns
         -------
         float
-            Description not yet provided.
+            Resident memory usage in gigabytes.
         """
         return self._process.memory_info().rss / (1024**3)
 
     def _cpu(self) -> float:
         """
-        Document this function.
+        Get current process CPU utilization.
 
         Returns
         -------
         float
-            Description not yet provided.
+            CPU utilization percentage for the current process.
         """
         return float(self._process.cpu_percent(interval=None))
 
     def _gpu(self, index: int) -> tuple[float, float]:
         """
-        Document this function.
+        Get current GPU utilization statistics.
 
         Parameters
         ----------
         index : int
-            Description not yet provided.
+            Zero-based NVIDIA GPU device index.
 
         Returns
         -------
-        tuple[float, float]
-            Description not yet provided.
+        tuple of float
+            GPU utilization percentage and VRAM utilization percentage.
+            Both values are NaN if the requested GPU is unavailable.
         """
         if (
             self._pynvml is None
@@ -290,21 +280,22 @@ class Monitor:
         span_id: str | None = None,
     ) -> dict[str, Any]:
         """
-        Document this function.
+        Create a monitoring event record.
 
         Parameters
         ----------
         stage : str
-            Description not yet provided.
+            Stage associated with the event.
         event : str
-            Description not yet provided.
-        span_id : str | None
-            Description not yet provided.
+            Event type, such as ``"start"``, ``"end"``, ``"checkpoint"``,
+            or ``"sample"``.
+        span_id : str or None, optional
+            Identifier connecting the start and end of a span.
 
         Returns
         -------
-        dict[str, Any]
-            Description not yet provided.
+        dict
+            Initialized event record.
         """
         record: dict[str, Any] = {
             "t": time.time(),
@@ -327,12 +318,16 @@ class Monitor:
 
     def _append_event(self, event: dict[str, Any]) -> None:
         """
-        Document this function.
+        Append an event to the monitoring data.
 
         Parameters
         ----------
-        event : dict[str, Any]
-            Description not yet provided.
+        event : dict
+            Event record to append.
+
+        Returns
+        -------
+        None
         """
         with self._lock:
             self._data.append(event)
@@ -340,24 +335,23 @@ class Monitor:
     @contextmanager
     def span(self, name: str) -> Iterator:
         """
-        Document this function.
+        Create a monitored execution span.
 
         Parameters
         ----------
         name : str
-            Description not yet provided.
+            Name of the execution stage.
 
         Yields
         ------
-        Iterator
-            Description not yet provided.
+        None
 
         Raises
         ------
         TypeError
-            Description not yet provided.
+            If ``name`` is not a string.
         ValueError
-            Description not yet provided.
+            If ``name`` is empty.
         """
         if not isinstance(name, str):
             raise TypeError("span name must be a string")
@@ -412,43 +406,23 @@ class Monitor:
 
     def observe(self, function: F) -> F:
         """
-        Document this function.
+        Decorate a function with automatic stage monitoring.
 
         Parameters
         ----------
-        function : F
-            Description not yet provided.
+        function : callable
+            Function to monitor.
 
         Returns
         -------
-        F
-            Description not yet provided.
-
-        Raises
-        ------
-        TypeError
-            Description not yet provided.
+        callable
+            Wrapped function.
         """
         if not callable(function):
             raise TypeError("observe expects a callable")
 
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
-            """
-            Document this function.
-
-            Parameters
-            ----------
-            *args : Any
-                Description not yet provided.
-            **kwargs : Any
-                Description not yet provided.
-
-            Returns
-            -------
-            Any
-                Description not yet provided.
-            """
             with self.span(function.__name__):
                 return function(*args, **kwargs)
 
@@ -456,19 +430,23 @@ class Monitor:
 
     def checkpoint(self, name: str) -> None:
         """
-        Document this function.
+        Record a checkpoint event.
 
         Parameters
         ----------
         name : str
-            Description not yet provided.
+            Checkpoint identifier.
+
+        Returns
+        -------
+        None
 
         Raises
         ------
         TypeError
-            Description not yet provided.
+            If ``name`` is not a string.
         ValueError
-            Description not yet provided.
+            If ``name`` is empty.
         """
         if not isinstance(name, str):
             raise TypeError("checkpoint name must be a string")
@@ -491,12 +469,12 @@ class Monitor:
 
     def _collect_sample(self) -> dict[str, Any]:
         """
-        Document this function.
+        Collect one resource utilization sample.
 
         Returns
         -------
-        dict[str, Any]
-            Description not yet provided.
+        dict
+            Sample event containing all enabled resource metrics.
         """
         sample = self._create_event(
             stage=self._current_sample_stage(),
@@ -519,7 +497,11 @@ class Monitor:
 
     def _sampler(self) -> None:
         """
-        Document this function.
+        Run the background resource-monitoring loop.
+
+        Returns
+        -------
+        None
         """
         if self.cpu_enabled:
             self._process.cpu_percent(interval=None)
@@ -539,12 +521,20 @@ class Monitor:
 
     def start(self, *, clear: bool = False) -> None:
         """
-        Document this function.
+        Start resource monitoring.
 
         Parameters
         ----------
-        clear : bool
-            Description not yet provided.
+        clear : bool, optional
+            Whether to discard previously collected events before starting.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Calling this method while monitoring is already active has no effect.
         """
         if self.running:
             logger.warning("Monitoring is already running")
@@ -572,17 +562,22 @@ class Monitor:
 
     def stop(self, timeout: float | None = None) -> None:
         """
-        Document this function.
+        Stop resource monitoring.
 
         Parameters
         ----------
-        timeout : float | None
-            Description not yet provided.
+        timeout : float or None, optional
+            Maximum number of seconds to wait for the sampling thread. If
+            None, wait until the sampling thread terminates.
+
+        Returns
+        -------
+        None
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``timeout`` is negative.
         """
         if timeout is not None and timeout < 0:
             raise ValueError("timeout cannot be negative")
@@ -606,24 +601,24 @@ class Monitor:
     @property
     def running(self) -> bool:
         """
-        Document this function.
+        Indicate whether the monitoring thread is active.
 
         Returns
         -------
         bool
-            Description not yet provided.
+            True if monitoring is running.
         """
         return self._thread is not None and self._thread.is_alive()
 
     @property
     def metric_names(self) -> tuple[str, ...]:
         """
-        Document this function.
+        Get the configured metric column names.
 
         Returns
         -------
-        tuple[str, ...]
-            Description not yet provided.
+        tuple of str
+            Configured metric names.
         """
         metrics: list[str] = []
 
@@ -641,19 +636,23 @@ class Monitor:
 
     def clear(self) -> None:
         """
-        Document this function.
+        Remove all collected monitoring events.
+
+        Returns
+        -------
+        None
         """
         with self._lock:
             self._data.clear()
 
     def get_dataframe(self):
         """
-        Document this function.
+        Convert collected monitoring events to a dataframe.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        pandas.DataFrame
+            Monitoring events and sampled resource metrics.
         """
         import pandas as pd
 
@@ -664,12 +663,12 @@ class Monitor:
 
     def __enter__(self) -> "Monitor":
         """
-        Document this function.
+        Start monitoring when entering a context manager.
 
         Returns
         -------
-        'Monitor'
-            Description not yet provided.
+        Monitor
+            Active monitor instance.
         """
         self.start()
         return self
@@ -681,21 +680,21 @@ class Monitor:
         traceback,
     ) -> bool:
         """
-        Document this function.
+        Stop monitoring when leaving a context manager.
 
         Parameters
         ----------
-        exception_type : Any
-            Description not yet provided.
-        exception_value : Any
-            Description not yet provided.
-        traceback : Any
-            Description not yet provided.
+        exception_type : type or None
+            Type of exception raised in the context.
+        exception_value : BaseException or None
+            Exception raised in the context.
+        traceback : types.TracebackType or None
+            Associated traceback.
 
         Returns
         -------
         bool
-            Description not yet provided.
+            False so exceptions are not suppressed.
         """
         self.stop()
         return False
@@ -707,26 +706,26 @@ class Monitor:
         measurement_variance: float = 25.0,
     ):
         """
-        Document this function.
+        Apply a simple one-dimensional Kalman filter.
 
         Parameters
         ----------
-        values : Any
-            Description not yet provided.
-        process_variance : float
-            Description not yet provided.
-        measurement_variance : float
-            Description not yet provided.
+        values : array-like
+            Input observations.
+        process_variance : float, optional
+            Process noise variance.
+        measurement_variance : float, optional
+            Observation noise variance.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        numpy.ndarray
+            Smoothed values.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If either variance is negative.
         """
         import numpy as np
 
@@ -786,26 +785,26 @@ class Monitor:
         **kwargs,
     ):
         """
-        Document this function.
+        Smooth a time series.
 
         Parameters
         ----------
-        series : Any
-            Description not yet provided.
-        method : str | None
-            Description not yet provided.
-        **kwargs : Any
-            Description not yet provided.
+        series : pandas.Series
+            Input values.
+        method : {"ema", "rolling", "kalman"} or None, optional
+            Smoothing method. If None, the input is returned unchanged.
+        **kwargs
+            Additional arguments passed to the selected smoothing method.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        pandas.Series or numpy.ndarray
+            Smoothed values.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If the smoothing method or its configuration is invalid.
         """
         if method is None:
             return series
@@ -869,24 +868,28 @@ class Monitor:
         **smooth_kwargs,
     ) -> None:
         """
-        Document this function.
+        Plot a raw and optionally smoothed metric.
 
         Parameters
         ----------
-        ax : Any
-            Description not yet provided.
-        t : Any
-            Description not yet provided.
-        values : Any
-            Description not yet provided.
+        ax : matplotlib.axes.Axes
+            Target axis.
+        t : array-like
+            Elapsed time values.
+        values : pandas.Series
+            Metric values.
         label : str
-            Description not yet provided.
+            Display name for the metric.
         color : str
-            Description not yet provided.
-        smooth : str | None
-            Description not yet provided.
-        **smooth_kwargs : Any
-            Description not yet provided.
+            Plot color.
+        smooth : {"ema", "rolling", "kalman"} or None, optional
+            Smoothing method.
+        **smooth_kwargs
+            Arguments passed to the smoothing function.
+
+        Returns
+        -------
+        None
         """
         ax.plot(
             t,
@@ -920,17 +923,17 @@ class Monitor:
     @staticmethod
     def _metric_label(metric: str) -> tuple[str, str]:
         """
-        Document this function.
+        Get the display label and unit for a metric.
 
         Parameters
         ----------
         metric : str
-            Description not yet provided.
+            Metric column name.
 
         Returns
         -------
-        tuple[str, str]
-            Description not yet provided.
+        tuple of str
+            Display label and unit.
         """
         if metric == "cpu":
             return "CPU", "%"
@@ -950,17 +953,17 @@ class Monitor:
 
     def _available_metrics(self, samples) -> list:
         """
-        Document this function.
+        Determine which configured metrics contain sample data.
 
         Parameters
         ----------
-        samples : Any
-            Description not yet provided.
+        samples : pandas.DataFrame
+            Resource sample events.
 
         Returns
         -------
-        list
-            Description not yet provided.
+        list of str
+            Available metric names.
         """
         return [
             metric
@@ -971,17 +974,17 @@ class Monitor:
     @staticmethod
     def _span_intervals(df) -> list[tuple[float, float, str]]:
         """
-        Document this function.
+        Match span start and end events.
 
         Parameters
         ----------
-        df : Any
-            Description not yet provided.
+        df : pandas.DataFrame
+            Monitoring event dataframe containing elapsed times.
 
         Returns
         -------
-        list[tuple[float, float, str]]
-            Description not yet provided.
+        list of tuple
+            Span start time, end time, and stage name.
         """
         intervals: list[tuple[float, float, str]] = []
 
@@ -1022,34 +1025,37 @@ class Monitor:
         **smooth_kwargs,
     ):
         """
-        Document this function.
+        Plot resource utilization and execution stages over time.
 
         Parameters
         ----------
-        df : Any
-            Description not yet provided.
-        metrics : Any
-            Description not yet provided.
-        save_path : Any
-            Description not yet provided.
-        show : Any
-            Description not yet provided.
-        smooth : Any
-            Description not yet provided.
-        **smooth_kwargs : Any
-            Description not yet provided.
+        df : pandas.DataFrame or None, optional
+            Monitoring dataframe. If None, data collected by this monitor
+            are used.
+        metrics : iterable of str or None, optional
+            Metrics to plot. If None, all configured metrics containing data
+            are plotted.
+        save_path : str or None, optional
+            Path where the figure should be saved.
+        show : bool, optional
+            Whether to display the figure.
+        smooth : {"ema", "rolling", "kalman"} or None, optional
+            Smoothing method applied to resource curves.
+        **smooth_kwargs
+            Additional arguments passed to the smoothing method.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        matplotlib.figure.Figure or None
+            Generated figure, or None if no samples can be plotted.
 
         Raises
         ------
         TypeError
-            Description not yet provided.
+            If metrics is provided as a single string.
         ValueError
-            Description not yet provided.
+            If the dataframe is invalid or a requested metric was not
+            collected.
         """
         import matplotlib.pyplot as plt
 
@@ -1368,27 +1374,28 @@ def monitor(
     interval: float = 0.1,
 ) -> Monitor:
     """
-    Document this function.
+    Create a configurable resource monitor.
 
     Parameters
     ----------
-    cpu : bool
-        Description not yet provided.
-    ram : bool
-        Description not yet provided.
-    gpu0 : bool
-        Description not yet provided.
-    gpu1 : bool
-        Description not yet provided.
-    gpus : Iterable[int] | None
-        Description not yet provided.
-    interval : float
-        Description not yet provided.
+    cpu : bool, optional
+        Whether to monitor process CPU utilization.
+    ram : bool, optional
+        Whether to monitor process resident memory utilization.
+    gpu0 : bool, optional
+        Whether to monitor NVIDIA GPU device 0.
+    gpu1 : bool, optional
+        Whether to monitor NVIDIA GPU device 1.
+    gpus : iterable of int or None, optional
+        Generic collection of NVIDIA GPU indices to monitor.
+    interval : float, optional
+        Sampling interval in seconds.
 
     Returns
     -------
     Monitor
-        Description not yet provided.
+        Configured monitor instance.
+
     """
     return Monitor(
         cpu=cpu,

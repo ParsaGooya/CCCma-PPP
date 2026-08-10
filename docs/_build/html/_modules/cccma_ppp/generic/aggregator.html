@@ -94,48 +94,54 @@
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">MetricsAggregator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
+<span class="sd">    Aggregate training and validation metrics across batches and epochs.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    distributed : Distributed</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">        Distributed training context.</span>
 <span class="sd">    name : str</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    epoch_metric_terms : dict[str, list[float]] | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    epoch_times : list[float] | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    num_epochs_seen : int</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">        Name of the aggregator (e.g., &quot;Train&quot;, &quot;Validation&quot;).</span>
+<span class="sd">    epoch_loss_terms : dict of str to list of float, optional</span>
+<span class="sd">        Stored loss values per epoch.</span>
+<span class="sd">    epoch_times : list of float, optional</span>
+<span class="sd">        Time per epoch.</span>
+<span class="sd">    num_epochs_seen : int, optional</span>
+<span class="sd">        Number of processed epochs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">distributed</span><span class="p">:</span> <span class="n">Distributed</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
 
-    <span class="n">epoch_metric_terms</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">epoch_loss_terms</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">epoch_times</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">num_epochs_seen</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Initialize internal state for batch and epoch aggregation.</span>
+
+<span class="sd">        Validates consistency of stored epoch history and initializes</span>
+<span class="sd">        batch-level accumulators.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        AssertionError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If epoch loss lists have inconsistent lengths.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">loss_terms</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lr_values</span> <span class="o">=</span> <span class="mf">0.0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">kwargs_terms</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_batches_seen</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">epochs_submitted</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_aggregated_across_ranks</span> <span class="o">=</span> <span class="kc">False</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_metric_terms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">lengths</span> <span class="o">=</span> <span class="p">{</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_metric_terms</span><span class="o">.</span><span class="n">values</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">lengths</span> <span class="o">=</span> <span class="p">{</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span><span class="o">.</span><span class="n">values</span><span class="p">()}</span>
             <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Not all loss lists have the same length: </span><span class="si">{</span><span class="n">lengths</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
@@ -143,14 +149,14 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs_seen</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">lengths</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">epoch_metric_terms</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_times</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_metric_terms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="p">(</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="p">(</span>
                 <span class="s2">&quot;must specify corresponding loss terms.&quot;</span>
             <span class="p">)</span>
             <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">epoch_times</span><span class="p">)</span> <span class="o">==</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">lengths</span><span class="p">),</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span>
-                <span class="s2">&quot;length of epoch_times is inconsistent with epoch_metric_terms.&quot;</span>
+                <span class="s2">&quot;length of epoch_times is inconsistent with epoch_loss_terms.&quot;</span>
             <span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
@@ -159,24 +165,20 @@
 <div class="viewcode-block" id="MetricsAggregator.record">
 <a class="viewcode-back" href="../../../api/cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator.record">[docs]</a>
     <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">record</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">loss_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">],</span>
-        <span class="n">lr</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Accumulate batch-level loss values.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        loss_dict : dict[str, torch.Tensor | int | float]</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        lr : torch.Tensor | int | float | None</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        kwargs : dict[str, torch.Tensor | int | float] | None</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        loss_dict : dict of str to Tensor or float</span>
+<span class="sd">            Loss components for a batch.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">loss_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">continue</span>
@@ -187,79 +189,42 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">loss_terms</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">kwargs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">continue</span>
-
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
-                    <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">kwargs_terms</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">lr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lr</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
-                <span class="n">lr</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lr</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">lr_values</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lr</span><span class="p">)</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">num_batches_seen</span> <span class="o">+=</span> <span class="mi">1</span></div>
 
 
     <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_dist_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Compute distributed average of accumulated loss terms.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        dict[str, float]</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        dict of str to float</span>
+<span class="sd">            Dictionary mapping each loss term name to its</span>
+<span class="sd">            globally averaged value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">logs</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_terms</span><span class="p">):</span>
-            <span class="n">logs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dist_average</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_terms</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+            <span class="n">local</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_terms</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_batches_seen</span><span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+            <span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs_terms</span><span class="p">):</span>
-            <span class="n">logs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dist_average</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs_terms</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">all_reduce_sum</span><span class="p">(</span><span class="n">local</span><span class="p">)</span>
 
-        <span class="n">logs</span><span class="p">[</span><span class="s2">&quot;lr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dist_average</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lr_values</span><span class="p">)</span>
+            <span class="n">global_sum</span> <span class="o">=</span> <span class="n">local</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="n">global_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">local</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+
+            <span class="k">if</span> <span class="n">global_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">logs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;nan&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">global_sum</span> <span class="o">/</span> <span class="n">global_count</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_aggregated_across_ranks</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="n">logs</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_dist_average</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        tensor : float</span>
-<span class="sd">            Description not yet provided.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        float</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">local</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">tensor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_batches_seen</span><span class="p">],</span>
-            <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
-            <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">all_reduce_sum</span><span class="p">(</span><span class="n">local</span><span class="p">)</span>
-
-        <span class="n">global_sum</span> <span class="o">=</span> <span class="n">local</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-        <span class="n">global_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">local</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
-
-        <span class="k">if</span> <span class="n">global_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;nan&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">global_sum</span> <span class="o">/</span> <span class="n">global_count</span>
 
 <div class="viewcode-block" id="MetricsAggregator.record_epoch">
 <a class="viewcode-back" href="../../../api/cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator.record_epoch">[docs]</a>
@@ -270,29 +235,30 @@
         <span class="n">time_elapsed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Record aggregated metrics for an epoch.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        logs : dict[str, float]</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        replace_index : int</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        time_elapsed : float</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        logs : dict of str to float</span>
+<span class="sd">            Aggregated loss values.</span>
+<span class="sd">        replace_index : int or None, optional</span>
+<span class="sd">            Index to overwrite existing epoch values.</span>
+<span class="sd">        time_elapsed : float or None, optional</span>
+<span class="sd">            Time taken for the epoch.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        dict</span>
+<span class="sd">            Recorded logs.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If distributed aggregation has not been performed.</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If attempting to replace a non-existing metric.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregated_across_ranks</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s2">&quot;Call _dist_compute() before record_epoch(), so losses are &quot;</span>
@@ -301,7 +267,7 @@
 
         <span class="k">if</span> <span class="n">replace_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">logs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">epoch_metric_terms</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">epoch_times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">time_elapsed</span> <span class="k">if</span> <span class="n">time_elapsed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
@@ -310,12 +276,12 @@
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">logs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_metric_terms</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;Cannot replace metric </span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2">; it was not previously recorded.&quot;</span>
                     <span class="p">)</span>
 
-                <span class="bp">self</span><span class="o">.</span><span class="n">epoch_metric_terms</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">replace_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">replace_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">epoch_times</span><span class="p">[</span><span class="n">replace_index</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">time_elapsed</span> <span class="k">if</span> <span class="n">time_elapsed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
@@ -331,17 +297,19 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator.reset_batch_losses">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">reset_batch_losses</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Reset batch-level accumulators.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 
 <span class="sd">        Warns</span>
 <span class="sd">        -----</span>
-<span class="sd">        UserWarning</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        If called before any epoch has been recorded.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">epochs_submitted</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">loss_terms</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">kwargs_terms</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">lr_values</span> <span class="o">=</span> <span class="mf">0.0</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">num_batches_seen</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_aggregated_across_ranks</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
@@ -361,24 +329,29 @@
         <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Plot loss curves and epoch times.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        aggregator_list : list[&#39;MetricsAggregator&#39;]</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        color_styles_list : list[tuple[str, str]]</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        plot_dir : str | Path | None</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        figsize : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        aggregator_list : list of MetricsAggregator</span>
+<span class="sd">            Aggregators to plot.</span>
+<span class="sd">        color_styles_list : list of (str, str), optional</span>
+<span class="sd">            Custom color and linestyle pairs.</span>
+<span class="sd">        plot_dir : Path or str or None, optional</span>
+<span class="sd">            Directory for saving plots.</span>
+<span class="sd">        figsize : tuple, optional</span>
+<span class="sd">            Figure size.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If aggregators are inconsistent or contain no data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="n">plot_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">plot_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">RuntimeContext</span><span class="o">.</span><span class="n">GLOBAL_FIGURES_DIR</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -401,19 +374,19 @@
         <span class="k">if</span> <span class="n">num_epochs</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No epochs have been recorded yet.&quot;</span><span class="p">)</span>
 
-        <span class="n">metric_lengths</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">aggregator</span><span class="o">.</span><span class="n">epoch_metric_terms</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">loss_lengths</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">aggregator</span><span class="o">.</span><span class="n">epoch_loss_terms</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">])</span>
             <span class="k">for</span> <span class="n">aggregator</span> <span class="ow">in</span> <span class="n">aggregator_list</span>
             <span class="k">if</span> <span class="n">aggregator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="p">}</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">metric_lengths</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">loss_lengths</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;All aggregators must have the same number of epoch items.&quot;</span>
             <span class="p">)</span>
-        <span class="n">metric_lengths</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">metric_lengths</span><span class="p">))</span>
+        <span class="n">loss_lengths</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">loss_lengths</span><span class="p">))</span>
 
         <span class="n">loss_kinds</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="n">epochs_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_epochs</span> <span class="o">-</span> <span class="n">metric_lengths</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">num_epochs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">epochs_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_epochs</span> <span class="o">-</span> <span class="n">loss_lengths</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">num_epochs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="n">rng</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">()</span>
         <span class="n">random_colors</span> <span class="o">=</span> <span class="p">[</span>
@@ -438,7 +411,7 @@
 
         <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">aggregator</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">aggregator_list</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">aggregator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">loss_kinds</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">aggregator</span><span class="o">.</span><span class="n">epoch_metric_terms</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+                <span class="n">loss_kinds</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">aggregator</span><span class="o">.</span><span class="n">epoch_loss_terms</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
 
                 <span class="k">if</span> <span class="n">color_styles_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">if</span> <span class="s2">&quot;train&quot;</span> <span class="ow">in</span> <span class="n">aggregator</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
@@ -466,9 +439,9 @@
 
             <span class="k">for</span> <span class="n">aggregator</span> <span class="ow">in</span> <span class="n">aggregator_list</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">aggregator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">epoch_losses</span> <span class="o">=</span> <span class="n">aggregator</span><span class="o">.</span><span class="n">epoch_metric_terms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">loss_name</span><span class="p">)</span>
+                    <span class="n">epoch_losses</span> <span class="o">=</span> <span class="n">aggregator</span><span class="o">.</span><span class="n">epoch_loss_terms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">loss_name</span><span class="p">)</span>
 
-                    <span class="k">if</span> <span class="n">epoch_losses</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">epoch_losses</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">epoch_losses</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="k">continue</span>
 
                     <span class="n">color</span><span class="p">,</span> <span class="n">style</span> <span class="o">=</span> <span class="n">style_by_name</span><span class="p">[</span><span class="n">aggregator</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
@@ -526,16 +499,17 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator.state_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Return serialized aggregator state.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        dict</span>
+<span class="sd">            State dictionary containing history and metadata.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-            <span class="s2">&quot;epoch_metric_terms&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_metric_terms</span><span class="p">,</span>
+            <span class="s2">&quot;epoch_loss_terms&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span><span class="p">,</span>
             <span class="s2">&quot;epoch_times&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch_times</span><span class="p">,</span>
             <span class="s2">&quot;num_epochs_seen&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs_seen</span><span class="p">,</span>
         <span class="p">}</span></div>
@@ -545,112 +519,23 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.generic.aggregator.html#cccma_ppp.core.trainer.MetricsAggregator.load_state_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Load aggregator state from dictionary.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        state_dict : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">epoch_metric_terms</span> <span class="o">=</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;epoch_metric_terms&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">epoch_times</span> <span class="o">=</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;epoch_times&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs_seen</span> <span class="o">=</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;num_epochs_seen&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">reset_batch_losses</span><span class="p">()</span></div>
-</div>
-
-
-
-<div class="viewcode-block" id="RunningCovariance">
-<a class="viewcode-back" href="../../../api/cccma_ppp.inference.predictors.predictor_abc.html#cccma_ppp.core.trainer.RunningCovariance">[docs]</a>
-<span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">RunningCovariance</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    distributed : Distributed</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    sum_x : torch.Tensor | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    sum_xxT : torch.Tensor | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    count : torch.Tensor | None</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">distributed</span><span class="p">:</span> <span class="n">Distributed</span>
-    <span class="n">sum_x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">sum_xxT</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">count</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-
-<div class="viewcode-block" id="RunningCovariance.update">
-<a class="viewcode-back" href="../../../api/cccma_ppp.inference.predictors.predictor_abc.html#cccma_ppp.core.trainer.RunningCovariance.update">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        x : torch.Tensor</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
-
-        <span class="n">batch_sum</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">batch_xxT</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">x</span>
-        <span class="n">batch_count</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
-            <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-            <span class="n">device</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
-            <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sum_x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">sum_x</span> <span class="o">=</span> <span class="n">batch_sum</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">sum_xxT</span> <span class="o">=</span> <span class="n">batch_xxT</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">=</span> <span class="n">batch_count</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">sum_x</span> <span class="o">+=</span> <span class="n">batch_sum</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">sum_xxT</span> <span class="o">+=</span> <span class="n">batch_xxT</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">+=</span> <span class="n">batch_count</span></div>
-
-
-<div class="viewcode-block" id="RunningCovariance.distributed_reduce">
-<a class="viewcode-back" href="../../../api/cccma_ppp.inference.predictors.predictor_abc.html#cccma_ppp.core.trainer.RunningCovariance.distributed_reduce">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">distributed_reduce</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">all_reduce_sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sum_x</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">all_reduce_sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sum_xxT</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">all_reduce_sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="RunningCovariance.finalize">
-<a class="viewcode-back" href="../../../api/cccma_ppp.inference.predictors.predictor_abc.html#cccma_ppp.core.trainer.RunningCovariance.finalize">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        state_dict : dict</span>
+<span class="sd">            Stored state.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sum_x</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Need at least two samples to compute covariance.&quot;</span><span class="p">)</span>
-
-        <span class="n">cov</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sum_xxT</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">mean</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">mean</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span> <span class="n">cov</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epoch_loss_terms</span> <span class="o">=</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;epoch_loss_terms&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epoch_times</span> <span class="o">=</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;epoch_times&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs_seen</span> <span class="o">=</span> <span class="n">state_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;num_epochs_seen&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_batch_losses</span><span class="p">()</span></div>
 </div>
 
 </pre></div>

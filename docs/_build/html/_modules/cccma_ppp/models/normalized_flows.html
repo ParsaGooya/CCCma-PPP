@@ -92,14 +92,14 @@
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">flowOutput</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
+<span class="sd">    Output container for flow transformations.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    e_samples : torch.Tensor</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">        Transformed samples.</span>
 <span class="sd">    log_det : torch.Tensor</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">        Log-determinant of the Jacobian.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">e_samples</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
@@ -112,14 +112,14 @@
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">NormalizedFlowConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
+<span class="sd">    Configuration for a composed normalizing flow model.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    list_flows : list[FlowSelector]</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    flow_sample_size : int</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">    list_flows : list of FlowSelector</span>
+<span class="sd">        Sequence of flow components.</span>
+<span class="sd">    flow_sample_size : int, optional</span>
+<span class="sd">        Number of samples used for Monte Carlo estimates.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">list_flows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FlowSelector</span><span class="p">]</span>
@@ -129,20 +129,20 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.NormalizedFlowConfig.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">latent_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">condition_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Construct normalized flow model.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        latent_size : int</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        condition_size : int</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            Dimensionality of latent space.</span>
+<span class="sd">        condition_size : int or None, optional</span>
+<span class="sd">            Conditioning feature size.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        NormalizedFlowModel</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">return</span> <span class="n">NormalizedFlowModel</span><span class="p">(</span>
             <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">latent_size</span><span class="o">=</span><span class="n">latent_size</span><span class="p">,</span> <span class="n">condition_size</span><span class="o">=</span><span class="n">condition_size</span>
         <span class="p">)</span></div>
@@ -154,33 +154,22 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.NormalizedFlowModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">NormalizedFlowModel</span><span class="p">(</span><span class="n">flowABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    config : NormalizedFlowConfig</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    latent_size : Any</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    condition_size : int</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">    Composed normalizing flow model.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">NormalizedFlowConfig</span><span class="p">,</span> <span class="n">latent_size</span><span class="p">,</span> <span class="n">condition_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Initialize normalized flow model.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        config : NormalizedFlowConfig</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        latent_size : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        condition_size : int</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        latent_size : int</span>
+<span class="sd">        condition_size : int or None, optional</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">list_flows</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">list_flows</span>
@@ -203,20 +192,21 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.NormalizedFlowModel.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Apply forward transformation through all flow steps.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        x : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        condition : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        x : torch.Tensor</span>
+<span class="sd">            Input samples.</span>
+<span class="sd">        condition : torch.Tensor or None, optional</span>
+<span class="sd">            Conditioning input.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        flowOutput</span>
+<span class="sd">            Transformed samples and log-determinant.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">bsz</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">log_det</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">flow</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">flows</span><span class="p">:</span>
@@ -230,20 +220,20 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.NormalizedFlowModel.inverse">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Apply inverse transformation through all flow steps.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        z : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        condition : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        z : torch.Tensor</span>
+<span class="sd">            Latent samples.</span>
+<span class="sd">        condition : torch.Tensor or None, optional</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        flowOutput</span>
+<span class="sd">            Reconstructed samples and log-determinant.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">bsz</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">log_det</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">z</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">flow</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">flows</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
@@ -260,31 +250,27 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.FCNN">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">FCNN</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
+<span class="sd">    Fully connected neural network used in flow components.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    in_dim : Any</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    out_dim : Any</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    hidden_dim : Any</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">    in_dim : int</span>
+<span class="sd">        Input dimension.</span>
+<span class="sd">    out_dim : int</span>
+<span class="sd">        Output dimension.</span>
+<span class="sd">    hidden_dim : int</span>
+<span class="sd">        Hidden layer size.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Initialize feedforward network.</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        in_dim : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        out_dim : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        hidden_dim : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">network</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
             <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">),</span>
@@ -298,36 +284,28 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.FCNN.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Compute forward pass.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        x : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        x : torch.Tensor</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        torch.Tensor</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
 </div>
 
 
 
 <div class="viewcode-block" id="MAF">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.MAF">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.MAF">[docs]</a>
 <span class="nd">@FlowSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;maf&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">MAF</span><span class="p">(</span><span class="n">flowABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    hidden_dim : Any</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    base_network : Any</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">    Masked autoregressive flow (MAF).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -336,38 +314,35 @@
         <span class="n">base_network</span><span class="o">=</span><span class="n">FCNN</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Initialize MAF.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        hidden_dim : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        base_network : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        hidden_dim : int, optional</span>
+<span class="sd">        base_network : callable, optional</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hidden_dim</span> <span class="o">=</span> <span class="n">hidden_dim</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">base_network</span> <span class="o">=</span> <span class="n">base_network</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span> <span class="o">=</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="MAF.build">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.MAF.build">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.MAF.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">condition_size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Build MAF layers.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        condition_size : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        dim : int</span>
+<span class="sd">            Input dimensionality.</span>
+<span class="sd">        condition_size : int or None, optional</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        self</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="n">dim</span>
 
         <span class="n">layers</span> <span class="o">=</span> <span class="p">[]</span>
@@ -379,67 +354,57 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">register_parameter</span><span class="p">(</span>
                 <span class="s2">&quot;initial_param&quot;</span><span class="p">,</span> <span class="n">param</span><span class="o">=</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
             <span class="p">)</span>
-
             <span class="bp">self</span><span class="o">.</span><span class="n">reset_parameters</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">initial_param</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_network</span><span class="p">(</span><span class="n">added_features</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hidden_dim</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">added_features</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
 
 <div class="viewcode-block" id="MAF.reset_parameters">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.MAF.reset_parameters">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.MAF.reset_parameters">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">reset_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Initialize learnable parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">init</span><span class="o">.</span><span class="n">uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_param</span><span class="p">,</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">0.5</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="MAF.forward">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.MAF.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.MAF.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Progressive forward transformation.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        x : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        condition : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        x : torch.Tensor</span>
+<span class="sd">            Input tensor.</span>
+<span class="sd">        condition : torch.Tensor or None, optional</span>
+<span class="sd">            Conditioning input.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        tuple</span>
+<span class="sd">            (z, log_det)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;The flow model is build as condition dependant but no condition &quot;</span>
-                    <span class="s2">&quot;was provided in forward.&quot;</span>
-                <span class="p">)</span>
 
         <span class="n">z</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">log_det</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span><span class="p">:</span>
-                    <span class="n">mu</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_param</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">mu</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_param</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_param</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_param</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
                     <span class="n">mu</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="n">out</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">out</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">x_in</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="p">:</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">x_in</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">x</span><span class="p">[:,</span> <span class="p">:</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">(),</span> <span class="n">condition</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
@@ -452,47 +417,34 @@
 
 
 <div class="viewcode-block" id="MAF.inverse">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.MAF.inverse">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.MAF.inverse">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Apply autoregressive inverse transformation.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        z : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        condition : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        z : torch.Tensor</span>
+<span class="sd">        condition : torch.Tensor or None, optional</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        tuple</span>
+<span class="sd">            (x, log_det)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;The flow model is build as condition dependant but no condition &quot;</span>
-                    <span class="s2">&quot;was provided in forward.&quot;</span>
-                <span class="p">)</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
         <span class="n">log_det</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">z</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,))</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span><span class="p">:</span>
-                    <span class="n">mu</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_param</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">mu</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_param</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_param</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_param</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
                     <span class="n">mu</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="n">out</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">out</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">x_in</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="p">:</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">x_in</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">x</span><span class="p">[:,</span> <span class="p">:</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">(),</span> <span class="n">condition</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
@@ -507,54 +459,41 @@
 
 
 <div class="viewcode-block" id="RealNVP">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.RealNVP">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.RealNVP">[docs]</a>
 <span class="nd">@FlowSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;realnvp&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">RealNVP</span><span class="p">(</span><span class="n">flowABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    hidden_dim : Any</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    base_network : Any</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">    Real-valued non-volume preserving (RealNVP) flow.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">base_network</span><span class="o">=</span><span class="n">FCNN</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Initialize RealNVP.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        hidden_dim : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        base_network : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        hidden_dim : int, optional</span>
+<span class="sd">        base_network : callable, optional</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hidden_dim</span> <span class="o">=</span> <span class="n">hidden_dim</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">base_network</span> <span class="o">=</span> <span class="n">base_network</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span> <span class="o">=</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="RealNVP.build">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.RealNVP.build">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.RealNVP.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">condition_size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Build coupling layers.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        dim : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        condition_size : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        dim : int</span>
+<span class="sd">        condition_size : int or None, optional</span>
 
 <span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="n">dim</span>
         <span class="n">added_features</span> <span class="o">=</span> <span class="n">condition_size</span> <span class="k">if</span> <span class="n">condition_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">t1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_network</span><span class="p">(</span>
@@ -570,51 +509,35 @@
             <span class="n">added_features</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hidden_dim</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">added_features</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span> <span class="o">=</span> <span class="kc">True</span>
-
         <span class="k">return</span> <span class="bp">self</span></div>
 
 
 <div class="viewcode-block" id="RealNVP.forward">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.RealNVP.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.RealNVP.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Apply forward coupling transformations.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        x : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        condition : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        x : torch.Tensor</span>
+<span class="sd">        condition : torch.Tensor or None, optional</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        tuple</span>
+<span class="sd">            (z, log_det)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;The flow model is build as condition dependant but no condition &quot;</span>
-                    <span class="s2">&quot;was provided in forward.&quot;</span>
-                <span class="p">)</span>
 
         <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">(),</span> <span class="n">x</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">//</span> <span class="mi">2</span> <span class="p">:]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">t1_transformed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t1</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">lower</span><span class="p">,</span> <span class="n">condition</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
             <span class="n">s1_transformed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s1</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">lower</span><span class="p">,</span> <span class="n">condition</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">t1_transformed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t1</span><span class="p">(</span><span class="n">lower</span><span class="p">)</span>
             <span class="n">s1_transformed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s1</span><span class="p">(</span><span class="n">lower</span><span class="p">)</span>
         <span class="n">upper</span> <span class="o">=</span> <span class="n">t1_transformed</span> <span class="o">+</span> <span class="n">upper</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">s1_transformed</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">t2_transformed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t2</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">upper</span><span class="p">,</span> <span class="n">condition</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
             <span class="n">s2_transformed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s2</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">upper</span><span class="p">,</span> <span class="n">condition</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
@@ -628,37 +551,24 @@
 
 
 <div class="viewcode-block" id="RealNVP.inverse">
-<a class="viewcode-back" href="../../../api/cccma_ppp.models.normalized_flows.html#cccma_ppp.core.cVAE_module.RealNVP.inverse">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.registry_imports.html#cccma_ppp.core.cVAE_module.RealNVP.inverse">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Apply inverse coupling transformations.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        z : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        condition : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        z : torch.Tensor</span>
+<span class="sd">        condition : torch.Tensor or None, optional</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        tuple</span>
+<span class="sd">            (x, log_det)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;The flow model is build as condition dependant but no condition &quot;</span>
-                    <span class="s2">&quot;was provided in forward.&quot;</span>
-                <span class="p">)</span>
 
         <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="n">z</span><span class="p">[:,</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">(),</span> <span class="n">z</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">//</span> <span class="mi">2</span> <span class="p">:]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">t2_transformed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t2</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">upper</span><span class="p">,</span> <span class="n">condition</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
             <span class="n">s2_transformed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s2</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">upper</span><span class="p">,</span> <span class="n">condition</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
@@ -667,7 +577,7 @@
 
         <span class="n">lower</span> <span class="o">=</span> <span class="p">(</span><span class="n">lower</span> <span class="o">-</span> <span class="n">t2_transformed</span><span class="p">)</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">s2_transformed</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">t1_transformed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t1</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">lower</span><span class="p">,</span> <span class="n">condition</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
             <span class="n">s1_transformed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s1</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">lower</span><span class="p">,</span> <span class="n">condition</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>

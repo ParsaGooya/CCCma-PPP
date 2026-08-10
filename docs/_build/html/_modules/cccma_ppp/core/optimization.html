@@ -80,7 +80,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch.optim.lr_scheduler</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequentialLR</span><span class="p">,</span> <span class="n">LinearLR</span><span class="p">,</span> <span class="n">CosineAnnealingLR</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.core_abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">moduleABC</span>
 
 
@@ -89,16 +89,16 @@
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">LRSchedulerConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
+<span class="sd">    Configuration for learning rate scheduler.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    min_lr : float</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    warmup_epochs : int</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    total_epochs : int</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">    min_lr : float, optional</span>
+<span class="sd">        Minimum learning rate for cosine annealing.</span>
+<span class="sd">    warmup_epochs : int, optional</span>
+<span class="sd">        Number of warmup epochs with linearly increasing learning rate.</span>
+<span class="sd">    total_epochs : int or None, optional</span>
+<span class="sd">        Total number of training epochs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">min_lr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
@@ -107,48 +107,43 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Validate scheduler configuration parameters.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        AssertionError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If `min_lr` or `warmup_epochs` are negative.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_lr</span> <span class="o">&gt;=</span> <span class="mi">0</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">warmup_epochs</span> <span class="o">&gt;=</span> <span class="mi">0</span>
 
 <div class="viewcode-block" id="LRSchedulerConfig.build">
 <a class="viewcode-back" href="../../../api/cccma_ppp.core.optimization.html#cccma_ppp.core.optimization.LRSchedulerConfig.build">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">optimizer</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span>
-        <span class="n">num_batches</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">gradient_accumulation_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">num_batches</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Construct learning rate scheduler.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        optimizer : torch.optim.Optimizer</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            Optimizer instance.</span>
 <span class="sd">        num_batches : int</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        gradient_accumulation_steps : int</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            Number of batches per epoch.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        CosineAnnealingLRScheduler</span>
+<span class="sd">            Configured scheduler.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        AssertionError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If required configuration values are invalid.</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If warmup exceeds total epochs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_epochs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_epochs</span> <span class="o">&gt;</span> <span class="mi">0</span>
         <span class="k">assert</span> <span class="n">num_batches</span> <span class="o">&gt;</span> <span class="mi">0</span>
@@ -157,12 +152,8 @@
                 <span class="s2">&quot;number of warmup epochs must be smaller than total epochs.&quot;</span>
             <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">total_steps</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">num_batches</span> <span class="o">/</span> <span class="n">gradient_accumulation_steps</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_epochs</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">warmup_steps</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">num_batches</span> <span class="o">/</span> <span class="n">gradient_accumulation_steps</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">warmup_epochs</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_steps</span> <span class="o">=</span> <span class="n">num_batches</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_epochs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">warmup_steps</span> <span class="o">=</span> <span class="n">num_batches</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">warmup_epochs</span>
 
         <span class="k">return</span> <span class="n">CosineAnnealingLRScheduler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">)</span></div>
 </div>
@@ -174,18 +165,18 @@
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">OptimizerConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
+<span class="sd">    Configuration for optimizer and optional learning rate scheduler.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    lr : float</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    weight_decay : float</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    optimizer_type : str</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    lr_scheduler_config : LRSchedulerConfig | None</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">    lr : float, optional</span>
+<span class="sd">        Learning rate.</span>
+<span class="sd">    weight_decay : float, optional</span>
+<span class="sd">        Weight decay coefficient.</span>
+<span class="sd">    optimizer_type : str, optional</span>
+<span class="sd">        Optimizer type (&quot;adam&quot;, &quot;adamw&quot;).</span>
+<span class="sd">    lr_scheduler_config : LRSchedulerConfig or None, optional</span>
+<span class="sd">        Learning rate scheduler configuration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">lr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0001</span>
@@ -200,50 +191,44 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Validate optimizer configuration.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If weight_decay is negative.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_decay</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;weight_decay has to be positive&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="OptimizerConfig.build">
 <a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.optimization.OptimizerConfig.build">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">module</span><span class="p">:</span> <span class="n">moduleABC</span><span class="p">,</span>
-        <span class="n">num_batches</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">max_epochs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">gradient_accumulation_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">moduleABC</span><span class="p">,</span> <span class="n">num_batches</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_epochs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Construct optimizer wrapper.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        module : moduleABC</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        num_batches : int</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        max_epochs : int</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        gradient_accumulation_steps : int</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        module : ModuleABC</span>
+<span class="sd">            Model whose parameters are optimized.</span>
+<span class="sd">        num_batches : int, optional</span>
+<span class="sd">            Number of batches per epoch.</span>
+<span class="sd">        max_epochs : int, optional</span>
+<span class="sd">            Total number of training epochs.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        OptimizerWrapper</span>
+<span class="sd">            Wrapped optimizer and scheduler.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If scheduler configuration is incomplete.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler_config</span><span class="o">.</span><span class="n">total_epochs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">max_epochs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -257,9 +242,7 @@
                     <span class="s2">&quot;num_batches must be specified to set up learning rate scheduler.&quot;</span>
                 <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">OptimizerWrapper</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">num_batches</span><span class="p">,</span> <span class="n">max_epochs</span><span class="p">,</span> <span class="n">gradient_accumulation_steps</span>
-        <span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">OptimizerWrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">num_batches</span><span class="p">,</span> <span class="n">max_epochs</span><span class="p">)</span></div>
 </div>
 
 
@@ -268,20 +251,18 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.optimization.OptimizerWrapper">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">OptimizerWrapper</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
+<span class="sd">    Wrapper around optimizer and optional learning rate scheduler.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    config : OptimizerConfig</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">        Optimizer configuration.</span>
 <span class="sd">    module : moduleABC</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    num_batches : int</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    max_epochs : int</span>
-<span class="sd">        Description not yet provided.</span>
-<span class="sd">    gradient_accumulation_steps : int</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">        Model instance.</span>
+<span class="sd">    num_batches : int or None</span>
+<span class="sd">        Number of batches per epoch.</span>
+<span class="sd">    max_epochs : int or None</span>
+<span class="sd">        Total number of training epochs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -290,29 +271,23 @@
         <span class="n">module</span><span class="p">:</span> <span class="n">moduleABC</span><span class="p">,</span>
         <span class="n">num_batches</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">max_epochs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">gradient_accumulation_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Initialize optimizer and optional scheduler.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        config : OptimizerConfig</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        module : moduleABC</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        num_batches : int</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        max_epochs : int</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        gradient_accumulation_steps : int</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        module : ModuleABC</span>
+<span class="sd">        num_batches : int or None</span>
+<span class="sd">        max_epochs : int or None</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If scheduler configuration requirements are not met.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">OPTIMIZER_REGISTERY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">optimizer_type</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
@@ -334,32 +309,25 @@
                 <span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">lr_scheduler_config</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">num_batches</span><span class="p">,</span> <span class="n">gradient_accumulation_steps</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">num_batches</span>
             <span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">learning_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">param_groups</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;lr&quot;</span><span class="p">]</span>
 
 <div class="viewcode-block" id="OptimizerWrapper.step">
 <a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.optimization.OptimizerWrapper.step">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Perform optimizer step.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If optimizer has not been initialized.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Optimizer must be built before step().&quot;</span><span class="p">)</span>
 
@@ -370,8 +338,13 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.optimization.OptimizerWrapper.scheduler_step">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">scheduler_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Perform scheduler step.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span></div>
 
@@ -380,20 +353,25 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.optimization.OptimizerWrapper.zero_grad">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">zero_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">set_to_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Reset gradients of model parameters.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        set_to_none : Any</span>
-<span class="sd">            Description not yet provided.</span>
-<span class="sd">        **kwargs : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        set_to_none : bool, optional</span>
+<span class="sd">            Whether to set gradients to None instead of zero.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Additional arguments passed to optimizer.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If optimizer has not been initialized.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Optimizer must be built before zero_grad().&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">set_to_none</span><span class="o">=</span><span class="n">set_to_none</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
@@ -403,18 +381,19 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.optimization.OptimizerWrapper.state_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Return optimizer and scheduler state.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        dict</span>
+<span class="sd">            State dictionary containing optimizer and scheduler states.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If optimizer has not been initialized.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Optimizer must be built before state_dict().&quot;</span><span class="p">)</span>
 
@@ -432,18 +411,23 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.core.trainer.html#cccma_ppp.core.optimization.OptimizerWrapper.load_state_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Load optimizer and scheduler state.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        state_dict : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        state_dict : dict</span>
+<span class="sd">            State dictionary.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If optimizer is not initialized.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Optimizer must be built before load_state_dict().&quot;</span><span class="p">)</span>
 
@@ -459,27 +443,30 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.core.optimization.html#cccma_ppp.core.optimization.CosineAnnealingLRScheduler">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CosineAnnealingLRScheduler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Document this class.</span>
+<span class="sd">    Learning rate scheduler with optional warmup and cosine annealing.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    config : LRSchedulerConfig</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">        Scheduler configuration.</span>
 <span class="sd">    optimizer : torch.optim.Optimizer</span>
-<span class="sd">        Description not yet provided.</span>
+<span class="sd">        Optimizer instance.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">LRSchedulerConfig</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Initialize scheduler with optional warmup phase.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        config : LRSchedulerConfig</span>
-<span class="sd">            Description not yet provided.</span>
 <span class="sd">        optimizer : torch.optim.Optimizer</span>
-<span class="sd">            Description not yet provided.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
 
         <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">warmup_steps</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -510,13 +497,18 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.core.optimization.html#cccma_ppp.core.optimization.CosineAnnealingLRScheduler.step">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Advance scheduler by one step.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If scheduler has not been initialized.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;scheduler&quot;</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Scheduler must be built before stepping.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span></div>
@@ -526,18 +518,19 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.core.optimization.html#cccma_ppp.core.optimization.CosineAnnealingLRScheduler.state_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Return scheduler state.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        dict</span>
+<span class="sd">            Scheduler state dictionary.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If scheduler has not been initialized.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;scheduler&quot;</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Scheduler must be built before stepping.&quot;</span><span class="p">)</span>
 
@@ -548,18 +541,23 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.core.optimization.html#cccma_ppp.core.optimization.CosineAnnealingLRScheduler.load_state_dict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Document this function.</span>
+<span class="sd">        Load scheduler state.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        state_dict : Any</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">        state_dict : dict</span>
+<span class="sd">            Scheduler state dictionary.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
-<span class="sd">            Description not yet provided.</span>
+<span class="sd">            If scheduler has not been initialized.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;scheduler&quot;</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Scheduler must be built before stepping.&quot;</span><span class="p">)</span>
 
