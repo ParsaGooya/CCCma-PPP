@@ -34,16 +34,15 @@ train_loader:
         condition_method : ensemble_mean
         lead_times : 
                       start: 1
-                      end: 60
+                      end: 120
 
     batch_size: 10
     time_features :
-                    - time
                     - lead_time
                     - month_sin
                     - month_cos
                     
-    train_years_slice : [1961, 2015]
+    train_years_slice : [1961, 2020]
     num_validation_years : 5
     prefetch_factor : 4
     num_data_workers: 4
@@ -70,11 +69,11 @@ module:
             ModelConfig :
                     type : UNet
                     config :
-                        channels: [16,32,64,128,256]
+                        channels: [16,32,64,128]
                         block_config: 
                                 name: convnext
                                 num_blocks: 2
-                        output_block_hidden_channels: 32
+                        output_block_hidden_channels: 16
                         # latent_size: 500
                         # deterministic_guess_config:
                         #     load_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_3/checkpoints/best.pt
@@ -104,14 +103,14 @@ trainer :
 optimization :
         lr : 0.0001
         optimizer_type : adam
-        lr_scheduler_config :
-                    min_lr : 0.00001
-                    warmup_epochs : 1
-                    total_epochs: 10
-                    hold_min_lr: True
+        # lr_scheduler_config :
+        #             min_lr : 0.00001
+        #             warmup_epochs : 1
+        #             total_epochs: 10
+        #             hold_min_lr: True
 
 weights :
-        spatial_method : uniform
+        spatial_method : cosine_lat
 
 log_every_n_epochs : 2
 save_checkpoint : True

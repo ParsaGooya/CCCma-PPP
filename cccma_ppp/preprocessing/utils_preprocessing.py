@@ -75,6 +75,9 @@ class Normalizer(PreprocessModuleABC):
 
         reduction_dims = self._get_reduction_dims(data)
 
+        if mask is not None:
+            data = data.where(~mask)
+
         if self.frequency is None:
             self.min = data.min(reduction_dims).load()
             self.max = data.max(reduction_dims).load()
@@ -234,7 +237,7 @@ class Standardizer(PreprocessModuleABC):
         reduction_dims = self._get_reduction_dims(data)
 
         if mask is not None:
-            data = data.where(~np.isnan(mask))
+            data = data.where(~mask)
 
         if self.frequency is None:
             self.mean = data.mean(reduction_dims).load()
@@ -376,7 +379,7 @@ class AnomaliesScaler(PreprocessModuleABC):
         reduction_dims = self._get_reduction_dims(data)
 
         if mask is not None:
-            data = data.where(~np.isnan(mask))
+            data = data.where(~mask)
 
         if self.frequency is None:
             self.mean = data.mean(reduction_dims).load()

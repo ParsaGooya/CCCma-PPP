@@ -55,6 +55,8 @@ class PreprocessingPipeline:
         """
 
         self.fitted = False
+        self.mask = None
+        self.fitted_based_time = None
         self.reference_coords = None
         self.reference_var = None
         self.num_instances += 1
@@ -111,6 +113,7 @@ class PreprocessingPipeline:
 
         if self.load_dir is None:
             data_processed = base_data
+            self.mask = mask
             self.fitted_based_time = base_data[self.init_time_time].values
             self.steps = []
             self.fitted_preprocessors = []
@@ -395,6 +398,7 @@ class PreprocessingPipeline:
         self.fitted_preprocessors = loaded.fitted_preprocessors
         self.fitted = loaded.fitted
         self.fitted_based_time = loaded.fitted_based_time
+        self.mask = loaded.mask
         self.reference_coords = loaded.reference_coords
         self.reference_var = loaded.reference_var
         self.name = loaded.name
