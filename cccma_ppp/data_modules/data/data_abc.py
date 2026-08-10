@@ -303,7 +303,7 @@ class DataConfigABC(abc.ABC):
         ------
         ValueError
             If no data has been loaded.
-        """
+        """        
         self._check_opened()
 
         ds = self.data.isel(indexers=indexers, **indexers_kwargs)
@@ -482,7 +482,7 @@ def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
         sizes = None
 
     coords = {dim: dict(ds.coords).get(dim) for dim in ds.coords}
-    dims = (dim for dim in ds.dims)
+    dims = ds.dims
 
     time_coords_type = get_time_representation(ds[init_time_dim])
 
