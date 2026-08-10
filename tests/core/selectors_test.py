@@ -98,7 +98,6 @@ def make_checkpoint(
     )
 
 
-@pytest.mark.pruned
 def test_module_selector_build_without_output_shape():
     name = unique_name("module_no_output")
 
@@ -112,13 +111,11 @@ def test_module_selector_build_without_output_shape():
     assert built.output_shape is None
 
 
-@pytest.mark.pruned
 def test_module_selector_unregistered_type_raises():
     with pytest.raises(Exception):
         ModuleSelector(type=unique_name("missing_module"), config={})
 
 
-@pytest.mark.pruned
 def test_module_selector_register_lowercases_name():
     name = unique_name("mixed_module")
 
@@ -131,7 +128,6 @@ def test_module_selector_register_lowercases_name():
     assert isinstance(selector._module_config, DummyModuleConfig)
 
 
-@pytest.mark.pruned
 def test_module_selector_register_available_and_build():
     name = unique_name("module")
 
@@ -158,7 +154,6 @@ def test_model_selector_requires_config_or_load_dir():
         LocalModelSelector(type="anything", config=None, load_dir=None)
 
 
-@pytest.mark.pruned
 def test_model_selector_register_available_get_model_config():
     name = unique_name("model")
 
@@ -173,7 +168,6 @@ def test_model_selector_register_available_get_model_config():
     assert name in LocalModelSelector.available()
 
 
-@pytest.mark.pruned
 def test_model_selector_register_lowercase_lookup():
     name = unique_name("case_model")
 
@@ -233,7 +227,6 @@ def test_model_selector_checkpoint_load_overwrites_config(monkeypatch, tmp_path)
     assert model_config.checkpoint_config is fake_checkpoint_config
 
 
-@pytest.mark.pruned
 def test_model_selector_load_dir_type_mismatch(monkeypatch, tmp_path):
     def fake_load_config_from_checkpoint(load_dir):
         return (
@@ -295,7 +288,6 @@ def test_model_selector_freeze_weights_warning(monkeypatch, tmp_path):
     assert any("freeze" in msg.lower() for msg in messages)
 
 
-@pytest.mark.pruned
 def test_model_selector_load_dir_without_freeze_only_one_warning(monkeypatch, tmp_path):
     name = unique_name("nofreeze_model")
     LocalModelSelector.register(name)(DummyModelConfig)
@@ -329,7 +321,6 @@ def test_model_selector_load_dir_without_freeze_only_one_warning(monkeypatch, tm
     assert "overwritten" in str(record[0].message)
 
 
-@pytest.mark.pruned
 def test_cvae_model_selector_has_registry():
     name = unique_name("cvae_model")
 
@@ -343,7 +334,6 @@ def test_cvae_model_selector_has_registry():
     assert name in cVAEModelSelector.available()
 
 
-@pytest.mark.pruned
 def test_deterministic_model_selector_has_registry():
     name = unique_name("det_model")
 
@@ -357,7 +347,6 @@ def test_deterministic_model_selector_has_registry():
     assert name in deterministicModelSelector.available()
 
 
-@pytest.mark.pruned
 def test_flow_selector_register_available_and_get_model():
     name = unique_name("flow")
 
@@ -371,7 +360,6 @@ def test_flow_selector_register_available_and_get_model():
     assert name in FlowSelector.available()
 
 
-@pytest.mark.pruned
 def test_flow_selector_unregistered_raises():
     selector = FlowSelector(type=unique_name("missing_flow"), args={})
 
@@ -379,7 +367,6 @@ def test_flow_selector_unregistered_raises():
         selector.get_model()
 
 
-@pytest.mark.pruned
 def test_flow_selector_post_init_noop():
     name = unique_name("flow_noop")
 
@@ -392,7 +379,6 @@ def test_flow_selector_post_init_noop():
     assert flow.scale == 4
 
 
-@pytest.mark.pruned
 def test_flow_selector_case_insensitive_lookup():
     name = unique_name("flow_case")
 
@@ -410,7 +396,6 @@ def test_load_config_from_checkpoint_missing_file():
         _load_config_from_checkpoint("missing_checkpoint.pt")
 
 
-@pytest.mark.pruned
 def test_load_config_from_checkpoint_success(tmp_path):
     path = tmp_path / "checkpoint.pt"
 
@@ -431,7 +416,6 @@ def test_load_config_from_checkpoint_success(tmp_path):
     assert checkpoint_config.strict is True
 
 
-@pytest.mark.pruned
 def test_load_config_from_checkpoint_strict_false(tmp_path):
     path = tmp_path / "checkpoint.pt"
 
@@ -447,7 +431,6 @@ def test_load_config_from_checkpoint_strict_false(tmp_path):
     assert checkpoint_config.strict is False
 
 
-@pytest.mark.pruned
 def test_load_config_from_checkpoint_missing_module_config(tmp_path):
     path = tmp_path / "bad_checkpoint.pt"
 
@@ -466,7 +449,6 @@ def test_load_config_from_checkpoint_missing_module_config(tmp_path):
     assert checkpoint_config.load_path == path
 
 
-@pytest.mark.pruned
 def test_load_config_from_checkpoint_missing_shapes_allowed(tmp_path):
     path = tmp_path / "checkpoint.pt"
 

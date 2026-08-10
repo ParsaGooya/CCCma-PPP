@@ -226,7 +226,6 @@ def test_partial_conv_config_rejects_invalid_dropout(
         )
 
 
-@pytest.mark.pruned
 def test_convnext_config_defaults():
     config = ConvNeXtBlockConfig(name="convnext")
 
@@ -334,7 +333,6 @@ def test_convnext_config_rejects_invalid_drop_path_rate(
         )
 
 
-@pytest.mark.pruned
 def test_conv_single_forward_shape():
     config = make_conv_config(
         normalization="batch",
@@ -352,7 +350,6 @@ def test_conv_single_forward_shape():
     assert result.shape == (2, 5, 8, 8)
 
 
-@pytest.mark.pruned
 def test_conv_single_without_dropout_uses_identity():
     layer = ConvSingle(
         in_channels=3,
@@ -365,7 +362,6 @@ def test_conv_single_without_dropout_uses_identity():
     assert isinstance(layer.dropout, nn.Identity)
 
 
-@pytest.mark.pruned
 def test_conv_single_zero_dropout_uses_identity():
     layer = ConvSingle(
         in_channels=3,
@@ -378,7 +374,6 @@ def test_conv_single_zero_dropout_uses_identity():
     assert isinstance(layer.dropout, nn.Identity)
 
 
-@pytest.mark.pruned
 def test_conv_single_positive_dropout_uses_dropout2d():
     layer = ConvSingle(
         in_channels=3,
@@ -391,7 +386,6 @@ def test_conv_single_positive_dropout_uses_dropout2d():
     assert isinstance(layer.dropout, nn.Dropout2d)
 
 
-@pytest.mark.pruned
 def test_conv_single_uses_requested_bias():
     layer = ConvSingle(
         in_channels=3,
@@ -404,7 +398,6 @@ def test_conv_single_uses_requested_bias():
     assert layer.conv.bias is not None
 
 
-@pytest.mark.pruned
 def test_conv_single_without_bias():
     layer = ConvSingle(
         in_channels=3,
@@ -417,7 +410,6 @@ def test_conv_single_without_bias():
     assert layer.conv.bias is None
 
 
-@pytest.mark.pruned
 def test_conv_single_without_noise_does_not_call_noise_injection(
     monkeypatch,
 ):
@@ -441,7 +433,6 @@ def test_conv_single_without_noise_does_not_call_noise_injection(
     assert result.shape == (2, 4, 8, 8)
 
 
-@pytest.mark.pruned
 def test_partial_conv_single_forward_with_mask():
     layer = PartialConvSingle(
         in_channels=3,
@@ -462,7 +453,6 @@ def test_partial_conv_single_forward_with_mask():
     assert result_mask.shape == result.shape
 
 
-@pytest.mark.pruned
 def test_partial_conv_single_forward_without_mask():
     layer = PartialConvSingle(
         in_channels=3,
@@ -479,7 +469,6 @@ def test_partial_conv_single_forward_without_mask():
     assert result_mask is not None
 
 
-@pytest.mark.pruned
 def test_partial_conv_single_without_dropout_uses_identity():
     layer = PartialConvSingle(
         in_channels=3,
@@ -492,7 +481,6 @@ def test_partial_conv_single_without_dropout_uses_identity():
     assert isinstance(layer.dropout, nn.Identity)
 
 
-@pytest.mark.pruned
 def test_partial_conv_single_positive_dropout_uses_dropout2d():
     layer = PartialConvSingle(
         in_channels=3,
@@ -505,7 +493,6 @@ def test_partial_conv_single_positive_dropout_uses_dropout2d():
     assert isinstance(layer.dropout, nn.Dropout2d)
 
 
-@pytest.mark.pruned
 def test_conv_block_builds_requested_number_of_stages():
     block = ConvBlock(
         in_channels=3,
@@ -519,7 +506,6 @@ def test_conv_block_builds_requested_number_of_stages():
     assert block.out_channels == 5
 
 
-@pytest.mark.pruned
 def test_conv_block_first_stage_uses_input_channels():
     block = ConvBlock(
         in_channels=3,
@@ -533,7 +519,6 @@ def test_conv_block_first_stage_uses_input_channels():
     assert block.stages[0].conv.out_channels == 5
 
 
-@pytest.mark.pruned
 def test_conv_block_later_stages_use_output_channels():
     block = ConvBlock(
         in_channels=3,
@@ -547,7 +532,6 @@ def test_conv_block_later_stages_use_output_channels():
     assert block.stages[2].conv.in_channels == 5
 
 
-@pytest.mark.pruned
 def test_conv_block_forward_preserves_mask_identity():
     block = ConvBlock(
         in_channels=3,
@@ -567,7 +551,6 @@ def test_conv_block_forward_preserves_mask_identity():
     assert result.mask is mask
 
 
-@pytest.mark.pruned
 def test_conv_block_forward_with_none_mask():
     block = ConvBlock(
         in_channels=3,
@@ -585,7 +568,6 @@ def test_conv_block_forward_with_none_mask():
     assert result.mask is None
 
 
-@pytest.mark.pruned
 def test_partial_conv_block_builds_requested_number_of_stages():
     block = PartialConvBlock(
         in_channels=3,
@@ -599,7 +581,6 @@ def test_partial_conv_block_builds_requested_number_of_stages():
     assert block.out_channels == 5
 
 
-@pytest.mark.pruned
 def test_partial_conv_block_channel_progression():
     block = PartialConvBlock(
         in_channels=3,
@@ -632,7 +613,6 @@ def test_partial_conv_block_forward_without_mask():
     assert result.mask is not None
 
 
-@pytest.mark.pruned
 def test_partial_conv_block_calls_broadcast_mask(
     monkeypatch,
 ):
@@ -680,7 +660,6 @@ def test_partial_conv_block_calls_broadcast_mask(
     assert result.tensor.shape == (2, 5, 8, 8)
 
 
-@pytest.mark.pruned
 def test_convnext_single_uses_partial_depthwise_convolution():
     layer = ConvNeXtSingle(
         channels=4,
@@ -697,7 +676,6 @@ def test_convnext_single_uses_partial_depthwise_convolution():
     )
 
 
-@pytest.mark.pruned
 def test_convnext_single_uses_standard_depthwise_convolution():
     layer = ConvNeXtSingle(
         channels=4,
@@ -715,7 +693,6 @@ def test_convnext_single_uses_standard_depthwise_convolution():
     assert layer.depthwise.groups == 4
 
 
-@pytest.mark.pruned
 def test_convnext_single_hidden_channel_expansion():
     layer = ConvNeXtSingle(
         channels=4,
@@ -729,7 +706,6 @@ def test_convnext_single_hidden_channel_expansion():
     assert layer.pointwise_2.in_channels == 12
 
 
-@pytest.mark.pruned
 def test_convnext_single_forward_partial_conv():
     layer = ConvNeXtSingle(
         channels=4,
@@ -752,7 +728,6 @@ def test_convnext_single_forward_partial_conv():
     assert result_mask.shape == x.shape
 
 
-@pytest.mark.pruned
 def test_convnext_single_forward_standard_conv_preserves_mask():
     layer = ConvNeXtSingle(
         channels=4,
@@ -774,7 +749,6 @@ def test_convnext_single_forward_standard_conv_preserves_mask():
     assert result_mask is mask
 
 
-@pytest.mark.pruned
 def test_convnext_single_positive_dropout_uses_dropout2d():
     layer = ConvNeXtSingle(
         channels=4,
@@ -787,7 +761,6 @@ def test_convnext_single_positive_dropout_uses_dropout2d():
     assert isinstance(layer.dropout, nn.Dropout2d)
 
 
-@pytest.mark.pruned
 def test_convnext_single_zero_dropout_uses_identity():
     layer = ConvNeXtSingle(
         channels=4,
@@ -800,7 +773,6 @@ def test_convnext_single_zero_dropout_uses_identity():
     assert isinstance(layer.dropout, nn.Identity)
 
 
-@pytest.mark.pruned
 def test_convnext_single_positive_layer_scale_creates_parameter():
     layer = ConvNeXtSingle(
         channels=4,
@@ -864,7 +836,6 @@ def test_convnext_single_without_layer_scale_forward():
     assert result_mask is None
 
 
-@pytest.mark.pruned
 def test_convnext_single_residual_connection():
     config = make_convnext_config(
         use_partial_conv=False,
@@ -910,7 +881,6 @@ def test_convnext_single_residual_connection():
     )
 
 
-@pytest.mark.pruned
 def test_convnext_block_requires_projection_when_channels_differ():
     block = ConvNeXtBlock(
         in_channels=3,
@@ -922,7 +892,6 @@ def test_convnext_block_requires_projection_when_channels_differ():
     assert block.projection_conv is not None
 
 
-@pytest.mark.pruned
 def test_convnext_block_skips_projection_when_channels_match():
     block = ConvNeXtBlock(
         in_channels=4,
@@ -938,7 +907,6 @@ def test_convnext_block_skips_projection_when_channels_match():
     )
 
 
-@pytest.mark.pruned
 def test_convnext_block_partial_projection():
     block = ConvNeXtBlock(
         in_channels=3,
@@ -954,7 +922,6 @@ def test_convnext_block_partial_projection():
     )
 
 
-@pytest.mark.pruned
 def test_convnext_block_standard_projection():
     block = ConvNeXtBlock(
         in_channels=3,
@@ -991,7 +958,6 @@ def test_convnext_block_partial_projection_forward():
     assert result.mask.shape == result.tensor.shape
 
 
-@pytest.mark.pruned
 def test_convnext_block_standard_projection_forward():
     mask = make_mask(channels=1)
     block = ConvNeXtBlock(
@@ -1013,7 +979,6 @@ def test_convnext_block_standard_projection_forward():
     assert result.mask is mask
 
 
-@pytest.mark.pruned
 def test_convnext_block_without_projection_forward():
     block = ConvNeXtBlock(
         in_channels=4,
@@ -1034,7 +999,6 @@ def test_convnext_block_without_projection_forward():
     assert result.mask is None
 
 
-@pytest.mark.pruned
 def test_convnext_block_reports_output_channels():
     block = ConvNeXtBlock(
         in_channels=3,
@@ -1087,7 +1051,6 @@ def test_mask_pool_rejects_invalid_fraction_threshold(
         )
 
 
-@pytest.mark.pruned
 def test_mask_pool_defaults():
     pooling = MaskPool2d()
 
@@ -1130,7 +1093,6 @@ def test_mask_pool_any_marks_output_valid_when_any_input_is_valid():
     )
 
 
-@pytest.mark.pruned
 def test_mask_pool_any_all_zeros():
     pooling = MaskPool2d(method="any")
     mask = torch.zeros(2, 3, 8, 8)
@@ -1143,7 +1105,6 @@ def test_mask_pool_any_all_zeros():
     )
 
 
-@pytest.mark.pruned
 def test_mask_pool_any_all_ones():
     pooling = MaskPool2d(method="any")
     mask = torch.ones(2, 3, 8, 8)
@@ -1191,7 +1152,6 @@ def test_mask_pool_all_requires_every_input_to_be_valid():
     )
 
 
-@pytest.mark.pruned
 def test_mask_pool_all_all_ones():
     pooling = MaskPool2d(method="all")
     mask = torch.ones(2, 3, 8, 8)
@@ -1204,7 +1164,6 @@ def test_mask_pool_all_all_ones():
     )
 
 
-@pytest.mark.pruned
 def test_mask_pool_all_single_invalid_value():
     pooling = MaskPool2d(method="all")
     mask = torch.ones(1, 1, 2, 2)
@@ -1256,7 +1215,6 @@ def test_mask_pool_fraction_threshold_cases(
     assert result.item() == pytest.approx(expected)
 
 
-@pytest.mark.pruned
 def test_mask_pool_fraction_preserves_dtype():
     pooling = MaskPool2d(
         method="fraction",
@@ -1276,7 +1234,6 @@ def test_mask_pool_fraction_preserves_dtype():
     assert result.dtype == torch.float64
 
 
-@pytest.mark.pruned
 def test_mask_pool_fraction_preserves_channels():
     pooling = MaskPool2d(
         method="fraction",
@@ -1299,7 +1256,6 @@ def test_mask_pool_rejects_unsupported_method():
         pooling(torch.ones(1, 1, 4, 4))
 
 
-@pytest.mark.pruned
 def test_conv_block_config_setup_generator_enables_noise():
     config = make_conv_config()
 
@@ -1311,14 +1267,12 @@ def test_conv_block_config_setup_generator_enables_noise():
     assert config.inject_noise is True
 
 
-@pytest.mark.pruned
 def test_conv_block_config_setup_generator_defaults_to_disabled():
     config = make_conv_config().setup_generator()
 
     assert config.inject_noise is False
 
 
-@pytest.mark.pruned
 def test_partial_conv_config_setup_generator_enables_noise():
     config = make_partial_config()
 
@@ -1330,7 +1284,6 @@ def test_partial_conv_config_setup_generator_enables_noise():
     assert config.inject_noise is True
 
 
-@pytest.mark.pruned
 def test_convnext_config_setup_generator_enables_noise():
     config = make_convnext_config()
 
@@ -1342,7 +1295,6 @@ def test_convnext_config_setup_generator_enables_noise():
     assert config.inject_noise is True
 
 
-@pytest.mark.pruned
 def test_conv_single_noise_adds_input_channel():
     config = make_conv_config().setup_generator(
         inject_noise=True,
@@ -1358,7 +1310,6 @@ def test_conv_single_noise_adds_input_channel():
     assert layer.conv.in_channels == 4
 
 
-@pytest.mark.pruned
 def test_conv_single_noise_injection_called(
     monkeypatch,
 ):
@@ -1411,7 +1362,6 @@ def test_conv_single_noise_injection_called(
     )
 
 
-@pytest.mark.pruned
 def test_conv_single_forward_applies_layers_in_order():
     layer = ConvSingle(
         in_channels=3,
@@ -1478,7 +1428,6 @@ def test_conv_single_forward_applies_layers_in_order():
     )
 
 
-@pytest.mark.pruned
 def test_partial_conv_single_noise_adds_input_channel():
     config = make_partial_config().setup_generator(
         inject_noise=True,
@@ -1494,7 +1443,6 @@ def test_partial_conv_single_noise_adds_input_channel():
     assert layer.conv.in_channels == 4
 
 
-@pytest.mark.pruned
 def test_partial_conv_single_noise_expands_mask(
     monkeypatch,
 ):
@@ -1623,7 +1571,6 @@ def test_partial_conv_single_noise_does_not_expand_single_channel_mask(
     expand_mock.assert_not_called()
 
 
-@pytest.mark.pruned
 def test_convnext_single_noise_expands_pointwise_channels():
     config = make_convnext_config(
         expansion_ratio=3,
@@ -1701,7 +1648,6 @@ def test_convnext_single_noise_injected_twice(
     assert result_mask is None
 
 
-@pytest.mark.pruned
 def test_convnext_single_layer_scale_is_applied():
     config = make_convnext_config(
         use_partial_conv=False,
@@ -1744,7 +1690,6 @@ def test_convnext_single_layer_scale_is_applied():
     )
 
 
-@pytest.mark.pruned
 def test_convnext_block_passes_output_through_every_block():
     config = make_convnext_config(
         use_partial_conv=False,
@@ -1818,7 +1763,6 @@ def test_convnext_block_passes_output_through_every_block():
     assert result.mask is mask
 
 
-@pytest.mark.pruned
 def test_latent_layer_with_normalization_builds_sequence():
     layer = LatentLayer(
         input_shape=(
@@ -1840,7 +1784,6 @@ def test_latent_layer_with_normalization_builds_sequence():
     )
 
 
-@pytest.mark.pruned
 def test_latent_block_uses_conv_block_group_norm_groups():
     config = make_conv_config(
         group_norm_groups=2,
@@ -1871,7 +1814,6 @@ def test_latent_block_uses_conv_block_group_norm_groups():
     assert normalization.num_groups == 2
 
 
-@pytest.mark.pruned
 def test_latent_block_defaults_group_norm_groups_when_missing():
     class Config:
         pass
@@ -1907,7 +1849,6 @@ def test_latent_block_defaults_group_norm_groups_when_missing():
     assert normalization.num_groups == 8
 
 
-@pytest.mark.pruned
 def test_latent_block_delegates_tensor_to_latent_head():
     class FakeConvBlock(nn.Module):
         def __init__(self):
@@ -2012,7 +1953,6 @@ def test_mask_pool_output_shape_for_odd_dimensions(
     )
 
 
-@pytest.mark.pruned
 def test_mask_pool_fraction_boundary_is_inclusive():
     pooling = MaskPool2d(
         method="fraction",
@@ -2035,7 +1975,6 @@ def test_mask_pool_fraction_boundary_is_inclusive():
     assert result.item() == pytest.approx(1.0)
 
 
-@pytest.mark.pruned
 def test_mask_pool_fraction_uses_actual_border_count():
     pooling = MaskPool2d(
         method="fraction",

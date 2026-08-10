@@ -188,7 +188,6 @@ def test_resolve_data_empty_directory(tmp_path):
         _resolve_data(cfg)
 
 
-@pytest.mark.pruned
 def test_resolve_data_valid(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -271,7 +270,6 @@ def test_resolve_data_invalid_dims(tmp_path):
             _resolve_data(cfg)
 
 
-@pytest.mark.pruned
 def test_resolve_data_missing_variable(tmp_path):
     ds = xr.Dataset(
         {
@@ -305,7 +303,6 @@ def test_resolve_data_missing_variable(tmp_path):
             _resolve_data(cfg)
 
 
-@pytest.mark.pruned
 def test_resolve_data_missing_coords(tmp_path):
     ds = xr.Dataset(
         {
@@ -376,7 +373,6 @@ def test_resolve_data_ensemble_present(tmp_path):
     assert cfg.list_paths == ["x.nc"]
 
 
-@pytest.mark.pruned
 def test_get_ds_info_basic(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -389,7 +385,6 @@ def test_get_ds_info_basic(tmp_path):
     assert info.start_year == 2000
 
 
-@pytest.mark.pruned
 def test_get_ds_info_final_year(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -402,7 +397,6 @@ def test_get_ds_info_final_year(tmp_path):
     assert info.final_year == 2001
 
 
-@pytest.mark.pruned
 def test_get_ds_info_sizes(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -415,7 +409,6 @@ def test_get_ds_info_sizes(tmp_path):
     assert info.sizes["year"] == 2
 
 
-@pytest.mark.pruned
 def test_get_ds_info_coords(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -471,7 +464,6 @@ def test_get_ds_info_with_ensemble_selection(tmp_path):
     assert info.coords["ensembles"] is not None
 
 
-@pytest.mark.pruned
 def test_get_ds_info_sizes_none(tmp_path):
     ds = xr.Dataset(
         {
@@ -500,7 +492,6 @@ def test_get_ds_info_sizes_none(tmp_path):
     assert info.sizes is None
 
 
-@pytest.mark.pruned
 def test_load_preprocessor_pipeline(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -539,7 +530,6 @@ def test_resolve_data_skip_checks_branch(tmp_path):
     assert cfg.list_paths == ["file1.nc"]
 
 
-@pytest.mark.pruned
 def test_resolve_data_no_supported_nn_dimensions(
     tmp_path,
 ):
@@ -577,7 +567,6 @@ def test_resolve_data_no_supported_nn_dimensions(
             _resolve_data(cfg)
 
 
-@pytest.mark.pruned
 def test_resolve_data_multiple_files(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -622,7 +611,6 @@ def test_get_ds_info_uses_existing_list_paths(
     mock_glob.assert_not_called()
 
 
-@pytest.mark.pruned
 def test_get_ds_info_without_ensemble_selection(
     tmp_path,
 ):
@@ -637,7 +625,6 @@ def test_get_ds_info_without_ensemble_selection(
     assert "year" in info.coords
 
 
-@pytest.mark.pruned
 def test_get_ds_info_coord_contents(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -672,7 +659,6 @@ def test_load_preprocessor_pipeline_default_path(
     assert captured["path"].parent == (tmp_path / "preprocessing_pipeline")
 
 
-@pytest.mark.pruned
 def test_load_preprocessor_pipeline_custom_path(
     tmp_path,
 ):
@@ -691,7 +677,6 @@ def test_load_preprocessor_pipeline_custom_path(
     assert captured["path"] == (tmp_path / "dummy_preprocessing_pipeline.joblib")
 
 
-@pytest.mark.pruned
 def test_load_preprocessor_pipeline_fitted_success(
     tmp_path,
 ):

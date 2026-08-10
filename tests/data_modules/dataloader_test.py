@@ -251,7 +251,6 @@ def test_post_init_worker_persistence_branch(
     assert args["pin_memory"] is False
 
 
-@pytest.mark.pruned
 def test_single_process_has_no_sampler(
     monkeypatch,
 ):
@@ -272,7 +271,6 @@ def test_single_process_has_no_sampler(
     assert CapturingSampler.instances == []
 
 
-@pytest.mark.pruned
 def test_distributed_sampler_receives_all_arguments(
     monkeypatch,
 ):
@@ -308,7 +306,6 @@ def test_distributed_sampler_receives_all_arguments(
     }
 
 
-@pytest.mark.pruned
 def test_sampler_helper_forwards_extra_kwargs(
     monkeypatch,
 ):
@@ -371,7 +368,6 @@ def test_set_epoch_distributed_delegates(
     assert loader.sampler.epochs == [7]
 
 
-@pytest.mark.pruned
 def test_shape_and_feature_properties_delegate_to_dataset(
     monkeypatch,
 ):
@@ -397,7 +393,6 @@ def test_shape_and_feature_properties_delegate_to_dataset(
     dataset.get_added_features_dim.assert_called_once_with()
 
 
-@pytest.mark.pruned
 def test_iter_and_len_delegate_to_torch_loader(
     monkeypatch,
 ):
@@ -458,14 +453,12 @@ def test_subset_loader_start_branches(
     assert list(loader.subset_loader(start)) == expected
 
 
-@pytest.mark.pruned
 def test_config_available_times_property():
     config = ConcreteConfig()
 
     assert config.available_times == [2000, 2001]
 
 
-@pytest.mark.pruned
 def test_config_setup_distributed_returns_self():
     config = ConcreteConfig()
 
@@ -475,14 +468,12 @@ def test_config_setup_distributed_returns_self():
     assert config.setup is True
 
 
-@pytest.mark.pruned
 def test_config_init_sets_setup_false():
     config = ConcreteConfig()
 
     assert config._setup is False
 
 
-@pytest.mark.pruned
 def test_config_init_always_sets_pin_memory_false():
     config = ConcreteConfig(
         pin_memory=True,
@@ -491,7 +482,6 @@ def test_config_init_always_sets_pin_memory_false():
     assert config.pin_memory is False
 
 
-@pytest.mark.pruned
 def test_config_zero_workers_clears_prefetch_factor():
     config = ConcreteConfig(
         num_data_workers=0,
@@ -501,7 +491,6 @@ def test_config_zero_workers_clears_prefetch_factor():
     assert config.prefetch_factor is None
 
 
-@pytest.mark.pruned
 def test_config_nonzero_workers_preserves_prefetch_factor():
     config = ConcreteConfig(
         num_data_workers=2,
@@ -542,7 +531,6 @@ def test_post_init_worker_timeout_branches(
     assert kwargs["timeout"] == expected_timeout
 
 
-@pytest.mark.pruned
 def test_post_init_forwards_basic_loader_arguments(
     monkeypatch,
 ):
@@ -575,7 +563,6 @@ def test_post_init_forwards_basic_loader_arguments(
     assert captured.kwargs["timeout"] == 0
 
 
-@pytest.mark.pruned
 def test_post_init_forwards_config_pin_memory_value(
     monkeypatch,
 ):
@@ -595,7 +582,6 @@ def test_post_init_forwards_config_pin_memory_value(
     assert kwargs["pin_memory"] is True
 
 
-@pytest.mark.pruned
 def test_post_init_default_spatial_mask_flags(
     monkeypatch,
 ):
@@ -622,7 +608,6 @@ def test_post_init_default_spatial_mask_flags(
     }
 
 
-@pytest.mark.pruned
 def test_collate_partial_preserves_original_function(
     monkeypatch,
 ):
@@ -639,7 +624,6 @@ def test_collate_partial_preserves_original_function(
     assert wrapped_collate.func is collate
 
 
-@pytest.mark.pruned
 def test_distributed_sampler_uses_dataset_instance(
     monkeypatch,
 ):
@@ -664,7 +648,6 @@ def test_distributed_sampler_uses_dataset_instance(
     assert loader.sampler.dataset is dataset
 
 
-@pytest.mark.pruned
 def test_sampler_helper_single_process_ignores_extra_kwargs(
     monkeypatch,
 ):
@@ -689,7 +672,6 @@ def test_sampler_helper_single_process_ignores_extra_kwargs(
     assert CapturingSampler.instances == []
 
 
-@pytest.mark.pruned
 def test_set_epoch_accepts_zero_epoch(
     monkeypatch,
 ):
@@ -712,7 +694,6 @@ def test_set_epoch_accepts_zero_epoch(
     assert loader.sampler.epochs == [0]
 
 
-@pytest.mark.pruned
 def test_set_epoch_accepts_negative_epoch(
     monkeypatch,
 ):
@@ -734,7 +715,6 @@ def test_set_epoch_accepts_negative_epoch(
     assert loader.sampler.epochs == [-1]
 
 
-@pytest.mark.pruned
 def test_subset_loader_default_starts_at_first_batch(
     monkeypatch,
 ):
@@ -753,7 +733,6 @@ def test_subset_loader_default_starts_at_first_batch(
     ]
 
 
-@pytest.mark.pruned
 def test_iter_returns_underlying_loader_iterator(
     monkeypatch,
 ):
@@ -775,7 +754,6 @@ def test_iter_returns_underlying_loader_iterator(
         next(iterator)
 
 
-@pytest.mark.pruned
 def test_len_returns_zero_for_empty_capturing_loader(
     monkeypatch,
 ):
@@ -796,7 +774,6 @@ def test_len_returns_zero_for_empty_capturing_loader(
     assert list(loader) == []
 
 
-@pytest.mark.pruned
 def test_shape_properties_return_none_when_dataset_returns_none(
     monkeypatch,
 ):
