@@ -257,8 +257,8 @@ class WeightedMSE(lossABC):
             y_hat = self._downsample(y_hat)
 
         m = torch.ones_like(y)
-        m[(y < self.min_threshold) & (y_hat >= 0)] *= self.hyperparam
-        m[(y > self.max_threshold) & (y_hat <= 0)] *= self.hyperparam
+        m[(y < self.min_threshold) & (y_hat >= self.min_threshold)] *= self.hyperparam
+        m[(y > self.max_threshold) & (y_hat <= self.max_threshold)] *= self.hyperparam
 
         SE = (y_hat - y) ** 2 * m
 
@@ -710,7 +710,8 @@ class Frobenius_norm(lossABC):
         self,
         data: torch.Tensor,
         target: torch.Tensor,
-        print_loss=False,
+        target_mask: torch.Tensor | None = None,
+        print_loss: bool = False,
     ) -> torch.Tensor:
         """
         Compute Frobenius norm of covariance difference.
@@ -840,6 +841,11 @@ class Frobenius_norm(lossABC):
 
         elif self.reduction.lower() == "sum":
             loss = loss.sum()
+
+        else:
+            raise NotImplementedError(
+                "Other reduction methods than 'sum' and 'mean' are not defined."
+            )
 
         return loss
 

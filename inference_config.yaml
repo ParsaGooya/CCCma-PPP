@@ -1,15 +1,15 @@
-experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_4
+experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_SI
 
-writer:
+# writer:
 #     predictor:
 #             num_latent_samples: 10
 
-    num_output_sampling: 10
+    # num_output_sampling: 10
 
 inference_loader:
 
     batch_size: 12
-    inference_years_slice : [2015, 2020]
+    inference_years_slice : [2020, 2024]
     num_data_workers: 0
     load: True
 
