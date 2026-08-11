@@ -67,30 +67,37 @@ class LosspipelineConfig:
 
         self.loss_types: set[str] = set()
 
+        reserved_args = {
+            "reduction",
+            "weights",
+            "num_output_dimensions",
+            "generative_context",
+        }
+
         for loss in self.loss_pipeline:
-            if len(loss.args) > 0:
-                if {
-                    "reduction",
-                    "weights",
-                    "num_output_dimensions",
-                    "generative_context",
-                }.intersection(list(loss.args.keys())):
+            if reserved_args & loss.args.keys():
+                invalid_args = reserved_args & loss.args.keys()
+                if invalid_args:
                     raise ValueError(
-                        "Do not specify reduction, weights, num_output_dimensions or generative_context for individual loss terms manually. "
-                        "Set them for the LosspipelineConfig."
+                        f"Do not specify {sorted(invalid_args)} for individual loss terms. "
+                        "These are controlled by LosspipelineConfig."
                     )
 
             self.loss_types.add(loss.name)
 
-        if isinstance(self.loss_weights, list):
-            if not len(self.loss_weights) == len(self.loss_pipeline):
-                raise ValueError("Provide a weight for each loss term.")
-            if not sum(self.loss_weights) == 1:
-                raise ValueError("Sum of loss term weights should be 1.")
-        else:
+        if self.loss_weights is None:
             self.loss_weights = [
-                1 / len(self.loss_pipeline) for _ in self.loss_pipeline
+                1.0 / len(self.loss_pipeline)
+                for _ in self.loss_pipeline
             ]
+        else:
+            if len(self.loss_weights) != len(self.loss_pipeline):
+                raise ValueError("Provide a weight for each loss term.")
+
+            if not math.isclose(
+                sum(self.loss_weights), 1.0, rel_tol=1e-6, abs_tol=1e-8
+            ):
+                raise ValueError("Sum of loss term weights should be 1.")
 
     def build(
         self,
@@ -256,7 +263,7 @@ class Losspipeline(nn.Module):
             If input dimensionality does not match expectations.
         """
 
-        total_loss = None
+        total_loss = 0.0
         indiv_loses = {}
 
         if step_arguments is None:
@@ -281,11 +288,8 @@ class Losspipeline(nn.Module):
                 step_arguments["print_loss"] = True
 
             loss = criterion(data, target, target_mask, **step_arguments)
-            indiv_loses[name] = loss.item()
+            indiv_loses[name] = loss.detach()
 
-            if total_loss is None:
-                total_loss = loss * self.config.loss_weights[ind]
-            else:
-                total_loss += loss * self.config.loss_weights[ind]
+            total_loss = total_loss + loss * self.config.loss_weights[ind]
 
         return total_loss, indiv_loses
