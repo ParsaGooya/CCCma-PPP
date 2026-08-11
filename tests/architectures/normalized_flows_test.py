@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 from cccma_ppp.core.selectors import FlowSelector
-from cccma_ppp.models.normalized_flows import (
+from cccma_ppp.architectures.normalized_flows import (
     FCNN,
     MAF,
     RealNVP,
@@ -75,7 +75,6 @@ class DummySelector:
         return self.model
 
 
-@pytest.mark.pruned
 def test_normalized_flow_config_build():
     cfg = NormalizedFlowConfig(
         list_flows=[DummySelector(IdentityFlow())],
@@ -90,7 +89,6 @@ def test_normalized_flow_config_build():
     assert len(model.flows) == 1
 
 
-@pytest.mark.pruned
 def test_normalized_flow_config_build_with_condition_size():
     cfg = NormalizedFlowConfig(
         list_flows=[DummySelector(IdentityFlow())],
@@ -103,7 +101,6 @@ def test_normalized_flow_config_build_with_condition_size():
     assert model.flows[0].built_with["condition_size"] == 3
 
 
-@pytest.mark.pruned
 def test_normalized_flow_forward_single_flow():
     cfg = NormalizedFlowConfig(
         list_flows=[DummySelector(IdentityFlow())],
@@ -121,7 +118,6 @@ def test_normalized_flow_forward_single_flow():
     assert torch.allclose(out.log_det, torch.ones(data.shape[0]))
 
 
-@pytest.mark.pruned
 def test_normalized_flow_inverse_single_flow():
     cfg = NormalizedFlowConfig(
         list_flows=[DummySelector(IdentityFlow())],
@@ -139,7 +135,6 @@ def test_normalized_flow_inverse_single_flow():
     assert torch.allclose(out.log_det, -torch.ones(data.shape[0]))
 
 
-@pytest.mark.pruned
 def test_normalized_flow_forward_multiple_flows_logdet_accumulates():
     cfg = NormalizedFlowConfig(
         list_flows=[
@@ -161,7 +156,6 @@ def test_normalized_flow_forward_multiple_flows_logdet_accumulates():
     )
 
 
-@pytest.mark.pruned
 def test_normalized_flow_inverse_multiple_flows_reverse_order():
     f1 = IdentityFlow()
     f2 = ScaleFlow(scale=2.0)
@@ -186,7 +180,6 @@ def test_normalized_flow_inverse_multiple_flows_reverse_order():
     )
 
 
-@pytest.mark.pruned
 def test_normalized_flow_forward_with_condition():
     cfg = NormalizedFlowConfig(
         list_flows=[DummySelector(IdentityFlow())],
@@ -203,7 +196,6 @@ def test_normalized_flow_forward_with_condition():
     assert out.log_det.shape == (data.shape[0],)
 
 
-@pytest.mark.pruned
 def test_normalized_flow_inverse_with_condition():
     cfg = NormalizedFlowConfig(
         list_flows=[DummySelector(IdentityFlow())],
@@ -220,7 +212,6 @@ def test_normalized_flow_inverse_with_condition():
     assert out.log_det.shape == (data.shape[0],)
 
 
-@pytest.mark.pruned
 def test_normalized_flow_empty_flow_list_forward():
     cfg = NormalizedFlowConfig(list_flows=[], flow_sample_size=10)
     model = cfg.build(latent_size=4)
@@ -232,7 +223,6 @@ def test_normalized_flow_empty_flow_list_forward():
     assert torch.allclose(out.log_det, torch.zeros(data.shape[0]))
 
 
-@pytest.mark.pruned
 def test_normalized_flow_empty_flow_list_inverse():
     cfg = NormalizedFlowConfig(list_flows=[], flow_sample_size=10)
     model = cfg.build(latent_size=4)
@@ -244,7 +234,6 @@ def test_normalized_flow_empty_flow_list_inverse():
     assert torch.allclose(out.log_det, torch.zeros(data.shape[0]))
 
 
-@pytest.mark.pruned
 def test_flow_selector_maf_registered():
     selector = FlowSelector(type="maf", args={"hidden_dim": 8})
 
@@ -254,7 +243,6 @@ def test_flow_selector_maf_registered():
     assert flow.hidden_dim == 8
 
 
-@pytest.mark.pruned
 def test_flow_selector_realnvp_registered():
     selector = FlowSelector(type="realnvp", args={"hidden_dim": 8})
 
@@ -264,7 +252,6 @@ def test_flow_selector_realnvp_registered():
     assert flow.hidden_dim == 8
 
 
-@pytest.mark.pruned
 def test_normalized_flow_config_with_real_selectors():
     cfg = NormalizedFlowConfig(
         list_flows=[
@@ -282,7 +269,6 @@ def test_normalized_flow_config_with_real_selectors():
     assert isinstance(model.flows[1], RealNVP)
 
 
-@pytest.mark.pruned
 def test_maf_build_without_condition():
     maf = MAF(hidden_dim=8).build(dim=4)
 
@@ -292,7 +278,6 @@ def test_maf_build_without_condition():
     assert isinstance(maf.initial_param, torch.nn.Parameter)
 
 
-@pytest.mark.pruned
 def test_maf_build_with_condition():
     maf = MAF(hidden_dim=8).build(dim=4, condition_size=3)
 
@@ -302,7 +287,6 @@ def test_maf_build_with_condition():
     assert isinstance(maf.initial_param, FCNN)
 
 
-@pytest.mark.pruned
 def test_maf_reset_parameters_changes_parameter():
     maf = MAF(hidden_dim=8).build(dim=4)
 
@@ -313,7 +297,6 @@ def test_maf_reset_parameters_changes_parameter():
     assert before.shape == after.shape
 
 
-@pytest.mark.pruned
 def test_maf_forward_without_condition():
     maf = MAF(hidden_dim=8).build(dim=4)
     data = x(batch=5, dim=4)
@@ -324,7 +307,6 @@ def test_maf_forward_without_condition():
     assert log_det.shape == (5,)
 
 
-@pytest.mark.pruned
 def test_maf_forward_with_condition():
     maf = MAF(hidden_dim=8).build(dim=4, condition_size=3)
     data = x(batch=5, dim=4)
@@ -336,7 +318,6 @@ def test_maf_forward_with_condition():
     assert log_det.shape == (5,)
 
 
-@pytest.mark.pruned
 def test_maf_inverse_with_condition():
     maf = MAF(hidden_dim=8).build(dim=4, condition_size=3)
     data = x(batch=5, dim=4)
@@ -348,7 +329,6 @@ def test_maf_inverse_with_condition():
     assert log_det.shape == (5,)
 
 
-@pytest.mark.pruned
 def test_realnvp_forward_without_condition():
     flow = RealNVP(hidden_dim=8).build(dim=4)
     data = x(batch=5, dim=4)
@@ -359,7 +339,6 @@ def test_realnvp_forward_without_condition():
     assert log_det.shape == (5,)
 
 
-@pytest.mark.pruned
 def test_realnvp_inverse_without_condition():
     flow = RealNVP(hidden_dim=8).build(dim=4)
     data = x(batch=5, dim=4)
@@ -370,7 +349,6 @@ def test_realnvp_inverse_without_condition():
     assert log_det.shape == (5,)
 
 
-@pytest.mark.pruned
 def test_realnvp_forward_with_condition():
     flow = RealNVP(hidden_dim=8).build(dim=4, condition_size=3)
     data = x(batch=5, dim=4)
@@ -382,7 +360,6 @@ def test_realnvp_forward_with_condition():
     assert log_det.shape == (5,)
 
 
-@pytest.mark.pruned
 def test_realnvp_inverse_with_condition():
     flow = RealNVP(hidden_dim=8).build(dim=4, condition_size=3)
     data = x(batch=5, dim=4)
@@ -394,7 +371,6 @@ def test_realnvp_inverse_with_condition():
     assert log_det.shape == (5,)
 
 
-@pytest.mark.pruned
 def test_realnvp_forward_inverse_roundtrip_shape():
     flow = RealNVP(hidden_dim=8).build(dim=4)
     data = x(batch=5, dim=4)
@@ -405,7 +381,6 @@ def test_realnvp_forward_inverse_roundtrip_shape():
     assert inv.shape == data.shape
 
 
-@pytest.mark.pruned
 def test_realnvp_odd_dimension_shape_behavior():
     flow = RealNVP(hidden_dim=8).build(dim=5)
     data = x(batch=4, dim=5)
@@ -494,7 +469,6 @@ class ZeroNetwork(nn.Module):
         )
 
 
-@pytest.mark.pruned
 def test_normalized_flow_config_build_returns_model():
     config = NormalizedFlowConfig(
         list_flows=[],
@@ -514,7 +488,6 @@ def test_normalized_flow_config_build_returns_model():
     assert model.condition_size == 3
 
 
-@pytest.mark.pruned
 def test_normalized_flow_selector_called_once():
     selector = TrackingSelector(IdentityFlow())
 
@@ -530,7 +503,6 @@ def test_normalized_flow_selector_called_once():
     assert len(model.flows) == 1
 
 
-@pytest.mark.pruned
 def test_normalized_flow_builds_each_flow():
     first = IdentityFlow()
     second = ScaleFlow()
@@ -557,7 +529,6 @@ def test_normalized_flow_builds_each_flow():
     }
 
 
-@pytest.mark.pruned
 def test_normalized_flow_uses_module_list():
     config = NormalizedFlowConfig(
         list_flows=[
@@ -576,7 +547,6 @@ def test_normalized_flow_uses_module_list():
     )
 
 
-@pytest.mark.pruned
 def test_normalized_flow_forward_order():
     events = []
 
@@ -613,7 +583,6 @@ def test_normalized_flow_forward_order():
     )
 
 
-@pytest.mark.pruned
 def test_normalized_flow_inverse_reverse_order():
     events = []
 
@@ -650,7 +619,6 @@ def test_normalized_flow_inverse_reverse_order():
     )
 
 
-@pytest.mark.pruned
 def test_normalized_flow_passes_condition_forward():
     events = []
 
@@ -678,7 +646,6 @@ def test_normalized_flow_passes_condition_forward():
     assert events[0][2] is condition
 
 
-@pytest.mark.pruned
 def test_normalized_flow_passes_condition_inverse():
     events = []
 
@@ -706,7 +673,6 @@ def test_normalized_flow_passes_condition_inverse():
     assert events[0][2] is condition
 
 
-@pytest.mark.pruned
 def test_normalized_flow_empty_forward_preserves_input_identity():
     model = NormalizedFlowConfig(
         list_flows=[],
@@ -722,7 +688,6 @@ def test_normalized_flow_empty_forward_preserves_input_identity():
     assert output.log_det.dtype == data.dtype
 
 
-@pytest.mark.pruned
 def test_normalized_flow_empty_inverse_preserves_input_identity():
     model = NormalizedFlowConfig(
         list_flows=[],
@@ -762,7 +727,6 @@ def test_normalized_flow_forward_inverse_identity_roundtrip():
     )
 
 
-@pytest.mark.pruned
 def test_maf_build_dimension_one_without_condition():
     maf = MAF(
         hidden_dim=8,
@@ -778,7 +742,6 @@ def test_maf_build_dimension_one_without_condition():
     )
 
 
-@pytest.mark.pruned
 def test_maf_build_dimension_one_with_condition():
     maf = MAF(
         hidden_dim=8,
@@ -796,7 +759,6 @@ def test_maf_build_dimension_one_with_condition():
     assert maf._conditional is True
 
 
-@pytest.mark.pruned
 def test_maf_build_without_condition_is_not_conditional():
     maf = MAF(
         hidden_dim=8,
@@ -807,7 +769,6 @@ def test_maf_build_without_condition_is_not_conditional():
     assert maf._conditional is False
 
 
-@pytest.mark.pruned
 def test_maf_build_with_condition_is_conditional():
     maf = MAF(
         hidden_dim=8,
@@ -819,7 +780,6 @@ def test_maf_build_with_condition_is_conditional():
     assert maf._conditional is True
 
 
-@pytest.mark.pruned
 def test_maf_build_creates_one_layer_per_remaining_dimension():
     maf = MAF(
         hidden_dim=8,
@@ -830,7 +790,6 @@ def test_maf_build_creates_one_layer_per_remaining_dimension():
     assert len(maf.layers) == 4
 
 
-@pytest.mark.pruned
 def test_maf_build_layer_input_dimensions_without_condition():
     maf = MAF(
         hidden_dim=8,
@@ -849,7 +808,6 @@ def test_maf_build_layer_input_dimensions_without_condition():
     assert actual_input_dimensions == expected_input_dimensions
 
 
-@pytest.mark.pruned
 def test_maf_build_layer_input_dimensions_with_condition():
     maf = MAF(
         hidden_dim=8,
@@ -869,7 +827,6 @@ def test_maf_build_layer_input_dimensions_with_condition():
     assert actual_input_dimensions == expected_input_dimensions
 
 
-@pytest.mark.pruned
 def test_maf_initial_parameter_bounds():
     maf = MAF(
         hidden_dim=8,
@@ -883,7 +840,6 @@ def test_maf_initial_parameter_bounds():
     assert torch.all(maf.initial_param >= -bound)
 
 
-@pytest.mark.pruned
 def test_maf_forward_conditional_requires_condition():
     maf = MAF(
         hidden_dim=8,
@@ -899,7 +855,6 @@ def test_maf_forward_conditional_requires_condition():
         maf.forward(x(batch=5, dim=4))
 
 
-@pytest.mark.pruned
 def test_maf_inverse_conditional_requires_condition():
     maf = MAF(
         hidden_dim=8,
@@ -915,7 +870,6 @@ def test_maf_inverse_conditional_requires_condition():
         maf.inverse(x(batch=5, dim=4))
 
 
-@pytest.mark.pruned
 def test_maf_dimension_one_forward_without_condition():
     maf = MAF(
         hidden_dim=8,
@@ -934,7 +888,6 @@ def test_maf_dimension_one_forward_without_condition():
     assert log_det.shape == (5,)
 
 
-@pytest.mark.pruned
 def test_maf_dimension_one_inverse_without_condition():
     maf = MAF(
         hidden_dim=8,
@@ -953,7 +906,6 @@ def test_maf_dimension_one_inverse_without_condition():
     assert log_det.shape == (5,)
 
 
-@pytest.mark.pruned
 def test_maf_dimension_one_forward_with_condition():
     maf = MAF(
         hidden_dim=8,
@@ -980,7 +932,6 @@ def test_maf_dimension_one_forward_with_condition():
     assert log_det.shape == (5,)
 
 
-@pytest.mark.pruned
 def test_maf_dimension_one_inverse_with_condition():
     maf = MAF(
         hidden_dim=8,
@@ -1007,7 +958,6 @@ def test_maf_dimension_one_inverse_with_condition():
     assert log_det.shape == (5,)
 
 
-@pytest.mark.pruned
 def test_maf_zero_network_roundtrip_without_condition():
     maf = MAF(
         hidden_dim=8,
@@ -1041,7 +991,6 @@ def test_maf_zero_network_roundtrip_without_condition():
     )
 
 
-@pytest.mark.pruned
 def test_maf_zero_network_roundtrip_with_condition():
     maf = MAF(
         hidden_dim=8,
@@ -1152,7 +1101,6 @@ def test_maf_conditional_forward_inverse_roundtrip():
     )
 
 
-@pytest.mark.pruned
 def test_maf_forward_supports_gradients():
     maf = MAF(
         hidden_dim=8,
@@ -1174,7 +1122,6 @@ def test_maf_forward_supports_gradients():
     assert data.grad is not None
 
 
-@pytest.mark.pruned
 def test_realnvp_build_without_condition_is_not_conditional():
     flow = RealNVP(
         hidden_dim=8,
@@ -1185,7 +1132,6 @@ def test_realnvp_build_without_condition_is_not_conditional():
     assert flow._conditional is False
 
 
-@pytest.mark.pruned
 def test_realnvp_build_with_condition_is_conditional():
     flow = RealNVP(
         hidden_dim=8,
@@ -1197,7 +1143,6 @@ def test_realnvp_build_with_condition_is_conditional():
     assert flow._conditional is True
 
 
-@pytest.mark.pruned
 def test_realnvp_network_dimensions_without_condition():
     flow = RealNVP(
         hidden_dim=8,
@@ -1215,7 +1160,6 @@ def test_realnvp_network_dimensions_without_condition():
     assert flow.s2.network[-1].out_features == 3
 
 
-@pytest.mark.pruned
 def test_realnvp_network_dimensions_with_condition():
     flow = RealNVP(
         hidden_dim=8,
@@ -1234,7 +1178,6 @@ def test_realnvp_network_dimensions_with_condition():
     assert flow.s2.network[-1].out_features == 3
 
 
-@pytest.mark.pruned
 def test_realnvp_forward_conditional_requires_condition():
     flow = RealNVP(
         hidden_dim=8,
@@ -1250,7 +1193,6 @@ def test_realnvp_forward_conditional_requires_condition():
         flow.forward(x(batch=5, dim=4))
 
 
-@pytest.mark.pruned
 def test_realnvp_inverse_conditional_requires_condition():
     flow = RealNVP(
         hidden_dim=8,
@@ -1266,7 +1208,6 @@ def test_realnvp_inverse_conditional_requires_condition():
         flow.inverse(x(batch=5, dim=4))
 
 
-@pytest.mark.pruned
 def test_realnvp_zero_network_roundtrip_without_condition():
     flow = RealNVP(
         hidden_dim=8,
@@ -1301,7 +1242,6 @@ def test_realnvp_zero_network_roundtrip_without_condition():
     )
 
 
-@pytest.mark.pruned
 def test_realnvp_zero_network_roundtrip_with_condition():
     flow = RealNVP(
         hidden_dim=8,
@@ -1416,7 +1356,6 @@ def test_realnvp_conditional_roundtrip():
     )
 
 
-@pytest.mark.pruned
 def test_realnvp_forward_supports_gradients():
     flow = RealNVP(
         hidden_dim=8,
@@ -1441,7 +1380,6 @@ def test_realnvp_forward_supports_gradients():
         assert parameter.grad is not None
 
 
-@pytest.mark.pruned
 def test_realnvp_even_dimension_six():
     flow = RealNVP(
         hidden_dim=8,
@@ -1460,7 +1398,6 @@ def test_realnvp_even_dimension_six():
     assert log_det.shape == (5,)
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "dimension",
     [
@@ -1488,7 +1425,6 @@ def test_realnvp_rejects_odd_dimensions_during_inverse(
         flow.inverse(data)
 
 
-@pytest.mark.pruned
 def test_realnvp_log_determinants_are_finite():
     flow = RealNVP(
         hidden_dim=8,

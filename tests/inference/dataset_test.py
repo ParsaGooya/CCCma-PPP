@@ -79,6 +79,7 @@ class DummyDataConfig:
             coords=coords,
             sizes=sizes,
         )
+        self.coords = self.info.coords
 
         self.list_paths = [f"{name}.nc"]
         self.paths = [f"{name}.nc"]
@@ -253,7 +254,6 @@ def test_effective_input_prefers_model():
     assert config.effective_input is model
 
 
-@pytest.mark.pruned
 def test_effective_input_returns_model_without_condition():
     model = DummyDataConfig("model")
 
@@ -276,7 +276,6 @@ def test_effective_input_falls_back_to_condition():
     assert config.effective_input is condition
 
 
-@pytest.mark.pruned
 def test_effective_input_returns_none_without_sources():
     config = make_config(
         model=None,
@@ -286,7 +285,6 @@ def test_effective_input_returns_none_without_sources():
     assert config.effective_input is None
 
 
-@pytest.mark.pruned
 def test_available_times_model_only():
     config = make_config(
         model=DummyDataConfig(
@@ -301,7 +299,6 @@ def test_available_times_model_only():
     )
 
 
-@pytest.mark.pruned
 def test_available_times_condition_only():
     config = make_config(
         condition=DummyDataConfig(
@@ -316,7 +313,6 @@ def test_available_times_condition_only():
     )
 
 
-@pytest.mark.pruned
 def test_available_times_intersects_model_and_condition():
     config = make_config(
         model=DummyDataConfig(
@@ -350,7 +346,6 @@ def test_available_times_empty_intersection():
     assert config.available_times.size == 0
 
 
-@pytest.mark.pruned
 def test_available_times_uses_info_coordinate_values():
     model = DummyDataConfig(
         "model",
@@ -377,7 +372,6 @@ def test_available_times_uses_info_coordinate_values():
     )
 
 
-@pytest.mark.pruned
 def test_available_times_preserves_single_source_order():
     model = DummyDataConfig(
         "model",
@@ -394,7 +388,6 @@ def test_available_times_preserves_single_source_order():
     )
 
 
-@pytest.mark.pruned
 def test_available_times_intersection_is_sorted():
     model = DummyDataConfig(
         "model",
@@ -426,7 +419,6 @@ def test_available_times_without_any_source_raises_index_error():
         _ = config.available_times
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "using_model_as_condition",
@@ -455,7 +447,6 @@ def test_load_model_truth_table(
     assert dataset._load_model is expected
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "using_model_as_condition",
@@ -484,7 +475,6 @@ def test_write_condition_to_input_truth_table(
     assert dataset._write_condition_to_input is expected
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "using_model_as_condition",
@@ -518,7 +508,6 @@ def test_concat_condition_to_input_truth_table(
     assert dataset._concat_condition_to_input is expected
 
 
-@pytest.mark.pruned
 def test_getitem_model_only():
     dataset = make_dataset(
         config=make_dataset_config(
@@ -564,7 +553,6 @@ def test_getitem_model_only():
     compute.assert_called_once()
 
 
-@pytest.mark.pruned
 def test_getitem_model_used_as_condition():
     model = DummyDataConfig("model")
 
@@ -648,7 +636,6 @@ def test_getitem_condition_only():
     )
 
 
-@pytest.mark.pruned
 def test_getitem_concatenates_model_and_condition():
     dataset = make_dataset(
         config=make_dataset_config(
@@ -694,7 +681,6 @@ def test_getitem_concatenates_model_and_condition():
     )
 
 
-@pytest.mark.pruned
 def test_getitem_condition_replacement_precedes_concat():
     dataset = make_dataset(
         config=make_dataset_config(
@@ -728,7 +714,6 @@ def test_getitem_condition_replacement_precedes_concat():
     )
 
 
-@pytest.mark.pruned
 def test_getitem_time_features_receive_final_model_input():
     features = FakeTimeFeatures(
         result=np.asarray(
@@ -784,7 +769,6 @@ def test_getitem_time_features_receive_final_model_input():
     )
 
 
-@pytest.mark.pruned
 def test_getitem_time_features_receive_condition_input():
     features = FakeTimeFeatures(result=np.asarray([2000.0]))
 
@@ -819,7 +803,6 @@ def test_getitem_time_features_receive_condition_input():
     )
 
 
-@pytest.mark.pruned
 def test_getitem_time_features_receive_concatenated_input():
     features = FakeTimeFeatures(result=np.asarray([1.0]))
 
@@ -861,7 +844,6 @@ def test_getitem_time_features_receive_concatenated_input():
     ]
 
 
-@pytest.mark.pruned
 def test_getitem_without_time_features_returns_none():
     dataset = make_dataset(
         time_features=FakeTimeFeatures(None),
@@ -883,7 +865,6 @@ def test_getitem_without_time_features_returns_none():
     assert result["added_features"] is None
 
 
-@pytest.mark.pruned
 def test_getitem_converts_tensors_to_float32():
     dataset = make_dataset(
         time_features=FakeTimeFeatures(
@@ -917,7 +898,6 @@ def test_getitem_converts_tensors_to_float32():
     assert result["added_features"].dtype == torch.float32
 
 
-@pytest.mark.pruned
 def test_getitem_without_metadata_returns_dictionary():
     dataset = make_dataset(
         return_metadata=False,
@@ -944,7 +924,6 @@ def test_getitem_without_metadata_returns_dictionary():
     }
 
 
-@pytest.mark.pruned
 def test_getitem_with_metadata_returns_tuple():
     dataset = make_dataset(
         return_metadata=True,
@@ -1025,7 +1004,6 @@ def test_getitem_uses_requested_sample_index():
     dataset._index_condition_dataset.assert_called_once_with(1)
 
 
-@pytest.mark.pruned
 def test_getitem_passes_input_data_to_dask_compute():
     dataset = make_dataset()
 
@@ -1059,7 +1037,6 @@ def test_getitem_passes_input_data_to_dask_compute():
     )
 
 
-@pytest.mark.pruned
 def test_from_train_observation_without_condition():
     model = DummyDataConfig("model")
 
@@ -1083,7 +1060,6 @@ def test_from_train_observation_without_condition():
     assert "condition" not in result
 
 
-@pytest.mark.pruned
 def test_from_train_model_used_as_condition():
     model = DummyDataConfig("model")
 
@@ -1131,7 +1107,6 @@ def test_from_train_model_condition_branch_precedes_condition_branch():
     assert result["model"].names == ["model"]
 
 
-@pytest.mark.pruned
 def test_from_train_observation_and_independent_condition():
     model = DummyDataConfig("model")
     condition = DummyDataConfig("condition")
@@ -1181,7 +1156,6 @@ def test_from_train_condition_without_observation():
     assert result["condition"].names == ["condition"]
 
 
-@pytest.mark.pruned
 def test_from_train_unresolvable_configuration_raises():
     train_config = make_train_config(
         observation=None,
@@ -1198,7 +1172,6 @@ def test_from_train_unresolvable_configuration_raises():
         _from_train(train_config)
 
 
-@pytest.mark.pruned
 def test_from_train_copies_condition_method():
     model = DummyDataConfig("model")
 
@@ -1218,7 +1191,6 @@ def test_from_train_copies_condition_method():
     assert result["condition_method"] == "ensemble_mean"
 
 
-@pytest.mark.pruned
 def test_from_train_copies_none_condition_method():
     model = DummyDataConfig("model")
 
@@ -1238,7 +1210,6 @@ def test_from_train_copies_none_condition_method():
     assert result["condition_method"] is None
 
 
-@pytest.mark.pruned
 def test_from_train_deepcopies_lead_times():
     model = DummyDataConfig("model")
     lead_times = np.asarray([1, 3, 6])
@@ -1264,7 +1235,6 @@ def test_from_train_deepcopies_lead_times():
     assert result["lead_times"] is not lead_times
 
 
-@pytest.mark.pruned
 def test_from_train_preserves_none_lead_times():
     model = DummyDataConfig("model")
 
@@ -1284,7 +1254,6 @@ def test_from_train_preserves_none_lead_times():
     assert result["lead_times"] is None
 
 
-@pytest.mark.pruned
 def test_from_train_deepcopies_model():
     model = DummyDataConfig("model")
 
@@ -1334,7 +1303,6 @@ def test_from_train_deepcopies_condition():
     )
 
 
-@pytest.mark.pruned
 def test_from_train_does_not_copy_time_features():
     model = DummyDataConfig("model")
 
@@ -1357,7 +1325,6 @@ def test_from_train_does_not_copy_time_features():
     assert "time_features" not in result
 
 
-@pytest.mark.pruned
 def test_from_train_does_not_mutate_training_config():
     model = DummyDataConfig("model")
     lead_times = np.asarray([1, 2])

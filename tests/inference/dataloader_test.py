@@ -151,7 +151,6 @@ def patched_dataloader(monkeypatch):
     )
 
 
-@pytest.mark.pruned
 def test_batchdata_replaces_nan():
     batch = BatchData(
         input=torch.tensor(
@@ -175,7 +174,6 @@ def test_batchdata_replaces_nan():
     )
 
 
-@pytest.mark.pruned
 def test_batchdata_replaces_all_nan():
     batch = BatchData(
         input=torch.full(
@@ -190,7 +188,6 @@ def test_batchdata_replaces_all_nan():
     )
 
 
-@pytest.mark.pruned
 def test_batchdata_without_mask():
     batch = BatchData(
         input=torch.ones(2, 2),
@@ -200,7 +197,6 @@ def test_batchdata_without_mask():
     assert batch.input_mask is None
 
 
-@pytest.mark.pruned
 def test_batchdata_creates_spatial_mask():
     batch = BatchData(
         input=torch.tensor([[1.0, float("nan")]]),
@@ -218,7 +214,6 @@ def test_batchdata_creates_spatial_mask():
     )
 
 
-@pytest.mark.pruned
 def test_batchdata_reduces_spatial_mask():
     batch = BatchData(
         input=torch.tensor(
@@ -311,7 +306,6 @@ def make_collate_item(
     return data, metadata
 
 
-@pytest.mark.pruned
 def test_collate_batch_plain_inputs():
     result = collate_batch(
         [
@@ -326,14 +320,12 @@ def test_collate_batch_plain_inputs():
     assert result.input_mask is None
 
 
-@pytest.mark.pruned
 def test_collate_batch_single_item():
     result = collate_batch([make_collate_item([1.0, 1.0])])
 
     assert result.input.shape == (1, 2)
 
 
-@pytest.mark.pruned
 def test_collate_batch_with_metadata():
     result = collate_batch(
         [
@@ -354,7 +346,6 @@ def test_collate_batch_with_metadata():
     ]
 
 
-@pytest.mark.pruned
 def test_collate_batch_with_features():
     result = collate_batch(
         [
@@ -420,7 +411,6 @@ def make_loader_config(
     return config
 
 
-@pytest.mark.pruned
 def test_init_without_dataset_config():
     config = make_loader_config()
 
@@ -429,7 +419,6 @@ def test_init_without_dataset_config():
     assert config.train_dataset_config is None
 
 
-@pytest.mark.pruned
 def test_init_workers_zero_removes_prefetch():
     config = make_loader_config(
         num_data_workers=0,
@@ -439,7 +428,6 @@ def test_init_workers_zero_removes_prefetch():
     assert config.prefetch_factor is None
 
 
-@pytest.mark.pruned
 def test_init_workers_positive_preserves_prefetch(
     dataset_config,
 ):
@@ -459,7 +447,6 @@ def test_available_times_requires_config():
         _ = config.available_times
 
 
-@pytest.mark.pruned
 def test_available_times(dataset_config):
     config = make_loader_config(
         dataset_config=dataset_config,
@@ -471,7 +458,6 @@ def test_available_times(dataset_config):
     )
 
 
-@pytest.mark.pruned
 def test_input_metadata_requires_config():
     config = make_loader_config()
 
@@ -479,7 +465,6 @@ def test_input_metadata_requires_config():
         _ = config.input_var_metadata
 
 
-@pytest.mark.pruned
 def test_input_metadata(dataset_config):
     config = make_loader_config(
         dataset_config=dataset_config,
@@ -500,7 +485,6 @@ def test_target_metadata_requires_train_config(
         _ = config.target_var_metadata
 
 
-@pytest.mark.pruned
 def test_target_metadata_success(dataset_config):
     config = make_loader_config(
         dataset_config=dataset_config,
@@ -512,7 +496,6 @@ def test_target_metadata_success(dataset_config):
     assert train_config.ds_operator.target_calls == 1
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("model_name", "condition_name", "existing", "expected"),
     [
@@ -557,7 +540,6 @@ def test_input_preprocessor_exists_matrix(
     assert config._input_preprocessor_exists(tmp_path) is expected
 
 
-@pytest.mark.pruned
 def test_input_preprocessor_exists_requires_config(
     tmp_path,
 ):
@@ -593,7 +575,6 @@ def test_input_preprocessor_exists_default_directory(
     assert config._input_preprocessor_exists() is True
 
 
-@pytest.mark.pruned
 def test_setup_distributed_requires_config():
     config = make_loader_config()
 
@@ -604,7 +585,6 @@ def test_setup_distributed_requires_config():
         )
 
 
-@pytest.mark.pruned
 def test_setup_existing_preprocessors_skips_fit(
     dataset_config,
     monkeypatch,
@@ -651,7 +631,6 @@ def reset_shared_input_mask():
     BatchData._shared_input_mask = None
 
 
-@pytest.mark.pruned
 def test_check_config_rejects_missing_dataset_first():
     config = make_loader_config(
         dataset_config=None,
@@ -665,7 +644,6 @@ def test_check_config_rejects_missing_dataset_first():
         config._check_config()
 
 
-@pytest.mark.pruned
 def test_check_config_rejects_missing_time_features(
     dataset_config,
 ):
@@ -681,7 +659,6 @@ def test_check_config_rejects_missing_time_features(
         config._check_config()
 
 
-@pytest.mark.pruned
 def test_check_config_accepts_empty_time_features(
     dataset_config,
 ):
@@ -693,7 +670,6 @@ def test_check_config_accepts_empty_time_features(
     assert config._check_config() is None
 
 
-@pytest.mark.pruned
 def test_check_config_accepts_nonempty_time_features(
     dataset_config,
 ):
@@ -705,7 +681,6 @@ def test_check_config_accepts_nonempty_time_features(
     assert config._check_config() is None
 
 
-@pytest.mark.pruned
 def test_post_init_without_dataset_does_not_read_years():
     config = InferenceDataloaderConfig(
         dataset_config=None,
@@ -728,7 +703,6 @@ def test_post_init_with_dataset_requires_time_features(
         )
 
 
-@pytest.mark.pruned
 def test_post_init_with_dataset_and_preseeded_features(
     monkeypatch,
     dataset_config,
@@ -779,7 +753,6 @@ def test_batchdata_reduced_mask_initializes_shared_mask():
     )
 
 
-@pytest.mark.pruned
 def test_batchdata_reduced_mask_reuses_shared_mask():
     shared = torch.tensor([False, True])
     BatchData._shared_input_mask = shared
@@ -798,7 +771,6 @@ def test_batchdata_reduced_mask_reuses_shared_mask():
     assert batch.input_mask is shared
 
 
-@pytest.mark.pruned
 def test_batchdata_unreduced_mask_does_not_set_shared_mask():
     BatchData._shared_input_mask = None
 
@@ -812,7 +784,6 @@ def test_batchdata_unreduced_mask_does_not_set_shared_mask():
     assert BatchData._shared_input_mask is None
 
 
-@pytest.mark.pruned
 def test_batchdata_no_mask_does_not_set_shared_mask():
     BatchData._shared_input_mask = None
 
@@ -825,7 +796,6 @@ def test_batchdata_no_mask_does_not_set_shared_mask():
     assert BatchData._shared_input_mask is None
 
 
-@pytest.mark.pruned
 def test_batchdata_to_device_moves_only_input():
     batch = BatchData(
         input=torch.ones(2),
@@ -841,7 +811,6 @@ def test_batchdata_to_device_moves_only_input():
     assert batch.added_features is None
 
 
-@pytest.mark.pruned
 def test_batchdata_to_device_moves_all_optional_tensors():
     batch = BatchData(
         input=torch.ones(2),
@@ -858,7 +827,6 @@ def test_batchdata_to_device_moves_all_optional_tensors():
     assert batch.added_features.device.type == "cpu"
 
 
-@pytest.mark.pruned
 def test_collate_plain_batch_no_metadata_or_features():
     result = collate_batch(
         [
@@ -886,7 +854,6 @@ def test_collate_plain_batch_no_metadata_or_features():
     assert result.added_features is None
 
 
-@pytest.mark.pruned
 def test_collate_tuple_batch_with_metadata():
     result = collate_batch(
         [
@@ -914,7 +881,6 @@ def test_collate_tuple_batch_with_metadata():
     assert result.added_features is None
 
 
-@pytest.mark.pruned
 def test_collate_stacks_added_features():
     result = collate_batch(
         [
@@ -958,7 +924,6 @@ def test_collate_passes_mask_options():
     )
 
 
-@pytest.mark.pruned
 def test_available_times_rejects_missing_features(
     dataset_config,
 ):
@@ -974,7 +939,6 @@ def test_available_times_rejects_missing_features(
         _ = config.available_times
 
 
-@pytest.mark.pruned
 def test_available_times_returns_dataset_values(
     dataset_config,
 ):
@@ -989,7 +953,6 @@ def test_available_times_returns_dataset_values(
     )
 
 
-@pytest.mark.pruned
 def test_read_configs_copies_time_features_when_missing(
     dataset_config,
 ):
@@ -1006,7 +969,6 @@ def test_read_configs_copies_time_features_when_missing(
     assert config.time_features is not train_loader.time_features
 
 
-@pytest.mark.pruned
 def test_read_configs_preserves_existing_time_features(
     dataset_config,
 ):
@@ -1053,7 +1015,6 @@ def test_read_configs_builds_missing_dataset_config(
     assert config.train_dataset_config is train_loader.dataset_config
 
 
-@pytest.mark.pruned
 def test_read_configs_preserves_existing_dataset_config(
     monkeypatch,
     dataset_config,
@@ -1094,7 +1055,6 @@ def test_read_configs_always_records_train_dataset(
     assert config.train_dataset_config is train_loader.dataset_config
 
 
-@pytest.mark.pruned
 def test_input_preprocessor_exists_no_sources(
     dataset_config,
     tmp_path,
@@ -1110,7 +1070,6 @@ def test_input_preprocessor_exists_no_sources(
     assert config._input_preprocessor_exists(tmp_path) is True
 
 
-@pytest.mark.pruned
 def test_input_preprocessor_exists_model_only_true(
     dataset_config,
     tmp_path,
@@ -1128,7 +1087,6 @@ def test_input_preprocessor_exists_model_only_true(
     assert config._input_preprocessor_exists(tmp_path) is True
 
 
-@pytest.mark.pruned
 def test_input_preprocessor_exists_model_only_false(
     dataset_config,
     tmp_path,
@@ -1144,7 +1102,6 @@ def test_input_preprocessor_exists_model_only_false(
     assert config._input_preprocessor_exists(tmp_path) is False
 
 
-@pytest.mark.pruned
 def test_input_preprocessor_exists_condition_only_true(
     dataset_config,
     tmp_path,
@@ -1177,7 +1134,6 @@ def test_input_preprocessor_exists_condition_only_false(
     assert config._input_preprocessor_exists(tmp_path) is False
 
 
-@pytest.mark.pruned
 def test_input_preprocessor_exists_both_true(
     dataset_config,
     tmp_path,
@@ -1196,7 +1152,6 @@ def test_input_preprocessor_exists_both_true(
     assert config._input_preprocessor_exists(tmp_path) is True
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("model_exists", "condition_exists"),
     [
@@ -1290,7 +1245,6 @@ def test_setup_distributed_existing_preprocessors_root_skips_fit(
     assert train_loader.dataset_config.fit_called is False
 
 
-@pytest.mark.pruned
 def test_setup_distributed_enables_pin_memory(
     dataset_config,
     monkeypatch,
@@ -1319,7 +1273,6 @@ def test_setup_distributed_enables_pin_memory(
     assert config.pin_memory is True
 
 
-@pytest.mark.pruned
 def test_setup_distributed_leaves_pin_memory_default(
     dataset_config,
     monkeypatch,
@@ -1349,7 +1302,6 @@ def test_setup_distributed_leaves_pin_memory_default(
     assert config.pin_memory is original_pin_memory
 
 
-@pytest.mark.pruned
 def test_setup_distributed_records_rank_and_world_size(
     dataset_config,
     monkeypatch,
@@ -1381,7 +1333,6 @@ def test_setup_distributed_records_rank_and_world_size(
     assert config.world_size == 8
 
 
-@pytest.mark.pruned
 def test_input_metadata_calls_operator_each_time(
     dataset_config,
 ):

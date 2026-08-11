@@ -19,7 +19,7 @@ from cccma_ppp.configs import required_sample_dimensions
 from cccma_ppp.generic import registry_imports  # noqa: F401
 from cccma_ppp.core.writer import Writer
 from cccma_ppp.train.train import main as train_main
-from cccma_ppp.models.mlp_models import cvae as _mlp_cvae  # noqa: F401
+from cccma_ppp.architectures.mlp.cvae import cvae as _mlp_cvae  # noqa: F401
 from cccma_ppp.loss import kld as _loss_kld  # noqa: F401
 from cccma_ppp.loss import loss as _loss_pipeline  # noqa: F401
 from cccma_ppp.loss import utils_loss as _loss_utils  # noqa: F401
@@ -498,8 +498,6 @@ def normalize_training_config(config):
         {},
     )
 
-    # These fields are not accepted by the
-    # current cVAE module configuration.
     module_config.pop(
         "min_posterior_variance",
         None,
@@ -725,9 +723,6 @@ def build_training_fixture_config():
 
     ensure_mlp_preprocessing(dataset_config)
 
-    # Replace the complete model selector and
-    # module configuration. Do not reuse UNet
-    # fields from the base configuration.
     config["module"] = {
         "type": "cVAE",
         "config": {

@@ -39,20 +39,6 @@ def normalize_file_path(file_path):
 
 
 def parse_node_id(node_id):
-    """
-    Parse a pytest node ID into:
-
-    - project-relative file path
-    - class-qualified function path without parameters
-
-    Examples
-    --------
-    tests/a_test.py::test_one[param]
-        -> tests/a_test.py, test_one
-
-    tests/a_test.py::TestGroup::test_one[param]
-        -> tests/a_test.py, TestGroup::test_one
-    """
     file_path, separator, test_path = node_id.partition("::")
 
     if not separator:
@@ -75,9 +61,6 @@ def parse_node_id(node_id):
 
 
 def collect_function_locations(source, path):
-    """
-    Return class-qualified function locations from a Python test file.
-    """
     tree = ast.parse(
         source,
         filename=str(path),
@@ -146,9 +129,6 @@ def imports_pytest(tree):
 
 
 def pytest_import_index(tree):
-    """
-    Return a zero-based safe insertion index for import pytest.
-    """
     insertion_line = 1
     body = tree.body
     index = 0

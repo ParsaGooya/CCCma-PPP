@@ -150,7 +150,6 @@ def reset_shared_batch_masks():
 
 
 class TestBatchData:
-    @pytest.mark.pruned
     def test_replaces_input_and_target_nan_values(self):
         batch = BatchData(
             input=torch.tensor(
@@ -186,7 +185,6 @@ class TestBatchData:
             ),
         )
 
-    @pytest.mark.pruned
     def test_without_spatial_masks(self):
         batch = BatchData(
             input=torch.ones(
@@ -203,7 +201,6 @@ class TestBatchData:
         assert batch.input_mask is None
         assert batch.target_mask is None
 
-    @pytest.mark.pruned
     def test_reduced_spatial_masks(self):
         input_data = torch.tensor(
             [
@@ -259,7 +256,6 @@ class TestBatchData:
             ),
         )
 
-    @pytest.mark.pruned
     def test_unreduced_spatial_masks(self):
         input_data = torch.tensor(
             [
@@ -438,7 +434,6 @@ class TestBatchData:
         assert batch.input_mask is None
         assert batch.target_mask is None
 
-    @pytest.mark.pruned
     def test_metadata_is_preserved(self):
         metadata = [
             {
@@ -493,7 +488,6 @@ class TestCollateBatch:
             ),
         }
 
-    @pytest.mark.pruned
     def test_basic_collation(self):
         result = collate_batch(
             [
@@ -580,7 +574,6 @@ class TestCollateBatch:
             },
         ]
 
-    @pytest.mark.pruned
     def test_forwards_spatial_mask_arguments(self):
         result = collate_batch(
             [
@@ -602,7 +595,6 @@ class TestCollateBatch:
             1,
         )
 
-    @pytest.mark.pruned
     def test_nan_values_are_cleaned_after_collation(self):
         sample = self.make_sample(1)
         sample["input"][0] = float("nan")
@@ -619,7 +611,6 @@ class TestCollateBatch:
 
 
 class TestTrainDataloaderConfigPostInit:
-    @pytest.mark.pruned
     def test_constructs_added_time_features(self):
         dataset_config = make_dataset_config()
         config = make_config_without_post_init(
@@ -656,7 +647,6 @@ class TestTrainDataloaderConfigPostInit:
         )
         assert config.time_features is time_features
 
-    @pytest.mark.pruned
     def test_default_train_times_use_available_times(self):
         config = make_initialized_config(
             train_years_slice=None,
@@ -702,7 +692,6 @@ class TestTrainDataloaderConfigPostInit:
         )
         assert config.train_times is selected
 
-    @pytest.mark.pruned
     def test_validation_times_are_split_from_end(self):
         config = make_initialized_config(
             dataset_config=make_dataset_config(
@@ -735,7 +724,6 @@ class TestTrainDataloaderConfigPostInit:
             ),
         )
 
-    @pytest.mark.pruned
     def test_zero_validation_years_does_not_create_validation_times(self):
         config = make_initialized_config(
             num_validation_years=0,
@@ -746,7 +734,6 @@ class TestTrainDataloaderConfigPostInit:
             "validation_times",
         )
 
-    @pytest.mark.pruned
     def test_available_times_delegates_to_dataset_config(self):
         dataset_config = make_dataset_config()
         config = make_config_without_post_init(
@@ -773,7 +760,6 @@ class TestSetupDistributed:
             barrier=Mock(),
         )
 
-    @pytest.mark.pruned
     def test_root_fits_preprocessors(self):
         config = make_initialized_config()
         distributed = self.make_distributed(
@@ -818,7 +804,6 @@ class TestSetupDistributed:
         )
         assert config.pin_memory is True
 
-    @pytest.mark.pruned
     def test_explicit_load_path_skips_fit_and_loads(self):
         config = make_initialized_config()
         distributed = self.make_distributed(
@@ -837,7 +822,6 @@ class TestSetupDistributed:
             load_dir=load_path
         )
 
-    @pytest.mark.pruned
     def test_records_distributed_metadata(self):
         config = make_initialized_config()
         distributed = self.make_distributed(
@@ -855,7 +839,6 @@ class TestSetupDistributed:
 
 
 class TestBuildTrainLoader:
-    @pytest.mark.pruned
     def test_requires_setup(self):
         config = make_initialized_config()
 
@@ -865,7 +848,6 @@ class TestBuildTrainLoader:
         ):
             config.build_train_loader()
 
-    @pytest.mark.pruned
     def test_builds_dataset_and_dataloader(self):
         config = make_initialized_config(
             load=True,
@@ -1040,7 +1022,6 @@ class TestWeightsAndMetadata:
             barrier=Mock(),
         )
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "root",
         [
@@ -1067,7 +1048,6 @@ class TestWeightsAndMetadata:
         )
         distributed.barrier.assert_called_once_with()
 
-    @pytest.mark.pruned
     def test_get_weights_accepts_none(self):
         config = make_initialized_config()
         distributed = self.make_distributed()
@@ -1080,7 +1060,6 @@ class TestWeightsAndMetadata:
             save=True,
         )
 
-    @pytest.mark.pruned
     def test_input_variable_metadata(self):
         config = make_initialized_config()
 
@@ -1093,7 +1072,6 @@ class TestWeightsAndMetadata:
         }
         config.dataset_config.ds_operator.get_input_var_metadata.assert_called_once_with()
 
-    @pytest.mark.pruned
     def test_target_variable_metadata(self):
         config = make_initialized_config()
 

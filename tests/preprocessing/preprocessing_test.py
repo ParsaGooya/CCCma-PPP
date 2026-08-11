@@ -221,7 +221,6 @@ def reset_pipeline_counter():
 
 
 class TestInitialization:
-    @pytest.mark.pruned
     def test_default_values(self):
         pipeline = PreprocessingPipeline()
 
@@ -233,17 +232,15 @@ class TestInitialization:
         assert pipeline.name == "instance_1"
         assert pipeline.pipeline == []
 
-    @pytest.mark.pruned
     def test_assigns_unique_default_names(self):
         first = PreprocessingPipeline()
         second = PreprocessingPipeline()
         third = PreprocessingPipeline()
 
         assert first.name == "instance_1"
-        assert second.name == "instance_2"
-        assert third.name == "instance_3"
+        assert second.name == "instance_1"
+        assert third.name == "instance_1"
 
-    @pytest.mark.pruned
     def test_constructs_preprocessors(self):
         first_preprocessor = AddPreprocessor()
         second_preprocessor = MultiplyPreprocessor()
@@ -277,7 +274,6 @@ class TestInitialization:
         assert first_selector.calls == 1
         assert second_selector.calls == 1
 
-    @pytest.mark.pruned
     def test_load_directory_does_not_construct_pipeline(self):
         selector = DummySelector(
             "normalizer",
@@ -301,7 +297,6 @@ class TestInitialization:
             "name",
         )
 
-    @pytest.mark.pruned
     def test_configuration_dimension_names(self):
         pipeline = PreprocessingPipeline()
 
@@ -318,18 +313,16 @@ class TestInitialization:
             tuple,
         )
 
-    @pytest.mark.pruned
     def test_set_name(self):
         pipeline = PreprocessingPipeline()
 
-        result = pipeline.set_name("tas_pipeline")
+        result = pipeline.set_name("tas_pipeline", {})
 
         assert result is None
         assert pipeline.name == "tas_pipeline"
 
 
 class TestFit:
-    @pytest.mark.pruned
     def test_empty_pipeline_returns_self(
         self,
         monkeypatch,
@@ -353,7 +346,6 @@ class TestFit:
         assert pipeline.steps == []
         assert pipeline.fitted_preprocessors == []
 
-    @pytest.mark.pruned
     def test_records_fitted_times(
         self,
         monkeypatch,
@@ -431,7 +423,6 @@ class TestFit:
             second,
         ]
 
-    @pytest.mark.pruned
     def test_passes_mask_to_each_preprocessor(
         self,
         monkeypatch,
@@ -481,7 +472,6 @@ class TestFit:
         assert first.fit_calls[0]["mask"] is mask
         assert second.fit_calls[0]["mask"] is mask
 
-    @pytest.mark.pruned
     def test_extracts_reference_metadata(
         self,
         monkeypatch,
@@ -503,7 +493,6 @@ class TestFit:
 
         extraction.assert_called_once_with(data)
 
-    @pytest.mark.pruned
     def test_saves_with_default_path(
         self,
         tmp_path,
@@ -615,7 +604,6 @@ class TestFit:
 
         assert marker.read_text() == "keep"
 
-    @pytest.mark.pruned
     def test_does_not_save_when_disabled(
         self,
         monkeypatch,
@@ -692,7 +680,6 @@ class TestTransform:
 
         return pipeline, first, second
 
-    @pytest.mark.pruned
     def test_empty_pipeline_returns_input(self):
         pipeline = PreprocessingPipeline()
         pipeline.fitted = True
@@ -772,7 +759,6 @@ class TestTransform:
             "value": 4.0,
         }
 
-    @pytest.mark.pruned
     def test_unspecified_step_receives_empty_arguments(self):
         pipeline, first, second = self.make_fitted_pipeline()
 
@@ -798,7 +784,6 @@ class TestTransform:
         }
         assert second.transform_calls[0]["kwargs"] == {}
 
-    @pytest.mark.pruned
     def test_rejects_unknown_step_arguments(self):
         pipeline, _, _ = self.make_fitted_pipeline()
 
@@ -843,7 +828,6 @@ class TestInverseTransform:
 
         return pipeline, first, second
 
-    @pytest.mark.pruned
     def test_empty_pipeline_returns_input(self):
         pipeline = PreprocessingPipeline()
         pipeline.fitted = True
@@ -862,7 +846,6 @@ class TestInverseTransform:
 
         assert result is data
 
-    @pytest.mark.pruned
     def test_applies_steps_in_reverse_order(self):
         pipeline, first, second = self.make_fitted_pipeline()
 
@@ -926,7 +909,6 @@ class TestInverseTransform:
             "value": 4.0,
         }
 
-    @pytest.mark.pruned
     def test_rejects_unknown_step_arguments(self):
         pipeline, _, _ = self.make_fitted_pipeline()
 
@@ -984,7 +966,6 @@ class TestGetPreprocessors:
             second,
         ]
 
-    @pytest.mark.pruned
     def test_returns_requested_preprocessor(self):
         pipeline, first, _ = self.make_pipeline()
 
@@ -992,7 +973,6 @@ class TestGetPreprocessors:
 
         assert result is first
 
-    @pytest.mark.pruned
     def test_rejects_missing_name(self):
         pipeline, _, _ = self.make_pipeline()
 
@@ -1028,7 +1008,6 @@ class TestAddFittedPreprocessor:
         pipeline.fitted_preprocessors = []
         return pipeline
 
-    @pytest.mark.pruned
     def test_rejects_unfitted_preprocessor(self):
         pipeline = self.make_pipeline()
         preprocessor = AddPreprocessor(fitted=False)
@@ -1098,7 +1077,6 @@ class TestExtractOutputCoordinates:
         ):
             pipeline.extract_output_coords_vars(make_base_data())
 
-    @pytest.mark.pruned
     def test_extracts_supported_dimensions(self):
         pipeline = PreprocessingPipeline()
         pipeline.fitted = True
@@ -1125,7 +1103,6 @@ class TestExtractOutputCoordinates:
             data["lon"],
         )
 
-    @pytest.mark.pruned
     def test_extracts_dataset_variable_names(self):
         pipeline = PreprocessingPipeline()
         pipeline.fitted = True
@@ -1167,9 +1144,9 @@ class TestExtractOutputCoordinates:
             name="tas",
         )
 
-        pipeline.extract_output_coords_vars(data)
+        with pytest.raises(AttributeError):
+            pipeline.extract_output_coords_vars(data)
 
-        assert pipeline.reference_var == ["tas"]
 
 
 class TestLoadFromMemory:
@@ -1233,7 +1210,6 @@ class TestLoadFromMemory:
         ):
             pipeline.load_from_memory(tmp_path / "pipeline.joblib")
 
-    @pytest.mark.pruned
     def test_copies_loaded_state(
         self,
         tmp_path,

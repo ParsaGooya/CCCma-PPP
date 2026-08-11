@@ -46,7 +46,6 @@ def test_get_regular_class_without_dict():
     assert obj.value == 10
 
 
-@pytest.mark.pruned
 def test_get_dataclass_with_dict():
     reg = Registery()
 
@@ -61,7 +60,6 @@ def test_get_dataclass_with_dict():
     assert obj.y == 2
 
 
-@pytest.mark.pruned
 def test_get_dataclass_missing_field_strict():
     reg = Registery()
 
@@ -88,7 +86,6 @@ def test_get_dataclass_extra_field_strict():
         reg.get("dc", {"x": 1, "y": 2, "z": 3})
 
 
-@pytest.mark.pruned
 def test_get_with_none_config_regular_class():
     reg = Registery()
 
@@ -101,7 +98,6 @@ def test_get_with_none_config_regular_class():
     assert hasattr(obj, "val")
 
 
-@pytest.mark.pruned
 def test_register_overwrite():
     reg = Registery()
 
@@ -120,7 +116,6 @@ def test_register_overwrite():
     assert obj.val == 2
 
 
-@pytest.mark.pruned
 def test_get_with_empty_dict():
     reg = Registery()
 
@@ -133,7 +128,6 @@ def test_get_with_empty_dict():
     assert obj.flag is True
 
 
-@pytest.mark.pruned
 def test_get_dataclass_with_empty_dict_defaults():
     reg = Registery()
 
