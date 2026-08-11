@@ -3,23 +3,23 @@ max_epochs: 100
 train_loader:
     dataset_config:
         model:
-          paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/forecast_data/datetime
-          names: [tas]
-        #   preprocessing_pipeline:
-        #     preprocessors_list:
-        #       - name: trend_remover
-        #       - name: standardizer
-        #         args:
-        #           dims: [time]
-                  
-          ensemble_mean : True
-          concat_dim : time
-          rename_dict :
-                        year : time
-          
-        observation :
+            paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/forecast_data/datetime
+            names: [ tas ]
+            #   preprocessing_pipeline:
+            #     preprocessors_list:
+            #       - name: trend_remover
+            #       - name: standardizer
+            #         args:
+            #           dims: [time]
+
+            ensemble_mean: True
+            concat_dim: time
+            rename_dict:
+                year: time
+
+        observation:
             paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5/datetime
-            names: [tas]
+            names: [ tas ]
             # preprocessing_pipeline :
             #         preprocessors_list :
             #                 - name: trend_remover
@@ -30,90 +30,88 @@ train_loader:
             #                         dims: [time]
             #                         frequency: month
 
-            concat_dim : time
+            concat_dim: time
 
-
-        condition_method : ensemble_mean
-        lead_times : 
-                      start: 1
-                      end: 120
+        condition_method: ensemble_mean
+        lead_times:
+            start: 1
+            end: 120
 
     batch_size: 10
-    time_features :
-                    - lead_time
-                    - month_sin
-                    - month_cos
-                    
-    train_years_slice : [1961, 2020]
-    num_validation_years : 5
-    prefetch_factor : 4
+    time_features:
+      - lead_time
+      - month_sin
+      - month_cos
+
+    train_years_slice: [ 1961, 2020 ]
+    num_validation_years: 5
+    prefetch_factor: 4
     num_data_workers: 4
     reduce_spatial_mask: True
     load: True
 
 module:
-    type :  deterministic
+    type: deterministic
     config:
-            # ModelConfig :
-            #         type : MLP
-            #         config :
-            #               encoder_hidden_dims : [3000,3000,3000]
-            #               latent_size : 10
-            #               decoder_hidden_dims: [3000,3000,3000]
-            #               condition_embedding_dims :  [3000,3000,3000]
-            #               condition_embedding_size : 10
-            #               condition_dependant_latent: False
-            #               condemb_to_decoder:  True
-            #               batch_normalization : True
-            #               dropout_rate: 0.5
-            #               init_method :  xavier
+        # ModelConfig :
+        #         type : MLP
+        #         config :
+        #               encoder_hidden_dims : [3000,3000,3000]
+        #               latent_size : 10
+        #               decoder_hidden_dims: [3000,3000,3000]
+        #               condition_embedding_dims :  [3000,3000,3000]
+        #               condition_embedding_size : 10
+        #               condition_dependant_latent: False
+        #               condemb_to_decoder:  True
+        #               batch_normalization : True
+        #               dropout_rate: 0.5
+        #               init_method :  xavier
 
-            ModelConfig :
-                    type : UNet
-                    config :
-                        channels: [16,32,64,128]
-                        block_config: 
-                                name: convnext
-                                num_blocks: 2
-                        output_block_hidden_channels: 16
-                        # latent_size: 500
-                        # deterministic_guess_config:
-                        #     load_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_3/checkpoints/best.pt
-                        #     freeze_weights: True
-                        #     share_output_block: True    
-                        # GENERATOR: 
-                        #         noise_level:  full
-                        #         num_training_noise_samples: 10
-                        
+        ModelConfig:
+            type: UNet
+            config:
+                channels: [ 16, 32, 64, 128 ]
+                block_config:
+                    name: convnext
+                    num_blocks: 2
+                output_block_hidden_channels: 16
+                # latent_size: 500
+                # deterministic_guess_config:
+                #     load_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_3/checkpoints/best.pt
+                #     freeze_weights: True
+                #     share_output_block: True    
+                # GENERATOR: 
+                #         noise_level:  full
+                #         num_training_noise_samples: 10
+
 
 losspipeline:
-      loss_pipeline :
-                    - name : mse
+    loss_pipeline:
+      - name: mse
 
-      reduction : mean
+    reduction: mean
 
-trainer :
+trainer:
     # beta_finder :
     #           beta : 10
     #           num_epoch_to_warmup : 10
-#     gradient_accumulation_steps: 2
-    earlystoppingbuffer : 10
+    #     gradient_accumulation_steps: 2
+    earlystoppingbuffer: 10
 
-    mixed_precision: True              
+    mixed_precision: True
 
-optimization :
-        lr : 0.0001
-        optimizer_type : adam
-        lr_scheduler_config :
-                    min_lr : 0.00001
-                    # warmup_epochs : 1
-                    total_epochs: 10
-                    hold_min_lr: True
+optimization:
+    lr: 0.0001
+    optimizer_type: adam
+    lr_scheduler_config:
+        min_lr: 0.00001
+        # warmup_epochs : 1
+        total_epochs: 10
+        hold_min_lr: True
 
-weights :
-        spatial_method : cosine_lat
+weights:
+    spatial_method: cosine_lat
 
-log_every_n_epochs : 2
-save_checkpoint : True
-seed : 10
-
+log_every_n_epochs: 2
+save_checkpoint: True
+seed: 10
