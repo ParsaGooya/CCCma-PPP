@@ -104,7 +104,7 @@ class DataConfigABC(abc.ABC):
         if self.realization_list is not None:
             self._check_ensemble = True
 
-        self.preprocessing_pipeline.set_name(self.TYPE)
+        self.preprocessing_pipeline.set_name(self.TYPE, self.rename_dict)
 
         _resolve_data(self)
         self.info = _get_ds_info(self)

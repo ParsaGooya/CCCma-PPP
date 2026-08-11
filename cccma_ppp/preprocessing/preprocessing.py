@@ -62,11 +62,12 @@ class PreprocessingPipeline:
         self.num_instances += 1
         if self.load_dir is None:
             self.name = f"instance_{self.num_instances}"
+            self.rename_dict = None
             self.pipeline = []
             for step in self.preprocessors_list:
                 self.pipeline.append((step.name.lower(), step.get_preprocessor()))
 
-    def set_name(self, name: str):
+    def set_name(self, name: str, rename_dict: dict[str, str]):
         """
         Set pipeline name.
 
@@ -80,6 +81,7 @@ class PreprocessingPipeline:
         """
 
         self.name = name
+        self.rename_dict = rename_dict
 
     def fit(
         self,
@@ -265,6 +267,10 @@ class PreprocessingPipeline:
                 }
             )
             data = data.assign_coords(self.reference_coords)
+
+        if self.rename_dict is not None:
+            inverse_rename = {value: key for key, value in self.rename_dict.items()}
+            data = data.rename(inverse_rename)
 
         return data.assign_coords(channels=self.reference_var).to_dataset(
             dim="channels"
