@@ -18,7 +18,7 @@ import seaborn as sns
 
 
 ROOT = Path("cccma_ppp")
-OUTPUT_DIR = Path("output/documentation_audit_results")
+OUTPUT_DIR = Path("../output/documentation_audit_results")
 OUTPUT_TEXT = OUTPUT_DIR / Path("audit.txt")
 OUTPUT_ISSUES_CSV = OUTPUT_DIR / Path("doc_audit_issues.csv")
 OUTPUT_SUMMARY_CSV = OUTPUT_DIR / Path("doc_audit_summary.csv")

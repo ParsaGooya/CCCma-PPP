@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-OUTPUT_DIR = ROOT / "output/test_suite_analysis"
+OUTPUT_DIR = ROOT / "../output/test_suite_analysis"
 
 
 PATTERNS = [

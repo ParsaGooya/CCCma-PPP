@@ -1,52 +1,56 @@
-experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_4
-max_epochs: 3
+experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_3
+max_epochs: 1
 train_loader:
   dataset_config:
     model:
-      paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/forecast_data
+      paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/forecast_data/datetime
       names: [ tas ]
       preprocessing_pipeline:
         preprocessors_list:
         - name: anomalies
           args:
-            dims: [ year ]
+            dims: [ time ]
         # - name: flattener
 
       ensemble_mean: True
-      concat_dim: year
+      concat_dim: time
+      rename_dict:
+        year: time
 
     observation:
-      paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5
+      paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5/datetime
       names: [ tas ]
       preprocessing_pipeline:
         preprocessors_list:
         - name: anomalies
           args:
-            dims: [ year ]
+            dims: [ time ]
+            frequency: month
         # - name : flattener
 
-      concat_dim: year
-      rename_dict:
-        lead_time: month
+      concat_dim: time
 
     condition_method: ensemble_mean
-    lead_months:
+    lead_times:
       start: 1
-      end: 12
+      end: 1
 
   batch_size: 10
   time_features:
-  - year
+  - time
+  - lead_time
+  - month_sin
+  - month_cos
 
-  train_years: [ 1961, 1966 ]
-  num_validation_years: 1
+  train_years_slice: [ 1961, 1962 ]
+  num_validation_years: 0
   prefetch_factor: 4
-  num_data_workers: 4
+  num_data_workers: 0
   reduce_spatial_mask: True
   load: True
 
 module:
-  type: cvae #deterministic
+  type: deterministic
   config:
     # ModelConfig :
     #         type : MLP
@@ -70,11 +74,11 @@ module:
           name: convnext
           num_blocks: 2
         output_block_hidden_channels: 32
-        latent_size: 500
-        deterministic_guess_config:
-          load_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_3/checkpoints/best.pt
-          freeze_weights: True
-          share_output_block: True
+        # latent_size: 500
+        # deterministic_guess_config:
+        #     load_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_3/checkpoints/best.pt
+        #     freeze_weights: True
+        #     share_output_block: True    
         # GENERATOR: 
         #         noise_level:  full
         #         num_training_noise_samples: 10
@@ -88,9 +92,9 @@ losspipeline:
   reduction: mean
 
 trainer:
-  beta_finder:
-    beta: 10
-    num_epoch_to_warmup: 10
+  # beta_finder :
+  #           beta : 10
+  #           num_epoch_to_warmup : 10
   #     gradient_accumulation_steps: 2
   earlystoppingbuffer: 10
 
@@ -101,7 +105,7 @@ optimization:
   optimizer_type: adam
   lr_scheduler_config:
     min_lr: 0.00001
-    warmup_epochs: 2
+    warmup_epochs: 1
     total_epochs: 10
     hold_min_lr: True
 

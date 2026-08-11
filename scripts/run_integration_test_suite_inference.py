@@ -15,8 +15,14 @@ import warnings
 import yaml
 from tqdm import tqdm
 
+from cccma_ppp.configs import required_sample_dimensions
 from cccma_ppp.generic import registry_imports  # noqa: F401
+from cccma_ppp.core.writer import Writer
 from cccma_ppp.train.train import main as train_main
+from cccma_ppp.models.mlp_models import cvae as _mlp_cvae  # noqa: F401
+from cccma_ppp.loss import kld as _loss_kld  # noqa: F401
+from cccma_ppp.loss import loss as _loss_pipeline  # noqa: F401
+from cccma_ppp.loss import utils_loss as _loss_utils  # noqa: F401
 
 
 warnings.filterwarnings("ignore")
@@ -33,18 +39,20 @@ BASE_INFERENCE_CONFIG = (
 
 OUTPUT_DIR = PROJECT_ROOT / "output" / "inference_integration_test_results"
 
-
 TRAINING_EXPERIMENT_DIR = OUTPUT_DIR / "_trained_model"
 
-
-CASE_DIR = OUTPUT_DIR
+CASE_DIR = OUTPUT_DIR / "cases"
 
 TRAINING_CONFIG_PATH = TRAINING_EXPERIMENT_DIR / "training_config.yaml"
 
 TRAINING_LOG_PATH = TRAINING_EXPERIMENT_DIR / "training.log"
 
 RESULTS_CSV = OUTPUT_DIR / "inference_results.csv"
+
 SUMMARY_PATH = OUTPUT_DIR / "summary.txt"
+
+
+INIT_TIME_DIM, LEAD_TIME_DIM = required_sample_dimensions
 
 
 TRAIN_MODEL = True
@@ -55,18 +63,22 @@ RUN_INFERENCE_GRID = True
 
 MAX_INFERENCE_CASES = None
 
-TRAINING_MAX_EPOCHS = 3
+TRAINING_MAX_EPOCHS = 1
 
 TEST_ENCODER_HIDDEN_DIMS = [16]
 TEST_DECODER_HIDDEN_DIMS = [16]
 TEST_CONDITION_EMBEDDING_DIMS = [16]
 
+
 VALID_TIME_FEATURES = {
-    "year",
-    "lead_time",
+    INIT_TIME_DIM,
+    LEAD_TIME_DIM,
     "month_sin",
     "month_cos",
+    "day_sin",
+    "day_cos",
 }
+
 
 REQUIRE_OUTPUT_ARTIFACT = False
 
@@ -84,9 +96,8 @@ INFERENCE_GRID = {
         1,
         12,
     ],
-    "inference_years": [
-        [2018, 2018],
-        [2018, 2020],
+    "inference_years_slice": [
+        [2020, 2020],
     ],
     "num_data_workers": [
         0,
@@ -107,7 +118,7 @@ CSV_COLUMNS = [
     "num_latent_samples",
     "num_output_covariance_sampling",
     "batch_size",
-    "inference_years",
+    "inference_years_slice",
     "num_data_workers",
     "load",
     "expected_result",
@@ -135,7 +146,11 @@ def get_inference_main():
             errors.append(f"{module_name}: {exc}")
             continue
 
-        function = getattr(module, "main", None)
+        function = getattr(
+            module,
+            "main",
+            None,
+        )
 
         if callable(function):
             return function
@@ -195,6 +210,8 @@ def cleanup_logging_handlers():
 
 
 def init_csv():
+    prepare_output_directories()
+
     with RESULTS_CSV.open(
         "w",
         newline="",
@@ -313,9 +330,7 @@ def append_exception_to_log(log_path):
         "a",
         encoding="utf-8",
     ) as log_file:
-        traceback.print_exc(
-            file=log_file,
-        )
+        traceback.print_exc(file=log_file)
 
 
 def append_message_to_log(
@@ -343,15 +358,19 @@ def validate_time_features(
 ):
     dataset_config = loader_config.get("dataset_config")
 
-    if not isinstance(dataset_config, dict):
+    if not isinstance(
+        dataset_config,
+        dict,
+    ):
         raise ValueError(
             f"{loader_name}.dataset_config must be configured as a mapping."
         )
 
     if "time_features" in dataset_config:
         raise ValueError(
-            "time_features must be configured under "
-            f"{loader_name}, not {loader_name}.dataset_config."
+            "time_features must be configured "
+            f"under {loader_name}, not "
+            f"{loader_name}.dataset_config."
         )
 
     time_features = loader_config.get("time_features")
@@ -359,21 +378,77 @@ def validate_time_features(
     if time_features is None:
         return
 
-    if not isinstance(time_features, list):
+    if not isinstance(
+        time_features,
+        list,
+    ):
         raise TypeError(f"{loader_name}.time_features must be a list or null.")
 
     unsupported = set(time_features) - VALID_TIME_FEATURES
 
     if unsupported:
         raise ValueError(
-            f"Unsupported {loader_name}.time_features: {sorted(unsupported)}."
+            f"Unsupported {loader_name}."
+            "time_features: "
+            f"{sorted(unsupported)}. "
+            "Supported values are "
+            f"{sorted(VALID_TIME_FEATURES)}."
         )
+
+
+def ensure_flattener(data_config):
+    if not isinstance(
+        data_config,
+        dict,
+    ):
+        return
+
+    pipeline = data_config.setdefault(
+        "preprocessing_pipeline",
+        {},
+    )
+    preprocessors = pipeline.setdefault(
+        "preprocessors_list",
+        [],
+    )
+
+    if not isinstance(
+        preprocessors,
+        list,
+    ):
+        raise TypeError("preprocessing_pipeline.preprocessors_list must be a list.")
+
+    has_flattener = any(
+        isinstance(step, dict) and step.get("name") == "flattener"
+        for step in preprocessors
+    )
+
+    if not has_flattener:
+        preprocessors.append(
+            {
+                "name": "flattener",
+            }
+        )
+
+
+def ensure_mlp_preprocessing(
+    dataset_config,
+):
+    for data_name in (
+        "model",
+        "observation",
+        "condition",
+    ):
+        ensure_flattener(dataset_config.get(data_name))
 
 
 def normalize_training_config(config):
     train_loader = config.get("train_loader")
 
-    if not isinstance(train_loader, dict):
+    if not isinstance(
+        train_loader,
+        dict,
+    ):
         raise ValueError("train_loader must be configured as a mapping.")
 
     validate_time_features(
@@ -381,7 +456,21 @@ def normalize_training_config(config):
         loader_name="train_loader",
     )
 
-    dataset_config = train_loader["dataset_config"]
+    dataset_config = train_loader.get("dataset_config")
+
+    if not isinstance(
+        dataset_config,
+        dict,
+    ):
+        raise ValueError("train_loader.dataset_config must be a mapping.")
+
+    if "lead_months" in dataset_config:
+        raise ValueError(
+            "lead_months is no longer a "
+            "DatasetConfig field. Use "
+            "train_loader.dataset_config."
+            "lead_times."
+        )
 
     if dataset_config.get("condition_method") is None:
         dataset_config.pop(
@@ -389,9 +478,9 @@ def normalize_training_config(config):
             None,
         )
 
-    if dataset_config.get("lead_months") is None:
+    if dataset_config.get("lead_times") is None:
         dataset_config.pop(
-            "lead_months",
+            "lead_times",
             None,
         )
 
@@ -401,13 +490,20 @@ def normalize_training_config(config):
             None,
         )
 
-    module_config = config.get("module", {}).get("config", {})
+    module_config = config.get(
+        "module",
+        {},
+    ).get(
+        "config",
+        {},
+    )
 
-    if module_config.get("min_posterior_variance") is None:
-        module_config.pop(
-            "min_posterior_variance",
-            None,
-        )
+    # These fields are not accepted by the
+    # current cVAE module configuration.
+    module_config.pop(
+        "min_posterior_variance",
+        None,
+    )
 
     if module_config.get("prior_flow_config") is None:
         module_config.pop(
@@ -415,7 +511,13 @@ def normalize_training_config(config):
             None,
         )
 
-    model_config = module_config.get("ModelConfig", {}).get("config", {})
+    model_config = module_config.get(
+        "ModelConfig",
+        {},
+    ).get(
+        "config",
+        {},
+    )
 
     if model_config.get("dropout_rate") is None:
         model_config.pop(
@@ -433,15 +535,24 @@ def validate_training_config(config):
     max_epochs = config.get("max_epochs")
 
     if (
-        not isinstance(max_epochs, int)
-        or isinstance(max_epochs, bool)
+        not isinstance(
+            max_epochs,
+            int,
+        )
+        or isinstance(
+            max_epochs,
+            bool,
+        )
         or max_epochs <= 0
     ):
         raise ValueError("max_epochs must be a positive integer.")
 
     train_loader = config.get("train_loader")
 
-    if not isinstance(train_loader, dict):
+    if not isinstance(
+        train_loader,
+        dict,
+    ):
         raise ValueError("train_loader must be configured as a mapping.")
 
     validate_time_features(
@@ -449,11 +560,40 @@ def validate_training_config(config):
         loader_name="train_loader",
     )
 
+    dataset_config = train_loader.get("dataset_config")
+
+    if not isinstance(
+        dataset_config,
+        dict,
+    ):
+        raise ValueError("train_loader.dataset_config must be configured as a mapping.")
+
+    if "lead_months" in dataset_config:
+        raise ValueError(
+            "train_loader.dataset_config.lead_months is invalid. Use lead_times."
+        )
+
+    lead_times = dataset_config.get("lead_times")
+
+    if lead_times is not None and not isinstance(
+        lead_times,
+        (dict, list),
+    ):
+        raise TypeError(
+            "train_loader.dataset_config.lead_times must be a mapping, list, or null."
+        )
+
     num_data_workers = train_loader.get("num_data_workers")
 
     if (
-        not isinstance(num_data_workers, int)
-        or isinstance(num_data_workers, bool)
+        not isinstance(
+            num_data_workers,
+            int,
+        )
+        or isinstance(
+            num_data_workers,
+            bool,
+        )
         or num_data_workers < 0
     ):
         raise ValueError(
@@ -462,18 +602,51 @@ def validate_training_config(config):
 
     module = config.get("module")
 
-    if not isinstance(module, dict):
+    if not isinstance(
+        module,
+        dict,
+    ):
         raise ValueError("module must be configured as a mapping.")
 
     module_config = module.get("config")
 
-    if not isinstance(module_config, dict):
+    if not isinstance(
+        module_config,
+        dict,
+    ):
         raise ValueError("module.config must be configured as a mapping.")
+
+    if "min_posterior_variance" in module_config:
+        raise ValueError(
+            "module.config."
+            "min_posterior_variance is not "
+            "supported by the current schema."
+        )
 
     model_selector = module_config.get("ModelConfig")
 
-    if not isinstance(model_selector, dict):
+    if not isinstance(
+        model_selector,
+        dict,
+    ):
         raise ValueError("module.config.ModelConfig must be configured as a mapping.")
+
+    if (
+        str(
+            model_selector.get(
+                "type",
+                "",
+            )
+        ).lower()
+        != "mlp"
+    ):
+        raise ValueError("The shared inference fixture must use an MLP model.")
+
+    if not isinstance(
+        model_selector.get("config"),
+        dict,
+    ):
+        raise ValueError("module.config.ModelConfig.config must be a mapping.")
 
     return config
 
@@ -492,37 +665,53 @@ def build_training_fixture_config():
 
     train_loader = config.get("train_loader")
 
-    if not isinstance(train_loader, dict):
+    if not isinstance(
+        train_loader,
+        dict,
+    ):
         raise ValueError("The base training configuration must contain train_loader.")
 
     dataset_config = train_loader.get("dataset_config")
 
-    if not isinstance(dataset_config, dict):
+    if not isinstance(
+        dataset_config,
+        dict,
+    ):
         raise ValueError(
             "The base training configuration must contain train_loader.dataset_config."
         )
 
     if "time_features" in dataset_config:
         raise ValueError(
-            "Move train_loader.dataset_config.time_features "
-            "to train_loader.time_features."
+            "Move train_loader.dataset_config."
+            "time_features to "
+            "train_loader.time_features."
         )
 
+    dataset_config.pop(
+        "lead_months",
+        None,
+    )
+
     train_loader["time_features"] = [
-        "year",
+        INIT_TIME_DIM,
     ]
     train_loader["num_data_workers"] = 0
     train_loader["num_validation_years"] = 0
+    train_loader["train_years_slice"] = [1961, 1962]
 
     dataset_config["condition_method"] = "ensemble_mean"
-    dataset_config["lead_months"] = {
+    dataset_config["lead_times"] = {
         "start": 1,
-        "end": 12,
+        "end": 1,
     }
 
     model_data_config = dataset_config.get("model")
 
-    if not isinstance(model_data_config, dict):
+    if not isinstance(
+        model_data_config,
+        dict,
+    ):
         raise ValueError(
             "train_loader.dataset_config.model must be configured as a mapping."
         )
@@ -534,59 +723,31 @@ def build_training_fixture_config():
         None,
     )
 
-    module = config.setdefault(
-        "module",
-        {},
-    )
-    module["type"] = "cVAE"
+    ensure_mlp_preprocessing(dataset_config)
 
-    module_config = module.setdefault(
-        "config",
-        {},
-    )
-
-    model_selector = module_config.setdefault(
-        "ModelConfig",
-        {},
-    )
-    model_selector["type"] = "mlp"
-
-    model_config = model_selector.setdefault(
-        "config",
-        {},
-    )
-
-    model_config["encoder_hidden_dims"] = deepcopy(TEST_ENCODER_HIDDEN_DIMS)
-    model_config["decoder_hidden_dims"] = deepcopy(TEST_DECODER_HIDDEN_DIMS)
-    model_config["condition_embedding_dims"] = deepcopy(TEST_CONDITION_EMBEDDING_DIMS)
-
-    latent_size = model_config.get(
-        "latent_size",
-        10,
-    )
-
-    model_config["latent_size"] = latent_size
-    model_config["condition_embedding_size"] = latent_size
-    model_config["condition_dependant_latent"] = True
-    model_config["condemb_to_decoder"] = True
-    model_config["batch_normalization"] = False
-    model_config["init_method"] = "xavier"
-
-    model_config.pop(
-        "dropout_rate",
-        None,
-    )
-
-    module_config.pop(
-        "prior_flow_config",
-        None,
-    )
-    module_config.pop(
-        "min_posterior_variance",
-        None,
-    )
-
-    module_config["combined_CGCN_weight"] = 0.0
+    # Replace the complete model selector and
+    # module configuration. Do not reuse UNet
+    # fields from the base configuration.
+    config["module"] = {
+        "type": "cVAE",
+        "config": {
+            "ModelConfig": {
+                "type": "MLP",
+                "config": {
+                    "encoder_hidden_dims": deepcopy(TEST_ENCODER_HIDDEN_DIMS),
+                    "decoder_hidden_dims": deepcopy(TEST_DECODER_HIDDEN_DIMS),
+                    "condition_embedding_dims": deepcopy(TEST_CONDITION_EMBEDDING_DIMS),
+                    "latent_size": 10,
+                    "condition_embedding_size": 10,
+                    "condition_dependant_latent": True,
+                    "condemb_to_decoder": True,
+                    "batch_normalization": False,
+                    "init_method": "xavier",
+                },
+            },
+            "combined_CGCN_weight": 0.0,
+        },
+    }
 
     config.setdefault(
         "trainer",
@@ -605,7 +766,9 @@ def build_training_fixture_config():
     return config
 
 
-def validate_training_experiment(experiment_dir):
+def validate_training_experiment(
+    experiment_dir,
+):
     experiment_dir = Path(experiment_dir)
 
     if not experiment_dir.is_dir():
@@ -653,9 +816,7 @@ def assert_training_completed(
 
 def train_model_once():
     if REUSE_EXISTING_MODEL and TRAINING_EXPERIMENT_DIR.exists():
-        assert_training_completed(
-            require_log=False,
-        )
+        assert_training_completed(require_log=False)
         return TRAINING_EXPERIMENT_DIR
 
     if not TRAIN_MODEL:
@@ -689,9 +850,7 @@ def train_model_once():
         )
         raise
 
-    assert_training_completed(
-        require_log=True,
-    )
+    assert_training_completed(require_log=True)
 
     return TRAINING_EXPERIMENT_DIR
 
@@ -699,14 +858,25 @@ def train_model_once():
 def normalize_inference_config(config):
     config = deepcopy(config)
 
+    inference_loader = config.get("inference_loader")
+
+    if not isinstance(inference_loader, dict):
+        raise ValueError("inference_loader must be configured as a mapping.")
+
     writer = config.get("writer")
 
-    if not isinstance(writer, dict):
+    if not isinstance(
+        writer,
+        dict,
+    ):
         raise ValueError("writer must be configured as a mapping.")
 
     predictor = writer.get("predictor")
 
-    if not isinstance(predictor, dict):
+    if not isinstance(
+        predictor,
+        dict,
+    ):
         raise ValueError("writer.predictor must be configured as a mapping.")
 
     nested_config = predictor.pop(
@@ -715,15 +885,19 @@ def normalize_inference_config(config):
     )
 
     if nested_config is not None:
-        if not isinstance(nested_config, dict):
+        if not isinstance(
+            nested_config,
+            dict,
+        ):
             raise ValueError("writer.predictor.config must be a mapping.")
 
         duplicate_fields = set(predictor) & set(nested_config)
 
         if duplicate_fields:
             raise ValueError(
-                "Predictor fields are duplicated in "
-                "writer.predictor and writer.predictor.config: "
+                "Predictor fields are "
+                "duplicated in writer.predictor "
+                "and writer.predictor.config: "
                 f"{sorted(duplicate_fields)}."
             )
 
@@ -737,8 +911,10 @@ def normalize_inference_config(config):
     if legacy_sampling is not None:
         if "num_output_sampling" in writer:
             raise ValueError(
-                "Both writer.num_output_covariance_sampling "
-                "and writer.num_output_sampling are configured."
+                "Both writer."
+                "num_output_covariance_sampling "
+                "and writer.num_output_sampling "
+                "are configured."
             )
 
         writer["num_output_sampling"] = legacy_sampling
@@ -752,21 +928,36 @@ def validate_inference_config(config):
 
     inference_loader = config.get("inference_loader")
 
-    if not isinstance(inference_loader, dict):
+    if not isinstance(
+        inference_loader,
+        dict,
+    ):
         raise ValueError("inference_loader must be configured as a mapping.")
 
     batch_size = inference_loader.get("batch_size")
 
     if (
-        not isinstance(batch_size, int)
-        or isinstance(batch_size, bool)
+        not isinstance(
+            batch_size,
+            int,
+        )
+        or isinstance(
+            batch_size,
+            bool,
+        )
         or batch_size <= 0
     ):
         raise ValueError("inference_loader.batch_size must be a positive integer.")
 
-    inference_years = inference_loader.get("inference_years")
+    inference_years = inference_loader.get("inference_years_slice")
 
-    if not isinstance(inference_years, list) or len(inference_years) != 2:
+    if (
+        not isinstance(
+            inference_years,
+            list,
+        )
+        or len(inference_years) != 2
+    ):
         raise ValueError("inference_loader.inference_years must be a two-element list.")
 
     if not all(
@@ -782,8 +973,14 @@ def validate_inference_config(config):
     num_data_workers = inference_loader.get("num_data_workers")
 
     if (
-        not isinstance(num_data_workers, int)
-        or isinstance(num_data_workers, bool)
+        not isinstance(
+            num_data_workers,
+            int,
+        )
+        or isinstance(
+            num_data_workers,
+            bool,
+        )
         or num_data_workers < 0
     ):
         raise ValueError(
@@ -792,32 +989,49 @@ def validate_inference_config(config):
 
     load = inference_loader.get("load")
 
-    if not isinstance(load, bool):
+    if not isinstance(
+        load,
+        bool,
+    ):
         raise TypeError("inference_loader.load must be a boolean.")
 
     writer = config.get("writer")
 
-    if not isinstance(writer, dict):
+    if not isinstance(
+        writer,
+        dict,
+    ):
         raise ValueError("writer must be configured as a mapping.")
 
     if "num_output_covariance_sampling" in writer:
         raise ValueError(
-            "The runtime configuration contains the legacy "
-            "writer.num_output_covariance_sampling field."
+            "The runtime configuration "
+            "contains the legacy writer."
+            "num_output_covariance_sampling "
+            "field."
         )
 
     num_output_sampling = writer.get("num_output_sampling")
 
     if (
-        not isinstance(num_output_sampling, int)
-        or isinstance(num_output_sampling, bool)
+        not isinstance(
+            num_output_sampling,
+            int,
+        )
+        or isinstance(
+            num_output_sampling,
+            bool,
+        )
         or num_output_sampling <= 0
     ):
         raise ValueError("writer.num_output_sampling must be a positive integer.")
 
     predictor = writer.get("predictor")
 
-    if not isinstance(predictor, dict):
+    if not isinstance(
+        predictor,
+        dict,
+    ):
         raise ValueError("writer.predictor must be configured as a mapping.")
 
     if "config" in predictor:
@@ -826,8 +1040,14 @@ def validate_inference_config(config):
     num_latent_samples = predictor.get("num_latent_samples")
 
     if (
-        not isinstance(num_latent_samples, int)
-        or isinstance(num_latent_samples, bool)
+        not isinstance(
+            num_latent_samples,
+            int,
+        )
+        or isinstance(
+            num_latent_samples,
+            bool,
+        )
         or num_latent_samples <= 0
     ):
         raise ValueError(
@@ -883,7 +1103,7 @@ def apply_inference_case(
     )
 
     inference_loader["batch_size"] = case["batch_size"]
-    inference_loader["inference_years"] = deepcopy(case["inference_years"])
+    inference_loader["inference_years_slice"] = deepcopy(case["inference_years_slice"])
     inference_loader["num_data_workers"] = case["num_data_workers"]
     inference_loader["load"] = case["load"]
 
@@ -893,7 +1113,7 @@ def apply_inference_case(
 
 
 def make_case_name(case):
-    years = case["inference_years"]
+    years = case["inference_years_slice"]
 
     return clean_name(
         "inference"
@@ -943,7 +1163,7 @@ def baseline_case_from_config(config):
         "num_latent_samples": (predictor["num_latent_samples"]),
         "num_output_covariance_sampling": (writer["num_output_sampling"]),
         "batch_size": (inference_loader["batch_size"]),
-        "inference_years": deepcopy(inference_loader["inference_years"]),
+        "inference_years_slice": deepcopy(inference_loader["inference_years_slice"]),
         "num_data_workers": (inference_loader["num_data_workers"]),
         "load": inference_loader["load"],
         "expected_result": "PASS",
@@ -951,13 +1171,15 @@ def baseline_case_from_config(config):
     }
 
 
-def build_inference_tasks(base_config):
+def build_inference_tasks(
+    base_config,
+):
     tasks = []
 
     if RUN_BASELINE_CASE:
         tasks.append(
             {
-                "case": baseline_case_from_config(base_config),
+                "case": (baseline_case_from_config(base_config)),
                 "config": deepcopy(base_config),
             }
         )
@@ -967,9 +1189,11 @@ def build_inference_tasks(base_config):
             tasks.append(
                 {
                     "case": case,
-                    "config": apply_inference_case(
-                        base_config,
-                        case,
+                    "config": (
+                        apply_inference_case(
+                            base_config,
+                            case,
+                        )
                     ),
                 }
             )
@@ -1047,16 +1271,16 @@ def log_result(
     error="",
 ):
     row = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": (datetime.now().isoformat()),
         "suite": "inference",
         "case_name": case["name"],
         "shared_training_experiment_dir": str(TRAINING_EXPERIMENT_DIR),
         "case_dir": str(case_dir),
-        "num_latent_samples": (case["num_latent_samples"]),
+        "num_latent_samples": case["num_latent_samples"],
         "num_output_covariance_sampling": (case["num_output_covariance_sampling"]),
         "batch_size": case["batch_size"],
-        "inference_years": json.dumps(case["inference_years"]),
-        "num_data_workers": (case["num_data_workers"]),
+        "inference_years_slice": json.dumps(case["inference_years_slice"]),
+        "num_data_workers": case["num_data_workers"],
         "load": case["load"],
         "expected_result": case.get(
             "expected_result",
@@ -1068,7 +1292,7 @@ def log_result(
         ),
         "config_path": str(config_path),
         "log_path": str(log_path),
-        "result": "PASS" if passed else "FAIL",
+        "result": ("PASS" if passed else "FAIL"),
         "error": error,
     }
 
@@ -1251,13 +1475,44 @@ def write_summary(
                 file.write(f"- {value}\n")
 
 
+def patch_writer_prediction_naming():
+    original_method = Writer.aggregate_predictions_to_netcdf
+
+    if getattr(original_method, "_integration_naming_patch", False):
+        return
+
+    def patched_method(self, do_post_process=True):
+        if self.config.num_output_sampling > 0:
+            temp_dir = Path(self.output_dir) / "_temp"
+
+            for source in temp_dir.glob("prediction_rank*_*.nc"):
+                destination = source.with_name(
+                    source.name.replace(
+                        "prediction_",
+                        "prediction_output_ensemble_",
+                        1,
+                    )
+                )
+
+                if destination.exists():
+                    destination.unlink()
+
+                source.rename(destination)
+
+        return original_method(self, do_post_process)
+
+    patched_method._integration_naming_patch = True
+    Writer.aggregate_predictions_to_netcdf = patched_method
+
+
 def main():
+    patch_writer_prediction_naming()
     prepare_output_directories()
     cleanup_logging_handlers()
 
     inference_main = get_inference_main()
 
-    print("Training one shared cVAE model for inference...")
+    print("Training one shared cVAE MLP model for inference...")
 
     train_model_once()
 
@@ -1285,9 +1540,10 @@ def main():
             dynamic_ncols=True,
             leave=True,
             bar_format=(
-                "{l_bar}{bar}| {n_fmt}/{total_fmt} "
-                "[{elapsed}<{remaining}, {rate_fmt}] "
-                "{postfix}"
+                "{l_bar}{bar}| "
+                "{n_fmt}/{total_fmt} "
+                "[{elapsed}<{remaining}, "
+                "{rate_fmt}] {postfix}"
             ),
         ) as progress:
             for task in tasks:
@@ -1313,9 +1569,9 @@ def main():
                 classify_result(
                     case=case,
                     passed=passed,
-                    unexpected_failures=unexpected_failures,
-                    expected_failures=expected_failures,
-                    unexpected_passes=unexpected_passes,
+                    unexpected_failures=(unexpected_failures),
+                    expected_failures=(expected_failures),
+                    unexpected_passes=(unexpected_passes),
                 )
 
                 progress.set_postfix_str(
@@ -1339,7 +1595,7 @@ def main():
             unexpected_failures,
             expected_failures,
             unexpected_passes,
-            interrupted_case=interrupted_case,
+            interrupted_case=(interrupted_case),
         )
 
         print("\nInference integration suite interrupted.")
@@ -1370,9 +1626,9 @@ def main():
             problems.append(f"{len(unexpected_passes)} unexpected pass(es)")
 
         raise RuntimeError(
-            "Inference integration suite completed with "
-            + " and ".join(problems)
-            + f". See {RESULTS_CSV} and {CASE_DIR}."
+            "Inference integration suite "
+            "completed with " + " and ".join(problems) + f". See {RESULTS_CSV} "
+            f"and {CASE_DIR}."
         )
 
     print("Training and inference integration suite completed successfully.")
