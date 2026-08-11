@@ -7,13 +7,13 @@ import pytest
 import torch
 import torch.nn as nn
 
-import cccma_ppp.models.unet_models.cvae as module
-from cccma_ppp.models.layers.conv import (
+import cccma_ppp.architectures.unet.cvae as module
+from cccma_ppp.architectures.layers.conv import (
     ConvBlockConfig,
     LatentVector,
     TensorMask,
 )
-from cccma_ppp.models.unet_models.cvae import (
+from cccma_ppp.architectures.unet.cvae import (
     Generation,
     Recognition,
     cVAEUNet,

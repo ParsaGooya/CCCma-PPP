@@ -8,28 +8,28 @@ import torch.nn as nn
 
 
 from cccma_ppp.core.selectors import deterministicModelSelector
-from cccma_ppp.core.modules.deterministic import deterministicOutput
+from cccma_ppp.core.models.deterministic import deterministicOutput
 
-from cccma_ppp.models.models_abc import (
+from cccma_ppp.architectures.models_abc import (
     deterministicmodelsABC,
     modelConfigABC,
     DeterministicRequest,
     GENERATORConfig,
 )
 
-from cccma_ppp.models.layers.generic import (
+from cccma_ppp.architectures.layers.generic import (
     InitMethod,
     UpsamplingMethod,
     MaskPoolingMethod,
     OutputActivation,
     AlignmentMethod,
 )
-from cccma_ppp.models.layers.utils import (
+from cccma_ppp.architectures.layers.utils import (
     _broadcast_mask,
     _resize_tensor,
 )
 
-from cccma_ppp.models.layers.unet import (
+from cccma_ppp.architectures.layers.unet import (
     build_conv_block,
     UpBlock,
     DownBlock,
@@ -37,7 +37,7 @@ from cccma_ppp.models.layers.unet import (
 )
 
 
-from cccma_ppp.models.layers.conv import (
+from cccma_ppp.architectures.layers.conv import (
     ConvBlockConfig,
     PartialConvBlockConfig,
     ConvNeXtBlockConfig,
@@ -45,7 +45,7 @@ from cccma_ppp.models.layers.conv import (
 )
 
 
-from cccma_ppp.models.unet_models.utils import _unet_config_checks, _repeat_tensor_mask
+from cccma_ppp.architectures.unet.utils import _unet_config_checks, _repeat_tensor_mask
 
 
 @deterministicModelSelector.register("unet")

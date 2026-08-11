@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from cccma_ppp.models.layers.generic import (
+from cccma_ppp.architectures.layers.generic import (
     DropPath,
     LayerNorm2d,
     _build_activation,

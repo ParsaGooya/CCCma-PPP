@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.core.optimization import OptimizerWrapper
-from cccma_ppp.core.modules.cvae import cVAE
+from cccma_ppp.core.models.cvae import cVAE
 from cccma_ppp.data_modules.dataloader import Dataloader
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.aggregator import MetricsAggregator

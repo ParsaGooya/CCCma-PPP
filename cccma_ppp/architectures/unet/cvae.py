@@ -8,9 +8,9 @@ import torch.nn as nn
 from pathlib import Path
 
 from cccma_ppp.core.selectors import cVAEModelSelector, deterministicModelSelector
-from cccma_ppp.core.modules.cvae import cVAEOutput
+from cccma_ppp.core.models.cvae import cVAEOutput
 
-from cccma_ppp.models.models_abc import (
+from cccma_ppp.architectures.models_abc import (
     cVAEmodelConfigABC,
     cVAEmodelsABC,
     cVAEForwardRequest,
@@ -19,7 +19,7 @@ from cccma_ppp.models.models_abc import (
     GENERATORConfig,
 )
 
-from cccma_ppp.models.layers.generic import (
+from cccma_ppp.architectures.layers.generic import (
     InitMethod,
     UpsamplingMethod,
     MaskPoolingMethod,
@@ -27,12 +27,12 @@ from cccma_ppp.models.layers.generic import (
     NormalizationMethod,
     AlignmentMethod,
 )
-from cccma_ppp.models.layers.utils import (
+from cccma_ppp.architectures.layers.utils import (
     _broadcast_mask,
     _resize_tensor,
 )
 
-from cccma_ppp.models.layers.unet import (
+from cccma_ppp.architectures.layers.unet import (
     build_conv_block,
     UpBlock,
     DownBlock,
@@ -40,7 +40,7 @@ from cccma_ppp.models.layers.unet import (
 )
 
 
-from cccma_ppp.models.layers.conv import (
+from cccma_ppp.architectures.layers.conv import (
     ConvBlockConfig,
     PartialConvBlockConfig,
     ConvNeXtBlockConfig,
@@ -48,7 +48,7 @@ from cccma_ppp.models.layers.conv import (
     LatentVector,
 )
 
-from cccma_ppp.models.unet_models.utils import _unet_config_checks, _repeat_tensor_mask
+from cccma_ppp.architectures.unet.utils import _unet_config_checks, _repeat_tensor_mask
 
 
 @dataclasses.dataclass

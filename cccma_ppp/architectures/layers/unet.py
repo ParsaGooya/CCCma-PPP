@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 import copy
 
-from cccma_ppp.models.layers.generic import (
+from cccma_ppp.architectures.layers.generic import (
     MaskPoolingMethod,
     UpsamplingMethod,
     OutputActivation,
@@ -12,9 +12,9 @@ from cccma_ppp.models.layers.generic import (
 )
 
 
-from cccma_ppp.models.layers.utils import align_to_skip, _noise_injection
+from cccma_ppp.architectures.layers.utils import align_to_skip, _noise_injection
 
-from cccma_ppp.models.layers.conv import (
+from cccma_ppp.architectures.layers.conv import (
     ConvBlockConfig,
     ConvBlock,
     PartialConvBlockConfig,
@@ -26,7 +26,7 @@ from cccma_ppp.models.layers.conv import (
     TensorMask,
 )
 
-from cccma_ppp.models.layers.partialconv2d import PartialConv2d
+from cccma_ppp.architectures.layers.partialconv2d import PartialConv2d
 
 
 def build_conv_block(

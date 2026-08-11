@@ -1,4 +1,4 @@
-experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_3
+experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_4
 max_epochs: 100
 train_loader:
     dataset_config:
@@ -7,11 +7,11 @@ train_loader:
           names: [tas]
           preprocessing_pipeline:
             preprocessors_list:
-              - name: anomalies
+              - name: trend_remover
+              - name: standardizer
                 args:
                   dims: [time]
-              - name: trend_remover
-
+                  
           ensemble_mean : True
           concat_dim : time
           rename_dict :
@@ -22,13 +22,13 @@ train_loader:
             names: [tas]
             preprocessing_pipeline :
                     preprocessors_list :
-                            - name : anomalies
+                            - name: trend_remover
+                              args:
+                                    frequency: month                               
+                            - name : standardizer
                               args:
                                     dims: [time]
                                     frequency: month
-                            - name: trend_remover
-                              args:
-                                frequency: month
 
             concat_dim : time
 
@@ -81,15 +81,14 @@ module:
                         #     load_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_3/checkpoints/best.pt
                         #     freeze_weights: True
                         #     share_output_block: True    
-                        # GENERATOR: 
-                        #         noise_level:  full
-                        #         num_training_noise_samples: 10
+                        GENERATOR: 
+                                noise_level:  full
+                                num_training_noise_samples: 10
                         
 
-                    
 losspipeline:
       loss_pipeline :
-                    - name : mse
+                    - name : crps
 
       reduction : mean
 
@@ -105,11 +104,11 @@ trainer :
 optimization :
         lr : 0.0001
         optimizer_type : adam
-        # lr_scheduler_config :
-        #             min_lr : 0.00001
-        #             warmup_epochs : 1
-        #             total_epochs: 10
-        #             hold_min_lr: True
+        lr_scheduler_config :
+                    min_lr : 0.00001
+                    # warmup_epochs : 1
+                    total_epochs: 10
+                    hold_min_lr: True
 
 weights :
         spatial_method : cosine_lat

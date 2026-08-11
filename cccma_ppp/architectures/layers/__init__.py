@@ -1,6 +1,6 @@
 
 
-from cccma_ppp.models.layers.generic import (InitMethod, 
+from cccma_ppp.architectures.layers.generic import (InitMethod, 
                                              ActivationName,
                                              UpsamplingMethod, 
                                              OutputActivation,
@@ -16,7 +16,7 @@ from cccma_ppp.models.layers.generic import (InitMethod,
                                             LayerNorm2d)
 
 
-from cccma_ppp.models.layers.utils import (_same_padding,
+from cccma_ppp.architectures.layers.utils import (_same_padding,
                                         _resize_mask,
                                         _resize_tensor,
                                         _broadcast_mask,

@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 
-from cccma_ppp.models.layers.generic import AlignmentMethod, PaddingMethod
+from cccma_ppp.architectures.layers.generic import AlignmentMethod, PaddingMethod
 
 
 def _same_padding(kernel_size: int) -> int:

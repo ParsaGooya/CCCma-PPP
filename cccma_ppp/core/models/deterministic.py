@@ -8,7 +8,7 @@ import warnings
 
 from cccma_ppp.loss.loss import Losspipeline
 from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC, OutputABC
-from cccma_ppp.models.models_abc import DeterministicRequest
+from cccma_ppp.architectures.models_abc import DeterministicRequest
 from cccma_ppp.core.selectors import (
     ModuleSelector,
     deterministicModelSelector,

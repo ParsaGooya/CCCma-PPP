@@ -7,8 +7,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import math
-from cccma_ppp.models.layers.partialconv2d import PartialConv2d
-from cccma_ppp.models.layers.generic import (
+from cccma_ppp.architectures.layers.partialconv2d import PartialConv2d
+from cccma_ppp.architectures.layers.generic import (
     MaskPoolingMethod,
     NormalizationMethod,
     ActivationName,
@@ -19,12 +19,12 @@ from cccma_ppp.models.layers.generic import (
     LayerNorm2d,
     DropPath,
 )
-from cccma_ppp.models.layers.utils import (
+from cccma_ppp.architectures.layers.utils import (
     _same_padding,
     _broadcast_mask,
 )
 
-from cccma_ppp.models.layers.utils import _noise_injection, _expand_mask
+from cccma_ppp.architectures.layers.utils import _noise_injection, _expand_mask
 
 
 @dataclasses.dataclass

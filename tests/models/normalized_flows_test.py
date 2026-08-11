@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 from cccma_ppp.core.selectors import FlowSelector
-from cccma_ppp.models.normalized_flows import (
+from cccma_ppp.architectures.normalized_flows import (
     FCNN,
     MAF,
     RealNVP,

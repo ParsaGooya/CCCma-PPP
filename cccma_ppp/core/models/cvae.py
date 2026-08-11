@@ -14,8 +14,8 @@ from cccma_ppp.core.selectors import (
     cVAEModelSelector,
     _load_config_from_checkpoint,
 )
-from cccma_ppp.models.normalized_flows import NormalizedFlowConfig
-from cccma_ppp.models.models_abc import cVAEPredictRequest, cVAEForwardRequest
+from cccma_ppp.architectures.normalized_flows import NormalizedFlowConfig
+from cccma_ppp.architectures.models_abc import cVAEPredictRequest, cVAEForwardRequest
 from cccma_ppp.train.dataloader import BatchData
 from cccma_ppp.generic.runtime import RuntimeContext
 

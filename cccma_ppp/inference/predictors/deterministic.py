@@ -7,7 +7,7 @@ from cccma_ppp.core.trainer import clear_memory
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.aggregator import RunningCovariance
 from cccma_ppp.core.core_abc import moduleABC
-from cccma_ppp.core.modules.deterministic import deterministicOutput
+from cccma_ppp.core.models.deterministic import deterministicOutput
 from cccma_ppp.inference.predictors.predictor_abc import (
     PredictorABC,
     save_batch_to_netcdf,

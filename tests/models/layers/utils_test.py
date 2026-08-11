@@ -2,8 +2,8 @@ import pytest
 import torch
 import torch.nn.functional as F
 
-import cccma_ppp.models.layers.utils as module
-from cccma_ppp.models.layers.utils import (
+import cccma_ppp.architectures.layers.utils as module
+from cccma_ppp.architectures.layers.utils import (
     _broadcast_mask,
     _expand_mask,
     _get_normal,

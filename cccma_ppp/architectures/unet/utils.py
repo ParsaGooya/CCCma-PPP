@@ -1,4 +1,4 @@
-from cccma_ppp.models.layers.conv import TensorMask
+from cccma_ppp.architectures.layers.conv import TensorMask
 
 
 def _unet_config_checks(config):

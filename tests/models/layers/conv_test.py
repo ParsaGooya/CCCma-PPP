@@ -2,8 +2,8 @@ import pytest
 import torch
 import torch.nn as nn
 
-import cccma_ppp.models.layers.conv as module
-from cccma_ppp.models.layers.conv import (
+import cccma_ppp.architectures.layers.conv as module
+from cccma_ppp.architectures.layers.conv import (
     ConvBlock,
     ConvBlockConfig,
     ConvNeXtBlock,

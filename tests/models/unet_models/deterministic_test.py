@@ -6,14 +6,14 @@ import pytest
 import torch
 import torch.nn as nn
 
-import cccma_ppp.models.unet_models.deterministic as module
-from cccma_ppp.models.layers.conv import (
+import cccma_ppp.architectures.unet.deterministic as module
+from cccma_ppp.architectures.layers.conv import (
     ConvBlockConfig,
     ConvNeXtBlockConfig,
     PartialConvBlockConfig,
     TensorMask,
 )
-from cccma_ppp.models.unet_models.deterministic import (
+from cccma_ppp.architectures.unet.deterministic import (
     UNet,
     UNetConfig,
 )

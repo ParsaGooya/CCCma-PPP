@@ -2,14 +2,14 @@ import torch
 import numpy as np
 
 
-from cccma_ppp.models.models_abc import (
+from cccma_ppp.architectures.models_abc import (
     modelConfigABC,
     deterministicmodelsABC,
     DeterministicRequest,
 )
 
-from cccma_ppp.models.layers.mlp import build_mlp
-from cccma_ppp.core.modules.deterministic import deterministicOutput
+from cccma_ppp.architectures.layers.mlp import build_mlp
+from cccma_ppp.core.models.deterministic import deterministicOutput
 
 
 from typing import ClassVar
@@ -18,7 +18,7 @@ from typing import Literal
 
 from cccma_ppp.core.selectors import deterministicModelSelector
 
-from cccma_ppp.models.layers.generic import (
+from cccma_ppp.architectures.layers.generic import (
     InitMethod,
     ActivationName,
     _validate_dropout,

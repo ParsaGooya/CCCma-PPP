@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-from cccma_ppp.models.layers.generic import ActivationName, _build_activation
+from cccma_ppp.architectures.layers.generic import ActivationName, _build_activation
 
 
 def build_mlp(

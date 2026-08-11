@@ -2,7 +2,7 @@ import pytest
 import torch
 import torch.nn as nn
 
-from cccma_ppp.models.layers.partialconv2d import PartialConv2d
+from cccma_ppp.architectures.layers.partialconv2d import PartialConv2d
 
 
 def make_input(
