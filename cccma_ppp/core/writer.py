@@ -292,14 +292,20 @@ class Writer:
             post_processor = None
 
         naming_convention = "prediction"
+        save_name = None
         if self.config.num_output_sampling > 0:
-            naming_convention += "_output_ensemble"
+            save_name = naming_convention + "_output_ensemble"
+
         if getattr(self.predictor, "save_latent", False):
             naming_convention = "latent"
 
         if self.is_on_root:
             aggregate_predictions(
-                post_processor, self.output_dir, naming_convention, self.log_root
+                post_processor=post_processor, 
+                output_dir=self.output_dir, 
+                naming_convention=naming_convention, 
+                save_name=save_name,
+                logger_function=self.log_root
             )
 
         if self.is_distributed:
@@ -312,6 +318,7 @@ def aggregate_predictions(
     post_processor: PreprocessingPipeline | None,
     output_dir: Path,
     naming_convention: str = "prediction",
+    save_name: str = None,
     logger_function: callable = None,
     cleanup_temp: bool = True,
     init_time_dim: str = init_time_dim,
@@ -520,9 +527,12 @@ def aggregate_predictions(
                 f"{data_year[init_time_dim].values}"
             )
 
+        if save_name is None:
+            save_name = naming_convention
+
         output_path = (
             output_dir
-            / f"{naming_convention}_{int(year)}.nc"
+            / f"{save_name}_{int(year)}.nc"
         )
 
         data_year.to_netcdf(output_path)
