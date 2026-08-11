@@ -1,16 +1,16 @@
-experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_4
+experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_3
 max_epochs: 100
 train_loader:
     dataset_config:
         model:
           paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/forecast_data/datetime
           names: [tas]
-          preprocessing_pipeline:
-            preprocessors_list:
-              - name: trend_remover
-              - name: standardizer
-                args:
-                  dims: [time]
+        #   preprocessing_pipeline:
+        #     preprocessors_list:
+        #       - name: trend_remover
+        #       - name: standardizer
+        #         args:
+        #           dims: [time]
                   
           ensemble_mean : True
           concat_dim : time
@@ -20,15 +20,15 @@ train_loader:
         observation :
             paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5/datetime
             names: [tas]
-            preprocessing_pipeline :
-                    preprocessors_list :
-                            - name: trend_remover
-                              args:
-                                    frequency: month                               
-                            - name : standardizer
-                              args:
-                                    dims: [time]
-                                    frequency: month
+            # preprocessing_pipeline :
+            #         preprocessors_list :
+            #                 - name: trend_remover
+            #                   args:
+            #                         frequency: month                               
+            #                 - name : standardizer
+            #                   args:
+            #                         dims: [time]
+            #                         frequency: month
 
             concat_dim : time
 
@@ -81,14 +81,14 @@ module:
                         #     load_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_3/checkpoints/best.pt
                         #     freeze_weights: True
                         #     share_output_block: True    
-                        GENERATOR: 
-                                noise_level:  full
-                                num_training_noise_samples: 10
+                        # GENERATOR: 
+                        #         noise_level:  full
+                        #         num_training_noise_samples: 10
                         
 
 losspipeline:
       loss_pipeline :
-                    - name : crps
+                    - name : mse
 
       reduction : mean
 

@@ -428,7 +428,7 @@ def build_trainer(
             else:
                 print(msg)
 
-    log("creating data loaders ...")
+    log("creating data loaders (this might take a few minutes)...")
 
     config.train_loader.setup_distributed(distributed)
     return_spatial_mask = config.module.EXPECTS_MASK
