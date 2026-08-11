@@ -280,10 +280,14 @@ class UNet(deterministicmodelsABC):
         num_output_samples = request.output_sample_size
         batch_size = request.input.shape[0]
 
+        if self.training and self.config.GENERATOR is not None:
+            num_output_samples = self.config.GENERATOR.num_training_noise_samples
+
         unet_output_tensor = self.forward_decoder(request)
         output = self.output_block(unet_output_tensor)
 
         if self.config.GENERATOR is not None and num_output_samples > 0:
+            
             output = output.reshape(
                 batch_size,
                 num_output_samples,
