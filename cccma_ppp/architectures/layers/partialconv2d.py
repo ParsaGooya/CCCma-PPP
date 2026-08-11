@@ -1,21 +1,31 @@
-###############################################################################
-# BSD 3-Clause License
-#
-# Copyright (c) 2018, NVIDIA CORPORATION. All rights reserved.
-#
-# Author & Contact: Guilin Liu (guilinl@nvidia.com)
-###############################################################################
-
 import torch
 import torch.nn.functional as F
 from torch import nn
-# from timm.models.layers import trunc_normal_
 
 
 class PartialConv2d(nn.Conv2d):
-    def __init__(self, *args, **kwargs):
+    """
+    Document this class.
 
-        # whether the mask is multi-channel or not
+    Parameters
+    ----------
+    *args : Any
+        Description not yet provided.
+    **kwargs : Any
+        Description not yet provided.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        *args : Any
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
+        """
         self.multi_channel = kwargs.pop("multi_channel", False)
         self.return_mask = kwargs.pop("return_mask", False)
 
@@ -50,6 +60,26 @@ class PartialConv2d(nn.Conv2d):
         self.mask_ratio = None
 
     def forward(self, input, mask_in=None):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        input : Any
+            Description not yet provided.
+        mask_in : Any
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+
+        Raises
+        ------
+        AssertionError
+            Description not yet provided.
+        """
         assert len(input.shape) == 4
         if mask_in is not None or self.last_size != tuple(input.shape):
             self.last_size = tuple(input.shape)
@@ -58,7 +88,6 @@ class PartialConv2d(nn.Conv2d):
                 weight_maskUpdater = self.weight_maskUpdater.to(input)
 
                 if mask_in is None:
-                    # if mask is not provided, create a mask
                     if self.multi_channel:
                         mask = torch.ones(
                             input.data.shape[0],
@@ -83,9 +112,8 @@ class PartialConv2d(nn.Conv2d):
                     groups=1,
                 )
 
-                # for mixed precision training, change 1e-8 to 1e-6
                 self.mask_ratio = self.slide_winsize / (self.update_mask + 1e-8)
-                # self.mask_ratio = torch.max(self.update_mask)/(self.update_mask + 1e-8)
+
                 self.update_mask = torch.clamp(self.update_mask, 0, 1)
                 self.mask_ratio = torch.mul(self.mask_ratio, self.update_mask)
 

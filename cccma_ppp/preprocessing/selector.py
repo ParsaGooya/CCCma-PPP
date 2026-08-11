@@ -8,14 +8,14 @@ from cccma_ppp.preprocessing.registery import Registery
 @dataclasses.dataclass
 class PreprocessingStepSelector:
     """
-    Selector for preprocessing modules.
+    Document this class.
 
     Parameters
     ----------
     name : str
-        Name of the registered preprocessing module.
-    args : dict of str to object, optional
-        Arguments used to initialize the module.
+        Description not yet provided.
+    args : dict[str, object] | None
+        Description not yet provided.
     """
 
     name: str
@@ -24,42 +24,40 @@ class PreprocessingStepSelector:
 
     def get_preprocessor(self):
         """
-        Instantiate preprocessing module.
+        Document this function.
 
         Returns
         -------
-        PreprocessModuleABC
-            Initialized preprocessing module.
+        Any
+            Description not yet provided.
         """
-
         return self.registery.get(self.name.lower(), self.args)
 
     @classmethod
     def register(cls, name: str) -> Callable[..., PreprocessModuleABC]:
         """
-        Register preprocessing module.
+        Document this function.
 
         Parameters
         ----------
         name : str
-            Name used for registration.
+            Description not yet provided.
 
         Returns
         -------
-        Callable
-            Decorator for registering preprocessing modules.
+        Callable[..., PreprocessModuleABC]
+            Description not yet provided.
         """
-
         return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
         """
-        List available preprocessing modules.
+        Document this function.
 
         Returns
         -------
-        list of str
+        Any
+            Description not yet provided.
         """
-
         return cls.registery.available()

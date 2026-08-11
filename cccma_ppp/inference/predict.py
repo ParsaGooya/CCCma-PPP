@@ -10,6 +10,14 @@ import dacite
 
 
 def get_parser() -> argparse.ArgumentParser:
+    """
+    Document this function.
+
+    Returns
+    -------
+    argparse.ArgumentParser
+        Description not yet provided.
+    """
     parser = argparse.ArgumentParser(
         description="Run inference from a configuration file"
     )
@@ -24,14 +32,18 @@ def get_parser() -> argparse.ArgumentParser:
 
 
 def main(yaml_config: str):
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    yaml_config : str
+        Description not yet provided.
+    """
     distributed = Distributed.get_instance()
 
     try:
         config_data = prepare_config(yaml_config)
-
-        # to-do
-        # config.apply_overrides(args.override)
 
         config = dacite.from_dict(
             data_class=InferenceConfig,
@@ -58,9 +70,3 @@ def main(yaml_config: str):
 
     finally:
         distributed.cleanup()
-
-
-# if __name__ == "__main__":
-#     parser = get_parser()
-#     args = parser.parse_args()
-#     main(args.config)

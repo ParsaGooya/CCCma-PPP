@@ -4046,17 +4046,12 @@ class TestFinalDatasetUtilityBranches:
         assert len(dataset) == 1
 
 
-import abc
-import dataclasses
 import datetime
 from collections.abc import Sequence
-from unittest.mock import call
 
 import cftime
 import numpy as np
-import pandas as pd
 import pytest
-import xarray as xr
 
 
 class TestDatasetConfigABCStructure:

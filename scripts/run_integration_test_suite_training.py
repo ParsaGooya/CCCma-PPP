@@ -22,13 +22,7 @@ from cccma_ppp.loss import kld as _loss_kld  # noqa: F401
 from cccma_ppp.loss import loss as _loss_pipeline  # noqa: F401
 from cccma_ppp.loss import utils_loss as _loss_utils  # noqa: F401
 from cccma_ppp.architectures.mlp.cvae import cvae as _mlp_cvae  # noqa: F401
-from cccma_ppp.architectures.mlp.deterministic import (
-    deterministic as _mlp_deterministic,
-)  # noqa: F401
 from cccma_ppp.architectures.unet.cvae import cvae as _unet_cvae  # noqa: F401
-from cccma_ppp.architectures.unet.deterministic import (
-    deterministic as _unet_deterministic,
-)  # noqa: F401
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.train.train import main as train_main
 from cccma_ppp.train.train_configs import TrainConfig, prepare_config

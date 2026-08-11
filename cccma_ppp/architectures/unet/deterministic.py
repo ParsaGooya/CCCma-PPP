@@ -51,7 +51,36 @@ from cccma_ppp.architectures.unet.utils import _unet_config_checks, _repeat_tens
 @deterministicModelSelector.register("unet")
 @dataclasses.dataclass
 class UNetConfig(modelConfigABC):
+    """
+    Document this class.
 
+    Parameters
+    ----------
+    channels : list[int]
+        Description not yet provided.
+    block_config : ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig
+        Description not yet provided.
+    upsampling_method : UpsamplingMethod
+        Description not yet provided.
+    skip_alignment_method : AlignmentMethod
+        Description not yet provided.
+    transpose_kernel_sizes : list[int | tuple[int, int]] | int
+        Description not yet provided.
+    process_skip : bool
+        Description not yet provided.
+    mask_pooling : MaskPoolingMethod
+        Description not yet provided.
+    mask_fraction_threshold : float
+        Description not yet provided.
+    output_activation : OutputActivation
+        Description not yet provided.
+    output_block_hidden_channels : int | None
+        Description not yet provided.
+    init_method : InitMethod
+        Description not yet provided.
+    GENERATOR : GENERATORConfig | None
+        Description not yet provided.
+    """
 
     channels: list[int]
     block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig = (
@@ -77,7 +106,9 @@ class UNetConfig(modelConfigABC):
     NUM_OUTPUT_DIMS: ClassVar[int] = 3
 
     def __post_init__(self) -> None:
-
+        """
+        Document this function.
+        """
         _unet_config_checks(self)
 
         n_up_blocks = len(self.channels) - 1
@@ -87,17 +118,41 @@ class UNetConfig(modelConfigABC):
 
     @property
     def EXPECTS_MASK(self) -> bool:
-        return (
-            isinstance(self.block_config, PartialConvBlockConfig)
-            or getattr(self.block_config, "use_partial_conv", False)
+        """
+        Document this function.
+
+        Returns
+        -------
+        bool
+            Description not yet provided.
+        """
+        return isinstance(self.block_config, PartialConvBlockConfig) or getattr(
+            self.block_config, "use_partial_conv", False
         )
-    
+
     def build(
         self,
         input_shape: np.ndarray,
         output_shape: np.ndarray | None = None,
         added_features_dim: int | None = None,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        input_shape : np.ndarray
+            Description not yet provided.
+        output_shape : np.ndarray | None
+            Description not yet provided.
+        added_features_dim : int | None
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return UNet(
             config=self,
             input_shape=input_shape,
@@ -107,6 +162,21 @@ class UNetConfig(modelConfigABC):
 
 
 class UNet(deterministicmodelsABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    config : UNetConfig
+        Description not yet provided.
+    input_shape : np.ndarray | tuple
+        Description not yet provided.
+    output_shape : np.ndarray | tuple | None
+        Description not yet provided.
+    added_features_dim : int | None
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         config: UNetConfig,
@@ -114,6 +184,27 @@ class UNet(deterministicmodelsABC):
         output_shape: np.ndarray | tuple | None = None,
         added_features_dim: int | None = None,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        config : UNetConfig
+            Description not yet provided.
+        input_shape : np.ndarray | tuple
+            Description not yet provided.
+        output_shape : np.ndarray | tuple | None
+            Description not yet provided.
+        added_features_dim : int | None
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+        """
         super().__init__(config)
 
         self.init_method = config.init_method
@@ -142,10 +233,6 @@ class UNet(deterministicmodelsABC):
                     "needs output_block_hidden_channels to process output after "
                     "interpolation."
                 )
-            #     "This UNet implementation preserves spatial resolution. "
-            #     f"Input spatial shape {input_shape[-2:]} does not match "
-            #     f"output spatial shape {output_shape[-2:]}."
-            # )
 
         min_spatial_size = int(min(input_shape[-2:]))
 
@@ -179,7 +266,7 @@ class UNet(deterministicmodelsABC):
         output_channels = output_shape[0]
 
         channels = config.channels
-        
+
         self.initial_mapping = build_conv_block(
             input_channels,
             channels[0],
@@ -216,7 +303,8 @@ class UNet(deterministicmodelsABC):
         up_blocks: list[nn.Module] = []
         for index, skip_channels in enumerate(reversed_skips):
             inject_noise = generator_enabled and (
-                config.GENERATOR.noise_level != "medium" or index == len(reversed_skips) - 1
+                config.GENERATOR.noise_level != "medium"
+                or index == len(reversed_skips) - 1
             )
 
             out_channels = skip_channels
@@ -256,7 +344,23 @@ class UNet(deterministicmodelsABC):
         x_mask: torch.Tensor | None,
         added_features: torch.Tensor | None,
     ) -> TensorMask:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        x : torch.Tensor
+            Description not yet provided.
+        x_mask : torch.Tensor | None
+            Description not yet provided.
+        added_features : torch.Tensor | None
+            Description not yet provided.
+
+        Returns
+        -------
+        TensorMask
+            Description not yet provided.
+        """
         x_mask = _broadcast_mask(x_mask, x)
 
         if added_features is not None:
@@ -275,8 +379,19 @@ class UNet(deterministicmodelsABC):
         return TensorMask(tensor=x, mask=x_mask)
 
     def forward(self, request: DeterministicRequest) -> deterministicOutput:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        request : DeterministicRequest
+            Description not yet provided.
 
+        Returns
+        -------
+        deterministicOutput
+            Description not yet provided.
+        """
         num_output_samples = request.output_sample_size
         batch_size = request.input.shape[0]
 
@@ -287,7 +402,6 @@ class UNet(deterministicmodelsABC):
         output = self.output_block(unet_output_tensor)
 
         if self.config.GENERATOR is not None and num_output_samples > 0:
-            
             output = output.reshape(
                 batch_size,
                 num_output_samples,
@@ -297,7 +411,19 @@ class UNet(deterministicmodelsABC):
         return deterministicOutput(output=output)
 
     def forward_decoder(self, request: DeterministicRequest) -> torch.Tensor:
-    
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        request : DeterministicRequest
+            Description not yet provided.
+
+        Returns
+        -------
+        torch.Tensor
+            Description not yet provided.
+        """
         x = request.input
         x_mask = request.input_mask
         added_features = request.added_features
@@ -320,7 +446,6 @@ class UNet(deterministicmodelsABC):
             skips.append(skip)
 
         input = self.bottleneck(input)
-    
 
         if self.config.GENERATOR is not None and num_output_samples > 0:
             input = _repeat_tensor_mask(
@@ -346,7 +471,14 @@ class UNet(deterministicmodelsABC):
 
         return output_tensor
 
-
     @property
     def output_block(self) -> UNetOutput:
+        """
+        Document this function.
+
+        Returns
+        -------
+        UNetOutput
+            Description not yet provided.
+        """
         return self.output

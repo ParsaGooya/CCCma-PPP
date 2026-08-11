@@ -1,11 +1,8 @@
 from types import SimpleNamespace
 
 import pytest
-import torch
 
-from cccma_ppp.architectures.layers.conv import TensorMask
 from cccma_ppp.architectures.unet.utils import (
-    _repeat_tensor_mask,
     _unet_config_checks,
 )
 

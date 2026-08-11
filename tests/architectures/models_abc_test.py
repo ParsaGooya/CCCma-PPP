@@ -9,9 +9,7 @@ import torch.nn as nn
 import cccma_ppp.architectures.models_abc as module
 from cccma_ppp.architectures.models_abc import (
     CheckpointConfig,
-    DeterministicRequest,
     GENERATORConfig,
-    cVAEForwardRequest,
     cVAEmodelConfigABC,
     cVAEmodelsABC,
     cVAEPredictRequest,
