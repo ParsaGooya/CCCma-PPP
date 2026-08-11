@@ -2,6 +2,8 @@ import numpy as np
 import xarray as xr
 from pathlib import Path
 import joblib
+import datetime
+import cftime
 from typing import ClassVar, Literal
 
 from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
@@ -102,7 +104,7 @@ class Normalizer(PreprocessModuleABC):
         self.fitted = True
         return self
 
-    def transform(self, data: xr.DataArray):
+    def transform(self, data: xr.Dataset):
         """
         Apply min-max normalization.
 
@@ -133,7 +135,7 @@ class Normalizer(PreprocessModuleABC):
 
         return (data - minimum) / (maximum - minimum)
 
-    def inverse_transform(self, data: xr.DataArray):
+    def inverse_transform(self, data: xr.Dataset):
         """
         Reverse normalization.
 
@@ -265,7 +267,7 @@ class Standardizer(PreprocessModuleABC):
         self.fitted = True
         return self
 
-    def transform(self, data: xr.DataArray):
+    def transform(self, data: xr.Dataset):
         """
         Apply standardization.
 
@@ -293,7 +295,7 @@ class Standardizer(PreprocessModuleABC):
 
         return (data - mean) / std
 
-    def inverse_transform(self, data: xr.DataArray):
+    def inverse_transform(self, data: xr.Dataset):
         """
         Reverse standardization.
 
@@ -397,7 +399,7 @@ class AnomaliesScaler(PreprocessModuleABC):
         self.fitted = True
         return self
 
-    def transform(self, data: xr.DataArray):
+    def transform(self, data: xr.Dataset):
         """
         Compute anomalies.
 
@@ -420,7 +422,7 @@ class AnomaliesScaler(PreprocessModuleABC):
        
         return data - mean
 
-    def inverse_transform(self, data: xr.DataArray):
+    def inverse_transform(self, data: xr.Dataset):
         """
         Reconstruct original values from anomalies.
 
@@ -444,6 +446,312 @@ class AnomaliesScaler(PreprocessModuleABC):
 
         return data + mean
 
+
+@PreprocessingStepSelector.register("trend_remover")
+class TrendRemover(PreprocessModuleABC):
+    """
+    Linear trend-removal preprocessor.
+
+    Fits and removes a linear trend along the initialization-time dimension
+    independently at each remaining data location.
+
+    Parameters
+    ----------
+    frequency : {"month", "day"} or None, optional
+        Temporal grouping used when fitting the trend.
+
+        - ``None``: fit one trend using all initialization times.
+        - ``"month"``: fit a separate trend for each calendar month.
+        - ``"day"``: fit a separate trend for each day of year.
+    """
+
+    def __init__(
+        self,
+        frequency: Literal["month", "day"] | None = None,
+        **kwargs,
+    ) -> None:
+
+        if frequency not in {None, "month", "day"}:
+            raise ValueError(
+                f"Unsupported frequency {frequency!r}. "
+                "Expected None, 'month', or 'day'."
+            )
+
+        self.frequency = frequency
+        self.dims = [self.init_time_dim]
+
+        self.slope: xr.Dataset | None = None
+        self.intercept: xr.Dataset | None = None
+        self.time_origin = None
+
+        self.fitted = False
+
+    @staticmethod
+    def _time_to_numeric(
+        times: xr.DataArray,
+        origin: (np.datetime64
+                | datetime.datetime
+                | cftime.datetime
+                ),  
+    ) -> xr.DataArray:
+        """
+        Convert datetime-like values to elapsed days from a reference time.
+
+        Parameters
+        ----------
+        times : xr.DataArray
+            Datetime-like time coordinate.
+        origin : datetime-like
+            Reference time corresponding to zero elapsed days.
+
+        Returns
+        -------
+        xr.DataArray
+            Numeric elapsed time in days, with the same dimensions and
+            coordinates as ``times``.
+        """
+        values = np.asarray(times.values)
+
+        if isinstance(origin, xr.DataArray):
+            origin = origin.values
+
+        if isinstance(origin, np.ndarray):
+            if origin.ndim != 0:
+                raise ValueError("'origin' must be a scalar time value.")
+            origin = origin[()]
+
+        if values.size == 0:
+            raise ValueError("Time coordinate cannot be empty.")
+
+        if isinstance(values.reshape(-1)[0], cftime.datetime):
+            numeric = np.asarray(
+                [
+                    (time - origin).total_seconds() / 86400.0
+                    for time in values.reshape(-1)
+                ],
+                dtype=np.float64,
+            ).reshape(values.shape)
+
+        else:
+            numeric = (
+                (values - origin) / np.timedelta64(1, "D")
+            ).astype(np.float64)
+
+        return xr.DataArray(
+            numeric,
+            dims=times.dims,
+            coords=times.coords,
+        )
+
+    def _fit_linear_trend(
+        self,
+        data: xr.Dataset,
+    ) -> tuple[xr.Dataset, xr.Dataset]:
+        """
+        Fit a first-order polynomial along initialization time.
+
+        Returns
+        -------
+        slope : xr.Dataset
+            Linear slope for each data variable.
+        intercept : xr.Dataset
+            Linear intercept for each data variable.
+        """
+        numeric_time = self._time_to_numeric(
+            data[self.init_time_dim],
+            origin=self.time_origin,
+        )
+
+        data_numeric = data.assign_coords(
+            {
+                self.init_time_dim: numeric_time.values,
+            }
+        )
+
+        coefficients = data_numeric.polyfit(
+            dim=self.init_time_dim,
+            deg=1,
+            skipna=True,
+        )
+
+        slope = xr.Dataset()
+        intercept = xr.Dataset()
+
+        for name in data.data_vars:
+            coeff_name = f"{name}_polyfit_coefficients"
+
+            if coeff_name not in coefficients:
+                raise RuntimeError(
+                    f"Expected coefficient variable {coeff_name!r} "
+                    "was not produced by xarray.polyfit."
+                )
+
+            coeff = coefficients[coeff_name]
+
+            slope[name] = coeff.sel(
+                degree=1,
+                drop=True,
+            )
+
+            intercept[name] = coeff.sel(
+                degree=0,
+                drop=True,
+            )
+
+        return slope, intercept
+
+    def fit(
+        self,
+        data: xr.Dataset,
+        mask: xr.DataArray | None = None,
+    ):
+        """
+        Fit linear temporal trends for each data variable.
+        """
+        if self.init_time_dim not in data.dims:
+            raise ValueError(
+                f"Data must contain the initialization-time dimension "
+                f"{self.init_time_dim!r}."
+            )
+
+        if mask is not None:
+            data = data.where(~mask)
+
+        self.time_origin = data[self.init_time_dim].min()
+            
+
+        if self.frequency is None:
+            self.slope, self.intercept = self._fit_linear_trend(data)
+                
+        else:
+            grouped_data = self._add_grouping_coordinate(data)
+
+            slopes = []
+            intercepts = []
+
+            for group_value, group in grouped_data.groupby(
+                self.frequency
+            ):
+                if group.sizes[self.init_time_dim] < 2:
+                    raise ValueError(
+                        "At least two initialization times are required "
+                        "to fit each trend. "
+                        f"{self.frequency!r} group {group_value!r} "
+                        "contains fewer than two samples."
+                    )
+
+                slope, intercept = self._fit_linear_trend(group)
+
+                slopes.append(
+                    slope.expand_dims(
+                        {self.frequency: [group_value]}
+                    )
+                )
+
+                intercepts.append(
+                    intercept.expand_dims(
+                        {self.frequency: [group_value]}
+                    )
+                )
+
+            self.slope = xr.concat(
+                slopes,
+                dim=self.frequency,
+            )
+
+            self.intercept = xr.concat(
+                intercepts,
+                dim=self.frequency,
+            )
+
+        self.slope = self.slope.load()
+        self.intercept = self.intercept.load()
+
+        self.fitted = True
+        return self
+
+    def transform(
+        self,
+        data: xr.Dataset,
+    ) -> xr.Dataset:
+        """
+        Remove the fitted linear trend.
+
+        Parameters
+        ----------
+        data : xr.Dataset
+            Input data.
+
+        Returns
+        -------
+        xr.Dataset
+            Detrended data.
+        """
+        self._check_fitted()
+
+        slope = self._align_stat_for_transform(
+            data=data,
+            stat=self.slope,
+        )
+
+        intercept = self._align_stat_for_transform(
+            data=data,
+            stat=self.intercept,
+        )
+
+        numeric_time = self._time_to_numeric(
+            data[self.init_time_dim],
+            origin=self.time_origin,
+        )
+
+        trend = slope * numeric_time + intercept
+
+        return data - trend
+
+    def inverse_transform(
+        self,
+        data: xr.Dataset,
+    ) -> xr.Dataset:
+        """
+        Restore the fitted linear trend.
+
+        When a lead-time dimension is present, the trend is evaluated at
+        forecast target times rather than initialization times.
+
+        Parameters
+        ----------
+        data : xr.Dataset
+            Detrended data.
+
+        Returns
+        -------
+        xr.Dataset
+            Data with the fitted trend restored.
+        """
+        self._check_fitted()
+
+        slope = align_stat_data_lead_time_inverse_transform(
+            ds=data,
+            stat=self.slope,
+            lead_time_resolution=self.lead_time_resolution,
+        )
+
+        intercept = align_stat_data_lead_time_inverse_transform(
+            ds=data,
+            stat=self.intercept,
+            lead_time_resolution=self.lead_time_resolution,
+        )
+
+        target_time = self._get_inverse_target_time(data)
+
+        numeric_time = self._time_to_numeric(
+            target_time,
+            origin=self.time_origin,
+        )
+
+        trend = slope * numeric_time + intercept
+
+        return data + trend
 
 @PreprocessingStepSelector.register("flattener")
 class Flattennanremove(PreprocessModuleABC):
@@ -479,7 +787,7 @@ class Flattennanremove(PreprocessModuleABC):
     def fit(
         self,
         data: xr.Dataset | xr.DataArray,
-        target: xr.DataArray | None = None,
+        target: xr.Dataset | xr.DataArray | None = None,
         mask=None,
         save: bool = False,
         save_name: str | None = None,
@@ -591,7 +899,7 @@ class Flattennanremove(PreprocessModuleABC):
                     f"Missing dimensions: {missing_dims}."
                 )
 
-    def transform(self, data: xr.DataArray) -> xr.Dataset | xr.DataArray:
+    def transform(self, data: xr.Dataset) -> xr.Dataset:
         """
         Apply flattening and spatial filtering.
 
@@ -617,7 +925,7 @@ class Flattennanremove(PreprocessModuleABC):
             ..., "ref"
         )
 
-    def inverse_transform(self, data: xr.DataArray) -> xr.DataArray:
+    def inverse_transform(self, data: xr.Dataset) -> xr.Dataset:
         """
         Restore original spatial layout.
 

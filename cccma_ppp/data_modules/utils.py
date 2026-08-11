@@ -10,7 +10,6 @@ import calendar
 import pandas as pd
 from collections.abc import Iterator
 
-from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 from cccma_ppp.configs import (supported_NN_dimensions_sorted, 
                                required_sample_dimensions, 
                                realization_dim,
@@ -53,7 +52,6 @@ def _load_xarray_data(
     selection: dict | None = None,
     names: list | None = None,
     ensemble_mean: bool = False,
-    preprocessor: PreprocessModuleABC | None = None,
     concat_dim: str = "year",
     rename_dict: dict | None = None,
     chunks: dict | None = None,
@@ -76,8 +74,6 @@ def _load_xarray_data(
         Variables to extract.
     ensemble_mean : bool, optional
         Whether to average across ensembles.
-    preprocessor : PreprocessModuleABC or None, optional
-        Preprocessing pipeline to apply.
     concat_dim : str, optional
         Dimension used for concatenation.
     rename_dict : dict or None, optional
@@ -142,9 +138,6 @@ def _load_xarray_data(
                 f"Coordinate {init_time_dim!r} must contain datetime64 "
                 "or cftime datetime values to derive year, month, and day."
             ) from exc
-
-    if preprocessor is not None:
-        ds = preprocessor.transform(ds)
 
     nn_dims = [dim for dim in supported_NN_dimensions_sorted if dim in ds.dims]
 

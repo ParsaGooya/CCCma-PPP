@@ -119,7 +119,7 @@ class PreprocessingPipeline:
             self.fitted_preprocessors = []
 
             for step_name, preprocessor in self.pipeline:
-                preprocessor.fit(data_processed, mask=mask)
+                preprocessor.fit(data=data_processed, mask=mask)
                 data_processed = preprocessor.transform(data_processed)
                 self.steps.append(step_name)
                 self.fitted_preprocessors.append(preprocessor)

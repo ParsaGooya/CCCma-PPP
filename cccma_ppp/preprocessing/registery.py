@@ -65,7 +65,7 @@ class Registery:
         if config is not None:
             return cls(**(config))
         else:
-            return cls
+            return cls()
 
     def available(self):
         """

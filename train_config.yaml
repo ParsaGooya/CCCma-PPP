@@ -10,7 +10,7 @@ train_loader:
               - name: anomalies
                 args:
                   dims: [time]
-              # - name: flattener
+              - name: trend_remover
 
           ensemble_mean : True
           concat_dim : time
@@ -26,7 +26,9 @@ train_loader:
                               args:
                                     dims: [time]
                                     frequency: month
-                            # - name : flattener
+                            - name: trend_remover
+                              args:
+                                frequency: month
 
             concat_dim : time
 

@@ -19,7 +19,7 @@ class PreprocessingStepSelector:
     """
 
     name: str
-    args: dict[str, object] = dataclasses.field(default_factory=dict)
+    args: dict[str, object] | None = None
     registery: ClassVar[Registery] = Registery()
 
     def get_preprocessor(self):
