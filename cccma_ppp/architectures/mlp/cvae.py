@@ -4,16 +4,16 @@ import numpy as np
 from typing import ClassVar
 import dataclasses
 
-from cccma_ppp.models.models_abc import (
+from cccma_ppp.architectures.models_abc import (
     cVAEmodelsABC,
     cVAEmodelConfigABC,
     cVAEForwardRequest,
     cVAEPredictRequest,
 )
-from cccma_ppp.models.layers.mlp import build_mlp
-from cccma_ppp.core.modules.cvae import cVAEOutput
+from cccma_ppp.architectures.layers.mlp import build_mlp
+from cccma_ppp.core.models.cvae import cVAEOutput
 
-from cccma_ppp.models.layers.generic import (
+from cccma_ppp.architectures.layers.generic import (
     InitMethod,
     ActivationName,
     _validate_dropout,
@@ -26,32 +26,30 @@ from cccma_ppp.core.selectors import cVAEModelSelector
 @dataclasses.dataclass
 class cVAE_MLPConfig(cVAEmodelConfigABC):
     """
-    Document this class.
+    Configuration for MLP-based conditional variational autoencoder (cVAE).
 
     Parameters
     ----------
-    encoder_hidden_dims : list
-        Description not yet provided.
+    encoder_hidden_dims : list of int
+        Hidden layer sizes for encoder network.
     latent_size : int
-        Description not yet provided.
-    condition_embedding_dims : list | None
-        Description not yet provided.
-    condition_embedding_size : int | None
-        Description not yet provided.
-    decoder_hidden_dims : list
-        Description not yet provided.
-    condition_dependant_latent : bool
-        Description not yet provided.
-    condemb_to_decoder : bool
-        Description not yet provided.
-    batch_normalization : bool
-        Description not yet provided.
-    dropout_rate : float
-        Description not yet provided.
-    init_method : InitMethod
-        Description not yet provided.
-    activation : ActivationName
-        Description not yet provided.
+        Dimensionality of latent space.
+    condition_embedding_dims : list of int
+        Hidden layer sizes for condition embedding network.
+    condition_embedding_size : int
+        Output size of condition embedding.
+    decoder_hidden_dims : list of int or None, optional
+        Hidden layer sizes for decoder network.
+    condition_dependant_latent : bool, optional
+        Whether latent distribution depends on condition.
+    condemb_to_decoder : bool, optional
+        Whether to pass condition embedding to decoder.
+    batch_normalization : bool, optional
+        Whether to use batch normalization.
+    dropout_rate : float or None, optional
+        Dropout probability.
+    init_method : InitMethod, optional
+        Weight initialization method.
     """
 
     encoder_hidden_dims: list
@@ -73,13 +71,23 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Validate and finalize cVAE configuration.
+
+        Initializes parent configuration, sets default decoder and
+        conditioning behavior, and validates parameter consistency.
+
+        Returns
+        -------
+        None
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If dropout rate is outside [0, 1].
+        ValueError
+            If conditioning configuration is inconsistent with latent setup.
         """
+
         _validate_dropout(self.dropout_rate)
 
         if self.decoder_hidden_dims is None:
@@ -102,14 +110,6 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
 
     @property
     def EXPECTS_MASK(self) -> bool:
-        """
-        Document this function.
-
-        Returns
-        -------
-        bool
-            Description not yet provided.
-        """
         return False
 
     def build(
@@ -119,22 +119,23 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
         added_features_dim: int = None,
     ):
         """
-        Document this function.
+        Build cVAE MLP model instance.
 
         Parameters
         ----------
         input_shape : np.ndarray
-            Description not yet provided.
-        output_shape : np.ndarray | None
-            Description not yet provided.
-        added_features_dim : int
-            Description not yet provided.
+            Input tensor shape.
+        output_shape : np.ndarray or None, optional
+            Output tensor shape.
+        added_features_dim : int or None, optional
+            Number of additional features.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        cVAE_MLP
+            Instantiated model.
         """
+
         return cVAE_MLP(
             config=self,
             input_shape=input_shape,
@@ -145,18 +146,18 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
 
 class cVAE_MLP(cVAEmodelsABC):
     """
-    Document this class.
+    MLP-based conditional variational autoencoder (cVAE).
 
     Parameters
     ----------
     config : cVAE_MLPConfig
-        Description not yet provided.
-    input_shape : np.ndarray | tuple
-        Description not yet provided.
-    output_shape : np.ndarray | tuple | None
-        Description not yet provided.
-    added_features_dim : int
-        Description not yet provided.
+        Model configuration.
+    input_shape : np.ndarray
+        Input tensor shape.
+    output_shape : np.ndarray or None
+        Output tensor shape.
+    added_features_dim : int or None
+        Number of additional input features.
     """
 
     def __init__(
@@ -167,24 +168,25 @@ class cVAE_MLP(cVAEmodelsABC):
         added_features_dim: int = None,
     ):
         """
-        Document this function.
+        Initialize cVAE MLP model.
 
         Parameters
         ----------
         config : cVAE_MLPConfig
-            Description not yet provided.
-        input_shape : np.ndarray | tuple
-            Description not yet provided.
-        output_shape : np.ndarray | tuple | None
-            Description not yet provided.
-        added_features_dim : int
-            Description not yet provided.
+            Model configuration.
+        input_shape : np.ndarray
+            Input shape.
+        output_shape : np.ndarray or None
+            Output shape.
+        added_features_dim : int or None
+            Number of additional features.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If shapes do not match expected dimensions or checkpoint.
         """
+
         super().__init__(config)
 
         self.encoder_hidden_dims = config.encoder_hidden_dims
@@ -289,18 +291,20 @@ class cVAE_MLP(cVAEmodelsABC):
 
     def forward(self, request: cVAEForwardRequest) -> cVAEOutput:
         """
-        Document this function.
+        Perform forward pass through cVAE.
 
         Parameters
         ----------
-        request : cVAEForwardRequest
-            Description not yet provided.
+        request
+            cVAEForwardRequest object
 
         Returns
         -------
         cVAEOutput
-            Description not yet provided.
+            Output containing predictions, latent parameters,
+            and optional conditioning statistics.
         """
+
         x = request.target
         x_mask = request.target_mask
         condition = request.condition
@@ -323,10 +327,11 @@ class cVAE_MLP(cVAEmodelsABC):
 
         if posterior_variance_limits is not None:
             log_var = torch.clamp(
-                log_var,
-                min=posterior_variance_limits[0].type_as(mu),
+                log_var, 
+                min=posterior_variance_limits[0].type_as(mu), 
                 max=posterior_variance_limits[1].type_as(mu),
             )
+
 
         latent_samples = self._sample(mu, log_var, latent_sample_size)
 
@@ -354,18 +359,20 @@ class cVAE_MLP(cVAEmodelsABC):
         request: cVAEPredictRequest,
     ) -> cVAEOutput:
         """
-        Document this function.
+        Generate samples from learned prior.
 
         Parameters
         ----------
-        request : cVAEPredictRequest
-            Description not yet provided.
+        request
+            cVAE predict arguments specified
+            by cVAEPredictRequest.
 
         Returns
         -------
         cVAEOutput
-            Description not yet provided.
+            Generated samples and conditioning outputs.
         """
+
         condition = request.condition
         added_features = request.added_features
         latent_sample_size = request.latent_sample_size
@@ -374,7 +381,7 @@ class cVAE_MLP(cVAEmodelsABC):
         _shape_model_output = (latent_sample_size, B, C, -1)
 
         latent_samples, cond_mu, cond_log_var = self._sample_prior(request)
-
+        
         output = self._generate(
             latent_samples, condition=cond_mu, added_features=added_features
         )
@@ -396,24 +403,22 @@ class cVAE_MLP(cVAEmodelsABC):
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
         """
-        Document this function.
+        Encode input into latent distribution parameters.
 
         Parameters
         ----------
         x : torch.Tensor
-            Description not yet provided.
-        x_mask : torch.Tensor | None
-            Description not yet provided.
-        condition : torch.Tensor
-            Description not yet provided.
-        added_features : torch.Tensor
-            Description not yet provided.
+            Input tensor.
+        condition : torch.Tensor or None
+            Conditioning embedding.
+        added_features : torch.Tensor or None
 
         Returns
         -------
-        tuple[torch.Tensor]
-            Description not yet provided.
+        tuple of torch.Tensor
+            (mu, log_var)
         """
+
         if x_mask is not None:
             x = x * x_mask
 
@@ -443,22 +448,19 @@ class cVAE_MLP(cVAEmodelsABC):
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
         """
-        Document this function.
+        Compute condition embedding.
 
         Parameters
         ----------
-        condition : torch.Tensor
-            Description not yet provided.
-        condition_mask : torch.Tensor
-            Description not yet provided.
-        added_features : torch.Tensor
-            Description not yet provided.
+        condition : torch.Tensor or None
+        added_features : torch.Tensor or None
 
         Returns
         -------
-        tuple[torch.Tensor]
-            Description not yet provided.
+        tuple
+            (cond_mu, cond_log_var)
         """
+
         if added_features is not None:
             x_features = added_features.flatten(start_dim=1)
         else:
@@ -488,22 +490,20 @@ class cVAE_MLP(cVAEmodelsABC):
         added_features: torch.Tensor = None,
     ) -> torch.Tensor:
         """
-        Document this function.
+        Decode latent samples into output space.
 
         Parameters
         ----------
         latent_samples : torch.Tensor
-            Description not yet provided.
-        condition : torch.Tensor
-            Description not yet provided.
-        added_features : torch.Tensor
-            Description not yet provided.
+        condition : torch.Tensor or None
+        added_features : torch.Tensor or None
 
         Returns
         -------
         torch.Tensor
-            Description not yet provided.
+            Decoded outputs.
         """
+
         latent_sample_size, batch_size = latent_samples.shape[:-1]
 
         x_features = (
@@ -515,9 +515,7 @@ class cVAE_MLP(cVAEmodelsABC):
             latent_samples = torch.cat(
                 [
                     latent_samples,
-                    x_features.unsqueeze(0).expand(
-                        (latent_sample_size, *x_features.shape)
-                    ),
+                    x_features.unsqueeze(0).expand((latent_sample_size, *x_features.shape)),
                 ],
                 dim=-1,
             )
@@ -533,9 +531,7 @@ class cVAE_MLP(cVAEmodelsABC):
 
         feature_size = latent_samples.shape[-1]
 
-        latent_samples = latent_samples.reshape(
-            latent_sample_size * batch_size, feature_size
-        )
+        latent_samples = latent_samples.reshape(latent_sample_size * batch_size, feature_size)
         out = self.decoder(latent_samples)
 
         return out.reshape(latent_sample_size, batch_size, -1)

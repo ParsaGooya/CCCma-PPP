@@ -1,10 +1,12 @@
 import abc
-from typing import final, ClassVar
+from typing import final, ClassVar, Any
+from collections.abc import Mapping
 from pathlib import Path
 import gc
 import glob
 import xarray as xr
 import numpy as np
+import pandas as pd
 import dataclasses
 
 from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
@@ -12,6 +14,7 @@ from cccma_ppp.configs import (
     required_sample_dimensions,
     realization_dim,
     supported_NN_dimensions_sorted,
+    lead_time_resolution
 )
 
 from cccma_ppp.data_modules.utils import (
@@ -21,65 +24,42 @@ from cccma_ppp.data_modules.utils import (
     infer_time_resolution,
     get_time_representation,
     TimeTypes,
-    TimeFrequency,
+    TimeFrequency
 )
 from cccma_ppp.generic.runtime import RuntimeContext
 
 
+
 init_time_dim, lead_time_dim = required_sample_dimensions
-
-
 @dataclasses.dataclass
 class infoclass:
     """
-    Document this class.
+    Container for dataset metadata.
 
     Parameters
     ----------
-    sizes : dict | None
-        Description not yet provided.
-    start_time : xr.DataArray | np.ndarray | str | int | None
-        Description not yet provided.
-    final_time : xr.DataArray | np.ndarray | str | int | None
-        Description not yet provided.
+    sizes : dict or None
+        Sizes of non-spatial dataset dimensions.
+    start_time : xr.DataArray or np.ndarray or str or int or None
+        Earliest available time.
+    final_time : xr.DataArray or np.ndarray or str or int or None
+        Latest available time.
     coords : dict
-        Description not yet provided.
-    time_coords_type : TimeTypes
-        Description not yet provided.
-    init_time_freq : TimeFrequency
-        Description not yet provided.
+        Spatial and ensembles coordinates.
     """
 
     sizes: dict | None
     start_time: xr.DataArray | np.ndarray | str | int | None
     final_time: xr.DataArray | np.ndarray | str | int | None
     coords: dict
-    time_coords_type: TimeTypes
+    dims: tuple[str, ...] 
+    time_coords_type: TimeTypes 
     init_time_freq: TimeFrequency
 
 
 class DataConfigABC(abc.ABC):
     """
-    Document this class.
-
-    Attributes
-    ----------
-    paths : str
-        Description not yet provided.
-    names : list[str]
-        Description not yet provided.
-    preprocessing_pipeline : PreprocessingPipeline
-        Description not yet provided.
-    realization_list : list | None
-        Description not yet provided.
-    ensemble_mean : bool | None
-        Description not yet provided.
-    concat_dim : str
-        Description not yet provided.
-    file_type : str
-        Description not yet provided.
-    rename_dict : dict
-        Description not yet provided.
+    Abstract base class for dataset configuration.
     """
 
     paths: str
@@ -94,44 +74,64 @@ class DataConfigABC(abc.ABC):
     init_time_dim: ClassVar[str] = init_time_dim
     lead_time_dim: ClassVar[str] = lead_time_dim
     realization_dim: ClassVar[str] = realization_dim
+    lead_time_resolution: ClassVar[str] = lead_time_resolution
     supported_NN_dimensions: ClassVar[tuple] = supported_NN_dimensions_sorted
+
 
     def __init__(self):
         """
-        Document this function.
+        Initialize data configuration.
+
+        Ensures preprocessing pipeline exists and assigns its name.
+
+        Returns
+        -------
+        None
 
         Raises
         ------
         AttributeError
-            Description not yet provided.
+            If preprocessing_pipeline is not defined.
         """
         if not hasattr(self, "preprocessing_pipeline"):
             raise AttributeError(
                 f"{type(self).__name__} must define preprocessing_pipeline"
             )
 
+        self.data = None
         self._check_ensemble = False
+
         if self.realization_list is not None:
             self._check_ensemble = True
 
-        self.preprocessing_pipeline.set_name(self.TYPE)
+        self.preprocessing_pipeline.set_name(self.TYPE, self.rename_dict)
 
-        self._resolve_data()
-        self.info = self._get_ds_info()
+        _resolve_data(self)
+        self.info = _get_ds_info(self)
 
     @property
     @abc.abstractmethod
     def TYPE(self) -> str:
         """
-        Document this function.
+        Type identifier for dataset.
+
+        Returns
+        -------
+        str
         """
+
         pass
 
     @classmethod
     @abc.abstractmethod
     def _allowed_dims(cls) -> frozenset[str]:
         """
-        Document this function.
+        Allowed dataset dimensions.
+
+        Returns
+        -------
+        frozenset of str
+            Set of allowed dataset dimension names.
         """
         pass
 
@@ -139,28 +139,13 @@ class DataConfigABC(abc.ABC):
     @abc.abstractmethod
     def _required_dims(cls) -> frozenset[str]:
         """
-        Document this function.
-        """
-        pass
-
-    @final
-    def _resolve_data(self):
-        """
-        Document this function.
-        """
-        _resolve_data(self)
-
-    @final
-    def _get_ds_info(self):
-        """
-        Document this function.
+        Required dataset dimensions.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        frozenset of str
         """
-        return _get_ds_info(self)
+        pass
 
     @final
     def fit_preprocessor_pipeline(
@@ -172,21 +157,24 @@ class DataConfigABC(abc.ABC):
         save_name: str | None = None,
     ):
         """
-        Document this function.
+        Fit preprocessing pipeline on dataset.
 
         Parameters
         ----------
         selection : dict
-            Description not yet provided.
-        mask : bool
-            Description not yet provided.
-        save : bool
-            Description not yet provided.
-        save_path : Path | str | None
-            Description not yet provided.
-        save_name : str | None
-            Description not yet provided.
+            Subset selection for dataset.
+        mask : bool, optional
+            Whether to apply training mask.
+        save : bool, optional
+            Whether to save pipeline.
+        save_path : pathlib.Path or str or None, optional
+        save_name : str or None, optional
+
+        Returns
+        -------
+        None
         """
+        
         _base = _load_xarray_data(
             self.list_paths,
             names=self.names,
@@ -196,11 +184,7 @@ class DataConfigABC(abc.ABC):
             rename_dict=self.rename_dict,
         )
 
-        _mask = (
-            _create_train_mask(_base[self.init_time_dim], _base[self.lead_time_dim])
-            if mask
-            else None
-        )
+        _mask = _create_train_mask(_base[self.init_time_dim], _base[self.lead_time_dim]) if mask else None
 
         self.preprocessing_pipeline.fit(
             base_data=_base.load(),
@@ -217,17 +201,20 @@ class DataConfigABC(abc.ABC):
     @final
     def load_preprocessor_pipeline(self, load_dir: Path | str | None = None):
         """
-        Document this function.
+        Load fitted preprocessing pipeline.
 
         Parameters
         ----------
-        load_dir : Path | str | None
-            Description not yet provided.
+        load_dir : pathlib.Path or str or None
+
+        Returns
+        -------
+        None
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If loaded pipeline is not fitted.
         """
         if load_dir is None:
             load_dir = Path(RuntimeContext.GLOBAL_EXP_DIR) / "preprocessing_pipeline"
@@ -246,24 +233,137 @@ class DataConfigABC(abc.ABC):
                 f"the loaded preprocessor for {self.preprocessing_pipeline.name} is not fitted!"
             )
 
+    @final
+    def open_xarray_data(self, 
+                          load: bool = False, 
+                          add_time_auxiliary_coords: bool = False):
+        """
+        Lazily Open dataset from xarray sources.
 
-def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
+        Parameters
+        ---------- 
+        load: bool
+            If True, the dataset will be loaded into memory.
+        add_time_auxiliary_coords: bool
+            If True, auxilary year, month and day coords will 
+            be extracted from "init_time_dim".
+
+        Returns
+        -------
+        self
+        """
+
+        self.data = _load_xarray_data(
+            self.list_paths,
+            names=self.names,
+            ensemble_mean=self.ensemble_mean,
+            selection={self.realization_dim: self.coords[self.realization_dim]}
+            if self.coords.get(self.realization_dim) is not None
+            else None,
+            concat_dim=self.concat_dim,
+            rename_dict=self.rename_dict,
+            add_time_auxiliary_coords=add_time_auxiliary_coords,
+            load=load,
+        )
+
+        return self
+
+    @final
+    def isel(
+        self,
+        indexers: dict[str, Any] | None = None,
+        **indexers_kwargs: Any,
+    ):
+        
+        """
+        Select data by integer-location indexing and apply preprocessing.
+
+        This is a thin wrapper around ``xarray.DataArray.isel`` (or
+        ``xarray.Dataset.isel``), followed by application of the configured
+        preprocessing pipeline.
+
+        Parameters
+        ----------
+        indexers : dict of {str: indexer}, optional
+            Mapping from dimension names to integer-based indexers. Accepted
+            indexer types are those supported by xarray, such as integers,
+            slices, arrays, or DataArrays.
+
+        **indexers_kwargs : Any
+            Additional dimension-indexer pairs passed directly to
+            ``xarray.isel``. These are combined with ``indexers`` following
+            xarray's standard behavior.
+
+        Returns
+        -------
+        xr.DataArray or xr.Dataset
+            The selected data after applying the preprocessing pipeline.
+
+        Raises
+        ------
+        ValueError
+            If no data has been loaded.
+        """        
+        self._check_opened()
+
+        ds = self.data.isel(indexers=indexers, **indexers_kwargs)
+
+        return self.preprocessing_pipeline.transform(ds)
+
+    @final
+    @property
+    def coords(self) -> Mapping[str, int]:
+        return self.info.coords
+
+    @final
+    @property
+    def sizes(self) -> Mapping[str, int]:
+        return self.info.sizes
+        
+    @final
+    @property
+    def dims(self) -> tuple[str, ...] | Mapping[str, int]:
+        return self.info.dims
+
+    @final
+    @property
+    def init_time_frequency(self) -> str:
+        return self.info.init_time_freq
+
+    @final
+    @property
+    def indexes(self) -> Mapping[str, pd.Index]:
+        self._check_opened()
+        return self.data.indexes
+
+    @final
+    def _check_opened(self):
+
+        if self.data is None:
+            raise ValueError(
+                "No data is currently opened. "
+                "Make sure '_open_xarray_data' is called first."
+            )
+
+def _resolve_data(dataconfig: DataConfigABC, 
+                  _do_checks: bool = True) -> None:
     """
-    Document this function.
+    Validate dataset files and dimensions.
 
     Parameters
     ----------
     dataconfig : DataConfigABC
-        Description not yet provided.
-    _do_checks : bool
-        Description not yet provided.
+
+    Returns
+    -------
+    None
 
     Raises
     ------
     FileNotFoundError
-        Description not yet provided.
+        If data files do not exist.
     ValueError
-        Description not yet provided.
+        If dataset dimensions or variables are invalid.
     """
     if not Path(dataconfig.paths).exists():
         raise FileNotFoundError(
@@ -292,7 +392,7 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
                             f"The required initialization time ({dataconfig.init_time_dim} ) must be a dimension or at least a coordinate of individual data "
                             "file which will be a dimension after concatenation."
                         )
-
+                    
                 invalid = dataconfig._required_dims() - ds_dims
                 if invalid:
                     raise ValueError(
@@ -327,6 +427,7 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
                 if missing:
                     raise ValueError(f"{p} is missing variables: {missing}")
 
+
                 time = ds.coords[dataconfig.init_time_dim]
                 _validate_time_sequence(time)
 
@@ -338,17 +439,16 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
 
 def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
     """
-    Document this function.
+    Extract dataset metadata information.
 
     Parameters
     ----------
     dataconfig : DataConfigABC
-        Description not yet provided.
 
     Returns
     -------
     infoclass
-        Description not yet provided.
+        Metadata describing dataset dimensions and coordinates.
     """
     init_time_dim = dataconfig.init_time_dim
     lead_time_dim = dataconfig.lead_time_dim
@@ -363,33 +463,31 @@ def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
     ds = _load_xarray_data(
         list_paths,
         names=dataconfig.names,
+        selection={dataconfig.realization_dim: dataconfig.realization_list}
+            if dataconfig.realization_list is not None
+            else None,
         concat_dim=dataconfig.concat_dim,
         rename_dict=dataconfig.rename_dict,
     )
 
     if dataconfig.realization_list is not None:
-        ds = ds.sel({dataconfig.realization_dim: dataconfig.realization_list})
+        ds = ds.sel({dataconfig.realization_dim : dataconfig.realization_list})
 
     if init_time_dim in ds.dims:
-        start_time, final_time = (
-            ds[init_time_dim].min().values,
-            ds[init_time_dim].max().values,
-        )
+        start_time, final_time = ds[init_time_dim].min().values, ds[init_time_dim].max().values
     else:
         start_time = final_time = None
 
     sizes = {
         dim: dict(ds.sizes).get(dim)
         for dim in dict(ds.sizes).keys()
-        if (
-            dim in (init_time_dim, lead_time_dim)
-            or dim in (dataconfig.realization_dim,)
-        )
+        if (dim in (init_time_dim, lead_time_dim) or dim in (dataconfig.realization_dim,))
     }
     if not sizes:
         sizes = None
 
     coords = {dim: dict(ds.coords).get(dim) for dim in ds.coords}
+    dims = ds.dims
 
     time_coords_type = get_time_representation(ds[init_time_dim])
 
@@ -399,10 +497,14 @@ def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
     del ds
 
     return infoclass(
-        start_time=start_time,
-        final_time=final_time,
-        sizes=sizes,
-        coords=coords,
+        start_time=start_time, 
+        final_time=final_time, 
+        sizes=sizes, 
+        coords=coords, 
+        dims=dims,
         time_coords_type=time_coords_type,
-        init_time_freq=time_freq,
+        init_time_freq=time_freq
     )
+
+
+

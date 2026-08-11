@@ -14,8 +14,8 @@ from cccma_ppp.core.selectors import (
     cVAEModelSelector,
     _load_config_from_checkpoint,
 )
-from cccma_ppp.models.normalized_flows import NormalizedFlowConfig
-from cccma_ppp.models.models_abc import cVAEPredictRequest, cVAEForwardRequest
+from cccma_ppp.architectures.normalized_flows import NormalizedFlowConfig
+from cccma_ppp.architectures.models_abc import cVAEPredictRequest, cVAEForwardRequest
 from cccma_ppp.train.dataloader import BatchData
 from cccma_ppp.generic.runtime import RuntimeContext
 
@@ -23,22 +23,20 @@ from cccma_ppp.generic.runtime import RuntimeContext
 @dataclasses.dataclass
 class cVAEOutput(OutputABC):
     """
-    Document this class.
+    Container for cVAE outputs.
 
     Parameters
     ----------
     output : torch.Tensor
-        Description not yet provided.
-    mu : torch.Tensor | None
-        Description not yet provided.
-    log_var : torch.Tensor | None
-        Description not yet provided.
-    samples : torch.Tensor | None
-        Description not yet provided.
-    cond_mu : torch.Tensor | None
-        Description not yet provided.
-    cond_log_var : torch.Tensor | None
-        Description not yet provided.
+        Generated samples.
+    mu : torch.Tensor or None
+        Posterior mean.
+    log_var : torch.Tensor or None
+        Posterior log-variance.
+    cond_mu : torch.Tensor or None, optional
+        Conditional prior mean.
+    cond_log_var : torch.Tensor or None, optional
+        Conditional prior log-variance.
     """
 
     output: torch.Tensor
@@ -53,45 +51,38 @@ class cVAEOutput(OutputABC):
 @dataclasses.dataclass
 class cVAEConfig(moduleConfigABC):
     """
-    Document this class.
+    Configuration for conditional variational autoencoder (cVAE).
 
     Parameters
     ----------
-    ModelConfig : cVAEModelSelector | None
-        Description not yet provided.
-    posterior_variance_limits : list[float | None, float | None] | tuple[float | None, float | None] | None
-        Description not yet provided.
-    prior_flow_config : NormalizedFlowConfig | None
-        Description not yet provided.
-    combined_CGCN_weight : float
-        Description not yet provided.
-    load_dir : str | None
-        Description not yet provided.
+    ModelConfig : cVAEModelSelector or None
+        Model configuration selector.
+    posterior_variance_limits : list/tuple of two floats or None
+        Minimum allowed posterior variance.
+    prior_flow_config : NormalizedFlowConfig or None
+        Configuration for optional prior flow.
+    combined_CGCN_weight : float or None
+        Weight for auxiliary CGCN loss.
+    load_dir : str or None
+        Path to checkpoint for loading configuration.
     """
 
     ModelConfig: cVAEModelSelector | None = None
-    posterior_variance_limits: (
-        list[float | None, float | None] | tuple[float | None, float | None] | None
-    ) = None
+    posterior_variance_limits: list[float | None, float | None] | tuple[float | None, float | None] | None = None
     prior_flow_config: NormalizedFlowConfig | None = None
     combined_CGCN_weight: float = None
     load_dir: str | None = None
 
     def __post_init__(self):
         """
-        Document this function.
+        Validate and initialize configuration.
 
         Raises
         ------
-        AssertionError
-            Description not yet provided.
         ValueError
-            Description not yet provided.
-
-        Warns
-        -----
-        UserWarning
-            Description not yet provided.
+            If neither `ModelConfig` nor `load_dir` is provided.
+        AssertionError
+            If `combined_CGCN_weight` is not in [0, 1].
         """
         self.condition_dependant_flow = False
 
@@ -128,22 +119,23 @@ class cVAEConfig(moduleConfigABC):
         added_features_dim: int = None,
     ):
         """
-        Document this function.
+        Construct cVAE module instance.
 
         Parameters
         ----------
-        input_shape : np.ndarray | tuple
-            Description not yet provided.
-        output_shape : np.ndarray | tuple | None
-            Description not yet provided.
-        added_features_dim : int
-            Description not yet provided.
+        input_shape : np.ndarray
+            Input tensor shape.
+        output_shape : np.ndarray or None, optional
+            Output tensor shape.
+        added_features_dim : int, optional
+            Additional feature dimension.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        cVAE
+            Initialized cVAE module.
         """
+
         return cVAE(
             config=self,
             input_shape=input_shape,
@@ -153,18 +145,19 @@ class cVAEConfig(moduleConfigABC):
 
     def _load_from_checkpoint(self, load_path: Path | str):
         """
-        Document this function.
+        Load configuration from checkpoint.
 
         Parameters
         ----------
-        load_path : Path | str
-            Description not yet provided.
+        load_path : pathlib.Path or str
+            Path to checkpoint.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        cVAEConfig
+            Updated configuration.
         """
+
         checkpoint_module, checkpoint_config = _load_config_from_checkpoint(
             Path(load_path)
         )
@@ -196,18 +189,18 @@ class cVAEConfig(moduleConfigABC):
 
 class cVAE(moduleABC):
     """
-    Document this class.
+    Conditional variational autoencoder module.
 
     Parameters
     ----------
     config : cVAEConfig
-        Description not yet provided.
+        Configuration object.
     input_shape : np.ndarray
-        Description not yet provided.
-    output_shape : np.ndarray | None
-        Description not yet provided.
-    added_features_dim : int
-        Description not yet provided.
+        Shape of input data.
+    output_shape : np.ndarray or None
+        Shape of output data.
+    added_features_dim : int or None
+        Additional feature dimension.
     """
 
     def __init__(
@@ -218,26 +211,27 @@ class cVAE(moduleABC):
         added_features_dim: int = None,
     ):
         """
-        Document this function.
+        Initialize cVAE module and underlying model.
 
         Parameters
         ----------
         config : cVAEConfig
-            Description not yet provided.
+            Configuration instance.
         input_shape : np.ndarray
-            Description not yet provided.
-        output_shape : np.ndarray | None
-            Description not yet provided.
-        added_features_dim : int
-            Description not yet provided.
+            Input shape.
+        output_shape : np.ndarray or None
+            Output shape.
+        added_features_dim : int or None
+            Additional feature dimension.
 
         Raises
         ------
         AssertionError
-            Description not yet provided.
+            If `posterior_variance_limits` is non-negative.
         RuntimeError
-            Description not yet provided.
+            If checkpoint metadata or shapes are inconsistent.
         """
+
         super().__init__()
         self.config = config
         self.model_config = self.config.model_config
@@ -247,13 +241,11 @@ class cVAE(moduleABC):
         self.combined_CGCN_weight = self.config.combined_CGCN_weight
 
         if self.posterior_variance_limits is not None:
-            assert all(
-                [
-                    limit > 0
-                    for limit in self.posterior_variance_limits
-                    if limit is not None
-                ]
-            ), "posterior_variance_limits must be positive or None."
+            assert all([limit > 0 for limit in 
+                        self.posterior_variance_limits 
+                        if limit is not None]), (
+                "posterior_variance_limits must be positive or None."
+            )
         if getattr(self.config, "condition_dependant_flow", False):
             self.flow_condition_size = self.model_config.condition_embedding_size
         else:
@@ -291,24 +283,20 @@ class cVAE(moduleABC):
                 )
 
         if self.posterior_variance_limits is not None:
-            min = (
-                torch.log(torch.tensor(self.posterior_variance_limits[0]))
-                if self.posterior_variance_limits[0] is not None
-                else None
-            )
+            min = torch.log(
+                torch.tensor(self.posterior_variance_limits[0])
+            ) if self.posterior_variance_limits[0] is not None else None
 
-            max = (
-                torch.log(torch.tensor(self.posterior_variance_limits[1]))
-                if self.posterior_variance_limits[1] is not None
-                else None
-            )
+            max = torch.log(
+                torch.tensor(self.posterior_variance_limits[1])
+            ) if self.posterior_variance_limits[1] is not None else None
 
             self.posterior_variance_limits = [min, max]
-
+            
         self.input_shape = input_shape
         self.output_shape = output_shape
         self.added_features_dim = added_features_dim
-
+        
         self.model = self.model_config.build(
             input_shape=input_shape,
             output_shape=output_shape,
@@ -325,18 +313,23 @@ class cVAE(moduleABC):
 
     def init_loss_function(self, reconstruction_loss: Losspipeline):
         """
-        Document this function.
+        Initialize reconstruction and KL divergence losses.
 
         Parameters
         ----------
         reconstruction_loss : Losspipeline
-            Description not yet provided.
+            Loss pipeline instance.
+
+        Returns
+        -------
+        None
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If flow is used and reduction is not 'sum'.
         """
+
         if self.prior_flow_config is not None:
             if reconstruction_loss.reduction.lower() != "sum":
                 raise RuntimeError(
@@ -348,25 +341,26 @@ class cVAE(moduleABC):
 
     def _compute_loss(self, beta: float, data: BatchData):
         """
-        Document this function.
+        Compute total training loss.
 
         Parameters
         ----------
         beta : float
-            Description not yet provided.
+            Weight applied to KL divergence term.
         data : BatchData
-            Description not yet provided.
+            Input batch.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        tuple
+            Total loss tensor and dictionary of loss terms.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If loss function is not initialized.
         """
+
         if self.criterion is None:
             raise RuntimeError(
                 "crieterion should be specified before training is possible. Hint: call .init_loss_function() method in your module first."
@@ -378,10 +372,11 @@ class cVAE(moduleABC):
         target = data.target
         target_mask = data.target_mask
 
+
         target = target.unsqueeze(0).expand(
-            latent_sample_size,
-            *target.shape,
-        )
+            latent_sample_size, # Z 
+            *target.shape, # B x C x ...
+        ) # Z x B x C x ...
 
         if target_mask is not None and target_mask.shape != target.shape:
             target_mask = target_mask.unsqueeze(0).expand_as(target)
@@ -427,20 +422,21 @@ class cVAE(moduleABC):
 
     def forward(self, data: BatchData, latent_sample_size=1) -> cVAEOutput:
         """
-        Document this function.
+        Perform forward pass.
 
         Parameters
         ----------
         data : BatchData
-            Description not yet provided.
-        latent_sample_size : Any
-            Description not yet provided.
+            Input batch.
+        sample_size : int, optional
+            Number of latent samples.
 
         Returns
         -------
         cVAEOutput
-            Description not yet provided.
+            Model outputs.
         """
+
         generator = self.model_config.GENERATOR
         output_sample_size = 0
         if not self.training and generator is not None:
@@ -468,25 +464,19 @@ class cVAE(moduleABC):
         output_sample_size: int = 0,
     ) -> cVAEOutput:
         """
-        Document this function.
+        Generate predictions using the learned prior.
 
         Parameters
         ----------
         data : BatchData
-            Description not yet provided.
-        latent_sample_size : int
-            Description not yet provided.
-        nstds : int
-            Description not yet provided.
-        latent_samples : torch.Tensor
-            Description not yet provided.
-        output_sample_size : int
-            Description not yet provided.
+            Input batch.
+        sample_size : int, optional
+            Number of samples to generate.
 
         Returns
         -------
         cVAEOutput
-            Description not yet provided.
+            Generated outputs.
         """
         generator = self.model_config.GENERATOR
         if self.training and generator is not None:

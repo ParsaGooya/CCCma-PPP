@@ -5,21 +5,21 @@ import math
 
 import dataclasses
 
-from cccma_ppp.models.models_abc import flowABC
+from cccma_ppp.architectures.models_abc import flowABC
 from cccma_ppp.core.selectors import FlowSelector
 
 
 @dataclasses.dataclass
 class flowOutput:
     """
-    Document this class.
+    Output container for flow transformations.
 
     Parameters
     ----------
     e_samples : torch.Tensor
-        Description not yet provided.
+        Transformed samples.
     log_det : torch.Tensor
-        Description not yet provided.
+        Log-determinant of the Jacobian.
     """
 
     e_samples: torch.Tensor
@@ -29,14 +29,14 @@ class flowOutput:
 @dataclasses.dataclass
 class NormalizedFlowConfig:
     """
-    Document this class.
+    Configuration for a composed normalizing flow model.
 
     Parameters
     ----------
-    list_flows : list[FlowSelector]
-        Description not yet provided.
-    flow_sample_size : int
-        Description not yet provided.
+    list_flows : list of FlowSelector
+        Sequence of flow components.
+    flow_sample_size : int, optional
+        Number of samples used for Monte Carlo estimates.
     """
 
     list_flows: list[FlowSelector]
@@ -44,20 +44,20 @@ class NormalizedFlowConfig:
 
     def build(self, latent_size: int, condition_size: int = None):
         """
-        Document this function.
+        Construct normalized flow model.
 
         Parameters
         ----------
         latent_size : int
-            Description not yet provided.
-        condition_size : int
-            Description not yet provided.
+            Dimensionality of latent space.
+        condition_size : int or None, optional
+            Conditioning feature size.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        NormalizedFlowModel
         """
+
         return NormalizedFlowModel(
             config=self, latent_size=latent_size, condition_size=condition_size
         )
@@ -65,33 +65,22 @@ class NormalizedFlowConfig:
 
 class NormalizedFlowModel(flowABC):
     """
-    Document this class.
-
-    Parameters
-    ----------
-    config : NormalizedFlowConfig
-        Description not yet provided.
-    latent_size : Any
-        Description not yet provided.
-    condition_size : int
-        Description not yet provided.
+    Composed normalizing flow model.
     """
 
     def __init__(
         self, config: NormalizedFlowConfig, latent_size, condition_size: int = None
     ):
         """
-        Document this function.
+        Initialize normalized flow model.
 
         Parameters
         ----------
         config : NormalizedFlowConfig
-            Description not yet provided.
-        latent_size : Any
-            Description not yet provided.
-        condition_size : int
-            Description not yet provided.
+        latent_size : int
+        condition_size : int or None, optional
         """
+
         super().__init__()
 
         self.list_flows = config.list_flows
@@ -112,20 +101,21 @@ class NormalizedFlowModel(flowABC):
 
     def forward(self, x, condition=None):
         """
-        Document this function.
+        Apply forward transformation through all flow steps.
 
         Parameters
         ----------
-        x : Any
-            Description not yet provided.
-        condition : Any
-            Description not yet provided.
+        x : torch.Tensor
+            Input samples.
+        condition : torch.Tensor or None, optional
+            Conditioning input.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        flowOutput
+            Transformed samples and log-determinant.
         """
+
         bsz, _ = x.shape
         log_det = torch.zeros(bsz, device=x.device)
         for flow in self.flows:
@@ -136,20 +126,20 @@ class NormalizedFlowModel(flowABC):
 
     def inverse(self, z, condition=None):
         """
-        Document this function.
+        Apply inverse transformation through all flow steps.
 
         Parameters
         ----------
-        z : Any
-            Description not yet provided.
-        condition : Any
-            Description not yet provided.
+        z : torch.Tensor
+            Latent samples.
+        condition : torch.Tensor or None, optional
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        flowOutput
+            Reconstructed samples and log-determinant.
         """
+
         bsz, _ = z.shape
         log_det = torch.zeros(bsz, device=z.device)
         for flow in self.flows[::-1]:
@@ -162,31 +152,27 @@ class NormalizedFlowModel(flowABC):
 
 class FCNN(nn.Module):
     """
-    Document this class.
+    Fully connected neural network used in flow components.
 
     Parameters
     ----------
-    in_dim : Any
-        Description not yet provided.
-    out_dim : Any
-        Description not yet provided.
-    hidden_dim : Any
-        Description not yet provided.
+    in_dim : int
+        Input dimension.
+    out_dim : int
+        Output dimension.
+    hidden_dim : int
+        Hidden layer size.
     """
 
     def __init__(self, in_dim, out_dim, hidden_dim):
         """
-        Document this function.
+        Initialize feedforward network.
 
-        Parameters
-        ----------
-        in_dim : Any
-            Description not yet provided.
-        out_dim : Any
-            Description not yet provided.
-        hidden_dim : Any
-            Description not yet provided.
+        Returns
+        -------
+        None
         """
+
         super().__init__()
         self.network = nn.Sequential(
             nn.Linear(in_dim, hidden_dim),
@@ -198,32 +184,24 @@ class FCNN(nn.Module):
 
     def forward(self, x):
         """
-        Document this function.
+        Compute forward pass.
 
         Parameters
         ----------
-        x : Any
-            Description not yet provided.
+        x : torch.Tensor
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        torch.Tensor
         """
+
         return self.network(x)
 
 
 @FlowSelector.register("maf")
 class MAF(flowABC):
     """
-    Document this class.
-
-    Parameters
-    ----------
-    hidden_dim : Any
-        Description not yet provided.
-    base_network : Any
-        Description not yet provided.
+    Masked autoregressive flow (MAF).
     """
 
     def __init__(
@@ -232,15 +210,14 @@ class MAF(flowABC):
         base_network=FCNN,
     ):
         """
-        Document this function.
+        Initialize MAF.
 
         Parameters
         ----------
-        hidden_dim : Any
-            Description not yet provided.
-        base_network : Any
-            Description not yet provided.
+        hidden_dim : int, optional
+        base_network : callable, optional
         """
+
         super().__init__()
         self.hidden_dim = hidden_dim
         self.base_network = base_network
@@ -248,20 +225,19 @@ class MAF(flowABC):
 
     def build(self, dim, condition_size=None):
         """
-        Document this function.
+        Build MAF layers.
 
         Parameters
         ----------
-        dim : Any
-            Description not yet provided.
-        condition_size : Any
-            Description not yet provided.
+        dim : int
+            Input dimensionality.
+        condition_size : int or None, optional
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        self
         """
+
         self.dim = dim
 
         layers = []
@@ -285,30 +261,30 @@ class MAF(flowABC):
 
     def reset_parameters(self):
         """
-        Document this function.
+        Initialize learnable parameters.
+
+        Returns
+        -------
+        None
         """
+
         init.uniform_(self.initial_param, -math.sqrt(0.5), math.sqrt(0.5))
 
     def forward(self, x, condition=None):
         """
-        Document this function.
+        Progressive forward transformation.
 
         Parameters
         ----------
-        x : Any
-            Description not yet provided.
-        condition : Any
-            Description not yet provided.
+        x : torch.Tensor
+            Input tensor.
+        condition : torch.Tensor or None, optional
+            Conditioning input.
 
         Returns
         -------
-        Any
-            Description not yet provided.
-
-        Raises
-        ------
-        ValueError
-            Description not yet provided.
+        tuple
+            (z, log_det)
         """
         if self._conditional:
             if condition is None:
@@ -340,24 +316,17 @@ class MAF(flowABC):
 
     def inverse(self, z, condition=None):
         """
-        Document this function.
+        Apply autoregressive inverse transformation.
 
         Parameters
         ----------
-        z : Any
-            Description not yet provided.
-        condition : Any
-            Description not yet provided.
+        z : torch.Tensor
+        condition : torch.Tensor or None, optional
 
         Returns
         -------
-        Any
-            Description not yet provided.
-
-        Raises
-        ------
-        ValueError
-            Description not yet provided.
+        tuple
+            (x, log_det)
         """
         if self._conditional:
             if condition is None:
@@ -392,27 +361,19 @@ class MAF(flowABC):
 @FlowSelector.register("realnvp")
 class RealNVP(flowABC):
     """
-    Document this class.
-
-    Parameters
-    ----------
-    hidden_dim : Any
-        Description not yet provided.
-    base_network : Any
-        Description not yet provided.
+    Real-valued non-volume preserving (RealNVP) flow.
     """
 
     def __init__(self, hidden_dim=16, base_network=FCNN):
         """
-        Document this function.
+        Initialize RealNVP.
 
         Parameters
         ----------
-        hidden_dim : Any
-            Description not yet provided.
-        base_network : Any
-            Description not yet provided.
+        hidden_dim : int, optional
+        base_network : callable, optional
         """
+
         super().__init__()
         self.hidden_dim = hidden_dim
         self.base_network = base_network
@@ -420,20 +381,16 @@ class RealNVP(flowABC):
 
     def build(self, dim, condition_size=None):
         """
-        Document this function.
+        Build coupling layers.
 
         Parameters
         ----------
-        dim : Any
-            Description not yet provided.
-        condition_size : Any
-            Description not yet provided.
+        dim : int
+        condition_size : int or None, optional
 
         Returns
-        -------
-        Any
-            Description not yet provided.
         """
+
         self.dim = dim
         added_features = condition_size if condition_size is not None else 0
         self.t1 = self.base_network(
@@ -456,24 +413,17 @@ class RealNVP(flowABC):
 
     def forward(self, x, condition=None):
         """
-        Document this function.
+        Apply forward coupling transformations.
 
         Parameters
         ----------
-        x : Any
-            Description not yet provided.
-        condition : Any
-            Description not yet provided.
+        x : torch.Tensor
+        condition : torch.Tensor or None, optional
 
         Returns
         -------
-        Any
-            Description not yet provided.
-
-        Raises
-        ------
-        ValueError
-            Description not yet provided.
+        tuple
+            (z, log_det)
         """
         if self._conditional:
             if condition is None:
@@ -504,25 +454,19 @@ class RealNVP(flowABC):
 
     def inverse(self, z, condition=None):
         """
-        Document this function.
+        Apply inverse coupling transformations.
 
         Parameters
         ----------
-        z : Any
-            Description not yet provided.
-        condition : Any
-            Description not yet provided.
+        z : torch.Tensor
+        condition : torch.Tensor or None, optional
 
         Returns
         -------
-        Any
-            Description not yet provided.
-
-        Raises
-        ------
-        ValueError
-            Description not yet provided.
+        tuple
+            (x, log_det)
         """
+
         if self._conditional:
             if condition is None:
                 raise ValueError(

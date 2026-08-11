@@ -13,33 +13,18 @@ from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.core.writer import WriterConfig
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.data_modules.dataloader import Dataloader
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
 from cccma_ppp.train.train_configs import set_seed
+import cccma_ppp.generic.registry_imports
 
 
 @dataclasses.dataclass
 class InferenceConfig:
-    """
-    Document this class.
-
-    Parameters
-    ----------
-    experiment_dir : str
-        Description not yet provided.
-    writer : WriterConfig
-        Description not yet provided.
-    inference_loader : InferenceDataloaderConfig
-        Description not yet provided.
-    save_path : str | None
-        Description not yet provided.
-    seed : int | None
-        Description not yet provided.
-    checkpoint_name : str | None
-        Description not yet provided.
-    """
-
     experiment_dir: str
-    writer: WriterConfig = dataclasses.field(default_factory=WriterConfig)
+    writer: WriterConfig = dataclasses.field(
+        default_factory=WriterConfig
+    )
     inference_loader: InferenceDataloaderConfig = dataclasses.field(
         default_factory=InferenceDataloaderConfig
     )
@@ -48,9 +33,6 @@ class InferenceConfig:
     checkpoint_name: str | None = None
 
     def __post_init__(self):
-        """
-        Document this function.
-        """
         self.experiment_dir = Path(self.experiment_dir)
 
         if self.save_path is not None:
@@ -62,21 +44,12 @@ class InferenceConfig:
         self._resolve_inference_dataset_config()
 
     def _resolve_inference_dataset_config(self):
-        """
-        Document this function.
-        """
+
         self.inference_loader.read_configs_from_train(self.train_loader)
         self._check_inference_dataset()
 
     def _check_inference_dataset(self):
-        """
-        Document this function.
 
-        Raises
-        ------
-        RuntimeError
-            Description not yet provided.
-        """
         if (
             self.inference_loader.input_var_metadata
             != self.train_loader.input_var_metadata
@@ -94,14 +67,7 @@ class InferenceConfig:
 
     @property
     def output_preprocessor_dir(self):
-        """
-        Document this function.
 
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         if "observation" in self.train_config["train_loader"]["dataset_config"]:
             preprocessor_name = "observation"
         else:
@@ -112,14 +78,6 @@ class InferenceConfig:
 
     @property
     def output_dir(self) -> Path:
-        """
-        Document this function.
-
-        Returns
-        -------
-        Path
-            Description not yet provided.
-        """
         return (
             self.save_path
             if self.save_path is not None
@@ -128,20 +86,10 @@ class InferenceConfig:
 
     @property
     def log_dir(self) -> Path:
-        """
-        Document this function.
-
-        Returns
-        -------
-        Path
-            Description not yet provided.
-        """
         return self.experiment_dir / "logs"
 
     def _prepare_runtime_variables(self):
-        """
-        Document this function.
-        """
+
         RuntimeContext.GLOBAL_EXP_DIR = str(self.experiment_dir)
         RuntimeContext.GLOBAL_OUTPUT_DIR = str(self.output_dir)
         RuntimeContext.GLOBAL_LOG_DIR = str(self.log_dir)
@@ -150,13 +98,9 @@ class InferenceConfig:
 
     def prepare_directory(self, distributed: Distributed):
         """
-        Document this function.
-
-        Parameters
-        ----------
-        distributed : Distributed
-            Description not yet provided.
+        Create output (sub)directories.
         """
+
         self._prepare_runtime_variables()
 
         if distributed.is_root():
@@ -166,63 +110,31 @@ class InferenceConfig:
 
     def set_random_seed(self, rank: int):
         """
-        Document this function.
+        Apply configured random seed.
 
-        Parameters
-        ----------
-        rank : int
-            Description not yet provided.
+        Returns
+        -------
+        None
         """
+
         if self.seed is not None:
             set_seed(self.seed + rank)
 
     def load_train_config(self):
-        """
-        Document this function.
 
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return prepare_config(self.experiment_dir / "config.yaml")
 
     def load_train_dataloader_config(self):
-        """
-        Document this function.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return dacite.from_dict(
             data_class=TrainDataloaderConfig,
             data=self.train_config.get("train_loader"),
             config=dacite.Config(strict=False),
         )
 
-    def load_module(self, strict: bool = False):
-        """
-        Document this function.
+    def load_module(
+        self, strict: bool = False
+    ):
 
-        Parameters
-        ----------
-        strict : bool
-            Description not yet provided.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-
-        Raises
-        ------
-        FileNotFoundError
-            Description not yet provided.
-        KeyError
-            Description not yet provided.
-        """
         path = Path(self.experiment_dir) / "checkpoints"
 
         if self.checkpoint_name is not None:
@@ -233,7 +145,7 @@ class InferenceConfig:
         if not path.exists():
             raise FileNotFoundError(f"Checkpoint not found: {path}")
 
-        checkpoint = torch.load(path, map_location="cpu", weights_only=False)
+        checkpoint = torch.load(path, map_location="cpu", weights_only=False)  ### ERROR
 
         required_keys = {
             "input_shape",
@@ -272,19 +184,7 @@ class InferenceConfig:
 
 
 def prepare_config(path: Path | str) -> dict:
-    """
-    Document this function.
-
-    Parameters
-    ----------
-    path : Path | str
-        Description not yet provided.
-
-    Returns
-    -------
-    dict
-        Description not yet provided.
-    """
+    """Get config and update with possible dotlist override."""
     with open(path) as f:
         data = yaml.safe_load(f)
     return data
@@ -295,40 +195,7 @@ def build_writer(
     distributed: Distributed,
     logger: logging.Logger | None = None,
 ):
-    """
-    Document this function.
-
-    Parameters
-    ----------
-    config : InferenceConfig
-        Description not yet provided.
-    distributed : Distributed
-        Description not yet provided.
-    logger : logging.Logger | None
-        Description not yet provided.
-
-    Returns
-    -------
-    Any
-        Description not yet provided.
-
-    Raises
-    ------
-    RuntimeError
-        Description not yet provided.
-    """
-
     def log(msg, **kwargs):
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        msg : Any
-            Description not yet provided.
-        **kwargs : Any
-            Description not yet provided.
-        """
         if distributed.is_root():
             if logger is not None:
                 logger.info(msg, **kwargs)
@@ -344,10 +211,8 @@ def build_writer(
 
     config.inference_loader.setup_distributed(config.train_loader, distributed)
 
-    return_spatial_mask = module.model_config.EXPECTS_MASK
-    inference_loader = config.inference_loader.build_inference_loader(
-        return_spatial_mask=return_spatial_mask
-    )
+    return_spatial_mask= module.model_config.EXPECTS_MASK
+    inference_loader = config.inference_loader.build_inference_loader(return_spatial_mask=return_spatial_mask)
 
     log("Checking module dataloader compatability ...")
 
