@@ -67,7 +67,7 @@ class PreprocessingPipeline:
             for step in self.preprocessors_list:
                 self.pipeline.append((step.name.lower(), step.get_preprocessor()))
 
-    def set_name(self, name: str, rename_dict: dict[str, str]):
+    def set_name(self, name: str, rename_dict: dict[str, str] | None):
         """
         Set pipeline name.
 
@@ -272,10 +272,13 @@ class PreprocessingPipeline:
             dim="channels"
         )
 
+        return data
+
+    def inverse_rename(self, data: xr.Dataset):
+
         if self.rename_dict is not None:
             inverse_rename = {value: key for key, value in self.rename_dict.items()}
             data = data.rename(inverse_rename)
-
         return data
 
     def get_preprocessors(self, name=None):

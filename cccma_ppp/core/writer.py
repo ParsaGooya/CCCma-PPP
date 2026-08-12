@@ -178,6 +178,8 @@ class Writer:
 
                 self.predictor._infer_on_batch(batch)
 
+            del loader
+            clear_memory()
             self.aggregate_predictions_to_netcdf(do_post_process)
 
     def _save_train_stats(self):
@@ -200,9 +202,9 @@ class Writer:
                     _getting_train_stats=True,
                 )
 
-            self.aggregate_train_stats(stats)
             del loader
-            gc.collect()
+            clear_memory()
+            self.aggregate_train_stats(stats)
 
         if self.is_distributed:
             self.distributed.barrier()
@@ -310,7 +312,6 @@ class Writer:
 
         if self.is_distributed:
             self.distributed.barrier()
-
 
 
 
@@ -535,6 +536,9 @@ def aggregate_predictions(
             / f"{save_name}_{int(year)}.nc"
         )
 
+        if post_processor is not None:
+            data_year = post_processor.inverse_rename(data_year)
+            
         data_year.to_netcdf(output_path)
         data_year.close()
 
