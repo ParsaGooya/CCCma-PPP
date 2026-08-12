@@ -5,6 +5,7 @@ from collections import defaultdict
 import warnings
 import matplotlib.pyplot as plt
 import random
+import csv
 from pathlib import Path
 
 from cccma_ppp.generic.distributed import Distributed
@@ -408,10 +409,28 @@ class MetricsAggregator:
             for old_plot in plot_dir.glob(f"epoch_*_{safe_loss_name}.png"):
                 old_plot.unlink()
 
-            plt.savefig(plot_dir / f"epoch_{num_epochs}_{safe_loss_name}.png")
-            plt.close()
+            fig.savefig(plot_dir / f"epoch_{num_epochs}_{safe_loss_name}.png")
+            plt.close(fig)
 
-        _, ax = plt.subplots(1, 1, figsize=figsize)
+            csv_path = plot_dir / f"epoch_{num_epochs}_{safe_loss_name}.csv"
+
+            for old_csv in plot_dir.glob(f"epoch_*_{safe_loss_name}.csv"):
+                old_csv.unlink()
+
+            with csv_path.open("w") as f:
+                f.write("epoch," + ",".join(
+                    agg.name for agg in aggregator_list if agg is not None
+                ) + "\n")
+
+                for i, epoch in enumerate(epochs_range):
+                    values = [
+                        str(agg.epoch_metric_terms.get(loss_name, [np.nan] * metric_lengths)[i])
+                        for agg in aggregator_list
+                        if agg is not None
+                    ]
+                    f.write(f"{epoch}," + ",".join(values) + "\n")            
+
+        fig, ax = plt.subplots(1, 1, figsize=figsize)
 
         for aggregator in aggregator_list:
             if aggregator is not None:
@@ -436,8 +455,8 @@ class MetricsAggregator:
         for old_plot in plot_dir.glob("epoch_*_times.png"):
             old_plot.unlink()
 
-        plt.savefig(plot_dir / f"epoch_{num_epochs}_times.png")
-        plt.close()
+        fig.savefig(plot_dir / f"epoch_{num_epochs}_times.png")
+        plt.close(fig)
 
     def state_dict(self):
         """
@@ -474,6 +493,7 @@ class MetricsAggregator:
         self.epoch_metric_terms = state_dict.get("epoch_metric_terms", None)
         self.epoch_times = state_dict.get("epoch_times", None)
         self.num_epochs_seen = state_dict.get("num_epochs_seen", 0)
+        self.epochs_submitted = state_dict.get("epochs_submitted", False)
         self.reset_batch_losses()
 
 
