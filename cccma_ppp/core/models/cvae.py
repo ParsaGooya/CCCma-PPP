@@ -45,6 +45,7 @@ class cVAEOutput(OutputABC):
     samples: torch.Tensor | None = None
     cond_mu: torch.Tensor | None = None
     cond_log_var: torch.Tensor | None = None
+    deterministic_guess: bool = False
 
 
 @ModuleSelector.register("cvae")

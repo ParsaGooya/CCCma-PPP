@@ -3,6 +3,7 @@ from dataclasses import field
 from typing import ClassVar
 import numpy as np
 import math
+import warnings
 import torch
 import torch.nn as nn
 
@@ -316,6 +317,8 @@ class cVAEUNet(cVAEmodelsABC):
                 config.init_method,
                 exclude=(self.deterministic_guess,))
 
+        self._predict_called: bool = False
+
     def _build_output(
         self,
         in_channels: int,
@@ -443,7 +446,6 @@ class cVAEUNet(cVAEmodelsABC):
                                     sample_sizes)
                                     
                                     
-
         return cVAEOutput(
             output=output,
             mu=mu,
@@ -456,6 +458,7 @@ class cVAEUNet(cVAEmodelsABC):
     def predict(
         self,
         request: cVAEPredictRequest,
+        deterministic_guess_only: bool = True
     ) -> cVAEOutput:
         """
         Generate samples from learned prior.
@@ -471,7 +474,6 @@ class cVAEUNet(cVAEmodelsABC):
         cVAEOutput
             Generated samples and conditioning outputs.
         """
-
         num_output_samples = request.output_sample_size
         latent_sample_size = request.latent_sample_size
 
@@ -483,6 +485,10 @@ class cVAEUNet(cVAEmodelsABC):
             condition_embedding=cond_mu,
             num_output_samples=num_output_samples,
         )
+
+        if deterministic_guess_only:
+            latent_sample_size = 1
+            num_output_samples = 0
 
         if num_output_samples > 0:
             sample_sizes = (num_output_samples, latent_sample_size, batch_size)
@@ -497,11 +503,16 @@ class cVAEUNet(cVAEmodelsABC):
         )
 
         if deterministic_guess is not None:
-            out = out + deterministic_guess
+            if deterministic_guess_only:
+                if not self._predict_called:
+                    warnings.warn("YOU ARE SAVING DETERMINISTIC GUESS BRANCH OUTPUT ONLY!")
+                out = deterministic_guess.unsqueeze(0)
+            else:
+                out = out + deterministic_guess
 
         output = self._output_block(out, 
                                     sample_sizes)
-
+        self._predict_called = True
         return cVAEOutput(
             output=output,
             mu=None,
@@ -509,6 +520,7 @@ class cVAEUNet(cVAEmodelsABC):
             samples=None,
             cond_mu=cond_mu,
             cond_log_var=cond_log_var,
+            deterministic_guess=deterministic_guess_only
         )
 
     def _recognition(
