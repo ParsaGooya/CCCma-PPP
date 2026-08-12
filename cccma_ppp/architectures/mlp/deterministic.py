@@ -58,7 +58,7 @@ class AutoencoderConfig(modelConfigABC):
     batch_normalization: bool = False
     dropout_rate: float = None
     append_mode: AppendMode = 1
-    init_method: InitMethod = "trunc_normal"
+    init_method: InitMethod = "default"
     activation: ActivationName = "relu"
 
     NUM_INPUT_DIMS: ClassVar[int] = 2

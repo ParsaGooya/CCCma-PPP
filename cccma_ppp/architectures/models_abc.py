@@ -724,47 +724,66 @@ class cVAEmodelsABC(modelABC):
         return  latent_samples, cond_mu, cond_log_var
 
 
-
-def weights_init(m, method: InitMethod = "xavier"):
+def weights_init(
+    m: nn.Module,
+    method: InitMethod = "default",
+):
     """
-    Initialize layer weights.
+    Initialize trainable weights.
 
     Parameters
     ----------
-    m : torch.nn.Module
-    method : {"xavier", "trunc_normal"}, optional
-
-    Returns
-    -------
-    None
+    m : nn.Module
+        Module whose parameters will be initialized.
+    method : {"default", "kaiming", "xavier", "trunc_normal"}, optional
+        Initialization method. "default" preserves PyTorch's built-in
+        initialization.
 
     Raises
     ------
     NotImplementedError
+        If an unsupported initialization method is requested.
     """
 
-    if not isinstance(m, (nn.Linear, nn.Conv1d, nn.Conv2d, nn.Conv3d)):
+    if not isinstance(
+        m,
+        (
+            nn.Linear,
+            nn.Conv1d,
+            nn.Conv2d,
+            nn.Conv3d,
+        ),
+    ):
         return
 
-    if method == "xavier":
+    if method == "default":
+        # Preserve PyTorch's initialization.
+        return
 
-        def initializer(t):
-            nn.init.xavier_uniform_(t)
+    elif method == "kaiming":
+        initializer = lambda t: nn.init.kaiming_uniform_(
+            t,
+            a=math.sqrt(5),
+            mode="fan_in",
+            nonlinearity="leaky_relu",
+        )
+
+    elif method == "xavier":
+        initializer = nn.init.xavier_uniform_
 
     elif method == "trunc_normal":
-
-        def initializer(t):
-            trunc_normal_(t, std=0.02)
+        initializer = lambda t: trunc_normal_(
+            t,
+            std=0.02,
+        )
 
     else:
         raise NotImplementedError(
-            'initiliazation methods besied "trunc_normal" and "xavier" are not implementd.'
+            f'Initialization method "{method}" is not implemented.'
         )
 
-    if hasattr(m, "weight") and m.weight is not None:
-        if m.weight.requires_grad:
-            initializer(m.weight)
+    if m.weight is not None and m.weight.requires_grad:
+        initializer(m.weight)
 
-    if hasattr(m, "bias") and m.bias is not None:
-        if m.bias.requires_grad:
-            nn.init.constant_(m.bias, 0)
+    if m.bias is not None and m.bias.requires_grad:
+        nn.init.zeros_(m.bias)

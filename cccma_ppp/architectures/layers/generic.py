@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-InitMethod = Literal["trunc_normal", "xavier"]
+InitMethod = Literal["default", "kaiming", "xavier", "trunc_normal"]
 ActivationName = Literal["relu", "gelu", "silu"]
 NormalizationMethod = Literal["batch", "group", "layer", "none"]
 UpsamplingMethod = Literal["transpose_conv", "bilinear"]

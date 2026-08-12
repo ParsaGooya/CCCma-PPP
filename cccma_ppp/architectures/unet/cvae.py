@@ -91,7 +91,7 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
     output_activation: OutputActivation = "identity"
     output_block_hidden_channels: int | None = None
 
-    init_method: InitMethod = "trunc_normal"
+    init_method: InitMethod = "default"
     GENERATOR: GENERATORConfig | None = None
 
     NUM_INPUT_DIMS: ClassVar[int] = 3

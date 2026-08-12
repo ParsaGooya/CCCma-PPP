@@ -61,7 +61,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     condemb_to_decoder: bool = True
     batch_normalization: bool = False
     dropout_rate: float = None
-    init_method: InitMethod = "trunc_normal"
+    init_method: InitMethod = "default"
     activation: ActivationName = "relu"
 
     NUM_INPUT_DIMS: ClassVar[int] = 2
