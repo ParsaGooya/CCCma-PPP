@@ -66,7 +66,7 @@ class ConvBlockConfig(ConvBlockConfigABC):
     num_convolutions: int = 2
     kernel_size: int = 3
     normalization: NormalizationMethod = "batch"
-    padding_method: PaddingMethod = "circular"
+    padding_method: PaddingMethod = "zeros"
     activation: ActivationName = "relu"
     dropout_rate: float | None = None
     bias: bool = False
@@ -89,7 +89,7 @@ class PartialConvBlockConfig(ConvBlockConfigABC):
     num_convolutions: int = 2
     kernel_size: int = 3
     normalization: NormalizationMethod = "batch"
-    padding_method: PaddingMethod = "circular"
+    padding_method: PaddingMethod = "zeros"
     activation: ActivationName = "relu"
     dropout_rate: float | None = None
     bias: bool = False
@@ -115,7 +115,7 @@ class ConvNeXtBlockConfig(ConvBlockConfigABC):
     num_blocks: int = 2
     kernel_size: int = 7
     expansion_ratio: int = 4
-    padding_method: PaddingMethod = "circular"
+    padding_method: PaddingMethod = "zeros"
     layer_scale_init: float = 1e-6
     dropout_rate: float = 0.0
     drop_path_rate: float = 0.0
