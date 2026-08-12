@@ -49,15 +49,11 @@ from cccma_ppp.architectures.layers.conv import (
 )
 
 from cccma_ppp.architectures.unet.utils import _unet_config_checks, _repeat_tensor_mask
-
+from cccma_ppp.architectures.unet.deterministic import UNetConfig
 
 @dataclasses.dataclass
 class UNetSelector(deterministicModelSelector):
-    type: str = field(
-        init=False,
-        default="UNet",
-    )
-
+    type: str = "unet"
     share_output_block: bool = True
 
 
@@ -120,6 +116,14 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
         if self.deterministic_guess_config is not None:
             self.share_output_block = self.deterministic_guess_config.share_output_block
             self.deterministic_guess_config = self.deterministic_guess_config.get_model_config()
+
+            if not isinstance(self.deterministic_guess_config, UNetConfig):
+                raise TypeError(
+                    "cVAEUNet requires deterministic_guess_config to build a "
+                    f"UNet-compatible model, got "
+                    f"{type(self.deterministic_guess_config).__name__}."
+                )
+
             if (self.deterministic_guess_config.channels[0] !=
                 self.channels[0]):
                 raise ValueError(
