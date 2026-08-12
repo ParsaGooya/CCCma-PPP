@@ -385,8 +385,11 @@ class UNetOutputSIC(nn.Module):
         *,
         hidden_channels: int | None,
         activation: OutputActivation,
+        clip_output: bool = False
     ):
         super().__init__()
+
+        self.clip_output = clip_output
 
         if hidden_channels is None:
             layers: list[nn.Module] = [
@@ -420,4 +423,7 @@ class UNetOutputSIC(nn.Module):
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.layers(x)
+        out = self.layers(x)
+        if self.clip_output:
+            out = out.clip(0,1)
+        return out

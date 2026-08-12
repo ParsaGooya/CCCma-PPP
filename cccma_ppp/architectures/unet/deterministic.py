@@ -53,7 +53,6 @@ from cccma_ppp.architectures.unet.utils import _unet_config_checks, _repeat_tens
 @dataclasses.dataclass
 class UNetConfig(modelConfigABC):
 
-
     channels: list[int]
     block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig = (
         field(default_factory=ConvBlockConfig)
@@ -391,6 +390,7 @@ class UNet(deterministicmodelsABC):
 @deterministicModelSelector.register("unetsic")
 @dataclasses.dataclass
 class UNetSICConfig(UNetConfig):
+    clip_output: bool = False
 
     def build(
         self,
@@ -417,5 +417,6 @@ class UNetSIC(UNet):
             out_channels=out_channels,
             hidden_channels=self.config.output_block_hidden_channels,
             activation=self.config.output_activation,
+            clip_output=self.config.clip_output
         )
 
