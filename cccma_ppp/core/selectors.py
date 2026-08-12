@@ -203,15 +203,15 @@ class ModelSelector:
                 self.load_dir
             )
             checkpoint_model = checkpoint_module.get("ModelConfig")
-            assert self.type == checkpoint_model.get("type"), (
-                f"the specified model does not have the correct type {self.type}"
+            assert self.type.lower() == checkpoint_model.get("type"), (
+                f"The checkpoint {checkpoint_model.get('type')} model does not have the correct type {self.type}"
             )
             self.config = checkpoint_model.get("config")
             warnings.warn(
                 f"all model config overwritten by the saved model from {self.load_dir}"
             )
             if self.freeze_weights:
-                warnings.warn("Model weights will be frozen.")
+                warnings.warn(f"Checkpoint {self.type} model weights will be frozen.")
 
     @classmethod
     def register(cls, name: str) -> Callable[..., modelABC]:
