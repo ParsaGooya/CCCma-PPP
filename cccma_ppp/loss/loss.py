@@ -45,6 +45,7 @@ class LosspipelineConfig:
     loss_pipeline: list[LossStepConfig]
     loss_weights: list[float] = None
     reduction: Reduction = "mean"
+    masked_loss_calculation: bool = True
 
     def __post_init__(self):
         """
@@ -173,6 +174,7 @@ class Losspipeline(nn.Module):
         self._checked_dimensionality = False
         self.config = config
         self.reduction = config.reduction
+        self.masked_loss_calculation = config.masked_loss_calculation
         self.weights = weights
         self.num_output_dimensions = num_output_dimensions
         self.generative_context = (
@@ -262,12 +264,16 @@ class Losspipeline(nn.Module):
         AssertionError
             If input dimensionality does not match expectations.
         """
+        if not self.masked_loss_calculation:
+            target_mask = None
 
         total_loss = 0.0
         indiv_loses = {}
 
         if step_arguments is None:
-            step_arguments = dict()
+            step_arguments_ = dict()
+        else:
+            step_arguments_ = step_arguments.copy()
 
         if not self._checked_dimensionality:
             expected_ndim = self.num_output_dimensions + 1
@@ -285,9 +291,9 @@ class Losspipeline(nn.Module):
 
         for ind, (name, criterion) in enumerate(zip(self.steps, self.pipeline)):
             if print_loss:
-                step_arguments["print_loss"] = True
+                step_arguments_["print_loss"] = True
 
-            loss = criterion(data, target, target_mask, **step_arguments)
+            loss = criterion(data, target, target_mask, **step_arguments_)
             indiv_loses[name] = loss.detach()
 
             total_loss = total_loss + loss * self.config.loss_weights[ind]
