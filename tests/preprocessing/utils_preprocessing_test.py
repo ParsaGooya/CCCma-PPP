@@ -87,6 +87,7 @@ def passthrough_alignment(monkeypatch):
 
 
 class TestNormalizer:
+    @pytest.mark.pruned
     def test_defaults(self):
         scaler = Normalizer()
 
@@ -97,6 +98,7 @@ class TestNormalizer:
         assert scaler.large_ensemble is False
         assert scaler.fitted is False
 
+    @pytest.mark.pruned
     def test_converts_dimensions_to_tuple(self):
         scaler = Normalizer(
             dims=[
@@ -110,6 +112,7 @@ class TestNormalizer:
             "lat",
         )
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "frequency",
         [
@@ -134,6 +137,7 @@ class TestNormalizer:
         ):
             Normalizer(frequency="hour")
 
+    @pytest.mark.pruned
     def test_fit_returns_self(self):
         scaler = Normalizer(
             dims=[
@@ -146,6 +150,7 @@ class TestNormalizer:
         assert result is scaler
         assert scaler.fitted is True
 
+    @pytest.mark.pruned
     def test_fit_computes_minimum_and_maximum(self):
         data = xr.DataArray(
             [
@@ -166,6 +171,7 @@ class TestNormalizer:
         assert scaler.min.item() == 2.0
         assert scaler.max.item() == 8.0
 
+    @pytest.mark.pruned
     def test_transform_requires_fitted_scaler(self):
         scaler = Normalizer()
 
@@ -182,6 +188,7 @@ class TestNormalizer:
                 )
             )
 
+    @pytest.mark.pruned
     def test_inverse_requires_fitted_scaler(self):
         scaler = Normalizer()
 
@@ -198,6 +205,7 @@ class TestNormalizer:
                 )
             )
 
+    @pytest.mark.pruned
     def test_transform(self):
         data = xr.DataArray(
             [
@@ -227,6 +235,7 @@ class TestNormalizer:
             ),
         )
 
+    @pytest.mark.pruned
     def test_inverse_transform(
         self,
         passthrough_alignment,
@@ -263,6 +272,7 @@ class TestNormalizer:
         assert passthrough_alignment.call_args_list[0].kwargs["ds"] is data
         assert passthrough_alignment.call_args_list[0].kwargs["stat"] is scaler.min
 
+    @pytest.mark.pruned
     def test_roundtrip(
         self,
         passthrough_alignment,
@@ -288,6 +298,7 @@ class TestNormalizer:
             data,
         )
 
+    @pytest.mark.pruned
     def test_monthly_grouped_statistics(self):
         data = make_time_data()
         scaler = Normalizer(
@@ -323,6 +334,7 @@ class TestNormalizer:
             ],
         )
 
+    @pytest.mark.pruned
     def test_dataset_input(self):
         data = make_time_data()
         dataset = xr.Dataset(
@@ -349,6 +361,7 @@ class TestNormalizer:
             "b",
         }
 
+    @pytest.mark.pruned
     def test_ensemble_dimension_is_added_to_reduction(self):
         data = xr.DataArray(
             np.arange(
@@ -376,6 +389,7 @@ class TestNormalizer:
         assert scaler.min.ndim == 0
         assert scaler.max.ndim == 0
 
+    @pytest.mark.pruned
     def test_existing_ensemble_dimension_is_not_duplicated(self):
         data = xr.DataArray(
             np.arange(
@@ -407,6 +421,7 @@ class TestNormalizer:
 
 
 class TestStandardizer:
+    @pytest.mark.pruned
     def test_defaults(self):
         scaler = Standardizer()
 
@@ -424,6 +439,7 @@ class TestStandardizer:
         ):
             Standardizer(frequency="hour")
 
+    @pytest.mark.pruned
     def test_fit_computes_mean_and_standard_deviation(self):
         data = xr.DataArray(
             [
@@ -484,6 +500,7 @@ class TestStandardizer:
         assert scaler.mean.item() == pytest.approx(1.5)
         assert scaler.std.item() == pytest.approx(0.5)
 
+    @pytest.mark.pruned
     def test_nonpositive_standard_deviation_becomes_nan(self):
         data = xr.DataArray(
             [
@@ -502,6 +519,7 @@ class TestStandardizer:
 
         assert np.isnan(scaler.std.item())
 
+    @pytest.mark.pruned
     def test_transform(self):
         data = xr.DataArray(
             [
@@ -522,6 +540,7 @@ class TestStandardizer:
         assert result.mean().item() == pytest.approx(0.0)
         assert result.std().item() == pytest.approx(1.0)
 
+    @pytest.mark.pruned
     def test_transform_requires_fitted_scaler(self):
         with pytest.raises(
             RuntimeError,
@@ -536,6 +555,7 @@ class TestStandardizer:
                 )
             )
 
+    @pytest.mark.pruned
     def test_inverse_transform(
         self,
         passthrough_alignment,
@@ -569,6 +589,7 @@ class TestStandardizer:
         )
         assert passthrough_alignment.call_count == 2
 
+    @pytest.mark.pruned
     def test_roundtrip(
         self,
         passthrough_alignment,
@@ -594,6 +615,7 @@ class TestStandardizer:
             data,
         )
 
+    @pytest.mark.pruned
     def test_yearly_statistics(self):
         scaler = Standardizer(
             dims=[
@@ -614,6 +636,7 @@ class TestStandardizer:
 
 
 class TestAnomaliesScaler:
+    @pytest.mark.pruned
     def test_defaults(self):
         scaler = AnomaliesScaler()
 
@@ -623,6 +646,7 @@ class TestAnomaliesScaler:
         assert scaler.large_ensemble is False
         assert scaler.fitted is False
 
+    @pytest.mark.pruned
     def test_dimensions_are_stored_as_tuple(self):
         scaler = AnomaliesScaler(
             dims=[
@@ -636,6 +660,7 @@ class TestAnomaliesScaler:
             "lat",
         )
 
+    @pytest.mark.pruned
     def test_fit_computes_mean(self):
         data = xr.DataArray(
             [
@@ -687,6 +712,7 @@ class TestAnomaliesScaler:
 
         assert scaler.mean.item() == pytest.approx(1.5)
 
+    @pytest.mark.pruned
     def test_transform(self):
         data = xr.DataArray(
             [
@@ -716,6 +742,7 @@ class TestAnomaliesScaler:
             ),
         )
 
+    @pytest.mark.pruned
     def test_inverse_transform(
         self,
         passthrough_alignment,
@@ -798,6 +825,7 @@ class TestFlattennanremove:
             },
         )
 
+    @pytest.mark.pruned
     def test_defaults(self):
         flattener = Flattennanremove()
 
@@ -806,6 +834,7 @@ class TestFlattennanremove:
         assert flattener.common_to_input_and_target is False
         assert flattener.NN_dims == []
 
+    @pytest.mark.pruned
     def test_fit_detects_spatial_dimensions(self):
         flattener = Flattennanremove()
 
@@ -819,6 +848,7 @@ class TestFlattennanremove:
         ]
         assert flattener.reference_shape is not None
 
+    @pytest.mark.pruned
     def test_fit_removes_nan_locations(self):
         flattener = Flattennanremove().fit(self.make_spatial_data())
 
@@ -896,6 +926,7 @@ class TestFlattennanremove:
                 target=target,
             )
 
+    @pytest.mark.pruned
     def test_transform_stacks_spatial_dimensions(self):
         data = self.make_spatial_data()
         flattener = Flattennanremove().fit(data)
@@ -905,6 +936,7 @@ class TestFlattennanremove:
         assert tuple(result.dims) == ("ref",)
         assert result.size == 3
 
+    @pytest.mark.pruned
     def test_transform_existing_ref_dimension(self):
         data = self.make_spatial_data()
         flattener = Flattennanremove().fit(data)
@@ -952,6 +984,7 @@ class TestFlattennanremove:
 
         assert flattener._check_nn_dims(None) is None
 
+    @pytest.mark.pruned
     def test_check_nn_dims_rejects_missing_dimensions(self):
         flattener = Flattennanremove()
         flattener.NN_dims = [
@@ -1017,6 +1050,7 @@ class TestFlattennanremove:
         ):
             Flattennanremove()._load_from_memory(tmp_path / "flattener.joblib")
 
+    @pytest.mark.pruned
     def test_load_copies_state(
         self,
         tmp_path,
@@ -1058,6 +1092,7 @@ class TestFlattennanremove:
 
 
 class TestAlignStatistic:
+    @pytest.mark.pruned
     def test_static_statistic_is_returned_unchanged(self):
         data = make_forecast_data()
         stat = xr.DataArray(
@@ -1098,6 +1133,7 @@ class TestAlignStatistic:
 
         assert result is stat
 
+    @pytest.mark.pruned
     def test_temporal_statistic_requires_time_coordinate(self):
         data = xr.DataArray(
             np.ones(2),
@@ -1189,6 +1225,7 @@ class TestAlignStatistic:
                 stat,
             )
 
+    @pytest.mark.pruned
     def test_month_statistic_is_aligned_to_valid_time(self):
         data = make_forecast_data(
             times=("2000-01-01",),
@@ -1237,6 +1274,7 @@ class TestAlignStatistic:
             LEAD_TIME_DIM,
         )
 
+    @pytest.mark.pruned
     def test_year_statistic_is_aligned_to_valid_time(self):
         data = make_forecast_data(
             times=("2000-01-01",),
@@ -1280,6 +1318,7 @@ class TestAlignStatistic:
             ),
         )
 
+    @pytest.mark.pruned
     def test_year_and_month_statistic(self):
         data = make_forecast_data(
             times=("2000-01-01",),
@@ -1336,6 +1375,7 @@ class TestAlignStatistic:
             ),
         )
 
+    @pytest.mark.pruned
     def test_day_statistic(self):
         data = make_forecast_data(
             times=("2000-01-01",),
@@ -1377,6 +1417,7 @@ class TestAlignStatistic:
             ),
         )
 
+    @pytest.mark.pruned
     def test_without_lead_time_uses_initialization_time(self):
         data = xr.DataArray(
             np.ones(2),
@@ -1419,6 +1460,7 @@ class TestAlignStatistic:
         )
         assert tuple(result.dims) == (TIME_DIM,)
 
+    @pytest.mark.pruned
     def test_preserves_non_temporal_dimensions(self):
         data = make_forecast_data(
             times=("2000-01-01",),
@@ -1469,6 +1511,7 @@ class TestAlignStatistic:
             ],
         )
 
+    @pytest.mark.pruned
     def test_missing_year_is_reported_by_xarray(self):
         data = make_forecast_data(
             times=("2000-01-01",),
@@ -1498,6 +1541,7 @@ class TestAlignStatistic:
                 stat,
             )
 
+    @pytest.mark.pruned
     def test_temporary_coordinates_are_removed(self):
         data = make_forecast_data(
             times=("2000-01-01",),
@@ -1540,6 +1584,7 @@ class TestAlignStatistic:
         assert "__stat_day" not in result.coords
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "scaler_class",
     [
@@ -1578,6 +1623,7 @@ def test_normalizer_applies_mask():
     assert scaler.max.item() == pytest.approx(2.0)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "scaler_class,stat_names",
     [
@@ -1730,6 +1776,7 @@ def test_grouped_fit_with_ensemble_reduces_both_dimensions(
     )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "scaler_class",
     [
@@ -1788,6 +1835,7 @@ def test_grouped_dataset_fit_preserves_data_variables(
     }
 
 
+@pytest.mark.pruned
 def test_standardizer_dataset_mask_is_broadcast():
     data = xr.Dataset(
         {
@@ -1817,6 +1865,7 @@ def test_standardizer_dataset_mask_is_broadcast():
     assert scaler.mean["second"].item() == pytest.approx(4.0)
 
 
+@pytest.mark.pruned
 def test_anomalies_dataset_mask_is_broadcast():
     data = xr.Dataset(
         {
@@ -1846,6 +1895,7 @@ def test_anomalies_dataset_mask_is_broadcast():
     assert scaler.mean["second"].item() == pytest.approx(4.0)
 
 
+@pytest.mark.pruned
 def test_flattener_preserves_leading_dimensions():
     data = xr.DataArray(
         np.arange(
@@ -1890,6 +1940,7 @@ def test_flattener_preserves_leading_dimensions():
     )
 
 
+@pytest.mark.pruned
 def test_flattener_inverse_preserves_leading_dimensions():
     data = xr.DataArray(
         np.arange(
@@ -1936,6 +1987,7 @@ def test_flattener_inverse_preserves_leading_dimensions():
     np.testing.assert_array_equal(result["lon"], [-124.0, -123.0])
 
 
+@pytest.mark.pruned
 def test_flattener_inverse_restores_removed_locations_as_nan():
     data = xr.DataArray(
         [
@@ -1976,6 +2028,7 @@ def test_flattener_inverse_restores_removed_locations_as_nan():
     np.testing.assert_array_equal(result["lon"], [-124.0, -123.0])
 
 
+@pytest.mark.pruned
 def test_flattener_target_intersection_is_coordinate_based():
     data = xr.DataArray(
         [
@@ -2079,6 +2132,7 @@ def test_flattener_load_mode_rejects_incompatible_data(
         flattener.fit(data)
 
 
+@pytest.mark.pruned
 def test_flattener_save_uses_runtime_directory_and_default_name(
     tmp_path,
     monkeypatch,
@@ -2171,6 +2225,7 @@ def test_align_exact_initialization_time_statistic():
     assert tuple(result.dims) == (TIME_DIM,)
 
 
+@pytest.mark.pruned
 def test_align_exact_time_statistic_with_lead_times():
     data = make_forecast_data(
         times=("2000-01-01",),
@@ -2217,6 +2272,7 @@ def test_align_exact_time_statistic_with_lead_times():
     )
 
 
+@pytest.mark.pruned
 def test_align_preserves_custom_temporal_coordinate_names():
     custom_time_dim = "forecast_reference_time"
     custom_lead_dim = "forecast_period"
@@ -2282,6 +2338,7 @@ def test_align_preserves_custom_temporal_coordinate_names():
     )
 
 
+@pytest.mark.pruned
 def test_align_calls_add_lead_times_with_flattened_grid(
     monkeypatch,
 ):
@@ -2356,6 +2413,7 @@ def test_align_calls_add_lead_times_with_flattened_grid(
     )
 
 
+@pytest.mark.pruned
 def test_align_day_statistic_across_leap_day():
     data = make_forecast_data(
         times=("2000-02-28",),
@@ -2398,6 +2456,7 @@ def test_align_day_statistic_across_leap_day():
     )
 
 
+@pytest.mark.pruned
 def test_align_multiple_initialization_times_and_years():
     data = make_forecast_data(
         times=(
@@ -2445,6 +2504,7 @@ def test_align_multiple_initialization_times_and_years():
     )
 
 
+@pytest.mark.pruned
 def test_align_does_not_mutate_statistic():
     data = make_forecast_data(
         times=("2000-01-01",),
@@ -2526,6 +2586,7 @@ def make_trend_dataset(
 
 
 class TestTrendRemoverInitialization:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "frequency",
         [
@@ -2560,6 +2621,7 @@ class TestTrendRemoverInitialization:
         ):
             TrendRemover(frequency=frequency)
 
+    @pytest.mark.pruned
     def test_ignores_unknown_keyword_arguments(self):
         remover = TrendRemover(
             frequency=None,
@@ -2571,6 +2633,7 @@ class TestTrendRemoverInitialization:
 
 
 class TestTrendTimeToNumeric:
+    @pytest.mark.pruned
     def test_numpy_datetime_values(self):
         times = xr.DataArray(
             np.asarray(
@@ -2618,6 +2681,7 @@ class TestTrendTimeToNumeric:
             [0.0, 1.0, 31.0],
         )
 
+    @pytest.mark.pruned
     def test_scalar_dataarray_origin(self):
         times = xr.DataArray(
             np.asarray(
@@ -2643,6 +2707,7 @@ class TestTrendTimeToNumeric:
             [0.0, 2.0],
         )
 
+    @pytest.mark.pruned
     def test_scalar_numpy_array_origin(self):
         times = xr.DataArray(
             np.asarray(
@@ -2694,6 +2759,7 @@ class TestTrendTimeToNumeric:
                 origin=origin,
             )
 
+    @pytest.mark.pruned
     def test_rejects_empty_time_coordinate(self):
         times = xr.DataArray(
             np.asarray(
@@ -2712,6 +2778,7 @@ class TestTrendTimeToNumeric:
                 origin=np.datetime64("2000-01-01"),
             )
 
+    @pytest.mark.pruned
     def test_preserves_multidimensional_shape_and_coordinates(self):
         values = np.asarray(
             [
@@ -2753,6 +2820,7 @@ class TestTrendTimeToNumeric:
 
 
 class TestTrendFitLinearTrend:
+    @pytest.mark.pruned
     def test_fits_exact_linear_trend(self):
         data = make_trend_dataset(
             slope=2.0,
@@ -2770,6 +2838,7 @@ class TestTrendFitLinearTrend:
         assert slope["tas"].item() == pytest.approx(2.0)
         assert intercept["tas"].item() == pytest.approx(5.0)
 
+    @pytest.mark.pruned
     def test_preserves_non_time_dimensions(self):
         times = np.asarray(
             [
@@ -2818,6 +2887,7 @@ class TestTrendFitLinearTrend:
             [1.0, 10.0],
         )
 
+    @pytest.mark.pruned
     def test_missing_coefficient_variable_raises(self, monkeypatch):
         data = make_trend_dataset()
         remover = TrendRemover()
@@ -2853,6 +2923,7 @@ class TestTrendRemoverFit:
         ):
             TrendRemover().fit(data)
 
+    @pytest.mark.pruned
     def test_fit_returns_self_and_sets_fitted(self):
         remover = TrendRemover()
         result = remover.fit(make_trend_dataset())
@@ -2863,12 +2934,14 @@ class TestTrendRemoverFit:
         assert remover.intercept is not None
         assert remover.time_origin is not None
 
+    @pytest.mark.pruned
     def test_fit_loads_statistics(self):
         remover = TrendRemover().fit(make_trend_dataset())
 
         assert remover.slope["tas"].item() == pytest.approx(2.0)
         assert remover.intercept["tas"].item() == pytest.approx(5.0)
 
+    @pytest.mark.pruned
     def test_fit_applies_mask(self):
         data = make_trend_dataset()
         data["tas"][-1] = 1000.0
@@ -2929,6 +3002,7 @@ class TestTrendRemoverFit:
             atol=1e-10,
         )
 
+    @pytest.mark.pruned
     def test_fit_daily_groups(self):
         times = np.asarray(
             [
@@ -3001,6 +3075,7 @@ class TestTrendRemoverFit:
 
 
 class TestTrendRemoverTransform:
+    @pytest.mark.pruned
     def test_requires_fitted_remover(self):
         with pytest.raises(
             RuntimeError,
@@ -3008,6 +3083,7 @@ class TestTrendRemoverTransform:
         ):
             TrendRemover().transform(make_trend_dataset())
 
+    @pytest.mark.pruned
     def test_exact_linear_trend_becomes_zero(self):
         data = make_trend_dataset(
             slope=2.0,
@@ -3023,6 +3099,7 @@ class TestTrendRemoverTransform:
             atol=1e-10,
         )
 
+    @pytest.mark.pruned
     def test_transform_calls_alignment_for_both_statistics(
         self,
         monkeypatch,
@@ -3049,6 +3126,7 @@ class TestTrendRemoverTransform:
             "stat": remover.intercept,
         }
 
+    @pytest.mark.pruned
     def test_preserves_residuals(self):
         data = make_trend_dataset()
         data["tas"] = data["tas"] + xr.DataArray(
@@ -3067,6 +3145,7 @@ class TestTrendRemoverTransform:
 
 
 class TestTrendRemoverInverseTransform:
+    @pytest.mark.pruned
     def test_requires_fitted_remover(self):
         with pytest.raises(
             RuntimeError,
@@ -3086,6 +3165,7 @@ class TestTrendRemoverInverseTransform:
             atol=1e-10,
         )
 
+    @pytest.mark.pruned
     def test_inverse_calls_stat_alignment(
         self,
         monkeypatch,
@@ -3115,6 +3195,7 @@ class TestTrendRemoverInverseTransform:
             "lead_time_resolution": remover.lead_time_resolution,
         }
 
+    @pytest.mark.pruned
     def test_inverse_uses_target_time(
         self,
         monkeypatch,
@@ -3143,6 +3224,7 @@ class TestTrendRemoverInverseTransform:
         get_target.assert_called_once_with(detrended)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "scaler_class",
     [
@@ -3168,6 +3250,7 @@ def test_all_scalers_accept_supported_frequency(
     assert scaler.frequency == frequency
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "scaler_class",
     [
@@ -3214,6 +3297,7 @@ def test_grouped_transform_preserves_time_coordinate(
     )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "scaler_class",
     [
@@ -3245,6 +3329,7 @@ def test_grouped_fit_with_mask(scaler_class):
     assert scaler.fitted is True
 
 
+@pytest.mark.pruned
 def test_anomalies_grouped_statistics():
     scaler = AnomaliesScaler(
         dims=[TIME_DIM],
@@ -3262,6 +3347,7 @@ def test_anomalies_grouped_statistics():
     )
 
 
+@pytest.mark.pruned
 def test_anomalies_inverse_requires_fitted_scaler():
     with pytest.raises(
         RuntimeError,
@@ -3275,6 +3361,7 @@ def test_anomalies_inverse_requires_fitted_scaler():
         )
 
 
+@pytest.mark.pruned
 def test_standardizer_inverse_requires_fitted_scaler():
     with pytest.raises(
         RuntimeError,
@@ -3302,6 +3389,7 @@ class TestFlattennanremoveAdditionalBranches:
             },
         )
 
+    @pytest.mark.pruned
     def test_fit_uses_target_as_reference(self):
         data = self.make_data()
         target = data.copy()
@@ -3317,6 +3405,7 @@ class TestFlattennanremoveAdditionalBranches:
         assert flattener.NN_dims == ["lat", "lon"]
         assert flattener.common_to_input_and_target is True
 
+    @pytest.mark.pruned
     def test_save_uses_explicit_path_object(
         self,
         tmp_path,
@@ -3343,6 +3432,7 @@ class TestFlattennanremoveAdditionalBranches:
             save_path / "saved.joblib",
         )
 
+    @pytest.mark.pruned
     def test_load_mode_checks_data_and_target(
         self,
         tmp_path,
@@ -3388,6 +3478,7 @@ class TestFlattennanremoveAdditionalBranches:
 
         assert flattener._check_nn_dims(self.make_data()) is None
 
+    @pytest.mark.pruned
     def test_load_uses_path_conversion(
         self,
         tmp_path,
@@ -3417,6 +3508,7 @@ class TestFlattennanremoveAdditionalBranches:
 
 
 class TestAlignStatisticAdditionalBranches:
+    @pytest.mark.pruned
     def test_lead_time_statistic_precedes_other_temporal_dims(self):
         stat = xr.DataArray(
             np.ones((2, 12)),
@@ -3434,6 +3526,7 @@ class TestAlignStatisticAdditionalBranches:
 
         assert result is stat
 
+    @pytest.mark.pruned
     def test_static_dataset_is_returned_unchanged(self):
         stat = xr.Dataset(
             {
@@ -3451,6 +3544,7 @@ class TestAlignStatisticAdditionalBranches:
 
         assert result is stat
 
+    @pytest.mark.pruned
     def test_rejects_multidimensional_lead_time_coordinate(self):
         data = xr.DataArray(
             np.ones((2, 2)),
@@ -3489,6 +3583,7 @@ class TestAlignStatisticAdditionalBranches:
                 stat,
             )
 
+    @pytest.mark.pruned
     def test_alignment_for_observation_month_statistic(self):
         times = np.asarray(
             [
@@ -3527,6 +3622,7 @@ class TestAlignStatisticAdditionalBranches:
         )
         assert result.dims == (TIME_DIM,)
 
+    @pytest.mark.pruned
     def test_alignment_for_observation_day_statistic(self):
         times = np.asarray(
             [
@@ -3596,6 +3692,7 @@ class TestAlignStatisticAdditionalBranches:
         assert "__stat_month" not in result.coords
         assert "__stat_day" not in result.coords
 
+    @pytest.mark.pruned
     def test_assigns_original_temporal_coordinates(self):
         data = make_forecast_data(
             times=("2000-01-01",),
@@ -3623,6 +3720,7 @@ class TestAlignStatisticAdditionalBranches:
             data[LEAD_TIME_DIM],
         )
 
+    @pytest.mark.pruned
     def test_daily_resolution_calls_add_lead_times(
         self,
         monkeypatch,

@@ -1,16 +1,12 @@
 import json
 import math
-import os
 from collections import defaultdict
 from pathlib import Path
 
 import pulp
 
 
-ROOT = Path(__file__).resolve().parents[1]
-os.chdir(ROOT)
-
-OUTPUT_DIR = ROOT / "output" / "test_suite_analysis"
+OUTPUT_DIR = Path("../output/test_suite_analysis")
 
 TEST_MAP_FILE = OUTPUT_DIR / "test_map.json"
 BASELINE_COVERAGE_FILE = OUTPUT_DIR / "baseline_cov.json"

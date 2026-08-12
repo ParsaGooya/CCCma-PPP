@@ -26,12 +26,14 @@ def make_config(**overrides):
     return SimpleNamespace(**values)
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_valid_minimal_config():
     config = make_config()
 
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_single_channel_level():
     config = make_config(
         channels=[4],
@@ -42,6 +44,7 @@ def test_unet_config_checks_accepts_single_channel_level():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_multiple_channel_levels():
     config = make_config(
         channels=[4, 8, 16, 32],
@@ -56,6 +59,7 @@ def test_unet_config_checks_accepts_multiple_channel_levels():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "transpose_kernel_sizes",
     [
@@ -76,6 +80,7 @@ def test_unet_config_checks_accepts_positive_integer_kernel(
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "kernel",
     [
@@ -96,6 +101,7 @@ def test_unet_config_checks_accepts_tuple_kernels_in_list(
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_mixed_kernel_list():
     config = make_config(
         channels=[4, 8, 16, 32],
@@ -110,6 +116,7 @@ def test_unet_config_checks_accepts_mixed_kernel_list():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_none_condition_channels():
     config = make_config(
         condition_embedding_channels=None,
@@ -118,6 +125,7 @@ def test_unet_config_checks_accepts_none_condition_channels():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_none_dimensions():
     config = make_config(
         bottleneck_dim=None,
@@ -128,6 +136,7 @@ def test_unet_config_checks_accepts_none_dimensions():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "mask_fraction_threshold",
     [
@@ -167,6 +176,7 @@ def test_unet_config_checks_accepts_valid_output_hidden_channels(
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "num_training_noise_samples",
     [
@@ -188,6 +198,7 @@ def test_unet_config_checks_accepts_valid_generator_sample_counts(
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_generator_none():
     config = make_config(
         GENERATOR=None,
@@ -196,6 +207,7 @@ def test_unet_config_checks_accepts_generator_none():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_condition_independent_latent_with_decoder():
     config = make_config(
         condition_dependant_latent=False,
@@ -205,6 +217,7 @@ def test_unet_config_checks_accepts_condition_independent_latent_with_decoder():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_accepts_condition_dependent_latent_without_decoder():
     config = make_config(
         condition_dependant_latent=True,
@@ -214,6 +227,7 @@ def test_unet_config_checks_accepts_condition_dependent_latent_without_decoder()
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_skips_condition_rule_when_attribute_is_none():
     config = make_config(
         condition_dependant_latent=None,
@@ -223,6 +237,7 @@ def test_unet_config_checks_skips_condition_rule_when_attribute_is_none():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_does_not_mutate_config():
     config = make_config(
         channels=[4, 8, 16],
@@ -244,6 +259,7 @@ def test_unet_config_checks_does_not_mutate_config():
     assert config.transpose_kernel_sizes == original_kernels
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "channels",
@@ -344,6 +360,7 @@ def test_unet_config_checks_rejects_invalid_list_kernel(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "kernel",
     [
@@ -365,6 +382,7 @@ def test_unet_config_checks_rejects_or_errors_for_unsupported_scalar_kernel(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_kernel_count_validation_precedes_kernel_value_validation():
     config = make_config(
         channels=[4, 8, 16],
@@ -379,6 +397,7 @@ def test_kernel_count_validation_precedes_kernel_value_validation():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_rejects_empty_channels():
     config = make_config(
         channels=[],
@@ -393,6 +412,7 @@ def test_unet_config_checks_rejects_empty_channels():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "channels",
     [
@@ -431,6 +451,7 @@ def test_unet_config_checks_rejects_empty_condition_channels():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "condition_embedding_channels",
     [
@@ -469,6 +490,7 @@ def test_channel_validation_precedes_dimension_validation():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "bottleneck_dim",
     [
@@ -491,6 +513,7 @@ def test_unet_config_checks_rejects_nonpositive_bottleneck(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "latent_size",
     [
@@ -513,6 +536,7 @@ def test_unet_config_checks_rejects_nonpositive_latent_size(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "condition_embedding_size",
     [
@@ -535,6 +559,7 @@ def test_unet_config_checks_rejects_nonpositive_condition_embedding_size(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_dimension_validation_order_starts_with_bottleneck():
     config = make_config(
         bottleneck_dim=0,
@@ -549,6 +574,7 @@ def test_dimension_validation_order_starts_with_bottleneck():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_latent_size_checked_before_condition_embedding_size():
     config = make_config(
         bottleneck_dim=16,
@@ -563,6 +589,7 @@ def test_latent_size_checked_before_condition_embedding_size():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_rejects_independent_latent_without_decoder_condition():
     config = make_config(
         condition_dependant_latent=False,
@@ -590,6 +617,7 @@ def test_condition_rule_precedes_mask_threshold_validation():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "mask_fraction_threshold",
     [
@@ -628,6 +656,7 @@ def test_mask_threshold_checked_before_output_hidden_channels():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "output_block_hidden_channels",
     [
@@ -665,6 +694,7 @@ def test_output_hidden_channels_checked_before_generator():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "num_training_noise_samples",
     [

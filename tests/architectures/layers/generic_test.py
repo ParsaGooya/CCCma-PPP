@@ -12,6 +12,7 @@ from cccma_ppp.architectures.layers.generic import (
 )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "value",
     [
@@ -26,6 +27,7 @@ def test_validate_dropout_accepts_valid_values(value):
     assert _validate_dropout(value) is None
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "value",
     [
@@ -43,6 +45,7 @@ def test_validate_dropout_rejects_invalid_values(value):
         _validate_dropout(value)
 
 
+@pytest.mark.pruned
 def test_build_activation_relu():
     activation = _build_activation("relu")
 
@@ -50,12 +53,14 @@ def test_build_activation_relu():
     assert activation.inplace is True
 
 
+@pytest.mark.pruned
 def test_build_activation_gelu():
     activation = _build_activation("gelu")
 
     assert isinstance(activation, nn.GELU)
 
 
+@pytest.mark.pruned
 def test_build_activation_silu():
     activation = _build_activation("silu")
 
@@ -63,6 +68,7 @@ def test_build_activation_silu():
     assert activation.inplace is True
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "name",
     [
@@ -80,6 +86,7 @@ def test_build_activation_rejects_unsupported_name(name):
         _build_activation(name)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "name",
     [
@@ -97,6 +104,7 @@ def test_build_activation_preserves_shape(name):
     assert result.shape == tensor.shape
 
 
+@pytest.mark.pruned
 def test_relu_clamps_negative_values():
     activation = _build_activation("relu")
     tensor = torch.tensor(
@@ -125,6 +133,7 @@ def test_relu_clamps_negative_values():
     )
 
 
+@pytest.mark.pruned
 def test_silu_matches_functional_implementation():
     activation = _build_activation("silu")
     tensor = torch.randn(2, 3, 4, 5)
@@ -138,6 +147,7 @@ def test_silu_matches_functional_implementation():
     )
 
 
+@pytest.mark.pruned
 def test_gelu_matches_functional_implementation():
     activation = _build_activation("gelu")
     tensor = torch.randn(2, 3, 4, 5)
@@ -151,6 +161,7 @@ def test_gelu_matches_functional_implementation():
     )
 
 
+@pytest.mark.pruned
 def test_build_normalization_batch():
     normalization = _build_normalization(
         "batch",
@@ -161,6 +172,7 @@ def test_build_normalization_batch():
     assert normalization.num_features == 4
 
 
+@pytest.mark.pruned
 def test_build_normalization_group():
     normalization = _build_normalization(
         "group",
@@ -173,6 +185,7 @@ def test_build_normalization_group():
     assert normalization.num_channels == 8
 
 
+@pytest.mark.pruned
 def test_build_normalization_layer():
     normalization = _build_normalization(
         "layer",
@@ -184,6 +197,7 @@ def test_build_normalization_layer():
     assert normalization.bias.shape == (4,)
 
 
+@pytest.mark.pruned
 def test_build_normalization_none():
     normalization = _build_normalization(
         "none",
@@ -213,6 +227,7 @@ def test_build_normalization_rejects_unsupported_name(name):
         )
 
 
+@pytest.mark.pruned
 def test_group_normalization_limits_groups_to_channels():
     normalization = _build_normalization(
         "group",
@@ -255,6 +270,7 @@ def test_group_normalization_selects_largest_valid_group_count(
     assert channels % normalization.num_groups == 0
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "name",
     [
@@ -277,6 +293,7 @@ def test_normalization_preserves_shape(name):
     assert result.shape == tensor.shape
 
 
+@pytest.mark.pruned
 def test_identity_normalization_returns_same_object():
     normalization = _build_normalization(
         "none",
@@ -289,6 +306,7 @@ def test_identity_normalization_returns_same_object():
     assert result is tensor
 
 
+@pytest.mark.pruned
 def test_drop_path_zero_probability_returns_same_object_in_training():
     drop_path = DropPath(0.0)
     drop_path.train()
@@ -299,6 +317,7 @@ def test_drop_path_zero_probability_returns_same_object_in_training():
     assert result is tensor
 
 
+@pytest.mark.pruned
 def test_drop_path_zero_probability_returns_same_object_in_evaluation():
     drop_path = DropPath(0.0)
     drop_path.eval()
@@ -309,6 +328,7 @@ def test_drop_path_zero_probability_returns_same_object_in_evaluation():
     assert result is tensor
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "drop_probability",
     [
@@ -329,6 +349,7 @@ def test_drop_path_evaluation_returns_same_object(
     assert result is tensor
 
 
+@pytest.mark.pruned
 def test_drop_path_training_preserves_shape():
     drop_path = DropPath(0.5)
     drop_path.train()
@@ -341,6 +362,7 @@ def test_drop_path_training_preserves_shape():
     assert result.shape == tensor.shape
 
 
+@pytest.mark.pruned
 def test_drop_path_uses_per_sample_mask():
     drop_path = DropPath(0.5)
     drop_path.train()
@@ -360,6 +382,7 @@ def test_drop_path_uses_per_sample_mask():
         }
 
 
+@pytest.mark.pruned
 def test_drop_path_scales_kept_samples():
     drop_path = DropPath(0.5)
     drop_path.train()
@@ -393,6 +416,7 @@ def test_drop_path_drops_some_samples():
     assert torch.any(result == 2)
 
 
+@pytest.mark.pruned
 def test_drop_path_preserves_expected_mean_approximately():
     drop_path = DropPath(0.25)
     drop_path.train()
@@ -408,6 +432,7 @@ def test_drop_path_preserves_expected_mean_approximately():
     )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "shape",
     [
@@ -430,6 +455,7 @@ def test_drop_path_supports_multiple_tensor_ranks(shape):
     assert result.shape == tensor.shape
 
 
+@pytest.mark.pruned
 def test_drop_path_preserves_dtype():
     drop_path = DropPath(0.5)
     drop_path.train()
@@ -448,6 +474,7 @@ def test_drop_path_preserves_dtype():
     assert result.dtype == torch.float64
 
 
+@pytest.mark.pruned
 def test_drop_path_preserves_device():
     drop_path = DropPath(0.5)
     drop_path.train()
@@ -458,6 +485,7 @@ def test_drop_path_preserves_device():
     assert result.device == tensor.device
 
 
+@pytest.mark.pruned
 def test_drop_path_supports_backward():
     drop_path = DropPath(0.5)
     drop_path.train()
@@ -478,6 +506,7 @@ def test_drop_path_supports_backward():
     assert tensor.grad.shape == tensor.shape
 
 
+@pytest.mark.pruned
 def test_drop_path_random_tensor_shape(
     monkeypatch,
 ):
@@ -528,6 +557,7 @@ def test_drop_path_random_tensor_shape(
     )
 
 
+@pytest.mark.pruned
 def test_drop_path_random_values_above_threshold_are_kept(
     monkeypatch,
 ):
@@ -564,6 +594,7 @@ def test_drop_path_random_values_above_threshold_are_kept(
     )
 
 
+@pytest.mark.pruned
 def test_drop_path_random_values_below_threshold_are_dropped(
     monkeypatch,
 ):

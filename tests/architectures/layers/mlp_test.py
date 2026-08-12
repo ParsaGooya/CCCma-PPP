@@ -5,12 +5,14 @@ import torch.nn as nn
 from cccma_ppp.architectures.layers.mlp import build_mlp
 
 
+@pytest.mark.pruned
 def test_build_mlp_returns_sequential():
     model = build_mlp([4, 3, 2])
 
     assert isinstance(model, nn.Sequential)
 
 
+@pytest.mark.pruned
 def test_build_mlp_single_linear_layer():
     model = build_mlp([4, 2])
 
@@ -20,6 +22,7 @@ def test_build_mlp_single_linear_layer():
     assert model[0].out_features == 2
 
 
+@pytest.mark.pruned
 def test_build_mlp_multiple_linear_layers():
     model = build_mlp([4, 8, 6, 2])
 
@@ -39,6 +42,7 @@ def test_build_mlp_multiple_linear_layers():
     ]
 
 
+@pytest.mark.pruned
 def test_build_mlp_empty_dimensions_returns_empty_sequential():
     model = build_mlp([])
 
@@ -46,6 +50,7 @@ def test_build_mlp_empty_dimensions_returns_empty_sequential():
     assert len(model) == 0
 
 
+@pytest.mark.pruned
 def test_build_mlp_single_dimension_returns_empty_sequential():
     model = build_mlp([4])
 
@@ -53,6 +58,7 @@ def test_build_mlp_single_dimension_returns_empty_sequential():
     assert len(model) == 0
 
 
+@pytest.mark.pruned
 def test_build_mlp_two_dimensions_has_no_default_final_activation():
     model = build_mlp([4, 2])
 
@@ -60,6 +66,7 @@ def test_build_mlp_two_dimensions_has_no_default_final_activation():
     assert isinstance(model[0], nn.Linear)
 
 
+@pytest.mark.pruned
 def test_build_mlp_default_structure():
     model = build_mlp([4, 8, 2])
 
@@ -69,24 +76,28 @@ def test_build_mlp_default_structure():
     assert isinstance(model[2], nn.Linear)
 
 
+@pytest.mark.pruned
 def test_build_mlp_default_relu_is_inplace():
     model = build_mlp([4, 8, 2])
 
     assert model[1].inplace is True
 
 
+@pytest.mark.pruned
 def test_build_mlp_default_has_no_dropout():
     model = build_mlp([4, 8, 2])
 
     assert not any(isinstance(layer, nn.Dropout) for layer in model)
 
 
+@pytest.mark.pruned
 def test_build_mlp_default_has_no_batch_normalization():
     model = build_mlp([4, 8, 2])
 
     assert not any(isinstance(layer, nn.BatchNorm1d) for layer in model)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "activation",
@@ -113,6 +124,7 @@ def test_build_mlp_activation_types(
     )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "activation",
     [
@@ -147,6 +159,7 @@ def test_build_mlp_activation_on_every_hidden_layer(
     assert len(activations) == 2
 
 
+@pytest.mark.pruned
 def test_build_mlp_rejects_unsupported_activation():
     with pytest.raises(
         ValueError,
@@ -158,6 +171,7 @@ def test_build_mlp_rejects_unsupported_activation():
         )
 
 
+@pytest.mark.pruned
 def test_build_mlp_invalid_activation_not_checked_without_activated_layers():
     model = build_mlp(
         [4, 2],
@@ -181,12 +195,14 @@ def test_build_mlp_invalid_activation_checked_when_final_is_activated():
         )
 
 
+@pytest.mark.pruned
 def test_build_mlp_does_not_activate_final_by_default():
     model = build_mlp([4, 8, 2])
 
     assert isinstance(model[-1], nn.Linear)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "activation",
@@ -214,6 +230,7 @@ def test_build_mlp_activates_final_when_requested(
     )
 
 
+@pytest.mark.pruned
 def test_build_mlp_single_linear_layer_can_activate_final():
     model = build_mlp(
         [4, 2],
@@ -225,6 +242,7 @@ def test_build_mlp_single_linear_layer_can_activate_final():
     assert isinstance(model[1], nn.ReLU)
 
 
+@pytest.mark.pruned
 def test_build_mlp_activate_final_adds_activation_to_every_layer():
     model = build_mlp(
         [4, 8, 6, 2],
@@ -236,6 +254,7 @@ def test_build_mlp_activate_final_adds_activation_to_every_layer():
     assert len(relu_layers) == 3
 
 
+@pytest.mark.pruned
 def test_build_mlp_adds_dropout_to_hidden_layers():
     model = build_mlp(
         [4, 8, 2],
@@ -248,6 +267,7 @@ def test_build_mlp_adds_dropout_to_hidden_layers():
     assert dropout_layers[0].p == pytest.approx(0.25)
 
 
+@pytest.mark.pruned
 def test_build_mlp_adds_dropout_after_each_hidden_activation():
     model = build_mlp(
         [4, 8, 6, 2],
@@ -262,6 +282,7 @@ def test_build_mlp_adds_dropout_after_each_hidden_activation():
         assert layer.p == pytest.approx(0.4)
 
 
+@pytest.mark.pruned
 def test_build_mlp_does_not_add_dropout_to_final_layer_by_default():
     model = build_mlp(
         [4, 8, 2],
@@ -271,6 +292,7 @@ def test_build_mlp_does_not_add_dropout_to_final_layer_by_default():
     assert isinstance(model[-1], nn.Linear)
 
 
+@pytest.mark.pruned
 def test_build_mlp_adds_dropout_to_final_layer_when_activated():
     model = build_mlp(
         [4, 8, 2],
@@ -282,6 +304,7 @@ def test_build_mlp_adds_dropout_to_final_layer_when_activated():
     assert model[-1].p == pytest.approx(0.5)
 
 
+@pytest.mark.pruned
 def test_build_mlp_dropout_zero_still_adds_dropout_layer():
     model = build_mlp(
         [4, 8, 2],
@@ -294,6 +317,7 @@ def test_build_mlp_dropout_zero_still_adds_dropout_layer():
     assert dropout_layers[0].p == pytest.approx(0.0)
 
 
+@pytest.mark.pruned
 def test_build_mlp_dropout_one_is_constructed():
     model = build_mlp(
         [4, 8, 2],
@@ -306,6 +330,7 @@ def test_build_mlp_dropout_one_is_constructed():
     assert dropout_layers[0].p == pytest.approx(1.0)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "dropout_rate",
     [
@@ -324,6 +349,7 @@ def test_build_mlp_invalid_dropout_raises_when_layer_is_constructed(
         )
 
 
+@pytest.mark.pruned
 def test_build_mlp_invalid_dropout_not_checked_without_activated_layers():
     model = build_mlp(
         [4, 2],
@@ -334,6 +360,7 @@ def test_build_mlp_invalid_dropout_not_checked_without_activated_layers():
     assert len(model) == 1
 
 
+@pytest.mark.pruned
 def test_build_mlp_adds_batch_normalization_to_hidden_layers():
     model = build_mlp(
         [4, 8, 2],
@@ -346,6 +373,7 @@ def test_build_mlp_adds_batch_normalization_to_hidden_layers():
     assert batch_norm_layers[0].num_features == 8
 
 
+@pytest.mark.pruned
 def test_build_mlp_adds_batch_normalization_after_each_hidden_layer():
     model = build_mlp(
         [4, 8, 6, 2],
@@ -361,6 +389,7 @@ def test_build_mlp_adds_batch_normalization_after_each_hidden_layer():
     ]
 
 
+@pytest.mark.pruned
 def test_build_mlp_does_not_normalize_final_layer_by_default():
     model = build_mlp(
         [4, 8, 2],
@@ -370,6 +399,7 @@ def test_build_mlp_does_not_normalize_final_layer_by_default():
     assert isinstance(model[-1], nn.Linear)
 
 
+@pytest.mark.pruned
 def test_build_mlp_normalizes_final_layer_when_activated():
     model = build_mlp(
         [4, 8, 2],
@@ -381,6 +411,7 @@ def test_build_mlp_normalizes_final_layer_when_activated():
     assert model[-1].num_features == 2
 
 
+@pytest.mark.pruned
 def test_build_mlp_single_linear_layer_with_final_batch_normalization():
     model = build_mlp(
         [4, 2],
@@ -394,6 +425,7 @@ def test_build_mlp_single_linear_layer_with_final_batch_normalization():
     assert isinstance(model[2], nn.BatchNorm1d)
 
 
+@pytest.mark.pruned
 def test_build_mlp_batch_normalization_flag_has_no_effect_without_activation():
     model = build_mlp(
         [4, 2],
@@ -405,6 +437,7 @@ def test_build_mlp_batch_normalization_flag_has_no_effect_without_activation():
     assert isinstance(model[0], nn.Linear)
 
 
+@pytest.mark.pruned
 def test_build_mlp_hidden_layer_order():
     model = build_mlp(
         [4, 8, 2],
@@ -421,6 +454,7 @@ def test_build_mlp_hidden_layer_order():
     assert isinstance(model[4], nn.Linear)
 
 
+@pytest.mark.pruned
 def test_build_mlp_all_options_final_layer_order():
     model = build_mlp(
         [4, 8, 2],
@@ -443,6 +477,7 @@ def test_build_mlp_all_options_final_layer_order():
     assert isinstance(model[7], nn.BatchNorm1d)
 
 
+@pytest.mark.pruned
 def test_build_mlp_three_layers_all_options_order():
     model = build_mlp(
         [3, 5, 7, 2],
@@ -473,6 +508,7 @@ def test_build_mlp_three_layers_all_options_order():
         assert isinstance(layer, expected_type)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "dims",
@@ -520,6 +556,7 @@ def test_build_mlp_forward_with_all_options():
     assert torch.isfinite(result).all()
 
 
+@pytest.mark.pruned
 def test_build_mlp_preserves_leading_dimensions_without_batch_norm():
     model = build_mlp(
         [4, 8, 2],
@@ -532,6 +569,7 @@ def test_build_mlp_preserves_leading_dimensions_without_batch_norm():
     assert result.shape == (3, 5, 2)
 
 
+@pytest.mark.pruned
 def test_build_mlp_identity_when_dimensions_are_empty():
     model = build_mlp([])
     tensor = torch.randn(2, 3)
@@ -541,6 +579,7 @@ def test_build_mlp_identity_when_dimensions_are_empty():
     assert result is tensor
 
 
+@pytest.mark.pruned
 def test_build_mlp_identity_with_single_dimension():
     model = build_mlp([3])
     tensor = torch.randn(2, 3)
@@ -550,6 +589,7 @@ def test_build_mlp_identity_with_single_dimension():
     assert result is tensor
 
 
+@pytest.mark.pruned
 def test_build_mlp_output_is_finite():
     model = build_mlp(
         [4, 16, 8, 2],
@@ -562,6 +602,7 @@ def test_build_mlp_output_is_finite():
     assert torch.isfinite(result).all()
 
 
+@pytest.mark.pruned
 def test_build_mlp_supports_float64():
     model = build_mlp(
         [4, 8, 2],
@@ -579,6 +620,7 @@ def test_build_mlp_supports_float64():
     assert result.shape == (3, 2)
 
 
+@pytest.mark.pruned
 def test_build_mlp_supports_backward():
     model = build_mlp(
         [4, 8, 2],
@@ -602,6 +644,7 @@ def test_build_mlp_supports_backward():
         assert layer.bias.grad is not None
 
 
+@pytest.mark.pruned
 def test_build_mlp_single_linear_exact_value():
     model = build_mlp([2, 1])
 
@@ -633,6 +676,7 @@ def test_build_mlp_single_linear_exact_value():
     )
 
 
+@pytest.mark.pruned
 def test_build_mlp_hidden_activation_affects_output():
     model = build_mlp(
         [1, 1, 1],
@@ -659,6 +703,7 @@ def test_build_mlp_hidden_activation_affects_output():
     )
 
 
+@pytest.mark.pruned
 def test_build_mlp_final_activation_affects_output():
     model = build_mlp(
         [1, 1],
@@ -684,6 +729,7 @@ def test_build_mlp_final_activation_affects_output():
     )
 
 
+@pytest.mark.pruned
 def test_build_mlp_without_final_activation_preserves_negative_output():
     model = build_mlp(
         [1, 1],
@@ -713,6 +759,7 @@ def test_build_mlp_without_final_activation_preserves_negative_output():
     )
 
 
+@pytest.mark.pruned
 def test_build_mlp_linear_layers_have_independent_parameters():
     model = build_mlp([4, 4, 4])
 
@@ -723,6 +770,7 @@ def test_build_mlp_linear_layers_have_independent_parameters():
     assert first_linear.bias is not second_linear.bias
 
 
+@pytest.mark.pruned
 def test_build_mlp_registers_all_parameters():
     model = build_mlp([4, 8, 6, 2])
 
