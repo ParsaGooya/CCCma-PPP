@@ -465,7 +465,10 @@ class CosineAnnealingLRScheduler:
         if not hasattr(self, "scheduler"):
             raise RuntimeError("Scheduler must be built before stepping.")
 
-        return self.scheduler.state_dict()
+        return {
+            "scheduler": self.scheduler.state_dict(),
+            "num_steps": self.num_steps,
+        }
 
     def load_state_dict(self, state_dict):
         """
@@ -489,4 +492,10 @@ class CosineAnnealingLRScheduler:
         if not hasattr(self, "scheduler"):
             raise RuntimeError("Scheduler must be built before stepping.")
 
-        self.scheduler.load_state_dict(state_dict)
+        if "scheduler" in state_dict:
+            self.scheduler.load_state_dict(state_dict["scheduler"])
+            self.num_steps = state_dict["num_steps"]
+
+        else:
+            self.scheduler.load_state_dict(state_dict)
+            self.num_steps = self.scheduler.last_epoch

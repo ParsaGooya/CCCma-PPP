@@ -771,6 +771,15 @@ class Trainer:
         ):
             self.validation_aggregator.load_state_dict(checkpoint["validation_history"])
 
+        self.log_root(
+            logging.INFO,
+            (
+                f"Resumed at global_step={self.global_step}, "
+                f"scheduler_step={self.optimizer.lr_scheduler.num_steps}, "
+                f"lr={self.optimizer.learning_rate}"
+            ),
+        )
+
         if self.is_distributed:
             self.distributed.barrier()
 
