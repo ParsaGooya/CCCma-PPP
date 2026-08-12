@@ -268,13 +268,15 @@ class PreprocessingPipeline:
             )
             data = data.assign_coords(self.reference_coords)
 
+        data = data.assign_coords(channels=self.reference_var).to_dataset(
+            dim="channels"
+        )
+
         if self.rename_dict is not None:
             inverse_rename = {value: key for key, value in self.rename_dict.items()}
             data = data.rename(inverse_rename)
 
-        return data.assign_coords(channels=self.reference_var).to_dataset(
-            dim="channels"
-        )
+        return data
 
     def get_preprocessors(self, name=None):
         """
