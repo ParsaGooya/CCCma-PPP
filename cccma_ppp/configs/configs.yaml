@@ -19,3 +19,6 @@ observation_data_required_dimensions: [ "lat", "lon" ]
 
 condition_data_allowed_dimensions: [ "time", "lead_time", "ensembles", "sequence", "lev", "lat", "lon" ]
 condition_data_required_dimensions: [ "lat", "lon" ]
+
+# only applicable to cVAEUNet model where a deterministic branch exists.
+save_deterministic_guess_only: false

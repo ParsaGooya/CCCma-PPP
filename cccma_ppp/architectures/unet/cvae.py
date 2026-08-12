@@ -10,6 +10,8 @@ import torch.nn as nn
 from cccma_ppp.core.selectors import cVAEModelSelector, deterministicModelSelector
 from cccma_ppp.core.models.cvae import cVAEOutput
 
+from cccma_ppp.configs import save_deterministic_guess_only
+
 from cccma_ppp.architectures.models_abc import (
     cVAEmodelConfigABC,
     cVAEmodelsABC,
@@ -56,7 +58,6 @@ from cccma_ppp.architectures.unet.deterministic import UNetConfig
 class UNetSelector(deterministicModelSelector):
     type: str = "unet"
     share_output_block: bool = True
-
 
 
 @cVAEModelSelector.register("unet")
@@ -120,8 +121,8 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
 
             if not isinstance(self.deterministic_guess_config, UNetConfig):
                 raise TypeError(
-                    "cVAEUNet requires deterministic_guess_config to build a "
-                    f"UNet-compatible model, got "
+                    "cVAEUNet requires deterministic_guess_config to resolve to a "
+                    "UNetConfig or one of its subclasses, got "
                     f"{type(self.deterministic_guess_config).__name__}."
                 )
 
@@ -131,7 +132,7 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
                     "The cVAE UNet model and the configured deterministic guess " \
                     "model must have the same number of channels before output block " \
                     f"for summation of the deterministic guess at that level. Expected : {self.channels[0]} " \
-                    f"git {self.deterministic_guess_config.channels[0]}"
+                    f"got {self.deterministic_guess_config.channels[0]}"
                 )
 
             if self.deterministic_guess_config.GENERATOR is not None:
@@ -149,10 +150,14 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
                     self.output_block_hidden_channels
                     != self.deterministic_guess_config.output_block_hidden_channels
                     ),
+                    (getattr(self, "clip_output", None)
+                    != getattr(self.deterministic_guess_config, "clip_output", None)
+                    ),
                 ]):
                     raise ValueError(
-                        "With share_output_block being True, the cVAE and deterministic " \
-                        "guess must have the same output_block activation and hidden_channels."
+                        "With share_output_block=True, the cVAE and deterministic "
+                        "guess must use compatible output-block settings "
+                        "(activation, hidden channels, and clip_output)."
                     )
 
     
@@ -458,7 +463,7 @@ class cVAEUNet(cVAEmodelsABC):
     def predict(
         self,
         request: cVAEPredictRequest,
-        deterministic_guess_only: bool = True
+        deterministic_guess_only: bool = save_deterministic_guess_only
     ) -> cVAEOutput:
         """
         Generate samples from learned prior.
@@ -804,6 +809,8 @@ class Generation(nn.Module):
 @dataclasses.dataclass
 class cVAEUNetSICEConfig(cVAEUNetConfig):
 
+    clip_output: bool = False
+    
     def build(
         self,
         input_shape: np.ndarray,
@@ -830,5 +837,6 @@ class cVAEUNetSIC(cVAEUNet):
             out_channels=out_channels,
             hidden_channels=self.config.output_block_hidden_channels,
             activation=self.config.output_activation,
+            clip_output=self.config.clip_output
         )
 

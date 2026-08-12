@@ -37,3 +37,5 @@ observation_data_required_dimensions = frozenset(
 condition_data_required_dimensions = frozenset(
     set(data["condition_data_required_dimensions"])
 )
+
+save_deterministic_guess_only = eval(data["save_deterministic_guess_only"])
