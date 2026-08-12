@@ -4,6 +4,7 @@ import numpy as np
 import copy
 
 from cccma_ppp.architectures.layers.generic import (
+    LayerNorm2d,
     MaskPoolingMethod,
     UpsamplingMethod,
     OutputActivation,
@@ -357,6 +358,54 @@ class UNetOutput(nn.Module):
                     return_mask=False,
                 ),
                 nn.BatchNorm2d(hidden_channels),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(hidden_channels, out_channels, kernel_size=1),
+            ]
+
+        if activation == "sigmoid":
+            layers.append(nn.Sigmoid())
+        elif activation == "tanh":
+            layers.append(nn.Tanh())
+        elif activation != "identity":
+            raise ValueError(f"Unsupported output activation: {activation!r}.")
+
+        self.layers = nn.Sequential(*layers)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.layers(x)
+
+
+class UNetOutputSIC(nn.Module):
+    """Final channel projection and optional output activation."""
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        *,
+        hidden_channels: int | None,
+        activation: OutputActivation,
+    ):
+        super().__init__()
+
+        if hidden_channels is None:
+            layers: list[nn.Module] = [
+                LayerNorm2d(in_channels),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(in_channels, out_channels, kernel_size=1)
+            ]
+        else:
+            layers = [
+                PartialConv2d(
+                    in_channels,
+                    hidden_channels,
+                    kernel_size=3,
+                    padding=1,
+                    bias=False,
+                    multi_channel=False,
+                    return_mask=False,
+                ),
+                LayerNorm2d(hidden_channels),
                 nn.ReLU(inplace=True),
                 nn.Conv2d(hidden_channels, out_channels, kernel_size=1),
             ]

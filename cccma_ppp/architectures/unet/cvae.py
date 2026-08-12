@@ -1,11 +1,10 @@
 import dataclasses
 from dataclasses import field
-from typing import ClassVar, Mapping, Any
+from typing import ClassVar
 import numpy as np
 import math
 import torch
 import torch.nn as nn
-from pathlib import Path
 
 from cccma_ppp.core.selectors import cVAEModelSelector, deterministicModelSelector
 from cccma_ppp.core.models.cvae import cVAEOutput
@@ -37,6 +36,7 @@ from cccma_ppp.architectures.layers.unet import (
     UpBlock,
     DownBlock,
     UNetOutput,
+    UNetOutputSIC
 )
 
 
@@ -91,7 +91,7 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
     mask_fraction_threshold: float = 0.5
 
     output_activation: OutputActivation = "identity"
-    output_block_hidden_channels: int = 32
+    output_block_hidden_channels: int | None = None
 
     init_method: InitMethod = "trunc_normal"
     GENERATOR: GENERATORConfig | None = None
@@ -147,7 +147,7 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
                 ]):
                     raise ValueError(
                         "With share_output_block being True, the cVAE and deterministic " \
-                        "guess must have the same output_blovk activation and hidden_channels."
+                        "guess must have the same output_block activation and hidden_channels."
                     )
 
     
@@ -300,11 +300,9 @@ class cVAEUNet(cVAEmodelsABC):
 
         else:
 
-            self.output = UNetOutput(
+            self.output = self._build_output(
                 in_channels=reversed_channels[-1],
                 out_channels=output_channels,
-                hidden_channels=config.output_block_hidden_channels,
-                activation=config.output_activation,
             )
 
         if config.checkpoint_config is not None:
@@ -314,7 +312,18 @@ class cVAEUNet(cVAEmodelsABC):
                 config.init_method,
                 exclude=(self.deterministic_guess,))
 
-
+    def _build_output(
+        self,
+        in_channels: int,
+        out_channels: int,
+    ) -> nn.Module:
+        
+        return UNetOutput(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            hidden_channels=self.config.output_block_hidden_channels,
+            activation=self.config.output_activation,
+        )
 
     def _prepare_input(
         self,
@@ -774,4 +783,36 @@ class Generation(nn.Module):
 
 
 
+
+@cVAEModelSelector.register("unetsic")
+@dataclasses.dataclass
+class cVAEUNetSICEConfig(cVAEUNetConfig):
+
+    def build(
+        self,
+        input_shape: np.ndarray,
+        output_shape: np.ndarray | None = None,
+        added_features_dim: int | None = None,
+    ):
+        return cVAEUNetSIC(
+            config=self,
+            input_shape=input_shape,
+            output_shape=output_shape,
+            added_features_dim=added_features_dim,
+        )
+
+class cVAEUNetSIC(cVAEUNet):
+
+    def _build_output(
+        self,
+        in_channels: int,
+        out_channels: int,
+    ) -> nn.Module:
+        
+        return UNetOutputSIC(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            hidden_channels=self.config.output_block_hidden_channels,
+            activation=self.config.output_activation,
+        )
 

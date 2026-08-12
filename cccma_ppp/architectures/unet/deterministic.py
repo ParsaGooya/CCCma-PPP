@@ -34,6 +34,7 @@ from cccma_ppp.architectures.layers.unet import (
     UpBlock,
     DownBlock,
     UNetOutput,
+    UNetOutputSIC
 )
 
 
@@ -238,17 +239,27 @@ class UNet(deterministicmodelsABC):
 
         self.up_blocks = nn.ModuleList(up_blocks)
 
-        self.output = UNetOutput(
+        self.output = self._build_output(
             in_channels=input_channels,
             out_channels=output_channels,
-            hidden_channels=config.output_block_hidden_channels,
-            activation=config.output_activation,
         )
 
         if config.checkpoint_config is not None:
             self._load_state_dict(config.checkpoint_config)
         else:
             self._initialize_weights(config.init_method)
+
+    def _build_output(
+        self,
+        in_channels: int,
+        out_channels: int,
+    ) -> nn.Module:
+        return UNetOutput(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            hidden_channels=self.config.output_block_hidden_channels,
+            activation=self.config.output_activation,
+        )
 
     def _prepare_input(
         self,
@@ -346,7 +357,41 @@ class UNet(deterministicmodelsABC):
 
         return output_tensor
 
-
     @property
     def output_block(self) -> UNetOutput:
         return self.output
+    
+
+
+
+@deterministicModelSelector.register("unetsic")
+@dataclasses.dataclass
+class UNetSICConfig(UNetConfig):
+
+    def build(
+        self,
+        input_shape: np.ndarray,
+        output_shape: np.ndarray | None = None,
+        added_features_dim: int | None = None,
+    ):
+        return UNetSIC(
+            config=self,
+            input_shape=input_shape,
+            output_shape=output_shape,
+            added_features_dim=added_features_dim,
+        )
+
+class UNetSIC(UNet):
+
+    def _build_output(
+        self,
+        in_channels: int,
+        out_channels: int,
+    ) -> nn.Module:
+        return UNetOutputSIC(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            hidden_channels=self.config.output_block_hidden_channels,
+            activation=self.config.output_activation,
+        )
+
