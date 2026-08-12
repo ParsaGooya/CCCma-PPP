@@ -63,7 +63,8 @@ class UNetConfig(modelConfigABC):
     skip_alignment_method: AlignmentMethod = "padd"
     transpose_kernel_sizes: list[int | tuple[int, int]] | int = 3
 
-    process_skip: bool = False
+    add_skip_connections: bool = True
+    process_skip_connections: bool = False
 
     mask_pooling: MaskPoolingMethod = "any"
     mask_fraction_threshold: float = 0.5
@@ -117,6 +118,8 @@ class UNet(deterministicmodelsABC):
     ):
         super().__init__(config)
 
+        self.spatial_shapes = None
+        self.add_skip_connections = config.add_skip_connections
         self.init_method = config.init_method
         self.added_features_dim = added_features_dim or 0
 
@@ -193,13 +196,21 @@ class UNet(deterministicmodelsABC):
                     channels[index],
                     channels[index + 1],
                     block_config=config.block_config,
-                    process_skip=config.process_skip,
+                    return_skip=config.add_skip_connections,
+                    process_skip_connections=config.process_skip_connections,
                     mask_pooling=config.mask_pooling,
                     mask_fraction_threshold=config.mask_fraction_threshold,
                 )
                 for index in range(len(channels) - 1)
             ]
         )
+
+        shape = tuple(input_shape[-2:])
+        self.spatial_shapes = [shape]
+
+        for block in self.down_blocks:
+            shape = block.output_shape(shape)
+            self.spatial_shapes.append(shape)            
 
         self.bottleneck = build_conv_block(
             channels[-1],
@@ -221,11 +232,11 @@ class UNet(deterministicmodelsABC):
             )
 
             out_channels = skip_channels
-
+            
             up_blocks.append(
-                UpBlock(
+                UpBlock( 
                     input_channels=input_channels,
-                    skip_channels=skip_channels,
+                    skip_channels=skip_channels if config.add_skip_connections else None,
                     out_channels=out_channels,
                     block_config=config.block_config,
                     upsampling_method=config.upsampling_method,
@@ -248,6 +259,7 @@ class UNet(deterministicmodelsABC):
             self._load_state_dict(config.checkpoint_config)
         else:
             self._initialize_weights(config.init_method)
+            
 
     def _build_output(
         self,
@@ -324,31 +336,43 @@ class UNet(deterministicmodelsABC):
         )
 
         input = self.initial_mapping(input)
-        skips: list[TensorMask] = []
 
-        for down_block in self.down_blocks:
-            input, skip = down_block(input)
-            skips.append(skip)
+        if self.add_skip_connections:
+            down_features: list[TensorMask] = []
+
+            for down_block in self.down_blocks:
+                input, skip = down_block(input)
+                down_features.append(skip)
+
+        else:
+            down_features = self.spatial_shapes[:-1]
+            
+            for down_block in self.down_blocks:
+                input = down_block(input)
 
         input = self.bottleneck(input)
     
-
         if self.config.GENERATOR is not None and num_output_samples > 0:
             input = _repeat_tensor_mask(
                 input,
                 repeats=num_output_samples,
             )
 
-            skips = [
-                _repeat_tensor_mask(skip, repeats=num_output_samples) for skip in skips
-            ]
+            if self.add_skip_connections:
 
-        for up_block, skip in zip(
+                down_features = [
+                    _repeat_tensor_mask(skip, repeats=num_output_samples) for skip in down_features
+                ]
+
+        for up_block, feature in zip(
             self.up_blocks,
-            reversed(skips),
+            reversed(down_features),
             strict=True,
         ):
-            input = up_block(input, skip)
+            if self.add_skip_connections:
+                input = up_block(input, skip=feature)
+            else:
+                input = up_block(input, resize_shape=feature)
 
         output_tensor = _resize_tensor(
             input.tensor,

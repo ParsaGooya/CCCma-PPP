@@ -108,7 +108,7 @@ class DownBlock(nn.Module):
         mask_pooling: MaskPoolingMethod,
         mask_fraction_threshold: float,
         return_skip: bool = True,
-        process_skip: bool = False,
+        process_skip_connections: bool = False,
     ):
         super().__init__()
         self.return_skip = return_skip
@@ -124,7 +124,7 @@ class DownBlock(nn.Module):
                 in_channels,
                 block_config,
             )
-            if (process_skip and return_skip)
+            if (process_skip_connections and return_skip)
             else None
         )
 
