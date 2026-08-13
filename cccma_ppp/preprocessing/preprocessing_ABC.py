@@ -116,7 +116,9 @@ class PreprocessModuleABC(abc.ABC):
         Derive and attach the temporal coordinate used during fitting.
 
         """
-        if (self.frequency is None or self.init_time_dim not in self.dims):
+        dims = tuple() if self.dims is None else self.dims
+        
+        if (self.frequency is None or self.init_time_dim not in dims):
             return data
 
         init_time = data[self.init_time_dim]
