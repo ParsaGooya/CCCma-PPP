@@ -510,7 +510,9 @@ class cVAEUNet(cVAEmodelsABC):
         if deterministic_guess is not None:
             if deterministic_guess_only:
                 if not self._predict_called:
-                    warnings.warn("YOU ARE SAVING DETERMINISTIC GUESS BRANCH OUTPUT ONLY!")
+                    warnings.warn("======================================================\n"
+                                  "YOU ARE SAVING DETERMINISTIC GUESS BRANCH OUTPUT ONLY! \n"
+                                  "======================================================")
                 out = deterministic_guess.unsqueeze(0)
             else:
                 out = out + deterministic_guess
