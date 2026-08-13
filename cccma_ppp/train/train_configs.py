@@ -196,6 +196,18 @@ class TrainConfig:
         return os.path.join(self.experiment_dir, "logs")
 
     @property
+    def monitoring_dir(self) -> str:
+        """
+        Document this function.
+
+        Returns
+        -------
+        str
+            Description not yet provided.
+        """
+        return os.path.join(self.experiment_dir, "resource_monitoring")
+
+    @property
     def figures_dir(self) -> str:
         """
         Document this function.
@@ -215,6 +227,7 @@ class TrainConfig:
         RuntimeContext.GLOBAL_CHECKPOINT_DIR = str(self.checkpoint_dir)
         RuntimeContext.GLOBAL_FIGURES_DIR = str(self.figures_dir)
         RuntimeContext.GLOBAL_LOG_DIR = str(self.log_dir)
+        RuntimeContext.GLOBAL_MONITORING_DIR = str(self.monitoring_dir)
         RuntimeContext.INPUT_VAR_METADATA = self.train_loader.input_var_metadata
         RuntimeContext.TARGET_VAR_METADATA = self.train_loader.target_var_metadata
 

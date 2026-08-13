@@ -1,18 +1,80 @@
+from __future__ import annotations
+
 import functools
 import logging
 import os
+import socket
 import threading
 import time
 import uuid
 from collections.abc import Callable, Iterable, Iterator
 from contextlib import contextmanager
-from typing import Any, TypeVar, cast
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import psutil
+
+
+if TYPE_CHECKING:
+    from cccma_ppp.generic.distributed import Distributed
+
 
 logger = logging.getLogger(__name__)
 
 F = TypeVar("F", bound=Callable[..., Any])
+
+
+def resolve_physical_gpu_index(local_rank: int) -> int:
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    local_rank : int
+        Description not yet provided.
+
+    Returns
+    -------
+    int
+        Description not yet provided.
+
+    Raises
+    ------
+    TypeError
+        Description not yet provided.
+    ValueError
+        Description not yet provided.
+    """
+    if not isinstance(local_rank, int) or isinstance(local_rank, bool):
+        raise TypeError("local_rank must be an integer")
+
+    if local_rank < 0:
+        raise ValueError("local_rank must be non-negative")
+
+    visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES")
+
+    if not visible_devices:
+        return local_rank
+
+    devices = [
+        device.strip() for device in visible_devices.split(",") if device.strip()
+    ]
+
+    if local_rank >= len(devices):
+        raise ValueError(
+            f"local_rank {local_rank} is outside CUDA_VISIBLE_DEVICES, "
+            f"which contains {len(devices)} device(s)"
+        )
+
+    selected_device = devices[local_rank]
+
+    if not selected_device.isdigit():
+        raise ValueError(
+            "GPU monitoring requires numeric CUDA_VISIBLE_DEVICES entries; "
+            f"received {selected_device!r} for local rank {local_rank}"
+        )
+
+    return int(selected_device)
 
 
 class Monitor:
@@ -33,6 +95,12 @@ class Monitor:
         Description not yet provided.
     interval : float
         Description not yet provided.
+    rank : int
+        Description not yet provided.
+    local_rank : int
+        Description not yet provided.
+    world_size : int
+        Description not yet provided.
     """
 
     def __init__(
@@ -44,6 +112,9 @@ class Monitor:
         gpu1: bool = False,
         gpus: Iterable[int] | None = None,
         interval: float = 0.1,
+        rank: int = 0,
+        local_rank: int = 0,
+        world_size: int = 1,
     ) -> None:
         """
         Document this function.
@@ -62,6 +133,12 @@ class Monitor:
             Description not yet provided.
         interval : float
             Description not yet provided.
+        rank : int
+            Description not yet provided.
+        local_rank : int
+            Description not yet provided.
+        world_size : int
+            Description not yet provided.
 
         Raises
         ------
@@ -72,6 +149,28 @@ class Monitor:
         """
         if interval <= 0:
             raise ValueError("interval must be greater than zero")
+
+        distributed_values = {
+            "rank": rank,
+            "local_rank": local_rank,
+            "world_size": world_size,
+        }
+
+        for name, value in distributed_values.items():
+            if not isinstance(value, int) or isinstance(value, bool):
+                raise TypeError(f"{name} must be an integer")
+
+        if rank < 0:
+            raise ValueError("rank must be non-negative")
+
+        if local_rank < 0:
+            raise ValueError("local_rank must be non-negative")
+
+        if world_size <= 0:
+            raise ValueError("world_size must be greater than zero")
+
+        if rank >= world_size:
+            raise ValueError("rank must be less than world_size")
 
         gpu_indices = set(gpus or ())
 
@@ -95,11 +194,16 @@ class Monitor:
         self.gpu_indices = tuple(sorted(gpu_indices))
         self.interval = float(interval)
 
-        self._process = psutil.Process(os.getpid())
+        self.rank = rank
+        self.local_rank = local_rank
+        self.world_size = world_size
+        self.hostname = socket.gethostname()
+        self.pid = os.getpid()
+
+        self._process = psutil.Process(self.pid)
 
         self._data: list[dict[str, Any]] = []
         self._lock = threading.RLock()
-
         self._thread_stacks: dict[int, list[str]] = {}
 
         self._stop_event = threading.Event()
@@ -108,6 +212,7 @@ class Monitor:
         self._pynvml: Any | None = None
         self._gpu_handles: dict[int, Any] = {}
         self._unavailable_gpus: set[int] = set()
+        self._nvml_initialized = False
 
         if self.gpu_indices:
             self._initialize_gpus()
@@ -122,14 +227,16 @@ class Monitor:
             pynvml.nvmlInit()
 
             self._pynvml = pynvml
+            self._nvml_initialized = True
 
             device_count = pynvml.nvmlDeviceGetCount()
 
             for index in self.gpu_indices:
                 if index >= device_count:
                     logger.warning(
-                        "GPU %s is unavailable. The system reports %s "
-                        "NVIDIA GPU device(s).",
+                        "Rank %s cannot monitor GPU %s. The system reports "
+                        "%s NVIDIA GPU device(s).",
+                        self.rank,
                         index,
                         device_count,
                     )
@@ -140,19 +247,42 @@ class Monitor:
                     self._gpu_handles[index] = pynvml.nvmlDeviceGetHandleByIndex(index)
                 except Exception:
                     logger.exception(
-                        "Unable to initialize monitoring for GPU %s",
+                        "Rank %s could not initialize monitoring for GPU %s",
+                        self.rank,
                         index,
                     )
                     self._unavailable_gpus.add(index)
 
         except Exception:
             logger.warning(
-                "NVIDIA GPU monitoring is unavailable",
+                "NVIDIA GPU monitoring is unavailable on rank %s",
+                self.rank,
                 exc_info=True,
             )
 
             self._pynvml = None
+            self._nvml_initialized = False
             self._unavailable_gpus.update(self.gpu_indices)
+
+    def _shutdown_gpus(self) -> None:
+        """
+        Document this function.
+        """
+        if not self._nvml_initialized or self._pynvml is None:
+            return
+
+        try:
+            self._pynvml.nvmlShutdown()
+        except Exception:
+            logger.warning(
+                "Unable to shut down NVML on rank %s",
+                self.rank,
+                exc_info=True,
+            )
+        finally:
+            self._nvml_initialized = False
+            self._pynvml = None
+            self._gpu_handles.clear()
 
     def _get_stack(self) -> list:
         """
@@ -275,7 +405,8 @@ class Monitor:
         except Exception:
             if index not in self._unavailable_gpus:
                 logger.exception(
-                    "Unable to collect utilization for GPU %s",
+                    "Rank %s could not collect utilization for GPU %s",
+                    self.rank,
                     index,
                 )
                 self._unavailable_gpus.add(index)
@@ -311,6 +442,11 @@ class Monitor:
             "stage": stage,
             "event": event,
             "span_id": span_id,
+            "rank": self.rank,
+            "local_rank": self.local_rank,
+            "world_size": self.world_size,
+            "hostname": self.hostname,
+            "pid": self.pid,
         }
 
         if self.cpu_enabled:
@@ -433,7 +569,7 @@ class Monitor:
             raise TypeError("observe expects a callable")
 
         @functools.wraps(function)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             """
             Document this function.
 
@@ -530,7 +666,10 @@ class Monitor:
             try:
                 self._append_event(self._collect_sample())
             except Exception:
-                logger.exception("Unexpected error while collecting monitoring data")
+                logger.exception(
+                    "Unexpected monitoring error on rank %s",
+                    self.rank,
+                )
 
             elapsed = time.monotonic() - sample_started
             wait_time = max(0.0, self.interval - elapsed)
@@ -547,7 +686,10 @@ class Monitor:
             Description not yet provided.
         """
         if self.running:
-            logger.warning("Monitoring is already running")
+            logger.warning(
+                "Monitoring is already running on rank %s",
+                self.rank,
+            )
             return
 
         if clear:
@@ -557,13 +699,16 @@ class Monitor:
 
         self._thread = threading.Thread(
             target=self._sampler,
-            name="resource-monitor",
+            name=f"resource-monitor-rank-{self.rank}",
             daemon=True,
         )
         self._thread.start()
 
         logger.info(
-            "Monitoring started: cpu=%s, ram=%s, gpus=%s, interval=%s",
+            "Monitoring started: rank=%s, local_rank=%s, cpu=%s, ram=%s, "
+            "gpus=%s, interval=%s",
+            self.rank,
+            self.local_rank,
             self.cpu_enabled,
             self.ram_enabled,
             list(self.gpu_indices),
@@ -596,12 +741,25 @@ class Monitor:
         thread.join(timeout=timeout)
 
         if thread.is_alive():
-            logger.warning("Monitoring thread did not stop within the timeout")
+            logger.warning(
+                "Monitoring thread on rank %s did not stop within the timeout",
+                self.rank,
+            )
             return
 
         self._thread = None
 
-        logger.info("Monitoring stopped")
+        logger.info(
+            "Monitoring stopped on rank %s",
+            self.rank,
+        )
+
+    def close(self) -> None:
+        """
+        Document this function.
+        """
+        self.stop()
+        self._shutdown_gpus()
 
     @property
     def running(self) -> bool:
@@ -662,13 +820,13 @@ class Monitor:
 
         return pd.DataFrame(records)
 
-    def __enter__(self) -> "Monitor":
+    def __enter__(self) -> Monitor:
         """
         Document this function.
 
         Returns
         -------
-        'Monitor'
+        Monitor
             Description not yet provided.
         """
         self.start()
@@ -676,9 +834,9 @@ class Monitor:
 
     def __exit__(
         self,
-        exception_type,
-        exception_value,
-        traceback,
+        exception_type: Any,
+        exception_value: Any,
+        traceback: Any,
     ) -> bool:
         """
         Document this function.
@@ -697,12 +855,12 @@ class Monitor:
         bool
             Description not yet provided.
         """
-        self.stop()
+        self.close()
         return False
 
     @staticmethod
     def _kalman_filter(
-        values,
+        values: Any,
         process_variance: float = 1.0,
         measurement_variance: float = 25.0,
     ):
@@ -736,7 +894,10 @@ class Monitor:
         if measurement_variance < 0:
             raise ValueError("measurement_variance cannot be negative")
 
-        values = np.asarray(values, dtype=float)
+        values = np.asarray(
+            values,
+            dtype=float,
+        )
 
         if len(values) == 0:
             return values
@@ -753,13 +914,14 @@ class Monitor:
             return filtered
 
         first_index = int(valid_indices[0])
-
         estimate = float(values[first_index])
         estimate_variance = 1.0
 
-        for index in range(first_index, len(values)):
+        for index in range(
+            first_index,
+            len(values),
+        ):
             observation = values[index]
-
             estimate_variance += process_variance
 
             if not np.isfinite(observation):
@@ -781,9 +943,9 @@ class Monitor:
     @classmethod
     def _smooth(
         cls,
-        series,
+        series: Any,
         method: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """
         Document this function.
@@ -845,7 +1007,12 @@ class Monitor:
         if method == "kalman":
             return cls._kalman_filter(
                 series.to_numpy(),
-                process_variance=float(kwargs.get("process_variance", 1.0)),
+                process_variance=float(
+                    kwargs.get(
+                        "process_variance",
+                        1.0,
+                    )
+                ),
                 measurement_variance=float(
                     kwargs.get(
                         "measurement_variance",
@@ -859,14 +1026,14 @@ class Monitor:
     @classmethod
     def _plot_metric(
         cls,
-        ax,
-        t,
-        values,
+        ax: Any,
+        t: Any,
+        values: Any,
         *,
         label: str,
         color: str,
         smooth: str | None = None,
-        **smooth_kwargs,
+        **smooth_kwargs: Any,
     ) -> None:
         """
         Document this function.
@@ -918,7 +1085,9 @@ class Monitor:
         )
 
     @staticmethod
-    def _metric_label(metric: str) -> tuple[str, str]:
+    def _metric_label(
+        metric: str,
+    ) -> tuple[str, str]:
         """
         Document this function.
 
@@ -948,7 +1117,10 @@ class Monitor:
 
         return metric, ""
 
-    def _available_metrics(self, samples) -> list:
+    def _available_metrics(
+        self,
+        samples: Any,
+    ) -> list:
         """
         Document this function.
 
@@ -969,7 +1141,9 @@ class Monitor:
         ]
 
     @staticmethod
-    def _span_intervals(df) -> list[tuple[float, float, str]]:
+    def _span_intervals(
+        df: Any,
+    ) -> list[tuple[float, float, str]]:
         """
         Document this function.
 
@@ -1014,12 +1188,12 @@ class Monitor:
 
     def plot(
         self,
-        df=None,
-        metrics=None,
-        save_path=None,
-        show=True,
-        smooth=None,
-        **smooth_kwargs,
+        df: Any = None,
+        metrics: Iterable[str] | None = None,
+        save_path: str | os.PathLike[str] | None = None,
+        show: bool = True,
+        smooth: str | None = None,
+        **smooth_kwargs: Any,
     ):
         """
         Document this function.
@@ -1028,13 +1202,13 @@ class Monitor:
         ----------
         df : Any
             Description not yet provided.
-        metrics : Any
+        metrics : Iterable[str] | None
             Description not yet provided.
-        save_path : Any
+        save_path : str | os.PathLike[str] | None
             Description not yet provided.
-        show : Any
+        show : bool
             Description not yet provided.
-        smooth : Any
+        smooth : str | None
             Description not yet provided.
         **smooth_kwargs : Any
             Description not yet provided.
@@ -1062,7 +1236,12 @@ class Monitor:
             logger.warning("There are no monitoring events to plot")
             return None
 
-        required_columns = {"t", "event", "stage"}
+        required_columns = {
+            "t",
+            "event",
+            "stage",
+        }
+
         missing_columns = required_columns.difference(df.columns)
 
         if missing_columns:
@@ -1112,7 +1291,7 @@ class Monitor:
 
         checkpoints = df[df["event"] == "checkpoint"].copy()
 
-        timeline_events = []
+        timeline_events: list[dict[str, Any]] = []
 
         for start, end, stage in span_intervals:
             timeline_events.append(
@@ -1125,12 +1304,14 @@ class Monitor:
             )
 
         for _, checkpoint_event in checkpoints.iterrows():
+            checkpoint_time = float(checkpoint_event["elapsed"])
+
             timeline_events.append(
                 {
                     "kind": "checkpoint",
                     "stage": str(checkpoint_event["stage"]),
-                    "start": float(checkpoint_event["elapsed"]),
-                    "end": float(checkpoint_event["elapsed"]),
+                    "start": checkpoint_time,
+                    "end": checkpoint_time,
                 }
             )
 
@@ -1138,12 +1319,20 @@ class Monitor:
 
         timeline_height = max(
             2.0,
-            min(6.0, 0.32 * len(timeline_events) + 0.8),
+            min(
+                6.0,
+                0.32 * len(timeline_events) + 0.8,
+            ),
         )
 
         metric_height = 2.7 * len(selected_metrics)
 
-        figure = plt.figure(figsize=(16, timeline_height + metric_height))
+        figure = plt.figure(
+            figsize=(
+                16,
+                timeline_height + metric_height,
+            )
+        )
 
         grid = figure.add_gridspec(
             nrows=len(selected_metrics) + 1,
@@ -1185,6 +1374,7 @@ class Monitor:
 
         for position, metric in enumerate(selected_metrics):
             label, unit = self._metric_label(metric)
+
             axis = axes[position]
 
             self._plot_metric(
@@ -1200,6 +1390,7 @@ class Monitor:
             ylabel = f"{label} ({unit})" if unit else label
 
             axis.set_ylabel(ylabel)
+
             axis.grid(
                 visible=True,
                 axis="both",
@@ -1231,7 +1422,10 @@ class Monitor:
             if event["kind"] == "span":
                 start = event["start"]
                 end = event["end"]
-                duration = max(end - start, 0.001)
+                duration = max(
+                    end - start,
+                    0.001,
+                )
 
                 timeline_axis.broken_barh(
                     [(start, duration)],
@@ -1252,7 +1446,6 @@ class Monitor:
                         color="tab:blue",
                         alpha=0.035,
                     )
-
             else:
                 checkpoint_time = event["start"]
 
@@ -1278,6 +1471,7 @@ class Monitor:
 
         if timeline_events:
             timeline_axis.set_yticks(timeline_positions)
+
             timeline_axis.set_yticklabels(
                 timeline_labels,
                 fontsize=8,
@@ -1289,6 +1483,7 @@ class Monitor:
             )
         else:
             timeline_axis.set_yticks([])
+
             timeline_axis.text(
                 0.5,
                 0.5,
@@ -1299,22 +1494,28 @@ class Monitor:
             )
 
         timeline_axis.set_ylabel("Stage")
+
         timeline_axis.set_title(
-            "Execution timeline",
+            f"Execution timeline, rank {self.rank}",
             loc="left",
             fontsize=11,
         )
+
         timeline_axis.grid(
             visible=True,
             axis="x",
             alpha=0.2,
         )
+
         timeline_axis.tick_params(
             axis="x",
             labelbottom=False,
         )
 
-        maximum_time = float(df["elapsed"].max())
+        maximum_time = max(
+            float(df["elapsed"].max()),
+            0.001,
+        )
 
         timeline_axis.set_xlim(
             0.0,
@@ -1336,7 +1537,7 @@ class Monitor:
             bottom=0.08,
         )
 
-        if save_path:
+        if save_path is not None:
             save_path = os.fspath(save_path)
             directory = os.path.dirname(save_path)
 
@@ -1366,6 +1567,9 @@ def monitor(
     gpu1: bool = False,
     gpus: Iterable[int] | None = None,
     interval: float = 0.1,
+    rank: int = 0,
+    local_rank: int = 0,
+    world_size: int = 1,
 ) -> Monitor:
     """
     Document this function.
@@ -1384,6 +1588,12 @@ def monitor(
         Description not yet provided.
     interval : float
         Description not yet provided.
+    rank : int
+        Description not yet provided.
+    local_rank : int
+        Description not yet provided.
+    world_size : int
+        Description not yet provided.
 
     Returns
     -------
@@ -1397,4 +1607,318 @@ def monitor(
         gpu1=gpu1,
         gpus=gpus,
         interval=interval,
+        rank=rank,
+        local_rank=local_rank,
+        world_size=world_size,
     )
+
+
+def build_distributed_monitor(
+    distributed: Distributed,
+    *,
+    cpu: bool = True,
+    ram: bool = True,
+    gpu: bool = True,
+    interval: float = 0.1,
+) -> Monitor:
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    distributed : Distributed
+        Description not yet provided.
+    cpu : bool
+        Description not yet provided.
+    ram : bool
+        Description not yet provided.
+    gpu : bool
+        Description not yet provided.
+    interval : float
+        Description not yet provided.
+
+    Returns
+    -------
+    Monitor
+        Description not yet provided.
+    """
+    import torch
+
+    gpu_indices: list[int] = []
+
+    if gpu and torch.cuda.is_available():
+        try:
+            gpu_indices.append(resolve_physical_gpu_index(distributed.local_rank))
+        except (TypeError, ValueError):
+            logger.warning(
+                "Rank %s could not resolve its physical GPU. "
+                "CPU and RAM monitoring will remain enabled.",
+                distributed.rank,
+                exc_info=True,
+            )
+
+    return monitor(
+        cpu=cpu,
+        ram=ram,
+        gpus=gpu_indices,
+        interval=interval,
+        rank=distributed.rank,
+        local_rank=distributed.local_rank,
+        world_size=distributed.world_size,
+    )
+
+
+def export_results(
+    resource_monitor: Monitor,
+    output_dir: str | os.PathLike[str],
+) -> tuple[Path | None, Path | None]:
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    resource_monitor : Monitor
+        Description not yet provided.
+    output_dir : str | os.PathLike[str]
+        Description not yet provided.
+
+    Returns
+    -------
+    tuple[Path | None, Path | None]
+        Description not yet provided.
+    """
+    import matplotlib.pyplot as plt
+
+    output_dir = Path(output_dir)
+
+    output_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    monitoring_data = resource_monitor.get_dataframe()
+
+    if monitoring_data.empty:
+        logger.warning(
+            "Rank %s did not collect monitoring data",
+            resource_monitor.rank,
+        )
+        return None, None
+
+    rank_suffix = f"rank_{resource_monitor.rank:04d}"
+
+    csv_path = output_dir / f"resource_monitoring_{rank_suffix}.csv"
+
+    plot_path = output_dir / f"resource_monitoring_{rank_suffix}.png"
+
+    monitoring_data.to_csv(
+        csv_path,
+        index=False,
+    )
+
+    figure = resource_monitor.plot(
+        df=monitoring_data,
+        save_path=plot_path,
+        show=False,
+        smooth="kalman",
+        process_variance=1.0,
+        measurement_variance=25.0,
+    )
+
+    if figure is not None:
+        plt.close(figure)
+
+    logger.info(
+        "Rank %s monitoring data: %s",
+        resource_monitor.rank,
+        csv_path,
+    )
+
+    logger.info(
+        "Rank %s monitoring plot: %s",
+        resource_monitor.rank,
+        plot_path,
+    )
+
+    return csv_path, plot_path
+
+
+def combine_rank_results(
+    output_dir: str | os.PathLike[str],
+    world_size: int,
+) -> Path | None:
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    output_dir : str | os.PathLike[str]
+        Description not yet provided.
+    world_size : int
+        Description not yet provided.
+
+    Returns
+    -------
+    Path | None
+        Description not yet provided.
+
+    Raises
+    ------
+    TypeError
+        Description not yet provided.
+    ValueError
+        Description not yet provided.
+    """
+    import pandas as pd
+
+    if not isinstance(world_size, int) or isinstance(world_size, bool):
+        raise TypeError("world_size must be an integer")
+
+    if world_size <= 0:
+        raise ValueError("world_size must be greater than zero")
+
+    output_dir = Path(output_dir)
+
+    expected_paths = [
+        (output_dir / f"resource_monitoring_rank_{rank:04d}.csv")
+        for rank in range(world_size)
+    ]
+
+    existing_paths = [path for path in expected_paths if path.exists()]
+
+    if not existing_paths:
+        logger.warning(
+            "No rank monitoring files were found in %s",
+            output_dir,
+        )
+        return None
+
+    if len(existing_paths) != world_size:
+        logger.warning(
+            "Found %s of %s expected rank monitoring files",
+            len(existing_paths),
+            world_size,
+        )
+
+    frames = [pd.read_csv(path) for path in existing_paths]
+
+    combined = pd.concat(
+        frames,
+        ignore_index=True,
+        sort=False,
+    )
+
+    sort_columns = [column for column in ("t", "rank") if column in combined.columns]
+
+    if sort_columns:
+        combined = combined.sort_values(
+            sort_columns,
+            kind="stable",
+        ).reset_index(drop=True)
+
+    combined_path = output_dir / "resource_monitoring_all_ranks.csv"
+
+    combined.to_csv(
+        combined_path,
+        index=False,
+    )
+
+    logger.info(
+        "Combined monitoring data: %s",
+        combined_path,
+    )
+
+    return combined_path
+
+
+@contextmanager
+def distributed_monitoring(
+    distributed: Distributed,
+    output_dir: str | os.PathLike[str],
+    *,
+    cpu: bool = True,
+    ram: bool = True,
+    gpu: bool = True,
+    interval: float = 0.1,
+    combine_ranks: bool = True,
+) -> Iterator:
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    distributed : Distributed
+        Description not yet provided.
+    output_dir : str | os.PathLike[str]
+        Description not yet provided.
+    cpu : bool
+        Description not yet provided.
+    ram : bool
+        Description not yet provided.
+    gpu : bool
+        Description not yet provided.
+    interval : float
+        Description not yet provided.
+    combine_ranks : bool
+        Description not yet provided.
+
+    Yields
+    ------
+    Iterator
+        Description not yet provided.
+    """
+    resource_monitor = build_distributed_monitor(
+        distributed,
+        cpu=cpu,
+        ram=ram,
+        gpu=gpu,
+        interval=interval,
+    )
+
+    completed = False
+    exported = False
+
+    resource_monitor.start(clear=True)
+    resource_monitor.checkpoint("monitoring_started")
+
+    try:
+        yield resource_monitor
+        completed = True
+
+    finally:
+        if completed:
+            resource_monitor.checkpoint("monitoring_complete")
+        else:
+            resource_monitor.checkpoint("monitoring_interrupted")
+
+        resource_monitor.stop()
+
+        try:
+            export_results(
+                resource_monitor,
+                output_dir,
+            )
+            exported = True
+        except Exception:
+            logger.exception(
+                "Rank %s could not export monitoring results",
+                distributed.rank,
+            )
+        finally:
+            resource_monitor.close()
+
+        if completed:
+            distributed.barrier()
+
+            if distributed.is_root() and combine_ranks:
+                combine_rank_results(
+                    output_dir,
+                    distributed.world_size,
+                )
+
+        if completed and not exported:
+            logger.warning(
+                "Training completed on rank %s, but monitoring "
+                "results were not exported",
+                distributed.rank,
+            )
