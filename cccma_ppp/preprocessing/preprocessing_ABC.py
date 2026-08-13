@@ -99,12 +99,15 @@ class PreprocessModuleABC(abc.ABC):
 
         if (
             self.realization_dim in data.dims
-            and reduction_dims is not None
+            and len(reduction_dims) > 0
             and self.realization_dim not in reduction_dims
         ):
             self.large_ensemble = True
             reduction_dims = (self.realization_dim, *reduction_dims)
 
+        if len(reduction_dims) == 0:
+            return None
+        
         return reduction_dims
     
     @final
@@ -115,10 +118,8 @@ class PreprocessModuleABC(abc.ABC):
         """
         Derive and attach the temporal coordinate used during fitting.
 
-        """
-        dims = tuple() if self.dims is None else self.dims
-        
-        if (self.frequency is None or self.init_time_dim not in dims):
+        """        
+        if self.frequency is None:
             return data
 
         init_time = data[self.init_time_dim]
