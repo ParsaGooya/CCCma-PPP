@@ -17,6 +17,8 @@ class RuntimeContext:
         Description not yet provided.
     GLOBAL_LOG_DIR : Path | str | None
         Description not yet provided.
+    GLOBAL_MONITORING_DIR : Path | str | None
+        Description not yet provided.
     GLOBAL_OUTPUT_DIR : Path | str | None
         Description not yet provided.
     INPUT_VAR_METADATA : dict | None
@@ -29,6 +31,7 @@ class RuntimeContext:
     GLOBAL_CHECKPOINT_DIR: Path | str | None = None
     GLOBAL_FIGURES_DIR: Path | str | None = None
     GLOBAL_LOG_DIR: Path | str | None = None
+    GLOBAL_MONITORING_DIR: Path | str | None = None
     GLOBAL_OUTPUT_DIR: Path | str | None = None
 
     INPUT_VAR_METADATA: dict | None = None
