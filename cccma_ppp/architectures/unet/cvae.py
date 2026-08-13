@@ -308,15 +308,16 @@ class cVAEUNet(cVAEmodelsABC):
                 added_features_dim=added_features_dim,
             )
 
-        if (self.share_output_block or 
-            self.freeze_deterministic):
-
+        if self.share_output_block: 
+            
             self.output = self.deterministic_guess.output_block
 
-            if not self.share_output_block:
-                
-                for param in self.output.parameters():
-                    param.requires_grad = True
+        elif self.freeze_deterministic:
+
+            for param in self.deterministic_guess.output_block.parameters():
+                param.requires_grad = True
+
+            self.output = self.deterministic_guess.output_block
 
         else:
 
