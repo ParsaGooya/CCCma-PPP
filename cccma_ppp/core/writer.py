@@ -293,20 +293,24 @@ class Writer:
         if not do_post_process:
             post_processor = None
 
-        naming_convention = "prediction"
-        save_name = None
-        if self.config.num_output_sampling > 0:
-            save_name = naming_convention + "_output_ensemble"
-
+        load_naming_convention = "prediction"
         if getattr(self.predictor, "save_latent", False):
-            naming_convention = "latent"
+            load_naming_convention = "latent"
+
+        save_naming_convention = load_naming_convention
+
+        if hasattr(self.predictor, "nstds"):
+            save_naming_convention += f"_{self.predictor.nstds}stds"
+
+        if self.config.num_output_sampling > 0:
+            save_naming_convention += "_output_ensemble"
 
         if self.is_on_root:
             aggregate_predictions(
                 post_processor=post_processor, 
                 output_dir=self.output_dir, 
-                naming_convention=naming_convention, 
-                save_name=save_name,
+                load_naming_convention=load_naming_convention, 
+                save_naming_convention=save_naming_convention,
                 logger_function=self.log_root
             )
 
@@ -318,8 +322,8 @@ class Writer:
 def aggregate_predictions(
     post_processor: PreprocessingPipeline | None,
     output_dir: Path,
-    naming_convention: str = "prediction",
-    save_name: str = None,
+    load_naming_convention: str = "prediction",
+    save_naming_convention: str = None,
     logger_function: callable = None,
     cleanup_temp: bool = True,
     init_time_dim: str = init_time_dim,
@@ -330,11 +334,14 @@ def aggregate_predictions(
     Aggregate temporary inference batches into one file per
     initialization year.
     """
+    if save_naming_convention is None:
+        save_naming_convention = load_naming_convention
+
     output_dir = Path(output_dir)
     temp_save_dir = output_dir / "_temp"
-
+    
     temp_files = sorted(
-        temp_save_dir.glob(f"{naming_convention}_rank*_*.nc")
+        temp_save_dir.glob(f"{load_naming_convention}_rank*_*.nc")
     )
 
     if not temp_files:
@@ -528,12 +535,9 @@ def aggregate_predictions(
                 f"{data_year[init_time_dim].values}"
             )
 
-        if save_name is None:
-            save_name = naming_convention
-
         output_path = (
             output_dir
-            / f"{save_name}_{int(year)}.nc"
+            / f"{save_naming_convention}_{int(year)}.nc"
         )
 
         if post_processor is not None:
