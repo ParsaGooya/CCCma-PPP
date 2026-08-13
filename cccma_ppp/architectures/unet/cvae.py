@@ -117,6 +117,8 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
 
         if self.deterministic_guess_config is not None:
             self.share_output_block = self.deterministic_guess_config.share_output_block
+            self.freeze_deterministic = self.deterministic_guess_config.checkpoint_config.freeze_weights
+
             self.deterministic_guess_config = self.deterministic_guess_config.get_model_config()
 
             if not isinstance(self.deterministic_guess_config, UNetConfig):
@@ -162,7 +164,8 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
 
     
         else:
-            self.share_output_block = False             
+            self.share_output_block = False    
+            self.freeze_deterministic = False         
 
     @property
     def EXPECTS_MASK(self) -> bool:
@@ -204,6 +207,7 @@ class cVAEUNet(cVAEmodelsABC):
         self.condemb_to_decoder = config.condemb_to_decoder 
         self.deterministic_guess_config = config.deterministic_guess_config
         self.share_output_block = config.share_output_block
+        self.freeze_deterministic = config.freeze_deterministic
         self.deterministic_guess = None
 
 
@@ -304,9 +308,15 @@ class cVAEUNet(cVAEmodelsABC):
                 added_features_dim=added_features_dim,
             )
 
-        if self.share_output_block:
+        if (self.share_output_block or 
+            self.freeze_deterministic):
 
             self.output = self.deterministic_guess.output_block
+
+            if not self.share_output_block:
+                
+                for param in self.output.parameters():
+                    param.requires_grad = True
 
         else:
 
