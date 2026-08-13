@@ -47,7 +47,7 @@ class Normalizer(PreprocessModuleABC):
         self.min: xr.DataArray | xr.Dataset | None = None
         self.max: xr.DataArray | xr.Dataset | None = None
 
-        self.dims = tuple(dims) if dims is not None else None
+        self.dims = tuple(dims) if dims is not None else tuple()
         self.frequency = frequency
 
         self.large_ensemble = False
@@ -80,7 +80,7 @@ class Normalizer(PreprocessModuleABC):
         if mask is not None:
             data = data.where(~mask)
 
-        if self.frequency is None:
+        if (self.frequency is None or self.init_time_dim not in self.dims):
             self.min = data.min(reduction_dims).load()
             self.max = data.max(reduction_dims).load()
 
@@ -210,7 +210,7 @@ class Standardizer(PreprocessModuleABC):
         self.mean: xr.Dataset | xr.DataArray | None = None
         self.std: xr.Dataset | xr.DataArray | None = None
 
-        self.dims = tuple(dims) if dims is not None else None
+        self.dims = tuple(dims) if dims is not None else tuple()
         self.frequency = frequency
 
         self.large_ensemble = False
@@ -241,7 +241,7 @@ class Standardizer(PreprocessModuleABC):
         if mask is not None:
             data = data.where(~mask)
 
-        if self.frequency is None:
+        if (self.frequency is None or self.init_time_dim not in self.dims):
             self.mean = data.mean(reduction_dims).load()
             std = data.std(reduction_dims).load()
 
@@ -356,14 +356,11 @@ class AnomaliesScaler(PreprocessModuleABC):
 
         self.mean: xr.DataArray | xr.Dataset | None = None
 
-        self.dims = tuple(dims) if dims is not None else None
+        self.dims = tuple(dims) if dims is not None else tuple()
         self.frequency = frequency
 
         self.large_ensemble = False
         self.fitted = False
-
-        if self.dims is not None:
-            self.dims = tuple(self.dims)
 
     def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
         """
@@ -383,7 +380,7 @@ class AnomaliesScaler(PreprocessModuleABC):
         if mask is not None:
             data = data.where(~mask)
 
-        if self.frequency is None:
+        if (self.frequency is None or self.init_time_dim not in self.dims):
             self.mean = data.mean(reduction_dims).load()
 
         else:
