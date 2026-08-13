@@ -330,7 +330,7 @@ class DatasetConfigABC(abc.ABC):
                         f"{((self.init_time_dim, self.lead_time_dim, self.realization_dim))}"
                     )
 
-        else:
+        elif self.condition_method is not None:
             if self.condition_method.lower() == "static":
                 raise ValueError(
                     "For static conditioning method condition dataset must be specified!"
