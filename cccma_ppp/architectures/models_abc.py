@@ -372,9 +372,9 @@ class modelABC(nn.Module, abc.ABC):
         gc.collect()
 
         if checkpoint_config.freeze_weights:
-            # for param in self.parameters():
-            #     param.requires_grad = False
-            self.requires_grad_(False)
+            for param in self.parameters():
+                param.requires_grad = False
+            # self.requires_grad_(False)
 
 
 @dataclasses.dataclass

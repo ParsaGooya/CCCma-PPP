@@ -175,7 +175,7 @@ class ModelSelector:
     type: str
     config: Mapping[str, Any] | None = None
     load_dir: Path | str | None = None
-    freeze_weights: bool = False
+    freeze_weights: bool | None = None
 
     registery: ClassVar[Registery]
 
@@ -198,9 +198,17 @@ class ModelSelector:
                 "Either specify model configuration with config or specify a path for loading."
             )
 
+        if all([self.load_dir is None, self.freeze_weights]):
+            raise ValueError(
+                "When ''load_dir'' is not provided for a checkpoint model, ''freeze_weights'' must be False or None."
+            )            
+
         if self.load_dir is not None:
+            self._freeze_weights = self.freeze_weights or False
+
             checkpoint_module, self.checkpoint_config = _load_config_from_checkpoint(
-                self.load_dir
+                self.load_dir,
+                self._freeze_weights
             )
             checkpoint_model = checkpoint_module.get("ModelConfig")
             assert self.type.lower() == checkpoint_model.get("type").lower(), (
@@ -210,7 +218,7 @@ class ModelSelector:
             warnings.warn(
                 f"all model config overwritten by the saved model from {self.load_dir}"
             )
-            if self.freeze_weights:
+            if self._freeze_weights:
                 warnings.warn(f"Checkpoint {self.type} model weights will be frozen.")
 
     @classmethod
@@ -350,7 +358,9 @@ class FlowSelector:
         return self.registery.get(self.type.lower(), self.args)
 
 
-def _load_config_from_checkpoint(load_path: Path | str, strict: bool = True):
+def _load_config_from_checkpoint(load_path: Path | str, 
+                                 freeze_weights: bool = False, 
+                                 strict: bool = True):
     """
     Load configuration metadata from checkpoint.
 
@@ -396,6 +406,7 @@ def _load_config_from_checkpoint(load_path: Path | str, strict: bool = True):
         checkpoint_output_shape=checkpoint_output_shape,
         checkpoint_input_var_metadata=checkpoint_input_var_metadata,
         checkpoint_output_var_metadata=checkpoint_output_var_metadata,
+        freeze_weights=freeze_weights,
         strict=strict,
     )
 

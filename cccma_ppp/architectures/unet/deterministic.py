@@ -256,6 +256,7 @@ class UNet(deterministicmodelsABC):
 
         if config.checkpoint_config is not None:
             self._load_state_dict(config.checkpoint_config)
+            
         else:
             self._initialize_weights(config.init_method)
             
