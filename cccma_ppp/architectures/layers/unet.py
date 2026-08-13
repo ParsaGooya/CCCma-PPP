@@ -425,5 +425,5 @@ class UNetOutputSIC(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         out = self.layers(x)
         if self.clip_output:
-            out = out.clip(0,1)
+            out = torch.clamp(out, 0, 1)
         return out
