@@ -203,7 +203,7 @@ class ModelSelector:
                 self.load_dir
             )
             checkpoint_model = checkpoint_module.get("ModelConfig")
-            assert self.type.lower() == checkpoint_model.get("type"), (
+            assert self.type.lower() == checkpoint_model.get("type").lower(), (
                 f"The checkpoint {checkpoint_model.get('type')} model does not have the correct type {self.type}"
             )
             self.config = checkpoint_model.get("config")
