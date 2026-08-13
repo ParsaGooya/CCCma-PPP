@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Iterable, Sequence
 
 
-DEFAULT_ROOT = Path("cccma_ppp")
+DEFAULT_ROOT = Path(".")
 
 DEFAULT_REPORT = Path("../output/documentation_audit_results/docstring_insertions.json")
 
