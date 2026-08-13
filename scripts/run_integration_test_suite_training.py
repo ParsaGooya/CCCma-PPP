@@ -21,8 +21,10 @@ from cccma_ppp.generic import registry_imports  # noqa: F401
 from cccma_ppp.loss import kld as _loss_kld  # noqa: F401
 from cccma_ppp.loss import loss as _loss_pipeline  # noqa: F401
 from cccma_ppp.loss import utils_loss as _loss_utils  # noqa: F401
-from cccma_ppp.architectures.mlp.cvae import cvae as _mlp_cvae  # noqa: F401
-from cccma_ppp.architectures.unet.cvae import cvae as _unet_cvae  # noqa: F401
+from cccma_ppp.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
+from cccma_ppp.architectures.unet import cvae as _unet_cvae  # noqa: F401
+from cccma_ppp.architectures.mlp import deterministic as _mlp_deterministic  # noqa: F401
+from cccma_ppp.architectures.unet import deterministic as _unet_deterministic  # noqa: F401
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.train.train import main as train_main
 from cccma_ppp.train.train_configs import TrainConfig, prepare_config
@@ -36,7 +38,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 BASE_TRAIN_CONFIG = ROOT / "scripts" / "integration_suite_train_config.yaml"
 
-OUTPUT_DIR = ROOT / "output" / "train_integration_test_results"
+OUTPUT_DIR = ROOT / "../output" / "train_integration_test_results"
 GENERATED_CONFIG_DIR = OUTPUT_DIR / "_generated_configs"
 LOG_DIR = OUTPUT_DIR / "_logs"
 RESULTS_CSV = OUTPUT_DIR / "integration_results.csv"
@@ -672,6 +674,18 @@ def validate_generated_config(cfg):
     ):
         raise ValueError("module.config.ModelConfig.config must be a mapping.")
 
+    model_type = str(model_selector["type"]).lower()
+    model_config = model_selector["config"]
+
+    if model_type == "unet":
+        block_config = model_config.get("block_config")
+
+        if not isinstance(block_config, dict):
+            raise ValueError("UNet ModelConfig requires block_config to be a mapping.")
+
+        if not block_config.get("name"):
+            raise ValueError("UNet ModelConfig.block_config requires a nonempty name.")
+
     return cfg
 
 
@@ -980,8 +994,10 @@ def build_unet_model_config(
 ):
     model_cfg = {
         "channels": deepcopy(TEST_UNET_CHANNELS),
+        "block_config": {
+            "name": "standard_conv",
+        },
         "upsampling_method": "bilinear",
-        "upsampling_alignment_method": "padd",
         "transpose_kernel_sizes": 3,
         "mask_pooling": "any",
         "mask_fraction_threshold": 0.5,
@@ -992,6 +1008,7 @@ def build_unet_model_config(
     }
 
     if cvae:
+        model_cfg["upsampling_alignment_method"] = "padd"
         model_cfg["latent_size"] = latent_size
         model_cfg["condition_embedding_channels"] = deepcopy(
             TEST_UNET_CONDITION_CHANNELS
@@ -1002,6 +1019,9 @@ def build_unet_model_config(
         model_cfg["condemb_to_decoder"] = True
         model_cfg["deterministic_guess_config"] = None
         model_cfg["add_skip_latent"] = False
+    else:
+        model_cfg["skip_alignment_method"] = "padd"
+        model_cfg["process_skip"] = False
 
     return {
         "type": "UNet",

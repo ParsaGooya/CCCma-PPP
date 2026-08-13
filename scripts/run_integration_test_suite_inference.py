@@ -17,9 +17,8 @@ from tqdm import tqdm
 
 from cccma_ppp.configs import required_sample_dimensions
 from cccma_ppp.generic import registry_imports  # noqa: F401
-from cccma_ppp.core.writer import Writer
 from cccma_ppp.train.train import main as train_main
-from cccma_ppp.architectures.mlp.cvae import cvae as _mlp_cvae  # noqa: F401
+from cccma_ppp.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
 from cccma_ppp.loss import kld as _loss_kld  # noqa: F401
 from cccma_ppp.loss import loss as _loss_pipeline  # noqa: F401
 from cccma_ppp.loss import utils_loss as _loss_utils  # noqa: F401
@@ -37,7 +36,7 @@ BASE_INFERENCE_CONFIG = (
     PROJECT_ROOT / "scripts" / "integration_suite_inference_config.yaml"
 )
 
-OUTPUT_DIR = PROJECT_ROOT / "output" / "inference_integration_test_results"
+OUTPUT_DIR = PROJECT_ROOT / "../output" / "inference_integration_test_results"
 
 TRAINING_EXPERIMENT_DIR = OUTPUT_DIR / "_trained_model"
 
@@ -1470,38 +1469,8 @@ def write_summary(
                 file.write(f"- {value}\n")
 
 
-def patch_writer_prediction_naming():
-    original_method = Writer.aggregate_predictions_to_netcdf
-
-    if getattr(original_method, "_integration_naming_patch", False):
-        return
-
-    def patched_method(self, do_post_process=True):
-        if self.config.num_output_sampling > 0:
-            temp_dir = Path(self.output_dir) / "_temp"
-
-            for source in temp_dir.glob("prediction_rank*_*.nc"):
-                destination = source.with_name(
-                    source.name.replace(
-                        "prediction_",
-                        "prediction_output_ensemble_",
-                        1,
-                    )
-                )
-
-                if destination.exists():
-                    destination.unlink()
-
-                source.rename(destination)
-
-        return original_method(self, do_post_process)
-
-    patched_method._integration_naming_patch = True
-    Writer.aggregate_predictions_to_netcdf = patched_method
-
-
 def main():
-    patch_writer_prediction_naming()
+
     prepare_output_directories()
     cleanup_logging_handlers()
 
