@@ -458,6 +458,7 @@ def build_trainer(
         weights=weights,
         num_output_dimensions=config.module.NUM_OUTPUT_DIMS or len(output_shape),
         generative_context=generative_context,
+        output_shape=output_shape
     )
 
     module.init_loss_function(reconstruction_loss)

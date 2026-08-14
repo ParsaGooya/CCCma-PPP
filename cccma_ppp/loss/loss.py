@@ -4,11 +4,12 @@ from typing import ClassVar
 import dataclasses
 import torch
 import math
+from pathlib import Path
 from cccma_ppp.loss.loss_abc import Reduction
 from cccma_ppp.loss.registery import Registery
 
 from cccma_ppp.core.core_abc import GenerativeContext
-
+from cccma_ppp.data_modules.utils import _unwrap_data_variables
 
 @dataclasses.dataclass
 class LossStepConfig:
@@ -46,7 +47,8 @@ class LosspipelineConfig:
     loss_weights: list[float] = None
     reduction: Reduction = "mean"
     masked_loss_calculation: bool = True
-
+    saved_output_mask_dir: str | None = None
+    
     def __post_init__(self):
         """
         Validate loss pipeline configuration.
@@ -62,6 +64,7 @@ class LosspipelineConfig:
         ValueError
             If loss weights are inconsistent or invalid.
         """
+        self.output_mask = self._load_output_mask()
 
         if not len(self.loss_pipeline) >= 1:
             raise ValueError("provide at least one loss term.")
@@ -105,6 +108,7 @@ class LosspipelineConfig:
         weights: xr.DataArray,
         num_output_dimensions: int = 2,
         generative_context: GenerativeContext | None = None,
+        output_shape: tuple[int, ...] | None = None
     ):
         """
         Construct loss pipeline.
@@ -122,8 +126,111 @@ class LosspipelineConfig:
             Initialized loss pipeline.
         """
 
+        self._resove_output_mask(output_shape)
+
         return Losspipeline(
-            self, weights, num_output_dimensions, generative_context=generative_context
+            self, 
+            weights, 
+            num_output_dimensions, 
+            generative_context=generative_context,
+        )
+
+    def _resove_output_mask(self, output_shape: tuple[int, ...]):
+
+        if self.output_mask is not None:
+            if output_shape is None:
+                raise RuntimeError(
+                    "When a saved output mask is specified, output_shape "
+                    "must be provided when building Losspipeline."
+                )
+
+            mask = self.output_mask
+
+            output_channels = output_shape[0]
+            output_dims = tuple(output_shape[1:])
+
+            if mask.ndim == len(output_dims):
+                mask = mask.unsqueeze(0)
+
+            if mask.ndim != len(output_shape):
+                raise RuntimeError(
+                    "The saved output mask must either have the same number of "
+                    "dimensions as output_shape, including a channel dimension, "
+                    "or omit only the channel dimension. "
+                    f"Got mask shape {tuple(mask.shape)} for "
+                    f"output shape {tuple(output_shape)}."
+                )
+
+            if tuple(mask.shape[1:]) != output_dims:
+                raise RuntimeError(
+                    "The non-channel dimensions of the saved output mask must "
+                    "match the model output. "
+                    f"Expected {output_dims}, got {tuple(mask.shape[1:])}."
+                )
+
+            if mask.shape[0] not in (1, output_channels):
+                raise RuntimeError(
+                    "The channel dimension of the saved output mask must either "
+                    "be 1, indicating a mask shared across all output channels, "
+                    "or match the number of output channels. "
+                    f"Expected 1 or {output_channels}, got {mask.shape[0]}."
+                )
+
+            self.output_mask = mask
+
+    def _load_output_mask(self) -> torch.Tensor | None:
+        """
+        Load a saved loss mask as a torch tensor.
+
+        Returns
+        -------
+        torch.Tensor or None
+            Loaded mask, or None if no saved mask is configured.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the specified mask file does not exist.
+        TypeError
+            If the file format or loaded object is unsupported.
+        ValueError
+            If a NetCDF file does not contain exactly one data variable.
+        """
+
+        if self.saved_output_mask_dir is None:
+            return None
+
+        mask_path = Path(self.saved_output_mask_dir)
+
+        if not mask_path.is_file():
+            raise FileNotFoundError(
+                f"Saved mask file does not exist: {mask_path}"
+            )
+
+        if mask_path.suffix == ".pt":
+            mask = torch.load(
+                mask_path,
+                map_location="cpu",
+                weights_only=True,
+            )
+
+            if not isinstance(mask, torch.Tensor):
+                raise TypeError(
+                    "The saved .pt mask must contain a torch.Tensor, "
+                    f"got {type(mask).__name__}."
+                )
+
+            return mask.float()
+
+        if mask_path.suffix == ".nc":
+            with xr.open_dataset(mask_path) as ds:
+ 
+                mask = _unwrap_data_variables(ds).values
+
+            return torch.as_tensor(mask, dtype=torch.float32)
+
+        raise TypeError(
+            "The saved mask must be in NetCDF (.nc) or PyTorch (.pt) format."
         )
 
 
@@ -207,6 +314,13 @@ class Losspipeline(nn.Module):
 
         self.pipeline = torch.nn.ModuleList(self.pipeline)
 
+        output_mask = (
+            config.output_mask
+            if self.masked_loss_calculation
+            else None
+        )
+        self.register_buffer("output_mask", output_mask)
+
     @classmethod
     def register(cls, name: str):
         """
@@ -264,6 +378,9 @@ class Losspipeline(nn.Module):
         AssertionError
             If input dimensionality does not match expectations.
         """
+        if self.output_mask is not None:
+            target_mask = self.output_mask if target_mask is None else target_mask * self.output_mask
+        
         if not self.masked_loss_calculation:
             target_mask = None
 
@@ -299,3 +416,7 @@ class Losspipeline(nn.Module):
             total_loss = total_loss + loss * self.config.loss_weights[ind]
 
         return total_loss, indiv_loses
+
+
+
+
