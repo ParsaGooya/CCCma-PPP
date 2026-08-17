@@ -561,7 +561,6 @@ def test_forward_flattens_input_before_encoder():
     assert result.output.shape == (5, 2, 3)
 
 
-@pytest.mark.pruned
 def test_forward_applies_input_mask():
     model = make_model()
     captured = {}
@@ -860,6 +859,7 @@ def test_forward_flattens_added_features():
     assert captured["shape"] == (2, 8)
 
 
+@pytest.mark.pruned
 def test_forward_invalid_append_mode_with_features_raises():
     config = make_config(
         append_mode=99,
@@ -1078,6 +1078,7 @@ def test_forward_with_added_features_supports_backward():
     assert features.grad is not None
 
 
+@pytest.mark.pruned
 def test_forward_output_is_finite():
     model = make_model(
         config=make_config(

@@ -415,7 +415,6 @@ def test_mse_one_dimensional_output():
     assert result >= 0
 
 
-@pytest.mark.pruned
 def test_mse_shape_mismatch():
     with pytest.raises(
         RuntimeError,
@@ -759,6 +758,7 @@ def test_crps_lowres_invalid_kernel():
         )
 
 
+@pytest.mark.pruned
 def test_crps_lowres_invalid_output_dimensions():
     with pytest.raises(NotImplementedError):
         WeightedCRPS(
@@ -1289,7 +1289,6 @@ def test_frobenius_spatial_multiple_channels():
     assert result >= 0
 
 
-@pytest.mark.pruned
 def test_frobenius_channel():
     result = Frobenius_norm(
         w2d(),
@@ -1359,6 +1358,7 @@ def test_frobenius_shape_mismatch():
         )
 
 
+@pytest.mark.pruned
 def test_frobenius_generator_averages_ensemble():
     context = make_context(generator=True)
 
@@ -1421,6 +1421,7 @@ def test_frobenius_generative_spatial():
     assert torch.isfinite(result)
 
 
+@pytest.mark.pruned
 def test_frobenius_generative_channel():
     context = make_context(generative_modeling=True)
 
@@ -1440,7 +1441,6 @@ def test_frobenius_generative_channel():
     assert torch.isfinite(result)
 
 
-@pytest.mark.pruned
 def test_frobenius_generator_and_generative():
     context = make_context(
         generator=True,

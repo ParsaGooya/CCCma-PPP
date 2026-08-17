@@ -503,6 +503,7 @@ def test_model_rejects_different_spatial_shapes_without_hidden_output():
         )
 
 
+@pytest.mark.pruned
 def test_model_accepts_different_spatial_shapes_with_hidden_output():
     config = make_config(
         output_block_hidden_channels=4,
@@ -517,6 +518,7 @@ def test_model_accepts_different_spatial_shapes_with_hidden_output():
     assert model.output_shape == (1, 8, 8)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "input_shape",
     [
@@ -691,7 +693,6 @@ def test_down_blocks_without_skip_processing():
     assert all(block.skip_processor is None for block in model.down_blocks)
 
 
-@pytest.mark.pruned
 def test_up_blocks_use_kernel_sizes_in_decoder_order():
     config = make_config(
         channels=[4, 8, 16],
@@ -897,7 +898,6 @@ def test_forward_with_added_features():
     assert result.output.shape == (2, 1, 16, 16)
 
 
-@pytest.mark.pruned
 def test_forward_resizes_to_output_shape(
     monkeypatch,
 ):

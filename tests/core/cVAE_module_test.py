@@ -862,7 +862,6 @@ def test_forward_eval_uses_validation_noise_sample_count():
     assert request.output_sample_size == 11
 
 
-@pytest.mark.pruned
 def test_predict_training_uses_training_noise_sample_count():
     selector = GeneratorSelector()
     module = make_module(
@@ -1125,6 +1124,7 @@ def test_build_load_dir_rejects_input_metadata_mismatch(
         )
 
 
+@pytest.mark.pruned
 def test_build_load_dir_rejects_output_metadata_mismatch(
     monkeypatch,
 ):

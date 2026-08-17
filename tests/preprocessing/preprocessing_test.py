@@ -738,7 +738,6 @@ class TestTransform:
             data + 1.0,
         )
 
-    @pytest.mark.pruned
     def test_passes_step_arguments(self):
         pipeline, first, second = self.make_fitted_pipeline()
 
@@ -843,6 +842,7 @@ class TestInverseTransform:
 
         return pipeline, first, second
 
+    @pytest.mark.pruned
     def test_empty_pipeline_returns_input(self):
         pipeline = PreprocessingPipeline()
         pipeline.fitted = True
@@ -861,7 +861,6 @@ class TestInverseTransform:
 
         assert result is data
 
-    @pytest.mark.pruned
     def test_applies_steps_in_reverse_order(self):
         pipeline, first, second = self.make_fitted_pipeline()
 
@@ -890,6 +889,7 @@ class TestInverseTransform:
             transformed / 2.0,
         )
 
+    @pytest.mark.pruned
     def test_passes_step_arguments(self):
         pipeline, first, second = self.make_fitted_pipeline()
 
@@ -925,7 +925,6 @@ class TestInverseTransform:
             "value": 4.0,
         }
 
-    @pytest.mark.pruned
     def test_rejects_unknown_step_arguments(self):
         pipeline, _, _ = self.make_fitted_pipeline()
 
@@ -991,6 +990,7 @@ class TestGetPreprocessors:
 
         assert result is first
 
+    @pytest.mark.pruned
     def test_rejects_missing_name(self):
         pipeline, _, _ = self.make_pipeline()
 

@@ -1121,6 +1121,7 @@ class TestSamplePrior:
             3,
         )
 
+    @pytest.mark.pruned
     def test_unconditional_prior_flow(self):
         model = ConcreteCVAEModel(ConcreteCVAEConfig())
 
@@ -1226,7 +1227,6 @@ class TestSamplePrior:
 
         assert latent is user_samples
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "shape",
         [

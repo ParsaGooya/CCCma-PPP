@@ -138,7 +138,6 @@ class TestCVaEMLPConfig:
 
         assert config.decoder_hidden_dims == [7, 9]
 
-    @pytest.mark.pruned
     def test_condition_embedding_dims_default_to_encoder_dims(self):
         config = make_config(
             encoder_hidden_dims=[12, 6],
@@ -147,7 +146,6 @@ class TestCVaEMLPConfig:
 
         assert config.condition_embedding_dims == [12, 6]
 
-    @pytest.mark.pruned
     def test_condition_embedding_size_defaults_to_latent_size(self):
         config = make_config(
             latent_size=7,
@@ -156,7 +154,6 @@ class TestCVaEMLPConfig:
 
         assert config.condition_embedding_size == 7
 
-    @pytest.mark.pruned
     def test_independent_latent_requires_condition_in_decoder(self):
         with pytest.raises(
             ValueError,
@@ -176,7 +173,6 @@ class TestCVaEMLPConfig:
 
         assert config.condemb_to_decoder is False
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dropout_rate",
         [
@@ -207,6 +203,7 @@ class TestCVaEMLPConfig:
 
         assert config.dropout_rate == dropout_rate
 
+    @pytest.mark.pruned
     def test_build_returns_model(self):
         config = make_config()
 
@@ -230,6 +227,7 @@ class TestCVaEMLPInitialization:
         assert model.input_shape == 6
         assert model.output_shape == 6
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "output_shape",
         [
@@ -636,6 +634,7 @@ class TestCondition:
             features,
         )
 
+    @pytest.mark.pruned
     def test_dependent_latent_returns_distribution(self):
         model = make_model(
             condition_dependant_latent=True,

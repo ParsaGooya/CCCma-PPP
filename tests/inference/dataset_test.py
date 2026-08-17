@@ -1108,7 +1108,6 @@ def test_from_train_model_used_as_condition():
     assert "condition" not in result
 
 
-@pytest.mark.pruned
 def test_from_train_model_condition_branch_precedes_condition_branch():
     model = DummyDataConfig("model")
     condition = DummyDataConfig("condition")
@@ -1183,6 +1182,7 @@ def test_from_train_condition_without_observation():
     assert result["condition"].names == ["condition"]
 
 
+@pytest.mark.pruned
 def test_from_train_unresolvable_configuration_raises():
     train_config = make_train_config(
         observation=None,

@@ -1023,6 +1023,7 @@ def test_convnext_block_standard_projection_forward():
     assert result.mask is mask
 
 
+@pytest.mark.pruned
 def test_convnext_block_without_projection_forward():
     block = ConvNeXtBlock(
         in_channels=4,
@@ -1758,7 +1759,6 @@ def test_convnext_single_layer_scale_is_applied():
     )
 
 
-@pytest.mark.pruned
 def test_convnext_block_passes_output_through_every_block():
     config = make_convnext_config(
         use_partial_conv=False,

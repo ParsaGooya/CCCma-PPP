@@ -463,7 +463,6 @@ def test_log_root_uses_logger(env_dirs):
     assert any(rec[1] == "hello" for rec in logger.records)
 
 
-@pytest.mark.pruned
 def test_log_root_prints_when_logger_none(env_dirs, capsys):
     trainer, _, _, _, _ = make_trainer(validation=False)
     trainer.setup_distributed(DummyDistributed(root=True), None)
@@ -1446,6 +1445,7 @@ def test_optimizer_step_amp_enabled_branch(env_dirs):
     assert trainer.global_step == 1
 
 
+@pytest.mark.pruned
 def test_log_epoch_root_without_logger(env_dirs, capsys):
     trainer, _, _, _, _ = make_trainer(validation=False)
 

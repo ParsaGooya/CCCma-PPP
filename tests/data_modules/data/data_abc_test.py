@@ -171,7 +171,6 @@ class DummyDataConfig(DataConfigABC):
         self.preprocessing_pipeline.set_name(self.TYPE)
 
 
-@pytest.mark.pruned
 def test_missing_preprocessing_pipeline():
     class BadConfig(DataConfigABC):
         @property
@@ -757,6 +756,7 @@ def test_get_ds_info_sizes_none(tmp_path):
     }
 
 
+@pytest.mark.pruned
 def test_get_ds_info_uses_existing_list_paths(tmp_path):
     cfg = DummyDataConfig(tmp_path)
     cfg.list_paths = ["already_set.nc"]

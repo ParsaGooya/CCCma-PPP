@@ -69,7 +69,6 @@ def test_config_weights_valid_branch():
     assert cfg.loss_weights == [0.5, 0.5]
 
 
-@pytest.mark.pruned
 def test_config_invalid_weight_length():
     with pytest.raises((AssertionError, ValueError, RuntimeError)):
         LosspipelineConfig(
@@ -591,7 +590,6 @@ def test_saved_output_mask_rejects_unknown_extension(
         )
 
 
-@pytest.mark.pruned
 def test_loads_tensor_mask_from_pt(
     tmp_path,
 ):
@@ -807,6 +805,7 @@ def test_resolve_output_mask_rejects_dimension_count():
         )
 
 
+@pytest.mark.pruned
 def test_resolve_output_mask_rejects_spatial_mismatch():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -1341,6 +1340,7 @@ def test_output_mask_is_multiplied_with_target_mask(
     )
 
 
+@pytest.mark.pruned
 def test_masked_loss_disabled_clears_target_mask(
     monkeypatch,
 ):

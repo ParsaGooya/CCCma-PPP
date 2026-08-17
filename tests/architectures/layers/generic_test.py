@@ -68,6 +68,7 @@ def test_build_activation_silu():
     assert activation.inplace is True
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "name",
     [

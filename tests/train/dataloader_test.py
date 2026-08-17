@@ -667,7 +667,6 @@ class TestTrainDataloaderConfigPostInit:
             config.dataset_config.available_times,
         )
 
-    @pytest.mark.pruned
     def test_requested_train_slice_is_converted_to_strings(self):
         config = make_config_without_post_init(
             train_years_slice=[
@@ -774,6 +773,7 @@ class TestSetupDistributed:
             barrier=Mock(),
         )
 
+    @pytest.mark.pruned
     def test_root_fits_preprocessors(self):
         config = make_initialized_config()
         distributed = self.make_distributed(
@@ -790,7 +790,6 @@ class TestSetupDistributed:
         distributed.barrier.assert_called_once_with()
         assert config._setup is True
 
-    @pytest.mark.pruned
     def test_non_root_does_not_fit_preprocessors(self):
         config = make_initialized_config()
         distributed = self.make_distributed(
@@ -804,7 +803,6 @@ class TestSetupDistributed:
         config.dataset_config.fit_preprocessors.assert_not_called()
         distributed.barrier.assert_called_once_with()
 
-    @pytest.mark.pruned
     def test_distributed_mode_loads_preprocessors(self):
         config = make_initialized_config()
         distributed = self.make_distributed(
@@ -839,6 +837,7 @@ class TestSetupDistributed:
             load_dir=load_path
         )
 
+    @pytest.mark.pruned
     def test_records_distributed_metadata(self):
         config = make_initialized_config()
         distributed = self.make_distributed(
@@ -962,6 +961,7 @@ class TestBuildValidationLoader:
         ):
             config.build_validation_loader(supress_error=False)
 
+    @pytest.mark.pruned
     def test_builds_validation_loader(self):
         config = make_initialized_config(
             dataset_config=make_dataset_config(

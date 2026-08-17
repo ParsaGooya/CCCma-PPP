@@ -273,6 +273,7 @@ def test_batchdata_to_device(
         assert batch.added_features is None
 
 
+@pytest.mark.pruned
 def test_batchdata_metadata_survives_to_device():
     metadata = [{"year": 2000}]
     batch = BatchData(
@@ -311,7 +312,6 @@ def make_collate_item(
     return data, metadata
 
 
-@pytest.mark.pruned
 def test_collate_batch_plain_inputs():
     result = collate_batch(
         [
@@ -753,7 +753,6 @@ def test_post_init_with_dataset_and_preseeded_features(
     assert config.time_features == ()
 
 
-@pytest.mark.pruned
 def test_batchdata_reduced_mask_initializes_shared_mask():
     BatchData._shared_input_mask = None
 
@@ -940,6 +939,7 @@ def test_collate_stacks_added_features():
     )
 
 
+@pytest.mark.pruned
 def test_collate_passes_mask_options():
     result = collate_batch(
         [
@@ -1395,6 +1395,7 @@ def test_input_metadata_calls_operator_each_time(
     assert dataset_config.ds_operator.input_calls == 2
 
 
+@pytest.mark.pruned
 def test_target_metadata_calls_train_operator_each_time(
     dataset_config,
 ):

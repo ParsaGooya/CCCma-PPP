@@ -183,7 +183,6 @@ def test_build_mlp_invalid_activation_not_checked_without_activated_layers():
     assert isinstance(model[0], nn.Linear)
 
 
-@pytest.mark.pruned
 def test_build_mlp_invalid_activation_checked_when_final_is_activated():
     with pytest.raises(
         ValueError,
@@ -438,6 +437,7 @@ def test_build_mlp_batch_normalization_flag_has_no_effect_without_activation():
     assert isinstance(model[0], nn.Linear)
 
 
+@pytest.mark.pruned
 def test_build_mlp_hidden_layer_order():
     model = build_mlp(
         [4, 8, 2],
@@ -539,7 +539,6 @@ def test_build_mlp_forward_shape(
     )
 
 
-@pytest.mark.pruned
 def test_build_mlp_forward_with_all_options():
     model = build_mlp(
         [4, 8, 6, 2],

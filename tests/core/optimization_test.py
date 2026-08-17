@@ -161,6 +161,7 @@ def test_cosine_scheduler_state_dict_without_scheduler_attr():
         scheduler.state_dict()
 
 
+@pytest.mark.pruned
 def test_cosine_scheduler_load_state_dict_without_scheduler_attr():
     module = make_module()
     opt = make_optimizer(module)
@@ -242,7 +243,6 @@ def test_optimizer_build_scheduler_requires_num_batches_and_epochs_config_level(
         cfg.build(module)
 
 
-@pytest.mark.pruned
 def test_optimizer_build_scheduler_requires_num_batches_wrapper_level():
     module = make_module()
     cfg = OptimizerConfig(lr_scheduler_config=LRSchedulerConfig(total_epochs=2))
@@ -546,7 +546,6 @@ def test_lr_scheduler_build_rejects_nonpositive_num_batches(
         )
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "gradient_accumulation_steps",
     [
@@ -616,6 +615,7 @@ def test_lr_scheduler_build_rounds_partial_accumulation_batch_up():
     assert config.warmup_steps == 3
 
 
+@pytest.mark.pruned
 def test_optimizer_build_forwards_gradient_accumulation_steps():
     module = make_module()
     scheduler_config = LRSchedulerConfig(
@@ -903,6 +903,7 @@ def test_scheduler_hold_minimum_updates_every_parameter_group():
     )
 
 
+@pytest.mark.pruned
 def test_optimizer_scheduler_step_delegates_to_scheduler(
     monkeypatch,
 ):
@@ -981,7 +982,6 @@ def test_optimizer_state_dict_without_scheduler_uses_none():
     assert state["lr_scheduler"] is None
 
 
-@pytest.mark.pruned
 def test_optimizer_load_state_dict_does_not_load_absent_scheduler_state(
     monkeypatch,
 ):

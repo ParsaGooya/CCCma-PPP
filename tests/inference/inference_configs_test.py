@@ -403,6 +403,7 @@ def test_prepare_directory_existing_output(tmp_path):
     assert distributed.barrier_calls == 1
 
 
+@pytest.mark.pruned
 def test_set_random_seed_none_does_not_call_set_seed(
     monkeypatch,
     tmp_path,
@@ -495,6 +496,7 @@ def patch_module_selector(monkeypatch):
     return selector
 
 
+@pytest.mark.pruned
 def test_load_module_missing_default_checkpoint(tmp_path):
     config = make_bare_config(tmp_path)
 
@@ -505,7 +507,6 @@ def test_load_module_missing_default_checkpoint(tmp_path):
         config.load_module()
 
 
-@pytest.mark.pruned
 def test_load_module_missing_named_checkpoint(tmp_path):
     config = make_bare_config(tmp_path)
     config.checkpoint_name = "epoch_10.pt"
@@ -516,7 +517,6 @@ def test_load_module_missing_named_checkpoint(tmp_path):
     assert "epoch_10.pt" in str(error.value)
 
 
-@pytest.mark.pruned
 def test_load_module_missing_required_keys(tmp_path):
     checkpoint_dir = tmp_path / "checkpoints"
     checkpoint_dir.mkdir()
@@ -609,6 +609,7 @@ def test_load_module_strict_false(
     assert module.loaded_strict is False
 
 
+@pytest.mark.pruned
 def test_load_module_named_checkpoint(
     monkeypatch,
     tmp_path,
@@ -668,7 +669,6 @@ def test_load_module_dacite_receives_module_config(
     assert captured["data_class"].__name__ == "ModuleSelector"
 
 
-@pytest.mark.pruned
 def test_load_module_calls_gc_collect(
     monkeypatch,
     tmp_path,
@@ -757,6 +757,7 @@ def test_build_writer_passes_all_writer_arguments(
     }
 
 
+@pytest.mark.pruned
 def test_build_writer_loads_expected_preprocessor(
     monkeypatch,
     tmp_path,
@@ -1242,7 +1243,6 @@ def test_build_writer_module_receives_device(
     assert module.device == distributed.device
 
 
-@pytest.mark.pruned
 def test_build_writer_propagates_loader_build_error(
     monkeypatch,
     tmp_path,

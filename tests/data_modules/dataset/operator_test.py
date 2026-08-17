@@ -286,6 +286,7 @@ class TestFitPreprocessors:
         assert kwargs["selection"][INIT_TIME_DIM] is train_times
         assert kwargs["selection"][LEAD_TIME_DIM] is model.info.coords[LEAD_TIME_DIM]
 
+    @pytest.mark.pruned
     def test_model_selection_includes_realizations(self):
         model = make_data_config(
             realizations=[
@@ -833,7 +834,6 @@ class TestGetWeights:
             is flattener
         )
 
-    @pytest.mark.pruned
     def test_matching_channel_weights(self):
         model = make_data_config(
             names=[
@@ -887,6 +887,7 @@ class TestGetWeights:
             "pr",
         ]
 
+    @pytest.mark.pruned
     def test_inconsistent_channel_weights_raise(self):
         model = make_data_config(
             names=[
@@ -1138,7 +1139,6 @@ class TestTargetMetadata:
             "longitude",
         ]
 
-    @pytest.mark.pruned
     def test_rejects_missing_model_and_observation(self):
         config = DummyDatasetConfig()
         operator = DatasetOperator(config)

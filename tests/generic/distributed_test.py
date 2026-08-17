@@ -29,7 +29,6 @@ def test_distributed_false(monkeypatch):
     assert d.is_root()
 
 
-@pytest.mark.pruned
 def test_distributed_true(monkeypatch):
     monkeypatch.setenv("RANK", "1")
     monkeypatch.setenv("LOCAL_RANK", "0")
@@ -111,6 +110,7 @@ def test_barrier_not_called(monkeypatch):
     d.barrier()
 
 
+@pytest.mark.pruned
 def test_all_reduce_called(monkeypatch):
     monkeypatch.setattr(mod.dist, "is_available", lambda: True)
     monkeypatch.setattr(mod.dist, "is_initialized", lambda: True)

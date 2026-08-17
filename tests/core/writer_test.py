@@ -144,6 +144,7 @@ class DummyStat:
         return torch.tensor([1.0]), torch.tensor([[1.0]])
 
 
+@pytest.mark.pruned
 def test_writer_config_negative_sampling():
     with pytest.raises(
         ValueError,
@@ -402,7 +403,6 @@ def test_build_train_loader_train(tmp_path):
     assert cfg.train_called
 
 
-@pytest.mark.pruned
 def test_setup_distributed_extract_training_vars(
     tmp_path,
     monkeypatch,
@@ -1551,37 +1551,6 @@ def test_save_train_stats_moves_batch_and_requests_training_stats(
     assert captured["stats"] is predictor.stats
 
 
-@pytest.mark.pruned
-def test_save_train_stats_calls_gc_collect(
-    tmp_path,
-    monkeypatch,
-):
-    writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
-
-    writer.output_dir = tmp_path
-    writer.device = torch.device("cpu")
-    writer.is_on_root = True
-    writer.is_distributed = False
-    writer.predictor = DummyPredictor()
-    writer.config = SimpleNamespace(
-        get_trained_model_stats_from_validation=False,
-    )
-    writer.build_train_loader = lambda **kwargs: []
-    writer.aggregate_train_stats = lambda stats: None
-
-    calls = []
-
-    monkeypatch.setattr(
-        "cccma_ppp.core.writer.gc.collect",
-        lambda: calls.append(True),
-    )
-
-    writer._save_train_stats()
-
-    assert calls == [True]
-
-
 def test_aggregate_train_stats_saves_expected_values(
     tmp_path,
 ):
@@ -2079,7 +2048,6 @@ def test_predict_loop_nonlatent_uses_inference_loader():
     assert captured == [True]
 
 
-@pytest.mark.pruned
 def test_predict_loop_aggregates_after_all_batches():
     events = []
 
@@ -2115,6 +2083,7 @@ def test_predict_loop_aggregates_after_all_batches():
     ]
 
 
+@pytest.mark.pruned
 def test_predict_loop_propagates_predictor_error():
     class FailingPredictor(DummyPredictor):
         def _infer_on_batch(

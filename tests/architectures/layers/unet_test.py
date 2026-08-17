@@ -330,7 +330,6 @@ def test_build_conv_block_error_reports_config_type():
         )
 
 
-@pytest.mark.pruned
 def test_build_conv_block_requires_latent_output_shape():
     with pytest.raises(
         ValueError,
@@ -1150,6 +1149,7 @@ def test_unet_output_tanh_direct_projection():
     )
 
 
+@pytest.mark.pruned
 def test_unet_output_rejects_unsupported_activation():
     with pytest.raises(
         ValueError,
@@ -1244,6 +1244,7 @@ def test_unet_output_hidden_activation_structure(
     )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "hidden_channels",
@@ -2838,7 +2839,6 @@ def test_unet_output_sic_without_clipping_preserves_unbounded_output():
     assert torch.any(result > 1)
 
 
-@pytest.mark.pruned
 def test_unet_output_sic_rejects_unsupported_activation():
     with pytest.raises(
         ValueError,
