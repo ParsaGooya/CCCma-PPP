@@ -13,6 +13,7 @@ from cccma_ppp.architectures.layers.utils import (
 )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("kernel_size", "expected"),
     [
@@ -91,10 +92,12 @@ def test_align_to_skip_rejects_unknown_mode(mode):
         )
 
 
+@pytest.mark.pruned
 def test_resize_mask_none_returns_none():
     assert _resize_mask(None, (8, 8)) is None
 
 
+@pytest.mark.pruned
 def test_resize_mask_matching_size_returns_same_object():
     mask = torch.ones(2, 1, 8, 8)
 
@@ -106,6 +109,7 @@ def test_resize_mask_matching_size_returns_same_object():
     assert result is mask
 
 
+@pytest.mark.pruned
 def test_resize_mask_uses_nearest_interpolation():
     mask = torch.tensor(
         [
@@ -133,6 +137,7 @@ def test_resize_mask_uses_nearest_interpolation():
     torch.testing.assert_close(result, expected)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "dtype",
     [
@@ -164,6 +169,7 @@ def test_resize_mask_preserves_dtype(dtype):
     assert result.dtype == dtype
 
 
+@pytest.mark.pruned
 def test_resize_mask_preserves_binary_values():
     mask = torch.tensor(
         [
@@ -189,6 +195,7 @@ def test_resize_mask_preserves_binary_values():
     )
 
 
+@pytest.mark.pruned
 def test_resize_mask_downsamples():
     mask = torch.ones(2, 3, 8, 10)
 
@@ -200,12 +207,14 @@ def test_resize_mask_downsamples():
     assert result.shape == (2, 3, 4, 5)
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_none_returns_none():
     reference = torch.randn(2, 3, 8, 8)
 
     assert _broadcast_mask(None, reference) is None
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_2d_adds_batch_and_channel_dimensions():
     mask = torch.ones(8, 8)
     reference = torch.randn(1, 3, 8, 8)
@@ -242,6 +251,7 @@ def test_broadcast_mask_3d_interpreted_as_channels_height_width():
     assert result.shape == (1, 3, 8, 8)
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_3d_expands_batch():
     mask = torch.ones(3, 8, 8)
     reference = torch.randn(2, 3, 8, 8)
@@ -254,6 +264,7 @@ def test_broadcast_mask_3d_expands_batch():
     assert result.shape == (2, 3, 8, 8)
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_4d_matching_shape():
     mask = torch.ones(2, 3, 8, 8)
     reference = torch.randn(2, 3, 8, 8)
@@ -289,6 +300,7 @@ def test_broadcast_mask_rejects_invalid_rank(shape):
         )
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_rejects_batch_mismatch():
     mask = torch.ones(3, 1, 8, 8)
     reference = torch.randn(2, 3, 8, 8)
@@ -303,6 +315,7 @@ def test_broadcast_mask_rejects_batch_mismatch():
         )
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_batch_error_contains_sizes():
     mask = torch.ones(3, 1, 8, 8)
     reference = torch.randn(2, 3, 8, 8)
@@ -329,6 +342,7 @@ def test_broadcast_mask_resizes_spatial_dimensions():
     assert result.shape == (2, 1, 8, 10)
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_calls_resize_helper(
     monkeypatch,
 ):
@@ -362,6 +376,7 @@ def test_broadcast_mask_calls_resize_helper(
     assert result is expected
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_converts_dtype():
     mask = torch.ones(
         1,
@@ -386,6 +401,7 @@ def test_broadcast_mask_converts_dtype():
     assert result.dtype == torch.float64
 
 
+@pytest.mark.pruned
 def test_broadcast_mask_expanded_batch_values_match():
     mask = torch.tensor(
         [
@@ -426,6 +442,7 @@ def test_merge_masks_both_none_returns_none():
     assert result is None
 
 
+@pytest.mark.pruned
 def test_merge_masks_both_present():
     input_mask = torch.zeros(2, 2, 8, 8)
     skip_mask = torch.ones(2, 3, 8, 8)
@@ -451,6 +468,7 @@ def test_merge_masks_both_present():
     )
 
 
+@pytest.mark.pruned
 def test_merge_masks_input_none_creates_valid_input_mask():
     skip_mask = torch.zeros(2, 3, 8, 8)
     reference = torch.randn(2, 5, 8, 8)
@@ -499,6 +517,7 @@ def test_merge_masks_skip_none_creates_valid_skip_mask():
     )
 
 
+@pytest.mark.pruned
 def test_merge_masks_resizes_both_masks():
     input_mask = torch.zeros(2, 2, 4, 4)
     skip_mask = torch.ones(2, 3, 16, 16)
@@ -516,6 +535,7 @@ def test_merge_masks_resizes_both_masks():
     assert result.shape == (2, 5, 8, 8)
 
 
+@pytest.mark.pruned
 def test_merge_masks_concatenates_skip_before_input():
     input_mask = torch.full(
         (1, 2, 4, 4),
@@ -574,6 +594,7 @@ def test_merge_masks_generated_mask_uses_reference_dtype():
     assert result.dtype == torch.float64
 
 
+@pytest.mark.pruned
 def test_resize_tensor_matching_size_returns_same_object():
     tensor = torch.randn(2, 3, 8, 8)
 
@@ -585,6 +606,7 @@ def test_resize_tensor_matching_size_returns_same_object():
     assert result is tensor
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "mode",
     [
@@ -612,6 +634,7 @@ def test_resize_tensor_continuous_modes(mode):
     torch.testing.assert_close(result, expected)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "mode",
     [
@@ -639,6 +662,7 @@ def test_resize_tensor_modes_without_align_corners(mode):
     torch.testing.assert_close(result, expected)
 
 
+@pytest.mark.pruned
 def test_resize_tensor_default_mode_is_bilinear():
     tensor = torch.randn(2, 3, 4, 5)
 
@@ -657,6 +681,7 @@ def test_resize_tensor_default_mode_is_bilinear():
     torch.testing.assert_close(result, expected)
 
 
+@pytest.mark.pruned
 def test_resize_tensor_preserves_dtype():
     tensor = torch.randn(
         2,

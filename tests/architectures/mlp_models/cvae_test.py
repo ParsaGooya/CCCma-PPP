@@ -81,6 +81,7 @@ class FixedOutputModule(nn.Module):
 
 
 class TestCVaEMLPConfig:
+    @pytest.mark.pruned
     def test_basic_initialization(self):
         config = make_config()
 
@@ -95,15 +96,18 @@ class TestCVaEMLPConfig:
         assert config.dropout_rate is None
         assert config.activation == "relu"
 
+    @pytest.mark.pruned
     def test_expected_input_and_output_dimensions(self):
         config = make_config()
 
         assert config.NUM_INPUT_DIMS == 2
         assert config.NUM_OUTPUT_DIMS == 2
 
+    @pytest.mark.pruned
     def test_generator_is_none(self):
         assert cVAE_MLPConfig.GENERATOR is None
 
+    @pytest.mark.pruned
     def test_expects_mask_is_false(self):
         config = make_config()
 
@@ -126,6 +130,7 @@ class TestCVaEMLPConfig:
 
         assert config.decoder_hidden_dims == []
 
+    @pytest.mark.pruned
     def test_explicit_decoder_is_preserved(self):
         config = make_config(
             decoder_hidden_dims=[7, 9],
@@ -133,6 +138,7 @@ class TestCVaEMLPConfig:
 
         assert config.decoder_hidden_dims == [7, 9]
 
+    @pytest.mark.pruned
     def test_condition_embedding_dims_default_to_encoder_dims(self):
         config = make_config(
             encoder_hidden_dims=[12, 6],
@@ -141,6 +147,7 @@ class TestCVaEMLPConfig:
 
         assert config.condition_embedding_dims == [12, 6]
 
+    @pytest.mark.pruned
     def test_condition_embedding_size_defaults_to_latent_size(self):
         config = make_config(
             latent_size=7,
@@ -149,6 +156,7 @@ class TestCVaEMLPConfig:
 
         assert config.condition_embedding_size == 7
 
+    @pytest.mark.pruned
     def test_independent_latent_requires_condition_in_decoder(self):
         with pytest.raises(
             ValueError,
@@ -159,6 +167,7 @@ class TestCVaEMLPConfig:
                 condemb_to_decoder=False,
             )
 
+    @pytest.mark.pruned
     def test_dependent_latent_does_not_require_condition_in_decoder(self):
         config = make_config(
             condition_dependant_latent=True,
@@ -167,6 +176,7 @@ class TestCVaEMLPConfig:
 
         assert config.condemb_to_decoder is False
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dropout_rate",
         [
@@ -180,6 +190,7 @@ class TestCVaEMLPConfig:
                 dropout_rate=dropout_rate,
             )
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dropout_rate",
         [
@@ -237,6 +248,7 @@ class TestCVaEMLPInitialization:
                 output_shape=output_shape,
             )
 
+    @pytest.mark.pruned
     def test_converts_added_features_none_to_zero(self):
         model = make_model(
             added_features_dim=None,
@@ -244,6 +256,7 @@ class TestCVaEMLPInitialization:
 
         assert model.added_features_dim == 0
 
+    @pytest.mark.pruned
     def test_preserves_added_features_dimension(self):
         model = make_model(
             added_features_dim=4,
@@ -251,6 +264,7 @@ class TestCVaEMLPInitialization:
 
         assert model.added_features_dim == 4
 
+    @pytest.mark.pruned
     def test_flattened_input_and_output_sizes(self):
         model = make_model(
             input_shape=(2, 5),
@@ -260,6 +274,7 @@ class TestCVaEMLPInitialization:
         assert model.input_shape == 10
         assert model.output_shape == 12
 
+    @pytest.mark.pruned
     def test_condition_is_added_to_decoder_when_enabled(self):
         model = make_model(
             condition_embedding_size=5,
@@ -268,6 +283,7 @@ class TestCVaEMLPInitialization:
 
         assert model.add_condition_size == 5
 
+    @pytest.mark.pruned
     def test_condition_is_not_initially_added_when_disabled(self):
         config = make_config(
             condition_dependant_latent=True,
@@ -286,6 +302,7 @@ class TestCVaEMLPInitialization:
 
         assert model.condemb_to_decoder is False
 
+    @pytest.mark.pruned
     def test_builds_condition_distribution_for_dependent_latent(self):
         model = make_model(
             condition_dependant_latent=True,
@@ -294,6 +311,7 @@ class TestCVaEMLPInitialization:
         assert isinstance(model.condition_mu, nn.Linear)
         assert isinstance(model.condition_log_var, nn.Linear)
 
+    @pytest.mark.pruned
     def test_independent_latent_appends_embedding_projection(self):
         model = make_model(
             condition_dependant_latent=False,
@@ -301,6 +319,7 @@ class TestCVaEMLPInitialization:
 
         assert isinstance(model.embedding[-1], nn.Linear)
 
+    @pytest.mark.pruned
     def test_condition_flow_skips_condition_distribution(self):
         config = make_config(
             condition_dependant_latent=True,
@@ -317,6 +336,7 @@ class TestCVaEMLPInitialization:
         assert not hasattr(model, "condition_log_var")
         assert isinstance(model.embedding[-1], nn.Linear)
 
+    @pytest.mark.pruned
     def test_weights_are_initialized_without_checkpoint(self):
         config = make_config(
             init_method="trunc_normal",
@@ -342,6 +362,7 @@ class TestCVaEMLPInitialization:
         initialize.assert_called_once_with("trunc_normal")
         load_state.assert_not_called()
 
+    @pytest.mark.pruned
     def test_validates_checkpoint_compatibility(self):
         config = make_config()
 
@@ -412,6 +433,7 @@ class TestRecognition:
         torch.testing.assert_close(mu, expected)
         torch.testing.assert_close(log_var, expected)
 
+    @pytest.mark.pruned
     def test_flattens_target(self):
         model = self.make_stubbed_model()
 
@@ -427,6 +449,7 @@ class TestRecognition:
 
         assert model.encoder.last_input.shape == (2, 6)
 
+    @pytest.mark.pruned
     def test_concatenates_condition(self):
         model = self.make_stubbed_model()
 
@@ -448,6 +471,7 @@ class TestRecognition:
             condition,
         )
 
+    @pytest.mark.pruned
     def test_concatenates_added_features(self):
         model = self.make_stubbed_model()
 
@@ -567,6 +591,7 @@ class TestCondition:
         )
         assert cond_log_var is None
 
+    @pytest.mark.pruned
     def test_flattens_condition(self):
         model = make_model()
         model.embedding = nn.Identity()
@@ -670,6 +695,7 @@ class TestGenerate:
 
         return model
 
+    @pytest.mark.pruned
     def test_preserves_sample_and_batch_dimensions(self):
         model = self.make_stubbed_model(
             condemb_to_decoder=False,
@@ -719,6 +745,7 @@ class TestGenerate:
             expected_features,
         )
 
+    @pytest.mark.pruned
     def test_concatenates_condition_when_enabled(self):
         model = self.make_stubbed_model(
             condemb_to_decoder=True,
@@ -755,6 +782,7 @@ class TestGenerate:
             expected_condition,
         )
 
+    @pytest.mark.pruned
     def test_does_not_concatenate_condition_when_disabled(self):
         model = self.make_stubbed_model(
             condemb_to_decoder=False,
@@ -770,6 +798,7 @@ class TestGenerate:
 
         assert result.shape == (3, 2, 4)
 
+    @pytest.mark.pruned
     def test_ignores_none_condition(self):
         model = self.make_stubbed_model(
             condemb_to_decoder=True,
@@ -806,6 +835,7 @@ class TestForward:
 
         return model
 
+    @pytest.mark.pruned
     def test_forward_uses_request_values(self):
         model = self.make_forward_model()
 
@@ -877,6 +907,7 @@ class TestForward:
         assert torch.all(result.log_var >= -2.0)
         assert torch.all(result.log_var <= 2.0)
 
+    @pytest.mark.pruned
     def test_forward_without_limits_preserves_log_variance(self):
         model = self.make_forward_model()
 
@@ -935,6 +966,7 @@ class TestPredict:
 
         return model
 
+    @pytest.mark.pruned
     def test_predict_samples_prior(self):
         model = self.make_predict_model()
 
@@ -961,6 +993,7 @@ class TestPredict:
         assert result.cond_mu.shape == (2, 3)
         assert result.cond_log_var.shape == (2, 3)
 
+    @pytest.mark.pruned
     def test_predict_forwards_condition_and_features(self):
         model = self.make_predict_model()
 

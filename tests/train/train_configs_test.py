@@ -153,6 +153,7 @@ def make_valid_config_with(tmp_path):
     )
 
 
+@pytest.mark.pruned
 def test_basic_init(tmp_path):
     cfg = make_valid_config_with(tmp_path)
     assert cfg.max_epochs == 1
@@ -171,11 +172,13 @@ def test_max_epochs_none_becomes_inf(tmp_path):
     assert cfg.max_epochs == float("inf")
 
 
+@pytest.mark.pruned
 def test_missing_required_inputs_raises(tmp_path):
     with pytest.raises(ValueError):
         TrainConfig(tmp_path, 1, None, None, None, None)
 
 
+@pytest.mark.pruned
 def test_negative_epochs_assert(tmp_path):
     with pytest.raises(AssertionError):
         TrainConfig(
@@ -188,6 +191,7 @@ def test_negative_epochs_assert(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_deterministic_observation_required(tmp_path):
     loader = DummyTrainLoader()
     loader.dataset_config.observation = None
@@ -206,6 +210,7 @@ def test_deterministic_observation_required(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_generator_requires_crps(tmp_path):
     loader = DummyTrainLoader()
 
@@ -225,6 +230,7 @@ def test_set_random_seed(tmp_path):
     cfg.set_random_seed(0)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_creates_dirs(tmp_path):
     cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
@@ -234,6 +240,7 @@ def test_prepare_directory_creates_dirs(tmp_path):
     assert os.path.exists(cfg.checkpoint_dir)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_yaml_copy(tmp_path):
     cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
@@ -246,6 +253,7 @@ def test_prepare_directory_yaml_copy(tmp_path):
     assert (Path(cfg.experiment_dir) / "config.yaml").exists()
 
 
+@pytest.mark.pruned
 def test_resolve_resuming_same_path(tmp_path):
     cfg = object.__new__(TrainConfig)
     cfg.resume_dir = tmp_path
@@ -262,6 +270,7 @@ def test_resolve_resuming_same_path(tmp_path):
     assert cfg.copy_resume_dir_to_new_path is False
 
 
+@pytest.mark.pruned
 def test_resolve_resuming_different_path(tmp_path):
     cfg = object.__new__(TrainConfig)
     cfg.resume_dir = tmp_path
@@ -287,6 +296,7 @@ def test_build_trainer_basic(tmp_path):
     assert trainer == "trainer"
 
 
+@pytest.mark.pruned
 def test_build_trainer_with_logger(tmp_path):
     cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
@@ -296,6 +306,7 @@ def test_build_trainer_with_logger(tmp_path):
     build_trainer(cfg, d, logger=logger)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_without_yaml(tmp_path):
     cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
@@ -305,6 +316,7 @@ def test_prepare_directory_without_yaml(tmp_path):
     assert os.path.exists(cfg.experiment_dir)
 
 
+@pytest.mark.pruned
 def test_resolve_resuming_updates_config(tmp_path):
     cfg = object.__new__(TrainConfig)
 
@@ -332,6 +344,7 @@ def test_set_random_seed_none(tmp_path):
     cfg.set_random_seed(0)
 
 
+@pytest.mark.pruned
 def test_build_trainer_non_distributed(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -343,6 +356,7 @@ def test_build_trainer_non_distributed(tmp_path):
     assert trainer == "trainer"
 
 
+@pytest.mark.pruned
 def test_build_trainer_with_validation_loader(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -359,6 +373,7 @@ def test_build_trainer_with_validation_loader(tmp_path):
     assert trainer == "trainer"
 
 
+@pytest.mark.pruned
 def test_build_trainer_without_validation_loader(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -375,6 +390,7 @@ def test_build_trainer_without_validation_loader(tmp_path):
     assert trainer == "trainer"
 
 
+@pytest.mark.pruned
 def test_build_trainer_beta_finder_false(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -390,6 +406,7 @@ def test_build_trainer_beta_finder_false(tmp_path):
     assert trainer == "trainer"
 
 
+@pytest.mark.pruned
 def test_build_trainer_beta_finder_true(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -405,6 +422,7 @@ def test_build_trainer_beta_finder_true(tmp_path):
     assert trainer == "trainer"
 
 
+@pytest.mark.pruned
 def test_generator_with_crps_valid(tmp_path):
     loader = DummyTrainLoader()
 
@@ -445,6 +463,7 @@ def test_deterministic_with_observation_valid(tmp_path):
     assert cfg is not None
 
 
+@pytest.mark.pruned
 def test_prepare_directory_existing_dir(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -457,6 +476,7 @@ def test_prepare_directory_existing_dir(tmp_path):
     assert os.path.exists(cfg.experiment_dir)
 
 
+@pytest.mark.pruned
 def test_train_loader_setup_distributed_called(tmp_path):
     called = {"x": False}
 
@@ -474,6 +494,7 @@ def test_train_loader_setup_distributed_called(tmp_path):
     assert called["x"] is True
 
 
+@pytest.mark.pruned
 def test_build_trainer_with_weights(tmp_path):
     class Loader(DummyTrainLoader):
         def get_weights(self, w):
@@ -489,6 +510,7 @@ def test_build_trainer_with_weights(tmp_path):
     assert trainer == "trainer"
 
 
+@pytest.mark.pruned
 def test_build_trainer_without_weights(tmp_path):
     class Loader(DummyTrainLoader):
         def get_weights(self, w):
@@ -504,6 +526,7 @@ def test_build_trainer_without_weights(tmp_path):
     assert trainer == "trainer"
 
 
+@pytest.mark.pruned
 def test_module_build_called(tmp_path):
     called = {"x": False}
 
@@ -522,6 +545,7 @@ def test_module_build_called(tmp_path):
     assert called["x"] is True
 
 
+@pytest.mark.pruned
 def test_loss_build_called(tmp_path):
     called = {"x": False}
 
@@ -540,6 +564,7 @@ def test_loss_build_called(tmp_path):
     assert called["x"] is True
 
 
+@pytest.mark.pruned
 def test_optimizer_build_called(tmp_path):
     called = {"x": False}
 
@@ -558,6 +583,7 @@ def test_optimizer_build_called(tmp_path):
     assert called["x"] is True
 
 
+@pytest.mark.pruned
 def test_trainer_build_called(tmp_path):
     called = {"x": False}
 
@@ -576,6 +602,7 @@ def test_trainer_build_called(tmp_path):
     assert called["x"] is True
 
 
+@pytest.mark.pruned
 def test_build_trainer_logger_none(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -586,6 +613,7 @@ def test_build_trainer_logger_none(tmp_path):
     assert trainer == "trainer"
 
 
+@pytest.mark.pruned
 def test_build_trainer_device_cpu(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -597,6 +625,7 @@ def test_build_trainer_device_cpu(tmp_path):
     assert trainer == "trainer"
 
 
+@pytest.mark.pruned
 def test_build_trainer_local_rank_zero(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -608,6 +637,7 @@ def test_build_trainer_local_rank_zero(tmp_path):
     assert trainer == "trainer"
 
 
+@pytest.mark.pruned
 def test_prepare_directory_checkpoint_exists(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -618,6 +648,7 @@ def test_prepare_directory_checkpoint_exists(tmp_path):
     assert Path(cfg.checkpoint_dir).exists()
 
 
+@pytest.mark.pruned
 def test_prepare_directory_logs_exists(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -628,42 +659,49 @@ def test_prepare_directory_logs_exists(tmp_path):
     assert Path(cfg.log_dir).exists()
 
 
+@pytest.mark.pruned
 def test_max_epochs_positive(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     assert cfg.max_epochs > 0
 
 
+@pytest.mark.pruned
 def test_train_loader_exists(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     assert cfg.train_loader is not None
 
 
+@pytest.mark.pruned
 def test_module_exists(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     assert cfg.module is not None
 
 
+@pytest.mark.pruned
 def test_loss_pipeline_exists(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     assert cfg.losspipeline is not None
 
 
+@pytest.mark.pruned
 def test_trainer_exists(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     assert cfg.trainer is not None
 
 
+@pytest.mark.pruned
 def test_optimization_exists(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     assert cfg.optimization is not None
 
 
+@pytest.mark.pruned
 def test_deterministic_beta_finder_warning(tmp_path):
     loader = DummyTrainLoader()
     loader.dataset_config.observation = DummyObservation()
@@ -685,6 +723,7 @@ def test_deterministic_beta_finder_warning(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_non_mlp_with_flattener_raises(tmp_path):
     loader = DummyTrainLoader()
 
@@ -702,6 +741,7 @@ def test_non_mlp_with_flattener_raises(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_non_mlp_without_flattener_valid(tmp_path):
     loader = DummyTrainLoader()
 
@@ -726,6 +766,7 @@ def test_non_mlp_without_flattener_valid(tmp_path):
     assert cfg is not None
 
 
+@pytest.mark.pruned
 def test_prepare_runtime_variables(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -734,24 +775,28 @@ def test_prepare_runtime_variables(tmp_path):
     assert RuntimeContext.GLOBAL_EXP_DIR is not None
 
 
+@pytest.mark.pruned
 def test_checkpoint_dir_property(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     assert "checkpoints" in str(cfg.checkpoint_dir)
 
 
+@pytest.mark.pruned
 def test_log_dir_property(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     assert "logs" in str(cfg.log_dir)
 
 
+@pytest.mark.pruned
 def test_figures_dir_property(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     assert "figures" in str(cfg.figures_dir)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_copy_resume_branch(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"
@@ -770,6 +815,7 @@ def test_prepare_directory_copy_resume_branch(tmp_path):
     assert dst.exists()
 
 
+@pytest.mark.pruned
 def test_prepare_directory_without_copy_resume(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -782,6 +828,7 @@ def test_prepare_directory_without_copy_resume(tmp_path):
     assert Path(cfg.log_dir).exists()
 
 
+@pytest.mark.pruned
 def test_prepare_directory_yaml_none(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -792,6 +839,7 @@ def test_prepare_directory_yaml_none(tmp_path):
     assert Path(cfg.experiment_dir).exists()
 
 
+@pytest.mark.pruned
 def test_read_config_missing_resume_dir(tmp_path):
     cfg = object.__new__(TrainConfig)
 
@@ -803,6 +851,7 @@ def test_read_config_missing_resume_dir(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_build_trainer_print_logger_branch(tmp_path, capsys):
     cfg = make_valid_config_with(tmp_path)
 
@@ -834,6 +883,7 @@ def test_build_trainer_logger_info_branch(tmp_path):
     assert logger.called is True
 
 
+@pytest.mark.pruned
 def test_build_trainer_distributed_false(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -845,6 +895,7 @@ def test_build_trainer_distributed_false(tmp_path):
     assert trainer == "trainer"
 
 
+@pytest.mark.pruned
 def test_module_to_called(tmp_path):
     called = {"x": False}
 
@@ -877,6 +928,7 @@ def test_module_to_called(tmp_path):
     assert called["x"] is True
 
 
+@pytest.mark.pruned
 def test_module_init_loss_called(tmp_path):
     called = {"x": False}
 
@@ -908,6 +960,7 @@ def test_module_init_loss_called(tmp_path):
     assert called["x"] is True
 
 
+@pytest.mark.pruned
 def test_build_trainer_num_output_dims_fallback(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -934,6 +987,7 @@ def test_build_trainer_num_output_dims_fallback(tmp_path):
     assert trainer == "trainer"
 
 
+@pytest.mark.pruned
 def test_set_random_seed_executes(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -942,6 +996,7 @@ def test_set_random_seed_executes(tmp_path):
     cfg.set_random_seed(0)
 
 
+@pytest.mark.pruned
 def test_resolve_resuming_updates_resume_dir(tmp_path):
     cfg = object.__new__(TrainConfig)
 
@@ -961,6 +1016,7 @@ def test_resolve_resuming_updates_resume_dir(tmp_path):
     assert cfg.resume_dir == tmp_path
 
 
+@pytest.mark.pruned
 def test_resolve_resuming_sets_experiment_dir_path(tmp_path):
     cfg = object.__new__(TrainConfig)
 
@@ -991,6 +1047,7 @@ def test_missing_flattener_for_mlp(tmp_path):
         cfg.__post_init__()
 
 
+@pytest.mark.pruned
 def test_resolve_resuming_none_branch(tmp_path):
     cfg = object.__new__(TrainConfig)
 
@@ -1008,6 +1065,7 @@ def test_resolve_resuming_none_branch(tmp_path):
     assert cfg.resume_dir is None
 
 
+@pytest.mark.pruned
 def test_build_trainer_distributed_true_monkeypatch(tmp_path, monkeypatch):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1032,6 +1090,7 @@ def test_build_trainer_distributed_true_monkeypatch(tmp_path, monkeypatch):
     assert trainer == "trainer"
 
 
+@pytest.mark.pruned
 def test_prepare_runtime_sets_checkpoint_dir(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1040,6 +1099,7 @@ def test_prepare_runtime_sets_checkpoint_dir(tmp_path):
     assert RuntimeContext.GLOBAL_CHECKPOINT_DIR is not None
 
 
+@pytest.mark.pruned
 def test_prepare_runtime_sets_log_dir(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1048,6 +1108,7 @@ def test_prepare_runtime_sets_log_dir(tmp_path):
     assert RuntimeContext.GLOBAL_LOG_DIR is not None
 
 
+@pytest.mark.pruned
 def test_prepare_runtime_sets_figures_dir(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1056,6 +1117,7 @@ def test_prepare_runtime_sets_figures_dir(tmp_path):
     assert RuntimeContext.GLOBAL_FIGURES_DIR is not None
 
 
+@pytest.mark.pruned
 def test_prepare_runtime_sets_input_metadata(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1064,6 +1126,7 @@ def test_prepare_runtime_sets_input_metadata(tmp_path):
     assert RuntimeContext.INPUT_VAR_METADATA == cfg.train_loader.input_var_metadata
 
 
+@pytest.mark.pruned
 def test_prepare_runtime_sets_target_metadata(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1082,6 +1145,7 @@ def test_checkpoint_dir_exists_after_prepare(tmp_path):
     assert os.path.isdir(cfg.checkpoint_dir)
 
 
+@pytest.mark.pruned
 def test_log_dir_exists_after_prepare(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1092,6 +1156,7 @@ def test_log_dir_exists_after_prepare(tmp_path):
     assert os.path.isdir(cfg.log_dir)
 
 
+@pytest.mark.pruned
 def test_figures_dir_exists_after_prepare(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1102,6 +1167,7 @@ def test_figures_dir_exists_after_prepare(tmp_path):
     assert os.path.isdir(cfg.figures_dir)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_root_false(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1114,6 +1180,7 @@ def test_prepare_directory_root_false(tmp_path):
     cfg.prepare_directory(d)
 
 
+@pytest.mark.pruned
 def test_build_trainer_train_loader_len_used(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1124,6 +1191,7 @@ def test_build_trainer_train_loader_len_used(tmp_path):
     assert trainer == "trainer"
 
 
+@pytest.mark.pruned
 def test_build_trainer_output_shape_exists(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1132,6 +1200,7 @@ def test_build_trainer_output_shape_exists(tmp_path):
     assert loader.target_shape is not None
 
 
+@pytest.mark.pruned
 def test_build_trainer_input_shape_exists(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1140,6 +1209,7 @@ def test_build_trainer_input_shape_exists(tmp_path):
     assert loader.input_shape is not None
 
 
+@pytest.mark.pruned
 def test_build_trainer_added_features_none(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1148,6 +1218,7 @@ def test_build_trainer_added_features_none(tmp_path):
     assert loader.added_features_dim is None
 
 
+@pytest.mark.pruned
 def test_prepare_directory_with_existing_checkpoint_dir(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1160,6 +1231,7 @@ def test_prepare_directory_with_existing_checkpoint_dir(tmp_path):
     assert Path(cfg.checkpoint_dir).exists()
 
 
+@pytest.mark.pruned
 def test_prepare_directory_with_existing_logs_dir(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1172,6 +1244,7 @@ def test_prepare_directory_with_existing_logs_dir(tmp_path):
     assert Path(cfg.log_dir).exists()
 
 
+@pytest.mark.pruned
 def test_prepare_directory_with_existing_figures_dir(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1184,6 +1257,7 @@ def test_prepare_directory_with_existing_figures_dir(tmp_path):
     assert Path(cfg.figures_dir).exists()
 
 
+@pytest.mark.pruned
 def test_prepare_directory_copy_resume_false_branch(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1196,6 +1270,7 @@ def test_prepare_directory_copy_resume_false_branch(tmp_path):
     assert os.path.isdir(cfg.experiment_dir)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_copy_resume_true_branch(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"
@@ -1216,6 +1291,7 @@ def test_prepare_directory_copy_resume_true_branch(tmp_path):
     assert (dst / "x.txt").exists()
 
 
+@pytest.mark.pruned
 def test_prepare_directory_yaml_copy_again(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1229,6 +1305,7 @@ def test_prepare_directory_yaml_copy_again(tmp_path):
     assert (Path(cfg.experiment_dir) / "config.yaml").exists()
 
 
+@pytest.mark.pruned
 def test_prepare_directory_non_root_yaml_branch(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1244,24 +1321,28 @@ def test_prepare_directory_non_root_yaml_branch(tmp_path):
     cfg.prepare_directory(d, yaml_config=yaml_path)
 
 
+@pytest.mark.pruned
 def test_checkpoint_dir_type(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     assert isinstance(cfg.checkpoint_dir, str)
 
 
+@pytest.mark.pruned
 def test_log_dir_type(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     assert isinstance(cfg.log_dir, str)
 
 
+@pytest.mark.pruned
 def test_figures_dir_type(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     assert isinstance(cfg.figures_dir, str)
 
 
+@pytest.mark.pruned
 def test_prepare_runtime_variables_checkpoint(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1270,6 +1351,7 @@ def test_prepare_runtime_variables_checkpoint(tmp_path):
     assert RuntimeContext.GLOBAL_CHECKPOINT_DIR.endswith("checkpoints")
 
 
+@pytest.mark.pruned
 def test_prepare_runtime_variables_logs(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1278,6 +1360,7 @@ def test_prepare_runtime_variables_logs(tmp_path):
     assert RuntimeContext.GLOBAL_LOG_DIR.endswith("logs")
 
 
+@pytest.mark.pruned
 def test_prepare_runtime_variables_figures(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1286,6 +1369,7 @@ def test_prepare_runtime_variables_figures(tmp_path):
     assert RuntimeContext.GLOBAL_FIGURES_DIR.endswith("figures")
 
 
+@pytest.mark.pruned
 def test_prepare_runtime_variables_input_metadata(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1294,6 +1378,7 @@ def test_prepare_runtime_variables_input_metadata(tmp_path):
     assert RuntimeContext.INPUT_VAR_METADATA == cfg.train_loader.input_var_metadata
 
 
+@pytest.mark.pruned
 def test_prepare_runtime_variables_target_metadata(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1302,6 +1387,7 @@ def test_prepare_runtime_variables_target_metadata(tmp_path):
     assert RuntimeContext.TARGET_VAR_METADATA == cfg.train_loader.target_var_metadata
 
 
+@pytest.mark.pruned
 def test_set_random_seed_with_none(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1310,6 +1396,7 @@ def test_set_random_seed_with_none(tmp_path):
     cfg.set_random_seed(0)
 
 
+@pytest.mark.pruned
 def test_set_random_seed_with_integer(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1318,6 +1405,7 @@ def test_set_random_seed_with_integer(tmp_path):
     cfg.set_random_seed(0)
 
 
+@pytest.mark.pruned
 def test_build_train_loader_len(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1326,6 +1414,7 @@ def test_build_train_loader_len(tmp_path):
     assert len(loader) == 2
 
 
+@pytest.mark.pruned
 def test_build_train_loader_input_shape(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1334,6 +1423,7 @@ def test_build_train_loader_input_shape(tmp_path):
     assert loader.input_shape == (2,)
 
 
+@pytest.mark.pruned
 def test_build_train_loader_target_shape(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1342,6 +1432,7 @@ def test_build_train_loader_target_shape(tmp_path):
     assert loader.target_shape == (2,)
 
 
+@pytest.mark.pruned
 def test_build_train_loader_added_features_none(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1350,6 +1441,7 @@ def test_build_train_loader_added_features_none(tmp_path):
     assert loader.added_features_dim is None
 
 
+@pytest.mark.pruned
 def test_build_trainer_returns_trainer_again(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1360,6 +1452,7 @@ def test_build_trainer_returns_trainer_again(tmp_path):
     assert result == "trainer"
 
 
+@pytest.mark.pruned
 def test_build_trainer_logger_object(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1378,6 +1471,7 @@ def test_build_trainer_logger_object(tmp_path):
     assert logger.called is True
 
 
+@pytest.mark.pruned
 def test_build_trainer_no_logger_stdout(tmp_path, capsys):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1390,6 +1484,7 @@ def test_build_trainer_no_logger_stdout(tmp_path, capsys):
     assert "creating data loaders" in out.lower()
 
 
+@pytest.mark.pruned
 def test_build_trainer_module_build(tmp_path):
     called = {"x": False}
 
@@ -1409,6 +1504,7 @@ def test_build_trainer_module_build(tmp_path):
     assert called["x"]
 
 
+@pytest.mark.pruned
 def test_build_trainer_loss_build(tmp_path):
     called = {"x": False}
 
@@ -1428,6 +1524,7 @@ def test_build_trainer_loss_build(tmp_path):
     assert called["x"]
 
 
+@pytest.mark.pruned
 def test_build_trainer_optimizer_build(tmp_path):
     called = {"x": False}
 
@@ -1447,6 +1544,7 @@ def test_build_trainer_optimizer_build(tmp_path):
     assert called["x"]
 
 
+@pytest.mark.pruned
 def test_build_trainer_trainer_build(tmp_path):
     called = {"x": False}
 
@@ -1466,6 +1564,7 @@ def test_build_trainer_trainer_build(tmp_path):
     assert called["x"]
 
 
+@pytest.mark.pruned
 def test_module_to_executes(tmp_path):
     called = {"x": False}
 
@@ -1499,6 +1598,7 @@ def test_module_to_executes(tmp_path):
     assert called["x"]
 
 
+@pytest.mark.pruned
 def test_init_loss_function_executes(tmp_path):
     called = {"x": False}
 
@@ -1531,6 +1631,7 @@ def test_init_loss_function_executes(tmp_path):
     assert called["x"]
 
 
+@pytest.mark.pruned
 def test_build_trainer_distributed_false_again(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1542,6 +1643,7 @@ def test_build_trainer_distributed_false_again(tmp_path):
     assert result == "trainer"
 
 
+@pytest.mark.pruned
 def test_build_trainer_validation_loader_none(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1558,6 +1660,7 @@ def test_build_trainer_validation_loader_none(tmp_path):
     assert result == "trainer"
 
 
+@pytest.mark.pruned
 def test_build_trainer_validation_loader_present(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1574,6 +1677,7 @@ def test_build_trainer_validation_loader_present(tmp_path):
     assert result == "trainer"
 
 
+@pytest.mark.pruned
 def test_prepare_directory_copytree_branch_real(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"
@@ -1593,6 +1697,7 @@ def test_prepare_directory_copytree_branch_real(tmp_path):
     assert (dst / "hello.txt").exists()
 
 
+@pytest.mark.pruned
 def test_non_mlp_without_flatten_branch(tmp_path):
     loader = DummyTrainLoader()
 
@@ -1634,6 +1739,7 @@ def test_non_mlp_with_flatten_branch(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_generator_false_branch(tmp_path):
     module = DummyModuleSelector()
     module.GENERATOR = None
@@ -1650,6 +1756,7 @@ def test_generator_false_branch(tmp_path):
     assert cfg is not None
 
 
+@pytest.mark.pruned
 def test_build_trainer_distributed_real_completion(tmp_path, monkeypatch):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1674,6 +1781,7 @@ def test_build_trainer_distributed_real_completion(tmp_path, monkeypatch):
     assert result == "trainer"
 
 
+@pytest.mark.pruned
 def test_prepare_directory_root_false_with_copy_resume(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"
@@ -1696,6 +1804,7 @@ def test_prepare_directory_root_false_with_copy_resume(tmp_path):
     assert not dst.exists()
 
 
+@pytest.mark.pruned
 def test_prepare_directory_root_true_without_copy_resume(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1708,6 +1817,7 @@ def test_prepare_directory_root_true_without_copy_resume(tmp_path):
     assert Path(cfg.figures_dir).exists()
 
 
+@pytest.mark.pruned
 def test_prepare_runtime_variables_all_fields(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1757,6 +1867,7 @@ def test_resolve_resuming_copy_flag_false(tmp_path):
     assert cfg.copy_resume_dir_to_new_path is False
 
 
+@pytest.mark.pruned
 def test_logger_not_called_when_not_root(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1779,6 +1890,7 @@ def test_logger_not_called_when_not_root(tmp_path):
     assert logger.called is False
 
 
+@pytest.mark.pruned
 def test_prepare_directory_root_false_yaml_none(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1791,6 +1903,7 @@ def test_prepare_directory_root_false_yaml_none(tmp_path):
     cfg.prepare_directory(d, yaml_config=None)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_root_true_yaml_present(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1804,6 +1917,7 @@ def test_prepare_directory_root_true_yaml_present(tmp_path):
     assert (Path(cfg.experiment_dir) / "config.yaml").exists()
 
 
+@pytest.mark.pruned
 def test_prepare_directory_root_false_yaml_present(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1843,6 +1957,7 @@ def test_prepare_directory_copy_resume_root_false(tmp_path):
     assert not dst.exists()
 
 
+@pytest.mark.pruned
 def test_prepare_directory_copy_resume_root_true(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"
@@ -1862,6 +1977,7 @@ def test_prepare_directory_copy_resume_root_true(tmp_path):
     assert (dst / "a.txt").exists()
 
 
+@pytest.mark.pruned
 def test_prepare_directory_no_copy_root_true(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1874,6 +1990,7 @@ def test_prepare_directory_no_copy_root_true(tmp_path):
     assert Path(cfg.checkpoint_dir).exists()
 
 
+@pytest.mark.pruned
 def test_prepare_directory_no_copy_root_false(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1904,6 +2021,7 @@ def test_build_trainer_logger_none_non_root(tmp_path, capsys):
     assert out == ""
 
 
+@pytest.mark.pruned
 def test_build_trainer_logger_present_non_root(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1926,6 +2044,7 @@ def test_build_trainer_logger_present_non_root(tmp_path):
     assert logger.called is False
 
 
+@pytest.mark.pruned
 def test_build_trainer_logger_present_root(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1944,6 +2063,7 @@ def test_build_trainer_logger_present_root(tmp_path):
     assert logger.called is True
 
 
+@pytest.mark.pruned
 def test_build_trainer_distributed_true_full(tmp_path, monkeypatch):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1968,6 +2088,7 @@ def test_build_trainer_distributed_true_full(tmp_path, monkeypatch):
     assert result == "trainer"
 
 
+@pytest.mark.pruned
 def test_build_trainer_distributed_false_full(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1979,6 +2100,7 @@ def test_build_trainer_distributed_false_full(tmp_path):
     assert result == "trainer"
 
 
+@pytest.mark.pruned
 def test_build_trainer_num_output_dims_from_model(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1998,6 +2120,7 @@ def test_build_trainer_num_output_dims_from_model(tmp_path):
     assert called["value"] == 1
 
 
+@pytest.mark.pruned
 def test_build_trainer_num_output_dims_fallback_len(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -2048,6 +2171,7 @@ def test_read_config_missing_dir_branch(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_resolve_resuming_same_dir_flag(tmp_path):
     cfg = object.__new__(TrainConfig)
 
@@ -2064,6 +2188,7 @@ def test_resolve_resuming_same_dir_flag(tmp_path):
     assert cfg.copy_resume_dir_to_new_path is False
 
 
+@pytest.mark.pruned
 def test_resolve_resuming_different_dir_flag(tmp_path):
     cfg = object.__new__(TrainConfig)
 
@@ -2080,6 +2205,7 @@ def test_resolve_resuming_different_dir_flag(tmp_path):
     assert cfg.copy_resume_dir_to_new_path is True
 
 
+@pytest.mark.pruned
 def test_resolve_resuming_restores_resume_dir(tmp_path):
     cfg = object.__new__(TrainConfig)
 
@@ -2096,6 +2222,7 @@ def test_resolve_resuming_restores_resume_dir(tmp_path):
     assert cfg.resume_dir == tmp_path
 
 
+@pytest.mark.pruned
 def test_resolve_resuming_restores_experiment_dir(tmp_path):
     cfg = object.__new__(TrainConfig)
 
@@ -2112,6 +2239,7 @@ def test_resolve_resuming_restores_experiment_dir(tmp_path):
     assert isinstance(cfg.experiment_dir, Path)
 
 
+@pytest.mark.pruned
 def test_required_inputs_train_loader_missing(tmp_path):
     with pytest.raises(ValueError):
         TrainConfig(
@@ -2124,6 +2252,7 @@ def test_required_inputs_train_loader_missing(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_required_inputs_module_missing(tmp_path):
     with pytest.raises(ValueError):
         TrainConfig(
@@ -2148,6 +2277,7 @@ def test_required_inputs_loss_missing(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_required_inputs_trainer_missing(tmp_path):
     with pytest.raises(ValueError):
         TrainConfig(
@@ -2160,6 +2290,7 @@ def test_required_inputs_trainer_missing(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_generator_true_with_crps_valid(tmp_path):
     module = DummyModuleSelector()
     module.GENERATOR = True
@@ -2179,6 +2310,7 @@ def test_generator_true_with_crps_valid(tmp_path):
     assert cfg is not None
 
 
+@pytest.mark.pruned
 def test_generator_false_valid(tmp_path):
     module = DummyModuleSelector()
     module.GENERATOR = None
@@ -2195,6 +2327,7 @@ def test_generator_false_valid(tmp_path):
     assert cfg is not None
 
 
+@pytest.mark.pruned
 def test_prepare_directory_root_false_copy_resume_true_yaml_none(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"
@@ -2214,6 +2347,7 @@ def test_prepare_directory_root_false_copy_resume_true_yaml_none(tmp_path):
     cfg.prepare_directory(d, yaml_config=None)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_root_true_copy_resume_false_yaml_none(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -2226,6 +2360,7 @@ def test_prepare_directory_root_true_copy_resume_false_yaml_none(tmp_path):
     assert Path(cfg.figures_dir).exists()
 
 
+@pytest.mark.pruned
 def test_prepare_directory_root_true_copy_resume_false_yaml_present(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -2241,6 +2376,7 @@ def test_prepare_directory_root_true_copy_resume_false_yaml_present(tmp_path):
     assert (Path(cfg.experiment_dir) / "config.yaml").exists()
 
 
+@pytest.mark.pruned
 def test_prepare_directory_root_false_copy_resume_false_yaml_present(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -2281,6 +2417,7 @@ def test_prepare_directory_root_true_copy_resume_true_yaml_present(tmp_path):
     assert (dst / "config.yaml").exists()
 
 
+@pytest.mark.pruned
 def test_build_trainer_logger_none_non_root_branch(tmp_path, capsys):
     cfg = make_valid_config_with(tmp_path)
 
@@ -2297,6 +2434,7 @@ def test_build_trainer_logger_none_non_root_branch(tmp_path, capsys):
     assert captured.out == ""
 
 
+@pytest.mark.pruned
 def test_build_trainer_logger_present_non_root_branch(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -2319,6 +2457,7 @@ def test_build_trainer_logger_present_non_root_branch(tmp_path):
     assert logger.called is False
 
 
+@pytest.mark.pruned
 def test_build_trainer_logger_present_root_branch(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -2337,6 +2476,7 @@ def test_build_trainer_logger_present_root_branch(tmp_path):
     assert logger.called is True
 
 
+@pytest.mark.pruned
 def test_num_output_dims_equals_one_branch(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -2345,6 +2485,7 @@ def test_num_output_dims_equals_one_branch(tmp_path):
     assert cfg.module.NUM_OUTPUT_DIMS == 1
 
 
+@pytest.mark.pruned
 def test_num_output_dims_not_one_branch(tmp_path):
     loader = DummyTrainLoader()
 
@@ -2370,6 +2511,7 @@ def test_num_output_dims_not_one_branch(tmp_path):
     assert cfg.module.NUM_OUTPUT_DIMS == 2
 
 
+@pytest.mark.pruned
 def test_generator_branch_false(tmp_path):
     module = DummyModuleSelector()
 
@@ -2464,6 +2606,7 @@ def test_default_model_beta_warning(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_mlp_with_flattener_valid(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -2472,6 +2615,7 @@ def test_mlp_with_flattener_valid(tmp_path):
     assert cfg is not None
 
 
+@pytest.mark.pruned
 def test_non_mlp_without_flattener_valid_again(tmp_path):
     loader = DummyTrainLoader()
 
@@ -2496,6 +2640,7 @@ def test_non_mlp_without_flattener_valid_again(tmp_path):
     assert cfg is not None
 
 
+@pytest.mark.pruned
 def test_generator_false_edge(tmp_path):
     module = DummyModuleSelector()
     module.GENERATOR = None
@@ -2512,6 +2657,7 @@ def test_generator_false_edge(tmp_path):
     assert cfg is not None
 
 
+@pytest.mark.pruned
 def test_generator_true_edge(tmp_path):
     module = DummyModuleSelector()
     module.GENERATOR = True
@@ -2543,6 +2689,7 @@ def test_check_io_invalid_which():
         )
 
 
+@pytest.mark.pruned
 def test_check_io_1d_with_single_dim_no_flattener():
     _check_IO(
         {
@@ -2554,6 +2701,7 @@ def test_check_io_1d_with_single_dim_no_flattener():
     )
 
 
+@pytest.mark.pruned
 def test_check_io_multid_with_flattener_wrong_dims():
     with pytest.raises(
         RuntimeError,
@@ -2584,6 +2732,7 @@ def test_check_io_multid_with_flattener_correct_dims():
         )
 
 
+@pytest.mark.pruned
 def test_prepare_runtime_variables_string_conversion(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -2600,6 +2749,7 @@ def test_prepare_runtime_variables_string_conversion(tmp_path):
     )
 
 
+@pytest.mark.pruned
 def test_build_trainer_passes_max_epochs(tmp_path):
     received = {"epochs": None}
 
@@ -2619,6 +2769,7 @@ def test_build_trainer_passes_max_epochs(tmp_path):
     assert received["epochs"] == 1
 
 
+@pytest.mark.pruned
 def test_build_trainer_passes_validation_loader(tmp_path):
     received = {"loader": None}
 
@@ -2643,6 +2794,7 @@ def test_build_trainer_passes_validation_loader(tmp_path):
     assert received["loader"] == ["val"]
 
 
+@pytest.mark.pruned
 def test_build_trainer_passes_train_loader(tmp_path):
     received = {"loader": None}
 
@@ -2662,6 +2814,7 @@ def test_build_trainer_passes_train_loader(tmp_path):
     assert received["loader"] is not None
 
 
+@pytest.mark.pruned
 def test_build_trainer_passes_optimizer(tmp_path):
     received = {"optimizer": None}
 
@@ -2681,6 +2834,7 @@ def test_build_trainer_passes_optimizer(tmp_path):
     assert received["optimizer"] == "opt"
 
 
+@pytest.mark.pruned
 def test_build_trainer_passes_module(tmp_path):
     received = {"module": None}
 
@@ -2700,6 +2854,7 @@ def test_build_trainer_passes_module(tmp_path):
     assert received["module"] is not None
 
 
+@pytest.mark.pruned
 def test_build_trainer_uses_len_output_shape_fallback(tmp_path):
     class Module(DummyModuleSelector):
         NUM_OUTPUT_DIMS = 0
@@ -2723,6 +2878,7 @@ def test_build_trainer_uses_len_output_shape_fallback(tmp_path):
     assert captured["value"] == 1
 
 
+@pytest.mark.pruned
 def test_resolve_resuming_restores_requested_resume_dir(tmp_path):
     cfg = object.__new__(TrainConfig)
 
@@ -2739,6 +2895,7 @@ def test_resolve_resuming_restores_requested_resume_dir(tmp_path):
     assert cfg.resume_dir == tmp_path / "resume"
 
 
+@pytest.mark.pruned
 def test_prepare_directory_barrier_called(tmp_path):
     calls = {"n": 0}
 
@@ -2756,6 +2913,7 @@ def test_prepare_directory_barrier_called(tmp_path):
     assert calls["n"] == 2
 
 
+@pytest.mark.pruned
 def test_prepare_directory_barrier_called_with_yaml(tmp_path):
     calls = {"n": 0}
 

@@ -261,6 +261,7 @@ class TestTrainDatasetConfigObservationChecks:
 
         assert result is config
 
+    @pytest.mark.pruned
     def test_matching_spatial_coordinates_are_accepted(self):
         lat = make_coord(
             [
@@ -302,6 +303,7 @@ class TestTrainDatasetConfigObservationChecks:
         assert result is config
         assert caught == []
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dimension",
         [
@@ -425,12 +427,14 @@ class TestTrainDatasetConfigObservationChecks:
 
 
 class TestTrainDatasetConfigProperties:
+    @pytest.mark.pruned
     def test_effective_input_is_model(self):
         model = make_data_config()
         config = make_config(model=model)
 
         assert config.effective_input is model
 
+    @pytest.mark.pruned
     def test_dataset_operator_is_constructed(self):
         config = make_config()
         operator = object()
@@ -445,6 +449,7 @@ class TestTrainDatasetConfigProperties:
         assert result is operator
         constructor.assert_called_once_with(config)
 
+    @pytest.mark.pruned
     def test_common_time_without_observation(self):
         model = make_data_config(
             time_range=make_datetime_index(
@@ -553,6 +558,7 @@ class TestTrainDatasetConfigProperties:
 
 
 class TestTrainDatasetConfigDelegation:
+    @pytest.mark.pruned
     def test_fit_preprocessors_forwards_arguments(self):
         config = make_config()
         operator = Mock()
@@ -582,6 +588,7 @@ class TestTrainDatasetConfigDelegation:
             save_name="train",
         )
 
+    @pytest.mark.pruned
     def test_load_fitted_preprocessors_forwards_directory(self):
         config = make_config()
         operator = Mock()
@@ -597,6 +604,7 @@ class TestTrainDatasetConfigDelegation:
         assert result is None
         operator.load_fitted_preprocessors.assert_called_once_with("/tmp/preprocessors")
 
+    @pytest.mark.pruned
     def test_add_fitted_preprocessor_forwards_arguments(self):
         config = make_config()
         operator = Mock()
@@ -619,6 +627,7 @@ class TestTrainDatasetConfigDelegation:
             2,
         )
 
+    @pytest.mark.pruned
     def test_build_dataset(self):
         config = make_config()
         times = make_datetime_index(
@@ -654,6 +663,7 @@ class TestTrainDatasetConfigDelegation:
 
 
 class TestTrainDatasetBehaviorProperties:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "observation,expected",
         [
@@ -679,6 +689,7 @@ class TestTrainDatasetBehaviorProperties:
 
         assert dataset._autoencoding_model_data is expected
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         (
             "observation",
@@ -722,6 +733,7 @@ class TestTrainDatasetBehaviorProperties:
 
         assert dataset._load_model is expected
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         (
             "observation",
@@ -866,6 +878,7 @@ class TestObservationIndexes:
 
         assert result is None
 
+    @pytest.mark.pruned
     def test_computes_observation_indexes(self):
         dataset = make_dataset()
 
@@ -914,6 +927,7 @@ class TestObservationIndexes:
             ),
         )
 
+    @pytest.mark.pruned
     def test_reports_missing_observation_times(self):
         dataset = make_dataset()
 
@@ -1304,6 +1318,7 @@ class TestGetItem:
 
         return dataset
 
+    @pytest.mark.pruned
     def test_getitem_calls_all_index_helpers(self):
         dataset = self.make_getitem_dataset()
 
@@ -1337,6 +1352,7 @@ class TestGetItem:
             ),
         )
 
+    @pytest.mark.pruned
     def test_model_condition_replaces_input(self):
         dataset = self.make_getitem_dataset(
             observation=object(),
@@ -1355,6 +1371,7 @@ class TestGetItem:
             ),
         )
 
+    @pytest.mark.pruned
     def test_condition_is_concatenated_to_input(self):
         dataset = self.make_getitem_dataset(
             observation=object(),
@@ -1374,6 +1391,7 @@ class TestGetItem:
             ),
         )
 
+    @pytest.mark.pruned
     def test_returns_float32_tensors(self):
         dataset = self.make_getitem_dataset()
 
@@ -1382,6 +1400,7 @@ class TestGetItem:
         assert result["input"].dtype == torch.float32
         assert result["target"].dtype == torch.float32
 
+    @pytest.mark.pruned
     def test_time_features_are_called_with_final_input(self):
         features = np.asarray(
             [
@@ -1419,6 +1438,7 @@ class TestGetItem:
             ),
         )
 
+    @pytest.mark.pruned
     def test_none_time_features_are_preserved(self):
         dataset = self.make_getitem_dataset(
             time_features_result=None,
@@ -1428,6 +1448,7 @@ class TestGetItem:
 
         assert result["added_features"] is None
 
+    @pytest.mark.pruned
     def test_returns_datadict_without_metadata(self):
         dataset = self.make_getitem_dataset(return_metadata=False)
 

@@ -196,6 +196,7 @@ def crps_generative_context():
     )
 
 
+@pytest.mark.pruned
 def test_check_generator_structure_valid():
     data = torch.ones(4, 2, 1, 3, 4)
     target = torch.ones(2, 1, 3, 4)
@@ -203,6 +204,7 @@ def test_check_generator_structure_valid():
     assert _check_generator_structure(data, target) is True
 
 
+@pytest.mark.pruned
 def test_check_generator_structure_valid_generative():
     data = torch.ones(4, 3, 2, 1, 3, 4)
     target = torch.ones(3, 2, 1, 3, 4)
@@ -210,6 +212,7 @@ def test_check_generator_structure_valid_generative():
     assert _check_generator_structure(data, target) is True
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("data_shape", "target_shape"),
     [
@@ -233,6 +236,7 @@ def test_check_generator_structure_invalid(
         )
 
 
+@pytest.mark.pruned
 def test_mse_uses_default_generative_context():
     loss = make_mse()
 
@@ -240,6 +244,7 @@ def test_mse_uses_default_generative_context():
     assert loss.generative_context.generative_modeling is False
 
 
+@pytest.mark.pruned
 def test_mse_preserves_custom_generative_context():
     context = mse_full_generative_context()
 
@@ -252,6 +257,7 @@ def test_mse_preserves_custom_generative_context():
     assert loss.generative_context is context
 
 
+@pytest.mark.pruned
 def test_mse_registers_weights_as_buffer():
     loss = make_mse()
 
@@ -261,6 +267,7 @@ def test_mse_registers_weights_as_buffer():
     assert buffers["weights"] is loss.weights
 
 
+@pytest.mark.pruned
 def test_mse_nan_weights_are_zeroed():
     loss = WeightedMSE(w2d_nan(), num_output_dimensions=3)
 
@@ -269,12 +276,14 @@ def test_mse_nan_weights_are_zeroed():
     assert loss.weights[0, 0].item() == 1
 
 
+@pytest.mark.pruned
 def test_mse_channel_weights():
     loss = WeightedMSE(w_channels_1(), num_output_dimensions=3)
 
     assert loss(d(), t()) >= 0
 
 
+@pytest.mark.pruned
 def test_mse_two_channel_weights():
     loss = WeightedMSE(w_channels_2(), num_output_dimensions=3)
 
@@ -291,6 +300,7 @@ def test_mse_lowres_uses_avg_pool1d():
     assert loss.average_pool is F.avg_pool1d
 
 
+@pytest.mark.pruned
 def test_mse_lowres_uses_avg_pool2d():
     loss = WeightedMSE(
         w_channels_1(),
@@ -322,6 +332,7 @@ def test_mse_lowres_invalid_output_dimensions():
         )
 
 
+@pytest.mark.pruned
 def test_mse_lowres_without_channels_restores_weight_rank():
     loss = WeightedMSE(
         w2d(),
@@ -332,6 +343,7 @@ def test_mse_lowres_without_channels_restores_weight_rank():
     assert loss.weights.ndim == 3
 
 
+@pytest.mark.pruned
 def test_mse_lowres_with_channels_preserves_weight_rank():
     loss = WeightedMSE(
         w_channels_1(),
@@ -343,6 +355,7 @@ def test_mse_lowres_with_channels_preserves_weight_rank():
     assert loss.weights.shape[0] == 1
 
 
+@pytest.mark.pruned
 def test_mse_mean():
     result = make_mse()(
         d(),
@@ -352,6 +365,7 @@ def test_mse_mean():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_mse_mean_exact_value():
     result = make_mse()(
         torch.full_like(d(), 2.0),
@@ -374,6 +388,7 @@ def test_mse_sum():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_mse_sum_exact_value():
     result = WeightedMSE(
         w2d(),
@@ -387,6 +402,7 @@ def test_mse_sum_exact_value():
     assert result.item() == pytest.approx(12.0)
 
 
+@pytest.mark.pruned
 def test_mse_one_dimensional_output():
     result = WeightedMSE(
         w1d(),
@@ -399,6 +415,7 @@ def test_mse_one_dimensional_output():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_mse_shape_mismatch():
     with pytest.raises(
         RuntimeError,
@@ -422,6 +439,7 @@ def test_mse_invalid_reduction():
         )
 
 
+@pytest.mark.pruned
 def test_mse_uppercase_reduction_is_invalid():
     with pytest.raises(NotImplementedError):
         WeightedMSE(
@@ -434,6 +452,7 @@ def test_mse_uppercase_reduction_is_invalid():
         )
 
 
+@pytest.mark.pruned
 def test_mse_mask():
     result = make_mse()(
         d(),
@@ -444,6 +463,7 @@ def test_mse_mask():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_mse_partial_mask():
     target_mask = torch.ones_like(d())
     target_mask[:, :, 0, 0] = 0
@@ -457,6 +477,7 @@ def test_mse_partial_mask():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_mse_mask_excludes_values_from_mean():
     data = torch.ones_like(d())
     data[:, :, 0, 0] = 10.0
@@ -473,6 +494,7 @@ def test_mse_mask_excludes_values_from_mean():
     assert result.item() == pytest.approx(1.0)
 
 
+@pytest.mark.pruned
 def test_mse_zero_mask_produces_nan():
     result = make_mse()(
         d(),
@@ -483,6 +505,7 @@ def test_mse_zero_mask_produces_nan():
     assert torch.isnan(result)
 
 
+@pytest.mark.pruned
 def test_mse_mismatched_mask_shape_raises():
     bad_mask = torch.ones(2, 1, 4, 3)
 
@@ -494,6 +517,7 @@ def test_mse_mismatched_mask_shape_raises():
         )
 
 
+@pytest.mark.pruned
 def test_mse_aggregate_with_partial_mask():
     loss = make_mse()
 
@@ -509,6 +533,7 @@ def test_mse_aggregate_with_partial_mask():
     assert torch.isfinite(result)
 
 
+@pytest.mark.pruned
 def test_mse_lower_threshold_applies_hyperparameter():
     loss = WeightedMSE(
         scalar_weights(),
@@ -524,6 +549,7 @@ def test_mse_lower_threshold_applies_hyperparameter():
     assert result.item() == pytest.approx(12.0)
 
 
+@pytest.mark.pruned
 def test_mse_upper_threshold_applies_hyperparameter():
     loss = WeightedMSE(
         scalar_weights(),
@@ -539,6 +565,7 @@ def test_mse_upper_threshold_applies_hyperparameter():
     assert result.item() == pytest.approx(12.0)
 
 
+@pytest.mark.pruned
 def test_mse_no_threshold_trigger():
     loss = WeightedMSE(
         scalar_weights(),
@@ -555,6 +582,7 @@ def test_mse_no_threshold_trigger():
     assert result.item() == pytest.approx(0.0)
 
 
+@pytest.mark.pruned
 def test_mse_generator_averages_ensemble():
     loss = WeightedMSE(
         w2d(),
@@ -574,6 +602,7 @@ def test_mse_generator_averages_ensemble():
     assert result.item() == pytest.approx(1.0)
 
 
+@pytest.mark.pruned
 def test_mse_generator_valid_structure():
     result = WeightedMSE(
         w2d(),
@@ -634,6 +663,7 @@ def test_mse_downsample_static_tensor_restores_rank():
     assert result.ndim == tensor.ndim
 
 
+@pytest.mark.pruned
 def test_mse_downsample_uses_expected_stride(
     monkeypatch,
 ):
@@ -676,6 +706,7 @@ def test_mse_print(capsys):
     assert "MSE :" in capsys.readouterr().out
 
 
+@pytest.mark.pruned
 def test_crps_uses_default_generative_context():
     loss = WeightedCRPS(
         w2d(),
@@ -685,6 +716,7 @@ def test_crps_uses_default_generative_context():
     assert loss.generative_context.generative_modeling is False
 
 
+@pytest.mark.pruned
 def test_crps_preserves_custom_generative_context():
     context = crps_generative_context()
 
@@ -697,6 +729,7 @@ def test_crps_preserves_custom_generative_context():
     assert loss.generative_context is context
 
 
+@pytest.mark.pruned
 def test_crps_registers_weights_as_buffer():
     loss = WeightedCRPS(w2d(), num_output_dimensions=3)
 
@@ -706,6 +739,7 @@ def test_crps_registers_weights_as_buffer():
     assert buffers["weights"] is loss.weights
 
 
+@pytest.mark.pruned
 def test_crps_nan_weights_are_zeroed():
     loss = WeightedCRPS(w2d_nan(), num_output_dimensions=3)
 
@@ -734,6 +768,7 @@ def test_crps_lowres_invalid_output_dimensions():
         )
 
 
+@pytest.mark.pruned
 def test_crps_lowres_without_channels_restores_weight_rank():
     loss = WeightedCRPS(
         w2d(),
@@ -744,6 +779,7 @@ def test_crps_lowres_without_channels_restores_weight_rank():
     assert loss.weights.ndim == 2
 
 
+@pytest.mark.pruned
 def test_crps_lowres_with_channels_preserves_weight_rank():
     loss = WeightedCRPS(
         w_channels_1(),
@@ -787,6 +823,7 @@ def test_crps_single_sample():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_crps_single_sample_equals_absolute_error():
     loss = WeightedCRPS(
         w2d(),
@@ -805,6 +842,7 @@ def test_crps_single_sample_equals_absolute_error():
     assert result.item() == pytest.approx(2.0)
 
 
+@pytest.mark.pruned
 def test_crps_multiple_samples():
     result = WeightedCRPS(
         w2d(),
@@ -818,6 +856,7 @@ def test_crps_multiple_samples():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_crps_large_ensemble():
     result = WeightedCRPS(
         w2d(),
@@ -831,6 +870,7 @@ def test_crps_large_ensemble():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_crps_two_identical_samples_equals_absolute_error():
     loss = WeightedCRPS(
         w2d(),
@@ -849,6 +889,7 @@ def test_crps_two_identical_samples_equals_absolute_error():
     assert result.item() == pytest.approx(2.0)
 
 
+@pytest.mark.pruned
 def test_crps_two_sample_exact_scalar_case():
     loss = WeightedCRPS(
         scalar_weights(),
@@ -868,6 +909,7 @@ def test_crps_two_sample_exact_scalar_case():
     assert result.item() == pytest.approx(0.5)
 
 
+@pytest.mark.pruned
 def test_crps_channel_weights():
     result = WeightedCRPS(
         w_channels_1(),
@@ -881,6 +923,7 @@ def test_crps_channel_weights():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_crps_two_channel_weights():
     result = WeightedCRPS(
         w_channels_2(),
@@ -894,6 +937,7 @@ def test_crps_two_channel_weights():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_crps_generator_structure_failure():
     loss = WeightedCRPS(
         w2d(),
@@ -908,6 +952,7 @@ def test_crps_generator_structure_failure():
         )
 
 
+@pytest.mark.pruned
 def test_crps_mask():
     result = WeightedCRPS(
         w2d(),
@@ -922,6 +967,7 @@ def test_crps_mask():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_crps_partial_mask():
     target_mask = torch.ones_like(t())
     target_mask[:, :, 0, 0] = 0
@@ -939,6 +985,7 @@ def test_crps_partial_mask():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_crps_zero_mask_produces_nan():
     result = WeightedCRPS(
         w2d(),
@@ -953,6 +1000,7 @@ def test_crps_zero_mask_produces_nan():
     assert torch.isnan(result)
 
 
+@pytest.mark.pruned
 def test_crps_mask_shape_mismatch_raises():
     bad_mask = torch.randn(2, 1, 3, 2)
 
@@ -982,6 +1030,7 @@ def test_crps_sum_reduction():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_crps_uppercase_mean_reduction():
     result = WeightedCRPS(
         w2d(),
@@ -996,6 +1045,7 @@ def test_crps_uppercase_mean_reduction():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_crps_uppercase_sum_reduction():
     result = WeightedCRPS(
         w2d(),
@@ -1023,6 +1073,7 @@ def test_crps_invalid_reduction():
         )
 
 
+@pytest.mark.pruned
 def test_crps_aggregate_mask_none_and_present():
     loss = WeightedCRPS(
         w2d(),
@@ -1113,6 +1164,7 @@ def test_crps_print(capsys):
     assert "CRPS :" in capsys.readouterr().out
 
 
+@pytest.mark.pruned
 def test_frobenius_uses_default_generative_context():
     loss = make_frobenius()
 
@@ -1120,6 +1172,7 @@ def test_frobenius_uses_default_generative_context():
     assert loss.generative_context.generative_modeling is False
 
 
+@pytest.mark.pruned
 def test_frobenius_preserves_custom_context():
     context = make_context(
         generator=True,
@@ -1135,6 +1188,7 @@ def test_frobenius_preserves_custom_context():
     assert loss.generative_context is context
 
 
+@pytest.mark.pruned
 def test_frobenius_output_size_from_weights():
     loss = Frobenius_norm(
         w2d(),
@@ -1144,6 +1198,7 @@ def test_frobenius_output_size_from_weights():
     assert loss.output_size == 12
 
 
+@pytest.mark.pruned
 def test_frobenius_mean_aggregate_uses_default_output_size():
     loss = Frobenius_norm(
         w2d(),
@@ -1160,6 +1215,7 @@ def test_frobenius_mean_aggregate_uses_default_output_size():
     )
 
 
+@pytest.mark.pruned
 def test_frobenius_mean_aggregate_with_explicit_output_size():
     loss = Frobenius_norm(
         w2d(),
@@ -1205,6 +1261,7 @@ def test_frobenius_unknown_reduction_returns_unmodified_loss():
         )
 
 
+@pytest.mark.pruned
 def test_frobenius_spatial():
     result = Frobenius_norm(
         w2d(),
@@ -1218,6 +1275,7 @@ def test_frobenius_spatial():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_frobenius_spatial_multiple_channels():
     result = Frobenius_norm(
         w2d(),
@@ -1231,6 +1289,7 @@ def test_frobenius_spatial_multiple_channels():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_frobenius_channel():
     result = Frobenius_norm(
         w2d(),
@@ -1244,6 +1303,7 @@ def test_frobenius_channel():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_frobenius_sum():
     result = Frobenius_norm(
         w2d(),
@@ -1257,6 +1317,7 @@ def test_frobenius_sum():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_frobenius_uppercase_mean():
     result = Frobenius_norm(
         w2d(),
@@ -1270,6 +1331,7 @@ def test_frobenius_uppercase_mean():
     assert result >= 0
 
 
+@pytest.mark.pruned
 def test_frobenius_identical_inputs_produce_zero():
     data = torch.randn(5, 2, 3, 4)
 
@@ -1288,6 +1350,7 @@ def test_frobenius_identical_inputs_produce_zero():
     )
 
 
+@pytest.mark.pruned
 def test_frobenius_shape_mismatch():
     with pytest.raises(AssertionError):
         make_frobenius()(
@@ -1323,6 +1386,7 @@ def test_frobenius_generator_averages_ensemble():
     )
 
 
+@pytest.mark.pruned
 def test_frobenius_generator_rejects_invalid_structure():
     loss = Frobenius_norm(
         w2d(),
@@ -1337,6 +1401,7 @@ def test_frobenius_generator_rejects_invalid_structure():
         )
 
 
+@pytest.mark.pruned
 def test_frobenius_generative_spatial():
     context = make_context(generative_modeling=True)
 
@@ -1375,6 +1440,7 @@ def test_frobenius_generative_channel():
     assert torch.isfinite(result)
 
 
+@pytest.mark.pruned
 def test_frobenius_generator_and_generative():
     context = make_context(
         generator=True,
