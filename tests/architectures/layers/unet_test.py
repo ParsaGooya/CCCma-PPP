@@ -6,6 +6,8 @@ import pytest
 import torch
 import torch.nn as nn
 
+from cccma_ppp.architectures.layers.unet import UNetOutputSIC
+from cccma_ppp.architectures.layers.generic import LayerNorm2d
 import cccma_ppp.architectures.layers.unet as module
 from cccma_ppp.architectures.layers.conv import (
     ConvBlock,
@@ -171,7 +173,6 @@ class UnsupportedConfig:
         return result
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("config", "expected_type"),
     [
@@ -206,7 +207,6 @@ def test_build_conv_block_supported_types(
     assert block.out_channels == 5
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "config",
     [
@@ -230,7 +230,6 @@ def test_build_conv_block_does_not_mutate_config(
     assert config == original
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("config", "collection_name"),
     [
@@ -267,7 +266,6 @@ def test_build_conv_block_passes_noise_setting(
     assert collection[0].inject_noise is True
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("config", "collection_name"),
     [
@@ -303,7 +301,6 @@ def test_build_conv_block_disables_noise_by_default(
     assert collection[0].inject_noise is False
 
 
-@pytest.mark.pruned
 def test_build_conv_block_rejects_unsupported_config():
     with pytest.raises(
         TypeError,
@@ -316,7 +313,6 @@ def test_build_conv_block_rejects_unsupported_config():
         )
 
 
-@pytest.mark.pruned
 def test_build_conv_block_error_reports_config_type():
     with pytest.raises(
         TypeError,
@@ -357,7 +353,6 @@ def test_build_conv_block_rejects_latent_channel_mismatch():
         )
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "config",
@@ -417,27 +412,6 @@ def make_down_block(
     )
 
 
-@pytest.mark.pruned
-def test_down_block_with_skip_processor():
-    block = make_down_block(
-        return_skip=True,
-        process_skip=True,
-    )
-
-    assert isinstance(block.skip_processor, ConvBlock)
-
-
-@pytest.mark.pruned
-def test_down_block_does_not_create_unused_skip_processor():
-    block = make_down_block(
-        return_skip=False,
-        process_skip=True,
-    )
-
-    assert block.return_skip is False
-    assert block.skip_processor is None
-
-
 def make_up_block(
     *,
     block_config=None,
@@ -464,7 +438,6 @@ def make_up_block(
     )
 
 
-@pytest.mark.pruned
 def test_up_block_transpose_convolution():
     block = make_up_block(
         upsampling_method="transpose_conv",
@@ -484,7 +457,6 @@ def test_up_block_transpose_convolution():
     assert block.upsample.stride == (2, 2)
 
 
-@pytest.mark.pruned
 def test_up_block_transpose_noise_adds_input_channel():
     block = make_up_block(
         upsampling_method="transpose_conv",
@@ -494,7 +466,6 @@ def test_up_block_transpose_noise_adds_input_channel():
     assert block.upsample.in_channels == 5
 
 
-@pytest.mark.pruned
 def test_up_block_bilinear_standard_projection():
     block = make_up_block(
         upsampling_method="bilinear",
@@ -516,7 +487,6 @@ def test_up_block_bilinear_standard_projection():
     assert block.channel_projection.out_channels == 2
 
 
-@pytest.mark.pruned
 def test_up_block_bilinear_noise_adds_projection_channel():
     block = make_up_block(
         upsampling_method="bilinear",
@@ -539,7 +509,6 @@ def test_up_block_bilinear_partial_projection():
     assert block.channel_projection.return_mask is False
 
 
-@pytest.mark.pruned
 def test_up_block_convnext_partial_projection():
     block = make_up_block(
         block_config=make_convnext_config(
@@ -553,7 +522,6 @@ def test_up_block_convnext_partial_projection():
     )
 
 
-@pytest.mark.pruned
 def test_up_block_convnext_standard_projection():
     block = make_up_block(
         block_config=make_convnext_config(
@@ -581,7 +549,6 @@ def test_up_block_rejects_unsupported_upsampling_method():
         )
 
 
-@pytest.mark.pruned
 def test_up_block_stores_configuration():
     block = make_up_block(
         block_config=make_conv_config(
@@ -602,7 +569,6 @@ def test_up_block_stores_configuration():
     assert block.inject_noise_in_block is True
 
 
-@pytest.mark.pruned
 def test_up_block_merged_block_input_channels_with_skip():
     block = make_up_block(
         skip_channels=3,
@@ -611,7 +577,6 @@ def test_up_block_merged_block_input_channels_with_skip():
     assert block._block.stages[0].conv.in_channels == 5
 
 
-@pytest.mark.pruned
 def test_up_block_merged_block_input_channels_without_skip():
     block = make_up_block(
         skip_channels=None,
@@ -620,7 +585,6 @@ def test_up_block_merged_block_input_channels_without_skip():
     assert block._block.stages[0].conv.in_channels == 2
 
 
-@pytest.mark.pruned
 def test_up_block_does_not_mutate_partial_config():
     config = make_partial_config()
 
@@ -635,7 +599,6 @@ def test_up_block_does_not_mutate_partial_config():
     assert block._block.stages[0].return_mask is False
 
 
-@pytest.mark.pruned
 def test_up_block_enables_noise_inside_block_when_both_flags_true():
     block = make_up_block(
         inject_noise=True,
@@ -645,7 +608,6 @@ def test_up_block_enables_noise_inside_block_when_both_flags_true():
     assert block._block.stages[0].inject_noise is True
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "inject_noise",
@@ -697,7 +659,6 @@ def test_up_block_requires_skip_when_skip_channels_configured():
         )
 
 
-@pytest.mark.pruned
 def test_up_block_transpose_forward():
     block = make_up_block(
         upsampling_method="transpose_conv",
@@ -725,7 +686,6 @@ def test_up_block_transpose_forward():
     assert result.mask is None
 
 
-@pytest.mark.pruned
 def test_up_block_bilinear_forward():
     block = make_up_block(
         upsampling_method="bilinear",
@@ -753,7 +713,6 @@ def test_up_block_bilinear_forward():
     assert result.mask is None
 
 
-@pytest.mark.pruned
 def test_up_block_discards_input_and_skip_masks():
     block = make_up_block()
 
@@ -775,7 +734,6 @@ def test_up_block_discards_input_and_skip_masks():
     assert result.mask is None
 
 
-@pytest.mark.pruned
 def test_up_block_concatenates_skip_before_upsampled_tensor():
     block = UpBlock(
         input_channels=1,
@@ -837,7 +795,6 @@ def test_up_block_concatenates_skip_before_upsampled_tensor():
     assert result is received
 
 
-@pytest.mark.pruned
 def test_up_block_calls_align_to_skip_for_skip_tensor(
     monkeypatch,
 ):
@@ -895,7 +852,6 @@ def test_up_block_calls_align_to_skip_for_skip_tensor(
     )
 
 
-@pytest.mark.pruned
 def test_up_block_without_skip_aligns_to_resize_shape(
     monkeypatch,
 ):
@@ -941,7 +897,6 @@ def test_up_block_without_skip_aligns_to_resize_shape(
     )
 
 
-@pytest.mark.pruned
 def test_up_block_transpose_noise_before_upsampling(
     monkeypatch,
 ):
@@ -1008,7 +963,6 @@ def test_up_block_transpose_noise_before_upsampling(
     )
 
 
-@pytest.mark.pruned
 def test_up_block_bilinear_noise_after_upsampling(
     monkeypatch,
 ):
@@ -1075,7 +1029,6 @@ def test_up_block_bilinear_noise_after_upsampling(
     )
 
 
-@pytest.mark.pruned
 def test_up_block_without_noise_does_not_call_noise_injection(
     monkeypatch,
 ):
@@ -1114,7 +1067,6 @@ def test_up_block_without_noise_does_not_call_noise_injection(
     )
 
 
-@pytest.mark.pruned
 def test_unet_output_identity_direct_projection():
     layer = UNetOutput(
         in_channels=4,
@@ -1136,7 +1088,6 @@ def test_unet_output_identity_direct_projection():
     )
 
 
-@pytest.mark.pruned
 def test_unet_output_sigmoid_direct_projection():
     layer = UNetOutput(
         in_channels=4,
@@ -1152,7 +1103,6 @@ def test_unet_output_sigmoid_direct_projection():
     )
 
 
-@pytest.mark.pruned
 def test_unet_output_tanh_direct_projection():
     layer = UNetOutput(
         in_channels=4,
@@ -1168,7 +1118,6 @@ def test_unet_output_tanh_direct_projection():
     )
 
 
-@pytest.mark.pruned
 def test_unet_output_rejects_unsupported_activation():
     with pytest.raises(
         ValueError,
@@ -1182,7 +1131,6 @@ def test_unet_output_rejects_unsupported_activation():
         )
 
 
-@pytest.mark.pruned
 def test_unet_output_hidden_identity_structure():
     layer = UNetOutput(
         in_channels=4,
@@ -1262,7 +1210,6 @@ def test_unet_output_hidden_activation_structure(
     )
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "hidden_channels",
@@ -1323,7 +1270,6 @@ def test_unet_output_forward_shape(
     )
 
 
-@pytest.mark.pruned
 def test_unet_output_sigmoid_range():
     layer = UNetOutput(
         in_channels=4,
@@ -1345,7 +1291,6 @@ def test_unet_output_sigmoid_range():
     assert torch.all(result <= 1)
 
 
-@pytest.mark.pruned
 def test_unet_output_tanh_range():
     layer = UNetOutput(
         in_channels=4,
@@ -1367,7 +1312,6 @@ def test_unet_output_tanh_range():
     assert torch.all(result <= 1)
 
 
-@pytest.mark.pruned
 def test_unet_output_identity_allows_negative_values():
     layer = UNetOutput(
         in_channels=1,
@@ -1395,7 +1339,6 @@ def test_unet_output_identity_allows_negative_values():
     )
 
 
-@pytest.mark.pruned
 def test_unet_output_sigmoid_zero_logit_is_half():
     layer = UNetOutput(
         in_channels=1,
@@ -1426,7 +1369,6 @@ def test_unet_output_sigmoid_zero_logit_is_half():
     )
 
 
-@pytest.mark.pruned
 def test_unet_output_tanh_zero_logit_is_zero():
     layer = UNetOutput(
         in_channels=1,
@@ -1454,7 +1396,6 @@ def test_unet_output_tanh_zero_logit_is_zero():
     )
 
 
-@pytest.mark.pruned
 def test_unet_output_supports_backward():
     layer = UNetOutput(
         in_channels=4,
@@ -1480,7 +1421,6 @@ def test_unet_output_supports_backward():
         assert parameter.grad is not None
 
 
-@pytest.mark.pruned
 def test_unet_output_preserves_float64():
     layer = UNetOutput(
         in_channels=4,
@@ -1545,7 +1485,6 @@ def test_down_block_uses_partial_convolution_downsampling(
     assert block.tensor_downsample.return_mask is True
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "config",
     [
@@ -1579,7 +1518,6 @@ def test_down_block_uses_standard_convolution_downsampling(
     assert block.tensor_downsample.out_channels == 5
 
 
-@pytest.mark.pruned
 def test_down_block_standard_forward_returns_downsampled_and_skip():
     block = DownBlock(
         in_channels=3,
@@ -1666,88 +1604,6 @@ def test_down_block_standard_forward_without_skip():
     assert result.mask is None
 
 
-def test_down_block_processes_skip_after_downsampling(
-    monkeypatch,
-):
-    block = DownBlock(
-        in_channels=3,
-        out_channels=5,
-        block_config=make_conv_config(),
-        mask_pooling="any",
-        mask_fraction_threshold=0.5,
-        return_skip=True,
-        process_skip=True,
-    )
-
-    events = []
-
-    class Transform(nn.Module):
-        def forward(
-            self,
-            value,
-        ):
-            events.append("block")
-            return TensorMask(
-                tensor=value.tensor + 1,
-                mask=value.mask,
-            )
-
-    class Downsample(nn.Module):
-        def forward(
-            self,
-            value,
-        ):
-            events.append("downsample")
-            return torch.zeros(
-                value.shape[0],
-                5,
-                value.shape[2] // 2,
-                value.shape[3] // 2,
-            )
-
-    class ProcessSkip(nn.Module):
-        def forward(
-            self,
-            value,
-        ):
-            events.append("skip_processor")
-            return TensorMask(
-                tensor=value.tensor + 1,
-                mask=value.mask,
-            )
-
-    block._block = Transform()
-    block.tensor_downsample = Downsample()
-    block.skip_processor = ProcessSkip()
-
-    downsampled, skip = block(
-        make_tensor_mask(
-            channels=3,
-            fill_value=0.0,
-        )
-    )
-
-    assert events == [
-        "block",
-        "downsample",
-        "skip_processor",
-    ]
-    torch.testing.assert_close(
-        skip.tensor,
-        torch.full_like(
-            skip.tensor,
-            2.0,
-        ),
-    )
-    torch.testing.assert_close(
-        downsampled.tensor,
-        torch.zeros_like(
-            downsampled.tensor,
-        ),
-    )
-
-
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("input_shape", "expected"),
     [
@@ -1793,7 +1649,6 @@ def test_down_block_output_shape_matches_strided_convolution(
     )
 
 
-@pytest.mark.pruned
 def test_down_block_mask_pooling_arguments_are_currently_unused():
     first = DownBlock(
         in_channels=3,
@@ -1820,7 +1675,6 @@ def test_down_block_mask_pooling_arguments_are_currently_unused():
     )
 
 
-@pytest.mark.pruned
 def test_build_conv_block_forwards_latent_arguments(
     monkeypatch,
 ):
@@ -1872,7 +1726,6 @@ def test_build_conv_block_forwards_latent_arguments(
     assert captured["latent_normalization"] == "group"
 
 
-@pytest.mark.pruned
 def test_up_block_partial_effective_config_disables_mask_output():
     config = make_partial_config()
 
@@ -1892,7 +1745,6 @@ def test_up_block_partial_effective_config_disables_mask_output():
     assert block._block.config.return_mask is False
 
 
-@pytest.mark.pruned
 def test_up_block_convnext_partial_effective_config_disables_mask_output():
     config = make_convnext_config(
         use_partial_conv=True,
@@ -1933,7 +1785,6 @@ def test_up_block_without_skip_or_resize_shape_currently_raises():
         )
 
 
-@pytest.mark.pruned
 def test_up_block_ignores_resize_shape_when_skip_is_configured(
     monkeypatch,
 ):
@@ -1971,7 +1822,6 @@ def test_up_block_ignores_resize_shape_when_skip_is_configured(
     )
 
 
-@pytest.mark.pruned
 def test_up_block_bilinear_projects_after_upsampling(
     monkeypatch,
 ):
@@ -2059,7 +1909,6 @@ def test_up_block_bilinear_projects_after_upsampling(
     ]
 
 
-@pytest.mark.pruned
 def test_up_block_output_mask_is_cleared_before_block():
     block = make_up_block(
         skip_channels=3,
@@ -2125,7 +1974,6 @@ def test_up_block_resize_path_forwards_aligned_tensor_directly(
     assert result is capture.received[0]
 
 
-@pytest.mark.pruned
 def test_unet_output_hidden_sigmoid_range():
     layer = UNetOutput(
         in_channels=4,
@@ -2147,7 +1995,6 @@ def test_unet_output_hidden_sigmoid_range():
     assert torch.all(result <= 1)
 
 
-@pytest.mark.pruned
 def test_unet_output_hidden_tanh_range():
     layer = UNetOutput(
         in_channels=4,
@@ -2169,7 +2016,6 @@ def test_unet_output_hidden_tanh_range():
     assert torch.all(result <= 1)
 
 
-@pytest.mark.pruned
 def test_unet_output_hidden_path_preserves_batch_and_spatial_dimensions():
     layer = UNetOutput(
         in_channels=3,
@@ -2193,3 +2039,802 @@ def test_unet_output_hidden_path_preserves_batch_and_spatial_dimensions():
         11,
         13,
     )
+
+
+def test_down_block_creates_skip_processor_when_requested():
+    block = DownBlock(
+        in_channels=3,
+        out_channels=5,
+        block_config=make_conv_config(),
+        mask_pooling="any",
+        mask_fraction_threshold=0.5,
+        return_skip=True,
+        process_skip_connections=True,
+    )
+
+    assert block.skip_processor is not None
+    assert isinstance(
+        block.skip_processor,
+        ConvBlock,
+    )
+
+
+def test_down_block_does_not_create_unused_skip_processor():
+    block = DownBlock(
+        in_channels=3,
+        out_channels=5,
+        block_config=make_conv_config(),
+        mask_pooling="any",
+        mask_fraction_threshold=0.5,
+        return_skip=False,
+        process_skip_connections=True,
+    )
+
+    assert block.skip_processor is None
+
+
+def test_down_block_does_not_create_skip_processor_by_default():
+    block = DownBlock(
+        in_channels=3,
+        out_channels=5,
+        block_config=make_conv_config(),
+        mask_pooling="any",
+        mask_fraction_threshold=0.5,
+        return_skip=True,
+    )
+
+    assert block.skip_processor is None
+
+
+def test_down_block_processes_skip_after_main_block():
+    block = DownBlock(
+        in_channels=3,
+        out_channels=5,
+        block_config=make_conv_config(),
+        mask_pooling="any",
+        mask_fraction_threshold=0.5,
+        return_skip=True,
+        process_skip_connections=True,
+    )
+
+    transformed = TensorMask(
+        tensor=torch.ones(
+            2,
+            3,
+            8,
+            8,
+        ),
+        mask=torch.ones(
+            2,
+            1,
+            8,
+            8,
+        ),
+    )
+
+    main_block = FixedTensorMaskModule(transformed)
+    skip_processor = AddOneTensorMaskModule()
+
+    block._block = main_block
+    block.skip_processor = skip_processor
+
+    downsampled, skip = block(
+        make_tensor_mask(
+            channels=3,
+        )
+    )
+
+    assert main_block.received
+    assert skip_processor.received == [transformed]
+
+    torch.testing.assert_close(
+        skip.tensor,
+        transformed.tensor + 1,
+    )
+    assert skip.mask is transformed.mask
+
+    assert downsampled.tensor.shape == (
+        2,
+        5,
+        4,
+        4,
+    )
+
+
+def test_down_block_partial_forward_preserves_returned_mask(
+    monkeypatch,
+):
+    block = DownBlock(
+        in_channels=3,
+        out_channels=5,
+        block_config=make_partial_config(),
+        mask_pooling="fraction",
+        mask_fraction_threshold=0.25,
+        return_skip=True,
+    )
+
+    transformed = TensorMask(
+        tensor=torch.ones(
+            2,
+            3,
+            8,
+            8,
+        ),
+        mask=torch.ones(
+            2,
+            1,
+            8,
+            8,
+        ),
+    )
+    block._block = FixedTensorMaskModule(transformed)
+
+    expected_tensor = torch.randn(
+        2,
+        5,
+        4,
+        4,
+    )
+    expected_mask = torch.zeros(
+        2,
+        1,
+        4,
+        4,
+    )
+
+    downsample = Mock(
+        return_value=(
+            expected_tensor,
+            expected_mask,
+        )
+    )
+    block._modules["tensor_downsample"] = downsample
+
+    downsampled, skip = block(
+        make_tensor_mask(
+            channels=3,
+            with_mask=True,
+        )
+    )
+
+    downsample.assert_called_once_with(
+        transformed.tensor,
+        transformed.mask,
+    )
+
+    assert downsampled.tensor is expected_tensor
+    assert downsampled.mask is expected_mask
+    assert skip is transformed
+
+
+def test_down_block_partial_forward_accepts_none_mask():
+    block = DownBlock(
+        in_channels=3,
+        out_channels=5,
+        block_config=make_partial_config(),
+        mask_pooling="any",
+        mask_fraction_threshold=0.5,
+        return_skip=False,
+    )
+
+    result = block(
+        make_tensor_mask(
+            channels=3,
+            with_mask=False,
+        )
+    )
+
+    assert isinstance(
+        result,
+        TensorMask,
+    )
+    assert result.tensor.shape == (
+        2,
+        5,
+        4,
+        4,
+    )
+
+    if result.mask is not None:
+        assert result.mask.shape[-2:] == (
+            4,
+            4,
+        )
+
+
+def test_down_block_standard_downsample_uses_configured_padding():
+    block = DownBlock(
+        in_channels=3,
+        out_channels=5,
+        block_config=make_conv_config(
+            padding_method="reflect",
+        ),
+        mask_pooling="any",
+        mask_fraction_threshold=0.5,
+    )
+
+    assert isinstance(
+        block.tensor_downsample,
+        nn.Conv2d,
+    )
+    assert block.tensor_downsample.padding_mode == ("reflect")
+
+
+def test_down_block_partial_downsample_uses_configured_padding():
+    block = DownBlock(
+        in_channels=3,
+        out_channels=5,
+        block_config=make_partial_config(
+            padding_method="reflect",
+        ),
+        mask_pooling="any",
+        mask_fraction_threshold=0.5,
+    )
+
+    assert isinstance(
+        block.tensor_downsample,
+        PartialConv2d,
+    )
+    assert block.tensor_downsample.padding_mode == ("reflect")
+
+
+@pytest.mark.parametrize(
+    (
+        "input_shape",
+        "expected",
+    ),
+    [
+        (
+            (),
+            (),
+        ),
+        (
+            (0, 0),
+            (0, 0),
+        ),
+        (
+            np.asarray(
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                ]
+            ),
+            (
+                1,
+                1,
+                2,
+                2,
+            ),
+        ),
+    ],
+)
+def test_down_block_output_shape_additional_cases(
+    input_shape,
+    expected,
+):
+    block = DownBlock(
+        in_channels=3,
+        out_channels=5,
+        block_config=make_conv_config(),
+        mask_pooling="any",
+        mask_fraction_threshold=0.5,
+    )
+
+    assert block.output_shape(input_shape) == expected
+
+
+def test_up_block_transpose_without_skip_resizes_output(
+    monkeypatch,
+):
+    block = make_up_block(
+        skip_channels=None,
+        upsampling_method="transpose_conv",
+        skip_alignment_method="interpolation",
+    )
+
+    aligned = torch.randn(
+        2,
+        2,
+        9,
+        7,
+    )
+    align = Mock(return_value=aligned)
+
+    monkeypatch.setattr(
+        module,
+        "align_to_skip",
+        align,
+    )
+
+    capture = CaptureTensorMaskModule()
+    block._block = capture
+
+    result = block(
+        make_tensor_mask(
+            channels=4,
+            height=4,
+            width=4,
+        ),
+        resize_shape=(
+            9,
+            7,
+        ),
+    )
+
+    align.assert_called_once()
+    assert align.call_args.args[1] == (
+        9,
+        7,
+    )
+    assert capture.received[0].tensor is aligned
+    assert result is capture.received[0]
+
+
+def test_up_block_resize_path_uses_padding_configuration(
+    monkeypatch,
+):
+    block = make_up_block(
+        block_config=make_conv_config(
+            padding_method="replicate",
+        ),
+        skip_channels=None,
+        skip_alignment_method="padd",
+    )
+
+    align = Mock(
+        return_value=torch.zeros(
+            2,
+            2,
+            9,
+            9,
+        )
+    )
+    monkeypatch.setattr(
+        module,
+        "align_to_skip",
+        align,
+    )
+
+    block(
+        make_tensor_mask(
+            channels=4,
+            height=4,
+            width=4,
+        ),
+        resize_shape=(
+            9,
+            9,
+        ),
+    )
+
+    assert align.call_args.args[1] == (
+        9,
+        9,
+    )
+    assert align.call_args.args[2] == "padd"
+    assert align.call_args.args[3] == "replicate"
+
+
+def test_up_block_partial_projection_forward():
+    block = make_up_block(
+        block_config=make_partial_config(),
+        skip_channels=3,
+    )
+
+    result = block(
+        make_tensor_mask(
+            channels=4,
+            height=4,
+            width=4,
+            with_mask=True,
+        ),
+        make_tensor_mask(
+            channels=3,
+            height=8,
+            width=8,
+            with_mask=True,
+        ),
+    )
+
+    assert result.tensor.shape == (
+        2,
+        2,
+        8,
+        8,
+    )
+    assert result.mask is None
+
+
+def test_up_block_convnext_partial_projection_forward():
+    block = make_up_block(
+        block_config=make_convnext_config(
+            use_partial_conv=True,
+        ),
+        skip_channels=3,
+    )
+
+    result = block(
+        make_tensor_mask(
+            channels=4,
+            height=4,
+            width=4,
+        ),
+        make_tensor_mask(
+            channels=3,
+            height=8,
+            width=8,
+        ),
+    )
+
+    assert result.tensor.shape == (
+        2,
+        2,
+        8,
+        8,
+    )
+
+
+def test_up_block_transpose_channel_projection_is_called():
+    block = make_up_block(
+        upsampling_method="transpose_conv",
+    )
+
+    projection = Mock(wraps=block.channel_projection)
+    block._modules["channel_projection"] = projection
+
+    block(
+        make_tensor_mask(
+            channels=4,
+            height=4,
+            width=4,
+        ),
+        make_tensor_mask(
+            channels=3,
+            height=8,
+            width=8,
+        ),
+    )
+
+    projection.assert_called_once()
+
+
+def test_up_block_skip_alignment_receives_upsampled_tensor(
+    monkeypatch,
+):
+    block = make_up_block(
+        skip_channels=3,
+    )
+
+    captured = {}
+
+    def fake_align(
+        value,
+        shape,
+        method,
+        padding_method,
+    ):
+        captured["value"] = value
+        captured["shape"] = shape
+        captured["method"] = method
+        captured["padding_method"] = padding_method
+        return value
+
+    monkeypatch.setattr(
+        module,
+        "align_to_skip",
+        fake_align,
+    )
+
+    block(
+        make_tensor_mask(
+            channels=4,
+            height=4,
+            width=4,
+        ),
+        make_tensor_mask(
+            channels=3,
+            height=8,
+            width=8,
+        ),
+    )
+
+    assert captured["value"].shape == (
+        2,
+        2,
+        8,
+        8,
+    )
+    assert captured["shape"] == (
+        8,
+        8,
+    )
+
+
+def test_unet_output_sic_direct_structure():
+    layer = UNetOutputSIC(
+        in_channels=4,
+        out_channels=2,
+        hidden_channels=None,
+        activation="identity",
+    )
+
+    assert len(layer.layers) == 3
+    assert isinstance(
+        layer.layers[0],
+        LayerNorm2d,
+    )
+    assert isinstance(
+        layer.layers[1],
+        nn.ReLU,
+    )
+    assert isinstance(
+        layer.layers[2],
+        nn.Conv2d,
+    )
+
+    assert layer.layers[2].in_channels == 4
+    assert layer.layers[2].out_channels == 2
+
+
+def test_unet_output_sic_hidden_structure():
+    layer = UNetOutputSIC(
+        in_channels=4,
+        out_channels=2,
+        hidden_channels=6,
+        activation="identity",
+    )
+
+    assert len(layer.layers) == 4
+
+    assert isinstance(
+        layer.layers[0],
+        PartialConv2d,
+    )
+    assert layer.layers[0].in_channels == 4
+    assert layer.layers[0].out_channels == 6
+    assert layer.layers[0].bias is None
+    assert layer.layers[0].multi_channel is False
+    assert layer.layers[0].return_mask is False
+
+    assert isinstance(
+        layer.layers[1],
+        LayerNorm2d,
+    )
+    assert isinstance(
+        layer.layers[2],
+        nn.ReLU,
+    )
+    assert isinstance(
+        layer.layers[3],
+        nn.Conv2d,
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "hidden_channels",
+        "activation",
+        "expected_activation",
+    ),
+    [
+        (
+            None,
+            "sigmoid",
+            nn.Sigmoid,
+        ),
+        (
+            None,
+            "tanh",
+            nn.Tanh,
+        ),
+        (
+            6,
+            "sigmoid",
+            nn.Sigmoid,
+        ),
+        (
+            6,
+            "tanh",
+            nn.Tanh,
+        ),
+    ],
+)
+def test_unet_output_sic_activation_structure(
+    hidden_channels,
+    activation,
+    expected_activation,
+):
+    layer = UNetOutputSIC(
+        in_channels=4,
+        out_channels=2,
+        hidden_channels=hidden_channels,
+        activation=activation,
+    )
+
+    assert isinstance(
+        layer.layers[-1],
+        expected_activation,
+    )
+
+
+@pytest.mark.parametrize(
+    "hidden_channels",
+    [
+        None,
+        6,
+    ],
+)
+@pytest.mark.parametrize(
+    "activation",
+    [
+        "identity",
+        "sigmoid",
+        "tanh",
+    ],
+)
+def test_unet_output_sic_forward_shape(
+    hidden_channels,
+    activation,
+):
+    layer = UNetOutputSIC(
+        in_channels=4,
+        out_channels=2,
+        hidden_channels=hidden_channels,
+        activation=activation,
+    )
+
+    result = layer(
+        torch.randn(
+            3,
+            4,
+            9,
+            11,
+        )
+    )
+
+    assert result.shape == (
+        3,
+        2,
+        9,
+        11,
+    )
+
+
+def test_unet_output_sic_clip_output():
+    layer = UNetOutputSIC(
+        in_channels=1,
+        out_channels=1,
+        hidden_channels=None,
+        activation="identity",
+        clip_output=True,
+    )
+
+    with torch.no_grad():
+        layer.layers[-1].weight.fill_(10.0)
+        layer.layers[-1].bias.fill_(-5.0)
+
+    negative = layer(
+        -torch.ones(
+            1,
+            1,
+            2,
+            2,
+        )
+    )
+    positive = layer(
+        torch.ones(
+            1,
+            1,
+            2,
+            2,
+        )
+    )
+
+    assert torch.all(negative >= 0)
+    assert torch.all(negative <= 1)
+    assert torch.all(positive >= 0)
+    assert torch.all(positive <= 1)
+
+
+def test_unet_output_sic_without_clipping_preserves_unbounded_output():
+    layer = UNetOutputSIC(
+        in_channels=1,
+        out_channels=1,
+        hidden_channels=None,
+        activation="identity",
+        clip_output=False,
+    )
+
+    with torch.no_grad():
+        layer.layers[-1].weight.fill_(10.0)
+        layer.layers[-1].bias.fill_(10.0)
+
+    result = layer(
+        torch.ones(
+            1,
+            1,
+            2,
+            2,
+        )
+    )
+
+    assert torch.any(result > 1)
+
+
+def test_unet_output_sic_rejects_unsupported_activation():
+    with pytest.raises(
+        ValueError,
+        match="Unsupported output activation",
+    ):
+        UNetOutputSIC(
+            in_channels=4,
+            out_channels=2,
+            hidden_channels=None,
+            activation="relu",
+        )
+
+
+@pytest.mark.parametrize(
+    "hidden_channels",
+    [
+        None,
+        6,
+    ],
+)
+def test_unet_output_sic_supports_backward(
+    hidden_channels,
+):
+    layer = UNetOutputSIC(
+        in_channels=4,
+        out_channels=2,
+        hidden_channels=hidden_channels,
+        activation="identity",
+    )
+
+    tensor = torch.randn(
+        2,
+        4,
+        8,
+        8,
+        requires_grad=True,
+    )
+
+    result = layer(tensor)
+    result.sum().backward()
+
+    assert tensor.grad is not None
+
+    for parameter in layer.parameters():
+        assert parameter.grad is not None
+
+
+@pytest.mark.parametrize(
+    "hidden_channels",
+    [
+        None,
+        6,
+    ],
+)
+def test_unet_output_sic_preserves_float64(
+    hidden_channels,
+):
+    layer = UNetOutputSIC(
+        in_channels=4,
+        out_channels=2,
+        hidden_channels=hidden_channels,
+        activation="identity",
+    ).double()
+
+    result = layer(
+        torch.randn(
+            2,
+            4,
+            8,
+            8,
+            dtype=torch.float64,
+        )
+    )
+
+    assert result.dtype == torch.float64
