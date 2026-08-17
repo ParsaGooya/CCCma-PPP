@@ -59,8 +59,6 @@ SUMMARY_PATH = OUTPUT_DIR / "summary.txt"
 INIT_TIME_DIM, LEAD_TIME_DIM = required_sample_dimensions
 
 
-# All combinations remain enabled. Runtime is controlled by limiting
-# the number of real dataloader batches consumed by each training run.
 RUN_BASELINE_TESTS = True
 RUN_TRAIN_LOADER_CONFIG_CASES = True
 RUN_CVAE_MLP_GRID = True
@@ -76,9 +74,6 @@ MAX_DETERMINISTIC_MLP_CASES = None
 MAX_DETERMINISTIC_UNET_CASES = None
 
 
-# Each grid case still builds the real configuration, dataset,
-# dataloader, model, loss, optimizer, scheduler and checkpoint.
-# Only iteration over the dataloader is shortened.
 MAX_TRAIN_BATCHES_PER_CASE = 1
 MAX_VALIDATION_BATCHES_PER_CASE = 1
 
@@ -86,7 +81,6 @@ MAX_BASELINE_TRAIN_BATCHES = 1
 MAX_BASELINE_VALIDATION_BATCHES = 1
 
 
-# Integration-sized model dimensions.
 TEST_ENCODER_HIDDEN_DIMS = [16]
 TEST_DECODER_HIDDEN_DIMS = [16]
 TEST_CONDITION_EMBEDDING_DIMS = [16]
@@ -1041,11 +1035,8 @@ def base_config() -> dict[str, Any]:
         1980,
     ]
 
-    # Keep lazy loading so creating each loader does not eagerly load
-    # the entire selected period.
     train_loader_cfg["load"] = False
 
-    # PyTorch may reject prefetch_factor when num_workers is zero.
     train_loader_cfg.pop(
         "prefetch_factor",
         None,
@@ -2041,8 +2032,6 @@ def run_resume_training(
 
     resumed_cfg["resume_dir"] = str(experiment_dir)
 
-    # The first invocation completed epoch 1. Setting this to 2 causes
-    # the resumed invocation to execute one additional limited epoch.
     resumed_cfg["max_epochs"] = 2
 
     ensure_cvae_beta_finder(resumed_cfg)
@@ -2251,8 +2240,6 @@ def add_train_loader_config_tasks(
             "model_type": "MLP",
         }
 
-        # Defaults come first so values explicitly defined by the case
-        # are not accidentally overwritten.
         build_params = {
             **defaults,
             **params,
