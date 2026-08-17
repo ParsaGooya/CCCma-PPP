@@ -15,8 +15,10 @@ lead_time_resolution = data["lead_time_resolution"]
 realization_dim = data["realization_dim"]
 supported_NN_dimensions_sorted = tuple(data["supported_NN_dimensions_sorted"])
 
-if lead_time_resolution not in ["day", "month"]:
-    raise ValueError(f"lead_time_resolution must be in {lead_time_resolution}.")
+if lead_time_resolution not in ["day", 'month']:
+    raise ValueError(
+        f"lead_time_resolution must be in {lead_time_resolution}."
+    )
 
 model_data_allowed_dimensions = frozenset(
     set(data["model_data_allowed_dimensions"])
@@ -35,3 +37,5 @@ observation_data_required_dimensions = frozenset(
 condition_data_required_dimensions = frozenset(
     set(data["condition_data_required_dimensions"])
 )
+
+save_deterministic_guess_only = bool(data["save_deterministic_guess_only"])

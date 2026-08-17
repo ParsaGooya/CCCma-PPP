@@ -2,11 +2,12 @@ required_sample_dimensions:
   ##must be init_time_dim and lead_tim_dim
   [ "time", "lead_time" ]
 
-lead_time_resolution:
+lead_time_resolution: 
   ##must be month or day
   "month"
 
-realization_dim: "ensembles"
+realization_dim: 
+  "ensembles" 
 
 supported_NN_dimensions_sorted: [ "sequence", "lev", "lat", "lon" ]
 
@@ -18,3 +19,6 @@ observation_data_required_dimensions: [ "lat", "lon" ]
 
 condition_data_allowed_dimensions: [ "time", "lead_time", "ensembles", "sequence", "lev", "lat", "lon" ]
 condition_data_required_dimensions: [ "lat", "lon" ]
+
+# only applicable to cVAEUNet model where a deterministic branch exists.
+save_deterministic_guess_only: false

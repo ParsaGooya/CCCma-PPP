@@ -4,39 +4,46 @@ import dataclasses
 
 class Registery:
     """
-    Document this class.
+    Registry for mapping string identifiers to classes and instantiating them.
+
+    Methods
+    -------
+    register(name)
+        Register a class under a given name.
+    get(name, config=None)
+        Retrieve and instantiate a registered class.
+    available()
+        Return all registered names.
     """
 
     def __init__(self):
         """
-        Document this function.
+        Initialize an empty registry.
+
+        Returns
+        -------
+        None
         """
+
         self._modules = {}
 
     def register(self, name):
         """
-        Document this function.
+        Register a class under a specified name.
 
         Parameters
         ----------
-        name : Any
-            Description not yet provided.
+        name : str
+            Identifier used to register the class.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        Callable
+            Decorator that registers the class.
+
         """
 
         def decorator(cls):
-            """
-            Document this function.
-
-            Returns
-            -------
-            Any
-                Description not yet provided.
-            """
             self._modules[name] = cls
             return cls
 
@@ -44,25 +51,30 @@ class Registery:
 
     def get(self, name, config=None):
         """
-        Document this function.
+        Retrieve and instantiate a registered class.
 
         Parameters
         ----------
-        name : Any
-            Description not yet provided.
-        config : Any
-            Description not yet provided.
+        name : str
+            Name of the registered class.
+        config : dict or object or None, optional
+            Configuration used for instantiation.
+
+            - If dict and class is a dataclass, uses `dacite.from_dict`.
+            - If dict and class is not a dataclass, uses `cls(**config)`.
+            - Otherwise, instantiates using `cls(config)`.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        object
+            Instantiated object.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If the requested name is not registered.
         """
+
         if name not in self._modules:
             raise ValueError(f"{name} not registered. should be in {self.available()}")
 
@@ -82,11 +94,12 @@ class Registery:
 
     def available(self):
         """
-        Document this function.
+        Get available class names.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        list of str
+            Registered identifiers.
         """
+
         return list(self._modules.keys())

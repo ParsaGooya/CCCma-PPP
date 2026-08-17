@@ -1,106 +1,44 @@
-from __future__ import annotations
-
 import functools
 import logging
 import os
-import socket
 import threading
 import time
 import uuid
 from collections.abc import Callable, Iterable, Iterator
 from contextlib import contextmanager
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 import psutil
-
-
-if TYPE_CHECKING:
-    from cccma_ppp.generic.distributed import Distributed
-
 
 logger = logging.getLogger(__name__)
 
 F = TypeVar("F", bound=Callable[..., Any])
 
 
-def resolve_physical_gpu_index(local_rank: int) -> int:
+class Monitor:
     """
-    Document this function.
+    Monitor process and GPU resource utilization.
 
     Parameters
     ----------
-    local_rank : int
-        Description not yet provided.
-
-    Returns
-    -------
-    int
-        Description not yet provided.
+    cpu : bool, optional
+        Whether to monitor process CPU utilization.
+    ram : bool, optional
+        Whether to monitor process resident memory utilization.
+    gpu0 : bool, optional
+        Whether to monitor NVIDIA GPU device 0.
+    gpu1 : bool, optional
+        Whether to monitor NVIDIA GPU device 1.
+    gpus : iterable of int or None, optional
+        NVIDIA GPU device indices to monitor. This can be used instead of,
+        or together with, ``gpu0`` and ``gpu1``.
+    interval : float, optional
+        Sampling interval in seconds.
 
     Raises
     ------
-    TypeError
-        Description not yet provided.
     ValueError
-        Description not yet provided.
-    """
-    if not isinstance(local_rank, int) or isinstance(local_rank, bool):
-        raise TypeError("local_rank must be an integer")
-
-    if local_rank < 0:
-        raise ValueError("local_rank must be non-negative")
-
-    visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES")
-
-    if not visible_devices:
-        return local_rank
-
-    devices = [
-        device.strip() for device in visible_devices.split(",") if device.strip()
-    ]
-
-    if local_rank >= len(devices):
-        raise ValueError(
-            f"local_rank {local_rank} is outside CUDA_VISIBLE_DEVICES, "
-            f"which contains {len(devices)} device(s)"
-        )
-
-    selected_device = devices[local_rank]
-
-    if not selected_device.isdigit():
-        raise ValueError(
-            "GPU monitoring requires numeric CUDA_VISIBLE_DEVICES entries; "
-            f"received {selected_device!r} for local rank {local_rank}"
-        )
-
-    return int(selected_device)
-
-
-class Monitor:
-    """
-    Document this class.
-
-    Parameters
-    ----------
-    cpu : bool
-        Description not yet provided.
-    ram : bool
-        Description not yet provided.
-    gpu0 : bool
-        Description not yet provided.
-    gpu1 : bool
-        Description not yet provided.
-    gpus : Iterable[int] | None
-        Description not yet provided.
-    interval : float
-        Description not yet provided.
-    rank : int
-        Description not yet provided.
-    local_rank : int
-        Description not yet provided.
-    world_size : int
-        Description not yet provided.
+        If the sampling interval is not positive or a GPU index is negative.
     """
 
     def __init__(
@@ -112,65 +50,9 @@ class Monitor:
         gpu1: bool = False,
         gpus: Iterable[int] | None = None,
         interval: float = 0.1,
-        rank: int = 0,
-        local_rank: int = 0,
-        world_size: int = 1,
     ) -> None:
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        cpu : bool
-            Description not yet provided.
-        ram : bool
-            Description not yet provided.
-        gpu0 : bool
-            Description not yet provided.
-        gpu1 : bool
-            Description not yet provided.
-        gpus : Iterable[int] | None
-            Description not yet provided.
-        interval : float
-            Description not yet provided.
-        rank : int
-            Description not yet provided.
-        local_rank : int
-            Description not yet provided.
-        world_size : int
-            Description not yet provided.
-
-        Raises
-        ------
-        TypeError
-            Description not yet provided.
-        ValueError
-            Description not yet provided.
-        """
         if interval <= 0:
             raise ValueError("interval must be greater than zero")
-
-        distributed_values = {
-            "rank": rank,
-            "local_rank": local_rank,
-            "world_size": world_size,
-        }
-
-        for name, value in distributed_values.items():
-            if not isinstance(value, int) or isinstance(value, bool):
-                raise TypeError(f"{name} must be an integer")
-
-        if rank < 0:
-            raise ValueError("rank must be non-negative")
-
-        if local_rank < 0:
-            raise ValueError("local_rank must be non-negative")
-
-        if world_size <= 0:
-            raise ValueError("world_size must be greater than zero")
-
-        if rank >= world_size:
-            raise ValueError("rank must be less than world_size")
 
         gpu_indices = set(gpus or ())
 
@@ -194,16 +76,11 @@ class Monitor:
         self.gpu_indices = tuple(sorted(gpu_indices))
         self.interval = float(interval)
 
-        self.rank = rank
-        self.local_rank = local_rank
-        self.world_size = world_size
-        self.hostname = socket.gethostname()
-        self.pid = os.getpid()
-
-        self._process = psutil.Process(self.pid)
+        self._process = psutil.Process(os.getpid())
 
         self._data: list[dict[str, Any]] = []
         self._lock = threading.RLock()
+
         self._thread_stacks: dict[int, list[str]] = {}
 
         self._stop_event = threading.Event()
@@ -212,14 +89,17 @@ class Monitor:
         self._pynvml: Any | None = None
         self._gpu_handles: dict[int, Any] = {}
         self._unavailable_gpus: set[int] = set()
-        self._nvml_initialized = False
 
         if self.gpu_indices:
             self._initialize_gpus()
 
     def _initialize_gpus(self) -> None:
         """
-        Document this function.
+        Initialize NVIDIA GPU monitoring.
+
+        Returns
+        -------
+        None
         """
         try:
             import pynvml
@@ -227,16 +107,14 @@ class Monitor:
             pynvml.nvmlInit()
 
             self._pynvml = pynvml
-            self._nvml_initialized = True
 
             device_count = pynvml.nvmlDeviceGetCount()
 
             for index in self.gpu_indices:
                 if index >= device_count:
                     logger.warning(
-                        "Rank %s cannot monitor GPU %s. The system reports "
-                        "%s NVIDIA GPU device(s).",
-                        self.rank,
+                        "GPU %s is unavailable. The system reports %s "
+                        "NVIDIA GPU device(s).",
                         index,
                         device_count,
                     )
@@ -247,51 +125,28 @@ class Monitor:
                     self._gpu_handles[index] = pynvml.nvmlDeviceGetHandleByIndex(index)
                 except Exception:
                     logger.exception(
-                        "Rank %s could not initialize monitoring for GPU %s",
-                        self.rank,
+                        "Unable to initialize monitoring for GPU %s",
                         index,
                     )
                     self._unavailable_gpus.add(index)
 
         except Exception:
             logger.warning(
-                "NVIDIA GPU monitoring is unavailable on rank %s",
-                self.rank,
+                "NVIDIA GPU monitoring is unavailable",
                 exc_info=True,
             )
 
             self._pynvml = None
-            self._nvml_initialized = False
             self._unavailable_gpus.update(self.gpu_indices)
-
-    def _shutdown_gpus(self) -> None:
-        """
-        Document this function.
-        """
-        if not self._nvml_initialized or self._pynvml is None:
-            return
-
-        try:
-            self._pynvml.nvmlShutdown()
-        except Exception:
-            logger.warning(
-                "Unable to shut down NVML on rank %s",
-                self.rank,
-                exc_info=True,
-            )
-        finally:
-            self._nvml_initialized = False
-            self._pynvml = None
-            self._gpu_handles.clear()
 
     def _get_stack(self) -> list:
         """
-        Document this function.
+        Retrieve the stage stack for the calling thread.
 
         Returns
         -------
-        list
-            Description not yet provided.
+        list of str
+            Stack of active monitoring stages for the calling thread.
         """
         thread_id = threading.get_ident()
 
@@ -300,7 +155,11 @@ class Monitor:
 
     def _remove_empty_stack(self) -> None:
         """
-        Document this function.
+        Remove the calling thread's stage stack if it is empty.
+
+        Returns
+        -------
+        None
         """
         thread_id = threading.get_ident()
 
@@ -312,24 +171,24 @@ class Monitor:
 
     def current_stage(self) -> str:
         """
-        Document this function.
+        Get the active stage for the calling thread.
 
         Returns
         -------
         str
-            Description not yet provided.
+            Active stage name. Returns ``"root"`` if no stage is active.
         """
         stack = self._get_stack()
         return stack[-1] if stack else "root"
 
     def _current_sample_stage(self) -> str:
         """
-        Document this function.
+        Determine the active stage associated with a resource sample.
 
         Returns
         -------
         str
-            Description not yet provided.
+            Active application stage or ``"root"``.
         """
         sampler_thread_id = self._thread.ident if self._thread is not None else None
 
@@ -347,39 +206,40 @@ class Monitor:
 
     def _ram_gb(self) -> float:
         """
-        Document this function.
+        Get current process memory usage.
 
         Returns
         -------
         float
-            Description not yet provided.
+            Resident memory usage in gigabytes.
         """
         return self._process.memory_info().rss / (1024**3)
 
     def _cpu(self) -> float:
         """
-        Document this function.
+        Get current process CPU utilization.
 
         Returns
         -------
         float
-            Description not yet provided.
+            CPU utilization percentage for the current process.
         """
         return float(self._process.cpu_percent(interval=None))
 
     def _gpu(self, index: int) -> tuple[float, float]:
         """
-        Document this function.
+        Get current GPU utilization statistics.
 
         Parameters
         ----------
         index : int
-            Description not yet provided.
+            Zero-based NVIDIA GPU device index.
 
         Returns
         -------
-        tuple[float, float]
-            Description not yet provided.
+        tuple of float
+            GPU utilization percentage and VRAM utilization percentage.
+            Both values are NaN if the requested GPU is unavailable.
         """
         if (
             self._pynvml is None
@@ -405,8 +265,7 @@ class Monitor:
         except Exception:
             if index not in self._unavailable_gpus:
                 logger.exception(
-                    "Rank %s could not collect utilization for GPU %s",
-                    self.rank,
+                    "Unable to collect utilization for GPU %s",
                     index,
                 )
                 self._unavailable_gpus.add(index)
@@ -421,32 +280,28 @@ class Monitor:
         span_id: str | None = None,
     ) -> dict[str, Any]:
         """
-        Document this function.
+        Create a monitoring event record.
 
         Parameters
         ----------
         stage : str
-            Description not yet provided.
+            Stage associated with the event.
         event : str
-            Description not yet provided.
-        span_id : str | None
-            Description not yet provided.
+            Event type, such as ``"start"``, ``"end"``, ``"checkpoint"``,
+            or ``"sample"``.
+        span_id : str or None, optional
+            Identifier connecting the start and end of a span.
 
         Returns
         -------
-        dict[str, Any]
-            Description not yet provided.
+        dict
+            Initialized event record.
         """
         record: dict[str, Any] = {
             "t": time.time(),
             "stage": stage,
             "event": event,
             "span_id": span_id,
-            "rank": self.rank,
-            "local_rank": self.local_rank,
-            "world_size": self.world_size,
-            "hostname": self.hostname,
-            "pid": self.pid,
         }
 
         if self.cpu_enabled:
@@ -463,12 +318,16 @@ class Monitor:
 
     def _append_event(self, event: dict[str, Any]) -> None:
         """
-        Document this function.
+        Append an event to the monitoring data.
 
         Parameters
         ----------
-        event : dict[str, Any]
-            Description not yet provided.
+        event : dict
+            Event record to append.
+
+        Returns
+        -------
+        None
         """
         with self._lock:
             self._data.append(event)
@@ -476,24 +335,23 @@ class Monitor:
     @contextmanager
     def span(self, name: str) -> Iterator:
         """
-        Document this function.
+        Create a monitored execution span.
 
         Parameters
         ----------
         name : str
-            Description not yet provided.
+            Name of the execution stage.
 
         Yields
         ------
-        Iterator
-            Description not yet provided.
+        None
 
         Raises
         ------
         TypeError
-            Description not yet provided.
+            If ``name`` is not a string.
         ValueError
-            Description not yet provided.
+            If ``name`` is empty.
         """
         if not isinstance(name, str):
             raise TypeError("span name must be a string")
@@ -548,43 +406,23 @@ class Monitor:
 
     def observe(self, function: F) -> F:
         """
-        Document this function.
+        Decorate a function with automatic stage monitoring.
 
         Parameters
         ----------
-        function : F
-            Description not yet provided.
+        function : callable
+            Function to monitor.
 
         Returns
         -------
-        F
-            Description not yet provided.
-
-        Raises
-        ------
-        TypeError
-            Description not yet provided.
+        callable
+            Wrapped function.
         """
         if not callable(function):
             raise TypeError("observe expects a callable")
 
         @functools.wraps(function)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            """
-            Document this function.
-
-            Parameters
-            ----------
-            *args : Any
-                Description not yet provided.
-            **kwargs : Any
-                Description not yet provided.
-
-            Returns
-            -------
-            Any
-                Description not yet provided.
-            """
+        def wrapper(*args, **kwargs):
             with self.span(function.__name__):
                 return function(*args, **kwargs)
 
@@ -592,19 +430,23 @@ class Monitor:
 
     def checkpoint(self, name: str) -> None:
         """
-        Document this function.
+        Record a checkpoint event.
 
         Parameters
         ----------
         name : str
-            Description not yet provided.
+            Checkpoint identifier.
+
+        Returns
+        -------
+        None
 
         Raises
         ------
         TypeError
-            Description not yet provided.
+            If ``name`` is not a string.
         ValueError
-            Description not yet provided.
+            If ``name`` is empty.
         """
         if not isinstance(name, str):
             raise TypeError("checkpoint name must be a string")
@@ -627,12 +469,12 @@ class Monitor:
 
     def _collect_sample(self) -> dict[str, Any]:
         """
-        Document this function.
+        Collect one resource utilization sample.
 
         Returns
         -------
-        dict[str, Any]
-            Description not yet provided.
+        dict
+            Sample event containing all enabled resource metrics.
         """
         sample = self._create_event(
             stage=self._current_sample_stage(),
@@ -655,7 +497,11 @@ class Monitor:
 
     def _sampler(self) -> None:
         """
-        Document this function.
+        Run the background resource-monitoring loop.
+
+        Returns
+        -------
+        None
         """
         if self.cpu_enabled:
             self._process.cpu_percent(interval=None)
@@ -666,10 +512,7 @@ class Monitor:
             try:
                 self._append_event(self._collect_sample())
             except Exception:
-                logger.exception(
-                    "Unexpected monitoring error on rank %s",
-                    self.rank,
-                )
+                logger.exception("Unexpected error while collecting monitoring data")
 
             elapsed = time.monotonic() - sample_started
             wait_time = max(0.0, self.interval - elapsed)
@@ -678,18 +521,23 @@ class Monitor:
 
     def start(self, *, clear: bool = False) -> None:
         """
-        Document this function.
+        Start resource monitoring.
 
         Parameters
         ----------
-        clear : bool
-            Description not yet provided.
+        clear : bool, optional
+            Whether to discard previously collected events before starting.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        Calling this method while monitoring is already active has no effect.
         """
         if self.running:
-            logger.warning(
-                "Monitoring is already running on rank %s",
-                self.rank,
-            )
+            logger.warning("Monitoring is already running")
             return
 
         if clear:
@@ -699,16 +547,13 @@ class Monitor:
 
         self._thread = threading.Thread(
             target=self._sampler,
-            name=f"resource-monitor-rank-{self.rank}",
+            name="resource-monitor",
             daemon=True,
         )
         self._thread.start()
 
         logger.info(
-            "Monitoring started: rank=%s, local_rank=%s, cpu=%s, ram=%s, "
-            "gpus=%s, interval=%s",
-            self.rank,
-            self.local_rank,
+            "Monitoring started: cpu=%s, ram=%s, gpus=%s, interval=%s",
             self.cpu_enabled,
             self.ram_enabled,
             list(self.gpu_indices),
@@ -717,17 +562,22 @@ class Monitor:
 
     def stop(self, timeout: float | None = None) -> None:
         """
-        Document this function.
+        Stop resource monitoring.
 
         Parameters
         ----------
-        timeout : float | None
-            Description not yet provided.
+        timeout : float or None, optional
+            Maximum number of seconds to wait for the sampling thread. If
+            None, wait until the sampling thread terminates.
+
+        Returns
+        -------
+        None
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``timeout`` is negative.
         """
         if timeout is not None and timeout < 0:
             raise ValueError("timeout cannot be negative")
@@ -741,47 +591,34 @@ class Monitor:
         thread.join(timeout=timeout)
 
         if thread.is_alive():
-            logger.warning(
-                "Monitoring thread on rank %s did not stop within the timeout",
-                self.rank,
-            )
+            logger.warning("Monitoring thread did not stop within the timeout")
             return
 
         self._thread = None
 
-        logger.info(
-            "Monitoring stopped on rank %s",
-            self.rank,
-        )
-
-    def close(self) -> None:
-        """
-        Document this function.
-        """
-        self.stop()
-        self._shutdown_gpus()
+        logger.info("Monitoring stopped")
 
     @property
     def running(self) -> bool:
         """
-        Document this function.
+        Indicate whether the monitoring thread is active.
 
         Returns
         -------
         bool
-            Description not yet provided.
+            True if monitoring is running.
         """
         return self._thread is not None and self._thread.is_alive()
 
     @property
     def metric_names(self) -> tuple[str, ...]:
         """
-        Document this function.
+        Get the configured metric column names.
 
         Returns
         -------
-        tuple[str, ...]
-            Description not yet provided.
+        tuple of str
+            Configured metric names.
         """
         metrics: list[str] = []
 
@@ -799,19 +636,23 @@ class Monitor:
 
     def clear(self) -> None:
         """
-        Document this function.
+        Remove all collected monitoring events.
+
+        Returns
+        -------
+        None
         """
         with self._lock:
             self._data.clear()
 
     def get_dataframe(self):
         """
-        Document this function.
+        Convert collected monitoring events to a dataframe.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        pandas.DataFrame
+            Monitoring events and sampled resource metrics.
         """
         import pandas as pd
 
@@ -820,71 +661,71 @@ class Monitor:
 
         return pd.DataFrame(records)
 
-    def __enter__(self) -> Monitor:
+    def __enter__(self) -> "Monitor":
         """
-        Document this function.
+        Start monitoring when entering a context manager.
 
         Returns
         -------
         Monitor
-            Description not yet provided.
+            Active monitor instance.
         """
         self.start()
         return self
 
     def __exit__(
         self,
-        exception_type: Any,
-        exception_value: Any,
-        traceback: Any,
+        exception_type,
+        exception_value,
+        traceback,
     ) -> bool:
         """
-        Document this function.
+        Stop monitoring when leaving a context manager.
 
         Parameters
         ----------
-        exception_type : Any
-            Description not yet provided.
-        exception_value : Any
-            Description not yet provided.
-        traceback : Any
-            Description not yet provided.
+        exception_type : type or None
+            Type of exception raised in the context.
+        exception_value : BaseException or None
+            Exception raised in the context.
+        traceback : types.TracebackType or None
+            Associated traceback.
 
         Returns
         -------
         bool
-            Description not yet provided.
+            False so exceptions are not suppressed.
         """
-        self.close()
+        self.stop()
         return False
 
     @staticmethod
     def _kalman_filter(
-        values: Any,
+        values,
         process_variance: float = 1.0,
         measurement_variance: float = 25.0,
     ):
         """
-        Document this function.
+        Apply a simple one-dimensional Kalman filter.
 
         Parameters
         ----------
-        values : Any
-            Description not yet provided.
-        process_variance : float
-            Description not yet provided.
-        measurement_variance : float
-            Description not yet provided.
+        values : array-like
+            Input observations.
+        process_variance : float, optional
+            Process noise variance.
+        measurement_variance : float, optional
+            Observation noise variance.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        numpy.ndarray
+            Smoothed values.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If either variance is negative.
         """
         import numpy as np
 
@@ -894,10 +735,7 @@ class Monitor:
         if measurement_variance < 0:
             raise ValueError("measurement_variance cannot be negative")
 
-        values = np.asarray(
-            values,
-            dtype=float,
-        )
+        values = np.asarray(values, dtype=float)
 
         if len(values) == 0:
             return values
@@ -914,14 +752,13 @@ class Monitor:
             return filtered
 
         first_index = int(valid_indices[0])
+
         estimate = float(values[first_index])
         estimate_variance = 1.0
 
-        for index in range(
-            first_index,
-            len(values),
-        ):
+        for index in range(first_index, len(values)):
             observation = values[index]
+
             estimate_variance += process_variance
 
             if not np.isfinite(observation):
@@ -943,31 +780,31 @@ class Monitor:
     @classmethod
     def _smooth(
         cls,
-        series: Any,
+        series,
         method: str | None = None,
-        **kwargs: Any,
+        **kwargs,
     ):
         """
-        Document this function.
+        Smooth a time series.
 
         Parameters
         ----------
-        series : Any
-            Description not yet provided.
-        method : str | None
-            Description not yet provided.
-        **kwargs : Any
-            Description not yet provided.
+        series : pandas.Series
+            Input values.
+        method : {"ema", "rolling", "kalman"} or None, optional
+            Smoothing method. If None, the input is returned unchanged.
+        **kwargs
+            Additional arguments passed to the selected smoothing method.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        pandas.Series or numpy.ndarray
+            Smoothed values.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If the smoothing method or its configuration is invalid.
         """
         if method is None:
             return series
@@ -1007,12 +844,7 @@ class Monitor:
         if method == "kalman":
             return cls._kalman_filter(
                 series.to_numpy(),
-                process_variance=float(
-                    kwargs.get(
-                        "process_variance",
-                        1.0,
-                    )
-                ),
+                process_variance=float(kwargs.get("process_variance", 1.0)),
                 measurement_variance=float(
                     kwargs.get(
                         "measurement_variance",
@@ -1026,34 +858,38 @@ class Monitor:
     @classmethod
     def _plot_metric(
         cls,
-        ax: Any,
-        t: Any,
-        values: Any,
+        ax,
+        t,
+        values,
         *,
         label: str,
         color: str,
         smooth: str | None = None,
-        **smooth_kwargs: Any,
+        **smooth_kwargs,
     ) -> None:
         """
-        Document this function.
+        Plot a raw and optionally smoothed metric.
 
         Parameters
         ----------
-        ax : Any
-            Description not yet provided.
-        t : Any
-            Description not yet provided.
-        values : Any
-            Description not yet provided.
+        ax : matplotlib.axes.Axes
+            Target axis.
+        t : array-like
+            Elapsed time values.
+        values : pandas.Series
+            Metric values.
         label : str
-            Description not yet provided.
+            Display name for the metric.
         color : str
-            Description not yet provided.
-        smooth : str | None
-            Description not yet provided.
-        **smooth_kwargs : Any
-            Description not yet provided.
+            Plot color.
+        smooth : {"ema", "rolling", "kalman"} or None, optional
+            Smoothing method.
+        **smooth_kwargs
+            Arguments passed to the smoothing function.
+
+        Returns
+        -------
+        None
         """
         ax.plot(
             t,
@@ -1085,21 +921,19 @@ class Monitor:
         )
 
     @staticmethod
-    def _metric_label(
-        metric: str,
-    ) -> tuple[str, str]:
+    def _metric_label(metric: str) -> tuple[str, str]:
         """
-        Document this function.
+        Get the display label and unit for a metric.
 
         Parameters
         ----------
         metric : str
-            Description not yet provided.
+            Metric column name.
 
         Returns
         -------
-        tuple[str, str]
-            Description not yet provided.
+        tuple of str
+            Display label and unit.
         """
         if metric == "cpu":
             return "CPU", "%"
@@ -1117,22 +951,19 @@ class Monitor:
 
         return metric, ""
 
-    def _available_metrics(
-        self,
-        samples: Any,
-    ) -> list:
+    def _available_metrics(self, samples) -> list:
         """
-        Document this function.
+        Determine which configured metrics contain sample data.
 
         Parameters
         ----------
-        samples : Any
-            Description not yet provided.
+        samples : pandas.DataFrame
+            Resource sample events.
 
         Returns
         -------
-        list
-            Description not yet provided.
+        list of str
+            Available metric names.
         """
         return [
             metric
@@ -1141,21 +972,19 @@ class Monitor:
         ]
 
     @staticmethod
-    def _span_intervals(
-        df: Any,
-    ) -> list[tuple[float, float, str]]:
+    def _span_intervals(df) -> list[tuple[float, float, str]]:
         """
-        Document this function.
+        Match span start and end events.
 
         Parameters
         ----------
-        df : Any
-            Description not yet provided.
+        df : pandas.DataFrame
+            Monitoring event dataframe containing elapsed times.
 
         Returns
         -------
-        list[tuple[float, float, str]]
-            Description not yet provided.
+        list of tuple
+            Span start time, end time, and stage name.
         """
         intervals: list[tuple[float, float, str]] = []
 
@@ -1188,42 +1017,45 @@ class Monitor:
 
     def plot(
         self,
-        df: Any = None,
-        metrics: Iterable[str] | None = None,
-        save_path: str | os.PathLike[str] | None = None,
-        show: bool = True,
-        smooth: str | None = None,
-        **smooth_kwargs: Any,
+        df=None,
+        metrics=None,
+        save_path=None,
+        show=True,
+        smooth=None,
+        **smooth_kwargs,
     ):
         """
-        Document this function.
+        Plot resource utilization and execution stages over time.
 
         Parameters
         ----------
-        df : Any
-            Description not yet provided.
-        metrics : Iterable[str] | None
-            Description not yet provided.
-        save_path : str | os.PathLike[str] | None
-            Description not yet provided.
-        show : bool
-            Description not yet provided.
-        smooth : str | None
-            Description not yet provided.
-        **smooth_kwargs : Any
-            Description not yet provided.
+        df : pandas.DataFrame or None, optional
+            Monitoring dataframe. If None, data collected by this monitor
+            are used.
+        metrics : iterable of str or None, optional
+            Metrics to plot. If None, all configured metrics containing data
+            are plotted.
+        save_path : str or None, optional
+            Path where the figure should be saved.
+        show : bool, optional
+            Whether to display the figure.
+        smooth : {"ema", "rolling", "kalman"} or None, optional
+            Smoothing method applied to resource curves.
+        **smooth_kwargs
+            Additional arguments passed to the smoothing method.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        matplotlib.figure.Figure or None
+            Generated figure, or None if no samples can be plotted.
 
         Raises
         ------
         TypeError
-            Description not yet provided.
+            If metrics is provided as a single string.
         ValueError
-            Description not yet provided.
+            If the dataframe is invalid or a requested metric was not
+            collected.
         """
         import matplotlib.pyplot as plt
 
@@ -1236,12 +1068,7 @@ class Monitor:
             logger.warning("There are no monitoring events to plot")
             return None
 
-        required_columns = {
-            "t",
-            "event",
-            "stage",
-        }
-
+        required_columns = {"t", "event", "stage"}
         missing_columns = required_columns.difference(df.columns)
 
         if missing_columns:
@@ -1291,7 +1118,7 @@ class Monitor:
 
         checkpoints = df[df["event"] == "checkpoint"].copy()
 
-        timeline_events: list[dict[str, Any]] = []
+        timeline_events = []
 
         for start, end, stage in span_intervals:
             timeline_events.append(
@@ -1304,14 +1131,12 @@ class Monitor:
             )
 
         for _, checkpoint_event in checkpoints.iterrows():
-            checkpoint_time = float(checkpoint_event["elapsed"])
-
             timeline_events.append(
                 {
                     "kind": "checkpoint",
                     "stage": str(checkpoint_event["stage"]),
-                    "start": checkpoint_time,
-                    "end": checkpoint_time,
+                    "start": float(checkpoint_event["elapsed"]),
+                    "end": float(checkpoint_event["elapsed"]),
                 }
             )
 
@@ -1319,20 +1144,12 @@ class Monitor:
 
         timeline_height = max(
             2.0,
-            min(
-                6.0,
-                0.32 * len(timeline_events) + 0.8,
-            ),
+            min(6.0, 0.32 * len(timeline_events) + 0.8),
         )
 
         metric_height = 2.7 * len(selected_metrics)
 
-        figure = plt.figure(
-            figsize=(
-                16,
-                timeline_height + metric_height,
-            )
-        )
+        figure = plt.figure(figsize=(16, timeline_height + metric_height))
 
         grid = figure.add_gridspec(
             nrows=len(selected_metrics) + 1,
@@ -1374,7 +1191,6 @@ class Monitor:
 
         for position, metric in enumerate(selected_metrics):
             label, unit = self._metric_label(metric)
-
             axis = axes[position]
 
             self._plot_metric(
@@ -1390,7 +1206,6 @@ class Monitor:
             ylabel = f"{label} ({unit})" if unit else label
 
             axis.set_ylabel(ylabel)
-
             axis.grid(
                 visible=True,
                 axis="both",
@@ -1422,10 +1237,7 @@ class Monitor:
             if event["kind"] == "span":
                 start = event["start"]
                 end = event["end"]
-                duration = max(
-                    end - start,
-                    0.001,
-                )
+                duration = max(end - start, 0.001)
 
                 timeline_axis.broken_barh(
                     [(start, duration)],
@@ -1446,6 +1258,7 @@ class Monitor:
                         color="tab:blue",
                         alpha=0.035,
                     )
+
             else:
                 checkpoint_time = event["start"]
 
@@ -1471,7 +1284,6 @@ class Monitor:
 
         if timeline_events:
             timeline_axis.set_yticks(timeline_positions)
-
             timeline_axis.set_yticklabels(
                 timeline_labels,
                 fontsize=8,
@@ -1483,7 +1295,6 @@ class Monitor:
             )
         else:
             timeline_axis.set_yticks([])
-
             timeline_axis.text(
                 0.5,
                 0.5,
@@ -1494,28 +1305,22 @@ class Monitor:
             )
 
         timeline_axis.set_ylabel("Stage")
-
         timeline_axis.set_title(
-            f"Execution timeline, rank {self.rank}",
+            "Execution timeline",
             loc="left",
             fontsize=11,
         )
-
         timeline_axis.grid(
             visible=True,
             axis="x",
             alpha=0.2,
         )
-
         timeline_axis.tick_params(
             axis="x",
             labelbottom=False,
         )
 
-        maximum_time = max(
-            float(df["elapsed"].max()),
-            0.001,
-        )
+        maximum_time = float(df["elapsed"].max())
 
         timeline_axis.set_xlim(
             0.0,
@@ -1537,7 +1342,7 @@ class Monitor:
             bottom=0.08,
         )
 
-        if save_path is not None:
+        if save_path:
             save_path = os.fspath(save_path)
             directory = os.path.dirname(save_path)
 
@@ -1567,38 +1372,30 @@ def monitor(
     gpu1: bool = False,
     gpus: Iterable[int] | None = None,
     interval: float = 0.1,
-    rank: int = 0,
-    local_rank: int = 0,
-    world_size: int = 1,
 ) -> Monitor:
     """
-    Document this function.
+    Create a configurable resource monitor.
 
     Parameters
     ----------
-    cpu : bool
-        Description not yet provided.
-    ram : bool
-        Description not yet provided.
-    gpu0 : bool
-        Description not yet provided.
-    gpu1 : bool
-        Description not yet provided.
-    gpus : Iterable[int] | None
-        Description not yet provided.
-    interval : float
-        Description not yet provided.
-    rank : int
-        Description not yet provided.
-    local_rank : int
-        Description not yet provided.
-    world_size : int
-        Description not yet provided.
+    cpu : bool, optional
+        Whether to monitor process CPU utilization.
+    ram : bool, optional
+        Whether to monitor process resident memory utilization.
+    gpu0 : bool, optional
+        Whether to monitor NVIDIA GPU device 0.
+    gpu1 : bool, optional
+        Whether to monitor NVIDIA GPU device 1.
+    gpus : iterable of int or None, optional
+        Generic collection of NVIDIA GPU indices to monitor.
+    interval : float, optional
+        Sampling interval in seconds.
 
     Returns
     -------
     Monitor
-        Description not yet provided.
+        Configured monitor instance.
+
     """
     return Monitor(
         cpu=cpu,
@@ -1607,318 +1404,4 @@ def monitor(
         gpu1=gpu1,
         gpus=gpus,
         interval=interval,
-        rank=rank,
-        local_rank=local_rank,
-        world_size=world_size,
     )
-
-
-def build_distributed_monitor(
-    distributed: Distributed,
-    *,
-    cpu: bool = True,
-    ram: bool = True,
-    gpu: bool = True,
-    interval: float = 0.1,
-) -> Monitor:
-    """
-    Document this function.
-
-    Parameters
-    ----------
-    distributed : Distributed
-        Description not yet provided.
-    cpu : bool
-        Description not yet provided.
-    ram : bool
-        Description not yet provided.
-    gpu : bool
-        Description not yet provided.
-    interval : float
-        Description not yet provided.
-
-    Returns
-    -------
-    Monitor
-        Description not yet provided.
-    """
-    import torch
-
-    gpu_indices: list[int] = []
-
-    if gpu and torch.cuda.is_available():
-        try:
-            gpu_indices.append(resolve_physical_gpu_index(distributed.local_rank))
-        except (TypeError, ValueError):
-            logger.warning(
-                "Rank %s could not resolve its physical GPU. "
-                "CPU and RAM monitoring will remain enabled.",
-                distributed.rank,
-                exc_info=True,
-            )
-
-    return monitor(
-        cpu=cpu,
-        ram=ram,
-        gpus=gpu_indices,
-        interval=interval,
-        rank=distributed.rank,
-        local_rank=distributed.local_rank,
-        world_size=distributed.world_size,
-    )
-
-
-def export_results(
-    resource_monitor: Monitor,
-    output_dir: str | os.PathLike[str],
-) -> tuple[Path | None, Path | None]:
-    """
-    Document this function.
-
-    Parameters
-    ----------
-    resource_monitor : Monitor
-        Description not yet provided.
-    output_dir : str | os.PathLike[str]
-        Description not yet provided.
-
-    Returns
-    -------
-    tuple[Path | None, Path | None]
-        Description not yet provided.
-    """
-    import matplotlib.pyplot as plt
-
-    output_dir = Path(output_dir)
-
-    output_dir.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    monitoring_data = resource_monitor.get_dataframe()
-
-    if monitoring_data.empty:
-        logger.warning(
-            "Rank %s did not collect monitoring data",
-            resource_monitor.rank,
-        )
-        return None, None
-
-    rank_suffix = f"rank_{resource_monitor.rank:04d}"
-
-    csv_path = output_dir / f"resource_monitoring_{rank_suffix}.csv"
-
-    plot_path = output_dir / f"resource_monitoring_{rank_suffix}.png"
-
-    monitoring_data.to_csv(
-        csv_path,
-        index=False,
-    )
-
-    figure = resource_monitor.plot(
-        df=monitoring_data,
-        save_path=plot_path,
-        show=False,
-        smooth="kalman",
-        process_variance=1.0,
-        measurement_variance=25.0,
-    )
-
-    if figure is not None:
-        plt.close(figure)
-
-    logger.info(
-        "Rank %s monitoring data: %s",
-        resource_monitor.rank,
-        csv_path,
-    )
-
-    logger.info(
-        "Rank %s monitoring plot: %s",
-        resource_monitor.rank,
-        plot_path,
-    )
-
-    return csv_path, plot_path
-
-
-def combine_rank_results(
-    output_dir: str | os.PathLike[str],
-    world_size: int,
-) -> Path | None:
-    """
-    Document this function.
-
-    Parameters
-    ----------
-    output_dir : str | os.PathLike[str]
-        Description not yet provided.
-    world_size : int
-        Description not yet provided.
-
-    Returns
-    -------
-    Path | None
-        Description not yet provided.
-
-    Raises
-    ------
-    TypeError
-        Description not yet provided.
-    ValueError
-        Description not yet provided.
-    """
-    import pandas as pd
-
-    if not isinstance(world_size, int) or isinstance(world_size, bool):
-        raise TypeError("world_size must be an integer")
-
-    if world_size <= 0:
-        raise ValueError("world_size must be greater than zero")
-
-    output_dir = Path(output_dir)
-
-    expected_paths = [
-        (output_dir / f"resource_monitoring_rank_{rank:04d}.csv")
-        for rank in range(world_size)
-    ]
-
-    existing_paths = [path for path in expected_paths if path.exists()]
-
-    if not existing_paths:
-        logger.warning(
-            "No rank monitoring files were found in %s",
-            output_dir,
-        )
-        return None
-
-    if len(existing_paths) != world_size:
-        logger.warning(
-            "Found %s of %s expected rank monitoring files",
-            len(existing_paths),
-            world_size,
-        )
-
-    frames = [pd.read_csv(path) for path in existing_paths]
-
-    combined = pd.concat(
-        frames,
-        ignore_index=True,
-        sort=False,
-    )
-
-    sort_columns = [column for column in ("t", "rank") if column in combined.columns]
-
-    if sort_columns:
-        combined = combined.sort_values(
-            sort_columns,
-            kind="stable",
-        ).reset_index(drop=True)
-
-    combined_path = output_dir / "resource_monitoring_all_ranks.csv"
-
-    combined.to_csv(
-        combined_path,
-        index=False,
-    )
-
-    logger.info(
-        "Combined monitoring data: %s",
-        combined_path,
-    )
-
-    return combined_path
-
-
-@contextmanager
-def distributed_monitoring(
-    distributed: Distributed,
-    output_dir: str | os.PathLike[str],
-    *,
-    cpu: bool = True,
-    ram: bool = True,
-    gpu: bool = True,
-    interval: float = 0.1,
-    combine_ranks: bool = True,
-) -> Iterator:
-    """
-    Document this function.
-
-    Parameters
-    ----------
-    distributed : Distributed
-        Description not yet provided.
-    output_dir : str | os.PathLike[str]
-        Description not yet provided.
-    cpu : bool
-        Description not yet provided.
-    ram : bool
-        Description not yet provided.
-    gpu : bool
-        Description not yet provided.
-    interval : float
-        Description not yet provided.
-    combine_ranks : bool
-        Description not yet provided.
-
-    Yields
-    ------
-    Iterator
-        Description not yet provided.
-    """
-    resource_monitor = build_distributed_monitor(
-        distributed,
-        cpu=cpu,
-        ram=ram,
-        gpu=gpu,
-        interval=interval,
-    )
-
-    completed = False
-    exported = False
-
-    resource_monitor.start(clear=True)
-    resource_monitor.checkpoint("monitoring_started")
-
-    try:
-        yield resource_monitor
-        completed = True
-
-    finally:
-        if completed:
-            resource_monitor.checkpoint("monitoring_complete")
-        else:
-            resource_monitor.checkpoint("monitoring_interrupted")
-
-        resource_monitor.stop()
-
-        try:
-            export_results(
-                resource_monitor,
-                output_dir,
-            )
-            exported = True
-        except Exception:
-            logger.exception(
-                "Rank %s could not export monitoring results",
-                distributed.rank,
-            )
-        finally:
-            resource_monitor.close()
-
-        if completed:
-            distributed.barrier()
-
-            if distributed.is_root() and combine_ranks:
-                combine_rank_results(
-                    output_dir,
-                    distributed.world_size,
-                )
-
-        if completed and not exported:
-            logger.warning(
-                "Training completed on rank %s, but monitoring "
-                "results were not exported",
-                distributed.rank,
-            )

@@ -9,18 +9,16 @@ from cccma_ppp.core.core_abc import moduleABC
 @dataclasses.dataclass
 class LRSchedulerConfig:
     """
-    Document this class.
+    Configuration for learning rate scheduler.
 
     Parameters
     ----------
-    min_lr : float
-        Description not yet provided.
-    warmup_epochs : int
-        Description not yet provided.
-    total_epochs : int
-        Description not yet provided.
-    hold_min_lr : bool
-        Description not yet provided.
+    min_lr : float, optional
+        Minimum learning rate for cosine annealing.
+    warmup_epochs : int, optional
+        Number of warmup epochs with linearly increasing learning rate.
+    total_epochs : int or None, optional
+        Total number of training epochs.
     """
 
     min_lr: float = 0.0
@@ -30,13 +28,14 @@ class LRSchedulerConfig:
 
     def __post_init__(self):
         """
-        Document this function.
+        Validate scheduler configuration parameters.
 
         Raises
         ------
         AssertionError
-            Description not yet provided.
+            If `min_lr` or `warmup_epochs` are negative.
         """
+
         assert self.min_lr >= 0
         assert self.warmup_epochs >= 0
 
@@ -47,27 +46,28 @@ class LRSchedulerConfig:
         gradient_accumulation_steps: int = 1,
     ):
         """
-        Document this function.
+        Construct learning rate scheduler.
 
         Parameters
         ----------
         optimizer : torch.optim.Optimizer
-            Description not yet provided.
+            Optimizer instance.
         num_batches : int
-            Description not yet provided.
-        gradient_accumulation_steps : int
-            Description not yet provided.
+            Number of batches per epoch.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        CosineAnnealingLRScheduler
+            Configured scheduler.
 
         Raises
         ------
+        AssertionError
+            If required configuration values are invalid.
         ValueError
-            Description not yet provided.
+            If warmup exceeds total epochs.
         """
+
         if self.total_epochs is None or self.total_epochs <= 0:
             raise ValueError("total_epochs must be positive.")
 
@@ -75,10 +75,15 @@ class LRSchedulerConfig:
             raise ValueError("num_batches must be positive.")
 
         if gradient_accumulation_steps <= 0:
-            raise ValueError("gradient_accumulation_steps must be positive.")
+            raise ValueError(
+                "gradient_accumulation_steps must be positive."
+            )
 
         if self.warmup_epochs >= self.total_epochs:
-            raise ValueError("warmup_epochs must be smaller than total_epochs.")
+            raise ValueError(
+                "warmup_epochs must be smaller than total_epochs."
+            )
+
 
         self.total_steps = (
             math.ceil(num_batches / gradient_accumulation_steps) * self.total_epochs
@@ -93,18 +98,18 @@ class LRSchedulerConfig:
 @dataclasses.dataclass
 class OptimizerConfig:
     """
-    Document this class.
+    Configuration for optimizer and optional learning rate scheduler.
 
     Parameters
     ----------
-    lr : float
-        Description not yet provided.
-    weight_decay : float
-        Description not yet provided.
-    optimizer_type : str
-        Description not yet provided.
-    lr_scheduler_config : LRSchedulerConfig | None
-        Description not yet provided.
+    lr : float, optional
+        Learning rate.
+    weight_decay : float, optional
+        Weight decay coefficient.
+    optimizer_type : str, optional
+        Optimizer type ("adam", "adamw").
+    lr_scheduler_config : LRSchedulerConfig or None, optional
+        Learning rate scheduler configuration.
     """
 
     lr: float = 0.0001
@@ -119,13 +124,14 @@ class OptimizerConfig:
 
     def __post_init__(self):
         """
-        Document this function.
+        Validate optimizer configuration.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If weight_decay is negative.
         """
+
         if self.weight_decay < 0:
             raise ValueError("weight_decay has to be positive")
         self.optimizer = None
@@ -138,29 +144,28 @@ class OptimizerConfig:
         gradient_accumulation_steps: int = 1,
     ):
         """
-        Document this function.
+        Construct optimizer wrapper.
 
         Parameters
         ----------
-        module : moduleABC
-            Description not yet provided.
-        num_batches : int
-            Description not yet provided.
-        max_epochs : int
-            Description not yet provided.
-        gradient_accumulation_steps : int
-            Description not yet provided.
+        module : ModuleABC
+            Model whose parameters are optimized.
+        num_batches : int, optional
+            Number of batches per epoch.
+        max_epochs : int, optional
+            Total number of training epochs.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        OptimizerWrapper
+            Wrapped optimizer and scheduler.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If scheduler configuration is incomplete.
         """
+
         if self.lr_scheduler_config is not None:
             if self.lr_scheduler_config.total_epochs is None:
                 if max_epochs is None:
@@ -181,20 +186,18 @@ class OptimizerConfig:
 
 class OptimizerWrapper:
     """
-    Document this class.
+    Wrapper around optimizer and optional learning rate scheduler.
 
     Parameters
     ----------
     config : OptimizerConfig
-        Description not yet provided.
+        Optimizer configuration.
     module : moduleABC
-        Description not yet provided.
-    num_batches : int
-        Description not yet provided.
-    max_epochs : int
-        Description not yet provided.
-    gradient_accumulation_steps : int
-        Description not yet provided.
+        Model instance.
+    num_batches : int or None
+        Number of batches per epoch.
+    max_epochs : int or None
+        Total number of training epochs.
     """
 
     def __init__(
@@ -206,25 +209,19 @@ class OptimizerWrapper:
         gradient_accumulation_steps: int = 1,
     ):
         """
-        Document this function.
+        Initialize optimizer and optional scheduler.
 
         Parameters
         ----------
         config : OptimizerConfig
-            Description not yet provided.
-        module : moduleABC
-            Description not yet provided.
-        num_batches : int
-            Description not yet provided.
-        max_epochs : int
-            Description not yet provided.
-        gradient_accumulation_steps : int
-            Description not yet provided.
+        module : ModuleABC
+        num_batches : int or None
+        max_epochs : int or None
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If scheduler configuration requirements are not met.
         """
         self.lr_scheduler = None
         params = [p for p in module.parameters() if p.requires_grad]
@@ -253,25 +250,22 @@ class OptimizerWrapper:
 
     @property
     def learning_rate(self):
-        """
-        Document this function.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return self.optimizer.param_groups[0]["lr"]
 
     def step(self):
         """
-        Document this function.
+        Perform optimizer step.
+
+        Returns
+        -------
+        None
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If optimizer has not been initialized.
         """
+
         if self.optimizer is None:
             raise RuntimeError("Optimizer must be built before step().")
 
@@ -279,45 +273,56 @@ class OptimizerWrapper:
 
     def scheduler_step(self):
         """
-        Document this function.
+        Perform scheduler step.
+
+        Returns
+        -------
+        None
         """
+
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
 
     def zero_grad(self, set_to_none=True, **kwargs):
         """
-        Document this function.
+        Reset gradients of model parameters.
 
         Parameters
         ----------
-        set_to_none : Any
-            Description not yet provided.
-        **kwargs : Any
-            Description not yet provided.
+        set_to_none : bool, optional
+            Whether to set gradients to None instead of zero.
+        **kwargs
+            Additional arguments passed to optimizer.
+
+        Returns
+        -------
+        None
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If optimizer has not been initialized.
         """
+
         if self.optimizer is None:
             raise RuntimeError("Optimizer must be built before zero_grad().")
         self.optimizer.zero_grad(set_to_none=set_to_none, **kwargs)
 
     def state_dict(self):
         """
-        Document this function.
+        Return optimizer and scheduler state.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        dict
+            State dictionary containing optimizer and scheduler states.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If optimizer has not been initialized.
         """
+
         if self.optimizer is None:
             raise RuntimeError("Optimizer must be built before state_dict().")
 
@@ -332,18 +337,23 @@ class OptimizerWrapper:
 
     def load_state_dict(self, state_dict):
         """
-        Document this function.
+        Load optimizer and scheduler state.
 
         Parameters
         ----------
-        state_dict : Any
-            Description not yet provided.
+        state_dict : dict
+            State dictionary.
+
+        Returns
+        -------
+        None
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If optimizer is not initialized.
         """
+
         if self.optimizer is None:
             raise RuntimeError("Optimizer must be built before load_state_dict().")
 
@@ -355,27 +365,30 @@ class OptimizerWrapper:
 
 class CosineAnnealingLRScheduler:
     """
-    Document this class.
+    Learning rate scheduler with optional warmup and cosine annealing.
 
     Parameters
     ----------
     config : LRSchedulerConfig
-        Description not yet provided.
+        Scheduler configuration.
     optimizer : torch.optim.Optimizer
-        Description not yet provided.
+        Optimizer instance.
     """
 
     def __init__(self, config: LRSchedulerConfig, optimizer: torch.optim.Optimizer):
         """
-        Document this function.
+        Initialize scheduler with optional warmup phase.
 
         Parameters
         ----------
         config : LRSchedulerConfig
-            Description not yet provided.
         optimizer : torch.optim.Optimizer
-            Description not yet provided.
+
+        Returns
+        -------
+        None
         """
+
         self.config = config
         self.optimizer = optimizer
         self.num_steps = 0
@@ -406,13 +419,18 @@ class CosineAnnealingLRScheduler:
 
     def step(self):
         """
-        Document this function.
+        Advance scheduler by one step.
+
+        Returns
+        -------
+        None
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If scheduler has not been initialized.
         """
+
         if not hasattr(self, "scheduler"):
             raise RuntimeError("Scheduler must be built before stepping.")
 
@@ -428,40 +446,56 @@ class CosineAnnealingLRScheduler:
             self.scheduler.step()
             self.num_steps += 1
 
+
     def state_dict(self):
         """
-        Document this function.
+        Return scheduler state.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        dict
+            Scheduler state dictionary.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If scheduler has not been initialized.
         """
+
         if not hasattr(self, "scheduler"):
             raise RuntimeError("Scheduler must be built before stepping.")
 
-        return self.scheduler.state_dict()
+        return {
+            "scheduler": self.scheduler.state_dict(),
+            "num_steps": self.num_steps,
+        }
 
     def load_state_dict(self, state_dict):
         """
-        Document this function.
+        Load scheduler state.
 
         Parameters
         ----------
-        state_dict : Any
-            Description not yet provided.
+        state_dict : dict
+            Scheduler state dictionary.
+
+        Returns
+        -------
+        None
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If scheduler has not been initialized.
         """
+
         if not hasattr(self, "scheduler"):
             raise RuntimeError("Scheduler must be built before stepping.")
 
-        self.scheduler.load_state_dict(state_dict)
+        if "scheduler" in state_dict:
+            self.scheduler.load_state_dict(state_dict["scheduler"])
+            self.num_steps = state_dict["num_steps"]
+
+        else:
+            self.scheduler.load_state_dict(state_dict)
+            self.num_steps = self.scheduler.last_epoch

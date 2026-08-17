@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-InitMethod = Literal["trunc_normal", "xavier"]
+InitMethod = Literal["default", "kaiming", "xavier", "trunc_normal"]
 ActivationName = Literal["relu", "gelu", "silu"]
 NormalizationMethod = Literal["batch", "group", "layer", "none"]
 UpsamplingMethod = Literal["transpose_conv", "bilinear"]
@@ -16,42 +16,11 @@ NoiseLevel = Literal["full", "medium", "low"]
 
 
 def _validate_dropout(value: float | None) -> None:
-    """
-    Document this function.
-
-    Parameters
-    ----------
-    value : float | None
-        Description not yet provided.
-
-    Raises
-    ------
-    ValueError
-        Description not yet provided.
-    """
     if value is not None and not 0 <= value <= 1:
         raise ValueError("Dropout rates must be between 0 and 1.")
 
 
 def _build_activation(name: ActivationName) -> nn.Module:
-    """
-    Document this function.
-
-    Parameters
-    ----------
-    name : ActivationName
-        Description not yet provided.
-
-    Returns
-    -------
-    nn.Module
-        Description not yet provided.
-
-    Raises
-    ------
-    ValueError
-        Description not yet provided.
-    """
     if name == "relu":
         return nn.ReLU(inplace=True)
     if name == "gelu":
@@ -67,28 +36,6 @@ def _build_normalization(
     *,
     group_norm_groups: int = 8,
 ) -> nn.Module:
-    """
-    Document this function.
-
-    Parameters
-    ----------
-    name : NormalizationMethod
-        Description not yet provided.
-    channels : int
-        Description not yet provided.
-    group_norm_groups : int
-        Description not yet provided.
-
-    Returns
-    -------
-    nn.Module
-        Description not yet provided.
-
-    Raises
-    ------
-    ValueError
-        Description not yet provided.
-    """
     if name == "batch":
         return nn.BatchNorm2d(channels)
 
@@ -108,47 +55,15 @@ def _build_normalization(
 
 
 class LayerNorm2d(nn.Module):
-    """
-    Document this class.
-
-    Parameters
-    ----------
-    num_channels : int
-        Description not yet provided.
-    eps : float
-        Description not yet provided.
-    """
+    """Channel-wise LayerNorm for NCHW tensors."""
 
     def __init__(self, num_channels: int, eps: float = 1e-6):
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        num_channels : int
-            Description not yet provided.
-        eps : float
-            Description not yet provided.
-        """
         super().__init__()
         self.weight = nn.Parameter(torch.ones(num_channels))
         self.bias = nn.Parameter(torch.zeros(num_channels))
         self.eps = eps
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        x : torch.Tensor
-            Description not yet provided.
-
-        Returns
-        -------
-        torch.Tensor
-            Description not yet provided.
-        """
         return F.layer_norm(
             x.permute(0, 2, 3, 1),
             (x.shape[1],),
@@ -159,41 +74,13 @@ class LayerNorm2d(nn.Module):
 
 
 class DropPath(nn.Module):
-    """
-    Document this class.
-
-    Parameters
-    ----------
-    drop_probability : float
-        Description not yet provided.
-    """
+    """Per-sample stochastic depth."""
 
     def __init__(self, drop_probability: float = 0.0):
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        drop_probability : float
-            Description not yet provided.
-        """
         super().__init__()
         self.drop_probability = drop_probability
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Document this function.
-
-        Parameters
-        ----------
-        x : torch.Tensor
-            Description not yet provided.
-
-        Returns
-        -------
-        torch.Tensor
-            Description not yet provided.
-        """
         if self.drop_probability == 0.0 or not self.training:
             return x
 
