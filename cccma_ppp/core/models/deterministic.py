@@ -289,7 +289,7 @@ class deterministic(moduleABC):
             Description not yet provided.
         """
         generator = self.model_config.GENERATOR
-        output_sample_size = 0
+        output_sample_size = 1
         if not self.training and generator is not None:
             output_sample_size = generator.num_validation_noise_samples
 

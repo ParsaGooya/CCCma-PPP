@@ -617,7 +617,7 @@ class cVAEUNet(cVAEmodelsABC):
             num_output_samples=num_output_samples,
         )
 
-        if num_output_samples > 0:
+        if num_output_samples > 1:
             sample_sizes = (num_output_samples, latent_sample_size, batch_size)
 
         else:
@@ -682,9 +682,9 @@ class cVAEUNet(cVAEmodelsABC):
 
         if deterministic_guess_only:
             latent_sample_size = 1
-            num_output_samples = 0
+            num_output_samples = 1
 
-        if num_output_samples > 0:
+        if num_output_samples > 1:
             sample_sizes = (num_output_samples, latent_sample_size, batch_size)
 
         else:
@@ -801,7 +801,7 @@ class cVAEUNet(cVAEmodelsABC):
         self,
         latent_samples: torch.Tensor,
         condition_embedding: torch.Tensor | None = None,
-        num_output_samples: int = 0,
+        num_output_samples: int = 1,
     ) -> torch.Tensor:
         """
         Document this function.
@@ -840,7 +840,7 @@ class cVAEUNet(cVAEmodelsABC):
         )
         out = self.generation(latent_samples, num_output_samples)
 
-        if num_output_samples > 0:
+        if num_output_samples > 1:
             return out.reshape(
                 num_output_samples,
                 latent_sample_size,
@@ -1136,7 +1136,7 @@ class Generation(nn.Module):
     def forward(
         self,
         latent_samples: torch.Tensor,
-        num_output_samples: int = 0,
+        num_output_samples: int = 1,
     ) -> torch.Tensor:
         """
         Document this function.
@@ -1159,7 +1159,7 @@ class Generation(nn.Module):
 
         input = TensorMask(tensor=x, mask=None)
 
-        if self.config.GENERATOR is not None and num_output_samples > 0:
+        if self.config.GENERATOR is not None and num_output_samples > 1:
             input = _repeat_tensor_mask(
                 input,
                 repeats=num_output_samples,
@@ -1173,7 +1173,7 @@ class Generation(nn.Module):
             input = up_block(input, skip=None, resize_shape=resize_shape)
 
         output = input.tensor
-        if self.config.GENERATOR is not None and num_output_samples > 0:
+        if self.config.GENERATOR is not None and num_output_samples > 1:
             output = output.reshape(
                 batch_size,
                 num_output_samples,

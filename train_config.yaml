@@ -1,4 +1,4 @@
-experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_cVAEUnet_SIC_PreTrDet
+experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_cVAEUnet_SIC_PreTrDetUnfrozen_Gen
 max_epochs: 100
 train_loader:
     dataset_config:
@@ -45,10 +45,11 @@ module:
                 latent_size: 1000
                 latent_normalization: layer
 
-                condition_embedding_channels: [ 16, 32, 64, 128, 256 ]
+
+                condition_embedding_channels: [16, 32, 64, 128, 256]
                 condition_embedding_size: 1000
                 condition_dependant_latent: true
-                condemb_to_decoder: false
+                condemb_to_decoder: true     
 
                 block_config:
                     name: convnext
@@ -64,10 +65,12 @@ module:
                 upsampling_alignment_method: padd
                 init_method: default
 
+
 losspipeline:
     loss_pipeline:
       - name: mse
     reduction: mean
+
 
 trainer:
     beta_finder:

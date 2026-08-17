@@ -46,7 +46,7 @@ class WriterConfig:
         default_factory=DeterministicPredictorConfig
     )
 
-    num_output_sampling: int = 0
+    num_output_sampling: int = 1
     get_trained_model_stats_from_validation: bool = False
 
     def __post_init__(self):
@@ -58,8 +58,9 @@ class WriterConfig:
         ValueError
             Description not yet provided.
         """
-        if self.num_output_sampling < 0:
-            raise ValueError("num_output_sampling cannot be negative.")
+        if self.num_output_sampling <= 0:
+            raise ValueError("num_output_sampling cannot be zero or negative.")
+
 
     def build(
         self,
@@ -450,7 +451,7 @@ class Writer:
         if hasattr(self.predictor, "nstds"):
             save_naming_convention += f"_{self.predictor.nstds}stds"
 
-        if self.config.num_output_sampling > 0:
+        if self.config.num_output_sampling > 1:
             save_naming_convention += "_output_ensemble"
 
         if self.is_on_root:
