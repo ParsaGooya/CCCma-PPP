@@ -1032,7 +1032,7 @@ def base_config() -> dict[str, Any]:
     train_loader_cfg["num_validation_years"] = 0
     train_loader_cfg["train_years_slice"] = [
         1980,
-        1980,
+        1981,
     ]
 
     train_loader_cfg["load"] = False
