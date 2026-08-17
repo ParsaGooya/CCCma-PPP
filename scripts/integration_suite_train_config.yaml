@@ -1,5 +1,5 @@
 experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_cVAEUnet_SIC_PreTrDet
-max_epochs: 100
+max_epochs: 1
 train_loader:
   dataset_config:
     model:
@@ -27,10 +27,10 @@ train_loader:
   - month_sin
   - month_cos
 
-  train_years_slice: [ 1980, 2019 ]
-  num_validation_years: 3
-  prefetch_factor: 4
-  num_data_workers: 4
+  train_years_slice: [ 1980, 1981 ]
+  num_validation_years: 0
+  prefetch_factor: 0
+  num_data_workers: 0
   reduce_spatial_mask: True
   load: True
 

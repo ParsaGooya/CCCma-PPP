@@ -1,8 +1,16 @@
-from contextlib import redirect_stderr, redirect_stdout
+from __future__ import annotations
+
+from contextlib import (
+    contextmanager,
+    redirect_stderr,
+    redirect_stdout,
+)
 from copy import deepcopy
 from datetime import datetime
-from itertools import product
+from functools import partial
+from itertools import islice, product
 from pathlib import Path
+from typing import Any, Callable, Iterator
 import csv
 import json
 import logging
@@ -15,16 +23,19 @@ import dacite
 import yaml
 from tqdm import tqdm
 
-
 from cccma_ppp.configs import required_sample_dimensions
 from cccma_ppp.generic import registry_imports  # noqa: F401
 from cccma_ppp.loss import kld as _loss_kld  # noqa: F401
 from cccma_ppp.loss import loss as _loss_pipeline  # noqa: F401
 from cccma_ppp.loss import utils_loss as _loss_utils  # noqa: F401
 from cccma_ppp.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
+from cccma_ppp.architectures.mlp import (
+    deterministic as _mlp_deterministic,
+)  # noqa: F401
 from cccma_ppp.architectures.unet import cvae as _unet_cvae  # noqa: F401
-from cccma_ppp.architectures.mlp import deterministic as _mlp_deterministic  # noqa: F401
-from cccma_ppp.architectures.unet import deterministic as _unet_deterministic  # noqa: F401
+from cccma_ppp.architectures.unet import (
+    deterministic as _unet_deterministic,
+)  # noqa: F401
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.train.train import main as train_main
 from cccma_ppp.train.train_configs import TrainConfig, prepare_config
@@ -48,22 +59,34 @@ SUMMARY_PATH = OUTPUT_DIR / "summary.txt"
 INIT_TIME_DIM, LEAD_TIME_DIM = required_sample_dimensions
 
 
+# All combinations remain enabled. Runtime is controlled by limiting
+# the number of real dataloader batches consumed by each training run.
 RUN_BASELINE_TESTS = True
-RUN_TRAIN_DATASET_CONFIG_CASES = True
-
+RUN_TRAIN_LOADER_CONFIG_CASES = True
 RUN_CVAE_MLP_GRID = True
 RUN_CVAE_UNET_GRID = True
 RUN_DETERMINISTIC_MLP_GRID = True
 RUN_DETERMINISTIC_UNET_GRID = True
 
 
-MAX_TRAIN_DATASET_CONFIG_CASES = None
+MAX_TRAIN_LOADER_CONFIG_CASES = None
 MAX_CVAE_MLP_CASES = None
 MAX_CVAE_UNET_CASES = None
 MAX_DETERMINISTIC_MLP_CASES = None
 MAX_DETERMINISTIC_UNET_CASES = None
 
 
+# Each grid case still builds the real configuration, dataset,
+# dataloader, model, loss, optimizer, scheduler and checkpoint.
+# Only iteration over the dataloader is shortened.
+MAX_TRAIN_BATCHES_PER_CASE = 1
+MAX_VALIDATION_BATCHES_PER_CASE = 1
+
+MAX_BASELINE_TRAIN_BATCHES = 1
+MAX_BASELINE_VALIDATION_BATCHES = 1
+
+
+# Integration-sized model dimensions.
 TEST_ENCODER_HIDDEN_DIMS = [16]
 TEST_DECODER_HIDDEN_DIMS = [16]
 TEST_CONDITION_EMBEDDING_DIMS = [16]
@@ -71,6 +94,11 @@ TEST_CONDITION_EMBEDDING_DIMS = [16]
 TEST_UNET_CHANNELS = [4, 8]
 TEST_UNET_CONDITION_CHANNELS = [4, 8]
 TEST_UNET_OUTPUT_BLOCK_HIDDEN_CHANNELS = 8
+
+TEST_UNET_BLOCK_CONFIG = {
+    "name": "convnext",
+    "num_blocks": 2,
+}
 
 
 VALID_TIME_FEATURES = {
@@ -89,9 +117,9 @@ FULL_LEAD_MONTHS = {
 }
 
 
-TRAIN_DATASET_CONFIG_CASES = [
+TRAIN_LOADER_CONFIG_CASES = [
     {
-        "name": "tdc_condition_none_obs_present",
+        "name": "tlc_condition_none_obs_present",
         "condition_method": None,
         "model_ensemble_mean": True,
         "remove_observation": False,
@@ -102,7 +130,7 @@ TRAIN_DATASET_CONFIG_CASES = [
         "expected_failure_reason": "",
     },
     {
-        "name": "tdc_ensemble_mean_obs_present",
+        "name": "tlc_ensemble_mean_obs_present",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
         "remove_observation": False,
@@ -113,7 +141,7 @@ TRAIN_DATASET_CONFIG_CASES = [
         "expected_failure_reason": "",
     },
     {
-        "name": "tdc_same_member_model_not_mean",
+        "name": "tlc_same_member_model_not_mean",
         "condition_method": "same_member",
         "model_ensemble_mean": False,
         "remove_observation": False,
@@ -124,7 +152,7 @@ TRAIN_DATASET_CONFIG_CASES = [
         "expected_failure_reason": "",
     },
     {
-        "name": "tdc_cross_ensemble_model_not_mean",
+        "name": "tlc_cross_ensemble_model_not_mean",
         "condition_method": "cross_ensemble",
         "model_ensemble_mean": False,
         "remove_observation": False,
@@ -135,7 +163,7 @@ TRAIN_DATASET_CONFIG_CASES = [
         "expected_failure_reason": "",
     },
     {
-        "name": "tdc_same_member_invalid_model_mean",
+        "name": "tlc_same_member_invalid_model_mean",
         "condition_method": "same_member",
         "model_ensemble_mean": True,
         "remove_observation": False,
@@ -146,9 +174,13 @@ TRAIN_DATASET_CONFIG_CASES = [
         "expected_failure_reason": (
             "same_member conditioning should fail when model.ensemble_mean=True."
         ),
+        "expected_error_pattern": (
+            r"same_member.*ensemble_mean|"
+            r"ensemble_mean.*same_member"
+        ),
     },
     {
-        "name": "tdc_observation_missing_condition_none",
+        "name": "tlc_observation_missing_condition_none",
         "condition_method": None,
         "model_ensemble_mean": True,
         "remove_observation": True,
@@ -157,11 +189,13 @@ TRAIN_DATASET_CONFIG_CASES = [
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
         "expected_result": "FAIL",
         "expected_failure_reason": (
-            "observation=None and condition_method=None should fail."
+            "A training target is unavailable when observation is "
+            "missing and condition_method is None."
         ),
+        "expected_error_pattern": (r"observation|target|condition_method"),
     },
     {
-        "name": "tdc_observation_missing_ensemble_mean",
+        "name": "tlc_observation_missing_ensemble_mean",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
         "remove_observation": True,
@@ -172,7 +206,7 @@ TRAIN_DATASET_CONFIG_CASES = [
         "expected_failure_reason": "",
     },
     {
-        "name": "tdc_time_features_none",
+        "name": "tlc_time_features_none",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
         "remove_observation": False,
@@ -183,7 +217,7 @@ TRAIN_DATASET_CONFIG_CASES = [
         "expected_failure_reason": "",
     },
     {
-        "name": "tdc_time_features_init_time",
+        "name": "tlc_time_features_init_time",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
         "remove_observation": False,
@@ -194,7 +228,22 @@ TRAIN_DATASET_CONFIG_CASES = [
         "expected_failure_reason": "",
     },
     {
-        "name": "tdc_time_features_all",
+        "name": "tlc_time_features_production",
+        "condition_method": "ensemble_mean",
+        "model_ensemble_mean": True,
+        "remove_observation": False,
+        "add_condition": False,
+        "time_features": [
+            LEAD_TIME_DIM,
+            "month_sin",
+            "month_cos",
+        ],
+        "lead_months": deepcopy(FULL_LEAD_MONTHS),
+        "expected_result": "PASS",
+        "expected_failure_reason": "",
+    },
+    {
+        "name": "tlc_time_features_all",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
         "remove_observation": False,
@@ -212,7 +261,7 @@ TRAIN_DATASET_CONFIG_CASES = [
         "expected_failure_reason": "",
     },
     {
-        "name": "tdc_lead_months_single",
+        "name": "tlc_lead_months_single",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
         "remove_observation": False,
@@ -226,18 +275,7 @@ TRAIN_DATASET_CONFIG_CASES = [
         "expected_failure_reason": "",
     },
     {
-        "name": "tdc_lead_months_full",
-        "condition_method": "ensemble_mean",
-        "model_ensemble_mean": True,
-        "remove_observation": False,
-        "add_condition": False,
-        "time_features": [INIT_TIME_DIM],
-        "lead_months": deepcopy(FULL_LEAD_MONTHS),
-        "expected_result": "PASS",
-        "expected_failure_reason": "",
-    },
-    {
-        "name": "tdc_lead_months_missing",
+        "name": "tlc_lead_months_missing",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
         "remove_observation": False,
@@ -248,7 +286,7 @@ TRAIN_DATASET_CONFIG_CASES = [
         "expected_failure_reason": "",
     },
     {
-        "name": "tdc_explicit_condition_ensemble_mean",
+        "name": "tlc_explicit_condition_ensemble_mean",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
         "condition_ensemble_mean": True,
@@ -260,7 +298,7 @@ TRAIN_DATASET_CONFIG_CASES = [
         "expected_failure_reason": "",
     },
     {
-        "name": "tdc_explicit_condition_cross_ensemble",
+        "name": "tlc_explicit_condition_cross_ensemble",
         "condition_method": "cross_ensemble",
         "model_ensemble_mean": False,
         "condition_ensemble_mean": False,
@@ -272,7 +310,7 @@ TRAIN_DATASET_CONFIG_CASES = [
         "expected_failure_reason": "",
     },
     {
-        "name": "tdc_static_without_condition",
+        "name": "tlc_static_without_condition",
         "condition_method": "static",
         "model_ensemble_mean": True,
         "remove_observation": False,
@@ -281,11 +319,12 @@ TRAIN_DATASET_CONFIG_CASES = [
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
         "expected_result": "FAIL",
         "expected_failure_reason": (
-            "static conditioning requires an explicit condition dataset."
+            "Static conditioning requires an explicit condition dataset."
         ),
+        "expected_error_pattern": (r"static.*condition|condition.*static"),
     },
     {
-        "name": "tdc_static_with_model_copied_condition",
+        "name": "tlc_static_with_model_copied_condition",
         "condition_method": "static",
         "model_ensemble_mean": True,
         "condition_ensemble_mean": True,
@@ -295,16 +334,18 @@ TRAIN_DATASET_CONFIG_CASES = [
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
         "expected_result": "FAIL",
         "expected_failure_reason": (
-            "static conditioning cannot point to the same model data."
+            "Static conditioning cannot use the same data configuration "
+            "as the model input."
         ),
+        "expected_error_pattern": (r"static|same.*model|condition"),
     },
 ]
 
 
 CVAE_GRID = {
-    "min_posterior_variance": [
+    "posterior_variance_limits": [
         None,
-        2,
+        [0.5, 2.0],
     ],
     "use_prior_flow": [
         False,
@@ -321,7 +362,12 @@ CVAE_GRID = {
         True,
         False,
     ],
+    "condemb_to_decoder": [
+        True,
+        False,
+    ],
     "init_method": [
+        "default",
         "xavier",
         "trunc_normal",
     ],
@@ -342,6 +388,7 @@ MLP_GRID = {
 
 DETERMINISTIC_GRID = {
     "init_method": [
+        "default",
         "xavier",
         "trunc_normal",
     ],
@@ -371,6 +418,7 @@ CSV_COLUMNS = [
     "case_name",
     "module_type",
     "architecture",
+    "model_type",
     "condition_method",
     "model_ensemble_mean",
     "condition_ensemble_mean",
@@ -378,17 +426,19 @@ CSV_COLUMNS = [
     "add_condition",
     "time_features",
     "lead_months",
-    "min_posterior_variance",
+    "posterior_variance_limits",
     "use_prior_flow",
     "combined_CGCN_weight",
     "latent_size",
     "condition_dependant_latent",
+    "condemb_to_decoder",
     "batch_normalization",
     "dropout_rate",
     "init_method",
     "append_mode",
     "expected_result",
     "expected_failure_reason",
+    "expected_error_pattern",
     "config_path",
     "experiment_dir",
     "log_path",
@@ -397,30 +447,78 @@ CSV_COLUMNS = [
 ]
 
 
-def prepare_output_directories():
-    OUTPUT_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-    GENERATED_CONFIG_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-    LOG_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+class LimitedLoader:
+    """
+    Proxy around a real CCCma-PPP dataloader.
+
+    Attribute access is delegated to the real loader. Only iteration
+    and reported length are shortened.
+    """
+
+    def __init__(
+        self,
+        loader: Any,
+        max_batches: int | None,
+    ) -> None:
+        self._loader = loader
+        self._max_batches = max_batches
+
+    def __iter__(self) -> Iterator:
+        iterator = iter(self._loader)
+
+        if self._max_batches is None:
+            yield from iterator
+            return
+
+        yield from islice(
+            iterator,
+            self._max_batches,
+        )
+
+    def __len__(self) -> int:
+        loader_length = len(self._loader)
+
+        if self._max_batches is None:
+            return loader_length
+
+        return min(
+            loader_length,
+            self._max_batches,
+        )
+
+    def __getattr__(
+        self,
+        name: str,
+    ) -> Any:
+        return getattr(
+            self._loader,
+            name,
+        )
 
 
-def cleanup_logging_handlers():
+def prepare_output_directories() -> None:
+    for path in (
+        OUTPUT_DIR,
+        GENERATED_CONFIG_DIR,
+        LOG_DIR,
+    ):
+        path.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+
+def cleanup_logging_handlers() -> None:
     logger_names = [
         "",
         "training",
     ]
 
-    for logger_name in list(logging.Logger.manager.loggerDict):
-        if logger_name.startswith("cccma_ppp"):
-            logger_names.append(logger_name)
+    logger_names.extend(
+        logger_name
+        for logger_name in logging.Logger.manager.loggerDict
+        if logger_name.startswith("cccma_ppp")
+    )
 
     for logger_name in dict.fromkeys(logger_names):
         logger = logging.getLogger(logger_name)
@@ -441,7 +539,7 @@ def cleanup_logging_handlers():
         logger.propagate = False
 
 
-def init_csv():
+def init_csv() -> None:
     prepare_output_directories()
 
     with RESULTS_CSV.open(
@@ -456,69 +554,9 @@ def init_csv():
         writer.writeheader()
 
 
-def log_result(
-    *,
-    suite,
-    case_name,
-    module_type,
-    architecture,
-    params,
-    config_path,
-    experiment_dir,
-    log_path,
-    passed,
-    error="",
-):
-    row = {
-        "timestamp": (datetime.now().isoformat()),
-        "suite": suite,
-        "case_name": case_name,
-        "module_type": module_type,
-        "architecture": architecture,
-        "condition_method": params.get("condition_method"),
-        "model_ensemble_mean": params.get("model_ensemble_mean"),
-        "condition_ensemble_mean": params.get("condition_ensemble_mean"),
-        "remove_observation": params.get("remove_observation"),
-        "add_condition": params.get("add_condition"),
-        "time_features": json.dumps(params.get("time_features")),
-        "lead_months": json.dumps(params.get("lead_months")),
-        "min_posterior_variance": params.get("min_posterior_variance"),
-        "use_prior_flow": params.get("use_prior_flow"),
-        "combined_CGCN_weight": params.get("combined_CGCN_weight"),
-        "latent_size": params.get("latent_size"),
-        "condition_dependant_latent": (params.get("condition_dependant_latent")),
-        "batch_normalization": params.get("batch_normalization"),
-        "dropout_rate": params.get("dropout_rate"),
-        "init_method": params.get("init_method"),
-        "append_mode": params.get("append_mode"),
-        "expected_result": params.get(
-            "expected_result",
-            "PASS",
-        ),
-        "expected_failure_reason": params.get(
-            "expected_failure_reason",
-            "",
-        ),
-        "config_path": str(config_path),
-        "experiment_dir": str(experiment_dir),
-        "log_path": str(log_path),
-        "result": ("PASS" if passed else "FAIL"),
-        "error": error,
-    }
-
-    with RESULTS_CSV.open(
-        "a",
-        newline="",
-        encoding="utf-8",
-    ) as file:
-        writer = csv.DictWriter(
-            file,
-            fieldnames=CSV_COLUMNS,
-        )
-        writer.writerow(row)
-
-
-def clean_name(value):
+def clean_name(
+    value: Any,
+) -> str:
     value = str(value).replace(
         "None",
         "none",
@@ -537,7 +575,173 @@ def clean_name(value):
     return value.strip("_")
 
 
-def normalize_nullable_fields(cfg):
+def serialize_json(
+    value: Any,
+) -> str:
+    return json.dumps(
+        value,
+        sort_keys=True,
+        default=str,
+    )
+
+
+def case_paths(
+    case_name: str,
+) -> dict[str, Path]:
+    safe_name = clean_name(case_name)
+
+    return {
+        "config_path": (GENERATED_CONFIG_DIR / f"{safe_name}.yaml"),
+        "experiment_dir": (OUTPUT_DIR / safe_name),
+        "log_path": (LOG_DIR / f"{safe_name}.log"),
+    }
+
+
+def log_result(
+    *,
+    task: dict[str, Any],
+    paths: dict[str, Path],
+    passed: bool,
+    error: str,
+) -> None:
+    params = task["params"]
+
+    row = {
+        "timestamp": datetime.now().isoformat(),
+        "suite": task["suite"],
+        "case_name": task["case_name"],
+        "module_type": task["module_type"],
+        "architecture": task["architecture"],
+        "model_type": params.get("model_type"),
+        "condition_method": params.get("condition_method"),
+        "model_ensemble_mean": params.get("model_ensemble_mean"),
+        "condition_ensemble_mean": params.get("condition_ensemble_mean"),
+        "remove_observation": params.get("remove_observation"),
+        "add_condition": params.get("add_condition"),
+        "time_features": serialize_json(params.get("time_features")),
+        "lead_months": serialize_json(params.get("lead_months")),
+        "posterior_variance_limits": serialize_json(
+            params.get("posterior_variance_limits")
+        ),
+        "use_prior_flow": params.get("use_prior_flow"),
+        "combined_CGCN_weight": params.get("combined_CGCN_weight"),
+        "latent_size": params.get("latent_size"),
+        "condition_dependant_latent": params.get("condition_dependant_latent"),
+        "condemb_to_decoder": params.get("condemb_to_decoder"),
+        "batch_normalization": params.get("batch_normalization"),
+        "dropout_rate": params.get("dropout_rate"),
+        "init_method": params.get("init_method"),
+        "append_mode": params.get("append_mode"),
+        "expected_result": params.get(
+            "expected_result",
+            "PASS",
+        ),
+        "expected_failure_reason": params.get(
+            "expected_failure_reason",
+            "",
+        ),
+        "expected_error_pattern": params.get(
+            "expected_error_pattern",
+            "",
+        ),
+        "config_path": str(paths["config_path"]),
+        "experiment_dir": str(paths["experiment_dir"]),
+        "log_path": str(paths["log_path"]),
+        "result": ("PASS" if passed else "FAIL"),
+        "error": error,
+    }
+
+    with RESULTS_CSV.open(
+        "a",
+        newline="",
+        encoding="utf-8",
+    ) as file:
+        writer = csv.DictWriter(
+            file,
+            fieldnames=CSV_COLUMNS,
+        )
+        writer.writerow(row)
+
+
+def normalize_numeric_fields(
+    cfg: dict[str, Any],
+) -> dict[str, Any]:
+    optimization_cfg = cfg.get("optimization")
+
+    if not isinstance(
+        optimization_cfg,
+        dict,
+    ):
+        return cfg
+
+    numeric_fields = [
+        (
+            optimization_cfg,
+            "lr",
+        ),
+        (
+            optimization_cfg,
+            "weight_decay",
+        ),
+    ]
+
+    scheduler_cfg = optimization_cfg.get("lr_scheduler_config")
+
+    if isinstance(
+        scheduler_cfg,
+        dict,
+    ):
+        numeric_fields.append(
+            (
+                scheduler_cfg,
+                "min_lr",
+            )
+        )
+
+    for owner, field_name in numeric_fields:
+        value = owner.get(field_name)
+
+        if value is None:
+            continue
+
+        if isinstance(
+            value,
+            bool,
+        ):
+            raise TypeError(f"{field_name} must be numeric, not boolean.")
+
+        if isinstance(
+            value,
+            str,
+        ):
+            try:
+                value = float(value)
+            except ValueError as exc:
+                raise ValueError(
+                    f"{field_name} must be numeric, got {value!r}."
+                ) from exc
+
+        if not isinstance(
+            value,
+            (
+                int,
+                float,
+            ),
+        ):
+            raise TypeError(
+                f"{field_name} must be numeric, got {type(value).__name__}."
+            )
+
+        owner[field_name] = float(value)
+
+    return cfg
+
+
+def normalize_nullable_fields(
+    cfg: dict[str, Any],
+) -> dict[str, Any]:
+    normalize_numeric_fields(cfg)
+
     train_loader_cfg = cfg.setdefault(
         "train_loader",
         {},
@@ -549,9 +753,8 @@ def normalize_nullable_fields(cfg):
 
     if "time_features" in dataset_cfg:
         raise ValueError(
-            "time_features is no longer a "
-            "DatasetConfig field. Configure it "
-            "under train_loader.time_features."
+            "time_features is no longer a DatasetConfig field. "
+            "Configure it under train_loader.time_features."
         )
 
     if train_loader_cfg.get("time_features") is None:
@@ -580,9 +783,9 @@ def normalize_nullable_fields(cfg):
         {},
     )
 
-    if module_cfg.get("min_posterior_variance") is None:
+    if module_cfg.get("posterior_variance_limits") is None:
         module_cfg.pop(
-            "min_posterior_variance",
+            "posterior_variance_limits",
             None,
         )
 
@@ -606,10 +809,18 @@ def normalize_nullable_fields(cfg):
             None,
         )
 
+    if model_cfg.get("deterministic_guess_config") is None:
+        model_cfg.pop(
+            "deterministic_guess_config",
+            None,
+        )
+
     return cfg
 
 
-def validate_generated_config(cfg):
+def validate_generated_config(
+    cfg: dict[str, Any],
+) -> dict[str, Any]:
     train_loader_cfg = cfg.get("train_loader")
 
     if not isinstance(
@@ -628,9 +839,8 @@ def validate_generated_config(cfg):
 
     if "time_features" in dataset_cfg:
         raise ValueError(
-            "time_features must be configured "
-            "under train_loader, not "
-            "train_loader.dataset_config."
+            "time_features must be configured under "
+            "train_loader, not train_loader.dataset_config."
         )
 
     time_features = train_loader_cfg.get("time_features")
@@ -646,59 +856,107 @@ def validate_generated_config(cfg):
 
         if unsupported:
             raise ValueError(
-                "Unsupported "
-                "train_loader.time_features: "
-                f"{sorted(unsupported)}. "
-                "Supported values are "
+                "Unsupported train_loader.time_features: "
+                f"{sorted(unsupported)}. Supported values are "
                 f"{sorted(VALID_TIME_FEATURES)}."
             )
 
-    module_cfg = cfg.get(
-        "module",
-        {},
-    )
-    model_selector = module_cfg.get(
-        "config",
-        {},
-    ).get(
-        "ModelConfig",
-        {},
-    )
+    module_cfg = cfg.get("module")
+
+    if not isinstance(
+        module_cfg,
+        dict,
+    ):
+        raise ValueError("module must be configured as a mapping.")
+
+    module_type = str(
+        module_cfg.get(
+            "type",
+            "",
+        )
+    ).lower()
+
+    raw_module_config = module_cfg.get("config")
+
+    if not isinstance(
+        raw_module_config,
+        dict,
+    ):
+        raise ValueError("module.config must be configured as a mapping.")
+
+    if "min_posterior_variance" in raw_module_config:
+        raise ValueError(
+            "min_posterior_variance is obsolete. Use posterior_variance_limits."
+        )
+
+    model_selector = raw_module_config.get("ModelConfig")
+
+    if not isinstance(
+        model_selector,
+        dict,
+    ):
+        raise ValueError("module.config.ModelConfig must be configured as a mapping.")
 
     if not model_selector.get("type"):
         raise ValueError("module.config.ModelConfig.type must be configured.")
 
+    model_config = model_selector.get("config")
+
     if not isinstance(
-        model_selector.get("config"),
+        model_config,
         dict,
     ):
         raise ValueError("module.config.ModelConfig.config must be a mapping.")
 
     model_type = str(model_selector["type"]).lower()
-    model_config = model_selector["config"]
 
-    if model_type == "unet":
+    if model_type in {
+        "unet",
+        "unetsic",
+    }:
         block_config = model_config.get("block_config")
 
-        if not isinstance(block_config, dict):
+        if not isinstance(
+            block_config,
+            dict,
+        ):
             raise ValueError("UNet ModelConfig requires block_config to be a mapping.")
 
         if not block_config.get("name"):
             raise ValueError("UNet ModelConfig.block_config requires a nonempty name.")
 
+        if "process_skip" in model_config:
+            raise ValueError("process_skip is obsolete. Use process_skip_connections.")
+
+        if (
+            module_type == "deterministic"
+            and "upsampling_alignment_method" in model_config
+        ):
+            raise ValueError(
+                "Deterministic UNet uses "
+                "skip_alignment_method, not "
+                "upsampling_alignment_method."
+            )
+
+        if module_type == "cvae" and "skip_alignment_method" in model_config:
+            raise ValueError(
+                "cVAE UNet uses upsampling_alignment_method, not skip_alignment_method."
+            )
+
     return cfg
 
 
 def write_yaml(
-    cfg,
-    output_path,
-):
+    cfg: dict[str, Any],
+    output_path: Path,
+) -> Path:
     cfg = deepcopy(cfg)
-    output_path = Path(output_path)
 
+    normalize_numeric_fields(cfg)
     normalize_nullable_fields(cfg)
     validate_generated_config(cfg)
 
+    output_path = Path(output_path)
     output_path.parent.mkdir(
         parents=True,
         exist_ok=True,
@@ -717,23 +975,28 @@ def write_yaml(
     return output_path
 
 
-def load_train_config(config_path):
+def load_train_config(
+    config_path: Path,
+) -> TrainConfig:
     cfg_data = prepare_config(config_path)
 
     if cfg_data is None:
         raise ValueError(f"Generated training configuration is empty: {config_path}")
 
+    normalize_numeric_fields(cfg_data)
     normalize_nullable_fields(cfg_data)
     validate_generated_config(cfg_data)
 
     return dacite.from_dict(
         data_class=TrainConfig,
         data=cfg_data,
-        config=dacite.Config(strict=True),
+        config=dacite.Config(
+            strict=True,
+        ),
     )
 
 
-def base_config():
+def base_config() -> dict[str, Any]:
     cfg = prepare_config(BASE_TRAIN_CONFIG)
 
     if cfg is None:
@@ -741,7 +1004,11 @@ def base_config():
             f"The base training configuration is empty: {BASE_TRAIN_CONFIG}"
         )
 
+    normalize_numeric_fields(cfg)
+
     cfg["max_epochs"] = 1
+    cfg["log_every_n_epochs"] = 1
+    cfg["save_checkpoint"] = True
 
     train_loader_cfg = cfg.get("train_loader")
 
@@ -763,25 +1030,37 @@ def base_config():
 
     if "time_features" in dataset_cfg:
         raise ValueError(
-            "The base configuration still defines "
-            "train_loader.dataset_config."
-            "time_features. Move the field to "
-            "train_loader.time_features."
+            "Move dataset_config.time_features to train_loader.time_features."
         )
 
+    train_loader_cfg["batch_size"] = 1
     train_loader_cfg["num_data_workers"] = 0
     train_loader_cfg["num_validation_years"] = 0
-    train_loader_cfg["train_years_slice"] = [1961, 1962]
+    train_loader_cfg["train_years_slice"] = [
+        1980,
+        1980,
+    ]
+
+    # Keep lazy loading so creating each loader does not eagerly load
+    # the entire selected period.
+    train_loader_cfg["load"] = False
+
+    # PyTorch may reject prefetch_factor when num_workers is zero.
+    train_loader_cfg.pop(
+        "prefetch_factor",
+        None,
+    )
 
     normalize_nullable_fields(cfg)
+    validate_generated_config(cfg)
 
     return cfg
 
 
 def run_silenced(
-    function,
-    log_path,
-):
+    function: Callable[[], Any],
+    log_path: Path,
+) -> Any:
     log_path = Path(log_path)
     log_path.parent.mkdir(
         parents=True,
@@ -808,9 +1087,9 @@ def run_silenced(
 
 def assert_training_completed(
     *,
-    experiment_dir,
-    log_path,
-):
+    experiment_dir: Path,
+    log_path: Path,
+) -> None:
     experiment_dir = Path(experiment_dir)
     log_path = Path(log_path)
 
@@ -837,23 +1116,21 @@ def assert_training_completed(
     if "Training finished" not in log_text:
         raise AssertionError(
             "Training did not reach completion. "
-            "The log does not contain "
-            f"'Training finished': {log_path}"
+            "The log does not contain 'Training finished': "
+            f"{log_path}"
         )
 
 
-def get_original_flow_config(cfg):
-    return deepcopy(cfg["module"]["config"].get("prior_flow_config"))
-
-
-def ensure_cvae_beta_finder(cfg):
+def ensure_cvae_beta_finder(
+    cfg: dict[str, Any],
+) -> dict[str, Any]:
     cfg.setdefault(
         "trainer",
         {},
     ).setdefault(
         "beta_finder",
         {
-            "beta": 10,
+            "beta": 0.01,
             "num_epoch_to_warmup": 10,
         },
     )
@@ -862,8 +1139,8 @@ def ensure_cvae_beta_finder(cfg):
 
 
 def remove_deterministic_beta_finder(
-    cfg,
-):
+    cfg: dict[str, Any],
+) -> dict[str, Any]:
     cfg.setdefault(
         "trainer",
         {},
@@ -875,15 +1152,15 @@ def remove_deterministic_beta_finder(
     return cfg
 
 
-def apply_train_dataset_config_params(
-    cfg,
-    params,
-):
+def apply_train_loader_config_params(
+    cfg: dict[str, Any],
+    params: dict[str, Any],
+) -> dict[str, Any]:
     train_loader_cfg = cfg["train_loader"]
     dataset_cfg = train_loader_cfg["dataset_config"]
 
     if "time_features" in dataset_cfg:
-        raise ValueError("time_features must not be configured in dataset_config.")
+        raise ValueError("time_features must not be configured inside dataset_config.")
 
     if "model_ensemble_mean" in params:
         dataset_cfg["model"]["ensemble_mean"] = params["model_ensemble_mean"]
@@ -952,14 +1229,15 @@ def apply_train_dataset_config_params(
 
 def build_mlp_model_config(
     *,
-    latent_size=None,
-    condition_dependant_latent=None,
-    batch_normalization=False,
-    dropout_rate=None,
-    init_method="xavier",
-    append_mode=None,
-    cvae=False,
-):
+    latent_size: int | None = None,
+    condition_dependant_latent: bool | None = None,
+    condemb_to_decoder: bool = True,
+    batch_normalization: bool = False,
+    dropout_rate: float | None = None,
+    init_method: str = "default",
+    append_mode: int | None = None,
+    cvae: bool = False,
+) -> dict[str, Any]:
     model_cfg = {
         "encoder_hidden_dims": deepcopy(TEST_ENCODER_HIDDEN_DIMS),
         "decoder_hidden_dims": deepcopy(TEST_DECODER_HIDDEN_DIMS),
@@ -975,7 +1253,7 @@ def build_mlp_model_config(
         model_cfg["latent_size"] = latent_size
         model_cfg["condition_embedding_size"] = latent_size
         model_cfg["condition_dependant_latent"] = condition_dependant_latent
-        model_cfg["condemb_to_decoder"] = True
+        model_cfg["condemb_to_decoder"] = condemb_to_decoder
     else:
         model_cfg["append_mode"] = append_mode
 
@@ -987,16 +1265,17 @@ def build_mlp_model_config(
 
 def build_unet_model_config(
     *,
-    latent_size=None,
-    condition_dependant_latent=None,
-    init_method="trunc_normal",
-    cvae=False,
-):
+    latent_size: int | None = None,
+    condition_dependant_latent: bool | None = None,
+    condemb_to_decoder: bool = True,
+    init_method: str = "default",
+    model_type: str = "UNetSIC",
+    deterministic_guess_checkpoint: (str | Path | None) = None,
+    cvae: bool = False,
+) -> dict[str, Any]:
     model_cfg = {
         "channels": deepcopy(TEST_UNET_CHANNELS),
-        "block_config": {
-            "name": "standard_conv",
-        },
+        "block_config": deepcopy(TEST_UNET_BLOCK_CONFIG),
         "upsampling_method": "bilinear",
         "transpose_kernel_sizes": 3,
         "mask_pooling": "any",
@@ -1005,87 +1284,140 @@ def build_unet_model_config(
         "output_block_hidden_channels": (TEST_UNET_OUTPUT_BLOCK_HIDDEN_CHANNELS),
         "init_method": init_method,
         "GENERATOR": None,
+        "clip_output": False,
     }
 
     if cvae:
-        model_cfg["upsampling_alignment_method"] = "padd"
-        model_cfg["latent_size"] = latent_size
-        model_cfg["condition_embedding_channels"] = deepcopy(
-            TEST_UNET_CONDITION_CHANNELS
+        if latent_size is None:
+            raise ValueError("latent_size is required for cVAE UNetSIC.")
+
+        model_cfg.update(
+            {
+                "latent_size": latent_size,
+                "latent_normalization": "layer",
+                "condition_embedding_channels": deepcopy(TEST_UNET_CONDITION_CHANNELS),
+                "condition_embedding_size": latent_size,
+                "condition_dependant_latent": (condition_dependant_latent),
+                "condemb_to_decoder": (condemb_to_decoder),
+                "upsampling_alignment_method": "padd",
+                "add_skip_latent": False,
+            }
         )
-        model_cfg["condition_embedding_size"] = latent_size
-        model_cfg["latent_normalization"] = "layer"
-        model_cfg["condition_dependant_latent"] = condition_dependant_latent
-        model_cfg["condemb_to_decoder"] = True
-        model_cfg["deterministic_guess_config"] = None
-        model_cfg["add_skip_latent"] = False
+
+        if deterministic_guess_checkpoint is None:
+            model_cfg["deterministic_guess_config"] = None
+        else:
+            checkpoint_path = Path(deterministic_guess_checkpoint)
+
+            if not checkpoint_path.is_file():
+                raise FileNotFoundError(
+                    "The deterministic-guess checkpoint "
+                    "does not exist: "
+                    f"{checkpoint_path}"
+                )
+
+            model_cfg["deterministic_guess_config"] = {
+                "type": "UNetSIC",
+                "share_output_block": True,
+                "load_dir": str(checkpoint_path),
+                "freeze_weights": True,
+            }
     else:
-        model_cfg["skip_alignment_method"] = "padd"
-        model_cfg["process_skip"] = False
+        model_cfg.update(
+            {
+                "skip_alignment_method": "padd",
+                "add_skip_connections": True,
+                "process_skip_connections": False,
+            }
+        )
 
     return {
-        "type": "UNet",
+        "type": model_type,
         "config": model_cfg,
     }
 
 
-def ensure_flattener_for_mlp(cfg):
+def modify_preprocessors(
+    cfg: dict[str, Any],
+    *,
+    add_flattener: bool,
+) -> dict[str, Any]:
     dataset_cfg = cfg["train_loader"]["dataset_config"]
 
-    for data_name in ("model", "observation", "condition"):
+    for data_name in (
+        "model",
+        "observation",
+        "condition",
+    ):
         data_cfg = dataset_cfg.get(data_name)
-        if not isinstance(data_cfg, dict):
-            continue
 
-        pipeline = data_cfg.setdefault("preprocessing_pipeline", {})
-        preprocessors = pipeline.setdefault("preprocessors_list", [])
-
-        if not any(
-            isinstance(step, dict) and step.get("name") == "flattener"
-            for step in preprocessors
+        if not isinstance(
+            data_cfg,
+            dict,
         ):
-            preprocessors.append({"name": "flattener"})
-
-    return cfg
-
-
-def remove_flattener_for_unet(cfg):
-    dataset_cfg = cfg["train_loader"]["dataset_config"]
-
-    for data_name in ("model", "observation", "condition"):
-        data_cfg = dataset_cfg.get(data_name)
-        if not isinstance(data_cfg, dict):
             continue
 
-        pipeline = data_cfg.get("preprocessing_pipeline", {})
-        preprocessors = pipeline.get("preprocessors_list", [])
-        pipeline["preprocessors_list"] = [
+        pipeline = data_cfg.setdefault(
+            "preprocessing_pipeline",
+            {},
+        )
+        preprocessors = pipeline.setdefault(
+            "preprocessors_list",
+            [],
+        )
+
+        preprocessors[:] = [
             step
             for step in preprocessors
-            if not (isinstance(step, dict) and step.get("name") == "flattener")
+            if not (
+                isinstance(
+                    step,
+                    dict,
+                )
+                and step.get("name") == "flattener"
+            )
         ]
+
+        if add_flattener:
+            preprocessors.append(
+                {
+                    "name": "flattener",
+                }
+            )
 
     return cfg
 
 
 def build_cvae_config_from_params(
-    params,
-):
+    params: dict[str, Any],
+) -> dict[str, Any]:
     cfg = base_config()
+
     cfg["module"]["type"] = "cVAE"
 
-    apply_train_dataset_config_params(
+    apply_train_loader_config_params(
         cfg,
         params,
     )
 
     module_cfg = cfg["module"]["config"]
-    original_flow_config = get_original_flow_config(cfg)
+
+    original_flow_config = deepcopy(module_cfg.get("prior_flow_config"))
 
     module_cfg["combined_CGCN_weight"] = params.get(
         "combined_CGCN_weight",
         0.0,
     )
+
+    posterior_variance_limits = params.get("posterior_variance_limits")
+
+    if posterior_variance_limits is None:
+        module_cfg.pop(
+            "posterior_variance_limits",
+            None,
+        )
+    else:
+        module_cfg["posterior_variance_limits"] = deepcopy(posterior_variance_limits)
 
     if params.get(
         "use_prior_flow",
@@ -1097,6 +1429,11 @@ def build_cvae_config_from_params(
             )
 
         module_cfg["prior_flow_config"] = original_flow_config
+
+        cfg.setdefault(
+            "losspipeline",
+            {},
+        )["reduction"] = "sum"
     else:
         module_cfg.pop(
             "prior_flow_config",
@@ -1105,15 +1442,19 @@ def build_cvae_config_from_params(
 
     architecture = params["architecture"]
 
-    if architecture == "MLP":
-        ensure_flattener_for_mlp(cfg)
-    elif architecture == "UNet":
-        remove_flattener_for_unet(cfg)
+    modify_preprocessors(
+        cfg,
+        add_flattener=(architecture == "MLP"),
+    )
 
     if architecture == "MLP":
         module_cfg["ModelConfig"] = build_mlp_model_config(
             latent_size=params["latent_size"],
-            condition_dependant_latent=(params["condition_dependant_latent"]),
+            condition_dependant_latent=params["condition_dependant_latent"],
+            condemb_to_decoder=params.get(
+                "condemb_to_decoder",
+                True,
+            ),
             batch_normalization=params.get(
                 "batch_normalization",
                 False,
@@ -1125,8 +1466,14 @@ def build_cvae_config_from_params(
     elif architecture == "UNet":
         module_cfg["ModelConfig"] = build_unet_model_config(
             latent_size=params["latent_size"],
-            condition_dependant_latent=(params["condition_dependant_latent"]),
+            condition_dependant_latent=params["condition_dependant_latent"],
+            condemb_to_decoder=params.get(
+                "condemb_to_decoder",
+                True,
+            ),
             init_method=params["init_method"],
+            model_type="UNetSIC",
+            deterministic_guess_checkpoint=params.get("deterministic_guess_checkpoint"),
             cvae=True,
         )
     else:
@@ -1140,21 +1487,21 @@ def build_cvae_config_from_params(
 
 
 def build_deterministic_config_from_params(
-    params,
-):
+    params: dict[str, Any],
+) -> dict[str, Any]:
     cfg = base_config()
 
-    apply_train_dataset_config_params(
+    apply_train_loader_config_params(
         cfg,
         params,
     )
 
     architecture = params["architecture"]
 
-    if architecture == "MLP":
-        ensure_flattener_for_mlp(cfg)
-    elif architecture == "UNet":
-        remove_flattener_for_unet(cfg)
+    modify_preprocessors(
+        cfg,
+        add_flattener=(architecture == "MLP"),
+    )
 
     if architecture == "MLP":
         model_selector = build_mlp_model_config(
@@ -1167,6 +1514,7 @@ def build_deterministic_config_from_params(
     elif architecture == "UNet":
         model_selector = build_unet_model_config(
             init_method=params["init_method"],
+            model_type="UNetSIC",
             cvae=False,
         )
     else:
@@ -1186,38 +1534,24 @@ def build_deterministic_config_from_params(
     return cfg
 
 
-def mark_cvae_expected_result(params):
-    invalid = (
-        params.get("use_prior_flow") is True
-        and params.get("condition_dependant_latent") is False
-    )
-
-    if invalid:
-        params["expected_result"] = "FAIL"
-        params["expected_failure_reason"] = (
-            "Known invalid cVAE combination: "
-            "use_prior_flow=True with "
-            "condition_dependant_latent=False."
-        )
-    else:
-        params["expected_result"] = "PASS"
-        params["expected_failure_reason"] = ""
-
-    return params
-
-
-def common_training_params():
+def common_training_params() -> dict[str, Any]:
     return {
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
         "remove_observation": False,
         "add_condition": False,
-        "time_features": [INIT_TIME_DIM],
+        "time_features": [
+            LEAD_TIME_DIM,
+            "month_sin",
+            "month_cos",
+        ],
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
     }
 
 
-def grid_cases(grid):
+def grid_cases(
+    grid: dict[str, list[Any]],
+) -> Iterator[dict[str, Any]]:
     keys = list(grid)
     values = [grid[key] for key in keys]
 
@@ -1230,18 +1564,69 @@ def grid_cases(grid):
         )
 
 
-def generate_train_dataset_config_cases():
-    cases = deepcopy(TRAIN_DATASET_CONFIG_CASES)
+def mark_cvae_expected_result(
+    params: dict[str, Any],
+) -> dict[str, Any]:
+    invalid_prior_flow = (
+        params.get("use_prior_flow") is True
+        and params.get("condition_dependant_latent") is False
+    )
 
-    if MAX_TRAIN_DATASET_CONFIG_CASES is not None:
-        cases = cases[:MAX_TRAIN_DATASET_CONFIG_CASES]
+    invalid_condition_path = (
+        params.get("condition_dependant_latent") is False
+        and params.get(
+            "condemb_to_decoder",
+            True,
+        )
+        is False
+        and params.get("deterministic_guess_checkpoint") is None
+    )
+
+    if invalid_prior_flow:
+        params["expected_result"] = "FAIL"
+        params["expected_failure_reason"] = (
+            "A prior flow cannot be used with this "
+            "condition-independent latent configuration."
+        )
+        params["expected_error_pattern"] = (
+            r"prior.flow|condition.*latent|"
+            r"flow.*condition"
+        )
+    elif invalid_condition_path:
+        params["expected_result"] = "FAIL"
+        params["expected_failure_reason"] = (
+            "When condition_dependant_latent=False, "
+            "the condition embedding must be passed to "
+            "the decoder unless a deterministic guess exists."
+        )
+        params["expected_error_pattern"] = (
+            r"condition embedding.*decoder|"
+            r"condemb_to_decoder|"
+            r"deterministic guess"
+        )
+    else:
+        params["expected_result"] = "PASS"
+        params["expected_failure_reason"] = ""
+        params.pop(
+            "expected_error_pattern",
+            None,
+        )
+
+    return params
+
+
+def generate_train_loader_config_cases() -> list[dict[str, Any]]:
+    cases = deepcopy(TRAIN_LOADER_CONFIG_CASES)
+
+    if MAX_TRAIN_LOADER_CONFIG_CASES is not None:
+        cases = cases[:MAX_TRAIN_LOADER_CONFIG_CASES]
 
     return cases
 
 
 def generate_cvae_cases(
-    architecture,
-):
+    architecture: str,
+) -> list[dict[str, Any]]:
     grid = deepcopy(CVAE_GRID)
 
     if architecture == "MLP":
@@ -1252,16 +1637,18 @@ def generate_cvae_cases(
     for params in grid_cases(grid):
         params.update(common_training_params())
         params["architecture"] = architecture
+        params["model_type"] = "MLP" if architecture == "MLP" else "UNetSIC"
 
         mark_cvae_expected_result(params)
 
         params["name"] = clean_name(
             f"cvae_{architecture.lower()}"
-            f"_mpv_{params['min_posterior_variance']}"
+            f"_pvl_{params['posterior_variance_limits']}"
             f"_flow_{params['use_prior_flow']}"
             f"_cgcn_{params['combined_CGCN_weight']}"
             f"_latent_{params['latent_size']}"
             f"_condlat_{params['condition_dependant_latent']}"
+            f"_conddec_{params['condemb_to_decoder']}"
             f"_bn_{params.get('batch_normalization')}"
             f"_drop_{params.get('dropout_rate')}"
             f"_init_{params['init_method']}"
@@ -1278,8 +1665,8 @@ def generate_cvae_cases(
 
 
 def generate_deterministic_cases(
-    architecture,
-):
+    architecture: str,
+) -> list[dict[str, Any]]:
     grid = deepcopy(DETERMINISTIC_GRID)
 
     if architecture == "MLP":
@@ -1290,6 +1677,7 @@ def generate_deterministic_cases(
     for params in grid_cases(grid):
         params.update(common_training_params())
         params["architecture"] = architecture
+        params["model_type"] = "MLP" if architecture == "MLP" else "UNetSIC"
         params["expected_result"] = "PASS"
         params["expected_failure_reason"] = ""
 
@@ -1316,8 +1704,8 @@ def generate_deterministic_cases(
 
 
 def append_exception_to_log(
-    log_path,
-):
+    log_path: Path,
+) -> None:
     log_path = Path(log_path)
     log_path.parent.mkdir(
         parents=True,
@@ -1332,90 +1720,273 @@ def append_exception_to_log(
 
 
 def remove_existing_case_outputs(
-    experiment_dir,
-    config_path,
-    log_path,
-):
-    if experiment_dir.exists():
-        shutil.rmtree(experiment_dir)
+    *paths: Path,
+) -> None:
+    for path in paths:
+        path = Path(path)
 
-    if config_path.exists():
-        config_path.unlink()
-
-    if log_path.exists():
-        log_path.unlink()
+        if path.is_dir():
+            shutil.rmtree(path)
+        elif path.exists():
+            path.unlink()
 
 
-def run_training_case(
+@contextmanager
+def limit_config_loader_batches(
+    config_path: Path,
     *,
-    suite,
-    case_name,
-    module_type,
-    architecture,
-    cfg,
-    params,
+    max_train_batches: int | None,
+    max_validation_batches: int | None,
 ):
-    safe_name = clean_name(case_name)
+    """
+    Temporarily patch the dataloader configuration class used by
+    train_main. No CCCma-PPP source file is modified.
+    """
 
-    experiment_dir = OUTPUT_DIR / safe_name
-    config_path = GENERATED_CONFIG_DIR / f"{safe_name}.yaml"
-    log_path = LOG_DIR / f"{safe_name}.log"
+    config = load_train_config(config_path)
 
-    remove_existing_case_outputs(
-        experiment_dir,
-        config_path,
-        log_path,
+    train_loader_config = config.train_loader
+
+    if train_loader_config is None:
+        raise ValueError("The training configuration does not contain a train_loader.")
+
+    config_class = type(train_loader_config)
+
+    original_train_builder = getattr(
+        config_class,
+        "build_train_loader",
+        None,
     )
 
-    case_cfg = deepcopy(cfg)
-    case_cfg["experiment_dir"] = str(experiment_dir)
+    if not callable(original_train_builder):
+        raise TypeError(f"{config_class.__name__}.build_train_loader is not callable.")
+
+    original_validation_builder = getattr(
+        config_class,
+        "build_validation_loader",
+        None,
+    )
+
+    class_attribute_patches: list[tuple[type, str, Any]] = []
+
+    def patch_attribute(
+        owner: type,
+        name: str,
+        value: Any,
+    ) -> None:
+        original_value = getattr(
+            owner,
+            name,
+        )
+        class_attribute_patches.append(
+            (
+                owner,
+                name,
+                original_value,
+            )
+        )
+        setattr(
+            owner,
+            name,
+            value,
+        )
+
+    def limited_train_builder(
+        self,
+        *args,
+        **kwargs,
+    ):
+        loader = original_train_builder(
+            self,
+            *args,
+            **kwargs,
+        )
+
+        return LimitedLoader(
+            loader,
+            max_train_batches,
+        )
+
+    patch_attribute(
+        config_class,
+        "build_train_loader",
+        limited_train_builder,
+    )
+
+    if callable(original_validation_builder):
+
+        def limited_validation_builder(
+            self,
+            *args,
+            **kwargs,
+        ):
+            loader = original_validation_builder(
+                self,
+                *args,
+                **kwargs,
+            )
+
+            if loader is None:
+                return None
+
+            return LimitedLoader(
+                loader,
+                max_validation_batches,
+            )
+
+        patch_attribute(
+            config_class,
+            "build_validation_loader",
+            limited_validation_builder,
+        )
 
     try:
+        yield
+    finally:
+        for (
+            owner,
+            name,
+            original_value,
+        ) in reversed(class_attribute_patches):
+            setattr(
+                owner,
+                name,
+                original_value,
+            )
+
+
+def run_limited_training(
+    config_path: Path,
+    *,
+    max_train_batches: int | None,
+    max_validation_batches: int | None,
+) -> None:
+    config_path = Path(config_path)
+
+    with limit_config_loader_batches(
+        config_path,
+        max_train_batches=max_train_batches,
+        max_validation_batches=max_validation_batches,
+    ):
+        train_main(str(config_path))
+
+
+def run_training_task(
+    task: dict[str, Any],
+) -> tuple[bool, str]:
+    paths = case_paths(task["case_name"])
+
+    remove_existing_case_outputs(
+        paths["experiment_dir"],
+        paths["config_path"],
+        paths["log_path"],
+    )
+
+    try:
+        cfg_builder = task.get("cfg_builder")
+
+        if cfg_builder is None:
+            raise KeyError(f"Training task is missing cfg_builder: {task['case_name']}")
+
+        if not callable(cfg_builder):
+            raise TypeError(
+                "Training task cfg_builder must be callable, "
+                f"got {type(cfg_builder).__name__} for "
+                f"{task['case_name']}."
+            )
+
+        case_cfg = cfg_builder()
+
+        if not isinstance(
+            case_cfg,
+            dict,
+        ):
+            raise TypeError(
+                "cfg_builder must return a dictionary, "
+                f"got {type(case_cfg).__name__} for "
+                f"{task['case_name']}."
+            )
+
+        case_cfg = deepcopy(case_cfg)
+        case_cfg["experiment_dir"] = str(paths["experiment_dir"])
+
         write_yaml(
             case_cfg,
-            config_path,
+            paths["config_path"],
+        )
+
+        print(
+            f"\nStarting {task['suite']}:{task['case_name']}",
+            flush=True,
+        )
+        print(
+            f"Log: {paths['log_path']}",
+            flush=True,
         )
 
         run_silenced(
-            lambda: train_main(str(config_path)),
-            log_path,
+            lambda: run_limited_training(
+                paths["config_path"],
+                max_train_batches=(MAX_TRAIN_BATCHES_PER_CASE),
+                max_validation_batches=(MAX_VALIDATION_BATCHES_PER_CASE),
+            ),
+            paths["log_path"],
         )
 
         assert_training_completed(
-            experiment_dir=(experiment_dir),
-            log_path=log_path,
+            experiment_dir=(paths["experiment_dir"]),
+            log_path=(paths["log_path"]),
         )
 
         passed = True
         error = ""
+
     except Exception as exc:
         passed = False
         error = f"{type(exc).__name__}: {exc}"
 
-        append_exception_to_log(log_path)
+        append_exception_to_log(paths["log_path"])
         cleanup_logging_handlers()
 
     log_result(
-        suite=suite,
-        case_name=case_name,
-        module_type=module_type,
-        architecture=architecture,
-        params=params,
-        config_path=config_path,
-        experiment_dir=experiment_dir,
-        log_path=log_path,
+        task=task,
+        paths=paths,
         passed=passed,
         error=error,
     )
 
-    return passed
+    return passed, error
 
 
 def make_train_config(
-    output_path,
-    experiment_dir,
-):
-    cfg = base_config()
+    output_path: Path,
+    experiment_dir: Path,
+) -> Path:
+    params = {
+        "architecture": "MLP",
+        "model_type": "MLP",
+        "condition_method": "ensemble_mean",
+        "model_ensemble_mean": True,
+        "remove_observation": False,
+        "add_condition": False,
+        "time_features": [
+            LEAD_TIME_DIM,
+            "month_sin",
+            "month_cos",
+        ],
+        "lead_months": deepcopy(FULL_LEAD_MONTHS),
+        "posterior_variance_limits": None,
+        "use_prior_flow": False,
+        "combined_CGCN_weight": 0.0,
+        "latent_size": 4,
+        "condition_dependant_latent": True,
+        "condemb_to_decoder": True,
+        "batch_normalization": False,
+        "dropout_rate": None,
+        "init_method": "default",
+    }
+
+    cfg = build_cvae_config_from_params(params)
     cfg["experiment_dir"] = str(experiment_dir)
 
     ensure_cvae_beta_finder(cfg)
@@ -1431,7 +2002,9 @@ def make_train_config(
     )
 
 
-def run_resume_training(root_dir):
+def run_resume_training(
+    root_dir: Path,
+) -> None:
     experiment_dir = root_dir / "resume"
 
     if experiment_dir.exists():
@@ -1443,8 +2016,14 @@ def run_resume_training(root_dir):
     )
     first_log = LOG_DIR / "resume_first.log"
 
+    remove_existing_case_outputs(first_log)
+
     run_silenced(
-        lambda: train_main(str(first_config)),
+        lambda: run_limited_training(
+            first_config,
+            max_train_batches=(MAX_BASELINE_TRAIN_BATCHES),
+            max_validation_batches=(MAX_BASELINE_VALIDATION_BATCHES),
+        ),
         first_log,
     )
 
@@ -1458,22 +2037,30 @@ def run_resume_training(root_dir):
     if resumed_cfg is None:
         raise ValueError(f"The resume configuration is empty: {first_config}")
 
+    normalize_numeric_fields(resumed_cfg)
+
     resumed_cfg["resume_dir"] = str(experiment_dir)
-    resumed_cfg["max_epochs"] = 1
+
+    # The first invocation completed epoch 1. Setting this to 2 causes
+    # the resumed invocation to execute one additional limited epoch.
+    resumed_cfg["max_epochs"] = 2
 
     ensure_cvae_beta_finder(resumed_cfg)
 
-    second_config = GENERATED_CONFIG_DIR / "resume_second.yaml"
-
-    write_yaml(
+    second_config = write_yaml(
         resumed_cfg,
-        second_config,
+        GENERATED_CONFIG_DIR / "resume_second.yaml",
     )
-
     second_log = LOG_DIR / "resume_second.log"
 
+    remove_existing_case_outputs(second_log)
+
     run_silenced(
-        lambda: train_main(str(second_config)),
+        lambda: run_limited_training(
+            second_config,
+            max_train_batches=(MAX_BASELINE_TRAIN_BATCHES),
+            max_validation_batches=(MAX_BASELINE_VALIDATION_BATCHES),
+        ),
         second_log,
     )
 
@@ -1483,7 +2070,9 @@ def run_resume_training(root_dir):
     )
 
 
-def run_dataset_pipeline(root_dir):
+def run_dataset_pipeline(
+    root_dir: Path,
+) -> None:
     experiment_dir = root_dir / "dataset_pipeline"
 
     if experiment_dir.exists():
@@ -1493,12 +2082,16 @@ def run_dataset_pipeline(root_dir):
         GENERATED_CONFIG_DIR / "dataset_pipeline.yaml",
         experiment_dir,
     )
+    log_path = LOG_DIR / "dataset_pipeline.log"
 
-    def run_pipeline():
+    remove_existing_case_outputs(log_path)
+
+    def run_pipeline() -> None:
         config = load_train_config(config_path)
         distributed = Distributed.get_instance()
 
         config.train_loader.setup_distributed(distributed)
+
         train_loader = config.train_loader.build_train_loader()
 
         if len(train_loader.dataset) <= 0:
@@ -1518,13 +2111,72 @@ def run_dataset_pipeline(root_dir):
                 f"Dataset sample is missing required keys: {sorted(missing_keys)}"
             )
 
+        print(f"dataset_samples={len(train_loader.dataset)}")
+        print(f"loader_batches={len(train_loader)}")
+        print(f"sample_keys={sorted(sample)}")
+
     run_silenced(
         run_pipeline,
-        LOG_DIR / "dataset_pipeline.log",
+        log_path,
     )
 
 
-def add_baseline_tasks(tasks):
+def run_baseline_task(
+    task: dict[str, Any],
+) -> tuple[bool, str]:
+    paths = {
+        "config_path": Path(task["config_path"]),
+        "experiment_dir": Path(task["experiment_dir"]),
+        "log_path": Path(task["log_path"]),
+    }
+
+    try:
+        runner = task.get("runner")
+
+        if runner is None:
+            raise KeyError(f"Baseline task is missing runner: {task['case_name']}")
+
+        if not callable(runner):
+            raise TypeError(
+                "Baseline task runner must be callable, "
+                f"got {type(runner).__name__} for "
+                f"{task['case_name']}."
+            )
+
+        print(
+            f"\nStarting baseline:{task['case_name']}",
+            flush=True,
+        )
+        print(
+            f"Log: {paths['log_path']}",
+            flush=True,
+        )
+
+        runner()
+
+        passed = True
+        error = ""
+
+    except Exception as exc:
+        passed = False
+        error = f"{type(exc).__name__}: {exc}"
+
+        append_exception_to_log(paths["log_path"])
+        cleanup_logging_handlers()
+
+    log_result(
+        task=task,
+        paths=paths,
+        passed=passed,
+        error=error,
+    )
+
+    return passed, error
+
+
+def add_baseline_tasks(
+    tasks: list[dict[str, Any]],
+) -> None:
     if not RUN_BASELINE_TESTS:
         return
 
@@ -1532,30 +2184,38 @@ def add_baseline_tasks(tasks):
         [
             {
                 "suite": "baseline",
-                "case_name": ("resume_training"),
+                "case_name": "resume_training",
                 "module_type": "cVAE",
                 "architecture": "MLP",
                 "params": {
+                    "model_type": "MLP",
                     "architecture": "MLP",
                     "expected_result": "PASS",
                     "expected_failure_reason": "",
                 },
-                "runner": lambda: run_resume_training(OUTPUT_DIR),
+                "runner": partial(
+                    run_resume_training,
+                    OUTPUT_DIR,
+                ),
                 "config_path": (GENERATED_CONFIG_DIR / "resume_second.yaml"),
                 "experiment_dir": (OUTPUT_DIR / "resume"),
                 "log_path": (LOG_DIR / "resume_second.log"),
             },
             {
                 "suite": "baseline",
-                "case_name": ("dataset_pipeline"),
+                "case_name": "dataset_pipeline",
                 "module_type": "cVAE",
                 "architecture": "MLP",
                 "params": {
+                    "model_type": "MLP",
                     "architecture": "MLP",
                     "expected_result": "PASS",
                     "expected_failure_reason": "",
                 },
-                "runner": lambda: run_dataset_pipeline(OUTPUT_DIR),
+                "runner": partial(
+                    run_dataset_pipeline,
+                    OUTPUT_DIR,
+                ),
                 "config_path": (GENERATED_CONFIG_DIR / "dataset_pipeline.yaml"),
                 "experiment_dir": (OUTPUT_DIR / "dataset_pipeline"),
                 "log_path": (LOG_DIR / "dataset_pipeline.log"),
@@ -1564,69 +2224,86 @@ def add_baseline_tasks(tasks):
     )
 
 
-def add_train_dataset_config_tasks(
-    tasks,
-):
-    if not RUN_TRAIN_DATASET_CONFIG_CASES:
+def add_train_loader_config_tasks(
+    tasks: list[dict[str, Any]],
+) -> None:
+    if not RUN_TRAIN_LOADER_CONFIG_CASES:
         return
 
-    for case in generate_train_dataset_config_cases():
-        case = deepcopy(case)
-        case["architecture"] = "MLP"
+    defaults = {
+        "architecture": "MLP",
+        "model_type": "MLP",
+        "posterior_variance_limits": None,
+        "use_prior_flow": False,
+        "combined_CGCN_weight": 0.0,
+        "latent_size": 4,
+        "condition_dependant_latent": True,
+        "condemb_to_decoder": True,
+        "batch_normalization": False,
+        "dropout_rate": None,
+        "init_method": "default",
+    }
+
+    for case in generate_train_loader_config_cases():
+        params = {
+            **case,
+            "architecture": "MLP",
+            "model_type": "MLP",
+        }
+
+        # Defaults come first so values explicitly defined by the case
+        # are not accidentally overwritten.
+        build_params = {
+            **defaults,
+            **params,
+        }
 
         tasks.append(
             {
-                "suite": ("train_dataset_config"),
-                "case_name": case["name"],
+                "suite": "train_loader_config",
+                "case_name": params["name"],
                 "module_type": "cVAE",
                 "architecture": "MLP",
-                "params": case,
-                "cfg": (
-                    build_cvae_config_from_params(
-                        {
-                            **case,
-                            "architecture": "MLP",
-                            "min_posterior_variance": None,
-                            "use_prior_flow": False,
-                            "combined_CGCN_weight": 0.0,
-                            "latent_size": 4,
-                            "condition_dependant_latent": True,
-                            "batch_normalization": False,
-                            "dropout_rate": None,
-                            "init_method": "xavier",
-                        }
-                    )
+                "params": params,
+                "cfg_builder": partial(
+                    build_cvae_config_from_params,
+                    build_params,
                 ),
             }
         )
 
 
 def add_cvae_tasks(
-    tasks,
-    architecture,
-):
+    tasks: list[dict[str, Any]],
+    architecture: str,
+) -> None:
     enabled = RUN_CVAE_MLP_GRID if architecture == "MLP" else RUN_CVAE_UNET_GRID
 
     if not enabled:
         return
 
     for case in generate_cvae_cases(architecture):
+        params = deepcopy(case)
+
         tasks.append(
             {
                 "suite": (f"cvae_{architecture.lower()}"),
-                "case_name": case["name"],
+                "case_name": params["name"],
                 "module_type": "cVAE",
                 "architecture": architecture,
-                "params": case,
-                "cfg": (build_cvae_config_from_params(case)),
+                "params": params,
+                "cfg_builder": partial(
+                    build_cvae_config_from_params,
+                    params,
+                ),
             }
         )
 
 
 def add_deterministic_tasks(
-    tasks,
-    architecture,
-):
+    tasks: list[dict[str, Any]],
+    architecture: str,
+) -> None:
     enabled = (
         RUN_DETERMINISTIC_MLP_GRID
         if architecture == "MLP"
@@ -1637,71 +2314,114 @@ def add_deterministic_tasks(
         return
 
     for case in generate_deterministic_cases(architecture):
+        params = deepcopy(case)
+
         tasks.append(
             {
                 "suite": (f"deterministic_{architecture.lower()}"),
-                "case_name": case["name"],
-                "module_type": ("deterministic"),
+                "case_name": params["name"],
+                "module_type": "deterministic",
                 "architecture": architecture,
-                "params": case,
-                "cfg": (build_deterministic_config_from_params(case)),
+                "params": params,
+                "cfg_builder": partial(
+                    build_deterministic_config_from_params,
+                    params,
+                ),
             }
         )
 
 
-def run_baseline_task(task):
-    try:
-        task
+def validate_tasks(
+    tasks: list[dict[str, Any]],
+) -> None:
+    case_names = set()
 
-        passed = True
-        error = ""
-    except Exception as exc:
-        passed = False
-        error = f"{type(exc).__name__}: {exc}"
+    for index, task in enumerate(tasks):
+        required_keys = {
+            "suite",
+            "case_name",
+            "module_type",
+            "architecture",
+            "params",
+        }
 
-        append_exception_to_log(task["log_path"])
-        cleanup_logging_handlers()
+        missing_keys = required_keys - set(task)
 
-    log_result(
-        suite=task["suite"],
-        case_name=task["case_name"],
-        module_type=task["module_type"],
-        architecture=task["architecture"],
-        params=task["params"],
-        config_path=task["config_path"],
-        experiment_dir=task["experiment_dir"],
-        log_path=task["log_path"],
-        passed=passed,
-        error=error,
-    )
+        if missing_keys:
+            raise ValueError(
+                f"Task {index} is missing required keys: {sorted(missing_keys)}"
+            )
 
-    return passed
+        case_name = task["case_name"]
+
+        if case_name in case_names:
+            raise ValueError(f"Duplicate integration case name: {case_name}")
+
+        case_names.add(case_name)
+
+        has_runner = "runner" in task
+        has_builder = "cfg_builder" in task
+
+        if has_runner == has_builder:
+            raise ValueError(
+                f"Task {case_name!r} must define exactly one of runner or cfg_builder."
+            )
+
+        callable_name = "runner" if has_runner else "cfg_builder"
+
+        if not callable(task[callable_name]):
+            raise TypeError(
+                f"Task {case_name!r} field {callable_name!r} must be callable."
+            )
 
 
 def classify_result(
     *,
-    case_name,
-    expected_result,
-    passed,
-    unexpected_failures,
-    expected_failures,
-    unexpected_passes,
-):
+    task: dict[str, Any],
+    passed: bool,
+    error: str,
+    unexpected_failures: list[str],
+    expected_failures: list[str],
+    unexpected_passes: list[str],
+) -> None:
+    case_name = task["case_name"]
+    params = task["params"]
+
+    expected_result = params.get(
+        "expected_result",
+        "PASS",
+    )
+
     if expected_result == "FAIL":
         if passed:
             unexpected_passes.append(case_name)
-        else:
-            expected_failures.append(case_name)
-    elif not passed:
-        unexpected_failures.append(case_name)
+            return
+
+        expected_error_pattern = params.get("expected_error_pattern")
+
+        if expected_error_pattern and not re.search(
+            expected_error_pattern,
+            error,
+            flags=(re.IGNORECASE | re.DOTALL),
+        ):
+            unexpected_failures.append(
+                f"{case_name}: failed for the wrong reason: {error}"
+            )
+            return
+
+        expected_failures.append(case_name)
+        return
+
+    if not passed:
+        unexpected_failures.append(f"{case_name}: {error}")
 
 
 def write_summary(
-    tasks,
-    unexpected_failures,
-    expected_failures,
-    unexpected_passes,
-):
+    tasks: list[dict[str, Any]],
+    unexpected_failures: list[str],
+    expected_failures: list[str],
+    unexpected_passes: list[str],
+) -> None:
     actual_failures = len(unexpected_failures) + len(expected_failures)
     actual_passes = len(tasks) - actual_failures
 
@@ -1714,6 +2434,10 @@ def write_summary(
         file.write(f"unexpected_failures: {len(unexpected_failures)}\n")
         file.write(f"expected_failures: {len(expected_failures)}\n")
         file.write(f"unexpected_passes: {len(unexpected_passes)}\n")
+        file.write(f"max_train_batches_per_case: {MAX_TRAIN_BATCHES_PER_CASE}\n")
+        file.write(
+            f"max_validation_batches_per_case: {MAX_VALIDATION_BATCHES_PER_CASE}\n"
+        )
         file.write(f"results_csv: {RESULTS_CSV}\n")
         file.write(f"log_dir: {LOG_DIR}\n")
 
@@ -1742,16 +2466,15 @@ def write_summary(
                 file.write(f"- {value}\n")
 
 
-def main():
+def main() -> None:
     prepare_output_directories()
     cleanup_logging_handlers()
     init_csv()
 
-    tasks = []
+    tasks: list[dict[str, Any]] = []
 
     add_baseline_tasks(tasks)
-    add_train_dataset_config_tasks(tasks)
-
+    add_train_loader_config_tasks(tasks)
     add_cvae_tasks(
         tasks,
         "MLP",
@@ -1760,7 +2483,6 @@ def main():
         tasks,
         "UNet",
     )
-
     add_deterministic_tasks(
         tasks,
         "MLP",
@@ -1770,9 +2492,11 @@ def main():
         "UNet",
     )
 
-    unexpected_failures = []
-    expected_failures = []
-    unexpected_passes = []
+    validate_tasks(tasks)
+
+    unexpected_failures: list[str] = []
+    expected_failures: list[str] = []
+    unexpected_passes: list[str] = []
 
     with tqdm(
         total=len(tasks),
@@ -1795,26 +2519,14 @@ def main():
             progress.set_postfix_str(f"{suite}:{case_name[:60]}")
 
             if "runner" in task:
-                passed = run_baseline_task(task)
+                passed, error = run_baseline_task(task)
             else:
-                passed = run_training_case(
-                    suite=suite,
-                    case_name=case_name,
-                    module_type=task["module_type"],
-                    architecture=task["architecture"],
-                    cfg=task["cfg"],
-                    params=task["params"],
-                )
-
-            expected_result = task["params"].get(
-                "expected_result",
-                "PASS",
-            )
+                passed, error = run_training_task(task)
 
             classify_result(
-                case_name=case_name,
-                expected_result=(expected_result),
+                task=task,
                 passed=passed,
+                error=error,
                 unexpected_failures=(unexpected_failures),
                 expected_failures=(expected_failures),
                 unexpected_passes=(unexpected_passes),
@@ -1850,9 +2562,9 @@ def main():
             problems.append(f"{len(unexpected_passes)} unexpected pass(es)")
 
         raise RuntimeError(
-            "Integration suite completed "
-            "with " + " and ".join(problems) + f". See {RESULTS_CSV} "
-            f"and {LOG_DIR}."
+            "Integration suite completed with "
+            + " and ".join(problems)
+            + f". See {RESULTS_CSV} and {LOG_DIR}."
         )
 
     print("Integration suite completed successfully.")
