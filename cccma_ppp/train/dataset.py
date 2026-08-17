@@ -5,7 +5,6 @@ import dataclasses
 import warnings
 import cftime
 import datetime
-import calendar
 from pathlib import Path
 from collections.abc import Sequence
 
@@ -24,8 +23,7 @@ from cccma_ppp.data_modules.data.data_configs import (
     ConditionDataConfig,
 )
 
-from cccma_ppp.data_modules.utils import (add_lead_times, 
-                                          _unwrap_data_variables)
+from cccma_ppp.data_modules.utils import add_lead_times, _unwrap_data_variables
 
 
 from cccma_ppp.configs import lead_time_resolution
@@ -35,7 +33,7 @@ from cccma_ppp.configs import lead_time_resolution
 class TrainDatasetConfig(DatasetConfigABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     model : ModelDataConfig
@@ -49,6 +47,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     lead_times : lead_time_config | None
         Description not yet provided.
     """
+
     model: ModelDataConfig
     observation: ObsDataConfig | None = None
     condition: ConditionDataConfig | None = None
@@ -66,17 +65,17 @@ class TrainDatasetConfig(DatasetConfigABC):
     def _check_observation(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
             Description not yet provided.
-        
+
         Warns
         -----
         UserWarning
@@ -89,9 +88,7 @@ class TrainDatasetConfig(DatasetConfigABC):
                 if dim in self.observation.coords
             ]:
                 if dim in self.model.coords:
-                    if not self.observation.coords[dim].equals(
-                        self.model.coords[dim]
-                    ):
+                    if not self.observation.coords[dim].equals(self.model.coords[dim]):
                         warnings.warn(
                             "\n=====================================================================\n"
                             f"model and observation data do not have the same {dim} cooridnates.\n"
@@ -105,12 +102,14 @@ class TrainDatasetConfig(DatasetConfigABC):
                         "======================================================================\n"
                     )
 
-                if self.model.info.time_coords_type != self.observation.info.time_coords_type:
-
+                if (
+                    self.model.info.time_coords_type
+                    != self.observation.info.time_coords_type
+                ):
                     raise ValueError(
                         "Observation data and model data must have the same"
-                        f" cftime/datetime type time coordinates."
-                    )                      
+                        " cftime/datetime type time coordinates."
+                    )
 
         else:
             if self.condition_method is None:
@@ -124,7 +123,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     def effective_input(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -136,7 +135,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     def ds_operator(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -148,7 +147,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     def get_common_time(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -158,15 +157,13 @@ class TrainDatasetConfig(DatasetConfigABC):
             return self.model.time_range
 
         else:
-            return self.model.time_range.intersection(
-                self.observation.time_range
-            )
+            return self.model.time_range.intersection(self.observation.time_range)
 
     @property
     def available_times(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -188,21 +185,22 @@ class TrainDatasetConfig(DatasetConfigABC):
             (self.get_common_time >= model_times.min())
             & (self.get_common_time <= model_times.max())
         ]
-    
+
     def fit_preprocessors(
         self,
-        train_times: (Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
+        train_times: (
+            Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
             | np.ndarray
             | xr.DataArray
             | slice
         ),
         save: bool = False,
-        save_path: str | Path | None =None,
+        save_path: str | Path | None = None,
         save_name: str | None = None,
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         train_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray | slice
@@ -224,7 +222,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         """
         Document this function.
-        
+
         Parameters
         ----------
         load_dir : Path | str | None
@@ -235,7 +233,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     def add_fitted_preprocessor(self, preprocessor, index=0):
         """
         Document this function.
-        
+
         Parameters
         ----------
         preprocessor : Any
@@ -259,7 +257,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
@@ -272,7 +270,7 @@ class TrainDatasetConfig(DatasetConfigABC):
             Description not yet provided.
         load : bool
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -292,7 +290,7 @@ class TrainDatasetConfig(DatasetConfigABC):
 class TrainDataset(DatasetABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     config : TrainDatasetConfig
@@ -308,8 +306,9 @@ class TrainDataset(DatasetABC):
     load : bool
         Description not yet provided.
     """
+
     config: TrainDatasetConfig
-    requested_times:(
+    requested_times: (
         Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
         | np.ndarray
         | xr.DataArray
@@ -327,7 +326,7 @@ class TrainDataset(DatasetABC):
 
         if self.config.observation is not None:
             self.config.observation.open_xarray_data(
-                load=self.load, add_time_auxiliary_coords= True
+                load=self.load, add_time_auxiliary_coords=True
             )
 
         self.obs_indexes = self.get_obs_indexes(self.sample_coords)
@@ -336,7 +335,7 @@ class TrainDataset(DatasetABC):
     def _autoencoding_model_data(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -348,7 +347,7 @@ class TrainDataset(DatasetABC):
     def _load_model(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -365,7 +364,7 @@ class TrainDataset(DatasetABC):
     def _write_condition_to_input(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -383,7 +382,7 @@ class TrainDataset(DatasetABC):
     def _concat_condition_to_input(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -400,17 +399,17 @@ class TrainDataset(DatasetABC):
     ) -> dict[str, np.ndarray] | None:
         """
         Document this function.
-        
+
         Parameters
         ----------
         sample_coords : dict[str, np.ndarray]
             Description not yet provided.
-        
+
         Returns
         -------
         dict[str, np.ndarray] | None
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -454,7 +453,7 @@ class TrainDataset(DatasetABC):
     def get_target_shape(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -492,12 +491,12 @@ class TrainDataset(DatasetABC):
     def _index_observation_dataset(self, ind: int) -> xr.DataArray | None:
         """
         Document this function.
-        
+
         Parameters
         ----------
         ind : int
             Description not yet provided.
-        
+
         Returns
         -------
         xr.DataArray | None
@@ -506,14 +505,16 @@ class TrainDataset(DatasetABC):
         if self.config.observation is None:
             return None
 
-        selection = {
-            dim: [indexes[ind]] for dim, indexes in self.obs_indexes.items()
-        }
+        selection = {dim: [indexes[ind]] for dim, indexes in self.obs_indexes.items()}
 
-        if (not self.config.observation.ensemble_mean and
-            self.config.realization_dim in self.config.observation.dims):
+        if (
+            not self.config.observation.ensemble_mean
+            and self.config.realization_dim in self.config.observation.dims
+        ):
             selection[self.config.realization_dim] = [
-                np.random.randint(self.config.observation.data.sizes[self.config.realization_dim])
+                np.random.randint(
+                    self.config.observation.data.sizes[self.config.realization_dim]
+                )
             ]
 
         obs = self.config.observation.isel(**selection)
@@ -523,12 +524,12 @@ class TrainDataset(DatasetABC):
     def __getitem__(self, ind):
         """
         Document this function.
-        
+
         Parameters
         ----------
         ind : Any
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -568,8 +569,3 @@ class TrainDataset(DatasetABC):
             return datadict, selection
         else:
             return datadict
-
-
-
-
-

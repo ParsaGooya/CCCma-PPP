@@ -21,7 +21,7 @@ from cccma_ppp.generic.distributed import Distributed
 class BatchData(BatchDataABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     input : torch.Tensor
@@ -41,6 +41,7 @@ class BatchData(BatchDataABC):
     target_mask : torch.Tensor | None
         Description not yet provided.
     """
+
     input: torch.Tensor
     target: torch.Tensor
     added_features: torch.Tensor = None
@@ -85,12 +86,12 @@ class BatchData(BatchDataABC):
     def to_device(self, device: torch.device | str):
         """
         Document this function.
-        
+
         Parameters
         ----------
         device : torch.device | str
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -115,7 +116,7 @@ class BatchData(BatchDataABC):
 class TrainDataloaderConfig(DataloaderConfigABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     dataset_config : TrainDatasetConfig
@@ -139,6 +140,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     reduce_spatial_mask : bool
         Description not yet provided.
     """
+
     dataset_config: TrainDatasetConfig
     batch_size: int
     time_features: list | None = None
@@ -161,7 +163,6 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         if self.train_years_slice is None:
             self.train_times = self.available_times
         else:
-
             self.train_years_slice = slice(
                 *[str(item) for item in self.train_years_slice]
             )
@@ -171,22 +172,23 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             )
 
         if self.num_validation_years > 0:
-
             last_train_year = self.train_times[-1].dt.year
 
             validation_mask = np.asarray(
-                [t.dt.year > last_train_year - self.num_validation_years
-                for t in self.train_times]
+                [
+                    t.dt.year > last_train_year - self.num_validation_years
+                    for t in self.train_times
+                ]
             )
 
             self.validation_times = self.train_times[validation_mask]
-            self.train_times = self.train_times[~validation_mask]    
+            self.train_times = self.train_times[~validation_mask]
 
     @property
     def available_times(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -199,7 +201,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         distributed : Distributed
@@ -233,7 +235,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         return_metadata : bool
@@ -242,12 +244,12 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             Description not yet provided.
         shuffle : bool | None
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -278,7 +280,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             rank=self.rank,
             shuffle=shuffle,
             world_size=self.world_size,
-            return_spatial_mask=return_spatial_mask
+            return_spatial_mask=return_spatial_mask,
         )
 
     def build_validation_loader(
@@ -290,7 +292,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         return_metadata : bool
@@ -301,17 +303,17 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             Description not yet provided.
         supress_error : bool
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
             Description not yet provided.
-        
+
         Warns
         -----
         UserWarning
@@ -342,7 +344,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
                 rank=self.rank,
                 shuffle=shuffle,
                 world_size=self.world_size,
-                return_spatial_mask=return_spatial_mask
+                return_spatial_mask=return_spatial_mask,
             )
 
         else:
@@ -357,12 +359,12 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     def get_weights(self, config: WeightsConfig | None = None):
         """
         Document this function.
-        
+
         Parameters
         ----------
         config : WeightsConfig | None
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -377,7 +379,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     def input_var_metadata(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -389,7 +391,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     def target_var_metadata(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -405,7 +407,7 @@ def collate_batch(
 ):
     """
     Document this function.
-    
+
     Parameters
     ----------
     batch : Any
@@ -414,7 +416,7 @@ def collate_batch(
         Description not yet provided.
     reduce_spatial_mask : bool
         Description not yet provided.
-    
+
     Returns
     -------
     Any

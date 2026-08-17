@@ -1,4 +1,3 @@
-import numpy as np
 import dataclasses
 import torch
 from pathlib import Path
@@ -20,7 +19,7 @@ from cccma_ppp.generic.runtime import RuntimeContext
 class BatchData(BatchDataABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     input : torch.Tensor
@@ -36,6 +35,7 @@ class BatchData(BatchDataABC):
     input_mask : torch.Tensor | None
         Description not yet provided.
     """
+
     input: torch.Tensor
     added_features: torch.Tensor = None
     metadata: list[dict] | None = None
@@ -67,12 +67,12 @@ class BatchData(BatchDataABC):
     def to_device(self, device: torch.device | str) -> "BatchData":
         """
         Document this function.
-        
+
         Parameters
         ----------
         device : torch.device | str
             Description not yet provided.
-        
+
         Returns
         -------
         'BatchData'
@@ -93,7 +93,7 @@ class BatchData(BatchDataABC):
 class InferenceDataloaderConfig(DataloaderConfigABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     dataset_config : InferenceDatasetConfig | None
@@ -115,6 +115,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     time_features : AddedTimeFeatures | None
         Description not yet provided.
     """
+
     dataset_config: InferenceDatasetConfig | None = None
     batch_size: int = 1
     inference_years_slice: tuple | list = None
@@ -138,15 +139,17 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
         if self.dataset_config is not None:
             _ = self._inference_times
-        
-        self.inference_years_slice = (slice(
-            *[str(item) for item in self.inference_years_slice]
-        ) if self.inference_years_slice is not None else None)
+
+        self.inference_years_slice = (
+            slice(*[str(item) for item in self.inference_years_slice])
+            if self.inference_years_slice is not None
+            else None
+        )
 
     def _check_config(self):
         """
         Document this function.
-        
+
         Raises
         ------
         RuntimeError
@@ -167,7 +170,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     def read_configs_from_train(self, train_dataloader_config: TrainDataloaderConfig):
         """
         Document this function.
-        
+
         Parameters
         ----------
         train_dataloader_config : TrainDataloaderConfig
@@ -186,7 +189,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     def _inference_times(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -203,7 +206,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     def available_times(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -215,12 +218,12 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     def _input_preprocessor_exists(self, load_dir: Path | str = None):
         """
         Document this function.
-        
+
         Parameters
         ----------
         load_dir : Path | str
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -262,7 +265,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         train_loader_config : TrainDataloaderConfig
@@ -294,21 +297,20 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
         self._setup = True
 
-    def build_inference_loader(self,
-                               return_spatial_mask: bool = False):
+    def build_inference_loader(self, return_spatial_mask: bool = False):
         """
         Document this function.
-        
+
         Parameters
         ----------
         return_spatial_mask : bool
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -333,14 +335,14 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
             rank=self.rank,
             world_size=self.world_size,
             shuffle=False,
-            return_spatial_mask=return_spatial_mask
+            return_spatial_mask=return_spatial_mask,
         )
 
     @property
     def input_var_metadata(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -353,12 +355,12 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     def target_var_metadata(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -379,7 +381,7 @@ def collate_batch(
 ):
     """
     Document this function.
-    
+
     Parameters
     ----------
     batch : Any
@@ -388,7 +390,7 @@ def collate_batch(
         Description not yet provided.
     reduce_spatial_mask : bool
         Description not yet provided.
-    
+
     Returns
     -------
     Any

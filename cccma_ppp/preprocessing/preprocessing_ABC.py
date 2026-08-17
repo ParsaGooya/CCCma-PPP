@@ -5,16 +5,20 @@ import numpy as np
 
 from cccma_ppp.data_modules.utils import add_lead_times
 
-from cccma_ppp.configs import (required_sample_dimensions,
-                               realization_dim,
-                               lead_time_unit,
-                               lead_time_resolution)
+from cccma_ppp.configs import (
+    required_sample_dimensions,
+    realization_dim,
+    lead_time_unit,
+    lead_time_resolution,
+)
 
 init_time_dim, lead_time_dim = required_sample_dimensions
+
+
 class PreprocessModuleABC(abc.ABC):
     """
     Document this class.
-    
+
     Attributes
     ----------
     large_ensemble : bool
@@ -22,6 +26,7 @@ class PreprocessModuleABC(abc.ABC):
     fitted : bool
         Description not yet provided.
     """
+
     large_ensemble: bool
     fitted: bool
 
@@ -31,12 +36,11 @@ class PreprocessModuleABC(abc.ABC):
     realization_dim: ClassVar[int] = realization_dim
     supported_frequencies: ClassVar = {None, "year", "month", "day"}
 
-    
     @abc.abstractmethod
     def fit(self, data):
         """
         Document this function.
-        
+
         Parameters
         ----------
         data : Any
@@ -48,7 +52,7 @@ class PreprocessModuleABC(abc.ABC):
     def transform(self, data, **kwargs):
         """
         Document this function.
-        
+
         Parameters
         ----------
         data : Any
@@ -62,7 +66,7 @@ class PreprocessModuleABC(abc.ABC):
     def inverse_transform(self, data, **kwargs):
         """
         Document this function.
-        
+
         Parameters
         ----------
         data : Any
@@ -79,12 +83,12 @@ class PreprocessModuleABC(abc.ABC):
     ) -> tuple[str, ...] | None:
         """
         Document this function.
-        
+
         Parameters
         ----------
         data : xr.Dataset | xr.DataArray
             Description not yet provided.
-        
+
         Returns
         -------
         tuple[str, ...] | None
@@ -102,9 +106,9 @@ class PreprocessModuleABC(abc.ABC):
 
         if len(reduction_dims) == 0:
             return None
-        
+
         return reduction_dims
-    
+
     @final
     def _add_grouping_coordinate(
         self,
@@ -112,17 +116,17 @@ class PreprocessModuleABC(abc.ABC):
     ) -> xr.Dataset | xr.DataArray:
         """
         Document this function.
-        
+
         Parameters
         ----------
         data : xr.Dataset | xr.DataArray
             Description not yet provided.
-        
+
         Returns
         -------
         xr.Dataset | xr.DataArray
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -143,13 +147,9 @@ class PreprocessModuleABC(abc.ABC):
             grouping_coord = init_time.dt.dayofyear
 
         else:
-            raise RuntimeError(
-                f"Unexpected temporal frequency {self.frequency!r}."
-            )
+            raise RuntimeError(f"Unexpected temporal frequency {self.frequency!r}.")
 
-        return data.assign_coords(
-            {self.frequency: grouping_coord}
-        )
+        return data.assign_coords({self.frequency: grouping_coord})
 
     @final
     def _align_stat_for_transform(
@@ -159,19 +159,19 @@ class PreprocessModuleABC(abc.ABC):
     ) -> xr.DataArray:
         """
         Document this function.
-        
+
         Parameters
         ----------
         data : xr.DataArray | xr.Dataset
             Description not yet provided.
         stat : xr.DataArray | xr.Dataset
             Description not yet provided.
-        
+
         Returns
         -------
         xr.DataArray
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -179,17 +179,13 @@ class PreprocessModuleABC(abc.ABC):
         ValueError
             Description not yet provided.
         """
-        if (self.frequency is None or self.init_time_dim not in self.dims):
+        if self.frequency is None or self.init_time_dim not in self.dims:
             return stat
 
-                                                                            
-                                              
         if self.frequency in data.coords:
             temporal_indexer = data.coords[self.frequency]
 
         else:
-                                                                  
-
             if self.init_time_dim not in data.coords:
                 raise ValueError(
                     f"Data must contain either the auxiliary coordinate "
@@ -209,13 +205,9 @@ class PreprocessModuleABC(abc.ABC):
                 temporal_indexer = init_time.dt.dayofyear
 
             else:
-                raise RuntimeError(
-                    f"Unexpected temporal frequency {self.frequency!r}."
-                )
+                raise RuntimeError(f"Unexpected temporal frequency {self.frequency!r}.")
 
-        return stat.sel(
-            {self.frequency: temporal_indexer}
-        )
+        return stat.sel({self.frequency: temporal_indexer})
 
     @final
     def _get_inverse_target_time(
@@ -224,27 +216,23 @@ class PreprocessModuleABC(abc.ABC):
     ) -> xr.DataArray:
         """
         Document this function.
-        
+
         Parameters
         ----------
         data : xr.DataArray | xr.Dataset
             Description not yet provided.
-        
+
         Returns
         -------
         xr.DataArray
             Description not yet provided.
         """
-        init_times = np.asarray(
-            data[self.init_time_dim].values
-        )
+        init_times = np.asarray(data[self.init_time_dim].values)
 
         if self.lead_time_dim not in data.dims:
             return data[self.init_time_dim]
 
-        lead_times = np.asarray(
-            data[self.lead_time_dim].values
-        )
+        lead_times = np.asarray(data[self.lead_time_dim].values)
 
         init_grid, lead_grid = np.meshgrid(
             init_times,
@@ -265,19 +253,16 @@ class PreprocessModuleABC(abc.ABC):
                 self.lead_time_dim,
             ),
             coords={
-                self.init_time_dim:
-                    data[self.init_time_dim],
-                self.lead_time_dim:
-                    data[self.lead_time_dim],
+                self.init_time_dim: data[self.init_time_dim],
+                self.lead_time_dim: data[self.lead_time_dim],
             },
         )
-
 
     @final
     def _check_fitted(self) -> None:
         """
         Document this function.
-        
+
         Raises
         ------
         RuntimeError

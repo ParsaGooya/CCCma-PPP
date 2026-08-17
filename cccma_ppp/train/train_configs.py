@@ -22,12 +22,11 @@ from cccma_ppp.core.trainer import TrainerConfig
 from cccma_ppp.core.optimization import OptimizerConfig
 from cccma_ppp.core.core_abc import GenerativeContext
 
-import cccma_ppp.generic.registry_imports
 
 def set_seed(seed):
     """
     Document this function.
-    
+
     Parameters
     ----------
     seed : Any
@@ -41,7 +40,7 @@ def set_seed(seed):
 class TrainConfig:
     """
     Document this class.
-    
+
     Parameters
     ----------
     experiment_dir : str
@@ -69,6 +68,7 @@ class TrainConfig:
     resume_dir : str | None
         Description not yet provided.
     """
+
     experiment_dir: str
     max_epochs: int
     train_loader: TrainDataloaderConfig | None
@@ -87,7 +87,7 @@ class TrainConfig:
     def __post_init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         AssertionError
@@ -107,14 +107,14 @@ class TrainConfig:
     def _check_module_pipeline_compatability(self):
         """
         Document this function.
-        
+
         Raises
         ------
         RuntimeError
             Description not yet provided.
         ValueError
             Description not yet provided.
-        
+
         Warns
         -----
         UserWarning
@@ -162,7 +162,7 @@ class TrainConfig:
     def set_random_seed(self, rank: int):
         """
         Document this function.
-        
+
         Parameters
         ----------
         rank : int
@@ -175,7 +175,7 @@ class TrainConfig:
     def checkpoint_dir(self) -> str:
         """
         Document this function.
-        
+
         Returns
         -------
         str
@@ -187,7 +187,7 @@ class TrainConfig:
     def log_dir(self) -> str:
         """
         Document this function.
-        
+
         Returns
         -------
         str
@@ -199,7 +199,7 @@ class TrainConfig:
     def figures_dir(self) -> str:
         """
         Document this function.
-        
+
         Returns
         -------
         str
@@ -221,7 +221,7 @@ class TrainConfig:
     def prepare_directory(self, distributed: Distributed, yaml_config: str = None):
         """
         Document this function.
-        
+
         Parameters
         ----------
         distributed : Distributed
@@ -257,7 +257,7 @@ class TrainConfig:
     def _resolve_resuming(self):
         """
         Document this function.
-        
+
         Raises
         ------
         ValueError
@@ -302,7 +302,7 @@ class TrainConfig:
     ) -> "TrainConfig":
         """
         Document this function.
-        
+
         Parameters
         ----------
         resume_dir : str | Path
@@ -311,12 +311,12 @@ class TrainConfig:
             Description not yet provided.
         max_epochs : int
             Description not yet provided.
-        
+
         Returns
         -------
         'TrainConfig'
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -340,12 +340,12 @@ class TrainConfig:
 def prepare_config(path: Path | str) -> dict:
     """
     Document this function.
-    
+
     Parameters
     ----------
     path : Path | str
         Description not yet provided.
-    
+
     Returns
     -------
     dict
@@ -361,7 +361,7 @@ def build_trainer(
 ):
     """
     Document this function.
-    
+
     Parameters
     ----------
     config : TrainConfig
@@ -370,16 +370,17 @@ def build_trainer(
         Description not yet provided.
     logger : logging.Logger | None
         Description not yet provided.
-    
+
     Returns
     -------
     Any
         Description not yet provided.
     """
+
     def log(msg, **kwargs):
         """
         Document this function.
-        
+
         Parameters
         ----------
         msg : Any
@@ -398,8 +399,12 @@ def build_trainer(
     config.train_loader.setup_distributed(distributed)
     return_spatial_mask = config.module.EXPECTS_MASK
 
-    train_loader = config.train_loader.build_train_loader(return_spatial_mask=return_spatial_mask)
-    validation_loader = config.train_loader.build_validation_loader(return_spatial_mask=return_spatial_mask)
+    train_loader = config.train_loader.build_train_loader(
+        return_spatial_mask=return_spatial_mask
+    )
+    validation_loader = config.train_loader.build_validation_loader(
+        return_spatial_mask=return_spatial_mask
+    )
     weights = config.train_loader.get_weights(config.weights)
 
     num_train_batches = len(train_loader)
@@ -423,7 +428,7 @@ def build_trainer(
         weights=weights,
         num_output_dimensions=config.module.NUM_OUTPUT_DIMS or len(output_shape),
         generative_context=generative_context,
-        output_shape=output_shape
+        output_shape=output_shape,
     )
 
     module.init_loss_function(reconstruction_loss)
@@ -454,7 +459,7 @@ def build_trainer(
 def _check_IO(metadata: dict, model_dims: int, which: str = "input"):
     """
     Document this function.
-    
+
     Parameters
     ----------
     metadata : dict
@@ -463,7 +468,7 @@ def _check_IO(metadata: dict, model_dims: int, which: str = "input"):
         Description not yet provided.
     which : str
         Description not yet provided.
-    
+
     Raises
     ------
     RuntimeError

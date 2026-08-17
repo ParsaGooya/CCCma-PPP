@@ -33,7 +33,7 @@ AppendMode = Literal[1, 2, 3]
 class AutoencoderConfig(modelConfigABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     encoder_hidden_dims : list
@@ -51,6 +51,7 @@ class AutoencoderConfig(modelConfigABC):
     activation : ActivationName
         Description not yet provided.
     """
+
     encoder_hidden_dims: list
     decoder_hidden_dims: list = None
     batch_normalization: bool = False
@@ -80,7 +81,7 @@ class AutoencoderConfig(modelConfigABC):
     def EXPECTS_MASK(self) -> bool:
         """
         Document this function.
-        
+
         Returns
         -------
         bool
@@ -96,7 +97,7 @@ class AutoencoderConfig(modelConfigABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         input_shape : np.ndarray
@@ -105,7 +106,7 @@ class AutoencoderConfig(modelConfigABC):
             Description not yet provided.
         added_features_dim : int
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -122,7 +123,7 @@ class AutoencoderConfig(modelConfigABC):
 class Autoencoder(deterministicmodelsABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     config : AutoencoderConfig
@@ -134,6 +135,7 @@ class Autoencoder(deterministicmodelsABC):
     added_features_dim : int
         Description not yet provided.
     """
+
     def __init__(
         self,
         config: AutoencoderConfig,
@@ -143,7 +145,7 @@ class Autoencoder(deterministicmodelsABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         config : AutoencoderConfig
@@ -154,7 +156,7 @@ class Autoencoder(deterministicmodelsABC):
             Description not yet provided.
         added_features_dim : int
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -235,12 +237,12 @@ class Autoencoder(deterministicmodelsABC):
     def forward(self, request: DeterministicRequest) -> deterministicOutput:
         """
         Document this function.
-        
+
         Parameters
         ----------
         request : DeterministicRequest
             Description not yet provided.
-        
+
         Returns
         -------
         deterministicOutput

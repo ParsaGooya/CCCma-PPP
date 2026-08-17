@@ -1,21 +1,12 @@
-                                                                               
-                      
- 
-                                                              
- 
-                                                   
-                                                                               
-
 import torch
 import torch.nn.functional as F
 from torch import nn
-                                              
 
 
 class PartialConv2d(nn.Conv2d):
     """
     Document this class.
-    
+
     Parameters
     ----------
     *args : Any
@@ -23,10 +14,11 @@ class PartialConv2d(nn.Conv2d):
     **kwargs : Any
         Description not yet provided.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Document this function.
-        
+
         Parameters
         ----------
         *args : Any
@@ -70,19 +62,19 @@ class PartialConv2d(nn.Conv2d):
     def forward(self, input, mask_in=None):
         """
         Document this function.
-        
+
         Parameters
         ----------
         input : Any
             Description not yet provided.
         mask_in : Any
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         AssertionError
@@ -96,7 +88,6 @@ class PartialConv2d(nn.Conv2d):
                 weight_maskUpdater = self.weight_maskUpdater.to(input)
 
                 if mask_in is None:
-                                                            
                     if self.multi_channel:
                         mask = torch.ones(
                             input.data.shape[0],
@@ -121,9 +112,8 @@ class PartialConv2d(nn.Conv2d):
                     groups=1,
                 )
 
-                                                                   
                 self.mask_ratio = self.slide_winsize / (self.update_mask + 1e-8)
-                                                                                         
+
                 self.update_mask = torch.clamp(self.update_mask, 0, 1)
                 self.mask_ratio = torch.mul(self.mask_ratio, self.update_mask)
 

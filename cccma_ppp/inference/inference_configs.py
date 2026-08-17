@@ -13,17 +13,15 @@ from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.core.writer import WriterConfig
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.data_modules.dataloader import Dataloader
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
 from cccma_ppp.train.train_configs import set_seed
-import cccma_ppp.generic.registry_imports
 
 
 @dataclasses.dataclass
 class InferenceConfig:
     """
     Document this class.
-    
+
     Parameters
     ----------
     experiment_dir : str
@@ -39,10 +37,9 @@ class InferenceConfig:
     checkpoint_name : str | None
         Description not yet provided.
     """
+
     experiment_dir: str
-    writer: WriterConfig = dataclasses.field(
-        default_factory=WriterConfig
-    )
+    writer: WriterConfig = dataclasses.field(default_factory=WriterConfig)
     inference_loader: InferenceDataloaderConfig = dataclasses.field(
         default_factory=InferenceDataloaderConfig
     )
@@ -74,7 +71,7 @@ class InferenceConfig:
     def _check_inference_dataset(self):
         """
         Document this function.
-        
+
         Raises
         ------
         RuntimeError
@@ -99,7 +96,7 @@ class InferenceConfig:
     def output_preprocessor_dir(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -117,7 +114,7 @@ class InferenceConfig:
     def output_dir(self) -> Path:
         """
         Document this function.
-        
+
         Returns
         -------
         Path
@@ -133,7 +130,7 @@ class InferenceConfig:
     def log_dir(self) -> Path:
         """
         Document this function.
-        
+
         Returns
         -------
         Path
@@ -154,7 +151,7 @@ class InferenceConfig:
     def prepare_directory(self, distributed: Distributed):
         """
         Document this function.
-        
+
         Parameters
         ----------
         distributed : Distributed
@@ -170,7 +167,7 @@ class InferenceConfig:
     def set_random_seed(self, rank: int):
         """
         Document this function.
-        
+
         Parameters
         ----------
         rank : int
@@ -182,7 +179,7 @@ class InferenceConfig:
     def load_train_config(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -193,7 +190,7 @@ class InferenceConfig:
     def load_train_dataloader_config(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -205,22 +202,20 @@ class InferenceConfig:
             config=dacite.Config(strict=False),
         )
 
-    def load_module(
-        self, strict: bool = False
-    ):
+    def load_module(self, strict: bool = False):
         """
         Document this function.
-        
+
         Parameters
         ----------
         strict : bool
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         FileNotFoundError
@@ -238,7 +233,7 @@ class InferenceConfig:
         if not path.exists():
             raise FileNotFoundError(f"Checkpoint not found: {path}")
 
-        checkpoint = torch.load(path, map_location="cpu", weights_only=False)           
+        checkpoint = torch.load(path, map_location="cpu", weights_only=False)
 
         required_keys = {
             "input_shape",
@@ -279,12 +274,12 @@ class InferenceConfig:
 def prepare_config(path: Path | str) -> dict:
     """
     Document this function.
-    
+
     Parameters
     ----------
     path : Path | str
         Description not yet provided.
-    
+
     Returns
     -------
     dict
@@ -302,7 +297,7 @@ def build_writer(
 ):
     """
     Document this function.
-    
+
     Parameters
     ----------
     config : InferenceConfig
@@ -311,21 +306,22 @@ def build_writer(
         Description not yet provided.
     logger : logging.Logger | None
         Description not yet provided.
-    
+
     Returns
     -------
     Any
         Description not yet provided.
-    
+
     Raises
     ------
     RuntimeError
         Description not yet provided.
     """
+
     def log(msg, **kwargs):
         """
         Document this function.
-        
+
         Parameters
         ----------
         msg : Any
@@ -348,8 +344,10 @@ def build_writer(
 
     config.inference_loader.setup_distributed(config.train_loader, distributed)
 
-    return_spatial_mask= module.model_config.EXPECTS_MASK
-    inference_loader = config.inference_loader.build_inference_loader(return_spatial_mask=return_spatial_mask)
+    return_spatial_mask = module.model_config.EXPECTS_MASK
+    inference_loader = config.inference_loader.build_inference_loader(
+        return_spatial_mask=return_spatial_mask
+    )
 
     log("Checking module dataloader compatability ...")
 

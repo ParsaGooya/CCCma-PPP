@@ -27,7 +27,7 @@ from cccma_ppp.core.selectors import cVAEModelSelector
 class cVAE_MLPConfig(cVAEmodelConfigABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     encoder_hidden_dims : list
@@ -53,6 +53,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     activation : ActivationName
         Description not yet provided.
     """
+
     encoder_hidden_dims: list
     latent_size: int
     condition_embedding_dims: list | None = None
@@ -73,7 +74,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     def __post_init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         ValueError
@@ -103,7 +104,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     def EXPECTS_MASK(self) -> bool:
         """
         Document this function.
-        
+
         Returns
         -------
         bool
@@ -119,7 +120,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         input_shape : np.ndarray
@@ -128,7 +129,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
             Description not yet provided.
         added_features_dim : int
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -145,7 +146,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
 class cVAE_MLP(cVAEmodelsABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     config : cVAE_MLPConfig
@@ -157,6 +158,7 @@ class cVAE_MLP(cVAEmodelsABC):
     added_features_dim : int
         Description not yet provided.
     """
+
     def __init__(
         self,
         config: cVAE_MLPConfig,
@@ -166,7 +168,7 @@ class cVAE_MLP(cVAEmodelsABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         config : cVAE_MLPConfig
@@ -177,7 +179,7 @@ class cVAE_MLP(cVAEmodelsABC):
             Description not yet provided.
         added_features_dim : int
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -288,12 +290,12 @@ class cVAE_MLP(cVAEmodelsABC):
     def forward(self, request: cVAEForwardRequest) -> cVAEOutput:
         """
         Document this function.
-        
+
         Parameters
         ----------
         request : cVAEForwardRequest
             Description not yet provided.
-        
+
         Returns
         -------
         cVAEOutput
@@ -321,11 +323,10 @@ class cVAE_MLP(cVAEmodelsABC):
 
         if posterior_variance_limits is not None:
             log_var = torch.clamp(
-                log_var, 
-                min=posterior_variance_limits[0].type_as(mu), 
+                log_var,
+                min=posterior_variance_limits[0].type_as(mu),
                 max=posterior_variance_limits[1].type_as(mu),
             )
-
 
         latent_samples = self._sample(mu, log_var, latent_sample_size)
 
@@ -354,12 +355,12 @@ class cVAE_MLP(cVAEmodelsABC):
     ) -> cVAEOutput:
         """
         Document this function.
-        
+
         Parameters
         ----------
         request : cVAEPredictRequest
             Description not yet provided.
-        
+
         Returns
         -------
         cVAEOutput
@@ -373,7 +374,7 @@ class cVAE_MLP(cVAEmodelsABC):
         _shape_model_output = (latent_sample_size, B, C, -1)
 
         latent_samples, cond_mu, cond_log_var = self._sample_prior(request)
-        
+
         output = self._generate(
             latent_samples, condition=cond_mu, added_features=added_features
         )
@@ -396,7 +397,7 @@ class cVAE_MLP(cVAEmodelsABC):
     ) -> tuple[torch.Tensor]:
         """
         Document this function.
-        
+
         Parameters
         ----------
         x : torch.Tensor
@@ -407,7 +408,7 @@ class cVAE_MLP(cVAEmodelsABC):
             Description not yet provided.
         added_features : torch.Tensor
             Description not yet provided.
-        
+
         Returns
         -------
         tuple[torch.Tensor]
@@ -443,7 +444,7 @@ class cVAE_MLP(cVAEmodelsABC):
     ) -> tuple[torch.Tensor]:
         """
         Document this function.
-        
+
         Parameters
         ----------
         condition : torch.Tensor
@@ -452,7 +453,7 @@ class cVAE_MLP(cVAEmodelsABC):
             Description not yet provided.
         added_features : torch.Tensor
             Description not yet provided.
-        
+
         Returns
         -------
         tuple[torch.Tensor]
@@ -488,7 +489,7 @@ class cVAE_MLP(cVAEmodelsABC):
     ) -> torch.Tensor:
         """
         Document this function.
-        
+
         Parameters
         ----------
         latent_samples : torch.Tensor
@@ -497,7 +498,7 @@ class cVAE_MLP(cVAEmodelsABC):
             Description not yet provided.
         added_features : torch.Tensor
             Description not yet provided.
-        
+
         Returns
         -------
         torch.Tensor
@@ -514,7 +515,9 @@ class cVAE_MLP(cVAEmodelsABC):
             latent_samples = torch.cat(
                 [
                     latent_samples,
-                    x_features.unsqueeze(0).expand((latent_sample_size, *x_features.shape)),
+                    x_features.unsqueeze(0).expand(
+                        (latent_sample_size, *x_features.shape)
+                    ),
                 ],
                 dim=-1,
             )
@@ -530,7 +533,9 @@ class cVAE_MLP(cVAEmodelsABC):
 
         feature_size = latent_samples.shape[-1]
 
-        latent_samples = latent_samples.reshape(latent_sample_size * batch_size, feature_size)
+        latent_samples = latent_samples.reshape(
+            latent_sample_size * batch_size, feature_size
+        )
         out = self.decoder(latent_samples)
 
         return out.reshape(latent_sample_size, batch_size, -1)

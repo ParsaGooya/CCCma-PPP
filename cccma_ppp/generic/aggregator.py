@@ -5,7 +5,6 @@ from collections import defaultdict
 import warnings
 import matplotlib.pyplot as plt
 import random
-import csv
 from pathlib import Path
 
 from cccma_ppp.generic.distributed import Distributed
@@ -16,7 +15,7 @@ from cccma_ppp.generic.runtime import RuntimeContext
 class MetricsAggregator:
     """
     Document this class.
-    
+
     Parameters
     ----------
     distributed : Distributed
@@ -30,6 +29,7 @@ class MetricsAggregator:
     num_epochs_seen : int
         Description not yet provided.
     """
+
     distributed: Distributed
     name: str
 
@@ -40,7 +40,7 @@ class MetricsAggregator:
     def __post_init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         AssertionError
@@ -85,7 +85,7 @@ class MetricsAggregator:
     ) -> None:
         """
         Document this function.
-        
+
         Parameters
         ----------
         loss_dict : dict[str, torch.Tensor | int | float]
@@ -129,7 +129,7 @@ class MetricsAggregator:
     def _dist_compute(self) -> dict[str, float]:
         """
         Document this function.
-        
+
         Returns
         -------
         dict[str, float]
@@ -151,12 +151,12 @@ class MetricsAggregator:
     def _dist_average(self, tensor: float) -> float:
         """
         Document this function.
-        
+
         Parameters
         ----------
         tensor : float
             Description not yet provided.
-        
+
         Returns
         -------
         float
@@ -186,7 +186,7 @@ class MetricsAggregator:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         logs : dict[str, float]
@@ -195,12 +195,12 @@ class MetricsAggregator:
             Description not yet provided.
         time_elapsed : float
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -244,7 +244,7 @@ class MetricsAggregator:
     def reset_batch_losses(self):
         """
         Document this function.
-        
+
         Warns
         -----
         UserWarning
@@ -271,7 +271,7 @@ class MetricsAggregator:
     ) -> None:
         """
         Document this function.
-        
+
         Parameters
         ----------
         aggregator_list : list['MetricsAggregator']
@@ -282,7 +282,7 @@ class MetricsAggregator:
             Description not yet provided.
         figsize : Any
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -408,17 +408,23 @@ class MetricsAggregator:
                 old_csv.unlink()
 
             with csv_path.open("w") as f:
-                f.write("epoch," + ",".join(
-                    agg.name for agg in aggregator_list if agg is not None
-                ) + "\n")
+                f.write(
+                    "epoch,"
+                    + ",".join(agg.name for agg in aggregator_list if agg is not None)
+                    + "\n"
+                )
 
                 for i, epoch in enumerate(epochs_range):
                     values = [
-                        str(agg.epoch_metric_terms.get(loss_name, [np.nan] * metric_lengths)[i])
+                        str(
+                            agg.epoch_metric_terms.get(
+                                loss_name, [np.nan] * metric_lengths
+                            )[i]
+                        )
                         for agg in aggregator_list
                         if agg is not None
                     ]
-                    f.write(f"{epoch}," + ",".join(values) + "\n")            
+                    f.write(f"{epoch}," + ",".join(values) + "\n")
 
         fig, ax = plt.subplots(1, 1, figsize=figsize)
 
@@ -451,7 +457,7 @@ class MetricsAggregator:
     def state_dict(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -467,7 +473,7 @@ class MetricsAggregator:
     def load_state_dict(self, state_dict):
         """
         Document this function.
-        
+
         Parameters
         ----------
         state_dict : Any
@@ -485,7 +491,7 @@ class MetricsAggregator:
 class RunningCovariance:
     """
     Document this class.
-    
+
     Parameters
     ----------
     distributed : Distributed
@@ -497,6 +503,7 @@ class RunningCovariance:
     count : torch.Tensor | None
         Description not yet provided.
     """
+
     distributed: Distributed
     sum_x: torch.Tensor | None = None
     sum_xxT: torch.Tensor | None = None
@@ -505,7 +512,7 @@ class RunningCovariance:
     def update(self, x: torch.Tensor):
         """
         Document this function.
-        
+
         Parameters
         ----------
         x : torch.Tensor
@@ -538,20 +545,20 @@ class RunningCovariance:
         self.distributed.all_reduce_sum(self.sum_xxT)
         self.distributed.all_reduce_sum(self.count)
 
-    def finalize(self, print_checks = False):
+    def finalize(self, print_checks=False):
         """
         Document this function.
-        
+
         Parameters
         ----------
         print_checks : Any
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError

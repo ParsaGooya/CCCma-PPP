@@ -20,6 +20,7 @@ class DeterministicPredictorConfig:
     """
     Document this class.
     """
+
     _type: ClassVar[str] = "deterministic"
 
     def build(
@@ -31,7 +32,7 @@ class DeterministicPredictorConfig:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         module : moduleABC
@@ -42,7 +43,7 @@ class DeterministicPredictorConfig:
             Description not yet provided.
         num_output_sampling : int
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -56,7 +57,7 @@ class DeterministicPredictorConfig:
 class DetermninisticPredictor(PredictorABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     config : DeterministicPredictorConfig
@@ -70,6 +71,7 @@ class DetermninisticPredictor(PredictorABC):
     num_output_sampling : int
         Description not yet provided.
     """
+
     def __init__(
         self,
         config: DeterministicPredictorConfig,
@@ -80,7 +82,7 @@ class DetermninisticPredictor(PredictorABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         config : DeterministicPredictorConfig
@@ -93,7 +95,7 @@ class DetermninisticPredictor(PredictorABC):
             Description not yet provided.
         num_output_sampling : int
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -126,7 +128,7 @@ class DetermninisticPredictor(PredictorABC):
     def extract_training_vars(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -142,19 +144,19 @@ class DetermninisticPredictor(PredictorABC):
     ) -> deterministicOutput | dict[str, RunningCovariance]:
         """
         Document this function.
-        
+
         Parameters
         ----------
         batch : BatchDataABC
             Description not yet provided.
         _getting_train_stats : bool
             Description not yet provided.
-        
+
         Returns
         -------
         deterministicOutput | dict[str, RunningCovariance]
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -179,7 +181,7 @@ class DetermninisticPredictor(PredictorABC):
 
             if self.num_output_covariance_sampling > 0:
                 num_output_sampling = 0
-            else: 
+            else:
                 num_output_sampling = self.num_output_sampling
 
             output = self.raw_module.predict(
@@ -206,14 +208,14 @@ class DetermninisticPredictor(PredictorABC):
     ) -> dict[str, RunningCovariance]:
         """
         Document this function.
-        
+
         Parameters
         ----------
         output : deterministicOutput
             Description not yet provided.
         data : BatchDataABC
             Description not yet provided.
-        
+
         Returns
         -------
         dict[str, RunningCovariance]
@@ -235,7 +237,7 @@ class DetermninisticPredictor(PredictorABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         output : deterministicOutput

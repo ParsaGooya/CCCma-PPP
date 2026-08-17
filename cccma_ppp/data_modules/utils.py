@@ -10,12 +10,14 @@ import calendar
 import pandas as pd
 from collections.abc import Iterator
 
-from cccma_ppp.configs import (supported_NN_dimensions_sorted, 
-                               required_sample_dimensions, 
-                               realization_dim,
-                               lead_time_unit,
-                               lead_time_resolution)
-                               
+from cccma_ppp.configs import (
+    supported_NN_dimensions_sorted,
+    required_sample_dimensions,
+    realization_dim,
+    lead_time_unit,
+    lead_time_resolution,
+)
+
 
 TimeTypes = Literal["datetime", "cftime"]
 TimeFrequency = Literal["day", "month", "year"]
@@ -27,12 +29,12 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 def _unwrap_data_variables(dataset: xr.Dataset) -> xr.DataArray:
     """
     Document this function.
-    
+
     Parameters
     ----------
     dataset : xr.Dataset
         Description not yet provided.
-    
+
     Returns
     -------
     xr.DataArray
@@ -59,11 +61,11 @@ def _load_xarray_data(
     add_time_auxiliary_coords: bool = False,
     init_time_dim: str = init_time_dim,
     realization_dim: str = realization_dim,
-    supported_NN_dimensions_sorted: tuple = supported_NN_dimensions_sorted
+    supported_NN_dimensions_sorted: tuple = supported_NN_dimensions_sorted,
 ):
     """
     Document this function.
-    
+
     Parameters
     ----------
     paths : list[str]
@@ -90,12 +92,12 @@ def _load_xarray_data(
         Description not yet provided.
     supported_NN_dimensions_sorted : tuple
         Description not yet provided.
-    
+
     Returns
     -------
     Any
         Description not yet provided.
-    
+
     Raises
     ------
     TypeError
@@ -159,18 +161,18 @@ def _load_xarray_data(
 
 def _create_train_mask(
     init_times: (
-    Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
-    | np.ndarray
-    | xr.DataArray
+        Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
+        | np.ndarray
+        | xr.DataArray
     ),
     lead_times: Sequence | xr.DataArray | np.ndarray | int,
     lead_time_resolution: lead_time_unit = lead_time_resolution,
     init_time_dim: str = init_time_dim,
-    lead_time_dim: str = lead_time_dim
+    lead_time_dim: str = lead_time_dim,
 ) -> xr.DataArray:
     """
     Document this function.
-    
+
     Parameters
     ----------
     init_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
@@ -183,12 +185,12 @@ def _create_train_mask(
         Description not yet provided.
     lead_time_dim : str
         Description not yet provided.
-    
+
     Returns
     -------
     xr.DataArray
         Description not yet provided.
-    
+
     Raises
     ------
     ValueError
@@ -201,7 +203,6 @@ def _create_train_mask(
         dims=(init_time_dim,),
         coords={init_time_dim: init_times},
     )
-
 
     if isinstance(lead_times, int):
         if lead_times < 1:
@@ -232,21 +233,16 @@ def _create_train_mask(
         },
     )
 
-    time_resolution = infer_time_resolution(
-        init_times.coords[init_time_dim].to_index()
-    )
-    
-    if time_resolution == "year":
+    time_resolution = infer_time_resolution(init_times.coords[init_time_dim].to_index())
 
+    if time_resolution == "year":
         cutoff_year = int(init_times.dt.year.max().item())
         mask = target_times.dt.year > cutoff_year
 
-    elif (time_resolution == "month" 
-          and lead_time_resolution == 'day'):
-        
+    elif time_resolution == "month" and lead_time_resolution == "day":
         cutoff_year = int(init_times.dt.month.max().item())
-        mask = target_times.dt.month > cutoff_year        
-    
+        mask = target_times.dt.month > cutoff_year
+
     else:
         cutoff_time = init_times.max().values
         mask = target_times > cutoff_time
@@ -262,7 +258,7 @@ def _calculate_target_times(
 ) -> np.ndarray:
     """
     Document this function.
-    
+
     Parameters
     ----------
     init_times : xr.DataArray
@@ -271,12 +267,12 @@ def _calculate_target_times(
         Description not yet provided.
     lead_time_resolution : lead_time_unit
         Description not yet provided.
-    
+
     Returns
     -------
     np.ndarray
         Description not yet provided.
-    
+
     Raises
     ------
     ValueError
@@ -305,10 +301,7 @@ def _calculate_target_times(
 
     if lead_time_resolution == "month":
         valid_times = [
-            [
-                _add_months(init_time, int(offset))
-                for offset in offsets
-            ]
+            [_add_months(init_time, int(offset)) for offset in offsets]
             for init_time in init_times.values
         ]
 
@@ -319,7 +312,7 @@ def _calculate_target_times(
 
     else:
         raise ValueError(
-            f"Invalid lead_time_resolution {lead_time_resolution}. Must be in " \
+            f"Invalid lead_time_resolution {lead_time_resolution}. Must be in "
             "['day', 'month']. "
         )
 
@@ -330,14 +323,14 @@ def _add_months(
 ) -> np.datetime64 | cftime.datetime:
     """
     Document this function.
-    
+
     Parameters
     ----------
     time : np.datetime64 | cftime.datetime
         Description not yet provided.
     n_months : int
         Description not yet provided.
-    
+
     Returns
     -------
     np.datetime64 | cftime.datetime
@@ -345,11 +338,7 @@ def _add_months(
     """
     is_cftime = isinstance(time, cftime.datetime)
 
-    calendar = (
-        time.calendar
-        if is_cftime
-        else "proleptic_gregorian"
-    )
+    calendar = time.calendar if is_cftime else "proleptic_gregorian"
 
     return xr.date_range(
         start=time,
@@ -360,19 +349,17 @@ def _add_months(
     )[-1]
 
 
-
-    
 def _validate_time_sequence(
     times_sequence: Sequence | np.ndarray | xr.DataArray,
 ) -> None:
     """
     Document this function.
-    
+
     Parameters
     ----------
     times_sequence : Sequence | np.ndarray | xr.DataArray
         Description not yet provided.
-    
+
     Raises
     ------
     TypeError
@@ -407,16 +394,14 @@ def _validate_time_sequence(
     if is_cftime:
         if not all(isinstance(value, cftime.datetime) for value in values):
             raise TypeError(
-                "'time_sequence' cannot mix cftime objects with "
-                "other datetime types."
+                "'time_sequence' cannot mix cftime objects with other datetime types."
             )
 
         calendars = {value.calendar for value in values}
 
         if len(calendars) > 1:
             raise ValueError(
-                "'time_sequence' contains multiple CF calendars: "
-                f"{calendars}."
+                f"'time_sequence' contains multiple CF calendars: {calendars}."
             )
 
     elif is_numpy_datetime:
@@ -438,7 +423,7 @@ def _validate_time_sequence(
 def suppress_stderr() -> Iterator[None]:
     """
     Document this function.
-    
+
     Yields
     ------
     None
@@ -456,17 +441,14 @@ def suppress_stderr() -> Iterator[None]:
         os.close(saved_stderr_fd)
 
 
-
-
-
 def add_lead_times(
     init_times: np.ndarray | xr.DataArray,
     lead_times: np.ndarray | xr.DataArray,
-    lead_time_resolution: lead_time_unit = 'month',
+    lead_time_resolution: lead_time_unit = "month",
 ) -> np.ndarray:
     """
     Document this function.
-    
+
     Parameters
     ----------
     init_times : np.ndarray | xr.DataArray
@@ -475,12 +457,12 @@ def add_lead_times(
         Description not yet provided.
     lead_time_resolution : lead_time_unit
         Description not yet provided.
-    
+
     Returns
     -------
     np.ndarray
         Description not yet provided.
-    
+
     Raises
     ------
     TypeError
@@ -495,9 +477,7 @@ def add_lead_times(
         raise ValueError("'init_times' and 'lead_times' must be one-dimensional.")
 
     if init_times.shape != lead_times.shape:
-        raise ValueError(
-            "'init_times' and 'lead_times' must have the same shape."
-        )
+        raise ValueError("'init_times' and 'lead_times' must have the same shape.")
 
     if not np.issubdtype(lead_times.dtype, np.integer):
         if not np.all(lead_times == lead_times.astype(int)):
@@ -529,13 +509,10 @@ def add_lead_times(
             return init_times + offsets.astype("timedelta64[D]")
 
         if lead_time_resolution == "month":
-                                                                      
             month_times = init_times.astype("datetime64[M]")
             return month_times + offsets.astype("timedelta64[M]")
 
-        raise ValueError(
-            f"Unsupported lead-time resolution: {lead_time_resolution!r}."
-        )
+        raise ValueError(f"Unsupported lead-time resolution: {lead_time_resolution!r}.")
 
     raise TypeError(
         "'init_times' must contain numpy.datetime64 or cftime.datetime values."
@@ -549,7 +526,7 @@ def _add_cftime_offset(
 ) -> cftime.datetime:
     """
     Document this function.
-    
+
     Parameters
     ----------
     init_time : cftime.datetime
@@ -558,12 +535,12 @@ def _add_cftime_offset(
         Description not yet provided.
     resolution : lead_time_unit
         Description not yet provided.
-    
+
     Returns
     -------
     cftime.datetime
         Description not yet provided.
-    
+
     Raises
     ------
     ValueError
@@ -573,16 +550,13 @@ def _add_cftime_offset(
         return init_time + datetime.timedelta(days=offset)
 
     if resolution != "month":
-        raise ValueError(
-            f"Unsupported lead-time resolution: {resolution!r}."
-        )
+        raise ValueError(f"Unsupported lead-time resolution: {resolution!r}.")
 
     total_months = init_time.year * 12 + init_time.month - 1 + offset
 
     target_year, zero_based_month = divmod(total_months, 12)
     target_month = zero_based_month + 1
 
-                                                                               
     target_day = min(
         init_time.day,
         _days_in_cftime_month(
@@ -600,7 +574,7 @@ def _add_cftime_offset(
         init_time.minute,
         init_time.second,
         init_time.microsecond,
-    )  
+    )
 
 
 def _days_in_cftime_month(
@@ -610,7 +584,7 @@ def _days_in_cftime_month(
 ) -> int:
     """
     Document this function.
-    
+
     Parameters
     ----------
     year : int
@@ -619,7 +593,7 @@ def _days_in_cftime_month(
         Description not yet provided.
     calendar_name : str
         Description not yet provided.
-    
+
     Returns
     -------
     int
@@ -630,15 +604,35 @@ def _days_in_cftime_month(
 
     if calendar_name in {"noleap", "365_day"}:
         month_lengths = (
-            31, 28, 31, 30, 31, 30,
-            31, 31, 30, 31, 30, 31,
+            31,
+            28,
+            31,
+            30,
+            31,
+            30,
+            31,
+            31,
+            30,
+            31,
+            30,
+            31,
         )
         return month_lengths[month - 1]
 
     if calendar_name in {"all_leap", "366_day"}:
         month_lengths = (
-            31, 29, 31, 30, 31, 30,
-            31, 31, 30, 31, 30, 31,
+            31,
+            29,
+            31,
+            30,
+            31,
+            30,
+            31,
+            31,
+            30,
+            31,
+            30,
+            31,
         )
         return month_lengths[month - 1]
 
@@ -652,7 +646,7 @@ def assign_datetime_init_time(
 ) -> xr.Dataset | xr.DataArray:
     """
     Document this function.
-    
+
     Parameters
     ----------
     ds : xr.Dataset | xr.DataArray
@@ -661,12 +655,12 @@ def assign_datetime_init_time(
         Description not yet provided.
     calendar : str | None
         Description not yet provided.
-    
+
     Returns
     -------
     xr.Dataset | xr.DataArray
         Description not yet provided.
-    
+
     Raises
     ------
     TypeError
@@ -675,23 +669,17 @@ def assign_datetime_init_time(
         Description not yet provided.
     """
     if init_time_dim not in ds.coords:
-        raise ValueError(
-            f"{init_time_dim!r} is not a coordinate."
-        )
+        raise ValueError(f"{init_time_dim!r} is not a coordinate.")
 
     years = np.asarray(ds.coords[init_time_dim].values)
-    if years.ndim == 0:  
+    if years.ndim == 0:
         years = np.array([years])
 
     if not np.issubdtype(years.dtype, np.integer):
-        raise TypeError(
-            f"{init_time_dim!r} must contain integer years."
-        )
+        raise TypeError(f"{init_time_dim!r} must contain integer years.")
 
     if calendar is None:
-        times = np.array(
-            [np.datetime64(f"{year:04d}-01-01") for year in years ]
-        )
+        times = np.array([np.datetime64(f"{year:04d}-01-01") for year in years])
     else:
         times = xr.date_range(
             start=f"{years.min():04d}-01-01",
@@ -701,11 +689,7 @@ def assign_datetime_init_time(
             use_cftime=True,
         )
 
-    return ds.assign_coords(
-        {init_time_dim: (init_time_dim, times)}
-    )
-
-
+    return ds.assign_coords({init_time_dim: (init_time_dim, times)})
 
 
 def get_time_representation(
@@ -713,17 +697,17 @@ def get_time_representation(
 ) -> TimeTypes:
     """
     Document this function.
-    
+
     Parameters
     ----------
     time : xr.DataArray | pd.DatetimeIndex | xr.CFTimeIndex
         Description not yet provided.
-    
+
     Returns
     -------
     TimeTypes
         Description not yet provided.
-    
+
     Raises
     ------
     TypeError
@@ -737,10 +721,7 @@ def get_time_representation(
         if isinstance(first, cftime.datetime):
             return "cftime"
 
-        if (
-            isinstance(first, np.datetime64)
-            or isinstance(first, datetime.datetime)
-        ):
+        if isinstance(first, np.datetime64) or isinstance(first, datetime.datetime):
             return "datetime"
 
     elif isinstance(time, xr.CFTimeIndex):
@@ -749,11 +730,7 @@ def get_time_representation(
     elif isinstance(time, pd.DatetimeIndex):
         return "datetime"
 
-    raise TypeError(
-        "Time coordinate must use either datetime or cftime objects."
-    )
-
-
+    raise TypeError("Time coordinate must use either datetime or cftime objects.")
 
 
 def infer_time_resolution(
@@ -761,17 +738,17 @@ def infer_time_resolution(
 ) -> TimeFrequency:
     """
     Document this function.
-    
+
     Parameters
     ----------
     times : pd.DatetimeIndex | xr.CFTimeIndex
         Description not yet provided.
-    
+
     Returns
     -------
     TimeFrequency
         Description not yet provided.
-    
+
     Raises
     ------
     ValueError
@@ -782,10 +759,7 @@ def infer_time_resolution(
             "At least two timestamps are required to infer the resolution."
         )
 
-    deltas = [
-        (t2 - t1).days
-        for t1, t2 in zip(times[:-1], times[1:])
-    ]
+    deltas = [(t2 - t1).days for t1, t2 in zip(times[:-1], times[1:])]
 
     min_delta = min(deltas)
 

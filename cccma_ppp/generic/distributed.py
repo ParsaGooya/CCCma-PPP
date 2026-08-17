@@ -7,6 +7,7 @@ class Distributed:
     """
     Document this class.
     """
+
     _instance = None
 
     def __init__(self):
@@ -37,7 +38,7 @@ class Distributed:
     def get_instance(cls):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -57,7 +58,7 @@ class Distributed:
     def is_root(self) -> bool:
         """
         Document this function.
-        
+
         Returns
         -------
         bool
@@ -75,7 +76,7 @@ class Distributed:
     def all_reduce_sum(self, local: torch.Tensor):
         """
         Document this function.
-        
+
         Parameters
         ----------
         local : torch.Tensor
@@ -87,7 +88,7 @@ class Distributed:
     def broadcast(self, local: torch.Tensor, src=0):
         """
         Document this function.
-        
+
         Parameters
         ----------
         local : torch.Tensor

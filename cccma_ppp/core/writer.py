@@ -2,7 +2,6 @@ import torch
 from pathlib import Path
 import logging
 import dataclasses
-import gc
 import os
 import time
 from tqdm import tqdm
@@ -27,11 +26,12 @@ from cccma_ppp.configs import required_sample_dimensions, realization_dim
 
 init_time_dim, lead_time_dim = required_sample_dimensions
 
+
 @dataclasses.dataclass
 class WriterConfig:
     """
     Document this class.
-    
+
     Parameters
     ----------
     predictor : DeterministicPredictorConfig | cVAEPredictorConfig
@@ -41,6 +41,7 @@ class WriterConfig:
     get_trained_model_stats_from_validation : bool
         Description not yet provided.
     """
+
     predictor: DeterministicPredictorConfig | cVAEPredictorConfig = dataclasses.field(
         default_factory=DeterministicPredictorConfig
     )
@@ -51,7 +52,7 @@ class WriterConfig:
     def __post_init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         ValueError
@@ -70,7 +71,7 @@ class WriterConfig:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         inference_data_loader : Dataloader
@@ -83,12 +84,12 @@ class WriterConfig:
             Description not yet provided.
         output_dir : Path | str
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -113,7 +114,7 @@ class WriterConfig:
 class Writer:
     """
     Document this class.
-    
+
     Parameters
     ----------
     config : WriterConfig
@@ -129,6 +130,7 @@ class Writer:
     output_dir : Path | str
         Description not yet provided.
     """
+
     def __init__(
         self,
         config: WriterConfig,
@@ -140,7 +142,7 @@ class Writer:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         config : WriterConfig
@@ -172,14 +174,14 @@ class Writer:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         distributed : Distributed
             Description not yet provided.
         logger : logging.Logger
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -238,7 +240,7 @@ class Writer:
     def train_stats_save_dir(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -249,7 +251,7 @@ class Writer:
     def predict(self):
         """
         Document this function.
-        
+
         Raises
         ------
         RuntimeError
@@ -329,7 +331,7 @@ class Writer:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         from_validation : bool
@@ -338,7 +340,7 @@ class Writer:
             Description not yet provided.
         shuffle : bool | None
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -361,7 +363,7 @@ class Writer:
     def aggregate_train_stats(self, stats: dict[str, RunningCovariance]):
         """
         Document this function.
-        
+
         Parameters
         ----------
         stats : dict[str, RunningCovariance]
@@ -393,7 +395,7 @@ class Writer:
     def log_root(self, level: int, msg: str, *args):
         """
         Document this function.
-        
+
         Parameters
         ----------
         level : int
@@ -413,7 +415,7 @@ class Writer:
     def raw_module(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -426,7 +428,7 @@ class Writer:
     def aggregate_predictions_to_netcdf(self, do_post_process: bool = True):
         """
         Document this function.
-        
+
         Parameters
         ----------
         do_post_process : bool
@@ -453,16 +455,15 @@ class Writer:
 
         if self.is_on_root:
             aggregate_predictions(
-                post_processor=post_processor, 
-                output_dir=self.output_dir, 
-                load_naming_convention=load_naming_convention, 
+                post_processor=post_processor,
+                output_dir=self.output_dir,
+                load_naming_convention=load_naming_convention,
                 save_naming_convention=save_naming_convention,
-                logger_function=self.log_root
+                logger_function=self.log_root,
             )
 
         if self.is_distributed:
             self.distributed.barrier()
-
 
 
 def aggregate_predictions(
@@ -478,7 +479,7 @@ def aggregate_predictions(
 ):
     """
     Document this function.
-    
+
     Parameters
     ----------
     post_processor : PreprocessingPipeline | None
@@ -499,7 +500,7 @@ def aggregate_predictions(
         Description not yet provided.
     optional_sample_dimensions : tuple[str, ...]
         Description not yet provided.
-    
+
     Raises
     ------
     RuntimeError
@@ -510,35 +511,24 @@ def aggregate_predictions(
 
     output_dir = Path(output_dir)
     temp_save_dir = output_dir / "_temp"
-    
-    temp_files = sorted(
-        temp_save_dir.glob(f"{load_naming_convention}_rank*_*.nc")
-    )
+
+    temp_files = sorted(temp_save_dir.glob(f"{load_naming_convention}_rank*_*.nc"))
 
     if not temp_files:
-        raise RuntimeError(
-            f"No temporary prediction files found in {temp_save_dir}."
-        )
+        raise RuntimeError(f"No temporary prediction files found in {temp_save_dir}.")
 
-                                                                    
-                           
     all_times = None
 
     for path in temp_files:
         with xr.open_dataarray(path) as data:
             if init_time_dim not in data.coords:
                 raise RuntimeError(
-                    f"{path} does not contain the coordinate "
-                    f"{init_time_dim!r}."
+                    f"{path} does not contain the coordinate {init_time_dim!r}."
                 )
 
             time_index = data.coords[init_time_dim].to_index()
 
-            all_times = (
-                time_index
-                if all_times is None
-                else all_times.union(time_index)
-            )
+            all_times = time_index if all_times is None else all_times.union(time_index)
 
     if all_times is None or len(all_times) == 0:
         raise RuntimeError(
@@ -547,16 +537,13 @@ def aggregate_predictions(
 
     all_times = all_times.sort_values()
 
-                                                                     
     all_times_da = xr.DataArray(
         all_times,
         dims=(init_time_dim,),
         coords={init_time_dim: all_times},
     )
 
-    initialization_years = np.asarray(
-        all_times_da.dt.year.values
-    )
+    initialization_years = np.asarray(all_times_da.dt.year.values)
 
     years = np.unique(initialization_years)
 
@@ -577,12 +564,12 @@ def aggregate_predictions(
     ) -> xr.DataArray | xr.Dataset:
         """
         Document this function.
-        
+
         Parameters
         ----------
         data : xr.DataArray | xr.Dataset
             Description not yet provided.
-        
+
         Returns
         -------
         xr.DataArray | xr.Dataset
@@ -595,9 +582,7 @@ def aggregate_predictions(
         return data
 
     for year in tqdm(years, desc="Saving years ..."):
-        year_times = all_times[
-            initialization_years == year
-        ]
+        year_times = all_times[initialization_years == year]
 
         year_datasets = []
 
@@ -608,34 +593,24 @@ def aggregate_predictions(
                 with xr.open_dataarray(path) as data:
                     if init_time_dim not in data.coords:
                         raise RuntimeError(
-                            f"{path} does not contain the coordinate "
-                            f"{init_time_dim!r}."
+                            f"{path} does not contain the coordinate {init_time_dim!r}."
                         )
 
-                    available_times = data.coords[
-                        init_time_dim
-                    ].to_index()
+                    available_times = data.coords[init_time_dim].to_index()
 
                     if time not in available_times:
                         continue
 
-                    data_time_part = data.sel(
-                        {init_time_dim: slice(time, time)}
-                    )
+                    data_time_part = data.sel({init_time_dim: slice(time, time)})
 
                     for dim in sample_coords:
-                        if (
-                            dim != init_time_dim
-                            and dim in data_time_part.dims
-                        ):
+                        if dim != init_time_dim and dim in data_time_part.dims:
                             data_time_part = data_time_part.dropna(
                                 dim=dim,
                                 how="all",
                             )
 
-                    data_time_part = _sort_sample_coords(
-                        data_time_part.load()
-                    )
+                    data_time_part = _sort_sample_coords(data_time_part.load())
 
                     time_datasets.append(data_time_part)
 
@@ -650,9 +625,7 @@ def aggregate_predictions(
                 join="exact",
             )
 
-            lead_times = np.asarray(
-                combined_time[lead_time_dim].values
-            )
+            lead_times = np.asarray(combined_time[lead_time_dim].values)
 
             _, unique_indices = np.unique(
                 lead_times,
@@ -661,20 +634,12 @@ def aggregate_predictions(
 
             if len(unique_indices) != len(lead_times):
                 combined_time = combined_time.isel(
-                    {
-                        lead_time_dim: np.sort(
-                            unique_indices
-                        )
-                    }
+                    {lead_time_dim: np.sort(unique_indices)}
                 )
 
-            combined_time = combined_time.sortby(
-                lead_time_dim
-            )
+            combined_time = combined_time.sortby(lead_time_dim)
 
-            if not combined_time.indexes[
-                lead_time_dim
-            ].is_monotonic_increasing:
+            if not combined_time.indexes[lead_time_dim].is_monotonic_increasing:
                 raise RuntimeError(
                     "Lead times remain non-monotonic for "
                     f"initialization time {time}: "
@@ -684,16 +649,10 @@ def aggregate_predictions(
             data_time = _sort_sample_coords(combined_time)
 
             if post_processor is not None:
-                data_time = post_processor.to_dataset(
-                    data_time
-                )
-                data_time = post_processor.inverse_transform(
-                    data_time
-                )
+                data_time = post_processor.to_dataset(data_time)
+                data_time = post_processor.inverse_transform(data_time)
             else:
-                data_time = data_time.to_dataset(
-                    dim="channels"
-                )
+                data_time = data_time.to_dataset(dim="channels")
 
             year_datasets.append(data_time)
 
@@ -710,23 +669,18 @@ def aggregate_predictions(
 
         data_year = _sort_sample_coords(data_year)
 
-        if not data_year.indexes[
-            init_time_dim
-        ].is_monotonic_increasing:
+        if not data_year.indexes[init_time_dim].is_monotonic_increasing:
             raise RuntimeError(
                 "Initialization times remain non-monotonic for "
                 f"year {year}: "
                 f"{data_year[init_time_dim].values}"
             )
 
-        output_path = (
-            output_dir
-            / f"{save_naming_convention}_{int(year)}.nc"
-        )
+        output_path = output_dir / f"{save_naming_convention}_{int(year)}.nc"
 
         if post_processor is not None:
             data_year = post_processor.inverse_rename(data_year)
-            
+
         data_year.to_netcdf(output_path)
         data_year.close()
 

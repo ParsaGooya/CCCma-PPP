@@ -23,7 +23,7 @@ from cccma_ppp.loss.kld import BetaAnnealing
 class TrainerConfig:
     """
     Document this class.
-    
+
     Parameters
     ----------
     beta_finder : BetaAnnealing | None
@@ -39,6 +39,7 @@ class TrainerConfig:
     grad_clip : float | None
         Description not yet provided.
     """
+
     beta_finder: BetaAnnealing | None = None
     earlystoppingbuffer: float = float("inf")
     minimum_validation_improvement_percentage: float = 0.02
@@ -49,7 +50,7 @@ class TrainerConfig:
     def __post_init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         AssertionError
@@ -68,7 +69,7 @@ class TrainerConfig:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         train_data_loader : Dataloader
@@ -81,12 +82,12 @@ class TrainerConfig:
             Description not yet provided.
         max_epochs : int
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -116,7 +117,7 @@ class TrainerConfig:
 class Trainer:
     """
     Document this class.
-    
+
     Parameters
     ----------
     config : TrainerConfig
@@ -132,6 +133,7 @@ class Trainer:
     validation_data_loader : Dataloader | None
         Description not yet provided.
     """
+
     def __init__(
         self,
         config: TrainerConfig,
@@ -143,7 +145,7 @@ class Trainer:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         config : TrainerConfig
@@ -178,7 +180,9 @@ class Trainer:
             self.beta_finder = self.config.beta_finder
 
         self.num_batches = len(self.TrainLoader)
-        self.remainder_batch_size = self.num_batches % self.config.gradient_accumulation_steps
+        self.remainder_batch_size = (
+            self.num_batches % self.config.gradient_accumulation_steps
+        )
 
         self._setup = False
         self._skip_training = False
@@ -192,7 +196,7 @@ class Trainer:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         distributed : Distributed
@@ -203,7 +207,7 @@ class Trainer:
             Description not yet provided.
         save_checkpoint : bool
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -292,7 +296,7 @@ class Trainer:
     def train(self):
         """
         Document this function.
-        
+
         Raises
         ------
         RuntimeError
@@ -344,7 +348,7 @@ class Trainer:
                     )
 
             if self.is_distributed:
-                    self.distributed.barrier()
+                self.distributed.barrier()
 
             if self.is_on_root:
                 if (self._epochs_trained) % self.log_every_n_epochs == 0:
@@ -359,9 +363,7 @@ class Trainer:
 
             should_stop = self._should_stop_early()
             if self.is_distributed:
-                stop_tensor = torch.tensor(
-                    int(should_stop), device=self.device
-                )
+                stop_tensor = torch.tensor(int(should_stop), device=self.device)
                 self.distributed.broadcast(stop_tensor, src=0)
                 should_stop = bool(stop_tensor.item())
 
@@ -420,7 +422,7 @@ class Trainer:
     def _train_on_epoch(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -438,12 +440,16 @@ class Trainer:
             current_lr = self.optimizer.learning_rate
             current_accumulation_size = (
                 self.remainder_batch_size
-                if (self.remainder_batch_size != 0 and 
-                batch_id >= self.num_batches - self.remainder_batch_size)
+                if (
+                    self.remainder_batch_size != 0
+                    and batch_id >= self.num_batches - self.remainder_batch_size
+                )
                 else self.config.gradient_accumulation_steps
             )
-                
-            batch_loss_dict, kwargs = self._train_on_batch(batch, current_accumulation_size)
+
+            batch_loss_dict, kwargs = self._train_on_batch(
+                batch, current_accumulation_size
+            )
 
             self.train_aggregator.record(batch_loss_dict, current_lr, kwargs)
 
@@ -456,14 +462,14 @@ class Trainer:
     def _train_on_batch(self, batch, accumulation_size: int):
         """
         Document this function.
-        
+
         Parameters
         ----------
         batch : Any
             Description not yet provided.
         accumulation_size : int
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -471,8 +477,6 @@ class Trainer:
         """
         batch.to_device(self.device)
         kwargs = {}
-
-
 
         if hasattr(self, "beta_finder"):
             beta = self.beta_finder(self.global_step)
@@ -497,7 +501,7 @@ class Trainer:
     def _validate_on_epoch(self):
         """
         Document this function.
-        
+
         Raises
         ------
         RuntimeError
@@ -519,17 +523,16 @@ class Trainer:
 
             self.validation_aggregator.record(batch_loss_dict)
 
-        
     @torch.no_grad()
     def _validate_on_batch(self, batch):
         """
         Document this function.
-        
+
         Parameters
         ----------
         batch : Any
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -574,12 +577,12 @@ class Trainer:
     def _is_improved(self, validation_loss: float | torch.Tensor) -> bool:
         """
         Document this function.
-        
+
         Parameters
         ----------
         validation_loss : float | torch.Tensor
             Description not yet provided.
-        
+
         Returns
         -------
         bool
@@ -601,7 +604,7 @@ class Trainer:
     def _should_stop_early(self) -> bool:
         """
         Document this function.
-        
+
         Returns
         -------
         bool
@@ -621,7 +624,7 @@ class Trainer:
     def _log_epoch(self, train_logs, validation_logs=None):
         """
         Document this function.
-        
+
         Parameters
         ----------
         train_logs : Any
@@ -651,7 +654,7 @@ class Trainer:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         name : str
@@ -690,19 +693,19 @@ class Trainer:
     def _load_checkpoint(self, path: str | Path | None = None, strict: bool = True):
         """
         Document this function.
-        
+
         Parameters
         ----------
         path : str | Path | None
             Description not yet provided.
         strict : bool
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         FileNotFoundError
@@ -761,7 +764,7 @@ class Trainer:
     def raw_module(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -774,7 +777,7 @@ class Trainer:
     def log_root(self, level: int, msg: str, *args):
         """
         Document this function.
-        
+
         Parameters
         ----------
         level : int

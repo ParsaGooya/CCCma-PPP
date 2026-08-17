@@ -6,7 +6,7 @@ from pathlib import Path
 class RuntimeContext:
     """
     Document this class.
-    
+
     Parameters
     ----------
     GLOBAL_EXP_DIR : Path | str | None
@@ -24,6 +24,7 @@ class RuntimeContext:
     TARGET_VAR_METADATA : dict | None
         Description not yet provided.
     """
+
     GLOBAL_EXP_DIR: Path | str | None = None
     GLOBAL_CHECKPOINT_DIR: Path | str | None = None
     GLOBAL_FIGURES_DIR: Path | str | None = None

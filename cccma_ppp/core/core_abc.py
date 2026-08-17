@@ -13,13 +13,14 @@ class moduleConfigABC(abc.ABC):
     """
     Document this class.
     """
+
     _type: ClassVar[str | None] = None
 
     @classmethod
     def check_registered(cls):
         """
         Document this function.
-        
+
         Raises
         ------
         RuntimeError
@@ -37,7 +38,7 @@ class moduleConfigABC(abc.ABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         input_shape : np.ndarray
@@ -61,6 +62,7 @@ class moduleABC(nn.Module, abc.ABC):
     """
     Document this class.
     """
+
     def __init__(self):
         """
         Document this function.
@@ -71,7 +73,7 @@ class moduleABC(nn.Module, abc.ABC):
     def init_loss_function(self, reconstruction_loss: nn.Module, **kwargs):
         """
         Document this function.
-        
+
         Parameters
         ----------
         reconstruction_loss : nn.Module
@@ -106,7 +108,7 @@ class moduleABC(nn.Module, abc.ABC):
     def _get_device(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -128,14 +130,14 @@ class moduleABC(nn.Module, abc.ABC):
     def _load_state_dict(self, load_path: Path | str, strict: bool = True):
         """
         Document this function.
-        
+
         Parameters
         ----------
         load_path : Path | str
             Description not yet provided.
         strict : bool
             Description not yet provided.
-        
+
         Raises
         ------
         FileNotFoundError
@@ -155,16 +157,17 @@ class moduleABC(nn.Module, abc.ABC):
 class GenerativeContext:
     """
     Document this class.
-    
+
     Parameters
     ----------
     module : moduleABC | None
         Description not yet provided.
     """
+
     def __init__(self, module: moduleABC | None = None):
         """
         Document this function.
-        
+
         Parameters
         ----------
         module : moduleABC | None
@@ -185,10 +188,11 @@ class GenerativeContext:
 class OutputABC:
     """
     Document this class.
-    
+
     Parameters
     ----------
     output : torch.Tensor
         Description not yet provided.
     """
+
     output: torch.Tensor

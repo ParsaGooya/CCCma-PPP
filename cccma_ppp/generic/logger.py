@@ -12,7 +12,7 @@ def setup_logger(
 ) -> logging.Logger:
     """
     Document this function.
-    
+
     Parameters
     ----------
     name : str
@@ -23,7 +23,7 @@ def setup_logger(
         Description not yet provided.
     level : int
         Description not yet provided.
-    
+
     Returns
     -------
     logging.Logger

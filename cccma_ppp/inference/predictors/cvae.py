@@ -21,7 +21,7 @@ from cccma_ppp.data_modules.dataloader import BatchDataABC
 class cVAEPredictorConfig:
     """
     Document this class.
-    
+
     Parameters
     ----------
     num_latent_samples : int
@@ -33,6 +33,7 @@ class cVAEPredictorConfig:
     save_latent : bool
         Description not yet provided.
     """
+
     num_latent_samples: int
     nstds: float = 1.0
     infer_latent_samples_from_training: bool = False
@@ -43,12 +44,12 @@ class cVAEPredictorConfig:
     def __post_init__(self) -> None:
         """
         Document this function.
-        
+
         Raises
         ------
         ValueError
             Description not yet provided.
-        
+
         Warns
         -----
         UserWarning
@@ -76,7 +77,7 @@ class cVAEPredictorConfig:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         module : moduleABC
@@ -87,7 +88,7 @@ class cVAEPredictorConfig:
             Description not yet provided.
         num_output_sampling : int
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -99,7 +100,7 @@ class cVAEPredictorConfig:
 class cVAEPredictor(PredictorABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     config : cVAEPredictorConfig
@@ -113,6 +114,7 @@ class cVAEPredictor(PredictorABC):
     num_output_sampling : int
         Description not yet provided.
     """
+
     def __init__(
         self,
         config: cVAEPredictorConfig,
@@ -123,7 +125,7 @@ class cVAEPredictor(PredictorABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         config : cVAEPredictorConfig
@@ -136,7 +138,7 @@ class cVAEPredictor(PredictorABC):
             Description not yet provided.
         num_output_sampling : int
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -179,7 +181,7 @@ class cVAEPredictor(PredictorABC):
     def extract_training_vars(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -191,7 +193,7 @@ class cVAEPredictor(PredictorABC):
     def extract_posterior_samples(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -203,7 +205,7 @@ class cVAEPredictor(PredictorABC):
     def extract_training_residuals(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -219,19 +221,19 @@ class cVAEPredictor(PredictorABC):
     ) -> cVAEOutput | dict[str, RunningCovariance]:
         """
         Document this function.
-        
+
         Parameters
         ----------
         batch : BatchDataABC
             Description not yet provided.
         _getting_train_stats : bool
             Description not yet provided.
-        
+
         Returns
         -------
         cVAEOutput | dict[str, RunningCovariance]
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -264,7 +266,7 @@ class cVAEPredictor(PredictorABC):
 
             if self.num_output_covariance_sampling > 0:
                 num_output_sampling = 0
-            else: 
+            else:
                 num_output_sampling = self.num_output_sampling
 
             output = self.raw_module.predict(
@@ -276,8 +278,8 @@ class cVAEPredictor(PredictorABC):
             )
 
             if self.num_output_covariance_sampling > 0:
-                sample_size = output.output.shape[:2]         
-                reshape_size = output.output.shape[2:]           
+                sample_size = output.output.shape[:2]
+                reshape_size = output.output.shape[2:]
                 output = self.add_decoder_noise(
                     output,
                     self.num_output_covariance_sampling,
@@ -295,19 +297,19 @@ class cVAEPredictor(PredictorABC):
     ) -> dict[str, RunningCovariance]:
         """
         Document this function.
-        
+
         Parameters
         ----------
         output : cVAEOutput
             Description not yet provided.
         data : BatchDataABC
             Description not yet provided.
-        
+
         Returns
         -------
         dict[str, RunningCovariance]
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -335,12 +337,12 @@ class cVAEPredictor(PredictorABC):
     def _get_latent_samples_based_on_train(self, data: BatchDataABC):
         """
         Document this function.
-        
+
         Parameters
         ----------
         data : BatchDataABC
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -361,12 +363,12 @@ class cVAEPredictor(PredictorABC):
     def build_latent_sampler(self) -> Callable[..., torch.Tensor]:
         """
         Document this function.
-        
+
         Returns
         -------
         Callable[..., torch.Tensor]
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -397,14 +399,14 @@ class cVAEPredictor(PredictorABC):
         def _sampler(sample_size: int | tuple[int, ...], std: float):
             """
             Document this function.
-            
+
             Parameters
             ----------
             sample_size : int | tuple[int, ...]
                 Description not yet provided.
             std : float
                 Description not yet provided.
-            
+
             Returns
             -------
             Any
@@ -426,14 +428,14 @@ class cVAEPredictor(PredictorABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         output : cVAEOutput
             Description not yet provided.
         metadata : list[dict]
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError

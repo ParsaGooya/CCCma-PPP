@@ -13,7 +13,7 @@ def build_mlp(
 ) -> nn.Sequential:
     """
     Document this function.
-    
+
     Parameters
     ----------
     dims : list[int]
@@ -26,7 +26,7 @@ def build_mlp(
         Description not yet provided.
     activate_final : bool
         Description not yet provided.
-    
+
     Returns
     -------
     nn.Sequential

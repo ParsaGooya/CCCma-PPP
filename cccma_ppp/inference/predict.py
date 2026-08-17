@@ -12,7 +12,7 @@ import dacite
 def get_parser() -> argparse.ArgumentParser:
     """
     Document this function.
-    
+
     Returns
     -------
     argparse.ArgumentParser
@@ -34,7 +34,7 @@ def get_parser() -> argparse.ArgumentParser:
 def main(yaml_config: str):
     """
     Document this function.
-    
+
     Parameters
     ----------
     yaml_config : str
@@ -44,9 +44,6 @@ def main(yaml_config: str):
 
     try:
         config_data = prepare_config(yaml_config)
-
-               
-                                               
 
         config = dacite.from_dict(
             data_class=InferenceConfig,
@@ -73,9 +70,3 @@ def main(yaml_config: str):
 
     finally:
         distributed.cleanup()
-
-
-                            
-                           
-                                
-                       

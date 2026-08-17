@@ -11,11 +11,12 @@ from cccma_ppp.core.registery import Registery
 from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.architectures.models_abc import modelABC, flowABC, CheckpointConfig
 
+
 @dataclasses.dataclass
 class ModuleSelector:
     """
     Document this class.
-    
+
     Parameters
     ----------
     type : str
@@ -23,6 +24,7 @@ class ModuleSelector:
     config : Mapping[str, Any]
         Description not yet provided.
     """
+
     type: str
     config: Mapping[str, Any]
     registery: ClassVar[Registery] = Registery()
@@ -37,12 +39,12 @@ class ModuleSelector:
     def register(cls, name: str) -> Callable[..., moduleABC]:
         """
         Document this function.
-        
+
         Parameters
         ----------
         name : str
             Description not yet provided.
-        
+
         Returns
         -------
         Callable[..., moduleABC]
@@ -54,20 +56,19 @@ class ModuleSelector:
     def available(cls):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
         """
         return cls.registery.available()
-    
 
     @property
     def NUM_INPUT_DIMS(self) -> int:
         """
         Document this function.
-        
+
         Returns
         -------
         int
@@ -79,7 +80,7 @@ class ModuleSelector:
     def NUM_OUTPUT_DIMS(self) -> int:
         """
         Document this function.
-        
+
         Returns
         -------
         int
@@ -91,7 +92,7 @@ class ModuleSelector:
     def GENERATOR(self) -> bool:
         """
         Document this function.
-        
+
         Returns
         -------
         bool
@@ -103,7 +104,7 @@ class ModuleSelector:
     def EXPECTS_MASK(self) -> bool:
         """
         Document this function.
-        
+
         Returns
         -------
         bool
@@ -119,7 +120,7 @@ class ModuleSelector:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         input_shape : np.ndarray
@@ -128,7 +129,7 @@ class ModuleSelector:
             Description not yet provided.
         added_features_dim : int
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -141,12 +142,11 @@ class ModuleSelector:
         )
 
 
-
 @dataclasses.dataclass
 class ModelSelector:
     """
     Document this class.
-    
+
     Parameters
     ----------
     type : str
@@ -158,6 +158,7 @@ class ModelSelector:
     freeze_weights : bool | None
         Description not yet provided.
     """
+
     type: str
     config: Mapping[str, Any] | None = None
     load_dir: Path | str | None = None
@@ -168,7 +169,7 @@ class ModelSelector:
     def __post_init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         AssertionError
@@ -177,7 +178,7 @@ class ModelSelector:
             Description not yet provided.
         ValueError
             Description not yet provided.
-        
+
         Warns
         -----
         UserWarning
@@ -193,14 +194,13 @@ class ModelSelector:
         if all([self.load_dir is None, self.freeze_weights]):
             raise ValueError(
                 "When ''load_dir'' is not provided for a checkpoint model, ''freeze_weights'' must be False or None."
-            )            
+            )
 
         if self.load_dir is not None:
             self._freeze_weights = self.freeze_weights or False
 
             checkpoint_module, self.checkpoint_config = _load_config_from_checkpoint(
-                self.load_dir,
-                self._freeze_weights
+                self.load_dir, self._freeze_weights
             )
             checkpoint_model = checkpoint_module.get("ModelConfig")
             assert self.type.lower() == checkpoint_model.get("type").lower(), (
@@ -217,12 +217,12 @@ class ModelSelector:
     def register(cls, name: str) -> Callable[..., modelABC]:
         """
         Document this function.
-        
+
         Parameters
         ----------
         name : str
             Description not yet provided.
-        
+
         Returns
         -------
         Callable[..., modelABC]
@@ -234,7 +234,7 @@ class ModelSelector:
     def available(cls):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -245,7 +245,7 @@ class ModelSelector:
     def get_model_config(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -262,6 +262,7 @@ class cVAEModelSelector(ModelSelector):
     """
     Document this class.
     """
+
     registery: ClassVar[Registery] = Registery()
 
 
@@ -269,15 +270,15 @@ class deterministicModelSelector(ModelSelector):
     """
     Document this class.
     """
-    registery: ClassVar[Registery] = Registery()
 
+    registery: ClassVar[Registery] = Registery()
 
 
 @dataclasses.dataclass
 class FlowSelector:
     """
     Document this class.
-    
+
     Parameters
     ----------
     type : str
@@ -285,6 +286,7 @@ class FlowSelector:
     args : dict[str, object]
         Description not yet provided.
     """
+
     type: str
     args: dict[str, object]
     registery: ClassVar[Registery] = Registery()
@@ -299,12 +301,12 @@ class FlowSelector:
     def register(cls, name: str) -> Callable[..., flowABC]:
         """
         Document this function.
-        
+
         Parameters
         ----------
         name : str
             Description not yet provided.
-        
+
         Returns
         -------
         Callable[..., flowABC]
@@ -316,7 +318,7 @@ class FlowSelector:
     def available(cls):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -327,7 +329,7 @@ class FlowSelector:
     def get_model(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -336,12 +338,12 @@ class FlowSelector:
         return self.registery.get(self.type.lower(), self.args)
 
 
-def _load_config_from_checkpoint(load_path: Path | str, 
-                                 freeze_weights: bool = False, 
-                                 strict: bool = True):
+def _load_config_from_checkpoint(
+    load_path: Path | str, freeze_weights: bool = False, strict: bool = True
+):
     """
     Document this function.
-    
+
     Parameters
     ----------
     load_path : Path | str
@@ -350,12 +352,12 @@ def _load_config_from_checkpoint(load_path: Path | str,
         Description not yet provided.
     strict : bool
         Description not yet provided.
-    
+
     Returns
     -------
     Any
         Description not yet provided.
-    
+
     Raises
     ------
     FileNotFoundError
@@ -364,9 +366,9 @@ def _load_config_from_checkpoint(load_path: Path | str,
     if not Path(load_path).exists():
         raise FileNotFoundError(f"Checkpoint not found: {load_path}")
 
-    checkpoint = torch.load(Path(load_path), 
-                            weights_only=False, 
-                            map_location=torch.device('cpu'))
+    checkpoint = torch.load(
+        Path(load_path), weights_only=False, map_location=torch.device("cpu")
+    )
 
     checkpoint_module = checkpoint.get("module_config")
     checkpoint_input_shape = checkpoint.get("input_shape")

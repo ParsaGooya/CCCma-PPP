@@ -10,7 +10,7 @@ from cccma_ppp.core.core_abc import moduleABC
 class LRSchedulerConfig:
     """
     Document this class.
-    
+
     Parameters
     ----------
     min_lr : float
@@ -22,6 +22,7 @@ class LRSchedulerConfig:
     hold_min_lr : bool
         Description not yet provided.
     """
+
     min_lr: float = 0.0
     warmup_epochs: int = 0
     total_epochs: int = None
@@ -30,7 +31,7 @@ class LRSchedulerConfig:
     def __post_init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         AssertionError
@@ -47,7 +48,7 @@ class LRSchedulerConfig:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         optimizer : torch.optim.Optimizer
@@ -56,12 +57,12 @@ class LRSchedulerConfig:
             Description not yet provided.
         gradient_accumulation_steps : int
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -74,15 +75,10 @@ class LRSchedulerConfig:
             raise ValueError("num_batches must be positive.")
 
         if gradient_accumulation_steps <= 0:
-            raise ValueError(
-                "gradient_accumulation_steps must be positive."
-            )
+            raise ValueError("gradient_accumulation_steps must be positive.")
 
         if self.warmup_epochs >= self.total_epochs:
-            raise ValueError(
-                "warmup_epochs must be smaller than total_epochs."
-            )
-
+            raise ValueError("warmup_epochs must be smaller than total_epochs.")
 
         self.total_steps = (
             math.ceil(num_batches / gradient_accumulation_steps) * self.total_epochs
@@ -98,7 +94,7 @@ class LRSchedulerConfig:
 class OptimizerConfig:
     """
     Document this class.
-    
+
     Parameters
     ----------
     lr : float
@@ -110,6 +106,7 @@ class OptimizerConfig:
     lr_scheduler_config : LRSchedulerConfig | None
         Description not yet provided.
     """
+
     lr: float = 0.0001
     weight_decay: float = 0
     optimizer_type: str = "adam"
@@ -123,7 +120,7 @@ class OptimizerConfig:
     def __post_init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         ValueError
@@ -142,7 +139,7 @@ class OptimizerConfig:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         module : moduleABC
@@ -153,12 +150,12 @@ class OptimizerConfig:
             Description not yet provided.
         gradient_accumulation_steps : int
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -185,7 +182,7 @@ class OptimizerConfig:
 class OptimizerWrapper:
     """
     Document this class.
-    
+
     Parameters
     ----------
     config : OptimizerConfig
@@ -199,6 +196,7 @@ class OptimizerWrapper:
     gradient_accumulation_steps : int
         Description not yet provided.
     """
+
     def __init__(
         self,
         config: OptimizerConfig,
@@ -209,7 +207,7 @@ class OptimizerWrapper:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         config : OptimizerConfig
@@ -222,7 +220,7 @@ class OptimizerWrapper:
             Description not yet provided.
         gradient_accumulation_steps : int
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -257,7 +255,7 @@ class OptimizerWrapper:
     def learning_rate(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -268,7 +266,7 @@ class OptimizerWrapper:
     def step(self):
         """
         Document this function.
-        
+
         Raises
         ------
         RuntimeError
@@ -289,14 +287,14 @@ class OptimizerWrapper:
     def zero_grad(self, set_to_none=True, **kwargs):
         """
         Document this function.
-        
+
         Parameters
         ----------
         set_to_none : Any
             Description not yet provided.
         **kwargs : Any
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -309,12 +307,12 @@ class OptimizerWrapper:
     def state_dict(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -335,12 +333,12 @@ class OptimizerWrapper:
     def load_state_dict(self, state_dict):
         """
         Document this function.
-        
+
         Parameters
         ----------
         state_dict : Any
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -358,7 +356,7 @@ class OptimizerWrapper:
 class CosineAnnealingLRScheduler:
     """
     Document this class.
-    
+
     Parameters
     ----------
     config : LRSchedulerConfig
@@ -366,10 +364,11 @@ class CosineAnnealingLRScheduler:
     optimizer : torch.optim.Optimizer
         Description not yet provided.
     """
+
     def __init__(self, config: LRSchedulerConfig, optimizer: torch.optim.Optimizer):
         """
         Document this function.
-        
+
         Parameters
         ----------
         config : LRSchedulerConfig
@@ -408,7 +407,7 @@ class CosineAnnealingLRScheduler:
     def step(self):
         """
         Document this function.
-        
+
         Raises
         ------
         RuntimeError
@@ -429,16 +428,15 @@ class CosineAnnealingLRScheduler:
             self.scheduler.step()
             self.num_steps += 1
 
-
     def state_dict(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -455,12 +453,12 @@ class CosineAnnealingLRScheduler:
     def load_state_dict(self, state_dict):
         """
         Document this function.
-        
+
         Parameters
         ----------
         state_dict : Any
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError

@@ -7,17 +7,17 @@ from cccma_ppp.architectures.layers.generic import AlignmentMethod, PaddingMetho
 def _same_padding(kernel_size: int) -> int:
     """
     Document this function.
-    
+
     Parameters
     ----------
     kernel_size : int
         Description not yet provided.
-    
+
     Returns
     -------
     int
         Description not yet provided.
-    
+
     Raises
     ------
     ValueError
@@ -36,7 +36,7 @@ def align_to_skip(
 ) -> torch.Tensor:
     """
     Document this function.
-    
+
     Parameters
     ----------
     x : torch.Tensor
@@ -47,12 +47,12 @@ def align_to_skip(
         Description not yet provided.
     padding_mode : PaddingMethod
         Description not yet provided.
-    
+
     Returns
     -------
     torch.Tensor
         Description not yet provided.
-    
+
     Raises
     ------
     RuntimeError
@@ -88,7 +88,7 @@ def padd(
 ) -> torch.Tensor:
     """
     Document this function.
-    
+
     Parameters
     ----------
     x : torch.Tensor
@@ -97,7 +97,7 @@ def padd(
         Description not yet provided.
     padding_mode : PaddingMethod
         Description not yet provided.
-    
+
     Returns
     -------
     torch.Tensor
@@ -128,14 +128,14 @@ def _resize_mask(
 ) -> torch.Tensor | None:
     """
     Document this function.
-    
+
     Parameters
     ----------
     mask : torch.Tensor | None
         Description not yet provided.
     size : tuple[int, int]
         Description not yet provided.
-    
+
     Returns
     -------
     torch.Tensor | None
@@ -162,19 +162,19 @@ def _broadcast_mask(
 ) -> torch.Tensor | None:
     """
     Document this function.
-    
+
     Parameters
     ----------
     mask : torch.Tensor | None
         Description not yet provided.
     reference : torch.Tensor
         Description not yet provided.
-    
+
     Returns
     -------
     torch.Tensor | None
         Description not yet provided.
-    
+
     Raises
     ------
     ValueError
@@ -187,7 +187,6 @@ def _broadcast_mask(
         mask = mask.unsqueeze(0).unsqueeze(0)
 
     elif mask.ndim == 3:
-                                        
         mask = mask.unsqueeze(0)
 
     if mask.ndim != 4:
@@ -221,7 +220,7 @@ def _merge_masks(
 ) -> torch.Tensor | None:
     """
     Document this function.
-    
+
     Parameters
     ----------
     input_mask : torch.Tensor | None
@@ -236,7 +235,7 @@ def _merge_masks(
         Description not yet provided.
     reference : torch.Tensor
         Description not yet provided.
-    
+
     Returns
     -------
     torch.Tensor | None
@@ -277,7 +276,7 @@ def _resize_tensor(
 ) -> torch.Tensor:
     """
     Document this function.
-    
+
     Parameters
     ----------
     x : torch.Tensor
@@ -286,7 +285,7 @@ def _resize_tensor(
         Description not yet provided.
     mode : str
         Description not yet provided.
-    
+
     Returns
     -------
     torch.Tensor
@@ -309,7 +308,7 @@ def _resize_tensor(
 def _sample(mu, var, sample_size=1, std=1):
     """
     Document this function.
-    
+
     Parameters
     ----------
     mu : Any
@@ -320,7 +319,7 @@ def _sample(mu, var, sample_size=1, std=1):
         Description not yet provided.
     std : Any
         Description not yet provided.
-    
+
     Returns
     -------
     Any
@@ -334,14 +333,14 @@ def _sample(mu, var, sample_size=1, std=1):
 def _get_normal(ref_tensor, std=1):
     """
     Document this function.
-    
+
     Parameters
     ----------
     ref_tensor : Any
         Description not yet provided.
     std : Any
         Description not yet provided.
-    
+
     Returns
     -------
     Any
@@ -355,12 +354,12 @@ def _get_normal(ref_tensor, std=1):
 def _noise_injection(ref_tensor: torch.Tensor):
     """
     Document this function.
-    
+
     Parameters
     ----------
     ref_tensor : torch.Tensor
         Description not yet provided.
-    
+
     Returns
     -------
     Any
@@ -378,14 +377,14 @@ def _noise_injection(ref_tensor: torch.Tensor):
 def _expand_mask(x: torch.Tensor, mask: torch.Tensor):
     """
     Document this function.
-    
+
     Parameters
     ----------
     x : torch.Tensor
         Description not yet provided.
     mask : torch.Tensor
         Description not yet provided.
-    
+
     Returns
     -------
     Any

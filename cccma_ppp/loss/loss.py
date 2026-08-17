@@ -11,11 +11,12 @@ from cccma_ppp.loss.registery import Registery
 from cccma_ppp.core.core_abc import GenerativeContext
 from cccma_ppp.data_modules.utils import _unwrap_data_variables
 
+
 @dataclasses.dataclass
 class LossStepConfig:
     """
     Document this class.
-    
+
     Parameters
     ----------
     name : str
@@ -23,6 +24,7 @@ class LossStepConfig:
     args : dict[str, object]
         Description not yet provided.
     """
+
     name: str
     args: dict[str, object] = dataclasses.field(default_factory=dict)
 
@@ -31,7 +33,7 @@ class LossStepConfig:
 class LosspipelineConfig:
     """
     Document this class.
-    
+
     Parameters
     ----------
     loss_pipeline : list[LossStepConfig]
@@ -45,16 +47,17 @@ class LosspipelineConfig:
     saved_output_mask_dir : str | None
         Description not yet provided.
     """
+
     loss_pipeline: list[LossStepConfig]
     loss_weights: list[float] = None
     reduction: Reduction = "mean"
     masked_loss_calculation: bool = True
     saved_output_mask_dir: str | None = None
-    
+
     def __post_init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         ValueError
@@ -87,8 +90,7 @@ class LosspipelineConfig:
 
         if self.loss_weights is None:
             self.loss_weights = [
-                1.0 / len(self.loss_pipeline)
-                for _ in self.loss_pipeline
+                1.0 / len(self.loss_pipeline) for _ in self.loss_pipeline
             ]
         else:
             if len(self.loss_weights) != len(self.loss_pipeline):
@@ -104,11 +106,11 @@ class LosspipelineConfig:
         weights: xr.DataArray,
         num_output_dimensions: int = 2,
         generative_context: GenerativeContext | None = None,
-        output_shape: tuple[int, ...] | None = None
+        output_shape: tuple[int, ...] | None = None,
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         weights : xr.DataArray
@@ -119,7 +121,7 @@ class LosspipelineConfig:
             Description not yet provided.
         output_shape : tuple[int, ...] | None
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -128,21 +130,21 @@ class LosspipelineConfig:
         self._resove_output_mask(output_shape)
 
         return Losspipeline(
-            self, 
-            weights, 
-            num_output_dimensions, 
+            self,
+            weights,
+            num_output_dimensions,
             generative_context=generative_context,
         )
 
     def _resove_output_mask(self, output_shape: tuple[int, ...]):
         """
         Document this function.
-        
+
         Parameters
         ----------
         output_shape : tuple[int, ...]
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -192,12 +194,12 @@ class LosspipelineConfig:
     def _load_output_mask(self) -> torch.Tensor | None:
         """
         Document this function.
-        
+
         Returns
         -------
         torch.Tensor | None
             Description not yet provided.
-        
+
         Raises
         ------
         FileNotFoundError
@@ -211,9 +213,7 @@ class LosspipelineConfig:
         mask_path = Path(self.saved_output_mask_dir)
 
         if not mask_path.is_file():
-            raise FileNotFoundError(
-                f"Saved mask file does not exist: {mask_path}"
-            )
+            raise FileNotFoundError(f"Saved mask file does not exist: {mask_path}")
 
         if mask_path.suffix == ".pt":
             mask = torch.load(
@@ -232,7 +232,6 @@ class LosspipelineConfig:
 
         if mask_path.suffix == ".nc":
             with xr.open_dataset(mask_path) as ds:
- 
                 mask = _unwrap_data_variables(ds).values
 
             return torch.as_tensor(mask, dtype=torch.float32)
@@ -245,7 +244,7 @@ class LosspipelineConfig:
 class Losspipeline(nn.Module):
     """
     Document this class.
-    
+
     Parameters
     ----------
     config : LosspipelineConfig
@@ -257,6 +256,7 @@ class Losspipeline(nn.Module):
     generative_context : GenerativeContext | None
         Description not yet provided.
     """
+
     registery: ClassVar[Registery] = Registery()
 
     def __init__(
@@ -268,7 +268,7 @@ class Losspipeline(nn.Module):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         config : LosspipelineConfig
@@ -317,23 +317,19 @@ class Losspipeline(nn.Module):
 
         self.pipeline = torch.nn.ModuleList(self.pipeline)
 
-        output_mask = (
-            config.output_mask
-            if self.masked_loss_calculation
-            else None
-        )
+        output_mask = config.output_mask if self.masked_loss_calculation else None
         self.register_buffer("output_mask", output_mask)
 
     @classmethod
     def register(cls, name: str):
         """
         Document this function.
-        
+
         Parameters
         ----------
         name : str
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -351,7 +347,7 @@ class Losspipeline(nn.Module):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         data : Any
@@ -364,20 +360,24 @@ class Losspipeline(nn.Module):
             Description not yet provided.
         step_arguments : dict
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         AssertionError
             Description not yet provided.
         """
         if self.output_mask is not None:
-            target_mask = self.output_mask if target_mask is None else target_mask * self.output_mask
-        
+            target_mask = (
+                self.output_mask
+                if target_mask is None
+                else target_mask * self.output_mask
+            )
+
         if not self.masked_loss_calculation:
             target_mask = None
 
@@ -413,7 +413,3 @@ class Losspipeline(nn.Module):
             total_loss = total_loss + loss * self.config.loss_weights[ind]
 
         return total_loss, indiv_loses
-
-
-
-
