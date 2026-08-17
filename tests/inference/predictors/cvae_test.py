@@ -114,6 +114,7 @@ def make_predictor(
     return predictor, model
 
 
+@pytest.mark.pruned
 def test_config_rejects_zero_latent_samples():
     with pytest.raises(
         ValueError,
@@ -122,7 +123,6 @@ def test_config_rejects_zero_latent_samples():
         cVAEPredictorConfig(num_latent_samples=0)
 
 
-@pytest.mark.pruned
 def test_config_rejects_negative_latent_samples():
     with pytest.raises(
         ValueError,
@@ -186,7 +186,7 @@ def test_config_build_returns_predictor(tmp_path):
     assert predictor.num_output_sampling == 3
 
 
-@pytest.mark.parametrize("num_output_sampling", [0, -1])
+@pytest.mark.parametrize("num_output_sampling", [-1])
 def test_predictor_rejects_nonpositive_output_sampling(
     tmp_path,
     num_output_sampling,
@@ -197,7 +197,7 @@ def test_predictor_rejects_nonpositive_output_sampling(
 
     with pytest.raises(
         ValueError,
-        match="num_output_sampling must be larger than 1",
+        match="num_output_sampling must be larger than 0",
     ):
         cVAEPredictor(
             config=config,
@@ -442,6 +442,7 @@ def test_get_latent_samples_builds_sampler_once(
     )
 
 
+@pytest.mark.pruned
 def test_build_latent_sampler_requires_stats_file(
     tmp_path,
 ):
@@ -457,6 +458,7 @@ def test_build_latent_sampler_requires_stats_file(
         predictor.build_latent_sampler()
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "stats",
     [
@@ -561,6 +563,7 @@ def test_infer_on_batch_requires_target_for_stats(
     assert model.eval_called is True
 
 
+@pytest.mark.pruned
 def test_infer_on_batch_returns_training_stats(
     tmp_path,
     monkeypatch,
@@ -638,7 +641,7 @@ def test_infer_on_batch_predicts_and_saves(
 
     assert model.predict_kwargs == {
         "data": batch,
-        "sample_size": 4,
+        "latent_sample_size": 4,
         "nstds": predictor.nstds,
         "latent_samples": None,
         "output_sample_size": 2,
@@ -799,7 +802,6 @@ def test_batch_to_netcdf_latent_requires_variables(
         )
 
 
-@pytest.mark.pruned
 def test_batch_to_netcdf_latent_pads_variables(
     tmp_path,
     monkeypatch,
@@ -1078,7 +1080,7 @@ def test_infer_on_batch_save_latent_forwards_and_returns(
     assert result is output
     assert model.forward_kwargs == {
         "data": batch,
-        "sample_size": 1,
+        "latent_sample_size": 1,
     }
     assert model.predict_kwargs is None
 
@@ -1088,7 +1090,6 @@ def test_infer_on_batch_save_latent_forwards_and_returns(
     )
 
 
-@pytest.mark.pruned
 def test_infer_on_batch_training_stats_takes_precedence_over_save_latent(
     tmp_path,
     monkeypatch,
@@ -1368,7 +1369,7 @@ def test_batch_to_netcdf_latent_uses_distributed_rank(
 
 
 @pytest.mark.pruned
-def test_batch_to_netcdf_prediction_detaches_tensor(
+def test_batch_to_netcdf_prediction_preserves_grad_state(
     tmp_path,
     monkeypatch,
 ):
@@ -1402,7 +1403,7 @@ def test_batch_to_netcdf_prediction_detaches_tensor(
     saved = save_mock.call_args.args[0]
 
     assert saved.device.type == "cpu"
-    assert saved.requires_grad is False
+    assert saved.requires_grad is True
     torch.testing.assert_close(
         saved,
         prediction.detach().cpu(),

@@ -117,6 +117,7 @@ def test_load_state_dict_missing_file_raises(tmp_path):
         module._load_state_dict(missing_path)
 
 
+@pytest.mark.pruned
 def test_load_state_dict_loads_checkpoint_strict_true(tmp_path):
     source = ConcreteModule()
     target = ConcreteModule()
@@ -133,7 +134,6 @@ def test_load_state_dict_loads_checkpoint_strict_true(tmp_path):
         assert torch.allclose(value, source.state_dict()[key])
 
 
-@pytest.mark.pruned
 def test_load_state_dict_accepts_string_path(tmp_path):
     source = ConcreteModule()
     target = ConcreteModule()
@@ -269,6 +269,7 @@ def test_check_registered_raises_when_unregistered():
         NotRegistered.check_registered()
 
 
+@pytest.mark.pruned
 def test_check_registered_success():
     class Registered(moduleConfigABC):
         _type = "registered"
@@ -282,7 +283,6 @@ def test_check_registered_success():
     Registered.check_registered()
 
 
-@pytest.mark.pruned
 def test_check_registered_inherited_type():
     class Registered(moduleConfigABC):
         _type = "registered"

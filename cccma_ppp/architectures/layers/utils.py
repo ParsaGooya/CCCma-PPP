@@ -5,6 +5,24 @@ from cccma_ppp.architectures.layers.generic import AlignmentMethod, PaddingMetho
 
 
 def _same_padding(kernel_size: int) -> int:
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    kernel_size : int
+        Description not yet provided.
+
+    Returns
+    -------
+    int
+        Description not yet provided.
+
+    Raises
+    ------
+    ValueError
+        Description not yet provided.
+    """
     if kernel_size <= 0 or kernel_size % 2 == 0:
         raise ValueError("Feature-block kernel sizes must be positive odd integers.")
     return kernel_size // 2
@@ -16,7 +34,32 @@ def align_to_skip(
     mode: AlignmentMethod = "padd",
     padding_mode: PaddingMethod = "zeros",
 ) -> torch.Tensor:
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    x : torch.Tensor
+        Description not yet provided.
+    skip_shape : torch.Tensor
+        Description not yet provided.
+    mode : AlignmentMethod
+        Description not yet provided.
+    padding_mode : PaddingMethod
+        Description not yet provided.
+
+    Returns
+    -------
+    torch.Tensor
+        Description not yet provided.
+
+    Raises
+    ------
+    RuntimeError
+        Description not yet provided.
+    ValueError
+        Description not yet provided.
+    """
     if x.shape[-2:] == skip_shape:
         return x
 
@@ -43,7 +86,23 @@ def align_to_skip(
 def padd(
     x: torch.Tensor, target_size: tuple[int, int], padding_mode: PaddingMethod = "zeros"
 ) -> torch.Tensor:
-    
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    x : torch.Tensor
+        Description not yet provided.
+    target_size : tuple[int, int]
+        Description not yet provided.
+    padding_mode : PaddingMethod
+        Description not yet provided.
+
+    Returns
+    -------
+    torch.Tensor
+        Description not yet provided.
+    """
     mode = "constant" if padding_mode == "zeros" else padding_mode
     target_h, target_w = target_size
     current_h, current_w = x.shape[-2:]
@@ -67,6 +126,21 @@ def _resize_mask(
     mask: torch.Tensor | None,
     size: tuple[int, int],
 ) -> torch.Tensor | None:
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    mask : torch.Tensor | None
+        Description not yet provided.
+    size : tuple[int, int]
+        Description not yet provided.
+
+    Returns
+    -------
+    torch.Tensor | None
+        Description not yet provided.
+    """
     if mask is None:
         return None
 
@@ -86,8 +160,26 @@ def _broadcast_mask(
     mask: torch.Tensor | None,
     reference: torch.Tensor,
 ) -> torch.Tensor | None:
-    """Normalize common mask layouts to NCHW and broadcast channels."""
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    mask : torch.Tensor | None
+        Description not yet provided.
+    reference : torch.Tensor
+        Description not yet provided.
+
+    Returns
+    -------
+    torch.Tensor | None
+        Description not yet provided.
+
+    Raises
+    ------
+    ValueError
+        Description not yet provided.
+    """
     if mask is None:
         return None
 
@@ -95,7 +187,6 @@ def _broadcast_mask(
         mask = mask.unsqueeze(0).unsqueeze(0)
 
     elif mask.ndim == 3:
-        # Interpret as either [C, H, W].
         mask = mask.unsqueeze(0)
 
     if mask.ndim != 4:
@@ -127,8 +218,29 @@ def _merge_masks(
     spatial_size: tuple[int, int],
     reference: torch.Tensor,
 ) -> torch.Tensor | None:
-    """Create the mask matching a channel-wise concatenated feature tensor."""
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    input_mask : torch.Tensor | None
+        Description not yet provided.
+    skip_mask : torch.Tensor | None
+        Description not yet provided.
+    out_channels : int
+        Description not yet provided.
+    skip_channels : int
+        Description not yet provided.
+    spatial_size : tuple[int, int]
+        Description not yet provided.
+    reference : torch.Tensor
+        Description not yet provided.
+
+    Returns
+    -------
+    torch.Tensor | None
+        Description not yet provided.
+    """
     if input_mask is None and skip_mask is None:
         return None
 
@@ -162,6 +274,23 @@ def _resize_tensor(
     *,
     mode: str = "bilinear",
 ) -> torch.Tensor:
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    x : torch.Tensor
+        Description not yet provided.
+    size : tuple[int, int]
+        Description not yet provided.
+    mode : str
+        Description not yet provided.
+
+    Returns
+    -------
+    torch.Tensor
+        Description not yet provided.
+    """
     if x.shape[-2:] == size:
         return x
 
@@ -178,21 +307,24 @@ def _resize_tensor(
 
 def _sample(mu, var, sample_size=1, std=1):
     """
-    Sample latent variables from Gaussian distribution.
+    Document this function.
 
     Parameters
     ----------
-    mu : torch.Tensor
-    var : torch.Tensor
-    sample_size : int, optional
-    std : float, optional
+    mu : Any
+        Description not yet provided.
+    var : Any
+        Description not yet provided.
+    sample_size : Any
+        Description not yet provided.
+    std : Any
+        Description not yet provided.
 
     Returns
     -------
-    torch.Tensor
-        Sampled latent variables.
+    Any
+        Description not yet provided.
     """
-
     out = mu + torch.sqrt(var) * _get_normal(var, std).sample((sample_size,))
 
     return out
@@ -200,24 +332,39 @@ def _sample(mu, var, sample_size=1, std=1):
 
 def _get_normal(ref_tensor, std=1):
     """
-    Create standard normal distribution.
+    Document this function.
 
     Parameters
     ----------
-    ref_tensor : torch.Tensor
-    std : float, optional
+    ref_tensor : Any
+        Description not yet provided.
+    std : Any
+        Description not yet provided.
 
     Returns
     -------
-    torch.distributions.Normal
+    Any
+        Description not yet provided.
     """
-
     return torch.distributions.Normal(
         torch.zeros_like(ref_tensor), torch.ones_like(ref_tensor) * std
     )
 
 
 def _noise_injection(ref_tensor: torch.Tensor):
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    ref_tensor : torch.Tensor
+        Description not yet provided.
+
+    Returns
+    -------
+    Any
+        Description not yet provided.
+    """
     noise_ref_tensor = ref_tensor[:, [0], ...]
 
     noise = _sample(
@@ -228,7 +375,21 @@ def _noise_injection(ref_tensor: torch.Tensor):
 
 
 def _expand_mask(x: torch.Tensor, mask: torch.Tensor):
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    x : torch.Tensor
+        Description not yet provided.
+    mask : torch.Tensor
+        Description not yet provided.
+
+    Returns
+    -------
+    Any
+        Description not yet provided.
+    """
     n = x.shape[1] - mask.shape[1]
 
     noise_mask = torch.ones(

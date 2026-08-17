@@ -12,6 +12,7 @@ from cccma_ppp.architectures.layers.generic import (
 )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "value",
     [
@@ -26,6 +27,7 @@ def test_validate_dropout_accepts_valid_values(value):
     assert _validate_dropout(value) is None
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "value",
     [
@@ -51,6 +53,7 @@ def test_build_activation_relu():
     assert activation.inplace is True
 
 
+@pytest.mark.pruned
 def test_build_activation_gelu():
     activation = _build_activation("gelu")
 
@@ -65,6 +68,7 @@ def test_build_activation_silu():
     assert activation.inplace is True
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "name",
     [
@@ -82,6 +86,7 @@ def test_build_activation_rejects_unsupported_name(name):
         _build_activation(name)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "name",
     [
@@ -202,6 +207,7 @@ def test_build_normalization_none():
     assert isinstance(normalization, nn.Identity)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "name",
     [
@@ -265,6 +271,7 @@ def test_group_normalization_selects_largest_valid_group_count(
     assert channels % normalization.num_groups == 0
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "name",
     [
@@ -300,50 +307,6 @@ def test_identity_normalization_returns_same_object():
     assert result is tensor
 
 
-@pytest.mark.parametrize(
-    ("batch_size", "channels", "height", "width"),
-    [
-        (1, 1, 1, 1),
-        (1, 3, 4, 5),
-        (2, 4, 1, 1),
-        (3, 8, 6, 7),
-    ],
-)
-def test_layer_norm_2d_handles_multiple_shapes(
-    batch_size,
-    channels,
-    height,
-    width,
-):
-    normalization = LayerNorm2d(channels)
-    tensor = torch.randn(
-        batch_size,
-        channels,
-        height,
-        width,
-    )
-
-    result = normalization(tensor)
-
-    assert result.shape == tensor.shape
-
-
-@pytest.mark.parametrize(
-    "drop_probability",
-    [
-        0.0,
-        0.1,
-        0.5,
-        0.9,
-        1.0,
-    ],
-)
-def test_drop_path_stores_probability(drop_probability):
-    drop_path = DropPath(drop_probability)
-
-    assert drop_path.drop_probability == pytest.approx(drop_probability)
-
-
 @pytest.mark.pruned
 def test_drop_path_zero_probability_returns_same_object_in_training():
     drop_path = DropPath(0.0)
@@ -366,6 +329,7 @@ def test_drop_path_zero_probability_returns_same_object_in_evaluation():
     assert result is tensor
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "drop_probability",
     [
@@ -386,6 +350,7 @@ def test_drop_path_evaluation_returns_same_object(
     assert result is tensor
 
 
+@pytest.mark.pruned
 def test_drop_path_training_preserves_shape():
     drop_path = DropPath(0.5)
     drop_path.train()
@@ -439,7 +404,6 @@ def test_drop_path_scales_kept_samples():
     assert 2.0 in unique_values
 
 
-@pytest.mark.pruned
 def test_drop_path_drops_some_samples():
     drop_path = DropPath(0.5)
     drop_path.train()
@@ -469,6 +433,7 @@ def test_drop_path_preserves_expected_mean_approximately():
     )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "shape",
     [

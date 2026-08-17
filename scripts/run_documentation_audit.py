@@ -18,7 +18,7 @@ import seaborn as sns
 
 
 ROOT = Path("cccma_ppp")
-OUTPUT_DIR = Path("output/documentation_audit_results")
+OUTPUT_DIR = Path("../output/documentation_audit_results")
 OUTPUT_TEXT = OUTPUT_DIR / Path("audit.txt")
 OUTPUT_ISSUES_CSV = OUTPUT_DIR / Path("doc_audit_issues.csv")
 OUTPUT_SUMMARY_CSV = OUTPUT_DIR / Path("doc_audit_summary.csv")
@@ -1127,8 +1127,6 @@ class Auditor:
         class_is_dataclass = is_dataclass(node)
 
         if class_is_dataclass:
-                                                                                  
-                                                                         
             dataclass_field_map = dataclass_fields(node)
 
             expected_params = {
@@ -1137,14 +1135,10 @@ class Auditor:
 
             expected_attrs: dict[str, str | None] = {}
         else:
-                                                                              
             expected_params = {
                 name.lstrip("*") for name, _, _ in class_init_parameters(node)
             }
 
-                                                                          
-                                                                                
-                                 
             expected_attrs = class_attributes(node)
 
         parameter_entries = [

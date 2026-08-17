@@ -54,7 +54,7 @@ class DummyTrainLoader:
     def setup_distributed(self, d):
         pass
 
-    def build_train_loader(self):
+    def build_train_loader(self, return_spatial_mask=False, **kwargs):
         class L:
             def __len__(self):
                 return 2
@@ -65,7 +65,7 @@ class DummyTrainLoader:
 
         return L()
 
-    def build_validation_loader(self):
+    def build_validation_loader(self, return_spatial_mask=False, **kwargs):
         return None
 
     def get_weights(self, w):
@@ -73,6 +73,7 @@ class DummyTrainLoader:
 
 
 class DummyModuleSelector:
+    EXPECTS_MASK = False
     type = "cvae"
     NUM_INPUT_DIMS = 4
     NUM_OUTPUT_DIMS = 1
@@ -171,6 +172,7 @@ def test_max_epochs_none_becomes_inf(tmp_path):
     assert cfg.max_epochs == float("inf")
 
 
+@pytest.mark.pruned
 def test_missing_required_inputs_raises(tmp_path):
     with pytest.raises(ValueError):
         TrainConfig(tmp_path, 1, None, None, None, None)
@@ -189,6 +191,7 @@ def test_negative_epochs_assert(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_deterministic_observation_required(tmp_path):
     loader = DummyTrainLoader()
     loader.dataset_config.observation = None
@@ -207,6 +210,7 @@ def test_deterministic_observation_required(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_generator_requires_crps(tmp_path):
     loader = DummyTrainLoader()
 
@@ -236,6 +240,7 @@ def test_prepare_directory_creates_dirs(tmp_path):
     assert os.path.exists(cfg.checkpoint_dir)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_yaml_copy(tmp_path):
     cfg = make_valid_config_with(tmp_path)
     d = DummyDistributed()
@@ -248,6 +253,7 @@ def test_prepare_directory_yaml_copy(tmp_path):
     assert (Path(cfg.experiment_dir) / "config.yaml").exists()
 
 
+@pytest.mark.pruned
 def test_resolve_resuming_same_path(tmp_path):
     cfg = object.__new__(TrainConfig)
     cfg.resume_dir = tmp_path
@@ -264,6 +270,7 @@ def test_resolve_resuming_same_path(tmp_path):
     assert cfg.copy_resume_dir_to_new_path is False
 
 
+@pytest.mark.pruned
 def test_resolve_resuming_different_path(tmp_path):
     cfg = object.__new__(TrainConfig)
     cfg.resume_dir = tmp_path
@@ -329,6 +336,7 @@ def test_resolve_resuming_updates_config(tmp_path):
     assert cfg.max_epochs == halted.max_epochs
 
 
+@pytest.mark.pruned
 def test_set_random_seed_none(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -354,7 +362,7 @@ def test_build_trainer_with_validation_loader(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     class Loader(DummyTrainLoader):
-        def build_validation_loader(self):
+        def build_validation_loader(self, return_spatial_mask=False):
             return [1]
 
     cfg.train_loader = Loader()
@@ -371,7 +379,7 @@ def test_build_trainer_without_validation_loader(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     class Loader(DummyTrainLoader):
-        def build_validation_loader(self):
+        def build_validation_loader(self, return_spatial_mask=False):
             return None
 
     cfg.train_loader = Loader()
@@ -415,6 +423,7 @@ def test_build_trainer_beta_finder_true(tmp_path):
     assert trainer == "trainer"
 
 
+@pytest.mark.pruned
 def test_generator_with_crps_valid(tmp_path):
     loader = DummyTrainLoader()
 
@@ -715,7 +724,6 @@ def test_deterministic_beta_finder_warning(tmp_path):
         )
 
 
-@pytest.mark.pruned
 def test_non_mlp_with_flattener_raises(tmp_path):
     loader = DummyTrainLoader()
 
@@ -733,6 +741,7 @@ def test_non_mlp_with_flattener_raises(tmp_path):
         )
 
 
+@pytest.mark.pruned
 def test_non_mlp_without_flattener_valid(tmp_path):
     loader = DummyTrainLoader()
 
@@ -787,7 +796,6 @@ def test_figures_dir_property(tmp_path):
     assert "figures" in str(cfg.figures_dir)
 
 
-@pytest.mark.pruned
 def test_prepare_directory_copy_resume_branch(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"
@@ -830,6 +838,7 @@ def test_prepare_directory_yaml_none(tmp_path):
     assert Path(cfg.experiment_dir).exists()
 
 
+@pytest.mark.pruned
 def test_read_config_missing_resume_dir(tmp_path):
     cfg = object.__new__(TrainConfig)
 
@@ -854,7 +863,6 @@ def test_build_trainer_print_logger_branch(tmp_path, capsys):
     assert "creating data loaders" in captured.out.lower()
 
 
-@pytest.mark.pruned
 def test_build_trainer_logger_info_branch(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1027,6 +1035,7 @@ def test_resolve_resuming_sets_experiment_dir_path(tmp_path):
     assert isinstance(cfg.experiment_dir, Path)
 
 
+@pytest.mark.pruned
 def test_missing_flattener_for_mlp(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1159,6 +1168,7 @@ def test_figures_dir_exists_after_prepare(tmp_path):
     assert os.path.isdir(cfg.figures_dir)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_root_false(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1639,7 +1649,7 @@ def test_build_trainer_validation_loader_none(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     class Loader(DummyTrainLoader):
-        def build_validation_loader(self):
+        def build_validation_loader(self, return_spatial_mask=False):
             return None
 
     cfg.train_loader = Loader()
@@ -1656,7 +1666,7 @@ def test_build_trainer_validation_loader_present(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
     class Loader(DummyTrainLoader):
-        def build_validation_loader(self):
+        def build_validation_loader(self, return_spatial_mask=False):
             return [1]
 
     cfg.train_loader = Loader()
@@ -1688,7 +1698,6 @@ def test_prepare_directory_copytree_branch_real(tmp_path):
     assert (dst / "hello.txt").exists()
 
 
-@pytest.mark.pruned
 def test_non_mlp_without_flatten_branch(tmp_path):
     loader = DummyTrainLoader()
 
@@ -1820,7 +1829,6 @@ def test_prepare_runtime_variables_all_fields(tmp_path):
     assert RuntimeContext.GLOBAL_FIGURES_DIR
 
 
-@pytest.mark.pruned
 def test_resolve_resuming_copy_flag_true(tmp_path):
     cfg = object.__new__(TrainConfig)
 
@@ -1840,7 +1848,6 @@ def test_resolve_resuming_copy_flag_true(tmp_path):
     assert cfg.copy_resume_dir_to_new_path is True
 
 
-@pytest.mark.pruned
 def test_resolve_resuming_copy_flag_false(tmp_path):
     cfg = object.__new__(TrainConfig)
 
@@ -1860,6 +1867,7 @@ def test_resolve_resuming_copy_flag_false(tmp_path):
     assert cfg.copy_resume_dir_to_new_path is False
 
 
+@pytest.mark.pruned
 def test_logger_not_called_when_not_root(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -1927,7 +1935,6 @@ def test_prepare_directory_root_false_yaml_present(tmp_path):
     assert not (Path(cfg.experiment_dir) / "config.yaml").exists()
 
 
-@pytest.mark.pruned
 def test_prepare_directory_copy_resume_root_false(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"
@@ -1998,7 +2005,6 @@ def test_prepare_directory_no_copy_root_false(tmp_path):
     cfg.prepare_directory(d)
 
 
-@pytest.mark.pruned
 def test_build_trainer_logger_none_non_root(tmp_path, capsys):
     cfg = make_valid_config_with(tmp_path)
 
@@ -2154,7 +2160,6 @@ def test_build_trainer_num_output_dims_fallback_len(tmp_path):
     assert called["value"] == 1
 
 
-@pytest.mark.pruned
 def test_read_config_missing_dir_branch(tmp_path):
     cfg = object.__new__(TrainConfig)
 
@@ -2260,7 +2265,6 @@ def test_required_inputs_module_missing(tmp_path):
         )
 
 
-@pytest.mark.pruned
 def test_required_inputs_loss_missing(tmp_path):
     with pytest.raises(ValueError):
         TrainConfig(
@@ -2390,6 +2394,7 @@ def test_prepare_directory_root_false_copy_resume_false_yaml_present(tmp_path):
     cfg.prepare_directory(d, yaml_config=yaml_path)
 
 
+@pytest.mark.pruned
 def test_prepare_directory_root_true_copy_resume_true_yaml_present(tmp_path):
     src = tmp_path / "src"
     dst = tmp_path / "dst"
@@ -2525,7 +2530,6 @@ def test_generator_branch_false(tmp_path):
     assert cfg is not None
 
 
-@pytest.mark.pruned
 def test_generator_branch_true_valid(tmp_path):
     module = DummyModuleSelector()
 
@@ -2564,7 +2568,6 @@ def test_cvae_requires_beta_finder(tmp_path):
         )
 
 
-@pytest.mark.pruned
 def test_default_model_without_observation_raises(tmp_path):
     loader = DummyTrainLoader()
     loader.dataset_config.observation = None
@@ -2583,7 +2586,6 @@ def test_default_model_without_observation_raises(tmp_path):
         )
 
 
-@pytest.mark.pruned
 def test_default_model_beta_warning(tmp_path):
     loader = DummyTrainLoader()
     loader.dataset_config.observation = DummyObservation()
@@ -2700,6 +2702,7 @@ def test_check_io_1d_with_single_dim_no_flattener():
     )
 
 
+@pytest.mark.pruned
 def test_check_io_multid_with_flattener_wrong_dims():
     with pytest.raises(
         RuntimeError,
@@ -2715,7 +2718,6 @@ def test_check_io_multid_with_flattener_wrong_dims():
         )
 
 
-@pytest.mark.pruned
 def test_check_io_multid_with_flattener_correct_dims():
     with pytest.raises(
         RuntimeError,
@@ -2773,7 +2775,7 @@ def test_build_trainer_passes_validation_loader(tmp_path):
     received = {"loader": None}
 
     class Loader(DummyTrainLoader):
-        def build_validation_loader(self):
+        def build_validation_loader(self, return_spatial_mask=False):
             return ["val"]
 
     class T(DummyTrainer):
@@ -2912,7 +2914,6 @@ def test_prepare_directory_barrier_called(tmp_path):
     assert calls["n"] == 2
 
 
-@pytest.mark.pruned
 def test_prepare_directory_barrier_called_with_yaml(tmp_path):
     calls = {"n": 0}
 

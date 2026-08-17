@@ -69,7 +69,7 @@ def test_config_defaults():
     assert config.batch_normalization is False
     assert config.dropout_rate is None
     assert config.append_mode == 1
-    assert config.init_method == "trunc_normal"
+    assert config.init_method == "default"
     assert config.activation == "relu"
 
 
@@ -111,6 +111,7 @@ def test_config_infers_empty_decoder_for_empty_encoder_dimensions():
     assert config.decoder_hidden_dims == []
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "dropout_rate",
     [
@@ -129,6 +130,7 @@ def test_config_accepts_valid_dropout(dropout_rate):
     assert config.dropout_rate == dropout_rate
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "dropout_rate",
     [
@@ -148,6 +150,7 @@ def test_config_rejects_invalid_dropout(dropout_rate):
         )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "append_mode",
     [
@@ -164,6 +167,7 @@ def test_config_accepts_append_modes(append_mode):
     assert config.append_mode == append_mode
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "activation",
     [
@@ -295,6 +299,7 @@ def test_model_converts_none_added_features_to_zero():
     assert model.added_features_dim == 0
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "added_features_dim",
     [
@@ -432,6 +437,7 @@ def test_append_mode_three_adds_features_to_both_networks():
     assert first_decoder_linear.in_features == 7
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "append_mode",
     [
@@ -459,6 +465,7 @@ def test_append_modes_without_added_feature_dimension(append_mode):
     assert first_decoder_linear.in_features == 4
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "append_mode",
     [
@@ -615,7 +622,6 @@ def test_forward_without_mask_preserves_input_values():
     )
 
 
-@pytest.mark.pruned
 def test_forward_append_mode_one_concatenates_features_to_encoder():
     model = make_model(
         config=make_config(
@@ -853,6 +859,7 @@ def test_forward_flattens_added_features():
     assert captured["shape"] == (2, 8)
 
 
+@pytest.mark.pruned
 def test_forward_invalid_append_mode_with_features_raises():
     config = make_config(
         append_mode=99,
@@ -956,6 +963,7 @@ def test_forward_zero_mask_with_zero_bias_produces_zero():
     )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "input_shape",

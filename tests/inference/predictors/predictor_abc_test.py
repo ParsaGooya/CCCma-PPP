@@ -282,7 +282,6 @@ def test_build_output_sampler_requires_statistics_file(
         predictor.build_output_sampler()
 
 
-@pytest.mark.pruned
 def test_build_output_sampler_loads_statistics(
     tmp_path,
     monkeypatch,
@@ -334,6 +333,7 @@ def test_build_output_sampler_loads_statistics(
     assert result is expected
 
 
+@pytest.mark.pruned
 def test_output_sampler_accepts_integer_sample_size(
     tmp_path,
     monkeypatch,
@@ -542,7 +542,6 @@ def test_get_multinormal_increases_jitter_between_retries(
     assert third_jitter > second_jitter
 
 
-@pytest.mark.pruned
 def test_sample_converts_integer_size_to_tuple(
     tmp_path,
 ):
@@ -600,6 +599,7 @@ def test_sample_preserves_tuple_size(tmp_path):
     assert result.shape == (2, 3, 4)
 
 
+@pytest.mark.pruned
 def test_sample_default_size_is_one(tmp_path):
     predictor = ConcretePredictor(tmp_path)
 
@@ -618,6 +618,7 @@ def test_sample_default_size_is_one(tmp_path):
     distribution.sample.assert_called_once_with((1,))
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_rejects_wrong_rank(
     tmp_path,
 ):
@@ -639,7 +640,6 @@ def test_save_batch_to_netcdf_rejects_wrong_rank(
         )
 
 
-@pytest.mark.pruned
 def test_save_batch_to_netcdf_rejects_metadata_mismatch(
     tmp_path,
 ):
@@ -736,6 +736,7 @@ def test_save_batch_to_netcdf_with_extra_dimensions(
         )
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_assigns_coordinates(
     tmp_path,
 ):
@@ -769,7 +770,6 @@ def test_save_batch_to_netcdf_assigns_coordinates(
         ]
 
 
-@pytest.mark.pruned
 def test_save_batch_to_netcdf_assigns_attributes(
     tmp_path,
 ):

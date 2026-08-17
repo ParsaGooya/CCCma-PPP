@@ -46,6 +46,7 @@ def test_get_regular_class_without_dict():
     assert obj.value == 10
 
 
+@pytest.mark.pruned
 def test_get_dataclass_with_dict():
     reg = Registery()
 
@@ -74,7 +75,6 @@ def test_get_dataclass_missing_field_strict():
         reg.get("dc", {"x": 1})
 
 
-@pytest.mark.pruned
 def test_get_dataclass_extra_field_strict():
     reg = Registery()
 

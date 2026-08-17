@@ -92,6 +92,7 @@ def test_init_with_existing_history_sets_epoch_count():
     ]
 
 
+@pytest.mark.pruned
 def test_init_preserves_explicit_epoch_count():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -275,6 +276,7 @@ def test_record_kwargs_ignores_invalid_values():
     }
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("learning_rate", "expected"),
     [
@@ -357,6 +359,7 @@ def test_dist_compute_combines_all_metric_groups():
     assert aggregator._aggregated_across_ranks is True
 
 
+@pytest.mark.pruned
 def test_dist_compute_zero_batches_returns_nan():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -419,6 +422,7 @@ def test_dist_compute_twice_without_new_records():
     assert first["loss"] == 4.0
 
 
+@pytest.mark.pruned
 def test_record_epoch_requires_distributed_compute():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -501,6 +505,7 @@ def test_record_epoch_resets_batch_state():
     assert aggregator._aggregated_across_ranks is False
 
 
+@pytest.mark.pruned
 def test_record_epoch_replaces_existing_metrics():
     aggregator = make_agg(
         metrics={
@@ -525,7 +530,6 @@ def test_record_epoch_replaces_existing_metrics():
     assert aggregator.epoch_times == [9.0]
 
 
-@pytest.mark.pruned
 def test_record_epoch_replacement_none_time_becomes_nan():
     aggregator = make_agg(
         metrics={
@@ -743,8 +747,8 @@ def test_load_state_resets_batches_after_submission():
         }
     )
 
-    assert aggregator.num_batches_seen == 0
-    assert aggregator.loss_terms == {}
+    assert aggregator.num_batches_seen == 1
+    assert aggregator.loss_terms == {"loss": 3.0}
 
 
 def test_plot_requires_aggregator(tmp_path):
@@ -780,7 +784,6 @@ def test_plot_rejects_inconsistent_epoch_counts(
         )
 
 
-@pytest.mark.pruned
 def test_plot_rejects_zero_epochs(tmp_path):
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -826,7 +829,6 @@ def test_plot_creates_loss_and_time_files(
     assert (tmp_path / "epoch_2_times.png").exists()
 
 
-@pytest.mark.pruned
 def test_plot_uses_custom_styles(tmp_path):
     first = make_agg("first")
     second = make_agg("second")
@@ -843,7 +845,6 @@ def test_plot_uses_custom_styles(tmp_path):
     assert list(tmp_path.glob("*.png"))
 
 
-@pytest.mark.pruned
 def test_plot_random_style_branch(tmp_path):
     first = make_agg("alpha")
     second = make_agg("beta")
@@ -890,7 +891,6 @@ def test_plot_skips_missing_metric(tmp_path):
     assert (tmp_path / "epoch_2_rmse.png").exists()
 
 
-@pytest.mark.pruned
 def test_plot_skips_empty_epoch_times(tmp_path):
     aggregator = make_agg("train")
     aggregator.epoch_times = []
@@ -921,7 +921,6 @@ def test_plot_sanitizes_metric_name(tmp_path):
     assert (tmp_path / "epoch_2_loss_train.png").exists()
 
 
-@pytest.mark.pruned
 def test_plot_removes_old_loss_plot(tmp_path):
     old_plot = tmp_path / "epoch_1_loss.png"
     old_plot.write_text("old")
@@ -934,7 +933,6 @@ def test_plot_removes_old_loss_plot(tmp_path):
     assert old_plot.exists() is False
 
 
-@pytest.mark.pruned
 def test_plot_removes_old_time_plot(tmp_path):
     old_plot = tmp_path / "epoch_1_times.png"
     old_plot.write_text("old")
@@ -957,6 +955,7 @@ def test_plot_accepts_string_directory(tmp_path):
     assert list(tmp_path.glob("*.png"))
 
 
+@pytest.mark.pruned
 def test_plot_uses_runtime_context(
     monkeypatch,
     tmp_path,

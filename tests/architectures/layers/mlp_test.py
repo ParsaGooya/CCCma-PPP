@@ -97,6 +97,7 @@ def test_build_mlp_default_has_no_batch_normalization():
     assert not any(isinstance(layer, nn.BatchNorm1d) for layer in model)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "activation",
@@ -123,6 +124,7 @@ def test_build_mlp_activation_types(
     )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "activation",
     [
@@ -181,7 +183,6 @@ def test_build_mlp_invalid_activation_not_checked_without_activated_layers():
     assert isinstance(model[0], nn.Linear)
 
 
-@pytest.mark.pruned
 def test_build_mlp_invalid_activation_checked_when_final_is_activated():
     with pytest.raises(
         ValueError,
@@ -201,6 +202,7 @@ def test_build_mlp_does_not_activate_final_by_default():
     assert isinstance(model[-1], nn.Linear)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "activation",
@@ -328,6 +330,7 @@ def test_build_mlp_dropout_one_is_constructed():
     assert dropout_layers[0].p == pytest.approx(1.0)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "dropout_rate",
     [
@@ -451,6 +454,7 @@ def test_build_mlp_hidden_layer_order():
     assert isinstance(model[4], nn.Linear)
 
 
+@pytest.mark.pruned
 def test_build_mlp_all_options_final_layer_order():
     model = build_mlp(
         [4, 8, 2],
@@ -504,6 +508,7 @@ def test_build_mlp_three_layers_all_options_order():
         assert isinstance(layer, expected_type)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "dims",
@@ -534,7 +539,6 @@ def test_build_mlp_forward_shape(
     )
 
 
-@pytest.mark.pruned
 def test_build_mlp_forward_with_all_options():
     model = build_mlp(
         [4, 8, 6, 2],

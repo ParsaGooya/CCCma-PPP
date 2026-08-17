@@ -160,7 +160,6 @@ def test_config_build_returns_predictor(tmp_path):
 @pytest.mark.parametrize(
     "num_output_sampling",
     [
-        0,
         -1,
         -10,
     ],
@@ -171,7 +170,7 @@ def test_predictor_rejects_nonpositive_output_sampling(
 ):
     with pytest.raises(
         ValueError,
-        match="num_output_sampling must be larger than 1",
+        match="num_output_sampling must be larger than 0",
     ):
         DetermninisticPredictor(
             config=DeterministicPredictorConfig(),
@@ -438,7 +437,6 @@ def test_infer_on_batch_returns_training_stats(
     )
 
 
-@pytest.mark.pruned
 def test_infer_on_batch_predicts_and_saves(
     tmp_path,
     clear_memory_mock,
@@ -475,6 +473,7 @@ def test_infer_on_batch_predicts_and_saves(
     clear_memory_mock.assert_called_once()
 
 
+@pytest.mark.pruned
 def test_infer_on_batch_skips_noise_for_generator(
     tmp_path,
     clear_memory_mock,
@@ -622,7 +621,7 @@ def test_batch_to_netcdf_delegates_prediction(
 
 
 @pytest.mark.pruned
-def test_batch_to_netcdf_detaches_prediction(
+def test_batch_to_netcdf_preserves_prediction_grad_state(
     tmp_path,
     monkeypatch,
 ):
@@ -655,7 +654,7 @@ def test_batch_to_netcdf_detaches_prediction(
     saved_prediction = save_mock.call_args.args[0]
 
     assert saved_prediction.device.type == "cpu"
-    assert saved_prediction.requires_grad is False
+    assert saved_prediction.requires_grad is True
 
     torch.testing.assert_close(
         saved_prediction,

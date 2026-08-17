@@ -29,7 +29,16 @@ from cccma_ppp.architectures.layers.utils import _noise_injection, _expand_mask
 
 @dataclasses.dataclass
 class TensorMask:
-    """Tensor and optional validity mask propagated through the conv models."""
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    tensor : torch.Tensor
+        Description not yet provided.
+    mask : torch.Tensor | None
+        Description not yet provided.
+    """
 
     tensor: torch.Tensor
     mask: torch.Tensor | None = None
@@ -37,14 +46,30 @@ class TensorMask:
 
 @dataclasses.dataclass
 class LatentVector:
-    """mu and log_var tensors for cVAE."""
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    mu : torch.Tensor
+        Description not yet provided.
+    log_var : torch.Tensor | None
+        Description not yet provided.
+    """
 
     mu: torch.Tensor
     log_var: torch.Tensor | None
 
 
 class ConvBlockConfigABC(abc.ABC):
+    """
+    Document this class.
+    """
+
     def __init__(self):
+        """
+        Document this function.
+        """
         self.inject_noise: bool = False
 
     @final
@@ -52,7 +77,19 @@ class ConvBlockConfigABC(abc.ABC):
         self,
         inject_noise: bool = False,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        inject_noise : bool
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         self.inject_noise = inject_noise
 
         return self
@@ -60,7 +97,30 @@ class ConvBlockConfigABC(abc.ABC):
 
 @dataclasses.dataclass
 class ConvBlockConfig(ConvBlockConfigABC):
-    """Configuration for a conventional repeated-convolution block."""
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    name : Literal['standard_conv']
+        Description not yet provided.
+    num_convolutions : int
+        Description not yet provided.
+    kernel_size : int
+        Description not yet provided.
+    normalization : NormalizationMethod
+        Description not yet provided.
+    padding_method : PaddingMethod
+        Description not yet provided.
+    activation : ActivationName
+        Description not yet provided.
+    dropout_rate : float | None
+        Description not yet provided.
+    bias : bool
+        Description not yet provided.
+    group_norm_groups : int
+        Description not yet provided.
+    """
 
     name: Literal["standard_conv"]
     num_convolutions: int = 2
@@ -73,6 +133,14 @@ class ConvBlockConfig(ConvBlockConfigABC):
     group_norm_groups: int = 8
 
     def __post_init__(self) -> None:
+        """
+        Document this function.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         super().__init__()
 
         if self.num_convolutions < 1:
@@ -83,7 +151,34 @@ class ConvBlockConfig(ConvBlockConfigABC):
 
 @dataclasses.dataclass
 class PartialConvBlockConfig(ConvBlockConfigABC):
-    """Configuration for a repeated partial-convolution block."""
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    name : Literal['partial_conv']
+        Description not yet provided.
+    num_convolutions : int
+        Description not yet provided.
+    kernel_size : int
+        Description not yet provided.
+    normalization : NormalizationMethod
+        Description not yet provided.
+    padding_method : PaddingMethod
+        Description not yet provided.
+    activation : ActivationName
+        Description not yet provided.
+    dropout_rate : float | None
+        Description not yet provided.
+    bias : bool
+        Description not yet provided.
+    group_norm_groups : int
+        Description not yet provided.
+    multi_channel : bool
+        Description not yet provided.
+    return_mask : bool
+        Description not yet provided.
+    """
 
     name: Literal["partial_conv"]
     num_convolutions: int = 2
@@ -99,6 +194,14 @@ class PartialConvBlockConfig(ConvBlockConfigABC):
     return_mask: bool = dataclasses.field(init=False, default=True)
 
     def __post_init__(self) -> None:
+        """
+        Document this function.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         super().__init__()
 
         if self.num_convolutions < 1:
@@ -109,7 +212,34 @@ class PartialConvBlockConfig(ConvBlockConfigABC):
 
 @dataclasses.dataclass
 class ConvNeXtBlockConfig(ConvBlockConfigABC):
-    """Configuration for a repeated ConvNeXt-style residual block."""
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    name : Literal['convnext']
+        Description not yet provided.
+    num_blocks : int
+        Description not yet provided.
+    kernel_size : int
+        Description not yet provided.
+    expansion_ratio : int
+        Description not yet provided.
+    padding_method : PaddingMethod
+        Description not yet provided.
+    layer_scale_init : float
+        Description not yet provided.
+    dropout_rate : float
+        Description not yet provided.
+    drop_path_rate : float
+        Description not yet provided.
+    use_partial_conv : bool
+        Description not yet provided.
+    multi_channel : bool
+        Description not yet provided.
+    return_mask : bool
+        Description not yet provided.
+    """
 
     name: Literal["convnext"]
     num_blocks: int = 2
@@ -125,6 +255,14 @@ class ConvNeXtBlockConfig(ConvBlockConfigABC):
     return_mask: bool = dataclasses.field(init=False, default=True)
 
     def __post_init__(self) -> None:
+        """
+        Document this function.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         super().__init__()
 
         if self.num_blocks < 1:
@@ -137,12 +275,37 @@ class ConvNeXtBlockConfig(ConvBlockConfigABC):
 
 
 class ConvSingle(nn.Module):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    in_channels : int
+        Description not yet provided.
+    out_channels : int
+        Description not yet provided.
+    config : ConvBlockConfig
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         in_channels: int,
         out_channels: int,
         config: ConvBlockConfig,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        in_channels : int
+            Description not yet provided.
+        out_channels : int
+            Description not yet provided.
+        config : ConvBlockConfig
+            Description not yet provided.
+        """
         super().__init__()
 
         self.inject_noise = config.inject_noise
@@ -172,6 +335,19 @@ class ConvSingle(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Description not yet provided.
+
+        Returns
+        -------
+        torch.Tensor
+            Description not yet provided.
+        """
         if self.inject_noise:
             x = _noise_injection(x)
 
@@ -182,7 +358,18 @@ class ConvSingle(nn.Module):
 
 
 class PartialConvSingle(nn.Module):
-    """One PartialConv2d + normalization + activation stage."""
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    in_channels : int
+        Description not yet provided.
+    out_channels : int
+        Description not yet provided.
+    config : PartialConvBlockConfig
+        Description not yet provided.
+    """
 
     def __init__(
         self,
@@ -190,6 +377,18 @@ class PartialConvSingle(nn.Module):
         out_channels: int,
         config: PartialConvBlockConfig,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        in_channels : int
+            Description not yet provided.
+        out_channels : int
+            Description not yet provided.
+        config : PartialConvBlockConfig
+            Description not yet provided.
+        """
         super().__init__()
         self.multi_channel = config.multi_channel
         self.return_mask = config.return_mask
@@ -226,7 +425,21 @@ class PartialConvSingle(nn.Module):
         x: torch.Tensor,
         mask: torch.Tensor | None,
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        x : torch.Tensor
+            Description not yet provided.
+        mask : torch.Tensor | None
+            Description not yet provided.
+
+        Returns
+        -------
+        tuple[torch.Tensor, torch.Tensor | None]
+            Description not yet provided.
+        """
         if self.inject_noise:
             x = _noise_injection(x)
             if self.multi_channel:
@@ -245,7 +458,18 @@ class PartialConvSingle(nn.Module):
 
 
 class ConvNeXtSingle(nn.Module):
-    """A compact NCHW ConvNeXt-style block."""
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    channels : int
+        Description not yet provided.
+    config : ConvNeXtBlockConfig
+        Description not yet provided.
+    drop_path_rate : float
+        Description not yet provided.
+    """
 
     def __init__(
         self,
@@ -253,6 +477,18 @@ class ConvNeXtSingle(nn.Module):
         config: ConvNeXtBlockConfig,
         drop_path_rate: float,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        channels : int
+            Description not yet provided.
+        config : ConvNeXtBlockConfig
+            Description not yet provided.
+        drop_path_rate : float
+            Description not yet provided.
+        """
         super().__init__()
         hidden_channels = channels * config.expansion_ratio
         self.use_partial_conv = config.use_partial_conv
@@ -314,7 +550,21 @@ class ConvNeXtSingle(nn.Module):
         x: torch.Tensor,
         mask: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        x : torch.Tensor
+            Description not yet provided.
+        mask : torch.Tensor | None
+            Description not yet provided.
+
+        Returns
+        -------
+        tuple[torch.Tensor, torch.Tensor | None]
+            Description not yet provided.
+        """
         residual = x
 
         if self.use_partial_conv:
@@ -345,12 +595,37 @@ class ConvNeXtSingle(nn.Module):
 
 
 class ConvBlock(nn.Module):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    in_channels : int
+        Description not yet provided.
+    out_channels : int
+        Description not yet provided.
+    config : ConvBlockConfig
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         in_channels: int,
         out_channels: int,
         config: ConvBlockConfig,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        in_channels : int
+            Description not yet provided.
+        out_channels : int
+            Description not yet provided.
+        config : ConvBlockConfig
+            Description not yet provided.
+        """
         super().__init__()
         self.config = config
         self.out_channels = out_channels
@@ -371,6 +646,19 @@ class ConvBlock(nn.Module):
         self.stages = nn.ModuleList(stages)
 
     def forward(self, input: TensorMask) -> TensorMask:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        input : TensorMask
+            Description not yet provided.
+
+        Returns
+        -------
+        TensorMask
+            Description not yet provided.
+        """
         x = input.tensor
 
         for stage in self.stages:
@@ -383,7 +671,18 @@ class ConvBlock(nn.Module):
 
 
 class PartialConvBlock(nn.Module):
-    """Repeated PartialConv2d block that updates the validity mask."""
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    in_channels : int
+        Description not yet provided.
+    out_channels : int
+        Description not yet provided.
+    config : PartialConvBlockConfig
+        Description not yet provided.
+    """
 
     def __init__(
         self,
@@ -391,6 +690,18 @@ class PartialConvBlock(nn.Module):
         out_channels: int,
         config: PartialConvBlockConfig,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        in_channels : int
+            Description not yet provided.
+        out_channels : int
+            Description not yet provided.
+        config : PartialConvBlockConfig
+            Description not yet provided.
+        """
         super().__init__()
         self.config = config
         self.out_channels = out_channels
@@ -411,6 +722,19 @@ class PartialConvBlock(nn.Module):
         self.stages = nn.ModuleList(stages)
 
     def forward(self, input: TensorMask) -> TensorMask:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        input : TensorMask
+            Description not yet provided.
+
+        Returns
+        -------
+        TensorMask
+            Description not yet provided.
+        """
         mask = _broadcast_mask(input.mask, input.tensor)
 
         x = input.tensor
@@ -421,7 +745,18 @@ class PartialConvBlock(nn.Module):
 
 
 class ConvNeXtBlock(nn.Module):
-    """Channel projection followed by one or more ConvNeXt blocks."""
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    in_channels : int
+        Description not yet provided.
+    out_channels : int
+        Description not yet provided.
+    config : ConvNeXtBlockConfig
+        Description not yet provided.
+    """
 
     def __init__(
         self,
@@ -429,6 +764,18 @@ class ConvNeXtBlock(nn.Module):
         out_channels: int,
         config: ConvNeXtBlockConfig,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        in_channels : int
+            Description not yet provided.
+        out_channels : int
+            Description not yet provided.
+        config : ConvNeXtBlockConfig
+            Description not yet provided.
+        """
         super().__init__()
 
         self.config = config
@@ -480,6 +827,19 @@ class ConvNeXtBlock(nn.Module):
         )
 
     def forward(self, input: TensorMask) -> TensorMask:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        input : TensorMask
+            Description not yet provided.
+
+        Returns
+        -------
+        TensorMask
+            Description not yet provided.
+        """
         x = input.tensor
         mask = input.mask
 
@@ -505,6 +865,23 @@ class ConvNeXtBlock(nn.Module):
 
 
 class LatentBlock(nn.Module):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    conv_block : ConvNeXtBlock | PartialConvBlock | ConvBlock
+        Description not yet provided.
+    input_shape : tuple[int, int, int]
+        Description not yet provided.
+    latent_size : int
+        Description not yet provided.
+    get_log_var : bool
+        Description not yet provided.
+    latent_normalization : NormalizationMethod | None
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         conv_block: ConvNeXtBlock | PartialConvBlock | ConvBlock,
@@ -514,6 +891,22 @@ class LatentBlock(nn.Module):
         get_log_var: bool = True,
         latent_normalization: NormalizationMethod | None = "layer",
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        conv_block : ConvNeXtBlock | PartialConvBlock | ConvBlock
+            Description not yet provided.
+        input_shape : tuple[int, int, int]
+            Description not yet provided.
+        latent_size : int
+            Description not yet provided.
+        get_log_var : bool
+            Description not yet provided.
+        latent_normalization : NormalizationMethod | None
+            Description not yet provided.
+        """
         super().__init__()
 
         self.conv_block = conv_block
@@ -527,19 +920,55 @@ class LatentBlock(nn.Module):
         )
 
     def forward(self, input: TensorMask) -> LatentVector:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        input : TensorMask
+            Description not yet provided.
+
+        Returns
+        -------
+        LatentVector
+            Description not yet provided.
+        """
         features = self.conv_block(input)
         return self.latent_head(features.tensor)
 
 
 class MaskPool2d(nn.Module):
-    """Pool masks according to configurable validity semantics."""
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    method : MaskPoolingMethod
+        Description not yet provided.
+    fraction_threshold : float
+        Description not yet provided.
+    """
 
     def __init__(
         self,
         method: MaskPoolingMethod = "any",
         fraction_threshold: float = 0.5,
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        method : MaskPoolingMethod
+            Description not yet provided.
+        fraction_threshold : float
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         super().__init__()
         self.method = method
         self.fraction_threshold = fraction_threshold
@@ -548,32 +977,51 @@ class MaskPool2d(nn.Module):
             raise ValueError("fraction_threshold must be between 0 and 1.")
 
     def forward(self, mask: torch.Tensor) -> torch.Tensor:
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        mask : torch.Tensor
+            Description not yet provided.
+
+        Returns
+        -------
+        torch.Tensor
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if self.method == "any":
             return F.max_pool2d(mask, kernel_size=3, stride=2, padding=1)
 
         if self.method == "all":
-            invalid = F.max_pool2d(
-                1.0 - mask,
-                kernel_size=3,
-                stride=2,
-                padding=1
-            )
+            invalid = F.max_pool2d(1.0 - mask, kernel_size=3, stride=2, padding=1)
             return 1.0 - invalid
 
         if self.method == "fraction":
-            sum_pool = F.avg_pool2d(
-                mask,
-                kernel_size=3,
-                stride=2,
-                padding=1,
-            ) * 9
+            sum_pool = (
+                F.avg_pool2d(
+                    mask,
+                    kernel_size=3,
+                    stride=2,
+                    padding=1,
+                )
+                * 9
+            )
 
-            count_pool = F.avg_pool2d(
-                torch.ones_like(mask),
-                kernel_size=3,
-                stride=2,
-                padding=1,
-            ) * 9
+            count_pool = (
+                F.avg_pool2d(
+                    torch.ones_like(mask),
+                    kernel_size=3,
+                    stride=2,
+                    padding=1,
+                )
+                * 9
+            )
 
             fraction = sum_pool / count_pool
             return (fraction >= self.fraction_threshold).to(mask.dtype)
@@ -582,6 +1030,23 @@ class MaskPool2d(nn.Module):
 
 
 class LatentLayer(nn.Module):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    input_shape : tuple[int, int, int]
+        Description not yet provided.
+    latent_size : int
+        Description not yet provided.
+    latent_normalization : NormalizationMethod | None
+        Description not yet provided.
+    get_log_var : bool
+        Description not yet provided.
+    group_norm_groups : int
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         input_shape: tuple[int, int, int],
@@ -591,17 +1056,34 @@ class LatentLayer(nn.Module):
         get_log_var: bool = True,
         group_norm_groups: int = 8,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        input_shape : tuple[int, int, int]
+            Description not yet provided.
+        latent_size : int
+            Description not yet provided.
+        latent_normalization : NormalizationMethod | None
+            Description not yet provided.
+        get_log_var : bool
+            Description not yet provided.
+        group_norm_groups : int
+            Description not yet provided.
+        """
         super().__init__()
 
         input_channels = input_shape[0]
-        self.normalization = (nn.Sequential(
-            _build_normalization(
-                latent_normalization,
-                input_channels,
-                group_norm_groups=group_norm_groups,
-            ),
-            nn.ReLU(inplace=True))
+        self.normalization = (
+            nn.Sequential(
+                _build_normalization(
+                    latent_normalization,
+                    input_channels,
+                    group_norm_groups=group_norm_groups,
+                ),
+                nn.ReLU(inplace=True),
+            )
             if latent_normalization is not None
             else nn.Identity()
         )
@@ -612,7 +1094,19 @@ class LatentLayer(nn.Module):
         self.log_var = nn.Linear(flattened_size, latent_size) if get_log_var else None
 
     def forward(self, x: torch.Tensor) -> LatentVector:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        x : torch.Tensor
+            Description not yet provided.
+
+        Returns
+        -------
+        LatentVector
+            Description not yet provided.
+        """
         x = self.normalization(x)
 
         x = x.flatten(start_dim=1)

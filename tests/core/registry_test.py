@@ -5,6 +5,7 @@ import pytest
 from cccma_ppp.core.registery import Registery
 
 
+@pytest.mark.pruned
 def test_get_unregistered_raises():
     registry = Registery()
 

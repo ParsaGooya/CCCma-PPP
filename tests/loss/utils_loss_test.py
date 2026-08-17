@@ -212,6 +212,7 @@ def test_check_generator_structure_valid_generative():
     assert _check_generator_structure(data, target) is True
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("data_shape", "target_shape"),
     [
@@ -299,6 +300,7 @@ def test_mse_lowres_uses_avg_pool1d():
     assert loss.average_pool is F.avg_pool1d
 
 
+@pytest.mark.pruned
 def test_mse_lowres_uses_avg_pool2d():
     loss = WeightedMSE(
         w_channels_1(),
@@ -424,7 +426,6 @@ def test_mse_shape_mismatch():
         )
 
 
-@pytest.mark.pruned
 def test_mse_invalid_reduction():
     with pytest.raises(NotImplementedError):
         WeightedMSE(
@@ -437,6 +438,7 @@ def test_mse_invalid_reduction():
         )
 
 
+@pytest.mark.pruned
 def test_mse_uppercase_reduction_is_invalid():
     with pytest.raises(NotImplementedError):
         WeightedMSE(
@@ -647,7 +649,6 @@ def test_mse_lowres_bad_mask_shape_raises():
         )
 
 
-@pytest.mark.pruned
 def test_mse_downsample_static_tensor_restores_rank():
     loss = WeightedMSE(
         w_channels_1(),
@@ -757,6 +758,7 @@ def test_crps_lowres_invalid_kernel():
         )
 
 
+@pytest.mark.pruned
 def test_crps_lowres_invalid_output_dimensions():
     with pytest.raises(NotImplementedError):
         WeightedCRPS(
@@ -777,6 +779,7 @@ def test_crps_lowres_without_channels_restores_weight_rank():
     assert loss.weights.ndim == 2
 
 
+@pytest.mark.pruned
 def test_crps_lowres_with_channels_preserves_weight_rank():
     loss = WeightedCRPS(
         w_channels_1(),
@@ -805,7 +808,6 @@ def test_crps_requires_generator_context():
         )
 
 
-@pytest.mark.pruned
 def test_crps_single_sample():
     loss = WeightedCRPS(
         w2d(),
@@ -1135,7 +1137,6 @@ def test_crps_generative_lowres_bad_mask_raises():
         )
 
 
-@pytest.mark.pruned
 def test_crps_downsample_static_tensor_restores_rank():
     loss = WeightedCRPS(
         w_channels_1(),
@@ -1253,12 +1254,11 @@ def test_frobenius_unknown_reduction_returns_unmodified_loss():
 
     value = torch.tensor(5.0)
 
-    result = loss._aggregate(
-        value,
-        output_size=2,
-    )
-
-    assert result is value
+    with pytest.raises(NotImplementedError):
+        loss._aggregate(
+            value,
+            output_size=2,
+        )
 
 
 @pytest.mark.pruned
@@ -1289,7 +1289,6 @@ def test_frobenius_spatial_multiple_channels():
     assert result >= 0
 
 
-@pytest.mark.pruned
 def test_frobenius_channel():
     result = Frobenius_norm(
         w2d(),
@@ -1387,6 +1386,7 @@ def test_frobenius_generator_averages_ensemble():
     )
 
 
+@pytest.mark.pruned
 def test_frobenius_generator_rejects_invalid_structure():
     loss = Frobenius_norm(
         w2d(),
@@ -1421,6 +1421,7 @@ def test_frobenius_generative_spatial():
     assert torch.isfinite(result)
 
 
+@pytest.mark.pruned
 def test_frobenius_generative_channel():
     context = make_context(generative_modeling=True)
 
@@ -1440,7 +1441,6 @@ def test_frobenius_generative_channel():
     assert torch.isfinite(result)
 
 
-@pytest.mark.pruned
 def test_frobenius_generator_and_generative():
     context = make_context(
         generator=True,

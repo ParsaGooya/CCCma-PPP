@@ -168,6 +168,7 @@ def test_multi_channel_slide_window_size():
     assert layer.slide_winsize == 27
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("kernel_size", "expected"),
     [
@@ -190,6 +191,7 @@ def test_single_channel_slide_window_size_for_kernels(
     assert layer.slide_winsize == expected
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("in_channels", "kernel_size", "expected"),
     [
@@ -232,6 +234,7 @@ def test_initial_cache_state():
     assert layer.mask_ratio is None
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "shape",
     [

@@ -64,6 +64,8 @@ class DummyFlow:
 
 
 class LocalModelSelector(ModelSelector):
+    registery = type(cVAEModelSelector.registery)()
+
     pass
 
 
@@ -156,6 +158,7 @@ def test_model_selector_requires_config_or_load_dir():
         LocalModelSelector(type="anything", config=None, load_dir=None)
 
 
+@pytest.mark.pruned
 def test_model_selector_register_available_get_model_config():
     name = unique_name("model")
 
@@ -183,7 +186,6 @@ def test_model_selector_register_lowercase_lookup():
     assert cfg.value == 3
 
 
-@pytest.mark.pruned
 def test_model_selector_unregistered_raises():
     selector = LocalModelSelector(type=unique_name("missing_model"), config={})
 
@@ -197,7 +199,7 @@ def test_model_selector_checkpoint_load_overwrites_config(monkeypatch, tmp_path)
 
     fake_checkpoint_config = object()
 
-    def fake_load_config_from_checkpoint(load_dir):
+    def fake_load_config_from_checkpoint(load_dir, freeze_weights=False):
         return (
             {
                 "ModelConfig": {
@@ -233,7 +235,7 @@ def test_model_selector_checkpoint_load_overwrites_config(monkeypatch, tmp_path)
 
 @pytest.mark.pruned
 def test_model_selector_load_dir_type_mismatch(monkeypatch, tmp_path):
-    def fake_load_config_from_checkpoint(load_dir):
+    def fake_load_config_from_checkpoint(load_dir, freeze_weights=False):
         return (
             {
                 "ModelConfig": {
@@ -258,12 +260,11 @@ def test_model_selector_load_dir_type_mismatch(monkeypatch, tmp_path):
         )
 
 
-@pytest.mark.pruned
 def test_model_selector_freeze_weights_warning(monkeypatch, tmp_path):
     name = unique_name("freeze_model")
     LocalModelSelector.register(name)(DummyModelConfig)
 
-    def fake_load_config_from_checkpoint(load_dir):
+    def fake_load_config_from_checkpoint(load_dir, freeze_weights=False):
         return (
             {
                 "ModelConfig": {
@@ -299,7 +300,7 @@ def test_model_selector_load_dir_without_freeze_only_one_warning(monkeypatch, tm
     name = unique_name("nofreeze_model")
     LocalModelSelector.register(name)(DummyModelConfig)
 
-    def fake_load_config_from_checkpoint(load_dir):
+    def fake_load_config_from_checkpoint(load_dir, freeze_weights=False):
         return (
             {
                 "ModelConfig": {
@@ -328,7 +329,6 @@ def test_model_selector_load_dir_without_freeze_only_one_warning(monkeypatch, tm
     assert "overwritten" in str(record[0].message)
 
 
-@pytest.mark.pruned
 def test_cvae_model_selector_has_registry():
     name = unique_name("cvae_model")
 

@@ -3,93 +3,91 @@ max_epochs: 100
 train_loader:
     dataset_config:
         model:
-          paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/SI/forecast/Full/NOAA/datetime
-          names: [SICN]
-          ensemble_mean : True
-          concat_dim : time
-          rename_dict :
-                        x : lon
-                        y: lat
-          
-        observation :
+            paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/SI/forecast/Full/NOAA/datetime
+            names: [ SICN ]
+            ensemble_mean: True
+            concat_dim: time
+            rename_dict:
+                x: lon
+                y: lat
+
+        observation:
             paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/SI/observation/NOAA/datetime
-            names: [SICN]
-            concat_dim : time
-            rename_dict :
-                            x : lon
-                            y: lat
+            names: [ SICN ]
+            concat_dim: time
+            rename_dict:
+                x: lon
+                y: lat
 
-        condition_method : ensemble_mean
-
+        condition_method: ensemble_mean
 
     batch_size: 10
-    time_features :
-                    - lead_time
-                    - month_sin
-                    - month_cos
-                    
-    train_years_slice : [1980, 2019]
-    num_validation_years : 3
-    prefetch_factor : 4
+    time_features:
+      - lead_time
+      - month_sin
+      - month_cos
+
+    train_years_slice: [ 1980, 2019 ]
+    num_validation_years: 3
+    prefetch_factor: 4
     num_data_workers: 4
     reduce_spatial_mask: True
     load: True
 
 module:
-    type :  cvae
+    type: cvae
     config:
 
-        ModelConfig :
-                type : UNetSIC
-                config :
-                    channels: [16,32,64,128, 256]
-                    latent_size: 1000
-                    latent_normalization: layer
+        ModelConfig:
+            type: UNetSIC
+            config:
+                channels: [ 16, 32, 64, 128, 256 ]
+                latent_size: 1000
+                latent_normalization: layer
 
-                    condition_embedding_channels: [16, 32, 64, 128, 256]
-                    condition_embedding_size: 1000
-                    condition_dependant_latent: true
-                    condemb_to_decoder: false     
+                condition_embedding_channels: [ 16, 32, 64, 128, 256 ]
+                condition_embedding_size: 1000
+                condition_dependant_latent: true
+                condemb_to_decoder: false
 
-                    block_config: 
-                            name: convnext
-                            num_blocks: 2
+                block_config:
+                    name: convnext
+                    num_blocks: 2
 
-                    deterministic_guess_config:
-                            type: UNetSIC
-                            share_output_block: true
-                            load_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_Unet_SIC/checkpoints/best.pt
-                            freeze_weights: True
+                deterministic_guess_config:
+                    type: UNetSIC
+                    share_output_block: true
+                    load_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_Unet_SIC/checkpoints/best.pt
+                    freeze_weights: True
 
-                    upsampling_method: bilinear
-                    upsampling_alignment_method: padd
-                    init_method: default
-                        
+                upsampling_method: bilinear
+                upsampling_alignment_method: padd
+                init_method: default
+
 losspipeline:
-      loss_pipeline :
-                    - name : mse
-      reduction : mean
+    loss_pipeline:
+      - name: mse
+    reduction: mean
 
-trainer :
-    beta_finder :
-              beta : 0.01
-              num_epoch_to_warmup : 10
-    earlystoppingbuffer : 10
-    mixed_precision: True              
+trainer:
+    beta_finder:
+        beta: 0.01
+        num_epoch_to_warmup: 10
+    earlystoppingbuffer: 10
+    mixed_precision: True
 
-optimization :
-        lr : 0.00001
-        optimizer_type : adam
-        lr_scheduler_config :
-                    min_lr : 0.00000001
-                    # warmup_epochs : 1
-                    total_epochs: 10
-                    hold_min_lr: True
+optimization:
+    lr: 0.00001
+    optimizer_type: adam
+    lr_scheduler_config:
+        min_lr: 1e-8
+        # warmup_epochs : 1
+        total_epochs: 10
+        hold_min_lr: True
 
-weights :
-        spatial_method : uniform
+weights:
+    spatial_method: uniform
 
-log_every_n_epochs : 2
-save_checkpoint : True
-seed : 10
-
+log_every_n_epochs: 2
+save_checkpoint: True
+seed: 10

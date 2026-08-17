@@ -1,822 +1,1324 @@
-import pytest
-from cccma_ppp.data_modules.dataset.dataset_abc import AddedTimeFeatures
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
+
 import numpy as np
+import pytest
 import xarray as xr
-from unittest.mock import patch
 
 from cccma_ppp.data_modules.dataset.operator import (
     DatasetOperator,
+    _build_chunks,
 )
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 
-class DummyFlatten:
-    pass
+INIT_TIME_DIM = "time"
+LEAD_TIME_DIM = "lead_time"
+REALIZATION_DIM = "ensembles"
+
+AVAILABLE_TIMES = np.array(
+    [
+        "2000-01-01",
+        "2001-01-01",
+    ],
+    dtype="datetime64[ns]",
+)
 
 
-class DummyPipeline:
-    def __init__(self):
-        self.pipeline = [("scale", object())]
-        self.fitted_preprocessors = []
-        self.added = None
+def make_train_times(
+    values=None,
+):
+    if values is None:
+        values = AVAILABLE_TIMES
 
-    def add_fitted_preprocessor(self, preprocessor, index=0):
-        self.added = (preprocessor, index)
+    values = np.asarray(
+        values,
+        dtype="datetime64[ns]",
+    )
 
-    def get_preprocessors(self, name):
-        return "flattener_obj"
-
-
-class DummyInfo:
-    def __init__(self, ensembles=None):
-        self.coords = {
-            "ensembles": ensembles,
-            "lead_time": np.array([1, 2, 3]),
-            "lat": [0, 1],
-            "lon": [10, 20],
-        }
+    return xr.DataArray(
+        values,
+        dims=(INIT_TIME_DIM,),
+        coords={
+            INIT_TIME_DIM: values,
+        },
+    )
 
 
-class DummyDataConfig:
-    def __init__(self, names=None, ensembles=None):
-        self.names = names or ["var"]
-        self.info = DummyInfo(ensembles)
-        self.preprocessing_pipeline = DummyPipeline()
-        self.fit_called = None
-        self.load_called = None
+def make_coord(
+    values,
+    dim,
+):
+    values = np.asarray(values)
 
-    def fit_preprocessor_pipeline(
-        self,
-        selection=None,
-        mask=False,
-        save=False,
-        save_path=None,
-        save_name=None,
-    ):
-        self.fit_called = {
-            "selection": selection,
-            "mask": mask,
-            "save": save,
-            "save_path": save_path,
-            "save_name": save_name,
-        }
-        return self
+    return xr.DataArray(
+        values,
+        dims=(dim,),
+        coords={
+            dim: values,
+        },
+    )
 
-    def load_preprocessor_pipeline(self, load_dir=None):
-        self.load_called = load_dir
-        return self
+
+def make_pipeline(
+    *,
+    pipeline=None,
+    fitted_preprocessors=None,
+):
+    if pipeline is None:
+        pipeline = [
+            (
+                "StandardScaler",
+                MagicMock(),
+            ),
+        ]
+
+    if fitted_preprocessors is None:
+        fitted_preprocessors = []
+
+    result = MagicMock()
+    result.pipeline = pipeline
+    result.fitted_preprocessors = fitted_preprocessors
+    result.get_preprocessors.return_value = None
+
+    return result
+
+
+def make_data_config(
+    *,
+    names=None,
+    times=None,
+    lead_times=None,
+    realizations=None,
+    spatial_coords=None,
+    ensemble_mean=False,
+    pipeline=None,
+):
+    if names is None:
+        names = ["tas"]
+
+    if times is None:
+        times = AVAILABLE_TIMES
+
+    if lead_times is None:
+        lead_times = [1, 2, 3]
+
+    coords = {
+        INIT_TIME_DIM: make_coord(
+            times,
+            INIT_TIME_DIM,
+        ),
+        LEAD_TIME_DIM: make_coord(
+            lead_times,
+            LEAD_TIME_DIM,
+        ),
+    }
+
+    if realizations is not None:
+        coords[REALIZATION_DIM] = make_coord(
+            realizations,
+            REALIZATION_DIM,
+        )
+
+    if spatial_coords:
+        for dim, values in spatial_coords.items():
+            coords[dim] = make_coord(
+                values,
+                dim,
+            )
+
+    return SimpleNamespace(
+        names=list(names),
+        coords=coords,
+        info=SimpleNamespace(
+            coords=coords,
+        ),
+        ensemble_mean=ensemble_mean,
+        preprocessing_pipeline=(make_pipeline() if pipeline is None else pipeline),
+        fit_preprocessor_pipeline=MagicMock(),
+        load_preprocessor_pipeline=MagicMock(),
+        init_time_dim=INIT_TIME_DIM,
+        lead_time_dim=LEAD_TIME_DIM,
+        realization_dim=REALIZATION_DIM,
+    )
 
 
 class DummyDatasetConfig:
-    def __init__(self):
-        self.model = DummyDataConfig()
-        self.observation = DummyDataConfig()
-        self.effective_condition = DummyDataConfig()
+    init_time_dim = INIT_TIME_DIM
+    lead_time_dim = LEAD_TIME_DIM
+    realization_dim = REALIZATION_DIM
+    supported_NN_dimensions = (
+        "latitude",
+        "longitude",
+    )
 
-        self.condition_method = "same_member"
+    def __init__(
+        self,
+        *,
+        model=None,
+        observation=None,
+        condition=None,
+        condition_method=None,
+        using_model_as_condition=False,
+    ):
+        self.model = model
+        self.observation = observation
+        self.effective_condition = condition
+        self.condition_method = condition_method
+        self._using_model_data_as_condition = using_model_as_condition
 
-        self._using_model_data_as_condition = False
+        self.available_times = AVAILABLE_TIMES
         self._fitted_preprocessors = False
 
-        self.lead_months = [1, 2, 3]
-        self.time_features = None
-
-        self.get_common_time = np.array([2000, 2001, 2002])
-
-
-class DummyWeights:
-    def __init__(self, dims=(), channels=None):
-        self.dims = dims
-        self.channels = xr.DataArray(
-            np.array(channels or []),
-            dims=("channels",),
-        )
-
-
-class DummyWeightsConfig:
-    def build_weights(self, *args, **kwargs):
-        return DummyWeights()
+    def get_input_times(
+        self,
+        requested_times,
+    ):
+        return requested_times
 
 
 class DummyPreprocessor(PreprocessModuleABC):
-    fitted = True
-
-    def fit(self, *args, **kwargs):
-        pass
-
-    def transform(self, x):
-        return x
-
-    def inverse_transform(self, x):
-        return x
-
-
-@pytest.mark.pruned
-def test_config_observation_exists():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    assert op.config_observation is not None
-
-
-def test_config_observation_missing():
-    cfg = DummyDatasetConfig()
-
-    del cfg.observation
-
-    op = DatasetOperator(cfg)
-
-    assert op.config_observation is None
-
-
-@pytest.mark.pruned
-def test_fit_preprocessors_model_called():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    op.fit_preprocessors([2000])
-
-    assert cfg.model.fit_called is not None
-
-
-@pytest.mark.pruned
-def test_fit_preprocessors_observation_called():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    op.fit_preprocessors([2000])
-
-    assert cfg.observation.fit_called is not None
-
-
-@pytest.mark.pruned
-def test_fit_preprocessors_condition_called():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    op.fit_preprocessors([2000])
-
-    assert cfg.effective_condition.fit_called is not None
-
-
-def test_fit_preprocessors_static_condition():
-    cfg = DummyDatasetConfig()
-
-    cfg.condition_method = "static"
-
-    op = DatasetOperator(cfg)
-
-    op.fit_preprocessors([2000])
-
-    assert cfg.effective_condition.fit_called["selection"] == {}
-
-
-def test_fit_preprocessors_with_ensemble_selection():
-    cfg = DummyDatasetConfig()
-
-    cfg.model.info.coords["ensembles"] = [0]
-
-    op = DatasetOperator(cfg)
-
-    op.fit_preprocessors([2000])
-
-    assert "ensembles" in cfg.model.fit_called["selection"]
-
-
-@pytest.mark.pruned
-def test_fit_preprocessors_sets_flag():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    op.fit_preprocessors([2000])
-
-    assert cfg._fitted_preprocessors is True
-
-
-def test_fit_preprocessors_without_model():
-    cfg = DummyDatasetConfig()
-
-    cfg.model = None
-
-    op = DatasetOperator(cfg)
-
-    op.fit_preprocessors([2000])
-
-    assert cfg._fitted_preprocessors is True
-
-
-def test_fit_preprocessors_without_observation():
-    cfg = DummyDatasetConfig()
-
-    cfg.observation = None
-
-    op = DatasetOperator(cfg)
-
-    op.fit_preprocessors([2000])
-
-    assert cfg._fitted_preprocessors is True
-
-
-def test_fit_preprocessors_without_condition():
-    cfg = DummyDatasetConfig()
-
-    cfg.effective_condition = None
-
-    op = DatasetOperator(cfg)
-
-    op.fit_preprocessors([2000])
-
-    assert cfg._fitted_preprocessors is True
-
-
-@pytest.mark.pruned
-def test_load_fitted_preprocessors_model():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    op.load_fitted_preprocessors("x")
-
-    assert cfg.model.load_called == "x"
-
-
-@pytest.mark.pruned
-def test_load_fitted_preprocessors_observation():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    op.load_fitted_preprocessors("x")
-
-    assert cfg.observation.load_called == "x"
-
-
-@pytest.mark.pruned
-def test_load_fitted_preprocessors_condition():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    op.load_fitted_preprocessors("x")
-
-    assert cfg.effective_condition.load_called == "x"
-
-
-@pytest.mark.pruned
-def test_load_fitted_preprocessors_sets_flag():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    op.load_fitted_preprocessors("x")
-
-    assert cfg._fitted_preprocessors is True
-
-
-def test_add_fitted_preprocessor_invalid_type():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    with pytest.raises(TypeError):
-        op.add_fitted_preprocessor(object())
-
-
-@pytest.mark.pruned
-def test_add_fitted_preprocessor_not_fitted():
-    class BadPreprocessor(DummyPreprocessor):
-        fitted = False
-
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    with pytest.raises(AssertionError):
-        op.add_fitted_preprocessor(BadPreprocessor())
-
-
-@pytest.mark.pruned
-def test_add_fitted_preprocessor_model():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    preprocessor = DummyPreprocessor()
-
-    op.add_fitted_preprocessor(preprocessor)
-
-    assert cfg.model.preprocessing_pipeline.added[0] == preprocessor
-
-
-@pytest.mark.pruned
-def test_add_fitted_preprocessor_observation():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    preprocessor = DummyPreprocessor()
-
-    op.add_fitted_preprocessor(preprocessor)
-
-    assert cfg.observation.preprocessing_pipeline.added[0] == preprocessor
-
-
-@pytest.mark.pruned
-def test_add_fitted_preprocessor_condition():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    preprocessor = DummyPreprocessor()
-
-    op.add_fitted_preprocessor(preprocessor)
-
-    assert cfg.effective_condition.preprocessing_pipeline.added[0] == preprocessor
-
-
-def test_get_weights_with_config():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    with patch(
-        "cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove",
-        DummyFlatten,
+    def __init__(
+        self,
+        fitted=True,
     ):
-        weights = op.get_weights(config=DummyWeightsConfig())
 
-    assert weights is not None
+        self.fitted = fitted
 
+    def fit(self, data, *args, **kwargs):
+        self.fitted = True
+        return self
 
-def test_get_weights_model_only():
-    cfg = DummyDatasetConfig()
+    def transform(self, data, *args, **kwargs):
+        return data
 
-    cfg.observation = None
+    def inverse_transform(self, data, *args, **kwargs):
+        return data
 
-    op = DatasetOperator(cfg)
 
-    with patch(
-        "cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove",
-        DummyFlatten,
-    ):
-        weights = op.get_weights(config=DummyWeightsConfig())
-
-    assert weights is not None
-
-
-def test_get_weights_no_model_or_observation():
-    cfg = DummyDatasetConfig()
-
-    cfg.model = None
-    cfg.observation = None
-
-    op = DatasetOperator(cfg)
-
-    with pytest.raises(ValueError):
-        op.get_weights(config=DummyWeightsConfig())
-
-
-@pytest.mark.pruned
-def test_get_weights_with_flattennanremove():
-    cfg = DummyDatasetConfig()
-
-    cfg.observation.preprocessing_pipeline.fitted_preprocessors = [DummyFlatten()]
-
-    op = DatasetOperator(cfg)
-
-    captured = {}
-
-    class Config:
-        def build_weights(self, *args, **kwargs):
-            captured["Flattennanremover"] = kwargs["Flattennanremover"]
-            return DummyWeights()
-
-    with patch(
-        "cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove",
-        DummyFlatten,
-    ):
-        op.get_weights(config=Config())
-
-    assert captured["Flattennanremover"] == "flattener_obj"
-
-
-def test_get_input_var_metadata_model_only():
-    cfg = DummyDatasetConfig()
-
-    cfg.effective_condition = None
-
-    op = DatasetOperator(cfg)
-
-    metadata = op.get_input_var_metadata()
-
-    assert metadata["variables"] == ["var"]
-
-
-def test_get_input_var_metadata_model_and_condition():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    metadata = op.get_input_var_metadata()
-
-    assert len(metadata["variables"]) == 2
-
-
-def test_get_input_var_metadata_using_model_as_condition():
-    cfg = DummyDatasetConfig()
-
-    cfg._using_model_data_as_condition = True
-
-    op = DatasetOperator(cfg)
-
-    metadata = op.get_input_var_metadata()
-
-    assert len(metadata["variables"]) == 1
-
-
-def test_get_target_var_metadata_observation():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    metadata = op.get_target_var_metadata()
-
-    assert metadata["variables"] == ["var"]
-
-
-def test_get_target_var_metadata_model():
-    cfg = DummyDatasetConfig()
-
-    cfg.observation = None
-
-    op = DatasetOperator(cfg)
-
-    metadata = op.get_target_var_metadata()
-
-    assert metadata["variables"] == ["var"]
-
-
-def test_get_target_var_metadata_missing():
-    cfg = DummyDatasetConfig()
-
-    cfg.model = None
-    cfg.observation = None
-
-    op = DatasetOperator(cfg)
-
-    with pytest.raises(ValueError):
-        op.get_target_var_metadata()
-
-
-@pytest.mark.pruned
-def test_update_metadata():
-    cfg = DummyDatasetConfig()
-
-    op = DatasetOperator(cfg)
-
-    metadata = {
-        "variables": [],
-        "preprocessors": [],
-    }
-
-    result = op._update_metadata_with_dataconfig_metadata(
-        metadata,
-        cfg.model,
-    )
-
-    assert result["variables"] == ["var"]
-
-
-def _get_time_features(config, selection, input):
-    return AddedTimeFeatures(config, config.time_features)(selection, input)
-
-
-def make_time_selection(
-    year=2000,
-    lead_time=6,
-):
-    return {
-        "year": year,
-        "lead_time": lead_time,
-    }
-
-
-def make_time_input(shape=(2,)):
-    return xr.DataArray(
-        np.ones(
-            shape,
-            dtype=np.float32,
-        )
-    )
-
-
-@pytest.mark.parametrize(
-    "features,expected_length",
-    [
-        (["year"], 1),
-        (["lead_time"], 1),
-        (["month_sin"], 1),
-        (["month_cos"], 1),
-        (
-            [
-                "year",
-                "lead_time",
-                "month_sin",
-            ],
-            3,
-        ),
-        (
-            [
-                "month_sin",
-                "month_cos",
-            ],
-            2,
-        ),
-        (
-            [
-                "year",
-                "lead_time",
-                "month_sin",
-                "month_cos",
-            ],
-            4,
-        ),
-    ],
-)
-def test_get_time_features_dimensions(
-    features,
-    expected_length,
-):
-    cfg = DummyDatasetConfig()
-    cfg.time_features = features
-
-    result = _get_time_features(
-        cfg,
-        make_time_selection(),
-        make_time_input(),
-    )
-
-    assert result.shape[0] == expected_length
-
-
-@pytest.mark.pruned
-def test_get_time_features_year_value():
-    cfg = DummyDatasetConfig()
-    cfg.time_features = ["year"]
-
-    result = _get_time_features(
-        cfg,
-        make_time_selection(
-            year=2000,
-            lead_time=1,
-        ),
-        make_time_input(),
-    )
-
-    assert result[0] == pytest.approx(0.5)
-
-
-@pytest.mark.pruned
-def test_get_time_features_lead_time_value():
-    cfg = DummyDatasetConfig()
-    cfg.time_features = ["lead_time"]
-
-    result = _get_time_features(
-        cfg,
-        make_time_selection(
-            year=2000,
-            lead_time=3,
-        ),
-        make_time_input(),
-    )
-
-    assert result[0] == pytest.approx(1.0)
-
-
-@pytest.mark.pruned
-def test_get_time_features_month_values_are_finite():
-    cfg = DummyDatasetConfig()
-    cfg.time_features = [
-        "month_sin",
-        "month_cos",
-    ]
-
-    result = _get_time_features(
-        cfg,
-        make_time_selection(
-            year=2000,
-            lead_time=6,
-        ),
-        make_time_input(),
-    )
-
-    assert np.isfinite(result).all()
-
-
-@pytest.mark.pruned
-def test_get_time_features_broadcast():
-    cfg = DummyDatasetConfig()
-    cfg.time_features = ["year"]
-
-    result = _get_time_features(
-        cfg,
-        make_time_selection(),
-        make_time_input(
-            shape=(3, 4, 5),
-        ),
-    )
-
-    assert result.ndim > 1
-
-
-@pytest.mark.pruned
-def test_get_time_features_no_broadcast():
-    cfg = DummyDatasetConfig()
-    cfg.time_features = ["year"]
-
-    result = _get_time_features(
-        cfg,
-        make_time_selection(),
-        make_time_input(
-            shape=(2,),
-        ),
-    )
-
-    assert result.ndim == 1
-
-
-@pytest.mark.parametrize(
-    "selection",
-    [
-        {},
-        {
-            "year": 2000,
-        },
-        {
-            "lead_time": 1,
-        },
-    ],
-)
-def test_get_time_features_missing_selection_keys(
-    selection,
-):
-    cfg = DummyDatasetConfig()
-    cfg.time_features = ["year"]
-
-    with pytest.raises(
-        ValueError,
-        match="selection coords are not in required sample dimensions",
-    ):
-        _get_time_features(
-            cfg,
-            selection,
-            make_time_input(),
+class TestConfigObservation:
+    @pytest.mark.pruned
+    def test_returns_observation_when_present(self):
+        observation = make_data_config()
+        config = DummyDatasetConfig(
+            observation=observation,
         )
 
+        operator = DatasetOperator(config)
 
-def test_fit_preprocessors_condition_with_ensemble_selection():
-    cfg = DummyDatasetConfig()
+        assert operator.config_observation is observation
 
-    cfg.effective_condition.info.coords["ensembles"] = [0]
+    def test_returns_none_when_attribute_is_absent(self):
+        config = SimpleNamespace()
+        operator = DatasetOperator(config)
 
-    op = DatasetOperator(cfg)
+        assert operator.config_observation is None
 
-    op.fit_preprocessors([2000])
+    @pytest.mark.pruned
+    def test_returns_none_when_observation_is_none(self):
+        config = DummyDatasetConfig(
+            observation=None,
+        )
+        operator = DatasetOperator(config)
 
-    assert "ensembles" in cfg.effective_condition.fit_called["selection"]
-
-
-def test_fit_preprocessors_observation_with_ensemble_selection():
-    cfg = DummyDatasetConfig()
-
-    cfg.observation.info.coords["ensembles"] = [0]
-
-    op = DatasetOperator(cfg)
-
-    op.fit_preprocessors([2000])
-
-    assert "ensembles" in cfg.observation.fit_called["selection"]
+        assert operator.config_observation is None
 
 
-def test_load_fitted_preprocessors_without_model():
-    cfg = DummyDatasetConfig()
-    cfg.model = None
+class TestFitPreprocessors:
+    def test_rejects_unavailable_train_times(self):
+        config = DummyDatasetConfig(
+            model=make_data_config(),
+        )
+        operator = DatasetOperator(config)
 
-    op = DatasetOperator(cfg)
+        train_times = make_train_times(
+            [
+                "1990-01-01",
+            ]
+        )
 
-    op.load_fitted_preprocessors("x")
-
-    assert cfg._fitted_preprocessors is True
-
-
-def test_load_fitted_preprocessors_without_observation():
-    cfg = DummyDatasetConfig()
-    cfg.observation = None
-
-    op = DatasetOperator(cfg)
-
-    op.load_fitted_preprocessors("x")
-
-    assert cfg._fitted_preprocessors is True
-
-
-def test_load_fitted_preprocessors_without_condition():
-    cfg = DummyDatasetConfig()
-    cfg.effective_condition = None
-
-    op = DatasetOperator(cfg)
-
-    op.load_fitted_preprocessors("x")
-
-    assert cfg._fitted_preprocessors is True
-
-
-def test_add_fitted_preprocessor_without_model():
-    cfg = DummyDatasetConfig()
-    cfg.model = None
-
-    op = DatasetOperator(cfg)
-    preprocessor = DummyPreprocessor()
-
-    op.add_fitted_preprocessor(preprocessor)
-
-    assert cfg.observation.preprocessing_pipeline.added[0] is preprocessor
-
-
-def test_add_fitted_preprocessor_without_observation():
-    cfg = DummyDatasetConfig()
-    cfg.observation = None
-
-    op = DatasetOperator(cfg)
-    preprocessor = DummyPreprocessor()
-
-    op.add_fitted_preprocessor(preprocessor)
-
-    assert cfg.model.preprocessing_pipeline.added[0] is preprocessor
-
-
-def test_add_fitted_preprocessor_without_condition():
-    cfg = DummyDatasetConfig()
-    cfg.effective_condition = None
-
-    op = DatasetOperator(cfg)
-    preprocessor = DummyPreprocessor()
-
-    op.add_fitted_preprocessor(preprocessor)
-
-    assert cfg.model.preprocessing_pipeline.added[0] is preprocessor
-
-
-@pytest.mark.pruned
-def test_get_weights_without_flattennanremove():
-    cfg = DummyDatasetConfig()
-    captured = {}
-
-    class Config:
-        def build_weights(
-            self,
-            *args,
-            **kwargs,
+        with pytest.raises(
+            ValueError,
+            match="train_times are unavailable",
         ):
-            captured["Flattennanremover"] = kwargs["Flattennanremover"]
-            return DummyWeights()
+            operator.fit_preprocessors(train_times)
 
-    op = DatasetOperator(cfg)
+    @pytest.mark.pruned
+    def test_validates_time_sequence(self):
+        config = DummyDatasetConfig(
+            model=make_data_config(),
+        )
+        operator = DatasetOperator(config)
+        train_times = make_train_times()
 
-    with patch(
-        "cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove",
-        DummyFlatten,
-    ):
-        op.get_weights(
-            config=Config(),
+        with patch(
+            "cccma_ppp.data_modules.dataset.operator._validate_time_sequence"
+        ) as mock_validate:
+            operator.fit_preprocessors(train_times)
+
+        mock_validate.assert_called_once_with(train_times)
+
+    @pytest.mark.pruned
+    def test_fits_model_preprocessor(self):
+        model = make_data_config()
+        config = DummyDatasetConfig(
+            model=model,
+        )
+        operator = DatasetOperator(config)
+        train_times = make_train_times()
+
+        operator.fit_preprocessors(
+            train_times,
+            save=True,
+            save_path=Path("/tmp/output"),
+            save_name="model.joblib",
         )
 
-    assert captured["Flattennanremover"] is None
+        model.fit_preprocessor_pipeline.assert_called_once()
+
+        kwargs = model.fit_preprocessor_pipeline.call_args.kwargs
+
+        assert kwargs["mask"] is True
+        assert kwargs["save"] is True
+        assert kwargs["save_path"] == Path("/tmp/output")
+        assert kwargs["save_name"] == "model.joblib"
+        assert kwargs["selection"][INIT_TIME_DIM] is train_times
+        assert kwargs["selection"][LEAD_TIME_DIM] is model.info.coords[LEAD_TIME_DIM]
+
+    @pytest.mark.pruned
+    def test_model_selection_includes_realizations(self):
+        model = make_data_config(
+            realizations=[
+                0,
+                1,
+            ]
+        )
+        config = DummyDatasetConfig(
+            model=model,
+        )
+        operator = DatasetOperator(config)
+
+        operator.fit_preprocessors(make_train_times())
+
+        selection = model.fit_preprocessor_pipeline.call_args.kwargs["selection"]
+
+        assert selection[REALIZATION_DIM] is (model.info.coords[REALIZATION_DIM])
+
+    @pytest.mark.pruned
+    def test_model_selection_omits_realizations_when_absent(self):
+        model = make_data_config(
+            realizations=None,
+        )
+        config = DummyDatasetConfig(
+            model=model,
+        )
+        operator = DatasetOperator(config)
+
+        operator.fit_preprocessors(make_train_times())
+
+        selection = model.fit_preprocessor_pipeline.call_args.kwargs["selection"]
+
+        assert REALIZATION_DIM not in selection
+
+    def test_fits_observation_preprocessor(self):
+        observation = make_data_config()
+        config = DummyDatasetConfig(
+            observation=observation,
+        )
+        operator = DatasetOperator(config)
+        train_times = make_train_times()
+
+        operator.fit_preprocessors(
+            train_times,
+            save=True,
+            save_path="/tmp/output",
+            save_name="observation.joblib",
+        )
+
+        observation.fit_preprocessor_pipeline.assert_called_once_with(
+            selection={
+                INIT_TIME_DIM: train_times,
+            },
+            save=True,
+            save_path="/tmp/output",
+            save_name="observation.joblib",
+        )
+
+    def test_observation_selection_includes_realizations(self):
+        observation = make_data_config(
+            realizations=[
+                0,
+                1,
+            ]
+        )
+        config = DummyDatasetConfig(
+            observation=observation,
+        )
+        operator = DatasetOperator(config)
+        train_times = make_train_times()
+
+        operator.fit_preprocessors(train_times)
+
+        selection = observation.fit_preprocessor_pipeline.call_args.kwargs["selection"]
+
+        assert selection[INIT_TIME_DIM] is train_times
+        assert selection[REALIZATION_DIM] is (observation.info.coords[REALIZATION_DIM])
+
+    @pytest.mark.pruned
+    def test_fits_dynamic_condition_preprocessor(self):
+        condition = make_data_config()
+        config = DummyDatasetConfig(
+            condition=condition,
+            condition_method="ensemble_mean",
+        )
+        operator = DatasetOperator(config)
+        train_times = make_train_times()
+
+        operator.fit_preprocessors(
+            train_times,
+            save=False,
+        )
+
+        condition.fit_preprocessor_pipeline.assert_called_once()
+
+        kwargs = condition.fit_preprocessor_pipeline.call_args.kwargs
+
+        assert kwargs["mask"] is True
+        assert kwargs["save"] is False
+        assert kwargs["selection"][INIT_TIME_DIM] is train_times
+        assert (
+            kwargs["selection"][LEAD_TIME_DIM] is (condition.info.coords[LEAD_TIME_DIM])
+        )
+
+    def test_dynamic_condition_selection_includes_realizations(self):
+        condition = make_data_config(
+            realizations=[
+                0,
+                1,
+            ]
+        )
+        config = DummyDatasetConfig(
+            condition=condition,
+            condition_method="cross_ensemble",
+        )
+        operator = DatasetOperator(config)
+
+        operator.fit_preprocessors(make_train_times())
+
+        selection = condition.fit_preprocessor_pipeline.call_args.kwargs["selection"]
+
+        assert selection[REALIZATION_DIM] is (condition.info.coords[REALIZATION_DIM])
+
+    @pytest.mark.pruned
+    def test_fits_static_condition_with_empty_selection(self):
+        condition = make_data_config()
+        config = DummyDatasetConfig(
+            condition=condition,
+            condition_method="static",
+        )
+        operator = DatasetOperator(config)
+
+        operator.fit_preprocessors(
+            make_train_times(),
+            save=True,
+            save_path="/tmp/output",
+            save_name="condition.joblib",
+        )
+
+        condition.fit_preprocessor_pipeline.assert_called_once_with(
+            selection={},
+            mask=True,
+            save=True,
+            save_path="/tmp/output",
+            save_name="condition.joblib",
+        )
+
+    def test_get_input_times_is_used_for_model_and_condition(self):
+        model = make_data_config()
+        condition = make_data_config()
+        config = DummyDatasetConfig(
+            model=model,
+            condition=condition,
+            condition_method="ensemble_mean",
+        )
+
+        selected_times = make_train_times(
+            [
+                "2000-01-01",
+            ]
+        )
+        config.get_input_times = MagicMock(return_value=selected_times)
+
+        operator = DatasetOperator(config)
+        train_times = make_train_times()
+
+        operator.fit_preprocessors(train_times)
+
+        assert config.get_input_times.call_count == 2
+
+        model_selection = model.fit_preprocessor_pipeline.call_args.kwargs["selection"]
+        condition_selection = condition.fit_preprocessor_pipeline.call_args.kwargs[
+            "selection"
+        ]
+
+        assert model_selection[INIT_TIME_DIM] is selected_times
+        assert condition_selection[INIT_TIME_DIM] is selected_times
+
+    @pytest.mark.pruned
+    def test_skips_missing_sources(self):
+        config = DummyDatasetConfig(
+            model=None,
+            observation=None,
+            condition=None,
+        )
+        operator = DatasetOperator(config)
+
+        operator.fit_preprocessors(make_train_times())
+
+        assert config._fitted_preprocessors is True
+
+    @pytest.mark.pruned
+    def test_sets_fitted_preprocessors_flag(self):
+        config = DummyDatasetConfig(
+            model=make_data_config(),
+        )
+        operator = DatasetOperator(config)
+
+        assert config._fitted_preprocessors is False
+
+        operator.fit_preprocessors(make_train_times())
+
+        assert config._fitted_preprocessors is True
 
 
-@pytest.mark.pruned
-def test_update_metadata_multiple_variables():
-    cfg = DummyDatasetConfig()
-    cfg.model.names = ["a", "b"]
+class TestLoadFittedPreprocessors:
+    def test_loads_all_available_preprocessors(self):
+        model = make_data_config()
+        observation = make_data_config()
+        condition = make_data_config()
 
-    op = DatasetOperator(cfg)
+        config = DummyDatasetConfig(
+            model=model,
+            observation=observation,
+            condition=condition,
+            condition_method="ensemble_mean",
+        )
+        operator = DatasetOperator(config)
+        load_dir = Path("/tmp/preprocessors")
 
-    metadata = {
-        "variables": [],
-        "preprocessors": [],
-    }
+        operator.load_fitted_preprocessors(load_dir)
 
-    result = op._update_metadata_with_dataconfig_metadata(
-        metadata,
-        cfg.model,
-    )
+        model.load_preprocessor_pipeline.assert_called_once_with(load_dir)
+        observation.load_preprocessor_pipeline.assert_called_once_with(load_dir)
+        condition.load_preprocessor_pipeline.assert_called_once_with(load_dir)
+        assert config._fitted_preprocessors is True
 
-    assert result["variables"] == [
-        "a",
-        "b",
-    ]
+    def test_skips_missing_sources(self):
+        config = DummyDatasetConfig()
+        operator = DatasetOperator(config)
+
+        operator.load_fitted_preprocessors()
+
+        assert config._fitted_preprocessors is True
+
+    @pytest.mark.pruned
+    def test_forwards_none_load_directory(self):
+        model = make_data_config()
+        config = DummyDatasetConfig(
+            model=model,
+        )
+        operator = DatasetOperator(config)
+
+        operator.load_fitted_preprocessors()
+
+        model.load_preprocessor_pipeline.assert_called_once_with(None)
+
+
+class TestAddFittedPreprocessor:
+    def test_rejects_wrong_type(self):
+        config = DummyDatasetConfig(
+            model=make_data_config(),
+        )
+        operator = DatasetOperator(config)
+
+        with pytest.raises(
+            TypeError,
+            match="preprocessor must be an instance",
+        ):
+            operator.add_fitted_preprocessor(object())
+
+    @pytest.mark.pruned
+    def test_rejects_unfitted_preprocessor(self):
+        config = DummyDatasetConfig(
+            model=make_data_config(),
+        )
+        operator = DatasetOperator(config)
+        preprocessor = DummyPreprocessor(
+            fitted=False,
+        )
+
+        with pytest.raises(
+            AssertionError,
+            match="must be fitted",
+        ):
+            operator.add_fitted_preprocessor(preprocessor)
+
+    def test_adds_to_all_available_pipelines(self):
+        model = make_data_config()
+        observation = make_data_config()
+        condition = make_data_config()
+
+        config = DummyDatasetConfig(
+            model=model,
+            observation=observation,
+            condition=condition,
+            condition_method="ensemble_mean",
+        )
+        operator = DatasetOperator(config)
+        preprocessor = DummyPreprocessor(
+            fitted=True,
+        )
+
+        operator.add_fitted_preprocessor(
+            preprocessor,
+            index=2,
+        )
+
+        for source in (
+            model,
+            observation,
+            condition,
+        ):
+            (
+                source.preprocessing_pipeline.add_fitted_preprocessor.assert_called_once_with(
+                    preprocessor,
+                    index=2,
+                )
+            )
+
+    def test_skips_missing_sources(self):
+        model = make_data_config()
+        config = DummyDatasetConfig(
+            model=model,
+        )
+        operator = DatasetOperator(config)
+        preprocessor = DummyPreprocessor(
+            fitted=True,
+        )
+
+        operator.add_fitted_preprocessor(preprocessor)
+
+        (
+            model.preprocessing_pipeline.add_fitted_preprocessor.assert_called_once_with(
+                preprocessor,
+                index=0,
+            )
+        )
+
+
+class TestGetWeights:
+    def test_uses_observation_before_model(self):
+        model = make_data_config(
+            spatial_coords={
+                "latitude": [
+                    -45,
+                    45,
+                ],
+            }
+        )
+        observation = make_data_config(
+            spatial_coords={
+                "latitude": [
+                    -30,
+                    30,
+                ],
+                "longitude": [
+                    0,
+                    90,
+                ],
+            }
+        )
+
+        config = DummyDatasetConfig(
+            model=model,
+            observation=observation,
+        )
+        operator = DatasetOperator(config)
+
+        weights_config = MagicMock()
+        expected = xr.DataArray(
+            np.ones(
+                (
+                    2,
+                    2,
+                )
+            ),
+            dims=(
+                "latitude",
+                "longitude",
+            ),
+        )
+        weights_config.build_weights.return_value = expected
+
+        result = operator.get_weights(
+            config=weights_config,
+            save=False,
+        )
+
+        assert result is expected
+
+        target_coords = weights_config.build_weights.call_args.args[0]
+
+        assert target_coords == {
+            "latitude": observation.info.coords["latitude"],
+            "longitude": observation.info.coords["longitude"],
+        }
+
+    @pytest.mark.pruned
+    def test_uses_model_when_observation_is_absent(self):
+        model = make_data_config(
+            spatial_coords={
+                "latitude": [
+                    -45,
+                    45,
+                ],
+            }
+        )
+
+        config = DummyDatasetConfig(
+            model=model,
+            observation=None,
+        )
+        operator = DatasetOperator(config)
+
+        weights_config = MagicMock()
+        expected = xr.DataArray(
+            np.ones(2),
+            dims=("latitude",),
+        )
+        weights_config.build_weights.return_value = expected
+
+        result = operator.get_weights(
+            config=weights_config,
+        )
+
+        assert result is expected
+
+        target_coords = weights_config.build_weights.call_args.args[0]
+
+        assert target_coords == {
+            "latitude": model.info.coords["latitude"],
+        }
+
+    def test_rejects_missing_model_and_observation(self):
+        config = DummyDatasetConfig()
+        operator = DatasetOperator(config)
+
+        with pytest.raises(
+            ValueError,
+            match="No model or observation data",
+        ):
+            operator.get_weights(config=MagicMock())
+
+    @pytest.mark.pruned
+    def test_forwards_save_arguments(self):
+        model = make_data_config(
+            spatial_coords={
+                "latitude": [
+                    -45,
+                    45,
+                ],
+            }
+        )
+        config = DummyDatasetConfig(
+            model=model,
+        )
+        operator = DatasetOperator(config)
+
+        weights_config = MagicMock()
+        weights_config.build_weights.return_value = xr.DataArray(
+            np.ones(2),
+            dims=("latitude",),
+        )
+
+        operator.get_weights(
+            config=weights_config,
+            save=True,
+            save_path=Path("/tmp/output"),
+            save_name="weights.nc",
+        )
+
+        kwargs = weights_config.build_weights.call_args.kwargs
+
+        assert kwargs["save"] is True
+        assert kwargs["save_path"] == Path("/tmp/output")
+        assert kwargs["save_name"] == "weights.nc"
+
+    @pytest.mark.pruned
+    def test_without_flattennanremove_passes_none(self):
+        model = make_data_config(
+            spatial_coords={
+                "latitude": [
+                    -45,
+                    45,
+                ],
+            }
+        )
+        config = DummyDatasetConfig(
+            model=model,
+        )
+        operator = DatasetOperator(config)
+
+        weights_config = MagicMock()
+        weights_config.build_weights.return_value = xr.DataArray(
+            np.ones(2),
+            dims=("latitude",),
+        )
+
+        with patch(
+            "cccma_ppp.preprocessing.utils_preprocessing.Flattennanremove"
+        ) as flatten_type:
+            flatten_type.return_value = MagicMock()
+
+            operator.get_weights(
+                config=weights_config,
+            )
+
+        assert (
+            weights_config.build_weights.call_args.kwargs["Flattennanremover"] is None
+        )
+
+    @pytest.mark.pruned
+    def test_with_flattennanremove_passes_flattener(self):
+        from cccma_ppp.preprocessing.utils_preprocessing import (
+            Flattennanremove,
+        )
+
+        flattener = MagicMock(spec=Flattennanremove)
+
+        pipeline = make_pipeline(
+            fitted_preprocessors=[
+                flattener,
+            ]
+        )
+        pipeline.get_preprocessors.return_value = flattener
+
+        model = make_data_config(
+            pipeline=pipeline,
+            spatial_coords={
+                "latitude": [
+                    -45,
+                    45,
+                ],
+            },
+        )
+        config = DummyDatasetConfig(
+            model=model,
+        )
+        operator = DatasetOperator(config)
+
+        weights_config = MagicMock()
+        weights_config.build_weights.return_value = xr.DataArray(
+            np.ones(2),
+            dims=("latitude",),
+        )
+
+        operator.get_weights(
+            config=weights_config,
+        )
+
+        pipeline.get_preprocessors.assert_called_once_with("flattener")
+        assert (
+            weights_config.build_weights.call_args.kwargs["Flattennanremover"]
+            is flattener
+        )
+
+    def test_matching_channel_weights(self):
+        model = make_data_config(
+            names=[
+                "tas",
+                "pr",
+            ],
+            spatial_coords={
+                "latitude": [
+                    -45,
+                    45,
+                ],
+            },
+        )
+        config = DummyDatasetConfig(
+            model=model,
+        )
+        operator = DatasetOperator(config)
+        operator.ref = model
+        operator.ref = model
+
+        weights_config = MagicMock()
+        weights_config.build_weights.return_value = xr.DataArray(
+            np.ones(
+                (
+                    2,
+                    2,
+                )
+            ),
+            dims=(
+                "channels",
+                "latitude",
+            ),
+            coords={
+                "channels": [
+                    "tas",
+                    "pr",
+                ],
+                "latitude": [
+                    -45,
+                    45,
+                ],
+            },
+        )
+
+        result = operator.get_weights(
+            config=weights_config,
+        )
+
+        assert result.channels.values.tolist() == [
+            "tas",
+            "pr",
+        ]
+
+    @pytest.mark.pruned
+    def test_inconsistent_channel_weights_raise(self):
+        model = make_data_config(
+            names=[
+                "tas",
+                "pr",
+            ],
+        )
+        config = DummyDatasetConfig(
+            model=model,
+        )
+        operator = DatasetOperator(config)
+        operator.ref = model
+        operator.ref = model
+
+        weights_config = MagicMock()
+        weights_config.build_weights.return_value = xr.DataArray(
+            np.ones(2),
+            dims=("channels",),
+            coords={
+                "channels": [
+                    "tas",
+                    "wrong",
+                ],
+            },
+        )
+
+        with pytest.raises(
+            RuntimeError,
+            match="inconsistent variable weights",
+        ):
+            operator.get_weights(
+                config=weights_config,
+            )
+
+
+class TestInputMetadata:
+    def test_model_only(self):
+        model = make_data_config(
+            names=[
+                "tas",
+                "pr",
+            ],
+            spatial_coords={
+                "latitude": [
+                    -45,
+                    45,
+                ],
+                "longitude": [
+                    0,
+                    90,
+                ],
+            },
+        )
+        model.preprocessing_pipeline.pipeline = [
+            (
+                "StandardScaler",
+                MagicMock(),
+            ),
+            (
+                "LogTransform",
+                MagicMock(),
+            ),
+        ]
+
+        config = DummyDatasetConfig(
+            model=model,
+        )
+        operator = DatasetOperator(config)
+
+        metadata = operator.get_input_var_metadata()
+
+        assert metadata == {
+            "variables": [
+                "tas",
+                "pr",
+            ],
+            "preprocessors": [
+                [
+                    "standardscaler",
+                    "logtransform",
+                ],
+                [
+                    "standardscaler",
+                    "logtransform",
+                ],
+            ],
+            "NN_dims": [
+                "channels",
+                "latitude",
+                "longitude",
+            ],
+        }
+
+    def test_model_and_condition(self):
+        model = make_data_config(
+            names=["tas"],
+        )
+        condition = make_data_config(
+            names=[
+                "pr",
+                "psl",
+            ],
+            spatial_coords={
+                "latitude": [
+                    -45,
+                    45,
+                ],
+            },
+        )
+
+        config = DummyDatasetConfig(
+            model=model,
+            condition=condition,
+            condition_method="ensemble_mean",
+            using_model_as_condition=False,
+        )
+        operator = DatasetOperator(config)
+
+        metadata = operator.get_input_var_metadata()
+
+        assert metadata["variables"] == [
+            "tas",
+            "pr",
+            "psl",
+        ]
+        assert metadata["NN_dims"] == [
+            "channels",
+            "latitude",
+        ]
+
+    def test_model_used_as_condition_is_not_duplicated(self):
+        model = make_data_config(
+            names=["tas"],
+        )
+        effective_condition = make_data_config(
+            names=["tas"],
+            spatial_coords={
+                "longitude": [
+                    0,
+                    90,
+                ],
+            },
+        )
+
+        config = DummyDatasetConfig(
+            model=model,
+            condition=effective_condition,
+            condition_method="ensemble_mean",
+            using_model_as_condition=True,
+        )
+        operator = DatasetOperator(config)
+
+        metadata = operator.get_input_var_metadata()
+
+        assert metadata["variables"] == [
+            "tas",
+        ]
+        assert metadata["NN_dims"] == [
+            "channels",
+            "longitude",
+        ]
+
+    @pytest.mark.pruned
+    def test_preprocessor_names_are_lowercase(self):
+        model = make_data_config(
+            names=["tas"],
+        )
+        model.preprocessing_pipeline.pipeline = [
+            (
+                "StandardScaler",
+                MagicMock(),
+            ),
+            (
+                "FlattenNaNRemove",
+                MagicMock(),
+            ),
+        ]
+
+        config = DummyDatasetConfig(
+            model=model,
+        )
+        operator = DatasetOperator(config)
+
+        metadata = operator.get_input_var_metadata()
+
+        assert metadata["preprocessors"] == [
+            [
+                "standardscaler",
+                "flattennanremove",
+            ]
+        ]
+
+
+class TestTargetMetadata:
+    def test_uses_observation_before_model(self):
+        model = make_data_config(
+            names=["model_var"],
+        )
+        observation = make_data_config(
+            names=["obs_var"],
+            spatial_coords={
+                "latitude": [
+                    -45,
+                    45,
+                ],
+            },
+        )
+
+        config = DummyDatasetConfig(
+            model=model,
+            observation=observation,
+        )
+        operator = DatasetOperator(config)
+
+        metadata = operator.get_target_var_metadata()
+
+        assert metadata["variables"] == [
+            "obs_var",
+        ]
+        assert metadata["NN_dims"] == [
+            "channels",
+            "latitude",
+        ]
+
+    def test_uses_model_without_observation(self):
+        model = make_data_config(
+            names=["model_var"],
+            spatial_coords={
+                "longitude": [
+                    0,
+                    90,
+                ],
+            },
+        )
+
+        config = DummyDatasetConfig(
+            model=model,
+            observation=None,
+        )
+        operator = DatasetOperator(config)
+
+        metadata = operator.get_target_var_metadata()
+
+        assert metadata["variables"] == [
+            "model_var",
+        ]
+        assert metadata["NN_dims"] == [
+            "channels",
+            "longitude",
+        ]
+
+    def test_rejects_missing_model_and_observation(self):
+        config = DummyDatasetConfig()
+        operator = DatasetOperator(config)
+
+        with pytest.raises(
+            ValueError,
+            match="target variable metadata could not be generated",
+        ):
+            operator.get_target_var_metadata()
+
+
+class TestUpdateMetadata:
+    @pytest.mark.pruned
+    def test_one_preprocessor_list_is_added_per_variable(self):
+        source = make_data_config(
+            names=[
+                "tas",
+                "pr",
+                "psl",
+            ]
+        )
+        source.preprocessing_pipeline.pipeline = [
+            (
+                "StandardScaler",
+                MagicMock(),
+            ),
+        ]
+
+        operator = DatasetOperator(
+            DummyDatasetConfig(
+                model=source,
+            )
+        )
+
+        metadata = {
+            "variables": [],
+            "preprocessors": [],
+        }
+
+        result = operator._update_metadata_with_dataconfig_metadata(
+            metadata,
+            source,
+        )
+
+        assert result is metadata
+        assert result["variables"] == [
+            "tas",
+            "pr",
+            "psl",
+        ]
+        assert result["preprocessors"] == [
+            ["standardscaler"],
+            ["standardscaler"],
+            ["standardscaler"],
+        ]
+
+    @pytest.mark.pruned
+    def test_empty_pipeline(self):
+        source = make_data_config(
+            names=["tas"],
+        )
+        source.preprocessing_pipeline.pipeline = []
+
+        operator = DatasetOperator(
+            DummyDatasetConfig(
+                model=source,
+            )
+        )
+
+        result = operator._update_metadata_with_dataconfig_metadata(
+            {
+                "variables": [],
+                "preprocessors": [],
+            },
+            source,
+        )
+
+        assert result == {
+            "variables": [
+                "tas",
+            ],
+            "preprocessors": [
+                [],
+            ],
+        }
+
+
+class TestBuildChunks:
+    def test_none_config_returns_none(self):
+        assert _build_chunks() is None
+
+    def test_builds_chunks_for_available_sample_dimensions(self):
+        source = make_data_config(
+            realizations=[
+                0,
+                1,
+            ]
+        )
+
+        source.coords = source.info.coords
+        source.coords = source.info.coords
+        result = _build_chunks(source)
+
+        assert result == {
+            INIT_TIME_DIM: 1,
+            LEAD_TIME_DIM: 1,
+            REALIZATION_DIM: 1,
+        }
+
+    @pytest.mark.pruned
+    def test_omits_missing_realization_dimension(self):
+        source = make_data_config(
+            realizations=None,
+        )
+
+        source.coords = source.info.coords
+        source.coords = source.info.coords
+        result = _build_chunks(source)
+
+        assert result == {
+            INIT_TIME_DIM: 1,
+            LEAD_TIME_DIM: 1,
+        }
+
+    @pytest.mark.pruned
+    def test_uses_configured_dimension_names(self):
+        source = SimpleNamespace(
+            init_time_dim="forecast_reference_time",
+            lead_time_dim="step",
+            realization_dim="member",
+            info=SimpleNamespace(
+                coords={
+                    "forecast_reference_time": make_coord(
+                        AVAILABLE_TIMES,
+                        "forecast_reference_time",
+                    ),
+                    "step": make_coord(
+                        [
+                            1,
+                            2,
+                        ],
+                        "step",
+                    ),
+                    "member": make_coord(
+                        [
+                            0,
+                            1,
+                        ],
+                        "member",
+                    ),
+                }
+            ),
+        )
+
+        source.coords = source.info.coords
+        source.coords = source.info.coords
+        assert _build_chunks(source) == {
+            "forecast_reference_time": 1,
+            "step": 1,
+            "member": 1,
+        }
+
+    @pytest.mark.pruned
+    def test_ignores_non_sample_dimensions(self):
+        source = make_data_config(
+            spatial_coords={
+                "latitude": [
+                    -45,
+                    45,
+                ],
+                "longitude": [
+                    0,
+                    90,
+                ],
+            },
+        )
+
+        source.coords = source.info.coords
+        source.coords = source.info.coords
+        result = _build_chunks(source)
+
+        assert "latitude" not in result
+        assert "longitude" not in result

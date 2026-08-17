@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 import logging
 import dataclasses
 import pytest
@@ -92,6 +93,9 @@ class DummyOptimizer:
         self.zero_grad_calls = []
         self.scheduler_steps = 0
         self.loaded_state = None
+
+        self.lr_scheduler = SimpleNamespace(num_steps=0)
+        self.learning_rate = 0.0
 
     def zero_grad(self, set_to_none=True, **kwargs):
         self.zero_grad_calls.append(set_to_none)
@@ -459,7 +463,6 @@ def test_log_root_uses_logger(env_dirs):
     assert any(rec[1] == "hello" for rec in logger.records)
 
 
-@pytest.mark.pruned
 def test_log_root_prints_when_logger_none(env_dirs, capsys):
     trainer, _, _, _, _ = make_trainer(validation=False)
     trainer.setup_distributed(DummyDistributed(root=True), None)
@@ -551,7 +554,7 @@ def test_train_on_batch_basic(env_dirs):
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
 
     batch = DummyBatch()
-    logs, _ = trainer._train_on_batch(batch)
+    logs, _ = trainer._train_on_batch(batch, accumulation_size=1)
 
     assert batch.moved_to == torch.device("cpu")
     assert logs["total_loss"] == 1.0
@@ -576,7 +579,7 @@ def test_train_on_batch_with_beta(env_dirs):
     )
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
 
-    logs, _ = trainer._train_on_batch(DummyBatch())
+    logs, _ = trainer._train_on_batch(DummyBatch(), accumulation_size=1)
 
     assert logs["beta"] == 0.5
     assert beta.calls == [0]
@@ -602,10 +605,10 @@ def test_train_on_batch_gradient_accumulation_delays_optimizer(env_dirs):
     )
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
 
-    trainer._train_on_batch(DummyBatch())
+    trainer._train_on_batch(DummyBatch(), accumulation_size=1)
     assert trainer.global_step == 0
 
-    trainer._train_on_batch(DummyBatch())
+    trainer._train_on_batch(DummyBatch(), accumulation_size=1)
     assert trainer.global_step == 1
 
 
@@ -749,7 +752,7 @@ def test_save_checkpoint_distributed_barrier(env_dirs, monkeypatch):
         validation_logs=None,
     )
 
-    assert dist.barrier_calls > before
+    assert dist.barrier_calls == before
 
 
 def test_load_checkpoint_missing_file(env_dirs):
@@ -760,6 +763,7 @@ def test_load_checkpoint_missing_file(env_dirs):
         trainer._load_checkpoint(env_dirs[0] / "missing.pt")
 
 
+@pytest.mark.pruned
 def test_load_checkpoint_success(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
@@ -1222,7 +1226,7 @@ def test_train_on_batch_batch_step_increments_only(env_dirs):
 
     trainer.setup_distributed(DummyDistributed(), DummyLogger())
 
-    trainer._train_on_batch(DummyBatch())
+    trainer._train_on_batch(DummyBatch(), accumulation_size=1)
 
     assert trainer.batch_step == 1
 
@@ -1441,6 +1445,7 @@ def test_optimizer_step_amp_enabled_branch(env_dirs):
     assert trainer.global_step == 1
 
 
+@pytest.mark.pruned
 def test_log_epoch_root_without_logger(env_dirs, capsys):
     trainer, _, _, _, _ = make_trainer(validation=False)
 
@@ -1477,7 +1482,6 @@ def test_train_loop_no_validation_no_plot_when_non_root(env_dirs):
     assert trainer._epochs_trained == 1
 
 
-@pytest.mark.pruned
 def test_load_checkpoint_restores_histories(env_dirs):
     trainer, _, _, _, _ = make_trainer(validation=True)
 

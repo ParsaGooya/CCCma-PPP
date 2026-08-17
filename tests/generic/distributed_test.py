@@ -1,4 +1,5 @@
 import pytest
+
 import torch
 
 import cccma_ppp.generic.distributed as mod

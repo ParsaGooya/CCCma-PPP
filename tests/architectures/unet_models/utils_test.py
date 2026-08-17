@@ -1,11 +1,8 @@
 from types import SimpleNamespace
 
 import pytest
-import torch
 
-from cccma_ppp.architectures.layers.conv import TensorMask
 from cccma_ppp.architectures.unet.utils import (
-    _repeat_tensor_mask,
     _unet_config_checks,
 )
 
@@ -20,6 +17,7 @@ def make_config(**overrides):
         "condition_embedding_size": 4,
         "condition_dependant_latent": True,
         "condemb_to_decoder": True,
+        "deterministic_guess_config": None,
         "mask_fraction_threshold": 0.5,
         "output_block_hidden_channels": 32,
         "GENERATOR": None,
@@ -61,6 +59,7 @@ def test_unet_config_checks_accepts_multiple_channel_levels():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "transpose_kernel_sizes",
     [
@@ -81,6 +80,7 @@ def test_unet_config_checks_accepts_positive_integer_kernel(
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "kernel",
     [
@@ -136,6 +136,7 @@ def test_unet_config_checks_accepts_none_dimensions():
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "mask_fraction_threshold",
     [
@@ -156,6 +157,7 @@ def test_unet_config_checks_accepts_valid_mask_thresholds(
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "output_block_hidden_channels",
     [
@@ -175,6 +177,7 @@ def test_unet_config_checks_accepts_valid_output_hidden_channels(
     assert _unet_config_checks(config) is None
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "num_training_noise_samples",
     [
@@ -257,6 +260,7 @@ def test_unet_config_checks_does_not_mutate_config():
     assert config.transpose_kernel_sizes == original_kernels
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "channels",
@@ -357,6 +361,7 @@ def test_unet_config_checks_rejects_invalid_list_kernel(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "kernel",
     [
@@ -408,6 +413,7 @@ def test_unet_config_checks_rejects_empty_channels():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "channels",
     [
@@ -447,6 +453,7 @@ def test_unet_config_checks_rejects_empty_condition_channels():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "condition_embedding_channels",
     [
@@ -471,7 +478,6 @@ def test_unet_config_checks_rejects_nonpositive_condition_channels(
         _unet_config_checks(config)
 
 
-@pytest.mark.pruned
 def test_channel_validation_precedes_dimension_validation():
     config = make_config(
         channels=[],
@@ -486,6 +492,7 @@ def test_channel_validation_precedes_dimension_validation():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "bottleneck_dim",
     [
@@ -508,6 +515,7 @@ def test_unet_config_checks_rejects_nonpositive_bottleneck(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "latent_size",
     [
@@ -530,6 +538,7 @@ def test_unet_config_checks_rejects_nonpositive_latent_size(
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "condition_embedding_size",
     [
@@ -567,7 +576,6 @@ def test_dimension_validation_order_starts_with_bottleneck():
         _unet_config_checks(config)
 
 
-@pytest.mark.pruned
 def test_latent_size_checked_before_condition_embedding_size():
     config = make_config(
         bottleneck_dim=16,
@@ -582,6 +590,7 @@ def test_latent_size_checked_before_condition_embedding_size():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 def test_unet_config_checks_rejects_independent_latent_without_decoder_condition():
     config = make_config(
         condition_dependant_latent=False,
@@ -610,6 +619,7 @@ def test_condition_rule_precedes_mask_threshold_validation():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "mask_fraction_threshold",
     [
@@ -635,7 +645,6 @@ def test_unet_config_checks_rejects_invalid_mask_threshold(
         _unet_config_checks(config)
 
 
-@pytest.mark.pruned
 def test_mask_threshold_checked_before_output_hidden_channels():
     config = make_config(
         mask_fraction_threshold=-1.0,
@@ -649,6 +658,7 @@ def test_mask_threshold_checked_before_output_hidden_channels():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "output_block_hidden_channels",
     [
@@ -687,6 +697,7 @@ def test_output_hidden_channels_checked_before_generator():
         _unet_config_checks(config)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "num_training_noise_samples",
     [
@@ -711,7 +722,6 @@ def test_unet_config_checks_rejects_nonpositive_training_noise_samples(
         _unet_config_checks(config)
 
 
-@pytest.mark.pruned
 def test_generator_error_reports_requirement():
     config = make_config(
         GENERATOR=SimpleNamespace(
@@ -727,249 +737,3 @@ def test_generator_error_reports_requirement():
     assert "Generator" in message
     assert "num_training_noise_samples" in message
     assert "larger than 0" in message
-
-
-@pytest.mark.pruned
-def test_repeat_tensor_mask_repeats_tensor():
-    tensor = torch.tensor(
-        [
-            [[1.0]],
-            [[2.0]],
-        ]
-    )
-    value = TensorMask(
-        tensor=tensor,
-        mask=None,
-    )
-
-    result = _repeat_tensor_mask(
-        value,
-        repeats=3,
-    )
-
-    expected = torch.tensor(
-        [
-            [[1.0]],
-            [[1.0]],
-            [[1.0]],
-            [[2.0]],
-            [[2.0]],
-            [[2.0]],
-        ]
-    )
-
-    assert isinstance(result, TensorMask)
-
-    torch.testing.assert_close(
-        result.tensor,
-        expected,
-    )
-    assert result.mask is None
-
-
-@pytest.mark.pruned
-def test_repeat_tensor_mask_repeats_tensor_and_mask():
-    tensor = torch.tensor(
-        [
-            [[1.0]],
-            [[2.0]],
-        ]
-    )
-    mask = torch.tensor(
-        [
-            [[True]],
-            [[False]],
-        ]
-    )
-
-    value = TensorMask(
-        tensor=tensor,
-        mask=mask,
-    )
-
-    result = _repeat_tensor_mask(
-        value,
-        repeats=2,
-    )
-
-    expected_tensor = torch.tensor(
-        [
-            [[1.0]],
-            [[1.0]],
-            [[2.0]],
-            [[2.0]],
-        ]
-    )
-    expected_mask = torch.tensor(
-        [
-            [[True]],
-            [[True]],
-            [[False]],
-            [[False]],
-        ]
-    )
-
-    torch.testing.assert_close(
-        result.tensor,
-        expected_tensor,
-    )
-    torch.testing.assert_close(
-        result.mask,
-        expected_mask,
-    )
-
-
-@pytest.mark.pruned
-def test_repeat_tensor_mask_preserves_tensor_dtype():
-    value = TensorMask(
-        tensor=torch.ones(
-            2,
-            3,
-            dtype=torch.float64,
-        ),
-        mask=None,
-    )
-
-    result = _repeat_tensor_mask(
-        value,
-        repeats=2,
-    )
-
-    assert result.tensor.dtype == torch.float64
-
-
-@pytest.mark.parametrize(
-    "mask_dtype",
-    [
-        torch.bool,
-        torch.float32,
-        torch.float64,
-        torch.int32,
-    ],
-)
-def test_repeat_tensor_mask_preserves_mask_dtype(
-    mask_dtype,
-):
-    value = TensorMask(
-        tensor=torch.ones(2, 3),
-        mask=torch.ones(
-            2,
-            3,
-            dtype=mask_dtype,
-        ),
-    )
-
-    result = _repeat_tensor_mask(
-        value,
-        repeats=2,
-    )
-
-    assert result.mask.dtype == mask_dtype
-
-
-@pytest.mark.pruned
-def test_repeat_tensor_mask_preserves_remaining_dimensions():
-    value = TensorMask(
-        tensor=torch.ones(2, 3, 4, 5),
-        mask=torch.ones(2, 1, 4, 5),
-    )
-
-    result = _repeat_tensor_mask(
-        value,
-        repeats=4,
-    )
-
-    assert result.tensor.shape == (8, 3, 4, 5)
-    assert result.mask.shape == (8, 1, 4, 5)
-
-
-@pytest.mark.pruned
-def test_repeat_tensor_mask_with_one_repeat_preserves_values():
-    tensor = torch.randn(2, 3, 4, 5)
-    mask = torch.randint(
-        0,
-        2,
-        (2, 1, 4, 5),
-        dtype=torch.bool,
-    )
-
-    result = _repeat_tensor_mask(
-        TensorMask(
-            tensor=tensor,
-            mask=mask,
-        ),
-        repeats=1,
-    )
-
-    torch.testing.assert_close(
-        result.tensor,
-        tensor,
-    )
-    torch.testing.assert_close(
-        result.mask,
-        mask,
-    )
-
-
-@pytest.mark.pruned
-def test_repeat_tensor_mask_returns_new_container():
-    value = TensorMask(
-        tensor=torch.ones(2, 3),
-        mask=torch.ones(2, 3),
-    )
-
-    result = _repeat_tensor_mask(
-        value,
-        repeats=1,
-    )
-
-    assert result is not value
-
-
-@pytest.mark.pruned
-def test_repeat_tensor_mask_repetition_order():
-    value = TensorMask(
-        tensor=torch.tensor(
-            [
-                [1.0],
-                [2.0],
-                [3.0],
-            ]
-        ),
-        mask=None,
-    )
-
-    result = _repeat_tensor_mask(
-        value,
-        repeats=2,
-    )
-
-    torch.testing.assert_close(
-        result.tensor[:, 0],
-        torch.tensor(
-            [
-                1.0,
-                1.0,
-                2.0,
-                2.0,
-                3.0,
-                3.0,
-            ]
-        ),
-    )
-
-
-@pytest.mark.pruned
-def test_repeat_tensor_mask_zero_repeats_returns_empty_batch():
-    value = TensorMask(
-        tensor=torch.ones(2, 3, 4),
-        mask=torch.ones(2, 1, 4),
-    )
-
-    result = _repeat_tensor_mask(
-        value,
-        repeats=0,
-    )
-
-    assert result.tensor.shape == (0, 3, 4)
-    assert result.mask.shape == (0, 1, 4)

@@ -394,6 +394,7 @@ def test_realnvp_inverse_with_condition():
     assert log_det.shape == (5,)
 
 
+@pytest.mark.pruned
 def test_realnvp_forward_inverse_roundtrip_shape():
     flow = RealNVP(hidden_dim=8).build(dim=4)
     data = x(batch=5, dim=4)
@@ -1006,6 +1007,7 @@ def test_maf_dimension_one_inverse_with_condition():
     assert log_det.shape == (5,)
 
 
+@pytest.mark.pruned
 def test_maf_zero_network_roundtrip_without_condition():
     maf = MAF(
         hidden_dim=8,
@@ -1039,6 +1041,7 @@ def test_maf_zero_network_roundtrip_without_condition():
     )
 
 
+@pytest.mark.pruned
 def test_maf_zero_network_roundtrip_with_condition():
     maf = MAF(
         hidden_dim=8,
@@ -1080,7 +1083,6 @@ def test_maf_zero_network_roundtrip_with_condition():
     )
 
 
-@pytest.mark.pruned
 def test_maf_forward_inverse_roundtrip():
     maf = MAF(
         hidden_dim=8,
@@ -1110,7 +1112,6 @@ def test_maf_forward_inverse_roundtrip():
     )
 
 
-@pytest.mark.pruned
 def test_maf_conditional_forward_inverse_roundtrip():
     maf = MAF(
         hidden_dim=8,
@@ -1300,6 +1301,7 @@ def test_realnvp_zero_network_roundtrip_without_condition():
     )
 
 
+@pytest.mark.pruned
 def test_realnvp_zero_network_roundtrip_with_condition():
     flow = RealNVP(
         hidden_dim=8,
@@ -1345,7 +1347,6 @@ def test_realnvp_zero_network_roundtrip_with_condition():
     )
 
 
-@pytest.mark.pruned
 def test_realnvp_forward_inverse_roundtrip():
     flow = RealNVP(
         hidden_dim=8,
@@ -1375,7 +1376,6 @@ def test_realnvp_forward_inverse_roundtrip():
     )
 
 
-@pytest.mark.pruned
 def test_realnvp_conditional_roundtrip():
     flow = RealNVP(
         hidden_dim=8,
@@ -1460,6 +1460,7 @@ def test_realnvp_even_dimension_six():
     assert log_det.shape == (5,)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "dimension",
     [
