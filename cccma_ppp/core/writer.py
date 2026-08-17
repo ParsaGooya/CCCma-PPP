@@ -29,6 +29,18 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 
 @dataclasses.dataclass
 class WriterConfig:
+    """
+    Document this class.
+    
+    Parameters
+    ----------
+    predictor : DeterministicPredictorConfig | cVAEPredictorConfig
+        Description not yet provided.
+    num_output_sampling : int
+        Description not yet provided.
+    get_trained_model_stats_from_validation : bool
+        Description not yet provided.
+    """
     predictor: DeterministicPredictorConfig | cVAEPredictorConfig = dataclasses.field(
         default_factory=DeterministicPredictorConfig
     )
@@ -37,7 +49,14 @@ class WriterConfig:
     get_trained_model_stats_from_validation: bool = False
 
     def __post_init__(self):
-
+        """
+        Document this function.
+        
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if self.num_output_sampling < 0:
             raise ValueError("num_output_sampling cannot be negative.")
 
@@ -49,7 +68,32 @@ class WriterConfig:
         post_processor: PreprocessingPipeline,
         output_dir: Path | str,
     ):
-
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        inference_data_loader : Dataloader
+            Description not yet provided.
+        train_dataloader_config : TrainDataloaderConfig
+            Description not yet provided.
+        module : moduleABC
+            Description not yet provided.
+        post_processor : PreprocessingPipeline
+            Description not yet provided.
+        output_dir : Path | str
+            Description not yet provided.
+        
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if self.predictor._type != module.config._type.lower():
             raise RuntimeError(
                 f"The provided selector config matches {self.predictor._type}"
@@ -67,6 +111,24 @@ class WriterConfig:
 
 
 class Writer:
+    """
+    Document this class.
+    
+    Parameters
+    ----------
+    config : WriterConfig
+        Description not yet provided.
+    inference_data_loader : Dataloader
+        Description not yet provided.
+    train_dataloader_config : TrainDataloaderConfig
+        Description not yet provided.
+    module : moduleABC
+        Description not yet provided.
+    post_processor : PreprocessingPipeline
+        Description not yet provided.
+    output_dir : Path | str
+        Description not yet provided.
+    """
     def __init__(
         self,
         config: WriterConfig,
@@ -76,7 +138,24 @@ class Writer:
         post_processor: PreprocessingPipeline,
         output_dir: Path | str,
     ):
-
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        config : WriterConfig
+            Description not yet provided.
+        inference_data_loader : Dataloader
+            Description not yet provided.
+        train_dataloader_config : TrainDataloaderConfig
+            Description not yet provided.
+        module : moduleABC
+            Description not yet provided.
+        post_processor : PreprocessingPipeline
+            Description not yet provided.
+        output_dir : Path | str
+            Description not yet provided.
+        """
         self.config = config
         self.module = module
         self.output_dir = Path(output_dir)
@@ -91,7 +170,21 @@ class Writer:
         distributed: Distributed,
         logger: logging.Logger,
     ):
-
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        distributed : Distributed
+            Description not yet provided.
+        logger : logging.Logger
+            Description not yet provided.
+        
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         self.logger = logger
         if self.logger is None:
             print("Logger is None. Print is used instead ... \n\n ")
@@ -143,10 +236,25 @@ class Writer:
 
     @property
     def train_stats_save_dir(self):
+        """
+        Document this function.
+        
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return Path(self.output_dir) / "training_variable_stats.pt"
 
     def predict(self):
-
+        """
+        Document this function.
+        
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if not self._setup:
             raise RuntimeError("Call setup_distributed() before predict().")
         self.log_root(logging.INFO, "Starting Inference Loop...")
@@ -160,7 +268,9 @@ class Writer:
         self.log_root(logging.INFO, f"Inference finished in {time_elapsed:.2f}s")
 
     def _predict(self):
-
+        """
+        Document this function.
+        """
         self.module.eval()
         loader = self.InferenceLoader
         do_post_process = True
@@ -183,7 +293,9 @@ class Writer:
             self.aggregate_predictions_to_netcdf(do_post_process)
 
     def _save_train_stats(self):
-
+        """
+        Document this function.
+        """
         if not self.train_stats_save_dir.exists():
             loader = self.build_train_loader(
                 from_validation=self.config.get_trained_model_stats_from_validation
@@ -215,7 +327,23 @@ class Writer:
         return_metadata: bool = False,
         shuffle: bool | None = None,
     ):
-
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        from_validation : bool
+            Description not yet provided.
+        return_metadata : bool
+            Description not yet provided.
+        shuffle : bool | None
+            Description not yet provided.
+        
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         self.TrainLoaderConfig.setup_distributed(
             self.distributed,
             load_path=Path(RuntimeContext.GLOBAL_EXP_DIR) / "preprocessing_pipeline",
@@ -231,7 +359,14 @@ class Writer:
             )
 
     def aggregate_train_stats(self, stats: dict[str, RunningCovariance]):
-
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        stats : dict[str, RunningCovariance]
+            Description not yet provided.
+        """
         for stat in stats.values():
             if stat.sum_x is not None:
                 stat.distributed_reduce()
@@ -257,22 +392,17 @@ class Writer:
 
     def log_root(self, level: int, msg: str, *args):
         """
-        Log message from root process.
-
+        Document this function.
+        
         Parameters
         ----------
         level : int
-            Logging level.
+            Description not yet provided.
         msg : str
-            Message.
-        *args
-            Formatting arguments.
-
-        Returns
-        -------
-        None
+            Description not yet provided.
+        *args : Any
+            Description not yet provided.
         """
-
         if self.is_on_root:
             if self.logger is not None:
                 self.logger.log(level, msg, *args)
@@ -281,11 +411,27 @@ class Writer:
 
     @property
     def raw_module(self):
+        """
+        Document this function.
+        
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         if isinstance(self.module, torch.nn.parallel.DistributedDataParallel):
             return self.module.module
         return self.module
 
     def aggregate_predictions_to_netcdf(self, do_post_process: bool = True):
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        do_post_process : bool
+            Description not yet provided.
+        """
         if self.is_distributed:
             self.distributed.barrier()
 
@@ -331,8 +477,33 @@ def aggregate_predictions(
     optional_sample_dimensions: tuple[str, ...] = (realization_dim,),
 ):
     """
-    Aggregate temporary inference batches into one file per
-    initialization year.
+    Document this function.
+    
+    Parameters
+    ----------
+    post_processor : PreprocessingPipeline | None
+        Description not yet provided.
+    output_dir : Path
+        Description not yet provided.
+    load_naming_convention : str
+        Description not yet provided.
+    save_naming_convention : str
+        Description not yet provided.
+    logger_function : callable
+        Description not yet provided.
+    cleanup_temp : bool
+        Description not yet provided.
+    init_time_dim : str
+        Description not yet provided.
+    lead_time_dim : str
+        Description not yet provided.
+    optional_sample_dimensions : tuple[str, ...]
+        Description not yet provided.
+    
+    Raises
+    ------
+    RuntimeError
+        Description not yet provided.
     """
     if save_naming_convention is None:
         save_naming_convention = load_naming_convention
@@ -349,8 +520,8 @@ def aggregate_predictions(
             f"No temporary prediction files found in {temp_save_dir}."
         )
 
-    # Collect initialization times while preserving DatetimeIndex or
-    # CFTimeIndex behavior.
+                                                                    
+                           
     all_times = None
 
     for path in temp_files:
@@ -376,7 +547,7 @@ def aggregate_predictions(
 
     all_times = all_times.sort_values()
 
-    # Works for both datetime64-backed DatetimeIndex and CFTimeIndex.
+                                                                     
     all_times_da = xr.DataArray(
         all_times,
         dims=(init_time_dim,),
@@ -404,6 +575,19 @@ def aggregate_predictions(
     def _sort_sample_coords(
         data: xr.DataArray | xr.Dataset,
     ) -> xr.DataArray | xr.Dataset:
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        data : xr.DataArray | xr.Dataset
+            Description not yet provided.
+        
+        Returns
+        -------
+        xr.DataArray | xr.Dataset
+            Description not yet provided.
+        """
         for coord in sample_coords:
             if coord in data.coords:
                 data = data.sortby(coord)

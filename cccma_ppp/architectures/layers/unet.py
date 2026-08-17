@@ -41,7 +41,40 @@ def build_conv_block(
     latent_normalization: NormalizationMethod | None = "layar",
     inject_noise: bool = False,
 ) -> nn.Module:
-
+    """
+    Document this function.
+    
+    Parameters
+    ----------
+    in_channels : int
+        Description not yet provided.
+    out_channels : int
+        Description not yet provided.
+    config : ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig
+        Description not yet provided.
+    latent_size : int
+        Description not yet provided.
+    block_output_shape : tuple[int, int, int] | None
+        Description not yet provided.
+    get_log_var : bool
+        Description not yet provided.
+    latent_normalization : NormalizationMethod | None
+        Description not yet provided.
+    inject_noise : bool
+        Description not yet provided.
+    
+    Returns
+    -------
+    nn.Module
+        Description not yet provided.
+    
+    Raises
+    ------
+    TypeError
+        Description not yet provided.
+    ValueError
+        Description not yet provided.
+    """
     effective_config = copy.copy(config)
 
     effective_config = effective_config.setup_generator(inject_noise=inject_noise)
@@ -97,8 +130,26 @@ def build_conv_block(
 
 
 class DownBlock(nn.Module):
-    """Feature transformation followed by spatial downsampling."""
-
+    """
+    Document this class.
+    
+    Parameters
+    ----------
+    in_channels : int
+        Description not yet provided.
+    out_channels : int
+        Description not yet provided.
+    block_config : ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig
+        Description not yet provided.
+    mask_pooling : MaskPoolingMethod
+        Description not yet provided.
+    mask_fraction_threshold : float
+        Description not yet provided.
+    return_skip : bool
+        Description not yet provided.
+    process_skip_connections : bool
+        Description not yet provided.
+    """
     def __init__(
         self,
         in_channels: int,
@@ -110,6 +161,26 @@ class DownBlock(nn.Module):
         return_skip: bool = True,
         process_skip_connections: bool = False,
     ):
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        in_channels : int
+            Description not yet provided.
+        out_channels : int
+            Description not yet provided.
+        block_config : ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig
+            Description not yet provided.
+        mask_pooling : MaskPoolingMethod
+            Description not yet provided.
+        mask_fraction_threshold : float
+            Description not yet provided.
+        return_skip : bool
+            Description not yet provided.
+        process_skip_connections : bool
+            Description not yet provided.
+        """
         super().__init__()
         self.return_skip = return_skip
 
@@ -162,6 +233,19 @@ class DownBlock(nn.Module):
         self,
         input: TensorMask,
     ) -> TensorMask | tuple[TensorMask, TensorMask]:
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        input : TensorMask
+            Description not yet provided.
+        
+        Returns
+        -------
+        TensorMask | tuple[TensorMask, TensorMask]
+            Description not yet provided.
+        """
         skip = self._block(input)
 
         if self.use_partial_conv_downsample:
@@ -171,7 +255,7 @@ class DownBlock(nn.Module):
             downsampled_tensor = self.tensor_downsample(skip.tensor)
             downsampled_mask = None
 
-        # pooled_mask = self.mask_pool(skip.mask) if skip.mask is not None else None
+                                                                                    
 
         downsampled = TensorMask(
             tensor=downsampled_tensor,
@@ -188,6 +272,19 @@ class DownBlock(nn.Module):
             return downsampled
 
     def output_shape(self, input_shape: np.ndarray | tuple):
+            """
+            Document this function.
+            
+            Parameters
+            ----------
+            input_shape : np.ndarray | tuple
+                Description not yet provided.
+            
+            Returns
+            -------
+            Any
+                Description not yet provided.
+            """
             return tuple(
                 (shape + 1) // 2
                 for shape in input_shape
@@ -195,8 +292,30 @@ class DownBlock(nn.Module):
 
 
 class UpBlock(nn.Module):
-    """Upsample, concatenate with a skip feature, and transform."""
-
+    """
+    Document this class.
+    
+    Parameters
+    ----------
+    input_channels : int
+        Description not yet provided.
+    skip_channels : int | None
+        Description not yet provided.
+    out_channels : int
+        Description not yet provided.
+    block_config : ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig
+        Description not yet provided.
+    upsampling_method : UpsamplingMethod
+        Description not yet provided.
+    skip_alignment_method : AlignmentMethod
+        Description not yet provided.
+    transpose_kernel_size : int
+        Description not yet provided.
+    inject_noise : bool
+        Description not yet provided.
+    inject_noise_in_block : bool
+        Description not yet provided.
+    """
     def __init__(
         self,
         input_channels: int,
@@ -210,6 +329,35 @@ class UpBlock(nn.Module):
         inject_noise: bool = False,
         inject_noise_in_block: bool = False,
     ):
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        input_channels : int
+            Description not yet provided.
+        skip_channels : int | None
+            Description not yet provided.
+        out_channels : int
+            Description not yet provided.
+        block_config : ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig
+            Description not yet provided.
+        upsampling_method : UpsamplingMethod
+            Description not yet provided.
+        skip_alignment_method : AlignmentMethod
+            Description not yet provided.
+        transpose_kernel_size : int
+            Description not yet provided.
+        inject_noise : bool
+            Description not yet provided.
+        inject_noise_in_block : bool
+            Description not yet provided.
+        
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         super().__init__()
 
         self.input_channels = input_channels
@@ -287,6 +435,28 @@ class UpBlock(nn.Module):
         skip: TensorMask | None = None,
         resize_shape: tuple | None = None,
     ) -> TensorMask:
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        input : TensorMask
+            Description not yet provided.
+        skip : TensorMask | None
+            Description not yet provided.
+        resize_shape : tuple | None
+            Description not yet provided.
+        
+        Returns
+        -------
+        TensorMask
+            Description not yet provided.
+        
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         if self.inject_noise:
             if self.upsampling_method == "transpose_conv":
                 x = _noise_injection(input.tensor)
@@ -330,8 +500,20 @@ class UpBlock(nn.Module):
 
 
 class UNetOutput(nn.Module):
-    """Final channel projection and optional output activation."""
-
+    """
+    Document this class.
+    
+    Parameters
+    ----------
+    in_channels : int
+        Description not yet provided.
+    out_channels : int
+        Description not yet provided.
+    hidden_channels : int | None
+        Description not yet provided.
+    activation : OutputActivation
+        Description not yet provided.
+    """
     def __init__(
         self,
         in_channels: int,
@@ -340,6 +522,25 @@ class UNetOutput(nn.Module):
         hidden_channels: int | None,
         activation: OutputActivation,
     ):
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        in_channels : int
+            Description not yet provided.
+        out_channels : int
+            Description not yet provided.
+        hidden_channels : int | None
+            Description not yet provided.
+        activation : OutputActivation
+            Description not yet provided.
+        
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         super().__init__()
 
         if hidden_channels is None:
@@ -372,12 +573,39 @@ class UNetOutput(nn.Module):
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        x : torch.Tensor
+            Description not yet provided.
+        
+        Returns
+        -------
+        torch.Tensor
+            Description not yet provided.
+        """
         return self.layers(x)
 
 
 class UNetOutputSIC(nn.Module):
-    """Final channel projection and optional output activation."""
-
+    """
+    Document this class.
+    
+    Parameters
+    ----------
+    in_channels : int
+        Description not yet provided.
+    out_channels : int
+        Description not yet provided.
+    hidden_channels : int | None
+        Description not yet provided.
+    activation : OutputActivation
+        Description not yet provided.
+    clip_output : bool
+        Description not yet provided.
+    """
     def __init__(
         self,
         in_channels: int,
@@ -387,6 +615,27 @@ class UNetOutputSIC(nn.Module):
         activation: OutputActivation,
         clip_output: bool = False
     ):
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        in_channels : int
+            Description not yet provided.
+        out_channels : int
+            Description not yet provided.
+        hidden_channels : int | None
+            Description not yet provided.
+        activation : OutputActivation
+            Description not yet provided.
+        clip_output : bool
+            Description not yet provided.
+        
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         super().__init__()
 
         self.clip_output = clip_output
@@ -423,6 +672,19 @@ class UNetOutputSIC(nn.Module):
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        x : torch.Tensor
+            Description not yet provided.
+        
+        Returns
+        -------
+        torch.Tensor
+            Description not yet provided.
+        """
         out = self.layers(x)
         if self.clip_output:
             out = torch.clamp(out, 0, 1)

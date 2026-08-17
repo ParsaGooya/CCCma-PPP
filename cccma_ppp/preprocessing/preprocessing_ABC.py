@@ -13,13 +13,15 @@ from cccma_ppp.configs import (required_sample_dimensions,
 init_time_dim, lead_time_dim = required_sample_dimensions
 class PreprocessModuleABC(abc.ABC):
     """
-    Abstract base class for preprocessing modules.
-
-    Classvar:
-        lead_time_resolution : {"month", "day"}, optional
-            Temporal unit represented by one lead-time increment.
-    """
+    Document this class.
     
+    Attributes
+    ----------
+    large_ensemble : bool
+        Description not yet provided.
+    fitted : bool
+        Description not yet provided.
+    """
     large_ensemble: bool
     fitted: bool
 
@@ -33,58 +35,41 @@ class PreprocessModuleABC(abc.ABC):
     @abc.abstractmethod
     def fit(self, data):
         """
-        Fit preprocessing parameters to data.
-
+        Document this function.
+        
         Parameters
         ----------
-        data : object
-            Input data used to estimate preprocessing statistics.
-
-        Returns
-        -------
-        None
+        data : Any
+            Description not yet provided.
         """
-
         pass
 
     @abc.abstractmethod
     def transform(self, data, **kwargs):
         """
-        Apply preprocessing transformation.
-
+        Document this function.
+        
         Parameters
         ----------
-        data : object
-            Input data to transform.
-        **kwargs : dict
-            Additional arguments for transformation.
-
-        Returns
-        -------
-        object
-            Transformed data.
+        data : Any
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
         """
-
         pass
 
     @abc.abstractmethod
     def inverse_transform(self, data, **kwargs):
         """
-        Reverse preprocessing transformation.
-
+        Document this function.
+        
         Parameters
         ----------
-        data : object
-            Transformed data.
-        **kwargs : dict
-            Additional arguments for inverse transformation.
-
-        Returns
-        -------
-        object
-            Data in original representation.
+        data : Any
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
         """
-
         pass
 
     @final
@@ -93,7 +78,17 @@ class PreprocessModuleABC(abc.ABC):
         data: xr.Dataset | xr.DataArray,
     ) -> tuple[str, ...] | None:
         """
-        Resolve the dimensions reduced during fitting.
+        Document this function.
+        
+        Parameters
+        ----------
+        data : xr.Dataset | xr.DataArray
+            Description not yet provided.
+        
+        Returns
+        -------
+        tuple[str, ...] | None
+            Description not yet provided.
         """
         reduction_dims = self.dims
 
@@ -116,9 +111,23 @@ class PreprocessModuleABC(abc.ABC):
         data: xr.Dataset | xr.DataArray,
     ) -> xr.Dataset | xr.DataArray:
         """
-        Derive and attach the temporal coordinate used during fitting.
-
-        """        
+        Document this function.
+        
+        Parameters
+        ----------
+        data : xr.Dataset | xr.DataArray
+            Description not yet provided.
+        
+        Returns
+        -------
+        xr.Dataset | xr.DataArray
+            Description not yet provided.
+        
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if self.frequency is None:
             return data
 
@@ -149,20 +158,37 @@ class PreprocessModuleABC(abc.ABC):
         stat: xr.DataArray | xr.Dataset,
     ) -> xr.DataArray:
         """
-        Align a fitted statistic for forward transformation.
-
-        This alignment depends only on initialization time. 
+        Document this function.
+        
+        Parameters
+        ----------
+        data : xr.DataArray | xr.Dataset
+            Description not yet provided.
+        stat : xr.DataArray | xr.Dataset
+            Description not yet provided.
+        
+        Returns
+        -------
+        xr.DataArray
+            Description not yet provided.
+        
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
         """
         if (self.frequency is None or self.init_time_dim not in self.dims):
             return stat
 
-        # If the temporal auxilary coordinates were added while loading data
-        # transform survives sample selection.
+                                                                            
+                                              
         if self.frequency in data.coords:
             temporal_indexer = data.coords[self.frequency]
 
         else:
-            # Generic fallback: derive the indexer from init_time.
+                                                                  
 
             if self.init_time_dim not in data.coords:
                 raise ValueError(
@@ -196,7 +222,19 @@ class PreprocessModuleABC(abc.ABC):
         self,
         data: xr.DataArray | xr.Dataset,
     ) -> xr.DataArray:
-
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        data : xr.DataArray | xr.Dataset
+            Description not yet provided.
+        
+        Returns
+        -------
+        xr.DataArray
+            Description not yet provided.
+        """
         init_times = np.asarray(
             data[self.init_time_dim].values
         )
@@ -237,6 +275,14 @@ class PreprocessModuleABC(abc.ABC):
 
     @final
     def _check_fitted(self) -> None:
+        """
+        Document this function.
+        
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if not self.fitted:
             raise RuntimeError(
                 "The preprocessor must be fitted before calling "

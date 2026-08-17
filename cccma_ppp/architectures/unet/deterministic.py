@@ -52,7 +52,38 @@ from cccma_ppp.architectures.unet.utils import _unet_config_checks, _repeat_tens
 @deterministicModelSelector.register("unet")
 @dataclasses.dataclass
 class UNetConfig(modelConfigABC):
-
+    """
+    Document this class.
+    
+    Parameters
+    ----------
+    channels : list[int]
+        Description not yet provided.
+    block_config : ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig
+        Description not yet provided.
+    upsampling_method : UpsamplingMethod
+        Description not yet provided.
+    skip_alignment_method : AlignmentMethod
+        Description not yet provided.
+    transpose_kernel_sizes : list[int | tuple[int, int]] | int
+        Description not yet provided.
+    add_skip_connections : bool
+        Description not yet provided.
+    process_skip_connections : bool
+        Description not yet provided.
+    mask_pooling : MaskPoolingMethod
+        Description not yet provided.
+    mask_fraction_threshold : float
+        Description not yet provided.
+    output_activation : OutputActivation
+        Description not yet provided.
+    output_block_hidden_channels : int | None
+        Description not yet provided.
+    init_method : InitMethod
+        Description not yet provided.
+    GENERATOR : GENERATORConfig | None
+        Description not yet provided.
+    """
     channels: list[int]
     block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig = (
         field(default_factory=ConvBlockConfig)
@@ -78,7 +109,9 @@ class UNetConfig(modelConfigABC):
     NUM_OUTPUT_DIMS: ClassVar[int] = 3
 
     def __post_init__(self) -> None:
-
+        """
+        Document this function.
+        """
         _unet_config_checks(self)
 
         n_up_blocks = len(self.channels) - 1
@@ -88,6 +121,14 @@ class UNetConfig(modelConfigABC):
 
     @property
     def EXPECTS_MASK(self) -> bool:
+        """
+        Document this function.
+        
+        Returns
+        -------
+        bool
+            Description not yet provided.
+        """
         return (
             isinstance(self.block_config, PartialConvBlockConfig)
             or getattr(self.block_config, "use_partial_conv", False)
@@ -99,6 +140,23 @@ class UNetConfig(modelConfigABC):
         output_shape: np.ndarray | None = None,
         added_features_dim: int | None = None,
     ):
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        input_shape : np.ndarray
+            Description not yet provided.
+        output_shape : np.ndarray | None
+            Description not yet provided.
+        added_features_dim : int | None
+            Description not yet provided.
+        
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return UNet(
             config=self,
             input_shape=input_shape,
@@ -108,6 +166,20 @@ class UNetConfig(modelConfigABC):
 
 
 class UNet(deterministicmodelsABC):
+    """
+    Document this class.
+    
+    Parameters
+    ----------
+    config : UNetConfig
+        Description not yet provided.
+    input_shape : np.ndarray | tuple
+        Description not yet provided.
+    output_shape : np.ndarray | tuple | None
+        Description not yet provided.
+    added_features_dim : int | None
+        Description not yet provided.
+    """
     def __init__(
         self,
         config: UNetConfig,
@@ -115,6 +187,27 @@ class UNet(deterministicmodelsABC):
         output_shape: np.ndarray | tuple | None = None,
         added_features_dim: int | None = None,
     ):
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        config : UNetConfig
+            Description not yet provided.
+        input_shape : np.ndarray | tuple
+            Description not yet provided.
+        output_shape : np.ndarray | tuple | None
+            Description not yet provided.
+        added_features_dim : int | None
+            Description not yet provided.
+        
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
+        """
         super().__init__(config)
 
         self.spatial_shapes = None
@@ -145,10 +238,10 @@ class UNet(deterministicmodelsABC):
                     "needs output_block_hidden_channels to process output after "
                     "interpolation."
                 )
-            #     "This UNet implementation preserves spatial resolution. "
-            #     f"Input spatial shape {input_shape[-2:]} does not match "
-            #     f"output spatial shape {output_shape[-2:]}."
-            # )
+                                                                           
+                                                                           
+                                                              
+               
 
         min_spatial_size = int(min(input_shape[-2:]))
 
@@ -266,6 +359,21 @@ class UNet(deterministicmodelsABC):
         in_channels: int,
         out_channels: int,
     ) -> nn.Module:
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        in_channels : int
+            Description not yet provided.
+        out_channels : int
+            Description not yet provided.
+        
+        Returns
+        -------
+        nn.Module
+            Description not yet provided.
+        """
         return UNetOutput(
             in_channels=in_channels,
             out_channels=out_channels,
@@ -279,7 +387,23 @@ class UNet(deterministicmodelsABC):
         x_mask: torch.Tensor | None,
         added_features: torch.Tensor | None,
     ) -> TensorMask:
-
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        x : torch.Tensor
+            Description not yet provided.
+        x_mask : torch.Tensor | None
+            Description not yet provided.
+        added_features : torch.Tensor | None
+            Description not yet provided.
+        
+        Returns
+        -------
+        TensorMask
+            Description not yet provided.
+        """
         x_mask = _broadcast_mask(x_mask, x)
 
         if added_features is not None:
@@ -298,8 +422,19 @@ class UNet(deterministicmodelsABC):
         return TensorMask(tensor=x, mask=x_mask)
 
     def forward(self, request: DeterministicRequest) -> deterministicOutput:
-
-
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        request : DeterministicRequest
+            Description not yet provided.
+        
+        Returns
+        -------
+        deterministicOutput
+            Description not yet provided.
+        """
         num_output_samples = request.output_sample_size
         batch_size = request.input.shape[0]
 
@@ -320,7 +455,19 @@ class UNet(deterministicmodelsABC):
         return deterministicOutput(output=output)
 
     def forward_decoder(self, request: DeterministicRequest) -> torch.Tensor:
-    
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        request : DeterministicRequest
+            Description not yet provided.
+        
+        Returns
+        -------
+        torch.Tensor
+            Description not yet provided.
+        """
         x = request.input
         x_mask = request.input_mask
         added_features = request.added_features
@@ -383,6 +530,14 @@ class UNet(deterministicmodelsABC):
 
     @property
     def output_block(self) -> UNetOutput:
+        """
+        Document this function.
+        
+        Returns
+        -------
+        UNetOutput
+            Description not yet provided.
+        """
         return self.output
     
 
@@ -391,6 +546,14 @@ class UNet(deterministicmodelsABC):
 @deterministicModelSelector.register("unetsic")
 @dataclasses.dataclass
 class UNetSICConfig(UNetConfig):
+    """
+    Document this class.
+    
+    Parameters
+    ----------
+    clip_output : bool
+        Description not yet provided.
+    """
     clip_output: bool = False
 
     def build(
@@ -399,6 +562,23 @@ class UNetSICConfig(UNetConfig):
         output_shape: np.ndarray | None = None,
         added_features_dim: int | None = None,
     ):
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        input_shape : np.ndarray
+            Description not yet provided.
+        output_shape : np.ndarray | None
+            Description not yet provided.
+        added_features_dim : int | None
+            Description not yet provided.
+        
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return UNetSIC(
             config=self,
             input_shape=input_shape,
@@ -407,12 +587,29 @@ class UNetSICConfig(UNetConfig):
         )
 
 class UNetSIC(UNet):
-
+    """
+    Document this class.
+    """
     def _build_output(
         self,
         in_channels: int,
         out_channels: int,
     ) -> nn.Module:
+        """
+        Document this function.
+        
+        Parameters
+        ----------
+        in_channels : int
+            Description not yet provided.
+        out_channels : int
+            Description not yet provided.
+        
+        Returns
+        -------
+        nn.Module
+            Description not yet provided.
+        """
         return UNetOutputSIC(
             in_channels=in_channels,
             out_channels=out_channels,

@@ -25,28 +25,27 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 @dataclasses.dataclass
 class ModelDataConfig(DataConfigABC):
     """
-    Configuration for model (predictor) dataset.
-
+    Document this class.
+    
     Parameters
     ----------
     paths : str
-        Path to dataset files.
-    names : list of str
-        Variables to load.
-    preprocessing_pipeline : PreprocessingPipeline, optional
-        Preprocessing steps applied to data.
-    realization_list : list or None, optional
-        Specific ensemble members to select.
-    ensemble_mean : bool or None, optional
-        Whether to compute ensemble mean.
-    concat_dim : str, optional
-        Dimension along which files are concatenated.
-    file_type : str, optional
-        File pattern (e.g., "*.nc").
-    rename_dict : dict or None, optional
-        Variable renaming mapping.
+        Description not yet provided.
+    names : list[str]
+        Description not yet provided.
+    preprocessing_pipeline : PreprocessingPipeline
+        Description not yet provided.
+    realization_list : list | None
+        Description not yet provided.
+    ensemble_mean : bool | None
+        Description not yet provided.
+    concat_dim : str
+        Description not yet provided.
+    file_type : str
+        Description not yet provided.
+    rename_dict : dict
+        Description not yet provided.
     """
-
     paths: str
     names: list[str]
     preprocessing_pipeline: PreprocessingPipeline = dataclasses.field(
@@ -60,11 +59,7 @@ class ModelDataConfig(DataConfigABC):
 
     def __post_init__(self) -> None:
         """
-        Initialize and validate model dataset configuration.
-
-        Returns
-        -------
-        None
+        Document this function.
         """
         super().__init__()
 
@@ -78,12 +73,12 @@ class ModelDataConfig(DataConfigABC):
     @final
     def TYPE(self) -> str:
         """
-        Dataset type identifier.
-
+        Document this function.
+        
         Returns
         -------
         str
-            Always "model".
+            Description not yet provided.
         """
         return "model"
 
@@ -91,11 +86,12 @@ class ModelDataConfig(DataConfigABC):
     @classmethod
     def _allowed_dims(cls) -> frozenset[str]:
         """
-        Allowed dataset dimensions.
-
+        Document this function.
+        
         Returns
         -------
-        frozenset of str
+        frozenset[str]
+            Description not yet provided.
         """
         return model_data_allowed_dimensions
 
@@ -103,11 +99,12 @@ class ModelDataConfig(DataConfigABC):
     @classmethod
     def _required_dims(cls) -> frozenset[str]:
         """
-        Required dataset dimensions.
-
+        Document this function.
+        
         Returns
         -------
-        frozenset of str
+        frozenset[str]
+            Description not yet provided.
         """
         return model_data_required_dimensions
 
@@ -115,28 +112,27 @@ class ModelDataConfig(DataConfigABC):
 @dataclasses.dataclass
 class ObsDataConfig(DataConfigABC):
     """
-    Configuration for observation (target) dataset.
-
+    Document this class.
+    
     Parameters
     ----------
     paths : str
-        Path(s) to observation data files.
-    names : list of str
-        Variable names in the dataset.
-    preprocessing_pipeline : PreprocessingPipeline, optional
-        Optional preprocessing pipeline applied to observations.
-    realization_list : list or None, optional
-        List of ensemble members, if applicable.
-    ensemble_mean : bool or None, optional
-        Whether to compute ensemble mean.
-    concat_dim : str, optional
-        Dimension along which to concatenate data.
-    file_type : str, optional
-        File format/type of the dataset.
-    rename_dict : dict or None, optional
-        Mapping of variable renames.
+        Description not yet provided.
+    names : list[str]
+        Description not yet provided.
+    preprocessing_pipeline : PreprocessingPipeline
+        Description not yet provided.
+    realization_list : list | None
+        Description not yet provided.
+    ensemble_mean : bool | None
+        Description not yet provided.
+    concat_dim : str
+        Description not yet provided.
+    file_type : str
+        Description not yet provided.
+    rename_dict : dict
+        Description not yet provided.
     """
-
     paths: str
     names: list[str]
     preprocessing_pipeline: PreprocessingPipeline = dataclasses.field(
@@ -150,13 +146,12 @@ class ObsDataConfig(DataConfigABC):
 
     def __post_init__(self):
         """
-        Initialize observation dataset configuration.
-
-        Resolves dataset paths, extracts metadata, and defines year range.
-
-        Returns
-        -------
-        None
+        Document this function.
+        
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
         """
         super().__init__()
 
@@ -171,12 +166,12 @@ class ObsDataConfig(DataConfigABC):
     @property
     def TYPE(self):
         """
-        Dataset type identifier.
-
+        Document this function.
+        
         Returns
         -------
-        str
-            Always "observation".
+        Any
+            Description not yet provided.
         """
         return "observation"
 
@@ -184,11 +179,12 @@ class ObsDataConfig(DataConfigABC):
     @classmethod
     def _allowed_dims(cls) -> frozenset[str]:
         """
-        Allowed dataset dimensions.
-
+        Document this function.
+        
         Returns
         -------
-        frozenset of str
+        frozenset[str]
+            Description not yet provided.
         """
         return observation_data_allowed_dimensions
 
@@ -196,11 +192,12 @@ class ObsDataConfig(DataConfigABC):
     @classmethod
     def _required_dims(cls) -> frozenset[str]:
         """
-        Required dataset dimensions.
-
+        Document this function.
+        
         Returns
         -------
-        frozenset of str
+        frozenset[str]
+            Description not yet provided.
         """
         return observation_data_required_dimensions
 
@@ -208,20 +205,27 @@ class ObsDataConfig(DataConfigABC):
 @dataclasses.dataclass
 class ConditionDataConfig(DataConfigABC):
     """
-    Configuration for conditioning dataset.
-
+    Document this class.
+    
     Parameters
     ----------
     paths : str
-    names : list of str
-    preprocessing_pipeline : PreprocessingPipeline, optional
-    realization_list : list or None, optional
-    ensemble_mean : bool or None, optional
-    concat_dim : str, optional
-    file_type : str, optional
-    rename_dict : dict or None, optional
+        Description not yet provided.
+    names : list[str]
+        Description not yet provided.
+    preprocessing_pipeline : PreprocessingPipeline
+        Description not yet provided.
+    realization_list : list | None
+        Description not yet provided.
+    ensemble_mean : bool | None
+        Description not yet provided.
+    concat_dim : str
+        Description not yet provided.
+    file_type : str
+        Description not yet provided.
+    rename_dict : dict
+        Description not yet provided.
     """
-
     paths: str
     names: list[str]
     preprocessing_pipeline: PreprocessingPipeline = dataclasses.field(
@@ -235,11 +239,7 @@ class ConditionDataConfig(DataConfigABC):
 
     def __post_init__(self):
         """
-        Initialize condition dataset configuration.
-
-        Returns
-        -------
-        None
+        Document this function.
         """
         super().__init__()
 
@@ -254,12 +254,12 @@ class ConditionDataConfig(DataConfigABC):
     @property
     def TYPE(self):
         """
-        Dataset type identifier.
-
+        Document this function.
+        
         Returns
         -------
-        str
-            Always "condition".
+        Any
+            Description not yet provided.
         """
         return "condition"
 
@@ -267,11 +267,12 @@ class ConditionDataConfig(DataConfigABC):
     @classmethod
     def _allowed_dims(cls) -> frozenset[str]:
         """
-        Allowed dataset dimensions.
-
+        Document this function.
+        
         Returns
         -------
-        frozenset of str
+        frozenset[str]
+            Description not yet provided.
         """
         return condition_data_allowed_dimensions
 
@@ -279,11 +280,12 @@ class ConditionDataConfig(DataConfigABC):
     @classmethod
     def _required_dims(cls) -> frozenset:
         """
-        Required dataset dimensions.
-
+        Document this function.
+        
         Returns
         -------
-        frozenset of str
+        frozenset
+            Description not yet provided.
         """
         return condition_data_required_dimensions
 
@@ -297,11 +299,28 @@ def build_time_range(
     lead_time_resolution: lead_time_unit = "month",
 ) -> xr.CFTimeIndex | np.ndarray:
     """
-    Build the complete time range covered by initialization and lead times.
-
-    Lead time is assumed to be one-based:
-        lead_time=1 -> initialization period
-        lead_time=2 -> next period
+    Document this function.
+    
+    Parameters
+    ----------
+    init_time : xr.DataArray
+        Description not yet provided.
+    n_lead_times : int
+        Description not yet provided.
+    lead_time_resolution : lead_time_unit
+        Description not yet provided.
+    
+    Returns
+    -------
+    xr.CFTimeIndex | np.ndarray
+        Description not yet provided.
+    
+    Raises
+    ------
+    TypeError
+        Description not yet provided.
+    ValueError
+        Description not yet provided.
     """
     if init_time.size == 0:
         raise ValueError("'init_time' cannot be empty.")
@@ -334,8 +353,8 @@ def build_time_range(
         else "proleptic_gregorian"
     )
 
-    # The last valid time is n_lead_times - 1 periods after the
-    # final initialization time.
+                                                               
+                                
     final_time = xr.date_range(
         start=final_init_time,
         periods=n_lead_times,

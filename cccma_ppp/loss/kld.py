@@ -12,20 +12,19 @@ from cccma_ppp.architectures.normalized_flows import NormalizedFlowModel
 @dataclasses.dataclass
 class BetaAnnealing:
     """
-    Beta annealing schedule for variational models.
-
+    Document this class.
+    
     Parameters
     ----------
-    beta : float, optional
-        Maximum beta value.
-    beta_min : float, optional
-        Minimum beta value.
-    num_epoch_to_warmup : int, optional
-        Number of epochs to linearly increase beta.
-    num_epochs_to_hold : int, optional
-        Number of epochs to maintain full beta in cyclic mode.
+    beta : float
+        Description not yet provided.
+    beta_min : float
+        Description not yet provided.
+    num_epoch_to_warmup : int
+        Description not yet provided.
+    num_epochs_to_hold : int
+        Description not yet provided.
     """
-
     beta: float = 1
     beta_min: float = 0
     num_epoch_to_warmup: int = 0
@@ -33,18 +32,13 @@ class BetaAnnealing:
 
     def __post_init__(self):
         """
-        Validate annealing configuration.
-
-        Returns
-        -------
-        None
-
+        Document this function.
+        
         Raises
         ------
         AssertionError
-            If `beta_min` is negative.
+            Description not yet provided.
         """
-
         self.built = False
         assert self.beta_min >= 0
         if self.num_epoch_to_warmup == 0:
@@ -52,18 +46,13 @@ class BetaAnnealing:
 
     def build(self, num_batches):
         """
-        Initialize annealing schedule.
-
+        Document this function.
+        
         Parameters
         ----------
-        num_batches : int
-            Number of batches per epoch.
-
-        Returns
-        -------
-        None
+        num_batches : Any
+            Description not yet provided.
         """
-
         self.num_batches = num_batches
         if self.num_epochs_to_hold == 0:
             self.range_epochs = (self.num_epoch_to_warmup) * self.num_batches
@@ -79,24 +68,23 @@ class BetaAnnealing:
 
     def __call__(self, step: int):
         """
-        Compute beta value at a given training step.
-
+        Document this function.
+        
         Parameters
         ----------
         step : int
-            Global training step.
-
+            Description not yet provided.
+        
         Returns
         -------
-        float
-            Current beta value.
-
+        Any
+            Description not yet provided.
+        
         Raises
         ------
         AssertionError
-            If scheduler has not been built.
+            Description not yet provided.
         """
-
         assert self.built, "make sure beta finder has been built."
 
         if self.num_epochs_to_hold == 0:
@@ -112,30 +100,25 @@ class BetaAnnealing:
 
 class KLD(lossABC):
     """
-    Kullback–Leibler divergence loss for variational models.
-
+    Document this class.
+    
     Parameters
     ----------
-    reduction : {"mean", "sum"}, optional
-        Reduction method applied to the KL divergence.
+    reduction : Reduction
+        Description not yet provided.
     """
-
     def __init__(
         self,
         reduction: Reduction = "mean",
     ):
         """
-        Initialize KLD loss.
-
+        Document this function.
+        
         Parameters
         ----------
-        reduction : {"mean", "sum"}, optional
-
-        Returns
-        -------
-        None
+        reduction : Reduction
+            Description not yet provided.
         """
-
         super().__init__()
         self.reduction = reduction
         self._has_prior_flow = False
@@ -150,59 +133,33 @@ class KLD(lossABC):
         print_loss=False,
     ) -> torch.Tensor:
         """
-        Compute KL divergence.
-
+        Document this function.
+        
         Parameters
         ----------
         mu : torch.Tensor
-            Posterior mean.
+            Description not yet provided.
         log_var : torch.Tensor
-            Posterior log-variance.
-        cond_mu : torch.Tensor or None, optional
-            Conditional prior mean.
-        cond_log_var : torch.Tensor or None, optional
-            Conditional prior log-variance.
-        prior_flow : NormalizedFlowModel or None, optional
-            Flow-based prior model.
-        print_loss : bool, optional
-            Whether to print the loss value.
-
+            Description not yet provided.
+        cond_mu : torch.Tensor | None
+            Description not yet provided.
+        cond_log_var : torch.Tensor | None
+            Description not yet provided.
+        prior_flow : NormalizedFlowModel
+            Description not yet provided.
+        print_loss : Any
+            Description not yet provided.
+        
         Returns
         -------
         torch.Tensor
-            KL divergence loss.
-
-
+            Description not yet provided.
+        
         Raises
         ------
         AssertionError
-            If posterior and prior parameter shapes are inconsistent.
-
-        Notes
-        -----
-        Expected tensor layouts:
-
-        - ``mu``:
-          ``(N, F)``
-        - ``log_var``:
-          ``(N, F)``
-
-        Optional conditional prior parameters:
-
-        - ``cond_mu``:
-          ``(N, F)``
-        - ``cond_log_var``:
-          ``(N, F)``
-
-        where:
-
-        - ``N`` is the number of latent samples
-          (typically batch size or flattened batch size)
-        - ``F`` is the latent feature dimension
-
-        When a flow prior is used, latent samples are drawn from the posterior and transformed through the flow before estimating the KL divergence.
+            Description not yet provided.
         """
-
         if prior_flow is not None:
             self._has_prior_flow = True
 
@@ -274,30 +231,18 @@ class KLD(lossABC):
 
     def _aggregate(self, loss):
         """
-        Aggregate loss to KL divergence reduction.
-
+        Document this function.
+        
         Parameters
         ----------
-        loss : torch.Tensor
-
+        loss : Any
+            Description not yet provided.
+        
         Returns
         -------
-        torch.Tensor
-
-        Notes
-        -----
-        For standard Gaussian KL divergence, ``loss`` is expected to have shape:
-
-        ``(N, F)``
-
-        where:
-
-        - ``N`` is the number of latent samples
-        - ``F`` is the latent dimensionality
-
-        Reduction is applied over the latent dimension before producing a scalar loss.
+        Any
+            Description not yet provided.
         """
-
         if not self._has_prior_flow:
             if self.reduction == "mean":
                 KLD = loss.mean()
@@ -310,62 +255,35 @@ class KLD(lossABC):
 
     def _print_loss(self, loss):
         """
-        Print KL divergence value.
-
+        Document this function.
+        
         Parameters
         ----------
-        loss : torch.Tensor
-
-        Returns
-        -------
-        None
+        loss : Any
+            Description not yet provided.
         """
-
         print(f"KLD : {loss.item():.5f}")
 
     def sample(self, mu, log_var, sample_size=1, std=1):
         """
-        Sample latent variables using the reparameterization trick.
-
+        Document this function.
+        
         Parameters
         ----------
-        mu : torch.Tensor
-            Mean of the latent distribution.
-        log_var : torch.Tensor
-            Log-variance of the latent distribution.
-        sample_size : int, optional
-            Number of Monte-Carlo samples.
-        std : float, optional
-            Scaling factor applied to the sampling noise.
-
+        mu : Any
+            Description not yet provided.
+        log_var : Any
+            Description not yet provided.
+        sample_size : Any
+            Description not yet provided.
+        std : Any
+            Description not yet provided.
+        
         Returns
         -------
-        torch.Tensor
-            Sampled latent variables.
-
-        Notes
-        -----
-        Expected input shapes:
-
-        - ``mu``:
-          ``(N, F)``
-        - ``log_var``:
-          ``(N, F)``
-
-        Returned shape:
-
-        - ``(S, N, F)``
-
-        where:
-
-        - ``S`` is ``sample_size``
-        - ``N`` is the number of latent samples
-        - ``F`` is the latent dimensionality
-
-        This corresponds to drawing ``S`` independent samples from
-        each posterior distribution.
+        Any
+            Description not yet provided.
         """
-
         var = torch.exp(log_var) + 1e-4
         out = mu + torch.sqrt(var) * self._get_normal(var, std).sample((sample_size,))
 
@@ -373,21 +291,20 @@ class KLD(lossABC):
 
     def _get_normal(self, ref_tensor, std=1):
         """
-        Create a normal distribution with given scale.
-
+        Document this function.
+        
         Parameters
         ----------
-        ref_tensor : torch.Tensor
-            Reference tensor used to infer shape/device.
-        std : float, optional
-            Standard deviation.
-
+        ref_tensor : Any
+            Description not yet provided.
+        std : Any
+            Description not yet provided.
+        
         Returns
         -------
-        torch.distributions.Normal
-            Normal distribution matching the reference tensor.
+        Any
+            Description not yet provided.
         """
-
         return torch.distributions.Normal(
             torch.zeros_like(ref_tensor), torch.ones_like(ref_tensor) * std
         )
