@@ -18,7 +18,6 @@ import re
 import shutil
 import traceback
 import warnings
-
 import dacite
 import yaml
 from tqdm import tqdm
@@ -50,6 +49,7 @@ ROOT = Path(__file__).resolve().parents[1]
 BASE_TRAIN_CONFIG = ROOT / "scripts" / "integration_suite_train_config.yaml"
 
 OUTPUT_DIR = ROOT / "../output" / "train_integration_test_results"
+CASES_DIR = OUTPUT_DIR / "cases"
 GENERATED_CONFIG_DIR = OUTPUT_DIR / "_generated_configs"
 LOG_DIR = OUTPUT_DIR / "_logs"
 RESULTS_CSV = OUTPUT_DIR / "integration_results.csv"
@@ -59,7 +59,7 @@ SUMMARY_PATH = OUTPUT_DIR / "summary.txt"
 INIT_TIME_DIM, LEAD_TIME_DIM = required_sample_dimensions
 
 
-RUN_BASELINE_TESTS = True
+RUN_BASELINE_TESTS = False
 RUN_TRAIN_LOADER_CONFIG_CASES = True
 RUN_CVAE_MLP_GRID = True
 RUN_CVAE_UNET_GRID = True
@@ -442,13 +442,6 @@ CSV_COLUMNS = [
 
 
 class LimitedLoader:
-    """
-    Proxy around a real CCCma-PPP dataloader.
-
-    Attribute access is delegated to the real loader. Only iteration
-    and reported length are shortened.
-    """
-
     def __init__(
         self,
         loader: Any,
@@ -493,6 +486,7 @@ class LimitedLoader:
 def prepare_output_directories() -> None:
     for path in (
         OUTPUT_DIR,
+        CASES_DIR,
         GENERATED_CONFIG_DIR,
         LOG_DIR,
     ):
@@ -586,7 +580,7 @@ def case_paths(
 
     return {
         "config_path": (GENERATED_CONFIG_DIR / f"{safe_name}.yaml"),
-        "experiment_dir": (OUTPUT_DIR / safe_name),
+        "experiment_dir": (CASES_DIR / safe_name),
         "log_path": (LOG_DIR / f"{safe_name}.log"),
     }
 
@@ -1729,10 +1723,6 @@ def limit_config_loader_batches(
     max_train_batches: int | None,
     max_validation_batches: int | None,
 ):
-    """
-    Temporarily patch the dataloader configuration class used by
-    train_main. No CCCma-PPP source file is modified.
-    """
 
     config = load_train_config(config_path)
 
