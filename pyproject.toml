@@ -23,6 +23,9 @@ dependencies = [
     "pynvml>=13.0.1",
     "netcdf4>=1.7.4",
     "dask>=2026.6.0",
+    "pyright>=1.1.411",
+    "pip-audit>=2.10.1",
+    "bandit>=1.9.4",
 ]
 name = "cccma-ppp"
 dynamic = ["version"]
