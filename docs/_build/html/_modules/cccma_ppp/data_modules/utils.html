@@ -78,168 +78,51 @@
   <h1>Source code for cccma_ppp.data_modules.utils</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cftime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">calendar</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.preprocessing.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreprocessingPipeline</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.preprocessing.utils_preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flattennanremove</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.generic.runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">RuntimeContext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.configs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">supported_NN_dimensions_sorted</span><span class="p">,</span>
+    <span class="n">required_sample_dimensions</span><span class="p">,</span>
+    <span class="n">realization_dim</span><span class="p">,</span>
+    <span class="n">lead_time_unit</span><span class="p">,</span>
+    <span class="n">lead_time_resolution</span><span class="p">,</span>
+<span class="p">)</span>
 
 
+<span class="n">TimeTypes</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;datetime&quot;</span><span class="p">,</span> <span class="s2">&quot;cftime&quot;</span><span class="p">]</span>
+<span class="n">TimeFrequency</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;day&quot;</span><span class="p">,</span> <span class="s2">&quot;month&quot;</span><span class="p">,</span> <span class="s2">&quot;year&quot;</span><span class="p">]</span>
 <span class="n">spatialmethod</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span> <span class="s2">&quot;cosine_lat&quot;</span><span class="p">]</span>
 
-
-<div class="viewcode-block" id="WeightsConfig">
-<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.data_modules.dataset.operator.WeightsConfig">[docs]</a>
-<span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">WeightsConfig</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Configuration for computing spatial and variable weights.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    spatial_method : {&quot;uniform&quot;, &quot;cosine_lat&quot;}, optional</span>
-<span class="sd">        Method used to compute spatial weights.</span>
-<span class="sd">    variable_weights : dict[str, float] or None, optional</span>
-<span class="sd">        Per-variable weighting factors.</span>
-<span class="sd">    load_dir : pathlib.Path or str or None, optional</span>
-<span class="sd">        Path to load precomputed weights.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">spatial_method</span><span class="p">:</span> <span class="n">spatialmethod</span> <span class="o">=</span> <span class="s2">&quot;uniform&quot;</span>
-    <span class="n">variable_weights</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">load_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Validate weight configuration.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        FileNotFoundError</span>
-<span class="sd">            If specified load path does not exist.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">load_dir</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;weights file not found at </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">load_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-<div class="viewcode-block" id="WeightsConfig.build_weights">
-<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.data_modules.dataset.operator.WeightsConfig.build_weights">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">build_weights</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">target_coords</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">Flattennanremover</span><span class="p">:</span> <span class="n">Flattennanremove</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">save_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">save_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generate or load spatial weights.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        target_coords : dict, optional</span>
-<span class="sd">            Spatial coordinates of target data.</span>
-<span class="sd">        Flattennanremover : Flattennanremove or None, optional</span>
-<span class="sd">            Preprocessor for flattened spatial representation.</span>
-<span class="sd">        save : bool, optional</span>
-<span class="sd">            Whether to save computed weights.</span>
-<span class="sd">        save_path : pathlib.Path or str or None, optional</span>
-<span class="sd">        save_name : str or None, optional</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        xr.DataArray</span>
-<span class="sd">            Spatial (and optional variable) weights.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            If loaded weights are incompatible with target coordinates.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">weights</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">load_dir</span><span class="p">))</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
-                <span class="n">weights</span> <span class="o">=</span> <span class="n">_unwrap_data_variables</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="s2">&quot;ref&quot;</span> <span class="ow">in</span> <span class="n">weights</span><span class="o">.</span><span class="n">dims</span> <span class="ow">and</span> <span class="p">{</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">}</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">coords</span><span class="p">):</span>
-                <span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">])</span>
-
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;the loaded weights from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">load_dir</span><span class="si">}</span><span class="s2"> must have lat and lon coordinates that match the target coordinates&quot;</span>
-
-            <span class="k">if</span> <span class="n">Flattennanremover</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">weights</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;ref&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">Flattennanremover</span><span class="o">.</span><span class="n">final_locations</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">target_coords</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">weights</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">target_coords</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">]):</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">weights</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;lon&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">target_coords</span><span class="p">[</span><span class="s2">&quot;lon&quot;</span><span class="p">]):</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">target_coords</span><span class="p">[</span><span class="s2">&quot;lon&quot;</span><span class="p">])</span>
-                <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">target_coords</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()))[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
-            <span class="p">)</span>
-            <span class="n">weights</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">target_coords</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;weights&quot;</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spatial_method</span> <span class="o">==</span> <span class="s2">&quot;uniform&quot;</span><span class="p">:</span>
-                <span class="n">weights</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">variable_weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">weights</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
-                        <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_weights</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
-                        <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;channels&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variable_weights</span><span class="o">.</span><span class="n">keys</span><span class="p">())},</span>
-                    <span class="p">)</span>
-                    <span class="o">*</span> <span class="n">weights</span>
-                <span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">Flattennanremover</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">weights</span> <span class="o">=</span> <span class="n">Flattennanremover</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
-                <span class="n">save_path</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">Path</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                    <span class="k">else</span> <span class="n">Path</span><span class="p">(</span><span class="n">RuntimeContext</span><span class="o">.</span><span class="n">GLOBAL_EXP_DIR</span><span class="p">)</span>
-                <span class="p">)</span>
-                <span class="n">save_name</span> <span class="o">=</span> <span class="n">save_name</span> <span class="ow">or</span> <span class="s2">&quot;spatial_weights.nc&quot;</span>
-
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">save_path</span><span class="p">):</span>
-                    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
-
-                <span class="n">weights</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="s2">&quot;ref&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_netcdf</span><span class="p">(</span><span class="n">save_path</span> <span class="o">/</span> <span class="n">save_name</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">weights</span></div>
-</div>
-
+<span class="n">init_time_dim</span><span class="p">,</span> <span class="n">lead_time_dim</span> <span class="o">=</span> <span class="n">required_sample_dimensions</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_unwrap_data_variables</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Convert dataset variables into a channel dimension.</span>
+<span class="sd">    Document this function.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    dataset : xr.Dataset</span>
+<span class="sd">        Description not yet provided.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    xr.DataArray</span>
-<span class="sd">        Concatenated variables along &quot;channels&quot; dimension.</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
-        <span class="p">[</span><span class="n">dataset</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="s2">&quot;channels&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">data_vars</span><span class="p">)],</span>
+        <span class="p">[</span>
+            <span class="n">dataset</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="s2">&quot;channels&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">data_vars</span><span class="p">)</span>
+        <span class="p">],</span>
         <span class="n">dim</span><span class="o">=</span><span class="s2">&quot;channels&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
@@ -249,98 +132,737 @@
     <span class="n">selection</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">names</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">ensemble_mean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">preprocessor</span><span class="p">:</span> <span class="n">PreprocessingPipeline</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">concat_dim</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;year&quot;</span><span class="p">,</span>
     <span class="n">rename_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">chunks</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">load</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">add_time_auxiliary_coords</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">init_time_dim</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">init_time_dim</span><span class="p">,</span>
+    <span class="n">realization_dim</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">realization_dim</span><span class="p">,</span>
+    <span class="n">supported_NN_dimensions_sorted</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="n">supported_NN_dimensions_sorted</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Load and optionally preprocess xarray dataset.</span>
+<span class="sd">    Document this function.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    paths : list of str</span>
-<span class="sd">        File paths to load.</span>
-<span class="sd">    selection : dict or None, optional</span>
-<span class="sd">        Subset selection applied after loading (e.g., slicing or filtering).</span>
-<span class="sd">    names : list of str or None, optional</span>
-<span class="sd">        Variables to extract.</span>
-<span class="sd">    ensemble_mean : bool, optional</span>
-<span class="sd">        Whether to average across ensembles.</span>
-<span class="sd">    preprocessor : PreprocessingPipeline or None, optional</span>
-<span class="sd">        Preprocessing pipeline to apply.</span>
-<span class="sd">    concat_dim : str, optional</span>
-<span class="sd">        Dimension used for concatenation.</span>
-<span class="sd">    rename_dict : dict or None, optional</span>
-<span class="sd">        Variable renaming mapping.</span>
+<span class="sd">    paths : list[str]</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    selection : dict | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    names : list | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    ensemble_mean : bool</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    concat_dim : str</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    rename_dict : dict | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    chunks : dict | None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    load : bool</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    add_time_auxiliary_coords : bool</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    init_time_dim : str</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    realization_dim : str</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    supported_NN_dimensions_sorted : tuple</span>
+<span class="sd">        Description not yet provided.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    xr.Dataset or xr.DataArray</span>
-<span class="sd">        Loaded (and optionally preprocessed) data.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    Any</span>
+<span class="sd">        Description not yet provided.</span>
 
-    <span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_mfdataset</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">combine</span><span class="o">=</span><span class="s2">&quot;nested&quot;</span><span class="p">,</span> <span class="n">concat_dim</span><span class="o">=</span><span class="n">concat_dim</span><span class="p">)</span>
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_mfdataset</span><span class="p">(</span>
+        <span class="n">paths</span><span class="p">,</span> <span class="n">combine</span><span class="o">=</span><span class="s2">&quot;nested&quot;</span><span class="p">,</span> <span class="n">concat_dim</span><span class="o">=</span><span class="n">concat_dim</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">chunks</span>
+    <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">rename_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">rename_dict</span><span class="p">)</span>
 
     <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">selection</span><span class="p">)</span> <span class="k">if</span> <span class="n">selection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ds</span>
 
-    <span class="k">if</span> <span class="s2">&quot;ensembles&quot;</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
-        <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="s2">&quot;ensembles&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">ensemble_mean</span> <span class="k">else</span> <span class="n">ds</span>
+    <span class="k">if</span> <span class="n">realization_dim</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">coords</span> <span class="ow">and</span> <span class="n">ensemble_mean</span><span class="p">:</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">realization_dim</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">names</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">preprocessor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">ds</span> <span class="o">=</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">add_time_auxiliary_coords</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">init_time_dim</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot add temporal auxiliary coordinates because &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">init_time_dim</span><span class="si">!r}</span><span class="s2"> is not present in the data coordinates.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">init_time</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">init_time_dim</span><span class="p">]</span>
+
+        <span class="n">_validate_time_sequence</span><span class="p">(</span><span class="n">init_time</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">init_time</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">init_time</span><span class="o">.</span><span class="n">dims</span> <span class="o">!=</span> <span class="p">(</span><span class="n">init_time_dim</span><span class="p">,):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Coordinate </span><span class="si">{</span><span class="n">init_time_dim</span><span class="si">!r}</span><span class="s2"> must be one-dimensional &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;over dimension </span><span class="si">{</span><span class="n">init_time_dim</span><span class="si">!r}</span><span class="s2">, but found dimensions &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">init_time</span><span class="o">.</span><span class="n">dims</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">assign_coords</span><span class="p">(</span>
+                <span class="n">year</span><span class="o">=</span><span class="n">init_time</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">year</span><span class="p">,</span>
+                <span class="n">month</span><span class="o">=</span><span class="n">init_time</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">month</span><span class="p">,</span>
+                <span class="n">day</span><span class="o">=</span><span class="n">init_time</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">dayofyear</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Coordinate </span><span class="si">{</span><span class="n">init_time_dim</span><span class="si">!r}</span><span class="s2"> must contain datetime64 &quot;</span>
+                <span class="s2">&quot;or cftime datetime values to derive year, month, and day.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+    <span class="n">nn_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">dim</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">supported_NN_dimensions_sorted</span> <span class="k">if</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">dims</span><span class="p">]</span>
+
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="o">*</span><span class="n">nn_dims</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">load</span><span class="p">:</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
 
     <span class="k">return</span> <span class="n">ds</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_create_train_mask</span><span class="p">(</span>
-    <span class="n">years</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span>
-    <span class="n">lead_times</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="n">exclude_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-<span class="p">):</span>
+    <span class="n">init_times</span><span class="p">:</span> <span class="p">(</span>
+        <span class="n">Sequence</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">datetime64</span> <span class="o">|</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span> <span class="o">|</span> <span class="n">cftime</span><span class="o">.</span><span class="n">datetime</span><span class="p">]</span>
+        <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+        <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span>
+    <span class="p">),</span>
+    <span class="n">lead_times</span><span class="p">:</span> <span class="n">Sequence</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">lead_time_resolution</span><span class="p">:</span> <span class="n">lead_time_unit</span> <span class="o">=</span> <span class="n">lead_time_resolution</span><span class="p">,</span>
+    <span class="n">init_time_dim</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">init_time_dim</span><span class="p">,</span>
+    <span class="n">lead_time_dim</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">lead_time_dim</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Create training mask for valid time indices.</span>
+<span class="sd">    Document this function.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    years : array-like</span>
-<span class="sd">        Years corresponding to dataset.</span>
-<span class="sd">    lead_times : array-like or int</span>
-<span class="sd">        Lead times in months.</span>
-<span class="sd">    exclude_idx : int, optional</span>
-<span class="sd">        Offset index for masking.</span>
+<span class="sd">    init_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    lead_times : Sequence | xr.DataArray | np.ndarray | int</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    lead_time_resolution : lead_time_unit</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    init_time_dim : str</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    lead_time_dim : str</span>
+<span class="sd">        Description not yet provided.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    xr.DataArray</span>
-<span class="sd">        Boolean mask indicating invalid positions.</span>
+<span class="sd">        Description not yet provided.</span>
 
-<span class="sd">    Notes</span>
-<span class="sd">    -----</span>
-<span class="sd">    Used to exclude samples with insufficient future observations</span>
-<span class="sd">    due to lead-time offsets.</span>
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_validate_time_sequence</span><span class="p">(</span><span class="n">init_times</span><span class="p">)</span>
+
+    <span class="n">init_times</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
+        <span class="n">init_times</span><span class="p">,</span>
+        <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="n">init_time_dim</span><span class="p">,),</span>
+        <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="n">init_time_dim</span><span class="p">:</span> <span class="n">init_times</span><span class="p">},</span>
+    <span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lead_times</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">lead_times</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;lead_times&#39; must be at least 1.&quot;</span><span class="p">)</span>
+
         <span class="n">lead_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">lead_times</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lead_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">lead_times</span><span class="p">)</span>
 
-    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">years</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">lead_times</span><span class="p">)),</span> <span class="kc">False</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">12</span><span class="p">)</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="n">idx_array</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="n">y</span>
+        <span class="k">if</span> <span class="n">lead_times</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">lead_times</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;lead_times&#39; must be a non-empty 1D array.&quot;</span><span class="p">)</span>
 
-    <span class="n">mask</span><span class="p">[</span><span class="n">idx_array</span> <span class="o">&gt;</span> <span class="n">idx_array</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">exclude_idx</span> <span class="o">+</span> <span class="mi">11</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">lead_times</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Lead times must be one-based and at least 1.&quot;</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
-        <span class="n">mask</span><span class="p">,</span>
-        <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;year&quot;</span><span class="p">,</span> <span class="s2">&quot;lead_time&quot;</span><span class="p">),</span>
-        <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="n">years</span><span class="p">,</span> <span class="s2">&quot;lead_time&quot;</span><span class="p">:</span> <span class="n">lead_times</span><span class="p">},</span>
-        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;mask&quot;</span><span class="p">,</span>
+    <span class="n">target_times</span> <span class="o">=</span> <span class="n">_calculate_target_times</span><span class="p">(</span>
+        <span class="n">init_times</span><span class="o">=</span><span class="n">init_times</span><span class="p">,</span>
+        <span class="n">lead_times</span><span class="o">=</span><span class="n">lead_times</span><span class="p">,</span>
+        <span class="n">lead_time_resolution</span><span class="o">=</span><span class="n">lead_time_resolution</span><span class="p">,</span>
     <span class="p">)</span>
+
+    <span class="n">target_times</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
+        <span class="n">target_times</span><span class="p">,</span>
+        <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="n">init_time_dim</span><span class="p">,</span> <span class="n">lead_time_dim</span><span class="p">),</span>
+        <span class="n">coords</span><span class="o">=</span><span class="p">{</span>
+            <span class="n">init_time_dim</span><span class="p">:</span> <span class="n">init_times</span><span class="p">[</span><span class="n">init_time_dim</span><span class="p">],</span>
+            <span class="n">lead_time_dim</span><span class="p">:</span> <span class="n">lead_times</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="n">time_resolution</span> <span class="o">=</span> <span class="n">infer_time_resolution</span><span class="p">(</span><span class="n">init_times</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">init_time_dim</span><span class="p">]</span><span class="o">.</span><span class="n">to_index</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">time_resolution</span> <span class="o">==</span> <span class="s2">&quot;year&quot;</span><span class="p">:</span>
+        <span class="n">cutoff_year</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">init_times</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">year</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">target_times</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">year</span> <span class="o">&gt;</span> <span class="n">cutoff_year</span>
+
+    <span class="k">elif</span> <span class="n">time_resolution</span> <span class="o">==</span> <span class="s2">&quot;month&quot;</span> <span class="ow">and</span> <span class="n">lead_time_resolution</span> <span class="o">==</span> <span class="s2">&quot;day&quot;</span><span class="p">:</span>
+        <span class="n">cutoff_year</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">init_times</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">month</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">target_times</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">month</span> <span class="o">&gt;</span> <span class="n">cutoff_year</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cutoff_time</span> <span class="o">=</span> <span class="n">init_times</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">target_times</span> <span class="o">&gt;</span> <span class="n">cutoff_time</span>
+
+    <span class="n">mask</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;mask&quot;</span>
+    <span class="k">return</span> <span class="n">mask</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_calculate_target_times</span><span class="p">(</span>
+    <span class="n">init_times</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span>
+    <span class="n">lead_times</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">lead_time_resolution</span><span class="p">:</span> <span class="n">lead_time_unit</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Document this function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    init_times : xr.DataArray</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    lead_times : np.ndarray</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    lead_time_resolution : lead_time_unit</span>
+<span class="sd">        Description not yet provided.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        Description not yet provided.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">offsets</span> <span class="o">=</span> <span class="n">lead_times</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="n">first_time</span> <span class="o">=</span> <span class="n">init_times</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">is_cftime</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">first_time</span><span class="p">,</span> <span class="n">cftime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">lead_time_resolution</span> <span class="o">==</span> <span class="s2">&quot;day&quot;</span><span class="p">:</span>
+        <span class="n">valid_times</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span>
+                <span class="n">init_time</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">offset</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">is_cftime</span>
+                <span class="k">else</span> <span class="n">init_time</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">offset</span><span class="p">),</span> <span class="s2">&quot;D&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="n">offsets</span>
+            <span class="p">]</span>
+            <span class="k">for</span> <span class="n">init_time</span> <span class="ow">in</span> <span class="n">init_times</span><span class="o">.</span><span class="n">values</span>
+        <span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="n">valid_times</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span> <span class="k">if</span> <span class="n">is_cftime</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">lead_time_resolution</span> <span class="o">==</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span>
+        <span class="n">valid_times</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="n">_add_months</span><span class="p">(</span><span class="n">init_time</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">offset</span><span class="p">))</span> <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="n">offsets</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">init_time</span> <span class="ow">in</span> <span class="n">init_times</span><span class="o">.</span><span class="n">values</span>
+        <span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="n">valid_times</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span> <span class="k">if</span> <span class="n">is_cftime</span> <span class="k">else</span> <span class="s2">&quot;datetime64[ns]&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Invalid lead_time_resolution </span><span class="si">{</span><span class="n">lead_time_resolution</span><span class="si">}</span><span class="s2">. Must be in &quot;</span>
+            <span class="s2">&quot;[&#39;day&#39;, &#39;month&#39;]. &quot;</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_months</span><span class="p">(</span>
+    <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">datetime64</span> <span class="o">|</span> <span class="n">cftime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span>
+    <span class="n">n_months</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">datetime64</span> <span class="o">|</span> <span class="n">cftime</span><span class="o">.</span><span class="n">datetime</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Document this function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    time : np.datetime64 | cftime.datetime</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    n_months : int</span>
+<span class="sd">        Description not yet provided.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.datetime64 | cftime.datetime</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_cftime</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">cftime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span>
+
+    <span class="n">calendar</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">calendar</span> <span class="k">if</span> <span class="n">is_cftime</span> <span class="k">else</span> <span class="s2">&quot;proleptic_gregorian&quot;</span>
+
+    <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span>
+        <span class="n">start</span><span class="o">=</span><span class="n">time</span><span class="p">,</span>
+        <span class="n">periods</span><span class="o">=</span><span class="n">n_months</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;MS&quot;</span><span class="p">,</span>
+        <span class="n">calendar</span><span class="o">=</span><span class="n">calendar</span><span class="p">,</span>
+        <span class="n">use_cftime</span><span class="o">=</span><span class="n">is_cftime</span><span class="p">,</span>
+    <span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_time_sequence</span><span class="p">(</span>
+    <span class="n">times_sequence</span><span class="p">:</span> <span class="n">Sequence</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Document this function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    times_sequence : Sequence | np.ndarray | xr.DataArray</span>
+<span class="sd">        Description not yet provided.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">times_sequence</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">times_sequence</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">)</span>
+        <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">times_sequence</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;times_sequence&#39; must be one-dimensional.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;times_sequence&#39; cannot be empty.&quot;</span><span class="p">)</span>
+
+    <span class="n">first</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">is_cftime</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">cftime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span>
+    <span class="n">is_numpy_datetime</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">)</span>
+    <span class="n">is_python_datetime</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">is_cftime</span> <span class="ow">or</span> <span class="n">is_numpy_datetime</span> <span class="ow">or</span> <span class="n">is_python_datetime</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;&#39;time_sequence&#39; must contain cftime.datetime, &quot;</span>
+            <span class="s2">&quot;numpy.datetime64, or datetime.datetime objects.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">is_cftime</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">cftime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;time_sequence&#39; cannot mix cftime objects with other datetime types.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">calendars</span> <span class="o">=</span> <span class="p">{</span><span class="n">value</span><span class="o">.</span><span class="n">calendar</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">calendars</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;&#39;time_sequence&#39; contains multiple CF calendars: </span><span class="si">{</span><span class="n">calendars</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">is_numpy_datetime</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;time_sequence&#39; cannot mix numpy.datetime64 values &quot;</span>
+                <span class="s2">&quot;with other datetime types.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;time_sequence&#39; cannot mix datetime.datetime values &quot;</span>
+                <span class="s2">&quot;with other datetime types.&quot;</span>
+            <span class="p">)</span>
+
+
+<div class="viewcode-block" id="suppress_stderr">
+<a class="viewcode-back" href="../../../api/cccma_ppp.data_modules.utils.html#cccma_ppp.data_modules.data.data_abc.suppress_stderr">[docs]</a>
+<span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">suppress_stderr</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Document this function.</span>
+
+<span class="sd">    Yields</span>
+<span class="sd">    ------</span>
+<span class="sd">    None</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stderr_fd</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">saved_stderr_fd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">dup</span><span class="p">(</span><span class="n">stderr_fd</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">devnull</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">dup2</span><span class="p">(</span><span class="n">devnull</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span> <span class="n">stderr_fd</span><span class="p">)</span>
+            <span class="k">yield</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">dup2</span><span class="p">(</span><span class="n">saved_stderr_fd</span><span class="p">,</span> <span class="n">stderr_fd</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">saved_stderr_fd</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="add_lead_times">
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.utils_preprocessing.html#cccma_ppp.data_modules.data.data_abc.add_lead_times">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_lead_times</span><span class="p">(</span>
+    <span class="n">init_times</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span>
+    <span class="n">lead_times</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span>
+    <span class="n">lead_time_resolution</span><span class="p">:</span> <span class="n">lead_time_unit</span> <span class="o">=</span> <span class="s2">&quot;month&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Document this function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    init_times : np.ndarray | xr.DataArray</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    lead_times : np.ndarray | xr.DataArray</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    lead_time_resolution : lead_time_unit</span>
+<span class="sd">        Description not yet provided.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        Description not yet provided.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">init_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">init_times</span><span class="p">)</span>
+    <span class="n">lead_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">lead_times</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">init_times</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">lead_times</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;init_times&#39; and &#39;lead_times&#39; must be one-dimensional.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">init_times</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">lead_times</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;init_times&#39; and &#39;lead_times&#39; must have the same shape.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">lead_times</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">lead_times</span> <span class="o">==</span> <span class="n">lead_times</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Lead times must contain integer values.&quot;</span><span class="p">)</span>
+
+        <span class="n">lead_times</span> <span class="o">=</span> <span class="n">lead_times</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">lead_times</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Lead times must be one-based and at least 1.&quot;</span><span class="p">)</span>
+
+    <span class="n">offsets</span> <span class="o">=</span> <span class="n">lead_times</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="n">first_time</span> <span class="o">=</span> <span class="n">init_times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">first_time</span><span class="p">,</span> <span class="n">cftime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
+        <span class="n">valid_times</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">_add_cftime_offset</span><span class="p">(</span>
+                <span class="n">init_time</span><span class="o">=</span><span class="n">init_time</span><span class="p">,</span>
+                <span class="n">offset</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">offset</span><span class="p">),</span>
+                <span class="n">resolution</span><span class="o">=</span><span class="n">lead_time_resolution</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">init_time</span><span class="p">,</span> <span class="n">offset</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">init_times</span><span class="p">,</span> <span class="n">offsets</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">valid_times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">init_times</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">lead_time_resolution</span> <span class="o">==</span> <span class="s2">&quot;day&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">init_times</span> <span class="o">+</span> <span class="n">offsets</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;timedelta64[D]&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">lead_time_resolution</span> <span class="o">==</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span>
+            <span class="n">month_times</span> <span class="o">=</span> <span class="n">init_times</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;datetime64[M]&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">month_times</span> <span class="o">+</span> <span class="n">offsets</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;timedelta64[M]&quot;</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported lead-time resolution: </span><span class="si">{</span><span class="n">lead_time_resolution</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+        <span class="s2">&quot;&#39;init_times&#39; must contain numpy.datetime64 or cftime.datetime values.&quot;</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_cftime_offset</span><span class="p">(</span>
+    <span class="n">init_time</span><span class="p">:</span> <span class="n">cftime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span>
+    <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">resolution</span><span class="p">:</span> <span class="n">lead_time_unit</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cftime</span><span class="o">.</span><span class="n">datetime</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Document this function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    init_time : cftime.datetime</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    offset : int</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    resolution : lead_time_unit</span>
+<span class="sd">        Description not yet provided.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cftime.datetime</span>
+<span class="sd">        Description not yet provided.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">resolution</span> <span class="o">==</span> <span class="s2">&quot;day&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">init_time</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">resolution</span> <span class="o">!=</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported lead-time resolution: </span><span class="si">{</span><span class="n">resolution</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="n">total_months</span> <span class="o">=</span> <span class="n">init_time</span><span class="o">.</span><span class="n">year</span> <span class="o">*</span> <span class="mi">12</span> <span class="o">+</span> <span class="n">init_time</span><span class="o">.</span><span class="n">month</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">offset</span>
+
+    <span class="n">target_year</span><span class="p">,</span> <span class="n">zero_based_month</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">total_months</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
+    <span class="n">target_month</span> <span class="o">=</span> <span class="n">zero_based_month</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="n">target_day</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+        <span class="n">init_time</span><span class="o">.</span><span class="n">day</span><span class="p">,</span>
+        <span class="n">_days_in_cftime_month</span><span class="p">(</span>
+            <span class="n">year</span><span class="o">=</span><span class="n">target_year</span><span class="p">,</span>
+            <span class="n">month</span><span class="o">=</span><span class="n">target_month</span><span class="p">,</span>
+            <span class="n">calendar_name</span><span class="o">=</span><span class="n">init_time</span><span class="o">.</span><span class="n">calendar</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">init_time</span><span class="p">)(</span>
+        <span class="n">target_year</span><span class="p">,</span>
+        <span class="n">target_month</span><span class="p">,</span>
+        <span class="n">target_day</span><span class="p">,</span>
+        <span class="n">init_time</span><span class="o">.</span><span class="n">hour</span><span class="p">,</span>
+        <span class="n">init_time</span><span class="o">.</span><span class="n">minute</span><span class="p">,</span>
+        <span class="n">init_time</span><span class="o">.</span><span class="n">second</span><span class="p">,</span>
+        <span class="n">init_time</span><span class="o">.</span><span class="n">microsecond</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_days_in_cftime_month</span><span class="p">(</span>
+    <span class="n">year</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">month</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">calendar_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Document this function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    year : int</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    month : int</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    calendar_name : str</span>
+<span class="sd">        Description not yet provided.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">calendar_name</span> <span class="o">==</span> <span class="s2">&quot;360_day&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">30</span>
+
+    <span class="k">if</span> <span class="n">calendar_name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;noleap&quot;</span><span class="p">,</span> <span class="s2">&quot;365_day&quot;</span><span class="p">}:</span>
+        <span class="n">month_lengths</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mi">31</span><span class="p">,</span>
+            <span class="mi">28</span><span class="p">,</span>
+            <span class="mi">31</span><span class="p">,</span>
+            <span class="mi">30</span><span class="p">,</span>
+            <span class="mi">31</span><span class="p">,</span>
+            <span class="mi">30</span><span class="p">,</span>
+            <span class="mi">31</span><span class="p">,</span>
+            <span class="mi">31</span><span class="p">,</span>
+            <span class="mi">30</span><span class="p">,</span>
+            <span class="mi">31</span><span class="p">,</span>
+            <span class="mi">30</span><span class="p">,</span>
+            <span class="mi">31</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">month_lengths</span><span class="p">[</span><span class="n">month</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">calendar_name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;all_leap&quot;</span><span class="p">,</span> <span class="s2">&quot;366_day&quot;</span><span class="p">}:</span>
+        <span class="n">month_lengths</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mi">31</span><span class="p">,</span>
+            <span class="mi">29</span><span class="p">,</span>
+            <span class="mi">31</span><span class="p">,</span>
+            <span class="mi">30</span><span class="p">,</span>
+            <span class="mi">31</span><span class="p">,</span>
+            <span class="mi">30</span><span class="p">,</span>
+            <span class="mi">31</span><span class="p">,</span>
+            <span class="mi">31</span><span class="p">,</span>
+            <span class="mi">30</span><span class="p">,</span>
+            <span class="mi">31</span><span class="p">,</span>
+            <span class="mi">30</span><span class="p">,</span>
+            <span class="mi">31</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">month_lengths</span><span class="p">[</span><span class="n">month</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">calendar</span><span class="o">.</span><span class="n">monthrange</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="assign_datetime_init_time">
+<a class="viewcode-back" href="../../../api/cccma_ppp.data_modules.utils.html#cccma_ppp.data_modules.data.data_abc.assign_datetime_init_time">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">assign_datetime_init_time</span><span class="p">(</span>
+    <span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span>
+    <span class="n">init_time_dim</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">init_time_dim</span><span class="p">,</span>
+    <span class="n">calendar</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Document this function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ds : xr.Dataset | xr.DataArray</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    init_time_dim : str</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    calendar : str | None</span>
+<span class="sd">        Description not yet provided.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    xr.Dataset | xr.DataArray</span>
+<span class="sd">        Description not yet provided.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">init_time_dim</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">init_time_dim</span><span class="si">!r}</span><span class="s2"> is not a coordinate.&quot;</span><span class="p">)</span>
+
+    <span class="n">years</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">init_time_dim</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">years</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">years</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">years</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">years</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">init_time_dim</span><span class="si">!r}</span><span class="s2"> must contain integer years.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">calendar</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">year</span><span class="si">:</span><span class="s2">04d</span><span class="si">}</span><span class="s2">-01-01&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="n">years</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span>
+            <span class="n">start</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">years</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">04d</span><span class="si">}</span><span class="s2">-01-01&quot;</span><span class="p">,</span>
+            <span class="n">periods</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">years</span><span class="p">),</span>
+            <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;YS&quot;</span><span class="p">,</span>
+            <span class="n">calendar</span><span class="o">=</span><span class="n">calendar</span><span class="p">,</span>
+            <span class="n">use_cftime</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ds</span><span class="o">.</span><span class="n">assign_coords</span><span class="p">({</span><span class="n">init_time_dim</span><span class="p">:</span> <span class="p">(</span><span class="n">init_time_dim</span><span class="p">,</span> <span class="n">times</span><span class="p">)})</span></div>
+
+
+
+<div class="viewcode-block" id="get_time_representation">
+<a class="viewcode-back" href="../../../api/cccma_ppp.data_modules.utils.html#cccma_ppp.data_modules.data.data_abc.get_time_representation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_time_representation</span><span class="p">(</span>
+    <span class="n">time</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">CFTimeIndex</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimeTypes</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Document this function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    time : xr.DataArray | pd.DatetimeIndex | xr.CFTimeIndex</span>
+<span class="sd">        Description not yet provided.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    TimeTypes</span>
+<span class="sd">        Description not yet provided.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="n">first</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">cftime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;cftime&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;datetime&quot;</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">CFTimeIndex</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;cftime&quot;</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;datetime&quot;</span>
+
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Time coordinate must use either datetime or cftime objects.&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="infer_time_resolution">
+<a class="viewcode-back" href="../../../api/cccma_ppp.data_modules.utils.html#cccma_ppp.data_modules.data.data_abc.infer_time_resolution">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">infer_time_resolution</span><span class="p">(</span>
+    <span class="n">times</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">CFTimeIndex</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimeFrequency</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Document this function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    times : pd.DatetimeIndex | xr.CFTimeIndex</span>
+<span class="sd">        Description not yet provided.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    TimeFrequency</span>
+<span class="sd">        Description not yet provided.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        Description not yet provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;At least two timestamps are required to infer the resolution.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">deltas</span> <span class="o">=</span> <span class="p">[(</span><span class="n">t2</span> <span class="o">-</span> <span class="n">t1</span><span class="p">)</span><span class="o">.</span><span class="n">days</span> <span class="k">for</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">times</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">times</span><span class="p">[</span><span class="mi">1</span><span class="p">:])]</span>
+
+    <span class="n">min_delta</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">deltas</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">min_delta</span> <span class="o">&lt;</span> <span class="mi">28</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;day&quot;</span>
+
+    <span class="k">if</span> <span class="n">min_delta</span> <span class="o">&lt;</span> <span class="mi">365</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;month&quot;</span>
+
+    <span class="k">return</span> <span class="s2">&quot;year&quot;</span></div>
+
 </pre></div>
 
            </div>

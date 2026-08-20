@@ -1,1 +1,165 @@
-/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/loss/utils_loss.py:docstring of cccma_ppp.loss.utils_loss.Frobenius_norm.forward:32: WARNING: Enumerated list ends without a blank line; unexpected unindent. [docutils]
+WARNING: Failed to import cccma_ppp.core.cVAE_module.
+Possible hints:
+* AttributeError: module 'cccma_ppp.core' has no attribute 'cVAE_module'
+* ModuleNotFoundError: No module named 'cccma_ppp.core.cVAE_module'
+WARNING: Failed to import cccma_ppp.core.deterministic_module.
+Possible hints:
+* ModuleNotFoundError: No module named 'cccma_ppp.core.deterministic_module'
+* AttributeError: module 'cccma_ppp.core' has no attribute 'deterministic_module'
+WARNING: Failed to import cccma_ppp.monitoring.
+Possible hints:
+* AttributeError: module 'cccma_ppp' has no attribute 'monitoring'
+* ModuleNotFoundError: No module named 'cccma_ppp.monitoring'
+WARNING: Failed to import cccma_ppp.inference.train.
+Possible hints:
+* AttributeError: module 'cccma_ppp.inference' has no attribute 'train'
+* ModuleNotFoundError: No module named 'cccma_ppp.inference.train'
+WARNING: Failed to import cccma_ppp.models.normalized_flows.
+Possible hints:
+* AttributeError: module 'cccma_ppp' has no attribute 'models'
+* ModuleNotFoundError: No module named 'cccma_ppp.models'
+WARNING: Failed to import cccma_ppp.inference.registry_imports.
+Possible hints:
+* ModuleNotFoundError: No module named 'cccma_ppp.inference.registry_imports'
+* AttributeError: module 'cccma_ppp.inference' has no attribute 'registry_imports'
+WARNING: Failed to import cccma_ppp.data_modules.dataset.config_abc.
+Possible hints:
+* ModuleNotFoundError: No module named 'cccma_ppp.data_modules.dataset.config_abc'
+* AttributeError: module 'cccma_ppp.data_modules.dataset' has no attribute 'config_abc'
+WARNING: Failed to import cccma_ppp.models.mlp_models.
+Possible hints:
+* AttributeError: module 'cccma_ppp' has no attribute 'models'
+* ModuleNotFoundError: No module named 'cccma_ppp.models'
+WARNING: Failed to import cccma_ppp.models.models_abc.
+Possible hints:
+* AttributeError: module 'cccma_ppp' has no attribute 'models'
+* ModuleNotFoundError: No module named 'cccma_ppp.models'
+WARNING: Failed to import cccma_ppp.train.datasets.
+Possible hints:
+* AttributeError: module 'cccma_ppp.train' has no attribute 'datasets'
+* ModuleNotFoundError: No module named 'cccma_ppp.train.datasets'
+WARNING: Failed to import cccma_ppp.models.
+Possible hints:
+* AttributeError: module 'cccma_ppp' has no attribute 'models'
+* ModuleNotFoundError: No module named 'cccma_ppp.models'
+WARNING: Failed to import cccma_ppp.train.registry_imports.
+Possible hints:
+* ModuleNotFoundError: No module named 'cccma_ppp.train.registry_imports'
+* AttributeError: module 'cccma_ppp.train' has no attribute 'registry_imports'
+WARNING: autodoc: failed to import 'cVAE_module' from module 'cccma_ppp.core'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.core.cVAE_module'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'deterministic_module' from module 'cccma_ppp.core'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.core.deterministic_module'
+ [autodoc.import_object]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:73: ERROR: Unexpected indentation. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:74: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:79: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:92: WARNING: Inline emphasis start-string without end-string. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:36: ERROR: Unexpected indentation. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:37: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:42: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:50: WARNING: Inline emphasis start-string without end-string. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.wrapattr:3: ERROR: Unexpected indentation. [docutils]
+WARNING: autodoc: failed to import 'config_abc' from module 'cccma_ppp.data_modules.dataset'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.data_modules.dataset.config_abc'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'registry_imports' from module 'cccma_ppp.inference'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.inference.registry_imports'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'train' from module 'cccma_ppp.inference'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.inference.train'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'models' from module 'cccma_ppp'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.models'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'models.mlp_models' from module 'cccma_ppp'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.models'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'models.models_abc' from module 'cccma_ppp'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.models'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'models.normalized_flows' from module 'cccma_ppp'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.models'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'monitoring' from module 'cccma_ppp'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.monitoring'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'datasets' from module 'cccma_ppp.train'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.train.datasets'
+ [autodoc.import_object]
+WARNING: autodoc: failed to import 'registry_imports' from module 'cccma_ppp.train'; the following exception was raised:
+Traceback (most recent call last):
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
+    module = _import_module(module_name, try_reload=True)
+  File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 218, in _import_module
+    raise ModuleNotFoundError(msg, name=modname)  # NoQA: TRY301
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'cccma_ppp.train.registry_imports'
+ [autodoc.import_object]

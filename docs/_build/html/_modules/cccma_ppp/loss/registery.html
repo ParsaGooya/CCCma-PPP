@@ -84,48 +84,41 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.loss.registery.html#cccma_ppp.loss.loss.Registery">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Registery</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Registry for mapping string identifiers to classes and instantiating them.</span>
-
-<span class="sd">    Methods</span>
-<span class="sd">    -------</span>
-<span class="sd">    register(name)</span>
-<span class="sd">        Register a class under a given name.</span>
-<span class="sd">    get(name, config=None)</span>
-<span class="sd">        Retrieve and instantiate a registered class.</span>
-<span class="sd">    available()</span>
-<span class="sd">        Return all registered names.</span>
+<span class="sd">    Document this class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize an empty registry.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
+<span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="Registery.register">
 <a class="viewcode-back" href="../../../api/cccma_ppp.loss.registery.html#cccma_ppp.loss.loss.Registery.register">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Register a class under a specified name.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        name : str</span>
-<span class="sd">            Identifier used to register the class.</span>
+<span class="sd">        name : Any</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Callable</span>
-<span class="sd">            Decorator that registers the class.</span>
-
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">decorator</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Document this function.</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            Any</span>
+<span class="sd">                Description not yet provided.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span>
             <span class="k">return</span> <span class="bp">cls</span>
 
@@ -136,30 +129,25 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.loss.registery.html#cccma_ppp.loss.loss.Registery.get">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Retrieve and instantiate a registered class.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        name : str</span>
-<span class="sd">            Name of the registered class.</span>
-<span class="sd">        config : dict or object or None, optional</span>
-<span class="sd">            Configuration used for instantiation.</span>
-
-<span class="sd">            - If dict and class is a dataclass, uses `dacite.from_dict`.</span>
-<span class="sd">            - If dict and class is not a dataclass, uses `cls(**config)`.</span>
-<span class="sd">            - Otherwise, instantiates using `cls(config)`.</span>
+<span class="sd">        name : Any</span>
+<span class="sd">            Description not yet provided.</span>
+<span class="sd">        config : Any</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        object</span>
-<span class="sd">            Instantiated object.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If the requested name is not registered.</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> not registered. should be in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">available</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -182,14 +170,13 @@
 <a class="viewcode-back" href="../../../api/cccma_ppp.loss.registery.html#cccma_ppp.loss.loss.Registery.available">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">available</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get available class names.</span>
+<span class="sd">        Document this function.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        list of str</span>
-<span class="sd">            Registered identifiers.</span>
+<span class="sd">        Any</span>
+<span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
 </div>
 

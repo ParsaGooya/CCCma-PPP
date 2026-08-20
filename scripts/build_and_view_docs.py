@@ -49,7 +49,6 @@ def build(strict=False):
 
 
 def summarize_warnings():
-
     if not WARNINGS_FILE.exists():
         return
 
@@ -78,7 +77,8 @@ def serve(port):
             str(port),
             "-d",
             str(HTML_DIR),
-        ]
+        ],
+        check=False,
     )
 
 
@@ -93,8 +93,16 @@ def main():
 
     parser.add_argument(
         "--serve",
-        action="store_true",
-        help="Serve generated HTML",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Serve generated HTML after a successful build",
+    )
+
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=18000,
+        help="Port used by the documentation server (default: 18000)",
     )
 
     args = parser.parse_args()
@@ -109,8 +117,14 @@ def main():
 
     summarize_warnings()
 
-    if rc == 0:
-        serve(18000)
+    if rc == 0 and args.serve:
+        print()
+        print(f"Serving documentation at http://localhost:{args.port}")
+        print("Press Ctrl+C to stop the server.")
+        serve(args.port)
+    elif rc == 0:
+        print()
+        print("Documentation build completed. Server disabled.")
 
     sys.exit(rc)
 
