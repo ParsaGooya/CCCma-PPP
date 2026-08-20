@@ -1,11 +1,5 @@
 from __future__ import annotations
 
-from contextlib import redirect_stderr, redirect_stdout
-from copy import deepcopy
-from datetime import datetime
-from functools import partial
-from pathlib import Path
-from typing import Any, Callable, Iterator
 import csv
 import gc
 import json
@@ -14,6 +8,12 @@ import re
 import shutil
 import traceback
 import warnings
+from contextlib import redirect_stderr, redirect_stdout
+from copy import deepcopy
+from datetime import datetime
+from functools import partial
+from pathlib import Path
+from typing import Any, Callable, Iterator
 
 import dacite
 import numpy as np
@@ -21,9 +21,22 @@ import torch
 import yaml
 from tqdm import tqdm
 
+
 from cccma_ppp.configs import required_sample_dimensions
 from cccma_ppp.generic import registry_imports  # noqa: F401
+from cccma_ppp.loss import kld as _loss_kld  # noqa: F401
+from cccma_ppp.loss import loss as _loss_pipeline  # noqa: F401
+from cccma_ppp.loss import utils_loss as _loss_utils  # noqa: F401
+from cccma_ppp.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
+from cccma_ppp.architectures.mlp import (
+    deterministic as _mlp_deterministic,
+)  # noqa: F401
+from cccma_ppp.architectures.unet import cvae as _unet_cvae  # noqa: F401
+from cccma_ppp.architectures.unet import (
+    deterministic as _unet_deterministic,
+)  # noqa: F401
 from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.train.train_configs import TrainConfig, prepare_config
 
 
@@ -32,16 +45,18 @@ logging.raiseExceptions = False
 
 
 ROOT = Path(__file__).resolve().parents[1]
-BASE_TRAIN_CONFIG = ROOT / "scripts" / "integration_suite_train_config.yaml"
+
+BASE_TRAIN_CONFIG = ROOT / "integration_suite_train_config.yaml"
 
 OUTPUT_DIR = ROOT / "../output" / "data_modules_integration_test_results"
-GENERATED_CONFIG_DIR = OUTPUT_DIR / "_generated_configs"
-LOG_DIR = OUTPUT_DIR / "_logs"
-PREPROCESSOR_DIR = OUTPUT_DIR / "_preprocessing_pipeline"
+
+CASES_DIR = OUTPUT_DIR / "cases"
 RESULTS_CSV = OUTPUT_DIR / "integration_results.csv"
 SUMMARY_PATH = OUTPUT_DIR / "summary.txt"
 
+
 INIT_TIME_DIM, LEAD_TIME_DIM = required_sample_dimensions
+
 
 RUN_DATA_CONFIG_COMBINATIONS = True
 RUN_DATASET_GETITEM_CASES = True
@@ -51,8 +66,10 @@ RUN_MULTIWORKER_CASES = True
 RUN_FUTURE_MASK_CASES = True
 RUN_DISTRIBUTED_PREPROCESSOR_CASES = True
 
+
 MAX_CASES: int | None = None
 MAX_BATCHES_PER_CASE = 4
+
 
 VALID_TIME_FEATURES = {
     INIT_TIME_DIM,
@@ -63,16 +80,19 @@ VALID_TIME_FEATURES = {
     "day_cos",
 }
 
+
 DEFAULT_TIME_FEATURES = [
     LEAD_TIME_DIM,
     "month_sin",
     "month_cos",
 ]
 
+
 FULL_LEAD_MONTHS = {
     "start": 1,
     "end": 12,
 }
+
 
 CSV_COLUMNS = [
     "timestamp",
@@ -94,20 +114,15 @@ CSV_COLUMNS = [
     "expected_result",
     "expected_failure_reason",
     "expected_error_pattern",
+    "case_dir",
     "config_path",
     "log_path",
+    "preprocessor_dir",
     "result",
     "error",
 ]
 
 
-# Required Dataset.__getitem__ combinations.
-#
-# model condition observation condition_method  INPUT                    TARGET
-# Y     N         N           MUST              model by method          model
-# Y     Y         N           MUST              condition by method      model
-# Y     Y         Y           MUST              model + condition        observation
-# Y     N         Y           OPTIONAL          model                    observation
 DATA_CONFIG_COMBINATIONS = [
     {
         "name": "autoencode_model_conditioned_on_itself",
@@ -208,7 +223,7 @@ DATA_CONFIG_COMBINATIONS = [
 DATALOADER_CASES = [
     {
         "name": "train_year_slice",
-        "description": "Select the configured training years and iterate batches.",
+        "description": ("Select the configured training years and iterate batches."),
         "year_slice": [1980, 1981],
         "num_data_workers": 0,
         "shuffle": False,
@@ -266,70 +281,178 @@ DATALOADER_CASES = [
 
 
 class LimitedLoader:
-    def __init__(self, loader: Any, max_batches: int | None) -> None:
+    def __init__(
+        self,
+        loader: Any,
+        max_batches: int | None,
+    ) -> None:
         self._loader = loader
         self._max_batches = max_batches
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         for index, batch in enumerate(self._loader):
             if self._max_batches is not None and index >= self._max_batches:
                 break
+
             yield batch
 
     def __len__(self) -> int:
         length = len(self._loader)
-        return length if self._max_batches is None else min(length, self._max_batches)
 
-    def __getattr__(self, name: str) -> Any:
-        return getattr(self._loader, name)
+        if self._max_batches is None:
+            return length
+
+        return min(
+            length,
+            self._max_batches,
+        )
+
+    def __getattr__(
+        self,
+        name: str,
+    ) -> Any:
+        return getattr(
+            self._loader,
+            name,
+        )
 
 
 def prepare_output_directories() -> None:
-    for path in (OUTPUT_DIR, GENERATED_CONFIG_DIR, LOG_DIR, PREPROCESSOR_DIR):
-        path.mkdir(parents=True, exist_ok=True)
+    OUTPUT_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    CASES_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    obsolete_directories = (
+        OUTPUT_DIR / "_generated_configs",
+        OUTPUT_DIR / "_logs",
+        OUTPUT_DIR / "_preprocessing_pipeline",
+        OUTPUT_DIR / "_parallel_monitoring",
+    )
+
+    for directory in obsolete_directories:
+        if directory.exists():
+            shutil.rmtree(directory)
 
 
 def cleanup_logging_handlers() -> None:
-    logger_names = ["", "training"]
+    logger_names = [
+        "",
+        "training",
+        "inference",
+    ]
+
     logger_names.extend(
         name
         for name in logging.Logger.manager.loggerDict
         if name.startswith("cccma_ppp")
     )
+
     for name in dict.fromkeys(logger_names):
         logger = logging.getLogger(name)
+
         for handler in list(logger.handlers):
             logger.removeHandler(handler)
+
             try:
                 handler.flush()
+            except Exception:
+                pass
+
+            try:
                 handler.close()
             except Exception:
                 pass
+
         logger.propagate = False
 
 
-def clean_name(value: Any) -> str:
-    value = str(value).replace("None", "none")
-    value = re.sub(r"[^A-Za-z0-9_.-]+", "_", value)
-    return re.sub(r"_+", "_", value).strip("_")
+def clean_name(
+    value: Any,
+) -> str:
+    value = str(value).replace(
+        "None",
+        "none",
+    )
+
+    value = re.sub(
+        r"[^A-Za-z0-9_.-]+",
+        "_",
+        value,
+    )
+
+    value = re.sub(
+        r"_+",
+        "_",
+        value,
+    )
+
+    return value.strip("_")
 
 
-def serialize_json(value: Any) -> str:
-    return json.dumps(value, sort_keys=True, default=str)
+def serialize_json(
+    value: Any,
+) -> str:
+    return json.dumps(
+        value,
+        sort_keys=True,
+        default=str,
+    )
 
 
 def init_csv() -> None:
     prepare_output_directories()
-    with RESULTS_CSV.open("w", newline="", encoding="utf-8") as file:
-        csv.DictWriter(file, fieldnames=CSV_COLUMNS).writeheader()
+
+    with RESULTS_CSV.open(
+        "w",
+        newline="",
+        encoding="utf-8",
+    ) as file:
+        writer = csv.DictWriter(
+            file,
+            fieldnames=CSV_COLUMNS,
+            extrasaction="ignore",
+            lineterminator="\n",
+        )
+
+        writer.writeheader()
 
 
-def case_paths(case_name: str) -> dict[str, Path]:
-    safe_name = clean_name(case_name)
+def case_paths(
+    case_name: str,
+) -> dict[str, Path]:
+    case_dir = CASES_DIR / clean_name(case_name)
+
     return {
-        "config_path": GENERATED_CONFIG_DIR / f"{safe_name}.yaml",
-        "log_path": LOG_DIR / f"{safe_name}.log",
+        "case_dir": case_dir,
+        "config_path": case_dir / "config.yaml",
+        "log_path": case_dir / "case.log",
+        "preprocessor_dir": (case_dir / "preprocessing_pipeline"),
     }
+
+
+def configure_runtime_context(
+    config_path: Path,
+) -> Path:
+    case_dir = Path(config_path).resolve().parent
+
+    case_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    RuntimeContext.GLOBAL_EXP_DIR = str(case_dir)
+
+    return case_dir
+
+
+def reset_runtime_context() -> None:
+    RuntimeContext.GLOBAL_EXP_DIR = None
 
 
 def log_result(
@@ -340,11 +463,15 @@ def log_result(
     error: str,
 ) -> None:
     params = task["params"]
+
     row = {
         "timestamp": datetime.now().isoformat(),
         "suite": task["suite"],
         "case_name": task["case_name"],
-        "description": params.get("description", ""),
+        "description": params.get(
+            "description",
+            "",
+        ),
         "model_present": params.get("model_present"),
         "condition_present": params.get("condition_present"),
         "observation_present": params.get("observation_present"),
@@ -357,41 +484,86 @@ def log_result(
         "num_data_workers": params.get("num_data_workers"),
         "expected_input": params.get("expected_input"),
         "expected_target": params.get("expected_target"),
-        "expected_result": params.get("expected_result", "PASS"),
-        "expected_failure_reason": params.get("expected_failure_reason", ""),
-        "expected_error_pattern": params.get("expected_error_pattern", ""),
+        "expected_result": params.get(
+            "expected_result",
+            "PASS",
+        ),
+        "expected_failure_reason": params.get(
+            "expected_failure_reason",
+            "",
+        ),
+        "expected_error_pattern": params.get(
+            "expected_error_pattern",
+            "",
+        ),
+        "case_dir": str(paths["case_dir"]),
         "config_path": str(paths["config_path"]),
         "log_path": str(paths["log_path"]),
-        "result": "PASS" if passed else "FAIL",
+        "preprocessor_dir": str(paths["preprocessor_dir"]),
+        "result": ("PASS" if passed else "FAIL"),
         "error": error,
     }
-    with RESULTS_CSV.open("a", newline="", encoding="utf-8") as file:
-        writer = csv.DictWriter(file, fieldnames=CSV_COLUMNS)
+
+    with RESULTS_CSV.open(
+        "a",
+        newline="",
+        encoding="utf-8",
+    ) as file:
+        writer = csv.DictWriter(
+            file,
+            fieldnames=CSV_COLUMNS,
+            extrasaction="ignore",
+            lineterminator="\n",
+        )
+
         writer.writerow(row)
+        file.flush()
 
 
-def normalize_nullable_fields(cfg: dict[str, Any]) -> dict[str, Any]:
-    loader_cfg = cfg.setdefault("train_loader", {})
-    dataset_cfg = loader_cfg.setdefault("dataset_config", {})
+def normalize_nullable_fields(
+    cfg: dict[str, Any],
+) -> dict[str, Any]:
+    loader_cfg = cfg.setdefault(
+        "train_loader",
+        {},
+    )
+
+    dataset_cfg = loader_cfg.setdefault(
+        "dataset_config",
+        {},
+    )
 
     if "time_features" in dataset_cfg:
         raise ValueError(
-            "time_features is no longer a DatasetConfig field. Configure it "
-            "under train_loader.time_features."
+            "time_features is no longer a DatasetConfig "
+            "field. Configure it under "
+            "train_loader.time_features."
         )
+
     if loader_cfg.get("time_features") is None:
-        loader_cfg.pop("time_features", None)
+        loader_cfg.pop(
+            "time_features",
+            None,
+        )
+
     if dataset_cfg.get("condition_method") is None:
-        dataset_cfg.pop("condition_method", None)
+        dataset_cfg.pop(
+            "condition_method",
+            None,
+        )
+
     if dataset_cfg.get("lead_times") is None:
-        dataset_cfg.pop("lead_times", None)
+        dataset_cfg.pop(
+            "lead_times",
+            None,
+        )
+
     return cfg
 
 
 def validate_generated_config(
     cfg: dict[str, Any],
 ) -> dict[str, Any]:
-
     train_loader_cfg = cfg.get("train_loader")
 
     if not isinstance(
@@ -412,20 +584,22 @@ def validate_generated_config(
         "shuffle",
         "return_metadata",
     }
+
     misplaced_arguments = runtime_loader_arguments & set(train_loader_cfg)
 
     if misplaced_arguments:
         raise ValueError(
-            "The following values are runtime arguments to "
-            "build_train_loader(), not TrainDataloaderConfig "
-            "fields: "
+            "The following values are runtime arguments "
+            "to build_train_loader(), not "
+            "TrainDataloaderConfig fields: "
             f"{sorted(misplaced_arguments)}"
         )
 
     if "time_features" in dataset_cfg:
         raise ValueError(
             "time_features must be configured under "
-            "train_loader, not train_loader.dataset_config."
+            "train_loader, not "
+            "train_loader.dataset_config."
         )
 
     time_features = train_loader_cfg.get("time_features")
@@ -442,7 +616,8 @@ def validate_generated_config(
         if unsupported:
             raise ValueError(
                 "Unsupported train_loader.time_features: "
-                f"{sorted(unsupported)}. Supported values are "
+                f"{sorted(unsupported)}. "
+                "Supported values are "
                 f"{sorted(VALID_TIME_FEATURES)}."
             )
 
@@ -459,7 +634,10 @@ def validate_generated_config(
 
     if (
         isinstance(num_data_workers, bool)
-        or not isinstance(num_data_workers, int)
+        or not isinstance(
+            num_data_workers,
+            int,
+        )
         or num_data_workers < 0
     ):
         raise ValueError(
@@ -468,23 +646,41 @@ def validate_generated_config(
 
     if num_data_workers == 0 and train_loader_cfg.get("prefetch_factor") is not None:
         raise ValueError(
-            "train_loader.prefetch_factor must be omitted or "
-            "null when num_data_workers=0."
+            "train_loader.prefetch_factor must be omitted "
+            "or null when num_data_workers=0."
         )
 
     return cfg
 
 
-def write_yaml(cfg: dict[str, Any], output_path: Path) -> Path:
-    cfg = validate_generated_config(normalize_nullable_fields(deepcopy(cfg)))
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with output_path.open("w", encoding="utf-8") as file:
-        yaml.safe_dump(cfg, file, sort_keys=False)
+def write_yaml(
+    cfg: dict[str, Any],
+    output_path: Path,
+) -> Path:
+    cfg = deepcopy(cfg)
+
+    normalize_nullable_fields(cfg)
+    validate_generated_config(cfg)
+
+    output_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    with output_path.open(
+        "w",
+        encoding="utf-8",
+    ) as file:
+        yaml.safe_dump(
+            cfg,
+            file,
+            sort_keys=False,
+        )
+
     return output_path
 
 
 def base_config() -> dict[str, Any]:
-
     cfg = prepare_config(BASE_TRAIN_CONFIG)
 
     if cfg is None:
@@ -514,8 +710,9 @@ def base_config() -> dict[str, Any]:
 
     if "time_features" in dataset_cfg:
         raise ValueError(
-            "Move train_loader.dataset_config.time_features "
-            "to train_loader.time_features."
+            "Move train_loader.dataset_config."
+            "time_features to "
+            "train_loader.time_features."
         )
 
     train_loader_cfg["batch_size"] = 2
@@ -535,7 +732,6 @@ def base_config() -> dict[str, Any]:
         "return_metadata",
         None,
     )
-
     train_loader_cfg.pop(
         "prefetch_factor",
         None,
@@ -547,22 +743,34 @@ def base_config() -> dict[str, Any]:
     return cfg
 
 
-def load_train_config(config_path: Path) -> TrainConfig:
+def load_train_config(
+    config_path: Path,
+) -> TrainConfig:
     data = prepare_config(config_path)
+
     if data is None:
         raise ValueError(f"Generated config is empty: {config_path}")
-    data = validate_generated_config(normalize_nullable_fields(data))
+
+    normalize_nullable_fields(data)
+    validate_generated_config(data)
+
     return dacite.from_dict(
         data_class=TrainConfig,
         data=data,
-        config=dacite.Config(strict=True),
+        config=dacite.Config(
+            strict=True,
+        ),
     )
 
 
-def copy_data_config(data_cfg: dict[str, Any]) -> dict[str, Any]:
+def copy_data_config(
+    data_cfg: dict[str, Any],
+) -> dict[str, Any]:
     copied = deepcopy(data_cfg)
 
-    copied["preprocessing_pipeline"] = deepcopy(data_cfg["preprocessing_pipeline"])
+    if "preprocessing_pipeline" in data_cfg:
+        copied["preprocessing_pipeline"] = deepcopy(data_cfg["preprocessing_pipeline"])
+
     return copied
 
 
@@ -570,15 +778,15 @@ def apply_data_combination(
     cfg: dict[str, Any],
     params: dict[str, Any],
 ) -> dict[str, Any]:
-
     train_loader_cfg = cfg["train_loader"]
     dataset_cfg = train_loader_cfg["dataset_config"]
     model_cfg = dataset_cfg["model"]
 
     if "time_features" in dataset_cfg:
         raise ValueError(
-            "time_features must be configured under train_loader, "
-            "not train_loader.dataset_config."
+            "time_features must be configured under "
+            "train_loader, not "
+            "train_loader.dataset_config."
         )
 
     if "model_ensemble_mean" in params:
@@ -592,6 +800,7 @@ def apply_data_combination(
             "condition",
             model_cfg,
         )
+
         dataset_cfg["condition"] = copy_data_config(condition_source)
 
         condition_ensemble_mean = params.get("condition_ensemble_mean")
@@ -637,12 +846,26 @@ def apply_data_combination(
     if "year_slice" in params:
         train_loader_cfg["train_years_slice"] = deepcopy(params["year_slice"])
 
+    if "lead_months" in params:
+        lead_months = params["lead_months"]
+
+        if lead_months is None:
+            dataset_cfg.pop(
+                "lead_times",
+                None,
+            )
+        else:
+            dataset_cfg["lead_times"] = deepcopy(lead_months)
+
     if "num_data_workers" in params:
         num_data_workers = params["num_data_workers"]
 
         if (
             isinstance(num_data_workers, bool)
-            or not isinstance(num_data_workers, int)
+            or not isinstance(
+                num_data_workers,
+                int,
+            )
             or num_data_workers < 0
         ):
             raise ValueError("num_data_workers must be a non-negative integer.")
@@ -680,471 +903,1097 @@ def apply_data_combination(
     return cfg
 
 
-def run_silenced(function: Callable[[], Any], log_path: Path) -> Any:
-    log_path.parent.mkdir(parents=True, exist_ok=True)
+def build_case_config(
+    params: dict[str, Any],
+) -> dict[str, Any]:
+    cfg = base_config()
+
+    apply_data_combination(
+        cfg,
+        params,
+    )
+
+    return cfg
+
+
+def run_silenced(
+    function: Callable[[], Any],
+    log_path: Path,
+) -> Any:
+    log_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
     cleanup_logging_handlers()
-    with log_path.open("w", encoding="utf-8") as log_file:
+
+    with log_path.open(
+        "w",
+        encoding="utf-8",
+    ) as log_file:
         try:
-            with redirect_stdout(log_file), redirect_stderr(log_file):
+            with (
+                redirect_stdout(log_file),
+                redirect_stderr(log_file),
+            ):
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
+
                     return function()
         finally:
             cleanup_logging_handlers()
 
 
-def append_exception_to_log(log_path: Path) -> None:
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    with log_path.open("a", encoding="utf-8") as file:
+def append_exception_to_log(
+    log_path: Path,
+) -> None:
+    log_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    with log_path.open(
+        "a",
+        encoding="utf-8",
+    ) as file:
         traceback.print_exc(file=file)
 
 
-def setup_loader(config: TrainConfig) -> Any:
+def setup_loader(
+    config: TrainConfig,
+    config_path: Path,
+    *,
+    return_metadata: bool = False,
+    shuffle: bool = False,
+) -> Any:
+    configure_runtime_context(config_path)
+
     distributed = Distributed.get_instance()
+
     config.train_loader.setup_distributed(distributed)
-    return config.train_loader.build_train_loader(shuffle=False)
+
+    return config.train_loader.build_train_loader(
+        return_metadata=return_metadata,
+        shuffle=shuffle,
+    )
 
 
-def sample_get(sample: Any, name: str) -> Any:
-    if isinstance(sample, dict):
+def sample_get(
+    sample: Any,
+    name: str,
+) -> Any:
+    if isinstance(
+        sample,
+        dict,
+    ):
         return sample.get(name)
-    return getattr(sample, name, None)
+
+    return getattr(
+        sample,
+        name,
+        None,
+    )
 
 
-def assert_tensor(name: str, value: Any) -> None:
-    if not isinstance(value, torch.Tensor):
+def assert_tensor(
+    name: str,
+    value: Any,
+) -> None:
+    if not isinstance(
+        value,
+        torch.Tensor,
+    ):
         raise AssertionError(f"{name} is not a torch.Tensor: {type(value).__name__}")
+
     if value.numel() == 0:
         raise AssertionError(f"{name} is empty.")
+
     if torch.is_floating_point(value) and not torch.isfinite(value).all():
         raise AssertionError(f"{name} contains non-finite values.")
 
 
-def assert_dataset_getitem_contract(dataset: Any, params: dict[str, Any]) -> None:
+def assert_dataset_getitem_contract(
+    dataset: Any,
+    params: dict[str, Any],
+) -> None:
     if len(dataset) <= 0:
         raise AssertionError("Dataset is empty.")
+
     sample = dataset[0]
-    input_tensor = sample_get(sample, "input")
-    target_tensor = sample_get(sample, "target")
-    added_features = sample_get(sample, "added_features")
 
-    assert_tensor("sample.input", input_tensor)
-    assert_tensor("sample.target", target_tensor)
-
-    features = params.get("time_features", DEFAULT_TIME_FEATURES)
-    if features:
-        assert_tensor("sample.added_features", added_features)
-    elif (
-        added_features is not None and getattr(added_features, "numel", lambda: 0)() > 0
-    ):
+    if not isinstance(sample, tuple):
         raise AssertionError(
-            "added_features is populated although time_features is empty."
+            "Dataset.__getitem__ must return a tuple containing "
+            "sample data and metadata, "
+            f"got {type(sample).__name__}."
         )
 
+    if len(sample) != 2:
+        raise AssertionError(
+            "Dataset.__getitem__ must return exactly two values: "
+            f"(sample_data, metadata), got {len(sample)} values."
+        )
+
+    sample_data, metadata = sample
+
+    if not isinstance(sample_data, dict):
+        raise AssertionError(
+            "The first Dataset.__getitem__ value must be a dictionary, "
+            f"got {type(sample_data).__name__}."
+        )
+
+    if not isinstance(metadata, dict):
+        raise AssertionError(
+            "The second Dataset.__getitem__ value must be a metadata "
+            f"dictionary, got {type(metadata).__name__}."
+        )
+
+    required_sample_fields = {
+        "input",
+        "target",
+    }
+
+    missing_sample_fields = required_sample_fields - set(sample_data)
+
+    if missing_sample_fields:
+        raise AssertionError(
+            "Dataset sample data is missing required fields: "
+            f"{sorted(missing_sample_fields)}. "
+            f"Available fields: {sorted(sample_data)}."
+        )
+
+    input_tensor = sample_data["input"]
+    target_tensor = sample_data["target"]
+    added_features = sample_data.get("added_features")
+
+    assert_tensor(
+        "sample.input",
+        input_tensor,
+    )
+    assert_tensor(
+        "sample.target",
+        target_tensor,
+    )
+
+    features = params.get(
+        "time_features",
+        DEFAULT_TIME_FEATURES,
+    )
+
+    if features:
+        assert_tensor(
+            "sample.added_features",
+            added_features,
+        )
+    elif (
+        added_features is not None
+        and getattr(
+            added_features,
+            "numel",
+            lambda: 0,
+        )()
+        > 0
+    ):
+        raise AssertionError(
+            "sample.added_features is populated although time_features is empty."
+        )
+
+    required_metadata_fields = {
+        INIT_TIME_DIM,
+        LEAD_TIME_DIM,
+    }
+
+    missing_metadata_fields = required_metadata_fields - set(metadata)
+
+    if missing_metadata_fields:
+        raise AssertionError(
+            "Dataset metadata is missing required fields: "
+            f"{sorted(missing_metadata_fields)}. "
+            f"Available fields: {sorted(metadata)}."
+        )
+
+    dataset_config = getattr(
+        dataset,
+        "config",
+        None,
+    )
+
     if params.get("observation_present"):
-        observation_cfg = getattr(getattr(dataset, "config", None), "observation", None)
-        if observation_cfg is None:
+        observation_config = getattr(
+            dataset_config,
+            "observation",
+            None,
+        )
+
+        if observation_config is None:
             raise AssertionError(
-                "Observation target was requested but dataset has none."
+                "Observation data was requested, but the dataset "
+                "configuration has no observation."
             )
 
     if params.get("condition_present"):
-        condition_cfg = getattr(getattr(dataset, "config", None), "condition", None)
-        if condition_cfg is None:
+        condition_config = getattr(
+            dataset_config,
+            "condition",
+            None,
+        )
+
+        if condition_config is None:
             raise AssertionError(
-                "Explicit condition was requested but dataset has none."
+                "Condition data was requested, but the dataset "
+                "configuration has no condition."
             )
 
     print(f"dataset_length={len(dataset)}")
+    print(f"sample_fields={sorted(sample_data)}")
+    print(f"metadata_fields={sorted(metadata)}")
     print(f"input_shape={tuple(input_tensor.shape)}")
     print(f"target_shape={tuple(target_tensor.shape)}")
+
+    if added_features is not None:
+        print(f"added_features_shape={tuple(added_features.shape)}")
+
+    print(f"metadata={metadata}")
     print(f"expected_input={params.get('expected_input')}")
     print(f"expected_target={params.get('expected_target')}")
 
 
-def extract_metadata(batch: Any) -> Any:
-    return getattr(batch, "metadata", None)
+def extract_metadata(
+    batch: Any,
+) -> Any:
+    if isinstance(
+        batch,
+        dict,
+    ):
+        return batch.get("metadata")
+
+    return getattr(
+        batch,
+        "metadata",
+        None,
+    )
 
 
-def flatten_metadata(metadata: Any) -> list[Any]:
+def flatten_metadata(
+    metadata: Any,
+) -> list:
     if metadata is None:
         return []
-    if isinstance(metadata, list):
+
+    if isinstance(
+        metadata,
+        list,
+    ):
         return metadata
-    if isinstance(metadata, tuple):
+
+    if isinstance(
+        metadata,
+        tuple,
+    ):
         return list(metadata)
-    if isinstance(metadata, dict):
+
+    if isinstance(
+        metadata,
+        dict,
+    ):
         lengths = [
-            len(value) for value in metadata.values() if hasattr(value, "__len__")
+            len(value)
+            for value in metadata.values()
+            if (
+                hasattr(
+                    value,
+                    "__len__",
+                )
+                and not isinstance(
+                    value,
+                    str,
+                )
+            )
         ]
+
         if not lengths:
             return [metadata]
+
         count = min(lengths)
+
         return [
-            {key: value[index] for key, value in metadata.items()}
+            {
+                key: (
+                    value[index]
+                    if (
+                        hasattr(
+                            value,
+                            "__len__",
+                        )
+                        and not isinstance(
+                            value,
+                            str,
+                        )
+                    )
+                    else value
+                )
+                for key, value in metadata.items()
+            }
             for index in range(count)
         ]
+
     return [metadata]
 
 
-def metadata_value(item: Any, names: tuple[str, ...]) -> Any:
+def metadata_value(
+    item: Any,
+    names: tuple[str, ...],
+) -> Any:
     for name in names:
         if isinstance(item, dict) and name in item:
             return item[name]
-        if hasattr(item, name):
-            return getattr(item, name)
+
+        if hasattr(
+            item,
+            name,
+        ):
+            return getattr(
+                item,
+                name,
+            )
+
     return None
 
 
-def canonical_sample_key(item: Any) -> str:
-    if isinstance(item, dict):
+def canonical_sample_key(
+    item: Any,
+) -> str:
+    if isinstance(
+        item,
+        dict,
+    ):
         return serialize_json(item)
-    if hasattr(item, "__dict__"):
+
+    if hasattr(
+        item,
+        "__dict__",
+    ):
         return serialize_json(vars(item))
+
     return str(item)
 
 
-def collect_loader_metadata(loader: Any, max_batches: int | None = None) -> list[Any]:
+def collect_loader_metadata(
+    loader: Any,
+    max_batches: int | None = None,
+) -> list:
     items: list[Any] = []
+
     for index, batch in enumerate(loader):
         if max_batches is not None and index >= max_batches:
             break
+
         items.extend(flatten_metadata(extract_metadata(batch)))
+
     return items
 
 
-def assert_batch_contract(loader: Any, time_features: list[str] | None) -> None:
+def assert_batch_contract(
+    loader: Any,
+    time_features: list[str] | None,
+) -> None:
     batches = 0
-    for batch in LimitedLoader(loader, MAX_BATCHES_PER_CASE):
-        assert_tensor("batch.input", getattr(batch, "input", None))
-        target = getattr(batch, "target", None)
+
+    for batch in LimitedLoader(
+        loader,
+        MAX_BATCHES_PER_CASE,
+    ):
+        input_tensor = (
+            batch.get("input")
+            if isinstance(batch, dict)
+            else getattr(
+                batch,
+                "input",
+                None,
+            )
+        )
+
+        target = (
+            batch.get("target")
+            if isinstance(batch, dict)
+            else getattr(
+                batch,
+                "target",
+                None,
+            )
+        )
+
+        features = (
+            batch.get("added_features")
+            if isinstance(batch, dict)
+            else getattr(
+                batch,
+                "added_features",
+                None,
+            )
+        )
+
+        assert_tensor(
+            "batch.input",
+            input_tensor,
+        )
+
         if target is not None:
-            assert_tensor("batch.target", target)
-        features = getattr(batch, "added_features", None)
+            assert_tensor(
+                "batch.target",
+                target,
+            )
+
         if time_features:
-            assert_tensor("batch.added_features", features)
+            assert_tensor(
+                "batch.added_features",
+                features,
+            )
+
         batches += 1
+
     if batches == 0:
         raise AssertionError("Dataloader yielded no batches.")
 
 
-def assert_year_slice(loader: Any, year_slice: list[int]) -> None:
-    metadata = collect_loader_metadata(loader, MAX_BATCHES_PER_CASE)
+def assert_year_slice(
+    loader: Any,
+    year_slice: list[int],
+) -> None:
+    metadata = collect_loader_metadata(
+        loader,
+        MAX_BATCHES_PER_CASE,
+    )
+
     if not metadata:
         raise AssertionError("return_metadata=True is required for year-slice checks.")
+
     lower, upper = year_slice
-    years = []
+    years: list[int] = []
+
     for item in metadata:
         value = metadata_value(
-            item, (INIT_TIME_DIM, "init_time", "initialization_time")
+            item,
+            (
+                INIT_TIME_DIM,
+                "init_time",
+                "initialization_time",
+            ),
         )
+
         if value is None:
             continue
-        if hasattr(value, "year"):
+
+        if hasattr(
+            value,
+            "year",
+        ):
             years.append(int(value.year))
         else:
-            years.append(
-                int(np.asarray(value).astype("datetime64[Y]").astype(int) + 1970)
-            )
+            year = np.asarray(value).astype("datetime64[Y]").astype(int) + 1970
+
+            years.append(int(year))
+
     if not years:
         raise AssertionError("Could not extract initialization years from metadata.")
+
     if min(years) < lower or max(years) > upper:
         raise AssertionError(
             f"Loader returned years outside [{lower}, {upper}]: {sorted(set(years))}"
         )
 
 
-def assert_multiworker_consistency(config: TrainConfig, shuffle: bool) -> None:
+def assert_multiworker_consistency(
+    config: TrainConfig,
+    shuffle: bool,
+    config_path: Path,
+) -> None:
+    configure_runtime_context(config_path)
 
     distributed = Distributed.get_instance()
+
     multi_cfg = config.train_loader
+
     multi_cfg.setup_distributed(distributed)
-    multi_loader = multi_cfg.build_train_loader(return_metadata=True, shuffle=shuffle)
+
+    multi_loader = multi_cfg.build_train_loader(
+        return_metadata=True,
+        shuffle=shuffle,
+    )
+
     multi_items = collect_loader_metadata(multi_loader)
 
     single_cfg = deepcopy(config.train_loader)
+
     single_cfg.num_data_workers = 0
-    if hasattr(single_cfg, "prefetch_factor"):
+
+    if hasattr(
+        single_cfg,
+        "prefetch_factor",
+    ):
         single_cfg.prefetch_factor = None
+
     single_cfg.setup_distributed(distributed)
-    single_loader = single_cfg.build_train_loader(return_metadata=True, shuffle=False)
+
+    single_loader = single_cfg.build_train_loader(
+        return_metadata=True,
+        shuffle=False,
+    )
+
     single_items = collect_loader_metadata(single_loader)
 
     multi_keys = [canonical_sample_key(item) for item in multi_items]
+
     single_keys = [canonical_sample_key(item) for item in single_items]
+
     if sorted(multi_keys) != sorted(single_keys):
         raise AssertionError(
-            "Multi-worker loading changed sample coverage. "
-            f"single={len(single_keys)}, multi={len(multi_keys)}"
+            "Multi-worker loading changed sample "
+            "coverage. "
+            f"single={len(single_keys)}, "
+            f"multi={len(multi_keys)}"
         )
+
     if len(multi_keys) != len(set(multi_keys)):
         raise AssertionError("Multi-worker loading duplicated one or more samples.")
+
     if not shuffle and multi_keys != single_keys:
         raise AssertionError("shuffle=False did not preserve deterministic order.")
 
 
-def add_months_numpy(value: Any, months: int) -> np.datetime64:
-    month_value = np.datetime64(value, "M") + np.timedelta64(int(months), "M")
+def add_months_numpy(
+    value: Any,
+    months: int,
+) -> np.datetime64:
+    month_value = np.datetime64(
+        value,
+        "M",
+    ) + np.timedelta64(
+        int(months),
+        "M",
+    )
+
     return month_value.astype("datetime64[D]")
 
 
-def assert_no_future_leakage(loader: Any, cutoff_year: int) -> None:
-    cutoff = np.datetime64(f"{cutoff_year + 1}-01-01", "D")
+def assert_no_future_leakage(
+    loader: Any,
+    cutoff_year: int,
+) -> None:
+    cutoff = np.datetime64(
+        f"{cutoff_year + 1}-01-01",
+        "D",
+    )
+
     inspected = 0
+
     for batch in loader:
         metadata = flatten_metadata(extract_metadata(batch))
-        target_mask = getattr(batch, "target_mask", None)
-        input_mask = getattr(batch, "input_mask", None)
+
+        target_mask = (
+            batch.get("target_mask")
+            if isinstance(batch, dict)
+            else getattr(
+                batch,
+                "target_mask",
+                None,
+            )
+        )
+
+        input_mask = (
+            batch.get("input_mask")
+            if isinstance(batch, dict)
+            else getattr(
+                batch,
+                "input_mask",
+                None,
+            )
+        )
+
         mask = target_mask if target_mask is not None else input_mask
+
         for index, item in enumerate(metadata):
             init_time = metadata_value(
-                item, (INIT_TIME_DIM, "init_time", "initialization_time")
+                item,
+                (
+                    INIT_TIME_DIM,
+                    "init_time",
+                    "initialization_time",
+                ),
             )
-            lead_time = metadata_value(item, (LEAD_TIME_DIM, "lead_time"))
+
+            lead_time = metadata_value(
+                item,
+                (
+                    LEAD_TIME_DIM,
+                    "lead_time",
+                ),
+            )
+
             if init_time is None or lead_time is None:
                 continue
-            valid_time = add_months_numpy(init_time, int(lead_time))
+
+            valid_time = add_months_numpy(
+                init_time,
+                int(lead_time),
+            )
+
             should_be_valid = valid_time < cutoff
+
             if mask is not None:
                 sample_mask = (
-                    mask[index] if mask.ndim > 0 and len(mask) > index else mask
+                    mask[index]
+                    if (
+                        getattr(
+                            mask,
+                            "ndim",
+                            0,
+                        )
+                        > 0
+                        and len(mask) > index
+                    )
+                    else mask
                 )
+
                 is_valid = bool(torch.as_tensor(sample_mask).bool().any().item())
+
                 if is_valid != should_be_valid:
                     raise AssertionError(
-                        "Future-leakage mask mismatch for "
-                        f"init_time={init_time}, lead_time={lead_time}, "
-                        f"valid_time={valid_time}, cutoff={cutoff}, mask_valid={is_valid}."
+                        "Future-leakage mask mismatch "
+                        f"for init_time={init_time}, "
+                        f"lead_time={lead_time}, "
+                        f"valid_time={valid_time}, "
+                        f"cutoff={cutoff}, "
+                        f"mask_valid={is_valid}."
                     )
+
             elif not should_be_valid:
                 raise AssertionError(
-                    "A sample whose valid time exceeds the training cutoff was "
-                    "returned without a mask."
+                    "A sample whose valid time exceeds "
+                    "the training cutoff was returned "
+                    "without a mask."
                 )
+
             inspected += 1
+
     if inspected == 0:
         raise AssertionError("No metadata samples were available for mask validation.")
 
 
-def preprocessor_files(directory: Path) -> list[Path]:
+def preprocessor_files(
+    directory: Path,
+) -> list:
     return sorted(directory.glob("*_preprocessing_pipeline.joblib"))
 
 
-def assert_rank_zero_preprocessor_setup(config: TrainConfig) -> None:
-    if PREPROCESSOR_DIR.exists():
-        shutil.rmtree(PREPROCESSOR_DIR)
-    PREPROCESSOR_DIR.mkdir(parents=True)
+def assert_rank_zero_preprocessor_setup(
+    config: TrainConfig,
+    config_path: Path,
+) -> None:
+    case_dir = configure_runtime_context(config_path)
+
+    preprocessor_dir = case_dir / "preprocessing_pipeline"
+
+    if preprocessor_dir.exists():
+        shutil.rmtree(preprocessor_dir)
+
     distributed = Distributed.get_instance()
-    rank = getattr(distributed, "rank", 0)
-    if rank != 0:
+
+    if distributed.rank != 0:
         raise RuntimeError("Run the preprocessor writer phase on rank 0.")
 
-    config.train_loader.setup_distributed(distributed, load_path=PREPROCESSOR_DIR)
-    _ = config.train_loader.build_train_loader(return_metadata=True, shuffle=False)
-    written = preprocessor_files(PREPROCESSOR_DIR)
+    config.train_loader.setup_distributed(distributed)
+
+    _ = config.train_loader.build_train_loader(
+        return_metadata=True,
+        shuffle=False,
+    )
+
+    written = preprocessor_files(preprocessor_dir)
+
     if not written:
         raise AssertionError(
-            "Rank 0 did not save preprocessing-pipeline artifacts to disk."
+            "Rank 0 did not save preprocessing-pipeline "
+            f"artifacts in {preprocessor_dir}."
         )
 
-    mtimes = {path: path.stat().st_mtime_ns for path in written}
+    mtimes = {path.name: path.stat().st_mtime_ns for path in written}
 
     loader_cfg = deepcopy(config.train_loader)
-    loader_cfg.setup_distributed(distributed, load_path=PREPROCESSOR_DIR)
-    _ = loader_cfg.build_train_loader(return_metadata=True, shuffle=False)
 
-    after = preprocessor_files(PREPROCESSOR_DIR)
-    if [path.name for path in after] != [path.name for path in written]:
+    loader_cfg.setup_distributed(
+        distributed,
+        load_path=preprocessor_dir,
+    )
+
+    _ = loader_cfg.build_train_loader(
+        return_metadata=True,
+        shuffle=False,
+    )
+
+    after = preprocessor_files(preprocessor_dir)
+
+    before_names = [path.name for path in written]
+
+    after_names = [path.name for path in after]
+
+    if after_names != before_names:
         raise AssertionError("Preprocessor load phase changed artifact membership.")
-    if {path: path.stat().st_mtime_ns for path in after} != mtimes:
+
+    after_mtimes = {path.name: path.stat().st_mtime_ns for path in after}
+
+    if after_mtimes != mtimes:
         raise AssertionError(
             "Preprocessor load phase rewrote artifacts instead of loading them."
         )
 
 
-def build_case_config(params: dict[str, Any]) -> dict[str, Any]:
-    cfg = base_config()
-    apply_data_combination(cfg, params)
-    return cfg
-
-
-def run_dataset_case(config_path: Path, params: dict[str, Any]) -> None:
+def run_dataset_case(
+    config_path: Path,
+    params: dict[str, Any],
+) -> None:
     config = load_train_config(config_path)
-    distributed = Distributed.get_instance()
-    config.train_loader.setup_distributed(distributed)
-    loader = config.train_loader.build_train_loader(
+
+    loader = setup_loader(
+        config,
+        config_path,
         return_metadata=True,
         shuffle=False,
     )
-    assert_dataset_getitem_contract(loader.dataset, params)
-    assert_batch_contract(loader, params.get("time_features", DEFAULT_TIME_FEATURES))
+
+    assert_dataset_getitem_contract(
+        loader.dataset,
+        params,
+    )
+
+    assert_batch_contract(
+        loader,
+        params.get(
+            "time_features",
+            DEFAULT_TIME_FEATURES,
+        ),
+    )
 
 
-def run_dataloader_case(config_path: Path, params: dict[str, Any]) -> None:
+def run_dataloader_case(
+    config_path: Path,
+    params: dict[str, Any],
+) -> None:
     config = load_train_config(config_path)
-    distributed = Distributed.get_instance()
-    config.train_loader.setup_distributed(distributed)
 
     check = params["check"]
+
     if check == "multiworker":
-        assert_multiworker_consistency(config, params["shuffle"])
+        assert_multiworker_consistency(
+            config,
+            params["shuffle"],
+            config_path,
+        )
         return
 
-    loader = config.train_loader.build_train_loader(
+    loader = setup_loader(
+        config,
+        config_path,
         return_metadata=True,
-        shuffle=params.get("shuffle", False),
+        shuffle=params.get(
+            "shuffle",
+            False,
+        ),
     )
-    assert_batch_contract(loader, params.get("time_features"))
+
+    assert_batch_contract(
+        loader,
+        params.get("time_features"),
+    )
+
     if check == "year_slice":
-        assert_year_slice(loader, params["year_slice"])
+        assert_year_slice(
+            loader,
+            params["year_slice"],
+        )
 
 
-def run_future_mask_case(config_path: Path, params: dict[str, Any]) -> None:
+def run_future_mask_case(
+    config_path: Path,
+    params: dict[str, Any],
+) -> None:
     config = load_train_config(config_path)
-    distributed = Distributed.get_instance()
-    config.train_loader.setup_distributed(distributed)
-    loader = config.train_loader.build_train_loader(
+
+    loader = setup_loader(
+        config,
+        config_path,
         return_metadata=True,
         shuffle=False,
     )
-    assert_no_future_leakage(loader, cutoff_year=params["cutoff_year"])
+
+    assert_no_future_leakage(
+        loader,
+        cutoff_year=params["cutoff_year"],
+    )
 
 
-def run_preprocessor_case(config_path: Path, params: dict[str, Any]) -> None:
+def run_preprocessor_case(
+    config_path: Path,
+    params: dict[str, Any],
+) -> None:
     del params
+
     config = load_train_config(config_path)
-    assert_rank_zero_preprocessor_setup(config)
+
+    assert_rank_zero_preprocessor_setup(
+        config,
+        config_path,
+    )
 
 
-def run_inference_case(config_path: Path, params: dict[str, Any]) -> None:
-    from cccma_ppp.inference.inference_configs import InferenceConfig
+def run_inference_case(
+    config_path: Path,
+    params: dict[str, Any],
+) -> None:
+    from cccma_ppp.inference.inference_configs import (
+        InferenceConfig,
+    )
+
+    configure_runtime_context(config_path)
 
     train_config = load_train_config(config_path)
+
     inference_data = prepare_config(params["inference_config_path"])
+
     if inference_data is None:
         raise ValueError("Inference configuration is empty.")
+
     inference_config = dacite.from_dict(
         data_class=InferenceConfig,
         data=inference_data,
-        config=dacite.Config(strict=True),
+        config=dacite.Config(
+            strict=True,
+        ),
     )
+
     inference_config.inference_loader.read_configs_from_train(train_config.train_loader)
+
     if (
         inference_config.inference_loader.time_features
         != train_config.train_loader.time_features
     ):
         raise AssertionError("Inference did not preserve training time_features.")
+
     distributed = Distributed.get_instance()
+
     inference_config.inference_loader.setup_distributed(distributed)
+
     loader = inference_config.inference_loader.build_inference_loader(
         return_metadata=True
     )
-    assert_batch_contract(loader, train_config.train_loader.time_features)
+
+    assert_batch_contract(
+        loader,
+        train_config.train_loader.time_features,
+    )
 
 
-def run_task(task: dict[str, Any]) -> tuple[bool, str]:
+def run_task(
+    task: dict[str, Any],
+) -> tuple[bool, str]:
     paths = case_paths(task["case_name"])
-    for path in paths.values():
-        if path.is_dir():
-            shutil.rmtree(path)
-        elif path.exists():
-            path.unlink()
+
+    case_dir = paths["case_dir"]
+
+    if case_dir.exists():
+        shutil.rmtree(case_dir)
+
+    case_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    passed = False
+    error = ""
 
     try:
         params = task["params"]
-        cfg = task["cfg_builder"]()
-        write_yaml(cfg, paths["config_path"])
-        print(f"\nStarting {task['suite']}:{task['case_name']}", flush=True)
-        print(f"Log: {paths['log_path']}", flush=True)
+
+        cfg_builder = task["cfg_builder"]
+
+        if not callable(cfg_builder):
+            raise TypeError(f"Invalid cfg_builder for {task['case_name']}.")
+
+        cfg = cfg_builder()
+
+        if not isinstance(
+            cfg,
+            dict,
+        ):
+            raise TypeError(
+                f"cfg_builder returned {type(cfg).__name__}, expected dict."
+            )
+
+        write_yaml(
+            cfg,
+            paths["config_path"],
+        )
+
+        configure_runtime_context(paths["config_path"])
+
+        print(
+            f"\nStarting {task['suite']}:{task['case_name']}",
+            flush=True,
+        )
+        print(
+            f"Case directory: {case_dir}",
+            flush=True,
+        )
+        print(
+            f"Log: {paths['log_path']}",
+            flush=True,
+        )
+
         run_silenced(
-            partial(task["runner"], paths["config_path"], params),
+            partial(
+                task["runner"],
+                paths["config_path"],
+                params,
+            ),
             paths["log_path"],
         )
-        passed, error = True, ""
+
+        passed = True
+
     except Exception as exc:
-        passed = False
         error = f"{type(exc).__name__}: {exc}"
+
         append_exception_to_log(paths["log_path"])
+
         cleanup_logging_handlers()
 
-    log_result(task=task, paths=paths, passed=passed, error=error)
-    gc.collect()
+    finally:
+        reset_runtime_context()
+        gc.collect()
+
+    log_result(
+        task=task,
+        paths=paths,
+        passed=passed,
+        error=error,
+    )
+
     return passed, error
 
 
-def add_data_combination_tasks(tasks: list[dict[str, Any]]) -> None:
+def add_data_combination_tasks(
+    tasks: list[dict[str, Any]],
+) -> None:
     if not RUN_DATA_CONFIG_COMBINATIONS:
         return
+
     for case in DATA_CONFIG_COMBINATIONS:
         params = {
             **deepcopy(case),
             "time_features": deepcopy(DEFAULT_TIME_FEATURES),
-            "year_slice": [1980, 1981],
+            "year_slice": [
+                1980,
+                1981,
+            ],
             "num_data_workers": 0,
         }
+
         tasks.append(
             {
                 "suite": "data_config_combination",
                 "case_name": params["name"],
                 "params": params,
-                "cfg_builder": partial(build_case_config, params),
+                "cfg_builder": partial(
+                    build_case_config,
+                    params,
+                ),
                 "runner": run_dataset_case,
             }
         )
 
 
-def add_getitem_tasks(tasks: list[dict[str, Any]]) -> None:
+def add_getitem_tasks(
+    tasks: list[dict[str, Any]],
+) -> None:
     if not RUN_DATASET_GETITEM_CASES:
         return
+
     for case in DATA_CONFIG_COMBINATIONS:
         params = {
             **deepcopy(case),
-            "name": f"getitem_{case['name']}",
+            "name": (f"getitem_{case['name']}"),
             "time_features": deepcopy(DEFAULT_TIME_FEATURES),
-            "year_slice": [1980, 1981],
+            "year_slice": [
+                1980,
+                1981,
+            ],
             "num_data_workers": 0,
         }
+
         tasks.append(
             {
                 "suite": "dataset_getitem",
                 "case_name": params["name"],
                 "params": params,
-                "cfg_builder": partial(build_case_config, params),
+                "cfg_builder": partial(
+                    build_case_config,
+                    params,
+                ),
                 "runner": run_dataset_case,
             }
         )
 
 
-def add_dataloader_tasks(tasks: list[dict[str, Any]]) -> None:
+def add_dataloader_tasks(
+    tasks: list[dict[str, Any]],
+) -> None:
     if not RUN_TRAIN_DATALOADER_CASES:
         return
+
     base_combination = deepcopy(DATA_CONFIG_COMBINATIONS[-2])
+
     for case in DATALOADER_CASES:
         if case["check"] == "multiworker" and not RUN_MULTIWORKER_CASES:
             continue
-        params = {**base_combination, **deepcopy(case)}
+
+        params = {
+            **base_combination,
+            **deepcopy(case),
+        }
+
         tasks.append(
             {
                 "suite": "train_dataloader",
                 "case_name": params["name"],
                 "params": params,
-                "cfg_builder": partial(build_case_config, params),
+                "cfg_builder": partial(
+                    build_case_config,
+                    params,
+                ),
                 "runner": run_dataloader_case,
             }
         )
 
 
-def add_future_mask_tasks(tasks: list[dict[str, Any]]) -> None:
+def add_future_mask_tasks(
+    tasks: list[dict[str, Any]],
+) -> None:
     if not RUN_FUTURE_MASK_CASES:
         return
+
     params = {
         **deepcopy(DATA_CONFIG_COMBINATIONS[-2]),
-        "name": "future_leakage_mask_december_cutoff",
+        "name": ("future_leakage_mask_december_cutoff"),
         "description": (
-            "For a final training year of 2020, samples initialized in December "
-            "2019 must mask lead months whose valid times reach 2021 or later."
+            "For a final training year of 2020, "
+            "samples initialized in December 2019 "
+            "must mask lead months whose valid "
+            "times reach 2021 or later."
         ),
-        "year_slice": [2019, 2020],
+        "year_slice": [
+            2019,
+            2020,
+        ],
         "cutoff_year": 2020,
         "num_data_workers": 0,
         "shuffle": False,
@@ -1152,91 +2001,140 @@ def add_future_mask_tasks(tasks: list[dict[str, Any]]) -> None:
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
         "expected_result": "PASS",
     }
+
     tasks.append(
         {
             "suite": "future_mask",
             "case_name": params["name"],
             "params": params,
-            "cfg_builder": partial(build_case_config, params),
+            "cfg_builder": partial(
+                build_case_config,
+                params,
+            ),
             "runner": run_future_mask_case,
         }
     )
 
 
-def add_preprocessor_tasks(tasks: list[dict[str, Any]]) -> None:
+def add_preprocessor_tasks(
+    tasks: list[dict[str, Any]],
+) -> None:
     if not RUN_DISTRIBUTED_PREPROCESSOR_CASES:
         return
+
     params = {
         **deepcopy(DATA_CONFIG_COMBINATIONS[-2]),
-        "name": "rank_zero_fits_other_ranks_load_preprocessors",
+        "name": ("rank_zero_fits_other_ranks_load_preprocessors"),
         "description": (
-            "Rank 0 fits and saves preprocessors. Subsequent setup loads the "
-            "same artifacts without rewriting them."
+            "Rank 0 fits and saves preprocessors. "
+            "Subsequent setup loads the same "
+            "artifacts without rewriting them."
         ),
-        "year_slice": [1980, 1981],
+        "year_slice": [
+            1980,
+            1981,
+        ],
         "num_data_workers": 0,
         "shuffle": False,
         "time_features": deepcopy(DEFAULT_TIME_FEATURES),
         "expected_result": "PASS",
     }
+
     tasks.append(
         {
             "suite": "distributed_preprocessing",
             "case_name": params["name"],
             "params": params,
-            "cfg_builder": partial(build_case_config, params),
+            "cfg_builder": partial(
+                build_case_config,
+                params,
+            ),
             "runner": run_preprocessor_case,
         }
     )
 
 
-def add_inference_tasks(tasks: list[dict[str, Any]]) -> None:
+def add_inference_tasks(
+    tasks: list[dict[str, Any]],
+) -> None:
     if not RUN_INFERENCE_DATALOADER_CASES:
         return
+
     inference_path = ROOT / "scripts" / "integration_suite_inference_config.yaml"
+
     if not inference_path.is_file():
         print(
-            "Skipping inference loader cases because the base inference config "
-            f"does not exist: {inference_path}",
+            "Skipping inference loader cases because "
+            "the base inference config does not exist: "
+            f"{inference_path}",
             flush=True,
         )
         return
+
     params = {
         **deepcopy(DATA_CONFIG_COMBINATIONS[-2]),
-        "name": "inference_reuses_training_data_contract",
+        "name": ("inference_reuses_training_data_contract"),
         "description": (
-            "Inference copies the training dataset contract and time_features, "
-            "then produces iterable masked batches."
+            "Inference copies the training dataset "
+            "contract and time_features, then "
+            "produces iterable masked batches."
         ),
-        "year_slice": [1980, 1981],
+        "year_slice": [
+            1980,
+            1981,
+        ],
         "num_data_workers": 0,
         "shuffle": False,
         "time_features": deepcopy(DEFAULT_TIME_FEATURES),
         "inference_config_path": inference_path,
         "expected_result": "PASS",
     }
+
     tasks.append(
         {
             "suite": "inference_dataloader",
             "case_name": params["name"],
             "params": params,
-            "cfg_builder": partial(build_case_config, params),
+            "cfg_builder": partial(
+                build_case_config,
+                params,
+            ),
             "runner": run_inference_case,
         }
     )
 
 
-def validate_tasks(tasks: list[dict[str, Any]]) -> None:
+def validate_tasks(
+    tasks: list[dict[str, Any]],
+) -> None:
     names: set[str] = set()
+
+    required_fields = {
+        "suite",
+        "case_name",
+        "params",
+        "cfg_builder",
+        "runner",
+    }
+
     for index, task in enumerate(tasks):
-        missing = {"suite", "case_name", "params", "cfg_builder", "runner"} - set(task)
+        missing = required_fields - set(task)
+
         if missing:
             raise ValueError(f"Task {index} is missing fields: {sorted(missing)}")
-        if task["case_name"] in names:
-            raise ValueError(f"Duplicate case name: {task['case_name']}")
-        names.add(task["case_name"])
-        if not callable(task["cfg_builder"]) or not callable(task["runner"]):
-            raise TypeError(f"Task callables are invalid: {task['case_name']}")
+
+        case_name = str(task["case_name"])
+
+        if case_name in names:
+            raise ValueError(f"Duplicate case name: {case_name}")
+
+        names.add(case_name)
+
+        if not callable(task["cfg_builder"]):
+            raise TypeError(f"Task cfg_builder is invalid: {case_name}")
+
+        if not callable(task["runner"]):
+            raise TypeError(f"Task runner is invalid: {case_name}")
 
 
 def classify_result(
@@ -1249,19 +2147,33 @@ def classify_result(
     unexpected_passes: list[str],
 ) -> None:
     params = task["params"]
-    expected = params.get("expected_result", "PASS")
+
+    expected = params.get(
+        "expected_result",
+        "PASS",
+    )
+
     if expected == "FAIL":
         if passed:
             unexpected_passes.append(task["case_name"])
             return
+
         pattern = params.get("expected_error_pattern")
-        if pattern and not re.search(pattern, error, re.IGNORECASE | re.DOTALL):
+
+        if pattern and not re.search(
+            pattern,
+            error,
+            re.IGNORECASE | re.DOTALL,
+        ):
             unexpected_failures.append(
                 f"{task['case_name']}: failed for the wrong reason: {error}"
             )
         else:
             expected_failures.append(task["case_name"])
-    elif not passed:
+
+        return
+
+    if not passed:
         unexpected_failures.append(f"{task['case_name']}: {error}")
 
 
@@ -1271,22 +2183,40 @@ def write_summary(
     expected_failures: list[str],
     unexpected_passes: list[str],
 ) -> None:
-    with SUMMARY_PATH.open("w", encoding="utf-8") as file:
+    with SUMMARY_PATH.open(
+        "w",
+        encoding="utf-8",
+    ) as file:
         file.write(f"total_cases: {len(tasks)}\n")
         file.write(f"unexpected_failures: {len(unexpected_failures)}\n")
         file.write(f"expected_failures: {len(expected_failures)}\n")
         file.write(f"unexpected_passes: {len(unexpected_passes)}\n")
+        file.write(f"cases_dir: {CASES_DIR}\n")
         file.write(f"results_csv: {RESULTS_CSV}\n")
-        file.write(f"log_dir: {LOG_DIR}\n")
-        for title, values in (
-            ("unexpected_failures", unexpected_failures),
-            ("expected_failures", expected_failures),
-            ("unexpected_passes", unexpected_passes),
-        ):
-            if values:
-                file.write(f"\n{title}:\n")
-                for value in values:
-                    file.write(f"- {value}\n")
+
+        groups = (
+            (
+                "unexpected_failures",
+                unexpected_failures,
+            ),
+            (
+                "expected_failures",
+                expected_failures,
+            ),
+            (
+                "unexpected_passes",
+                unexpected_passes,
+            ),
+        )
+
+        for title, values in groups:
+            if not values:
+                continue
+
+            file.write(f"\n{title}:\n")
+
+            for value in values:
+                file.write(f"- {value}\n")
 
 
 def main() -> None:
@@ -1295,12 +2225,14 @@ def main() -> None:
     init_csv()
 
     tasks: list[dict[str, Any]] = []
+
     add_data_combination_tasks(tasks)
     add_getitem_tasks(tasks)
     add_dataloader_tasks(tasks)
     add_future_mask_tasks(tasks)
     add_preprocessor_tasks(tasks)
     add_inference_tasks(tasks)
+
     validate_tasks(tasks)
 
     if MAX_CASES is not None:
@@ -1310,21 +2242,34 @@ def main() -> None:
     expected_failures: list[str] = []
     unexpected_passes: list[str] = []
 
-    with tqdm(total=len(tasks), desc="data_modules", unit="case") as progress:
-        for task in tasks:
-            progress.set_postfix_str(f"{task['suite']}:{task['case_name'][:60]}")
-            passed, error = run_task(task)
-            classify_result(
-                task=task,
-                passed=passed,
-                error=error,
-                unexpected_failures=unexpected_failures,
-                expected_failures=expected_failures,
-                unexpected_passes=unexpected_passes,
-            )
-            progress.update(1)
+    try:
+        with tqdm(
+            total=len(tasks),
+            desc="data_modules",
+            unit="case",
+            dynamic_ncols=True,
+            leave=True,
+        ) as progress:
+            for task in tasks:
+                progress.set_postfix_str(f"{task['suite']}:{task['case_name'][:60]}")
 
-    cleanup_logging_handlers()
+                passed, error = run_task(task)
+
+                classify_result(
+                    task=task,
+                    passed=passed,
+                    error=error,
+                    unexpected_failures=(unexpected_failures),
+                    expected_failures=(expected_failures),
+                    unexpected_passes=(unexpected_passes),
+                )
+
+                progress.update(1)
+
+    finally:
+        reset_runtime_context()
+        cleanup_logging_handlers()
+
     write_summary(
         tasks,
         unexpected_failures,
@@ -1333,21 +2278,26 @@ def main() -> None:
     )
 
     if unexpected_failures or unexpected_passes:
-        problems = []
+        problems: list[str] = []
+
         if unexpected_failures:
             problems.append(f"{len(unexpected_failures)} unexpected failure(s)")
+
         if unexpected_passes:
             problems.append(f"{len(unexpected_passes)} unexpected pass(es)")
+
         raise RuntimeError(
-            "Data-module integration suite completed with "
+            "Data-module integration suite "
+            "completed with "
             + " and ".join(problems)
-            + f". See {RESULTS_CSV} and {LOG_DIR}."
+            + f". See {RESULTS_CSV} "
+            + f"and {CASES_DIR}."
         )
 
     print("Data-module integration suite completed successfully.")
+    print(f"Cases: {CASES_DIR}")
     print(f"Results: {RESULTS_CSV}")
     print(f"Summary: {SUMMARY_PATH}")
-    print(f"Logs: {LOG_DIR}")
 
 
 if __name__ == "__main__":
