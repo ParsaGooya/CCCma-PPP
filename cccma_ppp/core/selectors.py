@@ -9,7 +9,7 @@ import warnings
 
 from cccma_ppp.core.registery import Registery
 from cccma_ppp.core.core_abc import moduleABC
-from cccma_ppp.architectures.models_abc import modelABC, flowABC, CheckpointConfig
+from cccma_ppp.architectures.models_abc import modelABC, flowABC, CheckpointConfig, modelConfigABC
 
 
 @dataclasses.dataclass
@@ -74,7 +74,7 @@ class ModuleSelector:
         int
             Description not yet provided.
         """
-        return self._module_config.model_config.NUM_INPUT_DIMS
+        return self.model_config.NUM_INPUT_DIMS
 
     @property
     def NUM_OUTPUT_DIMS(self) -> int:
@@ -86,7 +86,7 @@ class ModuleSelector:
         int
             Description not yet provided.
         """
-        return self._module_config.model_config.NUM_OUTPUT_DIMS
+        return self.model_config.NUM_OUTPUT_DIMS
 
     @property
     def GENERATOR(self) -> bool:
@@ -98,7 +98,7 @@ class ModuleSelector:
         bool
             Description not yet provided.
         """
-        return self._module_config.model_config.GENERATOR
+        return self.model_config.GENERATOR
 
     @property
     def EXPECTS_MASK(self) -> bool:
@@ -110,7 +110,31 @@ class ModuleSelector:
         bool
             Description not yet provided.
         """
-        return self._module_config.model_config.EXPECTS_MASK
+        return self.model_config.EXPECTS_MASK
+
+    @property
+    def model_type(self) -> str:
+        """
+        Document this function.
+
+        Returns
+        -------
+        bool
+            Description not yet provided.
+        """
+        return self._module_config.ModelConfig.type     
+
+    @property
+    def model_config(self) -> modelConfigABC:
+        """
+        Document this function.
+
+        Returns
+        -------
+        bool
+            Description not yet provided.
+        """
+        return self._module_config.model_config              
 
     def build_module(
         self,
