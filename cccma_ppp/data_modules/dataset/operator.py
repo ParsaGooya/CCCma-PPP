@@ -121,7 +121,7 @@ class DatasetOperator:
             )
 
         if self.config.effective_condition is not None:
-            if self.config.condition_method.lower() == "static":
+            if self.config.effective_condition_method == "static":
                 selection = {}
             else:
                 selection = {

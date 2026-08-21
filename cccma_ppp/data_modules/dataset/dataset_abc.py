@@ -181,7 +181,7 @@ class DatasetConfigABC(abc.ABC):
                 not self._using_model_data_as_condition,
             ]
         ):
-            if self.condition_method.lower() != "static":
+            if self.effective_condition_method != "static":
                 for dim in [
                     dim
                     for dim in self.model.coords
@@ -210,7 +210,7 @@ class DatasetConfigABC(abc.ABC):
                         " cftime/datetime type time coordinates."
                     )
 
-            if self.condition_method.lower() == "same_member":
+            if self.effective_condition_method == "same_member":
                 if any(
                     [
                         self.model.coords.get(self.realization_dim) is None,
@@ -266,10 +266,10 @@ class DatasetConfigABC(abc.ABC):
         ValueError
             Description not yet provided.
         """
-        if self.condition_method is not None:
-            if self.condition_method.lower() not in self._VALID_CONDITION_METHODS:
+        if self.effective_condition_method is not None:
+            if self.effective_condition_method not in self._VALID_CONDITION_METHODS:
                 raise ValueError(
-                    f"Invalid condition_method: {self.condition_method}. "
+                    f"Invalid condition_method: {self.effective_condition_method}. "
                     f"Must be a in {sorted(self._VALID_CONDITION_METHODS)}."
                 )
         return self
@@ -289,7 +289,8 @@ class DatasetConfigABC(abc.ABC):
             Description not yet provided.
         """
         if self.model is not None:
-            if self.condition_method.lower() == "same_member":
+            
+            if self.effective_condition_method == "same_member":
                 if self.model.ensemble_mean:
                     raise ValueError(
                         "for same member coniditioning the model data should not be ensemble mean."
@@ -312,12 +313,12 @@ class DatasetConfigABC(abc.ABC):
             Description not yet provided.
         """
         if self.effective_condition is not None:
-            if self.condition_method is None:
+            if self.effective_condition_method is None:
                 raise ValueError(
                     "You must specify condition_method for conditioning dataset!"
                 )
 
-            if self.condition_method.lower() in ["cross_ensemble", "same_member"]:
+            if self.effective_condition_method in ["cross_ensemble", "same_member"]:
                 if self.effective_condition.ensemble_mean:
                     raise ValueError(
                         "condition ensemble_mean cannot be True for cross_ensemble or same_member conditioning."
@@ -326,7 +327,7 @@ class DatasetConfigABC(abc.ABC):
                     raise ValueError(
                         f"For cross_ensemble or same_member conditioning a {self.realization_dim} dim must exist in the condition."
                     )
-            elif self.condition_method.lower() == "ensemble_mean":
+            elif self.effective_condition_method == "ensemble_mean":
                 if self.effective_condition.ensemble_mean is not True:
                     raise ValueError(
                         "Ensemble mean must be True for ensemble_mean conditioning."
@@ -341,7 +342,7 @@ class DatasetConfigABC(abc.ABC):
                         "'static' conditioning method cannot point to the same model data!"
                     )
 
-            if self.condition_method.lower() == "static":
+            if self.effective_condition_method == "static":
                 checklist = [
                     dim in self.effective_condition.coords
                     for dim in (
@@ -355,8 +356,8 @@ class DatasetConfigABC(abc.ABC):
                         f"{((self.init_time_dim, self.lead_time_dim, self.realization_dim))}"
                     )
 
-        elif self.condition_method is not None:
-            if self.condition_method.lower() == "static":
+        elif self.effective_condition_method is not None:
+            if self.effective_condition_method == "static":
                 raise ValueError(
                     "For static conditioning method condition dataset must be specified!"
                 )
@@ -421,7 +422,8 @@ class DatasetConfigABC(abc.ABC):
             Description not yet provided.
         """
         if self.condition is None:
-            return self.condition_method.lower() in {
+            
+            return self.effective_condition_method in {
                 "ensemble_mean",
                 "cross_ensemble",
                 "same_member",
@@ -448,6 +450,13 @@ class DatasetConfigABC(abc.ABC):
             Description not yet provided.
         """
         return self._effective_condition
+
+    @final
+    @property
+    def effective_condition_method(self) -> str:
+        return (None 
+                if self.condition_method is None 
+                else self.condition_method.lower())
 
     @final
     def _model_as_condition(self) -> ModelDataConfig:
@@ -1139,7 +1148,7 @@ class DatasetABC(Dataset, abc.ABC):
         """
         if (
             self.config.effective_condition is None
-            or self.config.condition_method.lower() == "static"
+            or self.config.effective_condition_method == "static"
         ):
             return None
 
@@ -1150,7 +1159,7 @@ class DatasetABC(Dataset, abc.ABC):
             and dim != self.config.realization_dim
         }
 
-        if self.config.condition_method.lower() == "same_member":
+        if self.config.effective_condition_method == "same_member":
             if self.config.realization_dim not in sample_coords:
                 raise ValueError(
                     f"'same_member' conditioning requires {self.config.realization_dim} coordinates."
@@ -1246,7 +1255,7 @@ class DatasetABC(Dataset, abc.ABC):
         if self.config.effective_condition is None:
             return None
 
-        if self.config.condition_method.lower() == "static":
+        if self.config.effective_condition_method == "static":
             selection = {}
 
         else:
@@ -1254,7 +1263,7 @@ class DatasetABC(Dataset, abc.ABC):
                 dim: [indexes[ind]] for dim, indexes in self.cond_indexes.items()
             }
 
-            if self.config.condition_method.lower() == "cross_ensemble":
+            if self.config.effective_condition_method == "cross_ensemble":
                 selection[self.config.realization_dim] = [
                     np.random.randint(
                         self.config.effective_condition.sizes[
