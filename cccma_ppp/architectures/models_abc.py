@@ -429,6 +429,7 @@ class DeterministicRequest:
     input_mask: torch.Tensor | None = None
     added_features: torch.Tensor | None = None
     output_sample_size: int = 1
+    chunk_output_samples: bool = False
 
 
 class deterministicmodelsABC(modelABC):
@@ -594,6 +595,7 @@ class cVAEPredictRequest:
     nstds: int = 1
     latent_sample_size: int = 1
     output_sample_size: int = 0
+    chunk_size: int | None = None
 
 
 class cVAEmodelsABC(modelABC):
