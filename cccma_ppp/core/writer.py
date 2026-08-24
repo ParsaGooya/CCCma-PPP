@@ -100,9 +100,9 @@ class WriterConfig:
         """
         if self.aggregate_only and self.predict_only:
             raise RuntimeError(
-                "You can run the writer in aggregate_only or predict_only mode. " \
+                "You can run the writer in aggregate_only OR predict_only mode OR neither. " \
                 "In case of the former, temporary batch predictions must have been saved " \
-                "on the disc. In case of the later, batch predictions will be saved temporarily " \
+                "on the disc previously. In case of the later, batch predictions will be saved temporarily " \
                 "but will not be aggregated year by year."
             )
         if self.predictor._type != module.config._type.lower():
@@ -222,7 +222,7 @@ class Writer:
             )
 
         self.temp_save_dir = Path(self.output_dir) / "_temp"
-        
+
         if self.config.aggregate_only:
             if not (self.temp_save_dir.is_dir() and any(self.temp_save_dir.glob("*.nc"))):
                 raise RuntimeError(
