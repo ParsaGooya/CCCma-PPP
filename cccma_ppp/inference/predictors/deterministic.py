@@ -20,7 +20,7 @@ class DeterministicPredictorConfig:
     """
     Document this class.
     """
-
+    chunk_output_samples: bool = False,
     _type: ClassVar[str] = "deterministic"
 
     def build(
@@ -29,7 +29,6 @@ class DeterministicPredictorConfig:
         distributed: Distributed,
         output_dir: Path | str,
         num_output_sampling: int = 1,
-        chunk_output_samples: bool = False,
     ):
         """
         Document this function.
@@ -43,8 +42,6 @@ class DeterministicPredictorConfig:
         output_dir : Path | str
             Description not yet provided.
         num_output_sampling : int
-            Description not yet provided.
-        chunk_output_samples : bool
             Description not yet provided.
 
         Returns
