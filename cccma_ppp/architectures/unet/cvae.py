@@ -670,6 +670,7 @@ class cVAEUNet(cVAEmodelsABC):
         """
         num_output_samples = request.output_sample_size
         latent_sample_size = request.latent_sample_size
+        chunk_size = request.chunk_size
 
         latent_samples, cond_mu, cond_log_var = self._sample_prior(request)
         batch_size = cond_mu.shape[0]
@@ -678,6 +679,7 @@ class cVAEUNet(cVAEmodelsABC):
             latent_samples,
             condition_embedding=cond_mu,
             num_output_samples=num_output_samples,
+            chunk_size = chunk_size,
         )
 
         if deterministic_guess_only:
@@ -802,6 +804,7 @@ class cVAEUNet(cVAEmodelsABC):
         latent_samples: torch.Tensor,
         condition_embedding: torch.Tensor | None = None,
         num_output_samples: int = 1,
+        chunk_size: int | None = None,
     ) -> torch.Tensor:
         """
         Document this function.
@@ -835,20 +838,44 @@ class cVAEUNet(cVAEmodelsABC):
 
         feature_size = latent_samples.shape[-1]
 
-        latent_samples = latent_samples.reshape(
-            latent_sample_size * batch_size, feature_size
-        )
-        out = self.generation(latent_samples, num_output_samples)
+        if chunk_size is None:
+            chunk_size = latent_sample_size
 
-        if num_output_samples > 1:
-            return out.reshape(
-                num_output_samples,
-                latent_sample_size,
-                batch_size,
-                *out.shape[2:],
+        outputs = []
+
+        for latent_chunk in latent_samples.split(chunk_size, dim=0):
+            chunk_size = latent_chunk.shape[0]
+
+            latent_chunk = latent_chunk.reshape(
+                chunk_size * batch_size,
+                feature_size,
             )
 
-        return out.reshape(latent_sample_size, batch_size, *out.shape[1:])
+            out = self.generation(
+                latent_chunk,
+                num_output_samples,
+            )
+
+            if num_output_samples > 1:
+                out = out.reshape(
+                    num_output_samples,
+                    chunk_size,
+                    batch_size,
+                    *out.shape[2:],
+                )
+            else:
+                out = out.reshape(
+                    chunk_size,
+                    batch_size,
+                    *out.shape[1:],
+                )
+
+            outputs.append(out)
+
+        if num_output_samples > 1:
+            return torch.cat(outputs, dim=1)
+
+        return torch.cat(outputs, dim=0)
 
     def _deterministic_guess(
         self,

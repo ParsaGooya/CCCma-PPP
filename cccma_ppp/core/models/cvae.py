@@ -468,7 +468,8 @@ class cVAE(moduleABC):
         latent_sample_size: int = 1,
         nstds: int = 1,
         latent_samples: torch.Tensor = None,
-        output_sample_size: int = 0,
+        output_sample_size: int = 1,
+        chunk_size: int | None = None
     ) -> cVAEOutput:
         """
         Document this function.
@@ -505,5 +506,6 @@ class cVAE(moduleABC):
                 nstds=nstds,
                 latent_samples=latent_samples,
                 output_sample_size=output_sample_size,
+                chunk_size=chunk_size,
             )
         )

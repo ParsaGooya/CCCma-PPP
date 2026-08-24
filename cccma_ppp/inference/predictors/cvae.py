@@ -28,6 +28,8 @@ class cVAEPredictorConfig:
         Description not yet provided.
     nstds : float
         Description not yet provided.
+    chunk_size: int 
+        Description not yet provided.
     infer_latent_samples_from_training : bool
         Description not yet provided.
     save_latent : bool
@@ -36,6 +38,7 @@ class cVAEPredictorConfig:
 
     num_latent_samples: int
     nstds: float = 1.0
+    chunk_size: int | None = None,
     infer_latent_samples_from_training: bool = False
     save_latent: bool = False
 
@@ -275,6 +278,7 @@ class cVAEPredictor(PredictorABC):
                 nstds=self.nstds,
                 latent_samples=latent_samples,
                 output_sample_size=num_output_sampling,
+                chunk_size=self.config.chunk_size
             )
 
             if self.num_output_covariance_sampling > 1:
