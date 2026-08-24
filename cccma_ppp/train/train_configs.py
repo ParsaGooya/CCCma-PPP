@@ -22,6 +22,7 @@ from cccma_ppp.core.trainer import TrainerConfig
 from cccma_ppp.core.optimization import OptimizerConfig
 from cccma_ppp.core.core_abc import GenerativeContext
 
+from cccma_ppp.generic import registry_imports
 
 def set_seed(seed):
     """
@@ -120,6 +121,7 @@ class TrainConfig:
         UserWarning
             Description not yet provided.
         """
+        
         if self.module.GENERATOR is not None:
             if "crps" not in self.losspipeline.loss_types:
                 raise RuntimeError(
@@ -149,6 +151,14 @@ class TrainConfig:
                 raise ValueError(
                     "with cVAE model TrainerConfig.beta_finder must be set up."
                 )
+
+        if self.module.model_type.lower() in ["mlp"]:
+            if self.module.model_config.batch_normalization:
+                if self.train_loader.batch_size == 1:
+                    raise ValueError(
+                        f"With {self.module.model_type} architecture, if batch_normalization is True, "
+                        "batch_size must be greater thatn one duting training."
+                    )
 
     def _check_IO_consistency(self):
         """

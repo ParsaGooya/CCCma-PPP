@@ -73,7 +73,7 @@ class cVAEPredictorConfig:
         module: moduleABC,
         distributed: Distributed,
         output_dir: Path | str,
-        num_output_sampling: int = 0,
+        num_output_sampling: int = 1,
     ):
         """
         Document this function.
@@ -121,7 +121,7 @@ class cVAEPredictor(PredictorABC):
         module: moduleABC,
         distributed: Distributed,
         output_dir: Path | str,
-        num_output_sampling: int = 0,
+        num_output_sampling: int = 1,
     ):
         """
         Document this function.
@@ -147,11 +147,11 @@ class cVAEPredictor(PredictorABC):
         self.config = config
         self.module = module
         self.num_output_sampling = num_output_sampling
-        self.num_output_covariance_sampling = 0
+        self.num_output_covariance_sampling = 1
         self.output_dir = Path(output_dir)
 
-        if num_output_sampling < 0:
-            raise ValueError("num_output_sampling must be larger than 0.")
+        if num_output_sampling <= 0:
+            raise ValueError("num_output_sampling must be larger than 1.")
 
         if module.model_config.GENERATOR is None:
             self.num_output_covariance_sampling = num_output_sampling
@@ -211,7 +211,7 @@ class cVAEPredictor(PredictorABC):
         Any
             Description not yet provided.
         """
-        return self.num_output_covariance_sampling > 0
+        return self.num_output_covariance_sampling > 1
 
     @torch.no_grad()
     def _infer_on_batch(
@@ -264,9 +264,9 @@ class cVAEPredictor(PredictorABC):
             if self.infer_latent_samples_from_training:
                 latent_samples = self._get_latent_samples_based_on_train(data=batch)
 
-            if self.num_output_covariance_sampling > 0:
-                num_output_sampling = 0
-            else:
+            if self.num_output_covariance_sampling > 1:
+                num_output_sampling = 1
+            else: 
                 num_output_sampling = self.num_output_sampling
 
             output = self.raw_module.predict(
@@ -277,9 +277,9 @@ class cVAEPredictor(PredictorABC):
                 output_sample_size=num_output_sampling,
             )
 
-            if self.num_output_covariance_sampling > 0:
-                sample_size = output.output.shape[:2]
-                reshape_size = output.output.shape[2:]
+            if self.num_output_covariance_sampling > 1:
+                sample_size = output.output.shape[:2]  # N x B
+                reshape_size = output.output.shape[2:]  # C x ...
                 output = self.add_decoder_noise(
                     output,
                     self.num_output_covariance_sampling,
@@ -495,7 +495,7 @@ class cVAEPredictor(PredictorABC):
         else:
             prediction = output.output
 
-            if self.num_output_sampling == 0:
+            if self.num_output_sampling == 1:
                 prediction = prediction.unsqueeze(0)
 
             num_output_dims = self.raw_module.model_config.NUM_OUTPUT_DIMS

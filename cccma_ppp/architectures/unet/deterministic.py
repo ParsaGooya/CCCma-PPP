@@ -443,7 +443,8 @@ class UNet(deterministicmodelsABC):
         unet_output_tensor = self.forward_decoder(request)
         output = self.output_block(unet_output_tensor)
 
-        if self.config.GENERATOR is not None and num_output_samples > 0:
+        if self.config.GENERATOR is not None and num_output_samples > 1:
+
             output = output.reshape(
                 batch_size,
                 num_output_samples,
@@ -497,7 +498,8 @@ class UNet(deterministicmodelsABC):
 
         input = self.bottleneck(input)
 
-        if self.config.GENERATOR is not None and num_output_samples > 0:
+        if self.config.GENERATOR is not None and num_output_samples > 1:
+
             input = _repeat_tensor_mask(
                 input,
                 repeats=num_output_samples,

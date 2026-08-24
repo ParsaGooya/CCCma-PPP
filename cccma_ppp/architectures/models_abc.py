@@ -45,6 +45,10 @@ class GENERATORConfig:
         if self.num_validation_noise_samples is None:
             self.num_validation_noise_samples = self.num_training_noise_samples
 
+        if self.num_validation_noise_samples <= 1:
+            raise ValueError(
+                "For Generator training, at least two output ensemble samples are required."
+            )
 
 @dataclasses.dataclass
 class CheckpointConfig:
@@ -424,7 +428,7 @@ class DeterministicRequest:
     input: torch.Tensor
     input_mask: torch.Tensor | None = None
     added_features: torch.Tensor | None = None
-    output_sample_size: int = 0
+    output_sample_size: int = 1
 
 
 class deterministicmodelsABC(modelABC):
@@ -553,7 +557,7 @@ class cVAEForwardRequest:
     condition_mask: torch.Tensor | None = None
     added_features: torch.Tensor | None = None
     latent_sample_size: int = 1
-    output_sample_size: int = 0
+    output_sample_size: int = 1
     posterior_variance_limits: list[torch.Tensor, torch.Tensor] | None = None
 
 
