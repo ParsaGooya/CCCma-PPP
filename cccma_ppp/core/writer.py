@@ -277,7 +277,10 @@ class Writer:
         """
         if not self._setup:
             raise RuntimeError("Call setup_distributed() before predict().")
-        self.log_root(logging.INFO, "Starting Inference Loop...")
+        if not self.config.aggregate_only:
+            self.log_root(logging.INFO, "Starting Inference Loop...")
+        else:
+            self.log_root(logging.INFO, "Starting aggregation...")
         self.start_time = time.time()
         clear_memory()
 
