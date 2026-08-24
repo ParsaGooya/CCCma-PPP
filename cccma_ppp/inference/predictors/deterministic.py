@@ -29,6 +29,7 @@ class DeterministicPredictorConfig:
         distributed: Distributed,
         output_dir: Path | str,
         num_output_sampling: int = 1,
+        chunk_output_samples: bool = False,
     ):
         """
         Document this function.
@@ -42,6 +43,8 @@ class DeterministicPredictorConfig:
         output_dir : Path | str
             Description not yet provided.
         num_output_sampling : int
+            Description not yet provided.
+        chunk_output_samples : bool
             Description not yet provided.
 
         Returns
@@ -186,7 +189,9 @@ class DetermninisticPredictor(PredictorABC):
                 num_output_sampling = self.num_output_sampling
 
             output = self.raw_module.predict(
-                data=batch, output_sample_size=num_output_sampling
+                data=batch, 
+                output_sample_size=num_output_sampling, 
+                chunk_output_samples = self.config.chunk_output_samples
             )
 
             if self.num_output_covariance_sampling > 1:

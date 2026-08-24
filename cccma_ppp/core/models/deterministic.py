@@ -303,7 +303,9 @@ class deterministic(moduleABC):
         )
 
     def predict(
-        self, data: BatchData, output_sample_size: int = 0
+        self, data: BatchData, 
+        output_sample_size: int = 1,
+        chunk_output_samples: bool = False
     ) -> deterministicOutput:
         """
         Document this function.
@@ -326,5 +328,6 @@ class deterministic(moduleABC):
                 input_mask=data.input_mask,
                 added_features=data.added_features,
                 output_sample_size=output_sample_size,
+                chunk_output_samples=chunk_output_samples
             )
         )
