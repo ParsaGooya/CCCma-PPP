@@ -19,8 +19,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="cccma_ppp.generic.aggregator module" href="cccma_ppp.generic.aggregator.html" />
-    <link rel="prev" title="cccma_ppp.data_modules.utils module" href="cccma_ppp.data_modules.utils.html" /> 
+    <link rel="next" title="cccma_ppp.inference package" href="cccma_ppp.inference.html" />
+    <link rel="prev" title="cccma_ppp.data_modules.dataset package" href="cccma_ppp.data_modules.dataset.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -49,24 +49,44 @@
 <li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/contributing.html">Contributing</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/train.html">Train</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="cccma_ppp.html">cccma_ppp package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="cccma_ppp.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.architectures.html">cccma_ppp.architectures package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.configs.html">cccma_ppp.configs package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.core.html">cccma_ppp.core package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.html">cccma_ppp.data_modules package</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">cccma_ppp.generic package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-cccma_ppp.generic.aggregator">cccma_ppp.generic.aggregator module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-cccma_ppp.generic.distributed">cccma_ppp.generic.distributed module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-cccma_ppp.generic.logger">cccma_ppp.generic.logger module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-cccma_ppp.generic.monitoring">cccma_ppp.generic.monitoring module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-cccma_ppp.generic.registry_imports">cccma_ppp.generic.registry_imports module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-cccma_ppp.generic.runtime">cccma_ppp.generic.runtime module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-cccma_ppp.generic">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.inference.html">cccma_ppp.inference package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.loss.html">cccma_ppp.loss package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.models.html">cccma_ppp.models package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.preprocessing.html">cccma_ppp.preprocessing package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cccma_ppp.train.html">cccma_ppp.train package</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.html#module-cccma_ppp">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -100,14 +120,1071 @@
 <h1>cccma_ppp.generic package<a class="headerlink" href="#cccma-ppp-generic-package" title="Link to this heading"></a></h1>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="cccma_ppp.generic.aggregator.html">cccma_ppp.generic.aggregator module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cccma_ppp.generic.distributed.html">cccma_ppp.generic.distributed module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cccma_ppp.generic.logger.html">cccma_ppp.generic.logger module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cccma_ppp.generic.runtime.html">cccma_ppp.generic.runtime module</a></li>
+</section>
+<section id="module-cccma_ppp.generic.aggregator">
+<span id="cccma-ppp-generic-aggregator-module"></span><h2>cccma_ppp.generic.aggregator module<a class="headerlink" href="#module-cccma_ppp.generic.aggregator" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.Distributed">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.generic.aggregator.</span></span><span class="sig-name descname"><span class="pre">Distributed</span></span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.Distributed" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Document this class.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.Distributed.all_reduce_sum">
+<span class="sig-name descname"><span class="pre">all_reduce_sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.all_reduce_sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.Distributed.all_reduce_sum" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>local</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.Distributed.barrier">
+<span class="sig-name descname"><span class="pre">barrier</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.barrier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.Distributed.barrier" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.Distributed.broadcast">
+<span class="sig-name descname"><span class="pre">broadcast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.broadcast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.Distributed.broadcast" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>local</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>src</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
-</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.Distributed.cleanup">
+<span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.cleanup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.Distributed.cleanup" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.Distributed.get_instance">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_instance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.get_instance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.Distributed.get_instance" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.Distributed.is_root">
+<span class="sig-name descname"><span class="pre">is_root</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.is_root"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.Distributed.is_root" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.MetricsAggregator">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.generic.aggregator.</span></span><span class="sig-name descname"><span class="pre">MetricsAggregator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch_metric_terms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch_times</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epochs_seen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#MetricsAggregator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.MetricsAggregator" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>distributed</strong> (<a class="reference internal" href="#cccma_ppp.generic.aggregator.Distributed" title="cccma_ppp.generic.aggregator.Distributed"><em>Distributed</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>epoch_metric_terms</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>list</em><em>[</em><em>float</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>epoch_times</strong> (<em>list</em><em>[</em><em>float</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>num_epochs_seen</strong> (<em>int</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.MetricsAggregator.distributed">
+<span class="sig-name descname"><span class="pre">distributed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#cccma_ppp.generic.distributed.Distributed" title="cccma_ppp.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span><a class="headerlink" href="#cccma_ppp.generic.aggregator.MetricsAggregator.distributed" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.MetricsAggregator.epoch_metric_terms">
+<span class="sig-name descname"><span class="pre">epoch_metric_terms</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.aggregator.MetricsAggregator.epoch_metric_terms" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.MetricsAggregator.epoch_times">
+<span class="sig-name descname"><span class="pre">epoch_times</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.aggregator.MetricsAggregator.epoch_times" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.MetricsAggregator.load_state_dict">
+<span class="sig-name descname"><span class="pre">load_state_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#MetricsAggregator.load_state_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.MetricsAggregator.load_state_dict" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state_dict</strong> (<em>Any</em>) – Description not yet provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.MetricsAggregator.name">
+<span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#cccma_ppp.generic.aggregator.MetricsAggregator.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.MetricsAggregator.num_epochs_seen">
+<span class="sig-name descname"><span class="pre">num_epochs_seen</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#cccma_ppp.generic.aggregator.MetricsAggregator.num_epochs_seen" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.MetricsAggregator.plot">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aggregator_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_styles_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">5)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#MetricsAggregator.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.MetricsAggregator.plot" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aggregator_list</strong> (<em>list</em><em>[</em><em>'MetricsAggregator'</em><em>]</em>) – Description not yet provided.</p></li>
+<li><p><strong>color_styles_list</strong> (<em>list</em><em>[</em><em>tuple</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Description not yet provided.</p></li>
+<li><p><strong>plot_dir</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>figsize</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.MetricsAggregator.record">
+<span class="sig-name descname"><span class="pre">record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#MetricsAggregator.record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.MetricsAggregator.record" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loss_dict</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>torch.Tensor</em><em> | </em><em>int</em><em> | </em><em>float</em><em>]</em>) – Description not yet provided.</p></li>
+<li><p><strong>lr</strong> (<em>torch.Tensor</em><em> | </em><em>int</em><em> | </em><em>float</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>torch.Tensor</em><em> | </em><em>int</em><em> | </em><em>float</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.MetricsAggregator.record_epoch">
+<span class="sig-name descname"><span class="pre">record_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_elapsed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#MetricsAggregator.record_epoch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.MetricsAggregator.record_epoch" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>logs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em>) – Description not yet provided.</p></li>
+<li><p><strong>replace_index</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>time_elapsed</strong> (<em>float</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>RuntimeError</strong> – Description not yet provided.</p></li>
+<li><p><strong>ValueError</strong> – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.MetricsAggregator.reset_batch_losses">
+<span class="sig-name descname"><span class="pre">reset_batch_losses</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#MetricsAggregator.reset_batch_losses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.MetricsAggregator.reset_batch_losses" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Warns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>UserWarning</strong> – Description not yet provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.MetricsAggregator.state_dict">
+<span class="sig-name descname"><span class="pre">state_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#MetricsAggregator.state_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.MetricsAggregator.state_dict" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.RunningCovariance">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.generic.aggregator.</span></span><span class="sig-name descname"><span class="pre">RunningCovariance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_xxT</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#RunningCovariance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.RunningCovariance" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>distributed</strong> (<a class="reference internal" href="#cccma_ppp.generic.aggregator.Distributed" title="cccma_ppp.generic.aggregator.Distributed"><em>Distributed</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>sum_x</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>sum_xxT</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>count</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.RunningCovariance.count">
+<span class="sig-name descname"><span class="pre">count</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.aggregator.RunningCovariance.count" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.RunningCovariance.distributed">
+<span class="sig-name descname"><span class="pre">distributed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#cccma_ppp.generic.distributed.Distributed" title="cccma_ppp.generic.distributed.Distributed"><span class="pre">Distributed</span></a></span><a class="headerlink" href="#cccma_ppp.generic.aggregator.RunningCovariance.distributed" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.RunningCovariance.distributed_reduce">
+<span class="sig-name descname"><span class="pre">distributed_reduce</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#RunningCovariance.distributed_reduce"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.RunningCovariance.distributed_reduce" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.RunningCovariance.finalize">
+<span class="sig-name descname"><span class="pre">finalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">print_checks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#RunningCovariance.finalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.RunningCovariance.finalize" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>print_checks</strong> (<em>Any</em>) – Description not yet provided.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.RunningCovariance.sum_x">
+<span class="sig-name descname"><span class="pre">sum_x</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.aggregator.RunningCovariance.sum_x" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.RunningCovariance.sum_xxT">
+<span class="sig-name descname"><span class="pre">sum_xxT</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.aggregator.RunningCovariance.sum_xxT" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.RunningCovariance.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/aggregator.html#RunningCovariance.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.RunningCovariance.update" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.RuntimeContext">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.generic.aggregator.</span></span><span class="sig-name descname"><span class="pre">RuntimeContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">GLOBAL_EXP_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_CHECKPOINT_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_FIGURES_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_LOG_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_MONITORING_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_OUTPUT_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INPUT_VAR_METADATA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TARGET_VAR_METADATA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/runtime.html#RuntimeContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.aggregator.RuntimeContext" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>GLOBAL_EXP_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_CHECKPOINT_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_FIGURES_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_LOG_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_MONITORING_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_OUTPUT_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>INPUT_VAR_METADATA</strong> (<em>dict</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>TARGET_VAR_METADATA</strong> (<em>dict</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.RuntimeContext.GLOBAL_CHECKPOINT_DIR">
+<span class="sig-name descname"><span class="pre">GLOBAL_CHECKPOINT_DIR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.aggregator.RuntimeContext.GLOBAL_CHECKPOINT_DIR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.RuntimeContext.GLOBAL_EXP_DIR">
+<span class="sig-name descname"><span class="pre">GLOBAL_EXP_DIR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.aggregator.RuntimeContext.GLOBAL_EXP_DIR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.RuntimeContext.GLOBAL_FIGURES_DIR">
+<span class="sig-name descname"><span class="pre">GLOBAL_FIGURES_DIR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.aggregator.RuntimeContext.GLOBAL_FIGURES_DIR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.RuntimeContext.GLOBAL_LOG_DIR">
+<span class="sig-name descname"><span class="pre">GLOBAL_LOG_DIR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.aggregator.RuntimeContext.GLOBAL_LOG_DIR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.RuntimeContext.GLOBAL_MONITORING_DIR">
+<span class="sig-name descname"><span class="pre">GLOBAL_MONITORING_DIR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.aggregator.RuntimeContext.GLOBAL_MONITORING_DIR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.RuntimeContext.GLOBAL_OUTPUT_DIR">
+<span class="sig-name descname"><span class="pre">GLOBAL_OUTPUT_DIR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.aggregator.RuntimeContext.GLOBAL_OUTPUT_DIR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.RuntimeContext.INPUT_VAR_METADATA">
+<span class="sig-name descname"><span class="pre">INPUT_VAR_METADATA</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.aggregator.RuntimeContext.INPUT_VAR_METADATA" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.aggregator.RuntimeContext.TARGET_VAR_METADATA">
+<span class="sig-name descname"><span class="pre">TARGET_VAR_METADATA</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.aggregator.RuntimeContext.TARGET_VAR_METADATA" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cccma_ppp.generic.distributed">
+<span id="cccma-ppp-generic-distributed-module"></span><h2>cccma_ppp.generic.distributed module<a class="headerlink" href="#module-cccma_ppp.generic.distributed" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.generic.distributed.Distributed">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.generic.distributed.</span></span><span class="sig-name descname"><span class="pre">Distributed</span></span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.distributed.Distributed" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Document this class.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.distributed.Distributed.all_reduce_sum">
+<span class="sig-name descname"><span class="pre">all_reduce_sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.all_reduce_sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.distributed.Distributed.all_reduce_sum" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>local</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.distributed.Distributed.barrier">
+<span class="sig-name descname"><span class="pre">barrier</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.barrier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.distributed.Distributed.barrier" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.distributed.Distributed.broadcast">
+<span class="sig-name descname"><span class="pre">broadcast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.broadcast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.distributed.Distributed.broadcast" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>local</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>src</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.distributed.Distributed.cleanup">
+<span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.cleanup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.distributed.Distributed.cleanup" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.distributed.Distributed.get_instance">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_instance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.get_instance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.distributed.Distributed.get_instance" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.distributed.Distributed.is_root">
+<span class="sig-name descname"><span class="pre">is_root</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/distributed.html#Distributed.is_root"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.distributed.Distributed.is_root" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cccma_ppp.generic.logger">
+<span id="cccma-ppp-generic-logger-module"></span><h2>cccma_ppp.generic.logger module<a class="headerlink" href="#module-cccma_ppp.generic.logger" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="cccma_ppp.generic.logger.setup_logger">
+<span class="sig-prename descclassname"><span class="pre">cccma_ppp.generic.logger.</span></span><span class="sig-name descname"><span class="pre">setup_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'trainer'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/logger.html#setup_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.logger.setup_logger" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Description not yet provided.</p></li>
+<li><p><strong>log_dir</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>rank</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>level</strong> (<em>int</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>logging.Logger</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-cccma_ppp.generic.monitoring">
+<span id="cccma-ppp-generic-monitoring-module"></span><h2>cccma_ppp.generic.monitoring module<a class="headerlink" href="#module-cccma_ppp.generic.monitoring" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.Monitor">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.generic.monitoring.</span></span><span class="sig-name descname"><span class="pre">Monitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ram</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/monitoring.html#Monitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.monitoring.Monitor" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cpu</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>ram</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>gpu0</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>gpu1</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>gpus</strong> (<em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>interval</strong> (<em>float</em>) – Description not yet provided.</p></li>
+<li><p><strong>rank</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>local_rank</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>world_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.Monitor.checkpoint">
+<span class="sig-name descname"><span class="pre">checkpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/monitoring.html#Monitor.checkpoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.monitoring.Monitor.checkpoint" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Description not yet provided.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>TypeError</strong> – Description not yet provided.</p></li>
+<li><p><strong>ValueError</strong> – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.Monitor.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/monitoring.html#Monitor.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.monitoring.Monitor.clear" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.Monitor.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/monitoring.html#Monitor.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.monitoring.Monitor.close" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.Monitor.current_stage">
+<span class="sig-name descname"><span class="pre">current_stage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/monitoring.html#Monitor.current_stage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.monitoring.Monitor.current_stage" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.Monitor.get_dataframe">
+<span class="sig-name descname"><span class="pre">get_dataframe</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/monitoring.html#Monitor.get_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.monitoring.Monitor.get_dataframe" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.Monitor.metric_names">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">metric_names</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#cccma_ppp.generic.monitoring.Monitor.metric_names" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[str, …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.Monitor.observe">
+<span class="sig-name descname"><span class="pre">observe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/monitoring.html#Monitor.observe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.monitoring.Monitor.observe" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>function</strong> (<em>F</em>) – Description not yet provided.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>F</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – Description not yet provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.Monitor.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smooth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">smooth_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/monitoring.html#Monitor.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.monitoring.Monitor.plot" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>metrics</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>save_path</strong> (<em>str</em><em> | </em><em>os.PathLike</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>show</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>smooth</strong> (<em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>**smooth_kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>TypeError</strong> – Description not yet provided.</p></li>
+<li><p><strong>ValueError</strong> – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.Monitor.running">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">running</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#cccma_ppp.generic.monitoring.Monitor.running" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.Monitor.span">
+<span class="sig-name descname"><span class="pre">span</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/monitoring.html#Monitor.span"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.monitoring.Monitor.span" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Description not yet provided.</p>
+</dd>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Iterator</em> – Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>TypeError</strong> – Description not yet provided.</p></li>
+<li><p><strong>ValueError</strong> – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Iterator</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.Monitor.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/monitoring.html#Monitor.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.monitoring.Monitor.start" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>clear</strong> (<em>bool</em>) – Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.Monitor.stop">
+<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/monitoring.html#Monitor.stop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.monitoring.Monitor.stop" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timeout</strong> (<em>float</em><em> | </em><em>None</em>) – Description not yet provided.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.build_distributed_monitor">
+<span class="sig-prename descclassname"><span class="pre">cccma_ppp.generic.monitoring.</span></span><span class="sig-name descname"><span class="pre">build_distributed_monitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ram</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/monitoring.html#build_distributed_monitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.monitoring.build_distributed_monitor" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>distributed</strong> (<a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.trainer.Distributed" title="cccma_ppp.core.trainer.Distributed"><em>Distributed</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>cpu</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>ram</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>gpu</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>interval</strong> (<em>float</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.generic.monitoring.Monitor" title="cccma_ppp.generic.monitoring.Monitor">Monitor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.combine_rank_results">
+<span class="sig-prename descclassname"><span class="pre">cccma_ppp.generic.monitoring.</span></span><span class="sig-name descname"><span class="pre">combine_rank_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/monitoring.html#combine_rank_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.monitoring.combine_rank_results" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output_dir</strong> (<em>str</em><em> | </em><em>os.PathLike</em><em>[</em><em>str</em><em>]</em>) – Description not yet provided.</p></li>
+<li><p><strong>world_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Path | None</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>TypeError</strong> – Description not yet provided.</p></li>
+<li><p><strong>ValueError</strong> – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.distributed_monitoring">
+<span class="sig-prename descclassname"><span class="pre">cccma_ppp.generic.monitoring.</span></span><span class="sig-name descname"><span class="pre">distributed_monitoring</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ram</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">combine_ranks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/monitoring.html#distributed_monitoring"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.monitoring.distributed_monitoring" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>distributed</strong> (<a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.trainer.Distributed" title="cccma_ppp.core.trainer.Distributed"><em>Distributed</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>output_dir</strong> (<em>str</em><em> | </em><em>os.PathLike</em><em>[</em><em>str</em><em>]</em>) – Description not yet provided.</p></li>
+<li><p><strong>cpu</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>ram</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>gpu</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>interval</strong> (<em>float</em>) – Description not yet provided.</p></li>
+<li><p><strong>combine_ranks</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Iterator</em> – Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Iterator</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.export_results">
+<span class="sig-prename descclassname"><span class="pre">cccma_ppp.generic.monitoring.</span></span><span class="sig-name descname"><span class="pre">export_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resource_monitor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/monitoring.html#export_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.monitoring.export_results" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resource_monitor</strong> (<a class="reference internal" href="#cccma_ppp.generic.monitoring.Monitor" title="cccma_ppp.generic.monitoring.Monitor"><em>Monitor</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>output_dir</strong> (<em>str</em><em> | </em><em>os.PathLike</em><em>[</em><em>str</em><em>]</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[Path | None, Path | None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.monitor">
+<span class="sig-prename descclassname"><span class="pre">cccma_ppp.generic.monitoring.</span></span><span class="sig-name descname"><span class="pre">monitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ram</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">world_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/monitoring.html#monitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.monitoring.monitor" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cpu</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>ram</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>gpu0</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>gpu1</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>gpus</strong> (<em>Iterable</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>interval</strong> (<em>float</em>) – Description not yet provided.</p></li>
+<li><p><strong>rank</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>local_rank</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>world_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.generic.monitoring.Monitor" title="cccma_ppp.generic.monitoring.Monitor">Monitor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cccma_ppp.generic.monitoring.resolve_physical_gpu_index">
+<span class="sig-prename descclassname"><span class="pre">cccma_ppp.generic.monitoring.</span></span><span class="sig-name descname"><span class="pre">resolve_physical_gpu_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local_rank</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/monitoring.html#resolve_physical_gpu_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.monitoring.resolve_physical_gpu_index" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>local_rank</strong> (<em>int</em>) – Description not yet provided.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>TypeError</strong> – Description not yet provided.</p></li>
+<li><p><strong>ValueError</strong> – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-cccma_ppp.generic.registry_imports">
+<span id="cccma-ppp-generic-registry-imports-module"></span><h2>cccma_ppp.generic.registry_imports module<a class="headerlink" href="#module-cccma_ppp.generic.registry_imports" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.generic.registry_imports.MAF">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.generic.registry_imports.</span></span><span class="sig-name descname"><span class="pre">MAF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_network</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;class</span> <span class="pre">'cccma_ppp.architectures.normalized_flows.FCNN'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/normalized_flows.html#MAF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.registry_imports.MAF" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.flowABC" title="cccma_ppp.architectures.models_abc.flowABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">flowABC</span></code></a></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_dim</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>base_network</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.registry_imports.MAF.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/normalized_flows.html#MAF.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.registry_imports.MAF.build" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition_size</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.registry_imports.MAF.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/normalized_flows.html#MAF.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.registry_imports.MAF.forward" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.registry_imports.MAF.inverse">
+<span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/normalized_flows.html#MAF.inverse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.registry_imports.MAF.inverse" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>z</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.registry_imports.MAF.reset_parameters">
+<span class="sig-name descname"><span class="pre">reset_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/normalized_flows.html#MAF.reset_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.registry_imports.MAF.reset_parameters" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.generic.registry_imports.RealNVP">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.generic.registry_imports.</span></span><span class="sig-name descname"><span class="pre">RealNVP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_network</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;class</span> <span class="pre">'cccma_ppp.architectures.normalized_flows.FCNN'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/normalized_flows.html#RealNVP"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.registry_imports.RealNVP" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.flowABC" title="cccma_ppp.architectures.models_abc.flowABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">flowABC</span></code></a></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_dim</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>base_network</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.registry_imports.RealNVP.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/normalized_flows.html#RealNVP.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.registry_imports.RealNVP.build" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition_size</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.registry_imports.RealNVP.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/normalized_flows.html#RealNVP.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.registry_imports.RealNVP.forward" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.generic.registry_imports.RealNVP.inverse">
+<span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/normalized_flows.html#RealNVP.inverse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.registry_imports.RealNVP.inverse" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>z</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Description not yet provided.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cccma_ppp.generic.runtime">
+<span id="cccma-ppp-generic-runtime-module"></span><h2>cccma_ppp.generic.runtime module<a class="headerlink" href="#module-cccma_ppp.generic.runtime" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.generic.runtime.RuntimeContext">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.generic.runtime.</span></span><span class="sig-name descname"><span class="pre">RuntimeContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">GLOBAL_EXP_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_CHECKPOINT_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_FIGURES_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_LOG_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_MONITORING_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">GLOBAL_OUTPUT_DIR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">INPUT_VAR_METADATA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TARGET_VAR_METADATA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/generic/runtime.html#RuntimeContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.generic.runtime.RuntimeContext" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>GLOBAL_EXP_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_CHECKPOINT_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_FIGURES_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_LOG_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_MONITORING_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>GLOBAL_OUTPUT_DIR</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>INPUT_VAR_METADATA</strong> (<em>dict</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>TARGET_VAR_METADATA</strong> (<em>dict</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.runtime.RuntimeContext.GLOBAL_CHECKPOINT_DIR">
+<span class="sig-name descname"><span class="pre">GLOBAL_CHECKPOINT_DIR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.runtime.RuntimeContext.GLOBAL_CHECKPOINT_DIR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.runtime.RuntimeContext.GLOBAL_EXP_DIR">
+<span class="sig-name descname"><span class="pre">GLOBAL_EXP_DIR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.runtime.RuntimeContext.GLOBAL_EXP_DIR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.runtime.RuntimeContext.GLOBAL_FIGURES_DIR">
+<span class="sig-name descname"><span class="pre">GLOBAL_FIGURES_DIR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.runtime.RuntimeContext.GLOBAL_FIGURES_DIR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.runtime.RuntimeContext.GLOBAL_LOG_DIR">
+<span class="sig-name descname"><span class="pre">GLOBAL_LOG_DIR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.runtime.RuntimeContext.GLOBAL_LOG_DIR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.runtime.RuntimeContext.GLOBAL_MONITORING_DIR">
+<span class="sig-name descname"><span class="pre">GLOBAL_MONITORING_DIR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.runtime.RuntimeContext.GLOBAL_MONITORING_DIR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.runtime.RuntimeContext.GLOBAL_OUTPUT_DIR">
+<span class="sig-name descname"><span class="pre">GLOBAL_OUTPUT_DIR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.runtime.RuntimeContext.GLOBAL_OUTPUT_DIR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.runtime.RuntimeContext.INPUT_VAR_METADATA">
+<span class="sig-name descname"><span class="pre">INPUT_VAR_METADATA</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.runtime.RuntimeContext.INPUT_VAR_METADATA" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.generic.runtime.RuntimeContext.TARGET_VAR_METADATA">
+<span class="sig-name descname"><span class="pre">TARGET_VAR_METADATA</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.generic.runtime.RuntimeContext.TARGET_VAR_METADATA" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cccma_ppp.generic">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-cccma_ppp.generic" title="Link to this heading"></a></h2>
 </section>
 </section>
 
@@ -115,8 +1192,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="cccma_ppp.data_modules.utils.html" class="btn btn-neutral float-left" title="cccma_ppp.data_modules.utils module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="cccma_ppp.generic.aggregator.html" class="btn btn-neutral float-right" title="cccma_ppp.generic.aggregator module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="cccma_ppp.data_modules.dataset.html" class="btn btn-neutral float-left" title="cccma_ppp.data_modules.dataset package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cccma_ppp.inference.html" class="btn btn-neutral float-right" title="cccma_ppp.inference package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

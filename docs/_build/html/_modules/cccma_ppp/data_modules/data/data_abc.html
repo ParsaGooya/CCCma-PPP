@@ -46,6 +46,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../start_here/usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../start_here/contributing.html">Contributing</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/train.html">Train</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/cccma_ppp.html">cccma_ppp package</a></li>
@@ -537,7 +549,7 @@
                 <span class="n">invalid</span> <span class="o">=</span> <span class="n">ds_dims</span> <span class="o">-</span> <span class="n">dataconfig</span><span class="o">.</span><span class="n">_allowed_dims</span><span class="p">()</span>
                 <span class="k">if</span> <span class="n">invalid</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;invalid data dimensions </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">dims</span><span class="p">)</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">dataconfig</span><span class="o">.</span><span class="n">TYPE</span><span class="si">}</span><span class="s2"> data. Must be a subset ot </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">dataconfig</span><span class="o">.</span><span class="n">_allowed_dims</span><span class="p">())</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;invalid data dimensions </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">dims</span><span class="p">)</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">dataconfig</span><span class="o">.</span><span class="n">TYPE</span><span class="si">}</span><span class="s2"> data. Must be a subset of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">dataconfig</span><span class="o">.</span><span class="n">_allowed_dims</span><span class="p">())</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">&quot;</span>
                     <span class="p">)</span>
                 <span class="n">invalid</span> <span class="o">=</span> <span class="n">ds_dims</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
                 <span class="k">if</span> <span class="n">invalid</span><span class="p">:</span>

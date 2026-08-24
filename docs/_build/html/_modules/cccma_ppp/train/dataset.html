@@ -46,6 +46,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../start_here/usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../start_here/contributing.html">Contributing</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/train.html">Train</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
@@ -171,7 +183,7 @@
                     <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">dim</span><span class="p">]):</span>
                         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                             <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=====================================================================</span><span class="se">\n</span><span class="s2">&quot;</span>
-                            <span class="sa">f</span><span class="s2">&quot;model and observation data do not have the same </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2"> cooridnates.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;model and observation data do not have the same </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2"> coordinates.</span><span class="se">\n</span><span class="s2">&quot;</span>
                             <span class="s2">&quot;=====================================================================</span><span class="se">\n</span><span class="s2">&quot;</span>
                         <span class="p">)</span>
 
@@ -379,6 +391,8 @@
 
 
 
+<div class="viewcode-block" id="TrainDataset">
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.html#cccma_ppp.inference.dataset.TrainDataset">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TrainDataset</span><span class="p">(</span><span class="n">DatasetABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -486,6 +500,8 @@
             <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="p">)</span>
 
+<div class="viewcode-block" id="TrainDataset.get_obs_indexes">
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.html#cccma_ppp.inference.dataset.TrainDataset.get_obs_indexes">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_obs_indexes</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">sample_coords</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
@@ -541,8 +557,11 @@
                 <span class="sa">f</span><span class="s2">&quot;dataset: </span><span class="si">{</span><span class="n">missing_values</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">indexes</span>
+        <span class="k">return</span> <span class="n">indexes</span></div>
 
+
+<div class="viewcode-block" id="TrainDataset.get_target_shape">
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.html#cccma_ppp.inference.dataset.TrainDataset.get_target_shape">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_target_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -579,7 +598,8 @@
             <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">len_names</span><span class="p">,</span> <span class="o">*</span><span class="n">out_shape</span><span class="p">])</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_input_shape</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_input_shape</span><span class="p">()</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_index_observation_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ind</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -661,7 +681,8 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_metadata</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">datadict</span><span class="p">,</span> <span class="n">selection</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">datadict</span>
+            <span class="k">return</span> <span class="n">datadict</span></div>
+
 </pre></div>
 
            </div>

@@ -46,6 +46,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../start_here/usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../start_here/contributing.html">Contributing</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/train.html">Train</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
@@ -87,6 +99,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">cccma_ppp.core.selectors</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlowSelector</span>
 
 
+<div class="viewcode-block" id="flowOutput">
+<a class="viewcode-back" href="../../../api/cccma_ppp.architectures.html#cccma_ppp.architectures.normalized_flows.flowOutput">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">flowOutput</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -101,9 +115,12 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">e_samples</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
-    <span class="n">log_det</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="n">log_det</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span></div>
 
 
+
+<div class="viewcode-block" id="NormalizedFlowConfig">
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.models.html#cccma_ppp.architectures.normalized_flows.NormalizedFlowConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">NormalizedFlowConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -120,6 +137,8 @@
     <span class="n">list_flows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FlowSelector</span><span class="p">]</span>
     <span class="n">flow_sample_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5000</span>
 
+<div class="viewcode-block" id="NormalizedFlowConfig.build">
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.models.html#cccma_ppp.architectures.normalized_flows.NormalizedFlowConfig.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">latent_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">condition_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -138,11 +157,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">NormalizedFlowModel</span><span class="p">(</span>
             <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">latent_size</span><span class="o">=</span><span class="n">latent_size</span><span class="p">,</span> <span class="n">condition_size</span><span class="o">=</span><span class="n">condition_size</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
+</div>
+
 
 
 <div class="viewcode-block" id="NormalizedFlowModel">
-<a class="viewcode-back" href="../../../api/cccma_ppp.loss.kld.html#cccma_ppp.loss.kld.NormalizedFlowModel">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.loss.kld.html#cccma_ppp.architectures.normalized_flows.NormalizedFlowModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">NormalizedFlowModel</span><span class="p">(</span><span class="n">flowABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Document this class.</span>
@@ -191,7 +212,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">flows</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flows</span><span class="p">)</span>
 
 <div class="viewcode-block" id="NormalizedFlowModel.forward">
-<a class="viewcode-back" href="../../../api/cccma_ppp.loss.kld.html#cccma_ppp.loss.kld.NormalizedFlowModel.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.loss.kld.html#cccma_ppp.architectures.normalized_flows.NormalizedFlowModel.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -218,7 +239,7 @@
 
 
 <div class="viewcode-block" id="NormalizedFlowModel.inverse">
-<a class="viewcode-back" href="../../../api/cccma_ppp.loss.kld.html#cccma_ppp.loss.kld.NormalizedFlowModel.inverse">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.loss.kld.html#cccma_ppp.architectures.normalized_flows.NormalizedFlowModel.inverse">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -247,6 +268,8 @@
 
 
 
+<div class="viewcode-block" id="FCNN">
+<a class="viewcode-back" href="../../../api/cccma_ppp.architectures.html#cccma_ppp.architectures.normalized_flows.FCNN">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">FCNN</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Document this class.</span>
@@ -283,6 +306,8 @@
             <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_dim</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">),</span>
         <span class="p">)</span>
 
+<div class="viewcode-block" id="FCNN.forward">
+<a class="viewcode-back" href="../../../api/cccma_ppp.architectures.html#cccma_ppp.architectures.normalized_flows.FCNN.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -297,9 +322,13 @@
 <span class="sd">        Any</span>
 <span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+</div>
 
 
+
+<div class="viewcode-block" id="MAF">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.architectures.normalized_flows.MAF">[docs]</a>
 <span class="nd">@FlowSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;maf&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">MAF</span><span class="p">(</span><span class="n">flowABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -333,6 +362,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">base_network</span> <span class="o">=</span> <span class="n">base_network</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span> <span class="o">=</span> <span class="kc">False</span>
 
+<div class="viewcode-block" id="MAF.build">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.architectures.normalized_flows.MAF.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">condition_size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -368,14 +399,20 @@
         <span class="k">if</span> <span class="n">added_features</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span> <span class="o">=</span> <span class="kc">True</span>
 
-        <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
 
+
+<div class="viewcode-block" id="MAF.reset_parameters">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.architectures.normalized_flows.MAF.reset_parameters">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">reset_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">init</span><span class="o">.</span><span class="n">uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_param</span><span class="p">,</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">0.5</span><span class="p">))</span>
+        <span class="n">init</span><span class="o">.</span><span class="n">uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_param</span><span class="p">,</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">0.5</span><span class="p">))</span></div>
 
+
+<div class="viewcode-block" id="MAF.forward">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.architectures.normalized_flows.MAF.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -423,8 +460,11 @@
                 <span class="n">mu</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="n">out</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">out</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
             <span class="n">z</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span>
             <span class="n">log_det</span> <span class="o">-=</span> <span class="n">alpha</span>
-        <span class="k">return</span> <span class="n">z</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,)),</span> <span class="n">log_det</span>
+        <span class="k">return</span> <span class="n">z</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,)),</span> <span class="n">log_det</span></div>
 
+
+<div class="viewcode-block" id="MAF.inverse">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.architectures.normalized_flows.MAF.inverse">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -473,9 +513,13 @@
             <span class="n">x</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">z</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
 
             <span class="n">log_det</span> <span class="o">+=</span> <span class="n">alpha</span>
-        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">log_det</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">log_det</span></div>
+</div>
 
 
+
+<div class="viewcode-block" id="RealNVP">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.architectures.normalized_flows.RealNVP">[docs]</a>
 <span class="nd">@FlowSelector</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;realnvp&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">RealNVP</span><span class="p">(</span><span class="n">flowABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -505,6 +549,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">base_network</span> <span class="o">=</span> <span class="n">base_network</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span> <span class="o">=</span> <span class="kc">False</span>
 
+<div class="viewcode-block" id="RealNVP.build">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.architectures.normalized_flows.RealNVP.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">condition_size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -539,8 +585,11 @@
         <span class="k">if</span> <span class="n">added_features</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_conditional</span> <span class="o">=</span> <span class="kc">True</span>
 
-        <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
 
+
+<div class="viewcode-block" id="RealNVP.forward">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.architectures.normalized_flows.RealNVP.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -587,8 +636,11 @@
         <span class="n">lower</span> <span class="o">=</span> <span class="n">t2_transformed</span> <span class="o">+</span> <span class="n">lower</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">s2_transformed</span><span class="p">)</span>
         <span class="n">z</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">log_det</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">s1_transformed</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">s2_transformed</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">z</span><span class="p">,</span> <span class="n">log_det</span>
+        <span class="k">return</span> <span class="n">z</span><span class="p">,</span> <span class="n">log_det</span></div>
 
+
+<div class="viewcode-block" id="RealNVP.inverse">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.architectures.normalized_flows.RealNVP.inverse">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -637,7 +689,9 @@
         <span class="n">upper</span> <span class="o">=</span> <span class="p">(</span><span class="n">upper</span> <span class="o">-</span> <span class="n">t1_transformed</span><span class="p">)</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">s1_transformed</span><span class="p">)</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">log_det</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="n">s1_transformed</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="n">s2_transformed</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">log_det</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">log_det</span></div>
+</div>
+
 </pre></div>
 
            </div>

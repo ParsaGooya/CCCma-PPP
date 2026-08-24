@@ -8,24 +8,51 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 DOCS_DIR = PROJECT_ROOT / "docs"
 SOURCE_DIR = DOCS_DIR / "source"
+API_DIR = SOURCE_DIR / "api"
+
+PACKAGE_DIR = PROJECT_ROOT / "cccma_ppp"
 
 BUILD_DIR = DOCS_DIR / "_build"
 HTML_DIR = BUILD_DIR / "html"
-
 WARNINGS_FILE = BUILD_DIR / "warnings.txt"
 
 
 def run(cmd, cwd=None):
+    print("$", " ".join(str(x) for x in cmd))
+
     result = subprocess.run(
         [str(x) for x in cmd],
         cwd=cwd,
+        check=False,
     )
+
     return result.returncode
 
 
 def clean():
     if BUILD_DIR.exists():
         shutil.rmtree(BUILD_DIR)
+
+
+def generate_api():
+
+    if not PACKAGE_DIR.exists():
+        print(f"ERROR: Package directory does not exist: {PACKAGE_DIR}")
+        return 1
+
+    API_DIR.mkdir(parents=True, exist_ok=True)
+
+    cmd = [
+        sys.executable,
+        "-m",
+        "sphinx.ext.apidoc",
+        "-f",
+        "-o",
+        str(API_DIR),
+        str(PACKAGE_DIR),
+    ]
+
+    return run(cmd, cwd=PROJECT_ROOT)
 
 
 def build(strict=False):
@@ -36,14 +63,19 @@ def build(strict=False):
         "-b",
         "html",
         "--keep-going",
-        str(SOURCE_DIR),
-        str(HTML_DIR),
-        "-w",
-        str(WARNINGS_FILE),
     ]
 
     if strict:
-        cmd.insert(5, "-W")
+        cmd.append("-W")
+
+    cmd.extend(
+        [
+            str(SOURCE_DIR),
+            str(HTML_DIR),
+            "-w",
+            str(WARNINGS_FILE),
+        ]
+    )
 
     return run(cmd, cwd=PROJECT_ROOT)
 
@@ -59,13 +91,11 @@ def summarize_warnings():
     print()
     print(f"Warnings: {len(issues)}")
 
-    preview = issues[:20]
-
-    for line in preview:
+    for line in issues[:20]:
         print(line)
 
-    if len(issues) > len(preview):
-        print(f"... and {len(issues) - len(preview)} more")
+    if len(issues) > 20:
+        print(f"... and {len(issues) - 20} more")
 
 
 def serve(port):
@@ -109,6 +139,14 @@ def main():
 
     clean()
 
+    print("Generating API documentation...")
+    rc = generate_api()
+
+    if rc != 0:
+        sys.exit(rc)
+
+    print()
+    print("Building documentation...")
     rc = build(strict=args.strict)
 
     print()
@@ -122,6 +160,7 @@ def main():
         print(f"Serving documentation at http://localhost:{args.port}")
         print("Press Ctrl+C to stop the server.")
         serve(args.port)
+
     elif rc == 0:
         print()
         print("Documentation build completed. Server disabled.")

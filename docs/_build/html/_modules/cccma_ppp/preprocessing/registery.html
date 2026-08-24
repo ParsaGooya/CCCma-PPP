@@ -46,6 +46,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../start_here/usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../start_here/contributing.html">Contributing</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/train.html">Train</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
@@ -77,7 +89,7 @@
              
   <h1>Source code for cccma_ppp.preprocessing.registery</h1><div class="highlight"><pre>
 <div class="viewcode-block" id="Registery">
-<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.registery.html#cccma_ppp.preprocessing.registery.Registery">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.registery.html#cccma_ppp.preprocessing.preprocessing.Registery">[docs]</a>
 <span></span><span class="k">class</span><span class="w"> </span><span class="nc">Registery</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Document this class.</span>
@@ -90,7 +102,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span> <span class="o">=</span> <span class="p">{}</span>
 
 <div class="viewcode-block" id="Registery.register">
-<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.registery.html#cccma_ppp.preprocessing.registery.Registery.register">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.registery.html#cccma_ppp.preprocessing.preprocessing.Registery.register">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -122,7 +134,7 @@
 
 
 <div class="viewcode-block" id="Registery.get">
-<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.registery.html#cccma_ppp.preprocessing.registery.Registery.get">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.registery.html#cccma_ppp.preprocessing.preprocessing.Registery.get">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -155,7 +167,7 @@
 
 
 <div class="viewcode-block" id="Registery.available">
-<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.registery.html#cccma_ppp.preprocessing.registery.Registery.available">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.registery.html#cccma_ppp.preprocessing.preprocessing.Registery.available">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">available</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>

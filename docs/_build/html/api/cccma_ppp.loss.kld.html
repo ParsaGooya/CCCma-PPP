@@ -18,9 +18,7 @@
       <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="cccma_ppp.loss.loss module" href="cccma_ppp.loss.loss.html" />
-    <link rel="prev" title="cccma_ppp.loss package" href="cccma_ppp.loss.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -49,26 +47,21 @@
 <li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../start_here/contributing.html">Contributing</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/train.html">Train</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="cccma_ppp.html">cccma_ppp package</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="cccma_ppp.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.core.html">cccma_ppp.core package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.html">cccma_ppp.data_modules package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.generic.html">cccma_ppp.generic package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.inference.html">cccma_ppp.inference package</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="cccma_ppp.loss.html">cccma_ppp.loss package</a><ul class="current">
-<li class="toctree-l4 current"><a class="reference internal" href="cccma_ppp.loss.html#submodules">Submodules</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.models.html">cccma_ppp.models package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.preprocessing.html">cccma_ppp.preprocessing package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.train.html">cccma_ppp.train package</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.html#submodules">Submodules</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cccma_ppp.html">cccma_ppp package</a></li>
 </ul>
 
         </div>
@@ -85,8 +78,6 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="cccma_ppp.html">cccma_ppp package</a></li>
-          <li class="breadcrumb-item"><a href="cccma_ppp.loss.html">cccma_ppp.loss package</a></li>
       <li class="breadcrumb-item active">cccma_ppp.loss.kld module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/api/cccma_ppp.loss.kld.rst.txt" rel="nofollow"> View page source</a>
@@ -150,7 +141,7 @@
 <dl class="py class">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.loss.kld.</span></span><span class="sig-name descname"><span class="pre">KLD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mean'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/loss/kld.html#KLD"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">lossABC</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.loss_abc.lossABC" title="cccma_ppp.loss.loss_abc.lossABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">lossABC</span></code></a></p>
 <p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -168,7 +159,7 @@
 <li><p><strong>log_var</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
 <li><p><strong>cond_mu</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
 <li><p><strong>cond_log_var</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
-<li><p><strong>prior_flow</strong> (<em>NormalizedFlowModel</em>) – Description not yet provided.</p></li>
+<li><p><strong>prior_flow</strong> (<a class="reference internal" href="cccma_ppp.loss.html#cccma_ppp.loss.kld.NormalizedFlowModel" title="cccma_ppp.loss.kld.NormalizedFlowModel"><em>NormalizedFlowModel</em></a>) – Description not yet provided.</p></li>
 <li><p><strong>print_loss</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 </ul>
 </dd>
@@ -211,12 +202,12 @@
 <dl class="py class">
 <dt class="sig sig-object py">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.loss.kld.</span></span><span class="sig-name descname"><span class="pre">NormalizedFlowModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/normalized_flows.html#NormalizedFlowModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">flowABC</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.flowABC" title="cccma_ppp.architectures.models_abc.flowABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">flowABC</span></code></a></p>
 <p>Document this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<em>NormalizedFlowConfig</em>) – Description not yet provided.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.normalized_flows.NormalizedFlowConfig" title="cccma_ppp.architectures.normalized_flows.NormalizedFlowConfig"><em>NormalizedFlowConfig</em></a>) – Description not yet provided.</p></li>
 <li><p><strong>latent_size</strong> (<em>Any</em>) – Description not yet provided.</p></li>
 <li><p><strong>condition_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
 </ul>
@@ -283,7 +274,7 @@
 <dd><p>Description not yet provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>GenerativeContext</p>
+<dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext">GenerativeContext</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -294,7 +285,7 @@
 <dd><p>Description not yet provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>GenerativeContext</p>
+<dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext">GenerativeContext</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -319,7 +310,7 @@
 
 <dl class="py attribute">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">generative_context</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">GenerativeContext</span></span></dt>
+<span class="sig-name descname"><span class="pre">generative_context</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.GenerativeContext" title="cccma_ppp.core.core_abc.GenerativeContext"><span class="pre">GenerativeContext</span></a></span></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -329,10 +320,7 @@
 
            </div>
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="cccma_ppp.loss.html" class="btn btn-neutral float-left" title="cccma_ppp.loss package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="cccma_ppp.loss.loss.html" class="btn btn-neutral float-right" title="cccma_ppp.loss.loss module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
+          <footer>
 
   <hr/>
 

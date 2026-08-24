@@ -1,0 +1,1081 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cccma_ppp.architectures.mlp package &mdash; CCCma PPP  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="cccma_ppp.architectures.unet package" href="cccma_ppp.architectures.unet.html" />
+    <link rel="prev" title="cccma_ppp.architectures.layers package" href="cccma_ppp.architectures.layers.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CCCma PPP
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Start Here</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../start_here/contributing.html">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_overviews/train.html">Train</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="cccma_ppp.html">cccma_ppp package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="cccma_ppp.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="cccma_ppp.architectures.html">cccma_ppp.architectures package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="cccma_ppp.architectures.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#module-cccma_ppp.architectures.models_abc">cccma_ppp.architectures.models_abc module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#module-cccma_ppp.architectures.normalized_flows">cccma_ppp.architectures.normalized_flows module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cccma_ppp.architectures.html#module-cccma_ppp.architectures">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.configs.html">cccma_ppp.configs package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.core.html">cccma_ppp.core package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.data_modules.html">cccma_ppp.data_modules package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.generic.html">cccma_ppp.generic package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.inference.html">cccma_ppp.inference package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.loss.html">cccma_ppp.loss package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.preprocessing.html">cccma_ppp.preprocessing package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cccma_ppp.train.html">cccma_ppp.train package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cccma_ppp.html#module-cccma_ppp">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CCCma PPP</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="cccma_ppp.html">cccma_ppp package</a></li>
+          <li class="breadcrumb-item"><a href="cccma_ppp.architectures.html">cccma_ppp.architectures package</a></li>
+      <li class="breadcrumb-item active">cccma_ppp.architectures.mlp package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/cccma_ppp.architectures.mlp.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cccma-ppp-architectures-mlp-package">
+<h1>cccma_ppp.architectures.mlp package<a class="headerlink" href="#cccma-ppp-architectures-mlp-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-cccma_ppp.architectures.mlp.cvae">
+<span id="cccma-ppp-architectures-mlp-cvae-module"></span><h2>cccma_ppp.architectures.mlp.cvae module<a class="headerlink" href="#module-cccma_ppp.architectures.mlp.cvae" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.build_mlp">
+<span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.cvae.</span></span><span class="sig-name descname"><span class="pre">build_mlp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'relu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate_final</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/layers/mlp.html#build_mlp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.build_mlp" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dims</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – Description not yet provided.</p></li>
+<li><p><strong>activation</strong> (<em>ActivationName</em>) – Description not yet provided.</p></li>
+<li><p><strong>dropout_rate</strong> (<em>float</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>batch_normalization</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>activate_final</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Sequential</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEForwardRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">posterior_variance_limits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/models_abc.html#cVAEForwardRequest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>target_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>added_features</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>latent_sample_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>output_sample_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>posterior_variance_limits</strong> (<em>list</em><em>[</em><em>torch.Tensor</em><em>, </em><em>torch.Tensor</em><em>] </em><em>| </em><em>None</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest.added_features">
+<span class="sig-name descname"><span class="pre">added_features</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest.added_features" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest.condition">
+<span class="sig-name descname"><span class="pre">condition</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest.condition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest.condition_mask">
+<span class="sig-name descname"><span class="pre">condition_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest.condition_mask" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest.latent_sample_size">
+<span class="sig-name descname"><span class="pre">latent_sample_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest.latent_sample_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest.output_sample_size">
+<span class="sig-name descname"><span class="pre">output_sample_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest.output_sample_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest.posterior_variance_limits">
+<span class="sig-name descname"><span class="pre">posterior_variance_limits</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest.posterior_variance_limits" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest.target">
+<span class="sig-name descname"><span class="pre">target</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest.target" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest.target_mask">
+<span class="sig-name descname"><span class="pre">target_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest.target_mask" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEModelSelector">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEModelSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/selectors.html#cVAEModelSelector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEModelSelector" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.selectors.ModelSelector" title="cccma_ppp.core.selectors.ModelSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelSelector</span></code></a></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>type</strong> (<em>str</em>)</p></li>
+<li><p><strong>config</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>load_dir</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>freeze_weights</strong> (<em>bool</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEModelSelector.registery">
+<span class="sig-name descname"><span class="pre">registery</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.registery.Registery" title="cccma_ppp.core.registery.Registery"><span class="pre">Registery</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;cccma_ppp.core.registery.Registery</span> <span class="pre">object&gt;</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEModelSelector.registery" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEOutput">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cond_mu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cond_log_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deterministic_guess</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/models/cvae.html#cVAEOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEOutput" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.OutputABC" title="cccma_ppp.core.core_abc.OutputABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">OutputABC</span></code></a></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>mu</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>log_var</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>samples</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>cond_mu</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>cond_log_var</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>deterministic_guess</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEOutput.cond_log_var">
+<span class="sig-name descname"><span class="pre">cond_log_var</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEOutput.cond_log_var" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEOutput.cond_mu">
+<span class="sig-name descname"><span class="pre">cond_mu</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEOutput.cond_mu" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEOutput.deterministic_guess">
+<span class="sig-name descname"><span class="pre">deterministic_guess</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEOutput.deterministic_guess" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEOutput.log_var">
+<span class="sig-name descname"><span class="pre">log_var</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEOutput.log_var" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEOutput.mu">
+<span class="sig-name descname"><span class="pre">mu</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEOutput.mu" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEOutput.output">
+<span class="sig-name descname"><span class="pre">output</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEOutput.output" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEOutput.samples">
+<span class="sig-name descname"><span class="pre">samples</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEOutput.samples" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEPredictRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior_flow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/models_abc.html#cVAEPredictRequest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>condition</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>added_features</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>prior_flow</strong> (<a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.flowABC" title="cccma_ppp.architectures.models_abc.flowABC"><em>flowABC</em></a><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>latent_samples</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>nstds</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>latent_sample_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>output_sample_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest.added_features">
+<span class="sig-name descname"><span class="pre">added_features</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest.added_features" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest.condition">
+<span class="sig-name descname"><span class="pre">condition</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest.condition" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest.condition_mask">
+<span class="sig-name descname"><span class="pre">condition_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest.condition_mask" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest.latent_sample_size">
+<span class="sig-name descname"><span class="pre">latent_sample_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest.latent_sample_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest.latent_samples">
+<span class="sig-name descname"><span class="pre">latent_samples</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest.latent_samples" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest.nstds">
+<span class="sig-name descname"><span class="pre">nstds</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest.nstds" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest.output_sample_size">
+<span class="sig-name descname"><span class="pre">output_sample_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest.output_sample_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest.prior_flow">
+<span class="sig-name descname"><span class="pre">prior_flow</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.flowABC" title="cccma_ppp.architectures.models_abc.flowABC"><span class="pre">flowABC</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest.prior_flow" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLP">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAE_MLP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/mlp/cvae.html#cVAE_MLP"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLP" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEmodelsABC" title="cccma_ppp.architectures.models_abc.cVAEmodelsABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">cVAEmodelsABC</span></code></a></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference internal" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig" title="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig"><em>cVAE_MLPConfig</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em><em> | </em><em>tuple</em>) – Description not yet provided.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>tuple</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLP.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/mlp/cvae.html#cVAE_MLP.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLP.forward" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="#cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest" title="cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest"><em>cVAEForwardRequest</em></a>) – Description not yet provided.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.architectures.mlp.cvae.cVAEOutput" title="cccma_ppp.architectures.mlp.cvae.cVAEOutput">cVAEOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLP.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/mlp/cvae.html#cVAE_MLP.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLP.predict" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="#cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest" title="cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest"><em>cVAEPredictRequest</em></a>) – Description not yet provided.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.architectures.mlp.cvae.cVAEOutput" title="cccma_ppp.architectures.mlp.cvae.cVAEOutput">cVAEOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAE_MLPConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder_hidden_dims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latent_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_embedding_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_embedding_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_hidden_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition_dependant_latent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condemb_to_decoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'relu'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/mlp/cvae.html#cVAE_MLPConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.cVAEmodelConfigABC" title="cccma_ppp.architectures.models_abc.cVAEmodelConfigABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">cVAEmodelConfigABC</span></code></a></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>encoder_hidden_dims</strong> (<em>list</em>) – Description not yet provided.</p></li>
+<li><p><strong>latent_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition_embedding_dims</strong> (<em>list</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition_embedding_size</strong> (<em>int</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>decoder_hidden_dims</strong> (<em>list</em>) – Description not yet provided.</p></li>
+<li><p><strong>condition_dependant_latent</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>condemb_to_decoder</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>batch_normalization</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>dropout_rate</strong> (<em>float</em>) – Description not yet provided.</p></li>
+<li><p><strong>init_method</strong> (<em>InitMethod</em>) – Description not yet provided.</p></li>
+<li><p><strong>activation</strong> (<em>ActivationName</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.EXPECTS_MASK">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">EXPECTS_MASK</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.EXPECTS_MASK" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.GENERATOR">
+<span class="sig-name descname"><span class="pre">GENERATOR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.GENERATOR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.NUM_INPUT_DIMS">
+<span class="sig-name descname"><span class="pre">NUM_INPUT_DIMS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.NUM_INPUT_DIMS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.NUM_OUTPUT_DIMS">
+<span class="sig-name descname"><span class="pre">NUM_OUTPUT_DIMS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.NUM_OUTPUT_DIMS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.activation">
+<span class="sig-name descname"><span class="pre">activation</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'relu'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'gelu'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'silu'</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'relu'</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.activation" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.batch_normalization">
+<span class="sig-name descname"><span class="pre">batch_normalization</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.batch_normalization" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/mlp/cvae.html#cVAE_MLPConfig.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.build" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Description not yet provided.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.checkpoint_config">
+<span class="sig-name descname"><span class="pre">checkpoint_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.checkpoint_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.condemb_to_decoder">
+<span class="sig-name descname"><span class="pre">condemb_to_decoder</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.condemb_to_decoder" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.condition_dependant_latent">
+<span class="sig-name descname"><span class="pre">condition_dependant_latent</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.condition_dependant_latent" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.condition_embedding_dims">
+<span class="sig-name descname"><span class="pre">condition_embedding_dims</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.condition_embedding_dims" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.condition_embedding_size">
+<span class="sig-name descname"><span class="pre">condition_embedding_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.condition_embedding_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.decoder_hidden_dims">
+<span class="sig-name descname"><span class="pre">decoder_hidden_dims</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.decoder_hidden_dims" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.dropout_rate">
+<span class="sig-name descname"><span class="pre">dropout_rate</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.dropout_rate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.encoder_hidden_dims">
+<span class="sig-name descname"><span class="pre">encoder_hidden_dims</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.encoder_hidden_dims" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.init_method">
+<span class="sig-name descname"><span class="pre">init_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'default'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'kaiming'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'xavier'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'trunc_normal'</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'default'</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.init_method" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.latent_size">
+<span class="sig-name descname"><span class="pre">latent_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAE_MLPConfig.latent_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEmodelConfigABC</span></span><a class="reference internal" href="../_modules/cccma_ppp/architectures/models_abc.html#cVAEmodelConfigABC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelConfigABC" title="cccma_ppp.architectures.models_abc.modelConfigABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">modelConfigABC</span></code></a></p>
+<p>Document this class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC.latent_size">
+<span class="sig-name descname"><span class="pre">latent_size</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC.latent_size" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC.condition_dependant_latent">
+<span class="sig-name descname"><span class="pre">condition_dependant_latent</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC.condition_dependant_latent" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC.condition_embedding_size">
+<span class="sig-name descname"><span class="pre">condition_embedding_size</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC.condition_embedding_size" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC.condition_embedding_dims">
+<span class="sig-name descname"><span class="pre">condition_embedding_dims</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC.condition_embedding_dims" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC.condemb_to_decoder">
+<span class="sig-name descname"><span class="pre">condemb_to_decoder</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC.condemb_to_decoder" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC.checkpoint_config">
+<span class="sig-name descname"><span class="pre">checkpoint_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC.checkpoint_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">condemb_to_decoder</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">condition_dependant_latent</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">condition_embedding_dims</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span></span><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">condition_embedding_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#id3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">latent_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#id4" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEmodelsABC">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.cvae.</span></span><span class="sig-name descname"><span class="pre">cVAEmodelsABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/models_abc.html#cVAEmodelsABC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEmodelsABC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelABC" title="cccma_ppp.architectures.models_abc.modelABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">modelABC</span></code></a></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC" title="cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC"><em>cVAEmodelConfigABC</em></a>) – Description not yet provided.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEmodelsABC.forward">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/models_abc.html#cVAEmodelsABC.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEmodelsABC.forward" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="#cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest" title="cccma_ppp.architectures.mlp.cvae.cVAEForwardRequest"><em>cVAEForwardRequest</em></a>) – Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.OutputABC" title="cccma_ppp.core.core_abc.OutputABC"><em>OutputABC</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.cvae.cVAEmodelsABC.predict">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/models_abc.html#cVAEmodelsABC.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.cvae.cVAEmodelsABC.predict" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="#cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest" title="cccma_ppp.architectures.mlp.cvae.cVAEPredictRequest"><em>cVAEPredictRequest</em></a>) – Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.OutputABC" title="cccma_ppp.core.core_abc.OutputABC"><em>OutputABC</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cccma_ppp.architectures.mlp.deterministic">
+<span id="cccma-ppp-architectures-mlp-deterministic-module"></span><h2>cccma_ppp.architectures.mlp.deterministic module<a class="headerlink" href="#module-cccma_ppp.architectures.mlp.deterministic" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.Autoencoder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.deterministic.</span></span><span class="sig-name descname"><span class="pre">Autoencoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/mlp/deterministic.html#Autoencoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.Autoencoder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.deterministicmodelsABC" title="cccma_ppp.architectures.models_abc.deterministicmodelsABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">deterministicmodelsABC</span></code></a></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference internal" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig" title="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig"><em>AutoencoderConfig</em></a>) – Description not yet provided.</p></li>
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em><em> | </em><em>tuple</em>) – Description not yet provided.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>tuple</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.Autoencoder.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/mlp/deterministic.html#Autoencoder.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.Autoencoder.forward" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="#cccma_ppp.architectures.mlp.deterministic.DeterministicRequest" title="cccma_ppp.architectures.mlp.deterministic.DeterministicRequest"><em>DeterministicRequest</em></a>) – Description not yet provided.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cccma_ppp.architectures.mlp.deterministic.deterministicOutput" title="cccma_ppp.architectures.mlp.deterministic.deterministicOutput">deterministicOutput</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.deterministic.</span></span><span class="sig-name descname"><span class="pre">AutoencoderConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoder_hidden_dims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_hidden_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">append_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'relu'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/mlp/deterministic.html#AutoencoderConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelConfigABC" title="cccma_ppp.architectures.models_abc.modelConfigABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">modelConfigABC</span></code></a></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>encoder_hidden_dims</strong> (<em>list</em>) – Description not yet provided.</p></li>
+<li><p><strong>decoder_hidden_dims</strong> (<em>list</em>) – Description not yet provided.</p></li>
+<li><p><strong>batch_normalization</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>dropout_rate</strong> (<em>float</em>) – Description not yet provided.</p></li>
+<li><p><strong>append_mode</strong> (<em>AppendMode</em>) – Description not yet provided.</p></li>
+<li><p><strong>init_method</strong> (<em>InitMethod</em>) – Description not yet provided.</p></li>
+<li><p><strong>activation</strong> (<em>ActivationName</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.EXPECTS_MASK">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">EXPECTS_MASK</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.EXPECTS_MASK" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.GENERATOR">
+<span class="sig-name descname"><span class="pre">GENERATOR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.GENERATOR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.NUM_INPUT_DIMS">
+<span class="sig-name descname"><span class="pre">NUM_INPUT_DIMS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.NUM_INPUT_DIMS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.NUM_OUTPUT_DIMS">
+<span class="sig-name descname"><span class="pre">NUM_OUTPUT_DIMS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.NUM_OUTPUT_DIMS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.activation">
+<span class="sig-name descname"><span class="pre">activation</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'relu'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'gelu'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'silu'</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'relu'</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.activation" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.append_mode">
+<span class="sig-name descname"><span class="pre">append_mode</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">2</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.append_mode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.batch_normalization">
+<span class="sig-name descname"><span class="pre">batch_normalization</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.batch_normalization" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/mlp/deterministic.html#AutoencoderConfig.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.build" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Description not yet provided.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.checkpoint_config">
+<span class="sig-name descname"><span class="pre">checkpoint_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.checkpoint_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.decoder_hidden_dims">
+<span class="sig-name descname"><span class="pre">decoder_hidden_dims</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.decoder_hidden_dims" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.dropout_rate">
+<span class="sig-name descname"><span class="pre">dropout_rate</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.dropout_rate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.encoder_hidden_dims">
+<span class="sig-name descname"><span class="pre">encoder_hidden_dims</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.encoder_hidden_dims" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.init_method">
+<span class="sig-name descname"><span class="pre">init_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'default'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'kaiming'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'xavier'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'trunc_normal'</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'default'</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.AutoencoderConfig.init_method" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.DeterministicRequest">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.deterministic.</span></span><span class="sig-name descname"><span class="pre">DeterministicRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_sample_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/models_abc.html#DeterministicRequest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.DeterministicRequest" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p></li>
+<li><p><strong>input_mask</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>added_features</strong> (<em>torch.Tensor</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>output_sample_size</strong> (<em>int</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.DeterministicRequest.added_features">
+<span class="sig-name descname"><span class="pre">added_features</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.DeterministicRequest.added_features" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.DeterministicRequest.input">
+<span class="sig-name descname"><span class="pre">input</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.DeterministicRequest.input" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.DeterministicRequest.input_mask">
+<span class="sig-name descname"><span class="pre">input_mask</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.DeterministicRequest.input_mask" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.DeterministicRequest.output_sample_size">
+<span class="sig-name descname"><span class="pre">output_sample_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.DeterministicRequest.output_sample_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.build_mlp">
+<span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.deterministic.</span></span><span class="sig-name descname"><span class="pre">build_mlp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dims</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'relu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activate_final</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/layers/mlp.html#build_mlp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.build_mlp" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dims</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – Description not yet provided.</p></li>
+<li><p><strong>activation</strong> (<em>ActivationName</em>) – Description not yet provided.</p></li>
+<li><p><strong>dropout_rate</strong> (<em>float</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>batch_normalization</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+<li><p><strong>activate_final</strong> (<em>bool</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Sequential</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.deterministicModelSelector">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.deterministic.</span></span><span class="sig-name descname"><span class="pre">deterministicModelSelector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freeze_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/selectors.html#deterministicModelSelector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.deterministicModelSelector" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.selectors.ModelSelector" title="cccma_ppp.core.selectors.ModelSelector"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelSelector</span></code></a></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>type</strong> (<em>str</em>)</p></li>
+<li><p><strong>config</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>load_dir</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>freeze_weights</strong> (<em>bool</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.deterministicModelSelector.registery">
+<span class="sig-name descname"><span class="pre">registery</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.registery.Registery" title="cccma_ppp.core.registery.Registery"><span class="pre">Registery</span></a><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;cccma_ppp.core.registery.Registery</span> <span class="pre">object&gt;</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.deterministicModelSelector.registery" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.deterministicOutput">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.deterministic.</span></span><span class="sig-name descname"><span class="pre">deterministicOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/core/models/deterministic.html#deterministicOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.deterministicOutput" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.OutputABC" title="cccma_ppp.core.core_abc.OutputABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">OutputABC</span></code></a></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>output</strong> (<em>torch.Tensor</em>) – Description not yet provided.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.deterministicOutput.output">
+<span class="sig-name descname"><span class="pre">output</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.deterministicOutput.output" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.deterministicmodelsABC">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.deterministic.</span></span><span class="sig-name descname"><span class="pre">deterministicmodelsABC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/models_abc.html#deterministicmodelsABC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.deterministicmodelsABC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.modelABC" title="cccma_ppp.architectures.models_abc.modelABC"><code class="xref py py-class docutils literal notranslate"><span class="pre">modelABC</span></code></a></p>
+<p>Document this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="#cccma_ppp.architectures.mlp.deterministic.modelConfigABC" title="cccma_ppp.architectures.mlp.deterministic.modelConfigABC"><em>modelConfigABC</em></a>) – Description not yet provided.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.deterministicmodelsABC.forward">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/models_abc.html#deterministicmodelsABC.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.deterministicmodelsABC.forward" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="#cccma_ppp.architectures.mlp.deterministic.DeterministicRequest" title="cccma_ppp.architectures.mlp.deterministic.DeterministicRequest"><em>DeterministicRequest</em></a>) – Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="cccma_ppp.core.html#cccma_ppp.core.core_abc.OutputABC" title="cccma_ppp.core.core_abc.OutputABC"><em>OutputABC</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.modelConfigABC">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">cccma_ppp.architectures.mlp.deterministic.</span></span><span class="sig-name descname"><span class="pre">modelConfigABC</span></span><a class="reference internal" href="../_modules/cccma_ppp/architectures/models_abc.html#modelConfigABC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.modelConfigABC" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Document this class.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.modelConfigABC.activation">
+<span class="sig-name descname"><span class="pre">activation</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.modelConfigABC.activation" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ActivationName</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.modelConfigABC.GENERATOR">
+<span class="sig-name descname"><span class="pre">GENERATOR</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.modelConfigABC.GENERATOR" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="cccma_ppp.architectures.html#cccma_ppp.architectures.models_abc.GENERATORConfig" title="cccma_ppp.architectures.models_abc.GENERATORConfig">GENERATORConfig</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.modelConfigABC.EXPECTS_MASK">
+<span class="sig-name descname"><span class="pre">EXPECTS_MASK</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.modelConfigABC.EXPECTS_MASK" title="Link to this definition"></a></dt>
+<dd><p>Description not yet provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id5">
+<span class="property"><span class="k"><span class="pre">abstract</span></span><span class="w"> </span><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">EXPECTS_MASK</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#id5" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id6">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">GENERATOR</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#id6" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.modelConfigABC.NUM_INPUT_DIMS">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">NUM_INPUT_DIMS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.modelConfigABC.NUM_INPUT_DIMS" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.modelConfigABC.NUM_OUTPUT_DIMS">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">NUM_OUTPUT_DIMS</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.modelConfigABC.NUM_OUTPUT_DIMS" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Description not yet provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">activation</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'relu'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'gelu'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'silu'</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#id7" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cccma_ppp.architectures.mlp.deterministic.modelConfigABC.build">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">added_features_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/cccma_ppp/architectures/models_abc.html#modelConfigABC.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cccma_ppp.architectures.mlp.deterministic.modelConfigABC.build" title="Link to this definition"></a></dt>
+<dd><p>Document this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_shape</strong> (<em>np.ndarray</em>) – Description not yet provided.</p></li>
+<li><p><strong>output_shape</strong> (<em>np.ndarray</em><em> | </em><em>None</em>) – Description not yet provided.</p></li>
+<li><p><strong>added_features_dim</strong> (<em>int</em>) – Description not yet provided.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Description not yet provided.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-cccma_ppp.architectures.mlp">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-cccma_ppp.architectures.mlp" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cccma_ppp.architectures.layers.html" class="btn btn-neutral float-left" title="cccma_ppp.architectures.layers package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cccma_ppp.architectures.unet.html" class="btn btn-neutral float-right" title="cccma_ppp.architectures.unet package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

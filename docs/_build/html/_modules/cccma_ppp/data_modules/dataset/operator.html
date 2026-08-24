@@ -46,6 +46,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../start_here/usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../start_here/contributing.html">Contributing</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../module_overviews/train.html">Train</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/cccma_ppp.html">cccma_ppp package</a></li>
@@ -91,7 +103,7 @@
 
 
 <div class="viewcode-block" id="DatasetOperator">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.train.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DatasetOperator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Document this class.</span>
@@ -127,7 +139,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">observation</span>
 
 <div class="viewcode-block" id="DatasetOperator.fit_preprocessors">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.fit_preprocessors">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.train.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.fit_preprocessors">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit_preprocessors</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">train_times</span><span class="p">:</span> <span class="p">(</span>
@@ -203,7 +215,7 @@
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">condition_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;static&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">effective_condition_method</span> <span class="o">==</span> <span class="s2">&quot;static&quot;</span><span class="p">:</span>
                 <span class="n">selection</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">selection</span> <span class="o">=</span> <span class="p">{</span>
@@ -236,7 +248,7 @@
 
 
 <div class="viewcode-block" id="DatasetOperator.load_fitted_preprocessors">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.load_fitted_preprocessors">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.train.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.load_fitted_preprocessors">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_fitted_preprocessors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">load_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -259,7 +271,7 @@
 
 
 <div class="viewcode-block" id="DatasetOperator.add_fitted_preprocessor">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.add_fitted_preprocessor">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.train.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.add_fitted_preprocessor">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_fitted_preprocessor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preprocessor</span><span class="p">:</span> <span class="n">PreprocessModuleABC</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -300,7 +312,7 @@
 
 
 <div class="viewcode-block" id="DatasetOperator.get_weights">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_weights">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.train.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_weights">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_weights</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">config</span><span class="p">:</span> <span class="n">WeightsConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -379,7 +391,7 @@
 
 
 <div class="viewcode-block" id="DatasetOperator.get_input_var_metadata">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_input_var_metadata">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.train.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_input_var_metadata">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_input_var_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -430,7 +442,7 @@
 
 
 <div class="viewcode-block" id="DatasetOperator.get_target_var_metadata">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.inference.dataset.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_target_var_metadata">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.train.html#cccma_ppp.data_modules.dataset.operator.DatasetOperator.get_target_var_metadata">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_target_var_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>

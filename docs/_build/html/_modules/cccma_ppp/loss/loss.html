@@ -46,6 +46,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../start_here/usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../start_here/contributing.html">Contributing</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/train.html">Train</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
@@ -91,7 +103,7 @@
 
 
 <div class="viewcode-block" id="LossStepConfig">
-<a class="viewcode-back" href="../../../api/cccma_ppp.loss.loss.html#cccma_ppp.loss.loss.LossStepConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.loss.loss.html#cccma_ppp.core.models.cvae.LossStepConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">LossStepConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -111,7 +123,7 @@
 
 
 <div class="viewcode-block" id="LosspipelineConfig">
-<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.loss.loss.LosspipelineConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.models.cvae.LosspipelineConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">LosspipelineConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -185,7 +197,7 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Sum of loss term weights should be 1.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LosspipelineConfig.build">
-<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.loss.loss.LosspipelineConfig.build">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.models.cvae.LosspipelineConfig.build">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">weights</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span>
@@ -329,7 +341,7 @@
 
 
 <div class="viewcode-block" id="Losspipeline">
-<a class="viewcode-back" href="../../../api/cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.loss.Losspipeline">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.loss.utils_loss.html#cccma_ppp.core.models.cvae.Losspipeline">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Losspipeline</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Document this class.</span>
@@ -410,7 +422,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;output_mask&quot;</span><span class="p">,</span> <span class="n">output_mask</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Losspipeline.register">
-<a class="viewcode-back" href="../../../api/cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.loss.Losspipeline.register">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.loss.utils_loss.html#cccma_ppp.core.models.cvae.Losspipeline.register">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -430,7 +442,7 @@
 
 
 <div class="viewcode-block" id="Losspipeline.forward">
-<a class="viewcode-back" href="../../../api/cccma_ppp.loss.utils_loss.html#cccma_ppp.loss.loss.Losspipeline.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.loss.utils_loss.html#cccma_ppp.core.models.cvae.Losspipeline.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data</span><span class="p">,</span>

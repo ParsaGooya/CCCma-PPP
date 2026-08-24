@@ -1,44 +1,12 @@
-WARNING: Failed to import cccma_ppp.core.cVAE_module.
-Possible hints:
-* AttributeError: module 'cccma_ppp.core' has no attribute 'cVAE_module'
-* ModuleNotFoundError: No module named 'cccma_ppp.core.cVAE_module'
-WARNING: Failed to import cccma_ppp.core.deterministic_module.
-Possible hints:
-* ModuleNotFoundError: No module named 'cccma_ppp.core.deterministic_module'
-* AttributeError: module 'cccma_ppp.core' has no attribute 'deterministic_module'
-WARNING: Failed to import cccma_ppp.monitoring.
-Possible hints:
-* AttributeError: module 'cccma_ppp' has no attribute 'monitoring'
-* ModuleNotFoundError: No module named 'cccma_ppp.monitoring'
-WARNING: Failed to import cccma_ppp.inference.train.
-Possible hints:
-* AttributeError: module 'cccma_ppp.inference' has no attribute 'train'
-* ModuleNotFoundError: No module named 'cccma_ppp.inference.train'
-WARNING: Failed to import cccma_ppp.models.normalized_flows.
-Possible hints:
-* AttributeError: module 'cccma_ppp' has no attribute 'models'
-* ModuleNotFoundError: No module named 'cccma_ppp.models'
-WARNING: Failed to import cccma_ppp.inference.registry_imports.
-Possible hints:
-* ModuleNotFoundError: No module named 'cccma_ppp.inference.registry_imports'
-* AttributeError: module 'cccma_ppp.inference' has no attribute 'registry_imports'
-WARNING: Failed to import cccma_ppp.data_modules.dataset.config_abc.
-Possible hints:
-* ModuleNotFoundError: No module named 'cccma_ppp.data_modules.dataset.config_abc'
-* AttributeError: module 'cccma_ppp.data_modules.dataset' has no attribute 'config_abc'
-WARNING: Failed to import cccma_ppp.models.mlp_models.
-Possible hints:
-* AttributeError: module 'cccma_ppp' has no attribute 'models'
-* ModuleNotFoundError: No module named 'cccma_ppp.models'
 WARNING: Failed to import cccma_ppp.models.models_abc.
 Possible hints:
 * AttributeError: module 'cccma_ppp' has no attribute 'models'
 * ModuleNotFoundError: No module named 'cccma_ppp.models'
-WARNING: Failed to import cccma_ppp.train.datasets.
+WARNING: Failed to import cccma_ppp.data_modules.dataset.config_abc.
 Possible hints:
-* AttributeError: module 'cccma_ppp.train' has no attribute 'datasets'
-* ModuleNotFoundError: No module named 'cccma_ppp.train.datasets'
-WARNING: Failed to import cccma_ppp.models.
+* AttributeError: module 'cccma_ppp.data_modules.dataset' has no attribute 'config_abc'
+* ModuleNotFoundError: No module named 'cccma_ppp.data_modules.dataset.config_abc'
+WARNING: Failed to import cccma_ppp.models.mlp_models.
 Possible hints:
 * AttributeError: module 'cccma_ppp' has no attribute 'models'
 * ModuleNotFoundError: No module named 'cccma_ppp.models'
@@ -46,6 +14,95 @@ WARNING: Failed to import cccma_ppp.train.registry_imports.
 Possible hints:
 * ModuleNotFoundError: No module named 'cccma_ppp.train.registry_imports'
 * AttributeError: module 'cccma_ppp.train' has no attribute 'registry_imports'
+WARNING: Failed to import cccma_ppp.models.normalized_flows.
+Possible hints:
+* AttributeError: module 'cccma_ppp' has no attribute 'models'
+* ModuleNotFoundError: No module named 'cccma_ppp.models'
+WARNING: Failed to import cccma_ppp.models.
+Possible hints:
+* AttributeError: module 'cccma_ppp' has no attribute 'models'
+* ModuleNotFoundError: No module named 'cccma_ppp.models'
+WARNING: Failed to import cccma_ppp.core.cVAE_module.
+Possible hints:
+* ModuleNotFoundError: No module named 'cccma_ppp.core.cVAE_module'
+* AttributeError: module 'cccma_ppp.core' has no attribute 'cVAE_module'
+WARNING: Failed to import cccma_ppp.core.deterministic_module.
+Possible hints:
+* AttributeError: module 'cccma_ppp.core' has no attribute 'deterministic_module'
+* ModuleNotFoundError: No module named 'cccma_ppp.core.deterministic_module'
+WARNING: Failed to import cccma_ppp.inference.registry_imports.
+Possible hints:
+* ModuleNotFoundError: No module named 'cccma_ppp.inference.registry_imports'
+* AttributeError: module 'cccma_ppp.inference' has no attribute 'registry_imports'
+WARNING: Failed to import cccma_ppp.monitoring.
+Possible hints:
+* AttributeError: module 'cccma_ppp' has no attribute 'monitoring'
+* ModuleNotFoundError: No module named 'cccma_ppp.monitoring'
+WARNING: Failed to import cccma_ppp.train.datasets.
+Possible hints:
+* AttributeError: module 'cccma_ppp.train' has no attribute 'datasets'
+* ModuleNotFoundError: No module named 'cccma_ppp.train.datasets'
+WARNING: Failed to import cccma_ppp.inference.train.
+Possible hints:
+* AttributeError: module 'cccma_ppp.inference' has no attribute 'train'
+* ModuleNotFoundError: No module named 'cccma_ppp.inference.train'
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.models_abc.cVAEmodelConfigABC.condemb_to_decoder, other instance in api/cccma_ppp.architectures, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.models_abc.cVAEmodelConfigABC.condition_dependant_latent, other instance in api/cccma_ppp.architectures, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.models_abc.cVAEmodelConfigABC.condition_embedding_dims, other instance in api/cccma_ppp.architectures, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.models_abc.cVAEmodelConfigABC.condition_embedding_size, other instance in api/cccma_ppp.architectures, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.models_abc.cVAEmodelConfigABC.latent_size, other instance in api/cccma_ppp.architectures, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.models_abc.modelABC.generative_modeling, other instance in api/cccma_ppp.architectures, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.models_abc.modelConfigABC.EXPECTS_MASK, other instance in api/cccma_ppp.architectures, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.models_abc.modelConfigABC.GENERATOR, other instance in api/cccma_ppp.architectures, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.models_abc.modelConfigABC.activation, other instance in api/cccma_ppp.architectures, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC.condemb_to_decoder, other instance in api/cccma_ppp.architectures.mlp, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC.condition_dependant_latent, other instance in api/cccma_ppp.architectures.mlp, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC.condition_embedding_dims, other instance in api/cccma_ppp.architectures.mlp, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC.condition_embedding_size, other instance in api/cccma_ppp.architectures.mlp, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.mlp.cvae.cVAEmodelConfigABC.latent_size, other instance in api/cccma_ppp.architectures.mlp, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.mlp.deterministic.modelConfigABC.EXPECTS_MASK, other instance in api/cccma_ppp.architectures.mlp, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.mlp.deterministic.modelConfigABC.GENERATOR, other instance in api/cccma_ppp.architectures.mlp, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.mlp.deterministic.modelConfigABC.activation, other instance in api/cccma_ppp.architectures.mlp, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.core.selectors.cVAEModelSelector, other instance in api/cccma_ppp.architectures.mlp, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.core.models.cvae.cVAEOutput, other instance in api/cccma_ppp.architectures.mlp, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.unet.cvae.cVAEmodelConfigABC.condemb_to_decoder, other instance in api/cccma_ppp.architectures.unet, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.unet.cvae.cVAEmodelConfigABC.condition_dependant_latent, other instance in api/cccma_ppp.architectures.unet, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.unet.cvae.cVAEmodelConfigABC.condition_embedding_dims, other instance in api/cccma_ppp.architectures.unet, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.unet.cvae.cVAEmodelConfigABC.condition_embedding_size, other instance in api/cccma_ppp.architectures.unet, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.unet.cvae.cVAEmodelConfigABC.latent_size, other instance in api/cccma_ppp.architectures.unet, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.core.selectors.deterministicModelSelector, other instance in api/cccma_ppp.architectures.mlp, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.core.selectors.deterministicModelSelector, other instance in api/cccma_ppp.architectures.unet, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.core.models.deterministic.deterministicOutput, other instance in api/cccma_ppp.architectures.mlp, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.unet.deterministic.modelConfigABC.EXPECTS_MASK, other instance in api/cccma_ppp.architectures.unet, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.unet.deterministic.modelConfigABC.GENERATOR, other instance in api/cccma_ppp.architectures.unet, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.architectures.unet.deterministic.modelConfigABC.activation, other instance in api/cccma_ppp.architectures.unet, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.core.selectors.modelABC.generative_modeling, other instance in api/cccma_ppp.core, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.core.selectors.modelConfigABC.EXPECTS_MASK, other instance in api/cccma_ppp.core, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.core.selectors.modelConfigABC.GENERATOR, other instance in api/cccma_ppp.core, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.core.selectors.modelConfigABC.activation, other instance in api/cccma_ppp.core, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.generic.runtime.RuntimeContext, other instance in api/cccma_ppp.architectures, use :no-index: for one of them
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:73: ERROR: Unexpected indentation. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:74: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:79: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:92: WARNING: Inline emphasis start-string without end-string. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:36: ERROR: Unexpected indentation. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:37: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:42: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:50: WARNING: Inline emphasis start-string without end-string. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.wrapattr:3: ERROR: Unexpected indentation. [docutils]
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataloader.Dataloader, other instance in api/cccma_ppp.core, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.generic.distributed.Distributed, other instance in api/cccma_ppp.core, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.generic.runtime.RuntimeContext, other instance in api/cccma_ppp.core, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of tqdm.std.tqdm, other instance in api/cccma_ppp.core, use :no-index: for one of them
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:73: ERROR: Unexpected indentation. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:74: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:79: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:92: WARNING: Inline emphasis start-string without end-string. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:36: ERROR: Unexpected indentation. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:37: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:42: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:50: WARNING: Inline emphasis start-string without end-string. [docutils]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.wrapattr:3: ERROR: Unexpected indentation. [docutils]
 WARNING: autodoc: failed to import 'cVAE_module' from module 'cccma_ppp.core'; the following exception was raised:
 Traceback (most recent call last):
   File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
@@ -64,6 +121,10 @@ Traceback (most recent call last):
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'cccma_ppp.core.deterministic_module'
  [autodoc.import_object]
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.generic.runtime.RuntimeContext, other instance in api/cccma_ppp.core, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataloader.BatchData, other instance in api/cccma_ppp.core.models, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.loss.loss.Losspipeline, other instance in api/cccma_ppp.core.models, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.generic.runtime.RuntimeContext, other instance in api/cccma_ppp.core.models, use :no-index: for one of them
 /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:73: ERROR: Unexpected indentation. [docutils]
 /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:74: WARNING: Block quote ends without a blank line; unexpected unindent. [docutils]
 /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm:79: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
@@ -73,6 +134,64 @@ ModuleNotFoundError: No module named 'cccma_ppp.core.deterministic_module'
 /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:42: WARNING: Definition list ends without a blank line; unexpected unindent. [docutils]
 /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.format_meter:50: WARNING: Inline emphasis start-string without end-string. [docutils]
 /fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/tqdm/std.py:docstring of tqdm.std.tqdm.wrapattr:3: ERROR: Unexpected indentation. [docutils]
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataloader.BatchDataABC.added_features, other instance in api/cccma_ppp.data_modules, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataloader.BatchDataABC.input, other instance in api/cccma_ppp.data_modules, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataloader.BatchDataABC.metadata, other instance in api/cccma_ppp.data_modules, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataloader.BatchDataABC.target, other instance in api/cccma_ppp.data_modules, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataloader.DataloaderConfigABC.dataset_config, other instance in api/cccma_ppp.data_modules, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataloader.DataloaderConfigABC.pin_memory, other instance in api/cccma_ppp.data_modules, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataloader.DataloaderConfigABC.prefetch_factor, other instance in api/cccma_ppp.data_modules, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataloader.DataloaderConfigABC.reduce_spatial_mask, other instance in api/cccma_ppp.data_modules, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataloader.DataloaderConfigABC.return_spatial_mask, other instance in api/cccma_ppp.data_modules, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataloader.DataloaderConfigABC.time_features, other instance in api/cccma_ppp.data_modules, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataloader.DatasetConfigABC.condition, other instance in api/cccma_ppp.data_modules, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataloader.DatasetConfigABC.condition_method, other instance in api/cccma_ppp.data_modules, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataloader.DatasetConfigABC.lead_times, other instance in api/cccma_ppp.data_modules, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataloader.DatasetConfigABC.model, other instance in api/cccma_ppp.data_modules, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.generic.runtime.RuntimeContext, other instance in api/cccma_ppp.core.models, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.data.data_abc.DataConfigABC.concat_dim, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.data.data_abc.DataConfigABC.ensemble_mean, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.data.data_abc.DataConfigABC.file_type, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.data.data_abc.DataConfigABC.names, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.data.data_abc.DataConfigABC.paths, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.data.data_abc.DataConfigABC.preprocessing_pipeline, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.data.data_abc.DataConfigABC.realization_list, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.data.data_abc.DataConfigABC.rename_dict, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline, other instance in api/cccma_ppp.core, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.generic.runtime.RuntimeContext, other instance in api/cccma_ppp.data_modules, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.data.data_configs.DataConfigABC.concat_dim, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.data.data_configs.DataConfigABC.ensemble_mean, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.data.data_configs.DataConfigABC.file_type, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.data.data_configs.DataConfigABC.names, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.data.data_configs.DataConfigABC.paths, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.data.data_configs.DataConfigABC.preprocessing_pipeline, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.data.data_configs.DataConfigABC.realization_list, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.data.data_configs.DataConfigABC.rename_dict, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.config, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.load, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.mask, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.requested_times, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.return_metadata, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.dataset_abc.DatasetABC.time_features, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.condition, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.condition_method, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.lead_times, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.dataset_abc.DatasetConfigABC.model, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.operator.DataConfigABC.concat_dim, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.operator.DataConfigABC.ensemble_mean, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.operator.DataConfigABC.file_type, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.operator.DataConfigABC.names, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.operator.DataConfigABC.paths, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.operator.DataConfigABC.preprocessing_pipeline, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.operator.DataConfigABC.realization_list, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.operator.DataConfigABC.rename_dict, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.operator.DatasetConfigABC.condition, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.operator.DatasetConfigABC.condition_method, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.operator.DatasetConfigABC.lead_times, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.operator.DatasetConfigABC.model, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.operator.PreprocessModuleABC.fitted, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.data_modules.dataset.operator.PreprocessModuleABC.large_ensemble, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
 WARNING: autodoc: failed to import 'config_abc' from module 'cccma_ppp.data_modules.dataset'; the following exception was raised:
 Traceback (most recent call last):
   File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
@@ -82,6 +201,56 @@ Traceback (most recent call last):
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'cccma_ppp.data_modules.dataset.config_abc'
  [autodoc.import_object]
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.generic.distributed.Distributed, other instance in api/cccma_ppp.core, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.generic.runtime.RuntimeContext, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataloader.BatchDataABC.added_features, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataloader.BatchDataABC.input, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataloader.BatchDataABC.metadata, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataloader.BatchDataABC.target, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataloader.DataloaderConfigABC.dataset_config, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataloader.DataloaderConfigABC.pin_memory, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataloader.DataloaderConfigABC.prefetch_factor, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataloader.DataloaderConfigABC.reduce_spatial_mask, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataloader.DataloaderConfigABC.return_spatial_mask, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataloader.DataloaderConfigABC.time_features, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataloader.TrainDataloaderConfig, other instance in api/cccma_ppp.core, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataset.DatasetABC.config, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataset.DatasetABC.load, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataset.DatasetABC.mask, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataset.DatasetABC.requested_times, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataset.DatasetABC.return_metadata, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataset.DatasetABC.time_features, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataset.DatasetConfigABC.condition, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataset.DatasetConfigABC.condition_method, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataset.DatasetConfigABC.lead_times, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataset.DatasetConfigABC.model, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC, other instance in api/cccma_ppp.data_modules.dataset, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataset.PreprocessModuleABC.fitted, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.dataset.PreprocessModuleABC.large_ensemble, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.preprocessing.preprocessing.PreprocessingPipeline, other instance in api/cccma_ppp.data_modules.data, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataloader.TrainDataloaderConfig, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.cvae.BatchDataABC.added_features, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.cvae.BatchDataABC.input, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.cvae.BatchDataABC.metadata, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.cvae.BatchDataABC.target, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.cvae.PredictorABC.num_output_covariance_sampling, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.cvae.PredictorABC.output_dir, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.cvae.PredictorABC.output_sampler, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.deterministic.BatchDataABC.added_features, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.deterministic.BatchDataABC.input, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.deterministic.BatchDataABC.metadata, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.deterministic.BatchDataABC.target, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.predictor_abc.PredictorABC, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.deterministic.PredictorABC.num_output_covariance_sampling, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.deterministic.PredictorABC.output_dir, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.deterministic.PredictorABC.output_sampler, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.predictor_abc.BatchDataABC.added_features, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.predictor_abc.BatchDataABC.input, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.predictor_abc.BatchDataABC.metadata, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.predictor_abc.BatchDataABC.target, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.predictor_abc.PredictorABC.num_output_covariance_sampling, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.predictor_abc.PredictorABC.output_dir, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.inference.predictors.predictor_abc.PredictorABC.output_sampler, other instance in api/cccma_ppp.inference.predictors, use :no-index: for one of them
 WARNING: autodoc: failed to import 'registry_imports' from module 'cccma_ppp.inference'; the following exception was raised:
 Traceback (most recent call last):
   File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
@@ -100,6 +269,12 @@ Traceback (most recent call last):
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'cccma_ppp.inference.train'
  [autodoc.import_object]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/loss/loss_abc.py:docstring of cccma_ppp.loss.loss_abc.lossABC:9: WARNING: duplicate object description of cccma_ppp.loss.kld.lossABC.generative_context, other instance in api/cccma_ppp.loss, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.loss.kld.lossABC.generative_context, other instance in api/cccma_ppp.loss, use :no-index: for one of them
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/loss/loss_abc.py:docstring of cccma_ppp.loss.loss_abc.lossABC:9: WARNING: duplicate object description of cccma_ppp.loss.loss_abc.lossABC.generative_context, other instance in api/cccma_ppp.loss, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.loss.loss_abc.lossABC.generative_context, other instance in api/cccma_ppp.loss, use :no-index: for one of them
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/cccma_ppp/loss/loss_abc.py:docstring of cccma_ppp.loss.loss_abc.lossABC:9: WARNING: duplicate object description of cccma_ppp.loss.utils_loss.lossABC.generative_context, other instance in api/cccma_ppp.loss, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.loss.utils_loss.lossABC.generative_context, other instance in api/cccma_ppp.loss, use :no-index: for one of them
 WARNING: autodoc: failed to import 'models' from module 'cccma_ppp'; the following exception was raised:
 Traceback (most recent call last):
   File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
@@ -145,6 +320,33 @@ Traceback (most recent call last):
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'cccma_ppp.monitoring'
  [autodoc.import_object]
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.fitted, other instance in api/cccma_ppp.preprocessing, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.preprocessing.preprocessing_ABC.PreprocessModuleABC.large_ensemble, other instance in api/cccma_ppp.preprocessing, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.preprocessing.selector.PreprocessModuleABC.fitted, other instance in api/cccma_ppp.preprocessing, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.preprocessing.selector.PreprocessModuleABC.large_ensemble, other instance in api/cccma_ppp.preprocessing, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.preprocessing.utils_preprocessing.PreprocessModuleABC.fitted, other instance in api/cccma_ppp.preprocessing, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.preprocessing.utils_preprocessing.PreprocessModuleABC.large_ensemble, other instance in api/cccma_ppp.preprocessing, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataloader.BatchDataABC.added_features, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataloader.BatchDataABC.input, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataloader.BatchDataABC.metadata, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataloader.BatchDataABC.target, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataloader.DataloaderConfigABC.dataset_config, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataloader.DataloaderConfigABC.pin_memory, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataloader.DataloaderConfigABC.prefetch_factor, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataloader.DataloaderConfigABC.reduce_spatial_mask, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataloader.DataloaderConfigABC.return_spatial_mask, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataloader.DataloaderConfigABC.time_features, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataset.TrainDatasetConfig, other instance in api/cccma_ppp.inference, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataset.DatasetABC.config, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataset.DatasetABC.load, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataset.DatasetABC.mask, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataset.DatasetABC.requested_times, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataset.DatasetABC.return_metadata, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataset.DatasetABC.time_features, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataset.DatasetConfigABC.condition, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataset.DatasetConfigABC.condition_method, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataset.DatasetConfigABC.lead_times, other instance in api/cccma_ppp.train, use :no-index: for one of them
+<unknown>:1: WARNING: duplicate object description of cccma_ppp.train.dataset.DatasetConfigABC.model, other instance in api/cccma_ppp.train, use :no-index: for one of them
 WARNING: autodoc: failed to import 'datasets' from module 'cccma_ppp.train'; the following exception was raised:
 Traceback (most recent call last):
   File "/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/.venv/lib/python3.13/site-packages/sphinx/ext/autodoc/_dynamic/_importer.py", line 131, in _import_from_module_and_path
@@ -163,3 +365,42 @@ Traceback (most recent call last):
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ModuleNotFoundError: No module named 'cccma_ppp.train.registry_imports'
  [autodoc.import_object]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.core.cVAE_module.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.core.core_abc.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.core.deterministic_module.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.core.optimization.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.core.registery.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.core.selectors.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.core.trainer.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.data_modules.data.data_abc.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.data_modules.data.data_configs.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.data_modules.dataloader.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.data_modules.dataset.config_abc.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.data_modules.dataset.operator.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.data_modules.utils.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.generic.aggregator.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.generic.distributed.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.generic.logger.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.generic.runtime.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.inference.dataloader.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.inference.dataset.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.inference.inference_configs.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.inference.registry_imports.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.inference.train.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.loss.kld.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.loss.loss.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.loss.loss_abc.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.loss.registery.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.loss.utils_loss.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.models.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.monitoring.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.preprocessing.preprocessing.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.preprocessing.preprocessing_ABC.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.preprocessing.registery.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.preprocessing.utils_preprocessing.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.train.dataloader.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.train.datasets.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.train.registry_imports.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.train.train.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/cccma_ppp.train.train_configs.rst: WARNING: document isn't included in any toctree [toc.not_included]
+/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/docs/source/api/modules.rst: WARNING: document isn't included in any toctree [toc.not_included]

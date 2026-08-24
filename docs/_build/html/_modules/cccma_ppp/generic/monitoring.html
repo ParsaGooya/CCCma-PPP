@@ -46,6 +46,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../start_here/usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../start_here/contributing.html">Contributing</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Module Overviews</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/configs.html">Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/data_modules.html">Data Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/generic.html">Generic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/inference.html">Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../module_overviews/train.html">Train</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/cccma_ppp.html">cccma_ppp package</a></li>
@@ -102,6 +114,8 @@
 <span class="n">F</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span>
 
 
+<div class="viewcode-block" id="resolve_physical_gpu_index">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.generic.monitoring.resolve_physical_gpu_index">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">resolve_physical_gpu_index</span><span class="p">(</span><span class="n">local_rank</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Document this function.</span>
@@ -152,9 +166,12 @@
             <span class="sa">f</span><span class="s2">&quot;received </span><span class="si">{</span><span class="n">selected_device</span><span class="si">!r}</span><span class="s2"> for local rank </span><span class="si">{</span><span class="n">local_rank</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 
-    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">selected_device</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">selected_device</span><span class="p">)</span></div>
 
 
+
+<div class="viewcode-block" id="Monitor">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.generic.monitoring.Monitor">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Monitor</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Document this class.</span>
@@ -388,6 +405,8 @@
             <span class="k">if</span> <span class="n">stack</span> <span class="o">==</span> <span class="p">[]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_thread_stacks</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">thread_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
+<div class="viewcode-block" id="Monitor.current_stage">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.generic.monitoring.Monitor.current_stage">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">current_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -398,7 +417,8 @@
 <span class="sd">            Description not yet provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">stack</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_stack</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">stack</span> <span class="k">else</span> <span class="s2">&quot;root&quot;</span>
+        <span class="k">return</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">stack</span> <span class="k">else</span> <span class="s2">&quot;root&quot;</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_current_sample_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -551,6 +571,8 @@
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
 
+<div class="viewcode-block" id="Monitor.span">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.generic.monitoring.Monitor.span">[docs]</a>
     <span class="nd">@contextmanager</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">span</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -622,8 +644,11 @@
                     <span class="k">if</span> <span class="n">full_name</span> <span class="ow">in</span> <span class="n">stack</span><span class="p">:</span>
                         <span class="n">stack</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">full_name</span><span class="p">)</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">_remove_empty_stack</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_remove_empty_stack</span><span class="p">()</span></div>
 
+
+<div class="viewcode-block" id="Monitor.observe">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.generic.monitoring.Monitor.observe">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">observe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">F</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">F</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -666,8 +691,11 @@
             <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">span</span><span class="p">(</span><span class="n">function</span><span class="o">.</span><span class="vm">__name__</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">function</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">wrapper</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">wrapper</span><span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="Monitor.checkpoint">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.generic.monitoring.Monitor.checkpoint">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -701,7 +729,8 @@
                 <span class="n">stage</span><span class="o">=</span><span class="n">full_name</span><span class="p">,</span>
                 <span class="n">event</span><span class="o">=</span><span class="s2">&quot;checkpoint&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_collect_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -754,6 +783,8 @@
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_stop_event</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">wait_time</span><span class="p">)</span>
 
+<div class="viewcode-block" id="Monitor.start">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.generic.monitoring.Monitor.start">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">clear</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -791,8 +822,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">ram_enabled</span><span class="p">,</span>
             <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gpu_indices</span><span class="p">),</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">interval</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="Monitor.stop">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.generic.monitoring.Monitor.stop">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -830,14 +864,18 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="s2">&quot;Monitoring stopped on rank </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="Monitor.close">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.generic.monitoring.Monitor.close">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_shutdown_gpus</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shutdown_gpus</span><span class="p">()</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">running</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -875,13 +913,18 @@
 
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
 
+<div class="viewcode-block" id="Monitor.clear">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.generic.monitoring.Monitor.clear">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
 
+
+<div class="viewcode-block" id="Monitor.get_dataframe">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.generic.monitoring.Monitor.get_dataframe">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -896,7 +939,8 @@
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span><span class="p">:</span>
             <span class="n">records</span> <span class="o">=</span> <span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">records</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">records</span><span class="p">)</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Monitor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1264,6 +1308,8 @@
 
         <span class="k">return</span> <span class="n">intervals</span>
 
+<div class="viewcode-block" id="Monitor.plot">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.generic.monitoring.Monitor.plot">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">df</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1634,9 +1680,13 @@
         <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
-        <span class="k">return</span> <span class="n">figure</span>
+        <span class="k">return</span> <span class="n">figure</span></div>
+</div>
 
 
+
+<div class="viewcode-block" id="monitor">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.generic.monitoring.monitor">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">monitor</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">cpu</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -1688,9 +1738,12 @@
         <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
         <span class="n">local_rank</span><span class="o">=</span><span class="n">local_rank</span><span class="p">,</span>
         <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="p">)</span></div>
 
 
+
+<div class="viewcode-block" id="build_distributed_monitor">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.generic.monitoring.build_distributed_monitor">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">build_distributed_monitor</span><span class="p">(</span>
     <span class="n">distributed</span><span class="p">:</span> <span class="n">Distributed</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -1720,20 +1773,32 @@
 <span class="sd">    Monitor</span>
 <span class="sd">        Description not yet provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-
     <span class="n">gpu_indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="k">if</span> <span class="n">gpu</span> <span class="ow">and</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">gpu_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">resolve_physical_gpu_index</span><span class="p">(</span><span class="n">distributed</span><span class="o">.</span><span class="n">local_rank</span><span class="p">))</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;Rank </span><span class="si">%s</span><span class="s2"> could not resolve its physical GPU. &quot;</span>
-                <span class="s2">&quot;CPU and RAM monitoring will remain enabled.&quot;</span><span class="p">,</span>
-                <span class="n">distributed</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span>
-                <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="p">)</span>
+    <span class="k">if</span> <span class="n">gpu</span><span class="p">:</span>
+        <span class="n">visible_devices</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;CUDA_VISIBLE_DEVICES&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">visible_devices</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">visible_devices</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">):</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s2">&quot;Ignoring non-numeric CUDA_VISIBLE_DEVICES &quot;</span>
+                        <span class="s2">&quot;entry </span><span class="si">%r</span><span class="s2"> while configuring GPU monitoring.&quot;</span><span class="p">,</span>
+                        <span class="n">value</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="n">gpu_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gpu_indices</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 
     <span class="k">return</span> <span class="n">monitor</span><span class="p">(</span>
         <span class="n">cpu</span><span class="o">=</span><span class="n">cpu</span><span class="p">,</span>
@@ -1743,9 +1808,12 @@
         <span class="n">rank</span><span class="o">=</span><span class="n">distributed</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span>
         <span class="n">local_rank</span><span class="o">=</span><span class="n">distributed</span><span class="o">.</span><span class="n">local_rank</span><span class="p">,</span>
         <span class="n">world_size</span><span class="o">=</span><span class="n">distributed</span><span class="o">.</span><span class="n">world_size</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="p">)</span></div>
 
 
+
+<div class="viewcode-block" id="export_results">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.generic.monitoring.export_results">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">export_results</span><span class="p">(</span>
     <span class="n">resource_monitor</span><span class="p">:</span> <span class="n">Monitor</span><span class="p">,</span>
     <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
@@ -1818,9 +1886,12 @@
         <span class="n">plot_path</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">csv_path</span><span class="p">,</span> <span class="n">plot_path</span>
+    <span class="k">return</span> <span class="n">csv_path</span><span class="p">,</span> <span class="n">plot_path</span></div>
 
 
+
+<div class="viewcode-block" id="combine_rank_results">
+<a class="viewcode-back" href="../../../api/cccma_ppp.generic.html#cccma_ppp.generic.monitoring.combine_rank_results">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">combine_rank_results</span><span class="p">(</span>
     <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="n">world_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -1906,11 +1977,12 @@
         <span class="n">combined_path</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">combined_path</span>
+    <span class="k">return</span> <span class="n">combined_path</span></div>
+
 
 
 <div class="viewcode-block" id="distributed_monitoring">
-<a class="viewcode-back" href="../../../api/cccma_ppp.train.train.html#cccma_ppp.train.train.distributed_monitoring">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.train.html#cccma_ppp.generic.monitoring.distributed_monitoring">[docs]</a>
 <span class="nd">@contextmanager</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">distributed_monitoring</span><span class="p">(</span>
     <span class="n">distributed</span><span class="p">:</span> <span class="n">Distributed</span><span class="p">,</span>
