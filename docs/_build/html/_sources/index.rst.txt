@@ -18,7 +18,7 @@ CCCma PPP
    module_overviews/*
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 10
    :caption: API Reference
 
    api/cccma_ppp
