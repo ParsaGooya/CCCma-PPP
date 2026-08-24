@@ -48,7 +48,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 BASE_TRAIN_CONFIG = ROOT / "integration_suite_train_config.yaml"
 
-OUTPUT_DIR = ROOT / "../output" / "data_modules_integration_test_results"
+OUTPUT_DIR = ROOT / "../../output" / "data_modules_integration_test_results"
 
 CASES_DIR = OUTPUT_DIR / "cases"
 RESULTS_CSV = OUTPUT_DIR / "integration_results.csv"
