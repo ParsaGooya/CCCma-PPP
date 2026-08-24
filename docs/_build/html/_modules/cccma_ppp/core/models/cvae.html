@@ -297,7 +297,7 @@
 
 
 <div class="viewcode-block" id="cVAE">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.core.trainer.html#cccma_ppp.architectures.mlp.cvae.cVAE">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.core.models.html#cccma_ppp.architectures.mlp.cvae.cVAE">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">cVAE</span><span class="p">(</span><span class="n">moduleABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Document this class.</span>
@@ -428,7 +428,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">load_dir</span><span class="p">)</span>
 
 <div class="viewcode-block" id="cVAE.init_loss_function">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.core.trainer.html#cccma_ppp.architectures.mlp.cvae.cVAE.init_loss_function">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.core.models.html#cccma_ppp.architectures.mlp.cvae.cVAE.init_loss_function">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">init_loss_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reconstruction_loss</span><span class="p">:</span> <span class="n">Losspipeline</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -533,7 +533,7 @@
         <span class="k">return</span> <span class="n">total_loss</span><span class="p">,</span> <span class="n">losses_dict</span>
 
 <div class="viewcode-block" id="cVAE.forward">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.core.trainer.html#cccma_ppp.architectures.mlp.cvae.cVAE.forward">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.core.models.html#cccma_ppp.architectures.mlp.cvae.cVAE.forward">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">BatchData</span><span class="p">,</span> <span class="n">latent_sample_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cVAEOutput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -570,7 +570,7 @@
 
 
 <div class="viewcode-block" id="cVAE.predict">
-<a class="viewcode-back" href="../../../../api/cccma_ppp.core.trainer.html#cccma_ppp.architectures.mlp.cvae.cVAE.predict">[docs]</a>
+<a class="viewcode-back" href="../../../../api/cccma_ppp.core.models.html#cccma_ppp.architectures.mlp.cvae.cVAE.predict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">BatchData</span><span class="p">,</span>

@@ -510,7 +510,7 @@
 
 
 <div class="viewcode-block" id="suppress_stderr">
-<a class="viewcode-back" href="../../../api/cccma_ppp.data_modules.utils.html#cccma_ppp.data_modules.utils.suppress_stderr">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.data_modules.dataset.html#cccma_ppp.data_modules.utils.suppress_stderr">[docs]</a>
 <span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">suppress_stderr</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -736,7 +736,7 @@
 
 
 <div class="viewcode-block" id="assign_datetime_init_time">
-<a class="viewcode-back" href="../../../api/cccma_ppp.data_modules.utils.html#cccma_ppp.data_modules.utils.assign_datetime_init_time">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.data_modules.html#cccma_ppp.data_modules.utils.assign_datetime_init_time">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">assign_datetime_init_time</span><span class="p">(</span>
     <span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span>
     <span class="n">init_time_dim</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">init_time_dim</span><span class="p">,</span>
@@ -792,7 +792,7 @@
 
 
 <div class="viewcode-block" id="get_time_representation">
-<a class="viewcode-back" href="../../../api/cccma_ppp.data_modules.utils.html#cccma_ppp.data_modules.utils.get_time_representation">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.utils.get_time_representation">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_time_representation</span><span class="p">(</span>
     <span class="n">time</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">CFTimeIndex</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimeTypes</span><span class="p">:</span>
@@ -836,7 +836,7 @@
 
 
 <div class="viewcode-block" id="infer_time_resolution">
-<a class="viewcode-back" href="../../../api/cccma_ppp.data_modules.utils.html#cccma_ppp.data_modules.utils.infer_time_resolution">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.data_modules.data.html#cccma_ppp.data_modules.utils.infer_time_resolution">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">infer_time_resolution</span><span class="p">(</span>
     <span class="n">times</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">CFTimeIndex</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimeFrequency</span><span class="p">:</span>

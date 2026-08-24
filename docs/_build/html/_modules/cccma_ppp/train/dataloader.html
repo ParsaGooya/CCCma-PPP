@@ -108,7 +108,7 @@
 
 
 <div class="viewcode-block" id="BatchData">
-<a class="viewcode-back" href="../../../api/cccma_ppp.train.dataloader.html#cccma_ppp.core.writer.BatchData">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.html#cccma_ppp.core.writer.BatchData">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">BatchData</span><span class="p">(</span><span class="n">BatchDataABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -176,7 +176,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">nan_to_num_</span><span class="p">(</span><span class="n">nan</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BatchData.to_device">
-<a class="viewcode-back" href="../../../api/cccma_ppp.train.dataloader.html#cccma_ppp.core.writer.BatchData.to_device">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.html#cccma_ppp.core.writer.BatchData.to_device">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_device</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -209,7 +209,7 @@
 
 
 <div class="viewcode-block" id="TrainDataloaderConfig">
-<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.writer.TrainDataloaderConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.html#cccma_ppp.core.writer.TrainDataloaderConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TrainDataloaderConfig</span><span class="p">(</span><span class="n">DataloaderConfigABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -295,7 +295,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_config</span><span class="o">.</span><span class="n">available_times</span>
 
 <div class="viewcode-block" id="TrainDataloaderConfig.setup_distributed">
-<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.writer.TrainDataloaderConfig.setup_distributed">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.html#cccma_ppp.core.writer.TrainDataloaderConfig.setup_distributed">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">setup_distributed</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">distributed</span><span class="p">:</span> <span class="n">Distributed</span><span class="p">,</span> <span class="n">load_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">):</span>
@@ -329,7 +329,7 @@
 
 
 <div class="viewcode-block" id="TrainDataloaderConfig.build_train_loader">
-<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.writer.TrainDataloaderConfig.build_train_loader">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.html#cccma_ppp.core.writer.TrainDataloaderConfig.build_train_loader">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_train_loader</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">return_metadata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -388,7 +388,7 @@
 
 
 <div class="viewcode-block" id="TrainDataloaderConfig.build_validation_loader">
-<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.writer.TrainDataloaderConfig.build_validation_loader">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.html#cccma_ppp.core.writer.TrainDataloaderConfig.build_validation_loader">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_validation_loader</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">return_metadata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -464,7 +464,7 @@
 
 
 <div class="viewcode-block" id="TrainDataloaderConfig.get_weights">
-<a class="viewcode-back" href="../../../api/cccma_ppp.train.train_configs.html#cccma_ppp.core.writer.TrainDataloaderConfig.get_weights">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.html#cccma_ppp.core.writer.TrainDataloaderConfig.get_weights">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">WeightsConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -512,7 +512,7 @@
 
 
 <div class="viewcode-block" id="collate_batch">
-<a class="viewcode-back" href="../../../api/cccma_ppp.train.dataloader.html#cccma_ppp.core.writer.collate_batch">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.train.html#cccma_ppp.core.writer.collate_batch">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">collate_batch</span><span class="p">(</span>
     <span class="n">batch</span><span class="p">,</span>
     <span class="n">return_spatial_mask</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>

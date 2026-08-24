@@ -104,7 +104,7 @@
 
 
 <div class="viewcode-block" id="PreprocessingPipeline">
-<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">PreprocessingPipeline</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -154,7 +154,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">step</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">step</span><span class="o">.</span><span class="n">get_preprocessor</span><span class="p">()))</span>
 
 <div class="viewcode-block" id="PreprocessingPipeline.set_name">
-<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.set_name">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.set_name">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rename_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -171,7 +171,7 @@
 
 
 <div class="viewcode-block" id="PreprocessingPipeline.fit">
-<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.fit">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.fit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">base_data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -237,7 +237,7 @@
 
 
 <div class="viewcode-block" id="PreprocessingPipeline.transform">
-<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.transform">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.transform">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">step_arguments</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -274,7 +274,7 @@
 
 
 <div class="viewcode-block" id="PreprocessingPipeline.inverse_transform">
-<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.inverse_transform">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.inverse_transform">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">step_arguments</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -312,7 +312,7 @@
 
 
 <div class="viewcode-block" id="PreprocessingPipeline.to_dataset">
-<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.to_dataset">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.to_dataset">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -368,7 +368,7 @@
 
 
 <div class="viewcode-block" id="PreprocessingPipeline.inverse_rename">
-<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.inverse_rename">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.inverse_rename">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse_rename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -390,7 +390,7 @@
 
 
 <div class="viewcode-block" id="PreprocessingPipeline.get_preprocessors">
-<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.get_preprocessors">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.get_preprocessors">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_preprocessors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -433,7 +433,7 @@
 
 
 <div class="viewcode-block" id="PreprocessingPipeline.add_fitted_preprocessor">
-<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.add_fitted_preprocessor">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.add_fitted_preprocessor">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_fitted_preprocessor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preprocessor</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -462,7 +462,7 @@
 
 
 <div class="viewcode-block" id="PreprocessingPipeline.extract_output_coords_vars">
-<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.extract_output_coords_vars">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.extract_output_coords_vars">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">extract_output_coords_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_data</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -492,7 +492,7 @@
 
 
 <div class="viewcode-block" id="PreprocessingPipeline.load_from_memory">
-<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.load_from_memory">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.preprocessing.html#cccma_ppp.core.writer.PreprocessingPipeline.load_from_memory">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_from_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">load_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>

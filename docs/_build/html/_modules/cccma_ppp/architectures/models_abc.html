@@ -151,7 +151,7 @@
 
 
 <div class="viewcode-block" id="CheckpointConfig">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.selectors.html#cccma_ppp.architectures.models_abc.CheckpointConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.html#cccma_ppp.architectures.models_abc.CheckpointConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CheckpointConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -186,14 +186,14 @@
 
 
 <div class="viewcode-block" id="flowABC">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.selectors.html#cccma_ppp.architectures.models_abc.flowABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.html#cccma_ppp.architectures.models_abc.flowABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">flowABC</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Document this class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="flowABC.forward">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.selectors.html#cccma_ppp.architectures.models_abc.flowABC.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.html#cccma_ppp.architectures.models_abc.flowABC.forward">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -210,7 +210,7 @@
 
 
 <div class="viewcode-block" id="flowABC.inverse">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.selectors.html#cccma_ppp.architectures.models_abc.flowABC.inverse">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.html#cccma_ppp.architectures.models_abc.flowABC.inverse">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -229,7 +229,7 @@
 
 
 <div class="viewcode-block" id="modelConfigABC">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.selectors.html#cccma_ppp.architectures.models_abc.modelConfigABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.html#cccma_ppp.architectures.models_abc.modelConfigABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">modelConfigABC</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Document this class.</span>
@@ -317,7 +317,7 @@
         <span class="k">pass</span>
 
 <div class="viewcode-block" id="modelConfigABC.build">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.selectors.html#cccma_ppp.architectures.models_abc.modelConfigABC.build">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.html#cccma_ppp.architectures.models_abc.modelConfigABC.build">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -346,7 +346,7 @@
 
 
 <div class="viewcode-block" id="modelABC">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.selectors.html#cccma_ppp.architectures.models_abc.modelABC">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.html#cccma_ppp.architectures.models_abc.modelABC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">modelABC</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Document this class.</span>
@@ -423,7 +423,7 @@
             <span class="p">)</span>
 
 <div class="viewcode-block" id="modelABC.forward">
-<a class="viewcode-back" href="../../../api/cccma_ppp.core.selectors.html#cccma_ppp.architectures.models_abc.modelABC.forward">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.core.html#cccma_ppp.architectures.models_abc.modelABC.forward">[docs]</a>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

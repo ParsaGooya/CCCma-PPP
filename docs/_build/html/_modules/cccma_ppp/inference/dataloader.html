@@ -106,7 +106,7 @@
 
 
 <div class="viewcode-block" id="BatchData">
-<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataloader.html#cccma_ppp.inference.dataloader.BatchData">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.html#cccma_ppp.inference.dataloader.BatchData">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">BatchData</span><span class="p">(</span><span class="n">BatchDataABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -157,7 +157,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">nan_to_num_</span><span class="p">(</span><span class="n">nan</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BatchData.to_device">
-<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataloader.html#cccma_ppp.inference.dataloader.BatchData.to_device">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.html#cccma_ppp.inference.dataloader.BatchData.to_device">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_device</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;BatchData&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -186,7 +186,7 @@
 
 
 <div class="viewcode-block" id="InferenceDataloaderConfig">
-<a class="viewcode-back" href="../../../api/cccma_ppp.inference.inference_configs.html#cccma_ppp.inference.dataloader.InferenceDataloaderConfig">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.html#cccma_ppp.inference.dataloader.InferenceDataloaderConfig">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">InferenceDataloaderConfig</span><span class="p">(</span><span class="n">DataloaderConfigABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -266,7 +266,7 @@
             <span class="p">)</span>
 
 <div class="viewcode-block" id="InferenceDataloaderConfig.read_configs_from_train">
-<a class="viewcode-back" href="../../../api/cccma_ppp.inference.inference_configs.html#cccma_ppp.inference.dataloader.InferenceDataloaderConfig.read_configs_from_train">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.html#cccma_ppp.inference.dataloader.InferenceDataloaderConfig.read_configs_from_train">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">read_configs_from_train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_dataloader_config</span><span class="p">:</span> <span class="n">TrainDataloaderConfig</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -359,7 +359,7 @@
         <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">exists</span><span class="p">)</span>
 
 <div class="viewcode-block" id="InferenceDataloaderConfig.setup_distributed">
-<a class="viewcode-back" href="../../../api/cccma_ppp.inference.inference_configs.html#cccma_ppp.inference.dataloader.InferenceDataloaderConfig.setup_distributed">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.html#cccma_ppp.inference.dataloader.InferenceDataloaderConfig.setup_distributed">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">setup_distributed</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">train_loader_config</span><span class="p">:</span> <span class="n">TrainDataloaderConfig</span><span class="p">,</span>
@@ -402,7 +402,7 @@
 
 
 <div class="viewcode-block" id="InferenceDataloaderConfig.build_inference_loader">
-<a class="viewcode-back" href="../../../api/cccma_ppp.inference.inference_configs.html#cccma_ppp.inference.dataloader.InferenceDataloaderConfig.build_inference_loader">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.html#cccma_ppp.inference.dataloader.InferenceDataloaderConfig.build_inference_loader">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_inference_loader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_spatial_mask</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Document this function.</span>
@@ -483,7 +483,7 @@
 
 
 <div class="viewcode-block" id="collate_batch">
-<a class="viewcode-back" href="../../../api/cccma_ppp.inference.dataloader.html#cccma_ppp.inference.dataloader.collate_batch">[docs]</a>
+<a class="viewcode-back" href="../../../api/cccma_ppp.inference.html#cccma_ppp.inference.dataloader.collate_batch">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">collate_batch</span><span class="p">(</span>
     <span class="n">batch</span><span class="p">,</span>
     <span class="n">return_spatial_mask</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>

@@ -33,12 +33,18 @@ def clean():
     if BUILD_DIR.exists():
         shutil.rmtree(BUILD_DIR)
 
+    if API_DIR.exists():
+        shutil.rmtree(API_DIR)
+
 
 def generate_api():
 
     if not PACKAGE_DIR.exists():
         print(f"ERROR: Package directory does not exist: {PACKAGE_DIR}")
         return 1
+
+    if API_DIR.exists():
+        shutil.rmtree(API_DIR)
 
     API_DIR.mkdir(parents=True, exist_ok=True)
 
