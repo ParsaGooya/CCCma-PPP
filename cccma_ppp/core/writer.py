@@ -48,6 +48,8 @@ class WriterConfig:
 
     num_output_sampling: int = 1
     get_trained_model_stats_from_validation: bool = False
+    aggregate_only: bool = False
+    predict_only: bool  = False
 
     def __post_init__(self):
         """
@@ -96,6 +98,13 @@ class WriterConfig:
         RuntimeError
             Description not yet provided.
         """
+        if self.aggregate_only and self.predict_only:
+            raise RuntimeError(
+                "You can run the writer in aggregate_only or predict_only mode. " \
+                "In case of the former, temporary batch predictions must have been saved " \
+                "on the disc. In case of the later, batch predictions will be saved temporarily " \
+                "but will not be aggregated year by year."
+            )
         if self.predictor._type != module.config._type.lower():
             raise RuntimeError(
                 f"The provided selector config matches {self.predictor._type}"
@@ -213,6 +222,14 @@ class Writer:
             )
 
         self.temp_save_dir = Path(self.output_dir) / "_temp"
+        
+        if self.config.aggregate_only:
+            if not (self.temp_save_dir.is_dir() and any(self.temp_save_dir.glob("*.nc"))):
+                raise RuntimeError(
+                    "With aggregate_only writer mode, a _temp folder with at least " \
+                    "one ''.nc'' file must exist!"
+                )
+
         if self.is_on_root:
             os.makedirs(self.temp_save_dir, exist_ok=True)
 
@@ -282,18 +299,20 @@ class Writer:
             loader = self.build_train_loader(return_metadata=True, shuffle=False)
             do_post_process = False
         with torch.inference_mode():
-            for batch in tqdm(
-                loader,
-                disable=not self.is_on_root,
-                desc="Inference",
-            ):
-                batch = batch.to_device(self.device)
+            if not self.config.aggregate_only:
+                for batch in tqdm(
+                    loader,
+                    disable=not self.is_on_root,
+                    desc="Inference",
+                ):
+                    batch = batch.to_device(self.device)
 
-                self.predictor._infer_on_batch(batch)
+                    self.predictor._infer_on_batch(batch)
 
-            del loader
-            clear_memory()
-            self.aggregate_predictions_to_netcdf(do_post_process)
+                del loader
+                clear_memory()
+            if not self.config.predict_only:
+                self.aggregate_predictions_to_netcdf(do_post_process)
 
     def _save_train_stats(self):
         """
