@@ -25,6 +25,7 @@ dependencies = [
     "dask>=2026.6.0",
     "pip-audit>=2.10.1",
     "bandit>=1.9.4",
+    "codespell>=2.4.3",
 ]
 name = "cccma-ppp"
 dynamic = ["version"]
