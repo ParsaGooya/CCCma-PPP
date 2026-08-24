@@ -15,7 +15,8 @@ from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
 from cccma_ppp.train.train_configs import set_seed
-from cccma_ppp.generic import registry_imports
+from cccma_ppp.generic import registry_imports  # noqa: F401
+
 
 @dataclasses.dataclass
 class InferenceConfig:

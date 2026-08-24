@@ -266,7 +266,7 @@ class cVAEPredictor(PredictorABC):
 
             if self.num_output_covariance_sampling > 1:
                 num_output_sampling = 1
-            else: 
+            else:
                 num_output_sampling = self.num_output_sampling
 
             output = self.raw_module.predict(
@@ -278,8 +278,8 @@ class cVAEPredictor(PredictorABC):
             )
 
             if self.num_output_covariance_sampling > 1:
-                sample_size = output.output.shape[:2]  # N x B
-                reshape_size = output.output.shape[2:]  # C x ...
+                sample_size = output.output.shape[:2]
+                reshape_size = output.output.shape[2:]
                 output = self.add_decoder_noise(
                     output,
                     self.num_output_covariance_sampling,

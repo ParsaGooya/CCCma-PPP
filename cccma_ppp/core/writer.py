@@ -61,7 +61,6 @@ class WriterConfig:
         if self.num_output_sampling <= 0:
             raise ValueError("num_output_sampling cannot be zero or negative.")
 
-
     def build(
         self,
         inference_data_loader: Dataloader,

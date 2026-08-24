@@ -134,7 +134,6 @@ class DetermninisticPredictor(PredictorABC):
         Any
             Description not yet provided.
         """
-
         return self.num_output_covariance_sampling > 1
 
     @torch.no_grad()
@@ -182,7 +181,7 @@ class DetermninisticPredictor(PredictorABC):
 
             if self.num_output_covariance_sampling > 1:
                 num_output_sampling = 1
-            else: 
+            else:
                 num_output_sampling = self.num_output_sampling
 
             output = self.raw_module.predict(

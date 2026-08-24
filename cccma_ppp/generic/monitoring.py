@@ -1621,6 +1621,27 @@ def build_distributed_monitor(
     gpu: bool = True,
     interval: float = 0.1,
 ) -> Monitor:
+    """
+    Document this function.
+
+    Parameters
+    ----------
+    distributed : Distributed
+        Description not yet provided.
+    cpu : bool
+        Description not yet provided.
+    ram : bool
+        Description not yet provided.
+    gpu : bool
+        Description not yet provided.
+    interval : float
+        Description not yet provided.
+
+    Returns
+    -------
+    Monitor
+        Description not yet provided.
+    """
     gpu_indices: list[int] = []
 
     if gpu:
