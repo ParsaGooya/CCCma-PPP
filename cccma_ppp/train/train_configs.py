@@ -157,7 +157,7 @@ class TrainConfig:
                 if self.train_loader.batch_size == 1:
                     raise ValueError(
                         f"With {self.module.model_type} architecture, if batch_normalization is True, "
-                        "batch_size must be greater thatn one duting training."
+                        "batch_size must be greater than one during training."
                     )
 
     def _check_IO_consistency(self):

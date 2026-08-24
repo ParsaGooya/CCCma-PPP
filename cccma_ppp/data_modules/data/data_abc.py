@@ -441,7 +441,7 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
                 invalid = ds_dims - dataconfig._allowed_dims()
                 if invalid:
                     raise ValueError(
-                        f"invalid data dimensions {list(ds.dims)} for {dataconfig.TYPE} data. Must be a subset ot {sorted(dataconfig._allowed_dims())} for {p}"
+                        f"invalid data dimensions {list(ds.dims)} for {dataconfig.TYPE} data. Must be a subset of {sorted(dataconfig._allowed_dims())} for {p}"
                     )
                 invalid = ds_dims - set(ds.coords.keys())
                 if invalid:

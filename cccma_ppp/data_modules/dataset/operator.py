@@ -252,7 +252,7 @@ class DatasetOperator:
             ref = self.config.model
         else:
             raise ValueError(
-                "No model or observation data is availablle. "
+                "No model or observation data is available. "
                 "Weights could not be generated"
             )
 
@@ -354,7 +354,7 @@ class DatasetOperator:
         if self.config_observation is None:
             if self.config.model is None:
                 raise ValueError(
-                    "No model or observation data is availablle. "
+                    "No model or observation data is available. "
                     "target variable metadata could not be generated"
                 )
 

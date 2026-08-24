@@ -247,7 +247,7 @@ class DatasetConfigABC(abc.ABC):
                         self.model.coords.get(dim)
                     ):
                         raise ValueError(
-                            f"model and condition data do not have the same {dim} cooridnates."
+                            f"model and condition data do not have the same {dim} coordinates."
                             / "when bias correcting to observations"
                         )
 

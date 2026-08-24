@@ -930,7 +930,7 @@ class Flattennanremove(PreprocessModuleABC):
 
             if missing_dims:
                 raise ValueError(
-                    "The saved preprocessor and data pipelines are not compatable. "
+                    "The saved preprocessor and data pipelines are not compatible. "
                     f"Missing dimensions: {missing_dims}."
                 )
 

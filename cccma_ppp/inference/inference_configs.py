@@ -350,7 +350,7 @@ def build_writer(
         return_spatial_mask=return_spatial_mask
     )
 
-    log("Checking module dataloader compatability ...")
+    log("Checking module dataloader compatibility...")
 
     if not all(
         [

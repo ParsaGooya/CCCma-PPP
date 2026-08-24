@@ -91,7 +91,7 @@ class TrainDatasetConfig(DatasetConfigABC):
                     if not self.observation.coords[dim].equals(self.model.coords[dim]):
                         warnings.warn(
                             "\n=====================================================================\n"
-                            f"model and observation data do not have the same {dim} cooridnates.\n"
+                            f"model and observation data do not have the same {dim} coordinates.\n"
                             "=====================================================================\n"
                         )
 
