@@ -634,7 +634,6 @@ class TestCondition:
             features,
         )
 
-    @pytest.mark.pruned
     def test_dependent_latent_returns_distribution(self):
         model = make_model(
             condition_dependant_latent=True,
@@ -867,6 +866,7 @@ class TestForward:
 
         assert result.output.shape == (4, 2, 1, 3)
 
+    @pytest.mark.pruned
     def test_forward_clamps_posterior_variance(self):
         model = self.make_forward_model()
 

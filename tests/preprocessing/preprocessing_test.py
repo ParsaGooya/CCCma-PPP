@@ -738,6 +738,7 @@ class TestTransform:
             data + 1.0,
         )
 
+    @pytest.mark.pruned
     def test_passes_step_arguments(self):
         pipeline, first, second = self.make_fitted_pipeline()
 
@@ -889,7 +890,6 @@ class TestInverseTransform:
             transformed / 2.0,
         )
 
-    @pytest.mark.pruned
     def test_passes_step_arguments(self):
         pipeline, first, second = self.make_fitted_pipeline()
 

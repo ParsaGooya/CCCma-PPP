@@ -1509,6 +1509,7 @@ def test_partial_conv_single_noise_adds_input_channel():
     assert layer.conv.in_channels == 4
 
 
+@pytest.mark.pruned
 def test_partial_conv_single_noise_expands_mask(
     monkeypatch,
 ):
@@ -1579,7 +1580,6 @@ def test_partial_conv_single_noise_expands_mask(
     assert result_mask is not None
 
 
-@pytest.mark.pruned
 def test_partial_conv_single_noise_does_not_expand_single_channel_mask(
     monkeypatch,
 ):

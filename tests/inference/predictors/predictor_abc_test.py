@@ -618,7 +618,6 @@ def test_sample_default_size_is_one(tmp_path):
     distribution.sample.assert_called_once_with((1,))
 
 
-@pytest.mark.pruned
 def test_save_batch_to_netcdf_rejects_wrong_rank(
     tmp_path,
 ):
@@ -770,6 +769,7 @@ def test_save_batch_to_netcdf_assigns_coordinates(
         ]
 
 
+@pytest.mark.pruned
 def test_save_batch_to_netcdf_assigns_attributes(
     tmp_path,
 ):

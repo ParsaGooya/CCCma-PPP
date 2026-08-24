@@ -219,6 +219,7 @@ def test_main_setup_logger_called_with_training_name_and_log_dir(monkeypatch, tm
     assert captured["log_dir"] == config_obj.log_dir
 
 
+@pytest.mark.pruned
 def test_main_build_trainer_receives_config_distributed_logger(monkeypatch, tmp_path):
     yaml_path = tmp_path / "config.yaml"
     yaml_path.write_text("experiment_dir: test\n", encoding="utf-8")

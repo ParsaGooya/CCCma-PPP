@@ -489,6 +489,7 @@ def test_input_metadata(dataset_config):
     assert dataset_config.ds_operator.input_calls == 1
 
 
+@pytest.mark.pruned
 def test_target_metadata_requires_train_config(
     dataset_config,
 ):
@@ -1395,7 +1396,6 @@ def test_input_metadata_calls_operator_each_time(
     assert dataset_config.ds_operator.input_calls == 2
 
 
-@pytest.mark.pruned
 def test_target_metadata_calls_train_operator_each_time(
     dataset_config,
 ):

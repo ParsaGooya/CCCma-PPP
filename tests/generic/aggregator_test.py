@@ -92,7 +92,6 @@ def test_init_with_existing_history_sets_epoch_count():
     ]
 
 
-@pytest.mark.pruned
 def test_init_preserves_explicit_epoch_count():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -166,6 +165,7 @@ def test_record_numeric_metrics():
     assert aggregator.num_batches_seen == 1
 
 
+@pytest.mark.pruned
 def test_record_tensor_metrics_uses_mean():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -237,7 +237,6 @@ def test_record_accumulates_multiple_batches():
     assert logs["loss"] == 3.0
 
 
-@pytest.mark.pruned
 def test_record_kwargs_numeric_and_tensor():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -327,6 +326,7 @@ def test_record_ignores_invalid_learning_rate(
     assert aggregator.lr_values == 0.0
 
 
+@pytest.mark.pruned
 def test_dist_compute_combines_all_metric_groups():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -359,7 +359,6 @@ def test_dist_compute_combines_all_metric_groups():
     assert aggregator._aggregated_across_ranks is True
 
 
-@pytest.mark.pruned
 def test_dist_compute_zero_batches_returns_nan():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -422,7 +421,6 @@ def test_dist_compute_twice_without_new_records():
     assert first["loss"] == 4.0
 
 
-@pytest.mark.pruned
 def test_record_epoch_requires_distributed_compute():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -436,7 +434,6 @@ def test_record_epoch_requires_distributed_compute():
         aggregator.record_epoch({"loss": 1.0})
 
 
-@pytest.mark.pruned
 def test_record_epoch_appends_metrics():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -638,6 +635,7 @@ def test_state_dict_empty():
     }
 
 
+@pytest.mark.pruned
 def test_state_dict_roundtrip():
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -784,6 +782,7 @@ def test_plot_rejects_inconsistent_epoch_counts(
         )
 
 
+@pytest.mark.pruned
 def test_plot_rejects_zero_epochs(tmp_path):
     aggregator = MetricsAggregator(
         DummyDistributed(),
@@ -891,6 +890,7 @@ def test_plot_skips_missing_metric(tmp_path):
     assert (tmp_path / "epoch_2_rmse.png").exists()
 
 
+@pytest.mark.pruned
 def test_plot_skips_empty_epoch_times(tmp_path):
     aggregator = make_agg("train")
     aggregator.epoch_times = []

@@ -923,6 +923,7 @@ def test_up_block_without_skip_aligns_to_resize_shape(
     )
 
 
+@pytest.mark.pruned
 def test_up_block_transpose_noise_before_upsampling(
     monkeypatch,
 ):
@@ -2685,7 +2686,6 @@ def test_unet_output_sic_hidden_structure():
     )
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "hidden_channels",

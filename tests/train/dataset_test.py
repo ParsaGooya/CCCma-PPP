@@ -303,7 +303,6 @@ class TestTrainDatasetConfigObservationChecks:
         assert result is config
         assert caught == []
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dimension",
         [
@@ -353,6 +352,7 @@ class TestTrainDatasetConfigObservationChecks:
         ):
             config._check_observation()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dimension",
         [

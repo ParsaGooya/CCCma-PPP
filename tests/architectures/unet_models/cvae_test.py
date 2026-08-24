@@ -190,7 +190,6 @@ class TestCVAEUNetConfig:
             5,
         ]
 
-    @pytest.mark.pruned
     def test_condition_channels_default_to_model_channels(self):
         config = make_config(
             channels=[
@@ -207,6 +206,7 @@ class TestCVAEUNetConfig:
             16,
         ]
 
+    @pytest.mark.pruned
     def test_condition_embedding_size_defaults_to_latent_size(self):
         config = make_config(
             latent_size=7,
@@ -499,7 +499,6 @@ class TestCVAEUNetInitialization:
                 ),
             )
 
-    @pytest.mark.pruned
     def test_rejects_depth_larger_than_input(self):
         with pytest.raises(
             ValueError,
@@ -1123,7 +1122,6 @@ class TestGenerate:
 
 
 class TestDeterministicGuess:
-    @pytest.mark.pruned
     def test_returns_none_without_deterministic_model(self):
         model = make_model()
         model.deterministic_guess = None
@@ -1415,6 +1413,7 @@ class TestForward:
             ),
         )
 
+    @pytest.mark.pruned
     def test_forward_adds_deterministic_guess(self):
         model = self.make_stubbed_model()
 
@@ -1784,7 +1783,6 @@ class TestGenerationModule:
 
         assert len(generation.up_blocks) == 1
 
-    @pytest.mark.pruned
     def test_forward_without_generator(self):
         generation = self.make_generation()
 
@@ -1858,6 +1856,7 @@ class TestAdditionalCVAEUNetConfig:
 
         assert config.EXPECTS_MASK is False
 
+    @pytest.mark.pruned
     def test_unshared_guess_allows_different_output_settings(self):
         resolved = Mock(
             spec=UNetConfig,
@@ -2314,7 +2313,6 @@ class TestAdditionalDeterministicGuessConfiguration:
         assert config.share_output_block is False
         assert config.freeze_deterministic is False
 
-    @pytest.mark.pruned
     def test_resolved_deterministic_configuration_is_stored(self):
         resolved = make_real_unet_config()
 
@@ -2364,7 +2362,6 @@ class TestAdditionalDeterministicGuessConfiguration:
                 deterministic_guess_config=selector,
             )
 
-    @pytest.mark.pruned
     def test_shared_output_accepts_matching_clip_output(self):
         resolved = make_real_unet_config()
         resolved.clip_output = None
@@ -2437,6 +2434,7 @@ class TestAdditionalConfigProperties:
 
         assert config.transpose_kernel_sizes == []
 
+    @pytest.mark.pruned
     def test_condition_channels_reference_model_channels(self):
         channels = [4, 8, 16]
 
@@ -2497,6 +2495,7 @@ class TestAdditionalInitializationBranches:
 
         assert generation.call_args.kwargs["latent_size"] == 5
 
+    @pytest.mark.pruned
     def test_checkpoint_configuration_loads_state(self):
         config = make_config()
         checkpoint_config = object()
@@ -2550,6 +2549,7 @@ class TestAdditionalInitializationBranches:
         )
         assert model.deterministic_guess is deterministic_model
 
+    @pytest.mark.pruned
     def test_shared_output_uses_deterministic_output_block(
         self,
     ):
@@ -2645,6 +2645,7 @@ class TestAdditionalInitializationBranches:
 
 
 class TestAdditionalPrepareInputBranches:
+    @pytest.mark.pruned
     def test_condition_mask_is_broadcast(self):
         model = make_model()
 
@@ -2682,7 +2683,6 @@ class TestAdditionalPrepareInputBranches:
         )
         assert torch.all(result.mask == 1)
 
-    @pytest.mark.pruned
     def test_condition_is_resized_before_mask_broadcast(
         self,
         monkeypatch,
@@ -3092,7 +3092,6 @@ class TestAdditionalPredictBranches:
 
 
 class TestAdditionalDeterministicGuessRequest:
-    @pytest.mark.pruned
     def test_request_contains_all_inputs(self):
         model = make_model()
 
@@ -3601,6 +3600,7 @@ class TestAdditionalGenerationForward:
             8,
         )
 
+    @pytest.mark.pruned
     def test_generation_passes_resize_shapes_in_order(
         self,
     ):
@@ -3865,7 +3865,6 @@ class TestSICModel:
             clip_output=True,
         )
 
-    @pytest.mark.pruned
     def test_sic_model_clips_output(self):
         model = self.make_sic_model(
             clip_output=True,
@@ -3890,6 +3889,7 @@ class TestSICModel:
         assert torch.all(result >= 0)
         assert torch.all(result <= 1)
 
+    @pytest.mark.pruned
     def test_sic_model_without_clipping_can_exceed_one(
         self,
     ):

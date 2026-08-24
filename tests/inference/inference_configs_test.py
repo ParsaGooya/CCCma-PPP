@@ -403,7 +403,6 @@ def test_prepare_directory_existing_output(tmp_path):
     assert distributed.barrier_calls == 1
 
 
-@pytest.mark.pruned
 def test_set_random_seed_none_does_not_call_set_seed(
     monkeypatch,
     tmp_path,
@@ -517,6 +516,7 @@ def test_load_module_missing_named_checkpoint(tmp_path):
     assert "epoch_10.pt" in str(error.value)
 
 
+@pytest.mark.pruned
 def test_load_module_missing_required_keys(tmp_path):
     checkpoint_dir = tmp_path / "checkpoints"
     checkpoint_dir.mkdir()

@@ -417,6 +417,7 @@ def test_resolve_data_missing_coords(tmp_path):
             _resolve_data(cfg)
 
 
+@pytest.mark.pruned
 def test_resolve_data_realization_required_missing(tmp_path):
     cfg = DummyDataConfig(
         tmp_path,
@@ -756,7 +757,6 @@ def test_get_ds_info_sizes_none(tmp_path):
     }
 
 
-@pytest.mark.pruned
 def test_get_ds_info_uses_existing_list_paths(tmp_path):
     cfg = DummyDataConfig(tmp_path)
     cfg.list_paths = ["already_set.nc"]

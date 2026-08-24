@@ -144,11 +144,10 @@ class DummyStat:
         return torch.tensor([1.0]), torch.tensor([[1.0]])
 
 
-@pytest.mark.pruned
 def test_writer_config_negative_sampling():
     with pytest.raises(
         ValueError,
-        match="cannot be negative",
+        match="cannot be zero or negative",
     ):
         WriterConfig(
             predictor=object(),
@@ -161,7 +160,7 @@ def test_writer_config_build(tmp_path):
 
     cfg = WriterConfig(
         predictor=DummyPredictorConfig(predictor),
-        num_output_sampling=0,
+        num_output_sampling=1,
     )
 
     writer = cfg.build(
@@ -178,7 +177,7 @@ def test_writer_config_build(tmp_path):
 @pytest.mark.pruned
 def test_log_root_logger_branch():
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.is_on_root = True
     writer.logger = DummyLogger()
@@ -191,7 +190,7 @@ def test_log_root_logger_branch():
 @pytest.mark.pruned
 def test_log_root_print_branch(capsys):
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.is_on_root = True
     writer.logger = None
@@ -204,7 +203,7 @@ def test_log_root_print_branch(capsys):
 @pytest.mark.pruned
 def test_log_root_non_root_noop(capsys):
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.is_on_root = False
     writer.logger = None
@@ -217,7 +216,7 @@ def test_log_root_non_root_noop(capsys):
 @pytest.mark.pruned
 def test_raw_module_normal():
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     module = object()
 
@@ -232,7 +231,7 @@ def test_setup_distributed_success(tmp_path):
 
     cfg = WriterConfig(
         predictor=DummyPredictorConfig(predictor),
-        num_output_sampling=0,
+        num_output_sampling=1,
     )
 
     writer = Writer(
@@ -258,7 +257,7 @@ def test_setup_distributed_logger_none(tmp_path):
 
     cfg = WriterConfig(
         predictor=DummyPredictorConfig(predictor),
-        num_output_sampling=0,
+        num_output_sampling=1,
     )
 
     writer = Writer(
@@ -278,6 +277,7 @@ def test_setup_distributed_logger_none(tmp_path):
     assert writer._setup
 
 
+@pytest.mark.pruned
 def test_setup_distributed_device_mismatch(tmp_path):
     predictor = DummyPredictor()
 
@@ -287,7 +287,7 @@ def test_setup_distributed_device_mismatch(tmp_path):
 
     cfg = WriterConfig(
         predictor=DummyPredictorConfig(predictor),
-        num_output_sampling=0,
+        num_output_sampling=1,
     )
 
     writer = Writer(
@@ -315,7 +315,7 @@ def test_setup_distributed_barrier_called(tmp_path):
 
     cfg = WriterConfig(
         predictor=DummyPredictorConfig(predictor),
-        num_output_sampling=0,
+        num_output_sampling=1,
     )
 
     dist = DummyDistributed(
@@ -341,7 +341,7 @@ def test_setup_distributed_barrier_called(tmp_path):
 
 def test_predict_requires_setup():
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer._setup = False
 
@@ -357,7 +357,7 @@ def test_predict_runs(
     monkeypatch,
 ):
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     called = {
         "predict": False,
@@ -390,7 +390,7 @@ def test_build_train_loader_train(tmp_path):
 
     RuntimeContext.GLOBAL_EXP_DIR = tmp_path
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     cfg = DummyTrainLoaderConfig()
 
@@ -419,7 +419,7 @@ def test_setup_distributed_extract_training_vars(
 
     cfg = WriterConfig(
         predictor=DummyPredictorConfig(predictor),
-        num_output_sampling=0,
+        num_output_sampling=1,
     )
 
     writer = Writer(
@@ -454,7 +454,7 @@ def test_raw_module_ddp_branch(monkeypatch):
     )
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
     writer.module = FakeDDP()
 
     assert writer.raw_module is writer.module.module
@@ -465,7 +465,7 @@ def test_save_train_stats_file_exists_skips_loader(
     tmp_path,
 ):
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.output_dir = tmp_path
 
@@ -495,10 +495,9 @@ def test_save_train_stats_file_exists_skips_loader(
     assert not called["loader"]
 
 
-@pytest.mark.pruned
 def test_save_train_stats_barrier(tmp_path):
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.output_dir = tmp_path
 
@@ -530,7 +529,7 @@ def test_save_train_stats_validation_branch(
     called = {}
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.output_dir = tmp_path
 
@@ -572,7 +571,7 @@ def test_aggregate_predictions_to_netcdf_root(
     )
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.is_distributed = False
     writer.is_on_root = True
@@ -602,7 +601,7 @@ def test_aggregate_predictions_to_netcdf_non_root(
     )
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.is_distributed = False
     writer.is_on_root = False
@@ -631,7 +630,7 @@ def test_aggregate_predictions_to_netcdf_no_postprocess(
     )
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.is_distributed = False
     writer.is_on_root = True
@@ -660,7 +659,7 @@ def test_aggregate_predictions_to_netcdf_latent(
     )
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.is_distributed = False
     writer.is_on_root = True
@@ -789,7 +788,7 @@ def test_aggregate_train_stats_root_skip_none_stat(
     tmp_path,
 ):
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.output_dir = tmp_path
     writer.is_on_root = True
@@ -876,7 +875,7 @@ def test_aggregate_train_stats_root_empty_stats(
     tmp_path,
 ):
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.output_dir = tmp_path
     writer.is_distributed = False
@@ -897,7 +896,7 @@ def test_aggregate_train_stats_skip_sum_x_none(
         sum_x = None
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.output_dir = tmp_path
     writer.is_distributed = False
@@ -931,7 +930,7 @@ def test_aggregate_train_stats_finalize_branch(
             )
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.output_dir = tmp_path
     writer.is_distributed = False
@@ -966,7 +965,7 @@ def test_aggregate_train_stats_distributed_reduce_called():
             )
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.is_on_root = False
     writer.is_distributed = False
@@ -984,7 +983,7 @@ def test_save_train_stats_existing_file_skips_loader(
     tmp_path,
 ):
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.output_dir = tmp_path
 
@@ -1026,7 +1025,7 @@ def test_save_train_stats_calls_aggregate(
             return self.stats
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.output_dir = tmp_path
     writer.is_on_root = True
@@ -1056,7 +1055,7 @@ def test_save_train_stats_validation_loader_branch(
     tmp_path,
 ):
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.output_dir = tmp_path
 
@@ -1109,7 +1108,7 @@ def test_aggregate_predictions_to_netcdf_distributed_barriers(
             self.count += 1
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.distributed = Dist()
 
@@ -1142,7 +1141,7 @@ def test_aggregate_predictions_to_netcdf_latent_name(
     )
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.is_distributed = False
     writer.is_on_root = True
@@ -1280,7 +1279,7 @@ def test_writer_config_build_rejects_predictor_module_type_mismatch(
 
     config = WriterConfig(
         predictor=DummyPredictorConfig(predictor),
-        num_output_sampling=0,
+        num_output_sampling=1,
     )
     config.predictor._type = "cvae"
 
@@ -1310,7 +1309,7 @@ def test_writer_config_build_is_case_insensitive_for_module_type(
 
     config = WriterConfig(
         predictor=predictor_config,
-        num_output_sampling=0,
+        num_output_sampling=1,
     )
 
     writer = config.build(
@@ -1331,7 +1330,7 @@ def test_writer_initialization_converts_output_dir_to_path(
     writer = Writer(
         WriterConfig(
             predictor=DummyPredictorConfig(DummyPredictor()),
-            num_output_sampling=0,
+            num_output_sampling=1,
         ),
         DummyLoader(),
         DummyTrainLoaderConfig(),
@@ -1388,7 +1387,7 @@ def test_setup_distributed_creates_temp_directory_on_root(
     writer = Writer(
         WriterConfig(
             predictor=DummyPredictorConfig(DummyPredictor()),
-            num_output_sampling=0,
+            num_output_sampling=1,
         ),
         DummyLoader(),
         DummyTrainLoaderConfig(),
@@ -1413,7 +1412,7 @@ def test_setup_distributed_non_root_does_not_create_temp_directory(
     writer = Writer(
         WriterConfig(
             predictor=DummyPredictorConfig(DummyPredictor()),
-            num_output_sampling=0,
+            num_output_sampling=1,
         ),
         DummyLoader(),
         DummyTrainLoaderConfig(),
@@ -1445,7 +1444,7 @@ def test_setup_distributed_records_distributed_properties(
     writer = Writer(
         WriterConfig(
             predictor=DummyPredictorConfig(DummyPredictor()),
-            num_output_sampling=0,
+            num_output_sampling=1,
         ),
         DummyLoader(),
         DummyTrainLoaderConfig(),
@@ -1471,7 +1470,7 @@ def test_predict_logs_elapsed_time(
     monkeypatch,
 ):
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
     writer._setup = True
 
     messages = []
@@ -1521,7 +1520,7 @@ def test_save_train_stats_moves_batch_and_requests_training_stats(
 
     predictor = RecordingPredictor()
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.output_dir = tmp_path
     writer.device = torch.device("cpu")
@@ -1558,7 +1557,7 @@ def test_aggregate_train_stats_saves_expected_values(
     inactive = DummyStat(active=False)
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
     writer.output_dir = tmp_path
     writer.is_on_root = True
     writer.is_distributed = False
@@ -1594,7 +1593,7 @@ def test_aggregate_train_stats_non_root_does_not_save(
     tmp_path,
 ):
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
     writer.output_dir = tmp_path
     writer.is_on_root = False
     writer.is_distributed = False
@@ -1617,7 +1616,7 @@ def test_aggregate_train_stats_distributed_barrier(
     )
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
     writer.output_dir = tmp_path
     writer.is_on_root = False
     writer.is_distributed = True
@@ -1631,7 +1630,7 @@ def test_aggregate_train_stats_distributed_barrier(
 @pytest.mark.pruned
 def test_log_root_passes_formatting_arguments():
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
     writer.is_on_root = True
 
     class RecordingLogger:
@@ -1791,7 +1790,7 @@ def make_predict_writer(
     is_on_root=True,
 ):
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
 
     writer.module = EvalRecordingModule()
     writer.InferenceLoader = loader or RecordingLoader(
@@ -1808,14 +1807,13 @@ def make_predict_writer(
     return writer
 
 
-@pytest.mark.pruned
-def test_writer_config_accepts_zero_output_sampling():
+def test_writer_config_accepts_positive_output_sampling():
     config = WriterConfig(
         predictor=object(),
-        num_output_sampling=0,
+        num_output_sampling=1,
     )
 
-    assert config.num_output_sampling == 0
+    assert config.num_output_sampling == 1
 
 
 @pytest.mark.pruned
@@ -1828,6 +1826,7 @@ def test_writer_config_accepts_positive_output_sampling():
     assert config.num_output_sampling == 7
 
 
+@pytest.mark.pruned
 def test_build_train_loader_forwards_training_arguments(
     tmp_path,
 ):
@@ -1854,7 +1853,7 @@ def test_build_train_loader_forwards_training_arguments(
             return "loader"
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
     writer.TrainLoaderConfig = Config()
     writer.distributed = object()
 
@@ -1902,7 +1901,7 @@ def test_build_train_loader_forwards_validation_arguments(
             return "validation"
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
     writer.TrainLoaderConfig = Config()
     writer.distributed = object()
 
@@ -2048,6 +2047,7 @@ def test_predict_loop_nonlatent_uses_inference_loader():
     assert captured == [True]
 
 
+@pytest.mark.pruned
 def test_predict_loop_aggregates_after_all_batches():
     events = []
 
@@ -2083,7 +2083,6 @@ def test_predict_loop_aggregates_after_all_batches():
     ]
 
 
-@pytest.mark.pruned
 def test_predict_loop_propagates_predictor_error():
     class FailingPredictor(DummyPredictor):
         def _infer_on_batch(
@@ -2201,7 +2200,7 @@ def test_aggregate_train_stats_does_not_finalize_inactive_stat(
             pytest.fail("Inactive stat must not be finalized.")
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
     writer.output_dir = tmp_path
     writer.is_on_root = True
     writer.is_distributed = False
@@ -2467,7 +2466,7 @@ def test_aggregate_predictions_to_netcdf_nonroot_distributed_barriers(
     )
 
     writer = object.__new__(Writer)
-    writer.config = SimpleNamespace(num_output_sampling=0)
+    writer.config = SimpleNamespace(num_output_sampling=1)
     writer.distributed = distributed
     writer.is_distributed = True
     writer.is_on_root = False

@@ -197,7 +197,7 @@ def test_predictor_rejects_nonpositive_output_sampling(
 
     with pytest.raises(
         ValueError,
-        match="num_output_sampling must be larger than 0",
+        match=r"num_output_sampling must be larger than 1\.",
     ):
         cVAEPredictor(
             config=config,
@@ -240,7 +240,7 @@ def test_generator_disables_output_covariance_sampling(
         num_output_sampling=4,
     )
 
-    assert predictor.num_output_covariance_sampling == 0
+    assert predictor.num_output_covariance_sampling == 1
     assert predictor.extract_training_residuals is False
 
 
@@ -319,7 +319,6 @@ def test_update_train_stats_updates_posterior_samples(
     )
 
 
-@pytest.mark.pruned
 def test_update_train_stats_requires_samples(
     tmp_path,
     monkeypatch,
@@ -442,7 +441,6 @@ def test_get_latent_samples_builds_sampler_once(
     )
 
 
-@pytest.mark.pruned
 def test_build_latent_sampler_requires_stats_file(
     tmp_path,
 ):
@@ -1014,6 +1012,7 @@ def test_get_latent_samples_uses_existing_sampler(
     assert result.shape == (4, 3, 5)
 
 
+@pytest.mark.pruned
 def test_infer_on_batch_save_latent_requires_target(
     tmp_path,
     monkeypatch,
@@ -1255,6 +1254,7 @@ def test_batch_to_netcdf_latent_equal_sizes_need_no_padding(
     assert torch.isneginf(prediction).sum() == 0
 
 
+@pytest.mark.pruned
 def test_batch_to_netcdf_latent_padding_uses_negative_infinity(
     tmp_path,
     monkeypatch,

@@ -574,6 +574,7 @@ def test_build_load_dir_success_path(monkeypatch):
     assert called["loaded"] is True
 
 
+@pytest.mark.pruned
 def test_build_load_dir_output_shape_mismatch(monkeypatch):
     cfg = cVAEConfig(ModelConfig=DummySelector())
     cfg.load_dir = "fake_checkpoint.pt"
@@ -847,7 +848,6 @@ class ConstantKLD(torch.nn.Module):
         return torch.tensor(self.value)
 
 
-@pytest.mark.pruned
 def test_forward_eval_uses_validation_noise_sample_count():
     selector = GeneratorSelector()
     module = make_module(
@@ -945,6 +945,7 @@ def test_compute_loss_accepts_none_target_mask():
     assert criterion.calls[0]["target_mask"] is None
 
 
+@pytest.mark.pruned
 def test_compute_loss_passes_prior_flow_to_kld():
     cfg = cVAEConfig(
         ModelConfig=DummySelector(),
@@ -1124,7 +1125,6 @@ def test_build_load_dir_rejects_input_metadata_mismatch(
         )
 
 
-@pytest.mark.pruned
 def test_build_load_dir_rejects_output_metadata_mismatch(
     monkeypatch,
 ):

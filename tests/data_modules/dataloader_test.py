@@ -343,7 +343,6 @@ class TestDataloaderConfigABC:
             make_available_times().values,
         )
 
-    @pytest.mark.pruned
     def test_select_requested_times_rejects_early_start(self):
         config = ConcreteDataloaderConfig()
 
@@ -358,6 +357,7 @@ class TestDataloaderConfigABC:
                 )
             )
 
+    @pytest.mark.pruned
     def test_select_requested_times_rejects_late_stop(self):
         config = ConcreteDataloaderConfig()
 

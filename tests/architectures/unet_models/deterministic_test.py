@@ -453,6 +453,7 @@ def test_model_defaults_output_shape_to_input_shape():
     assert model.output_shape == (2, 16, 16)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "input_shape",
     [
@@ -470,6 +471,7 @@ def test_model_rejects_invalid_input_rank(input_shape):
         )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "output_shape",
     [
@@ -487,6 +489,7 @@ def test_model_rejects_invalid_output_rank(output_shape):
         )
 
 
+@pytest.mark.pruned
 def test_model_rejects_different_spatial_shapes_without_hidden_output():
     config = make_config(
         output_block_hidden_channels=None,
@@ -503,7 +506,6 @@ def test_model_rejects_different_spatial_shapes_without_hidden_output():
         )
 
 
-@pytest.mark.pruned
 def test_model_accepts_different_spatial_shapes_with_hidden_output():
     config = make_config(
         output_block_hidden_channels=4,
@@ -518,7 +520,6 @@ def test_model_accepts_different_spatial_shapes_with_hidden_output():
     assert model.output_shape == (1, 8, 8)
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "input_shape",
     [
@@ -556,7 +557,6 @@ def test_model_rejects_depth_too_large_for_input():
         )
 
 
-@pytest.mark.pruned
 def test_depth_error_reports_allowed_levels():
     config = make_config(
         channels=[4, 8, 16, 32, 64],
@@ -812,7 +812,6 @@ def test_prepare_input_concatenates_added_features():
     assert result.mask is None
 
 
-@pytest.mark.pruned
 def test_prepare_input_adds_valid_feature_mask():
     model = make_model(
         added_features_dim=3,
@@ -898,6 +897,7 @@ def test_forward_with_added_features():
     assert result.output.shape == (2, 1, 16, 16)
 
 
+@pytest.mark.pruned
 def test_forward_resizes_to_output_shape(
     monkeypatch,
 ):
@@ -1779,6 +1779,7 @@ def test_prepare_input_preserves_channel_order():
     )
 
 
+@pytest.mark.pruned
 def test_prepare_input_uses_broadcast_mask_before_adding_feature_mask():
     model = make_model(
         added_features_dim=2,
@@ -2377,7 +2378,6 @@ def test_forward_generator_reshapes_batch_before_transpose():
     )
 
 
-@pytest.mark.pruned
 def test_checkpoint_configuration_calls_load_state_dict():
     config = make_config()
     checkpoint = SimpleNamespace(
@@ -2685,6 +2685,7 @@ def test_sic_unclipped_output_can_exceed_unit_interval():
     assert torch.any(result > 1)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "activation",
@@ -2809,7 +2810,6 @@ def test_no_skip_model_forward():
     )
 
 
-@pytest.mark.pruned
 def test_processed_skip_model_forward():
     model = make_model(
         config=make_config(

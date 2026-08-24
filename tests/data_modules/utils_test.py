@@ -312,6 +312,7 @@ class TestLoadXarrayData:
         assert result.sizes[REALIZATION_DIM] == 1
         assert result.coords[REALIZATION_DIM].values.tolist() == [0]
 
+    @pytest.mark.pruned
     def test_computes_ensemble_mean(self):
         dataset = make_dataset()
 
@@ -341,7 +342,6 @@ class TestLoadXarrayData:
 
         assert REALIZATION_DIM not in result.dims
 
-    @pytest.mark.pruned
     def test_selects_names(self):
         dataset = make_dataset()
 
@@ -390,7 +390,6 @@ class TestLoadXarrayData:
 
         assert mock_open.call_args.kwargs["chunks"] == chunks
 
-    @pytest.mark.pruned
     def test_adds_time_auxiliary_coordinates(self):
         dataset = make_dataset()
 
@@ -424,7 +423,6 @@ class TestLoadXarrayData:
             61,
         ]
 
-    @pytest.mark.pruned
     def test_auxiliary_coordinates_require_init_time(self):
         dataset = make_dataset().drop_vars(INIT_TIME_DIM)
 
@@ -442,7 +440,6 @@ class TestLoadXarrayData:
                     init_time_dim=INIT_TIME_DIM,
                 )
 
-    @pytest.mark.pruned
     def test_auxiliary_coordinate_must_use_expected_dimension(self):
         dataset = make_dataset().rename(
             {
@@ -664,6 +661,7 @@ class TestValidateTimeSequence:
                 ]
             )
 
+    @pytest.mark.pruned
     def test_rejects_mixed_python_datetime_values(self):
         values = np.array(
             [
@@ -683,6 +681,7 @@ class TestValidateTimeSequence:
         ):
             _validate_time_sequence(values)
 
+    @pytest.mark.pruned
     def test_rejects_mixed_numpy_datetime_object_array(self):
         values = np.array(
             [
@@ -1183,7 +1182,6 @@ class TestAddLeadTimes:
             ),
         )
 
-    @pytest.mark.pruned
     def test_accepts_integer_valued_float_lead_times(self):
         result = add_lead_times(
             init_times=np.array(
@@ -1378,6 +1376,7 @@ class TestAddLeadTimes:
                 lead_time_resolution="year",
             )
 
+    @pytest.mark.pruned
     def test_rejects_invalid_cftime_resolution(self):
         with pytest.raises(
             ValueError,
@@ -1398,6 +1397,7 @@ class TestAddLeadTimes:
                 lead_time_resolution="year",
             )
 
+    @pytest.mark.pruned
     def test_rejects_non_datetime_initializations(self):
         with pytest.raises(
             TypeError,
@@ -1499,7 +1499,6 @@ class TestAddCftimeOffset:
             123456,
         )
 
-    @pytest.mark.pruned
     def test_rejects_invalid_resolution(self):
         with pytest.raises(
             ValueError,
@@ -1560,7 +1559,6 @@ class TestDaysInCftimeMonth:
             == 29
         )
 
-    @pytest.mark.pruned
     def test_366_day_calendar(self):
         assert (
             _days_in_cftime_month(
@@ -1571,6 +1569,7 @@ class TestDaysInCftimeMonth:
             == 29
         )
 
+    @pytest.mark.pruned
     def test_standard_leap_year(self):
         assert (
             _days_in_cftime_month(
@@ -1729,6 +1728,7 @@ class TestAssignDatetimeInitTime:
                 init_time_dim=INIT_TIME_DIM,
             )
 
+    @pytest.mark.pruned
     def test_rejects_non_integer_years(self):
         dataset = xr.Dataset(
             {
@@ -1807,7 +1807,6 @@ class TestGetTimeRepresentation:
 
         assert get_time_representation(data) == "cftime"
 
-    @pytest.mark.pruned
     def test_datetime_index(self):
         index = pd.DatetimeIndex(
             [
@@ -1851,6 +1850,7 @@ class TestGetTimeRepresentation:
                 )
             )
 
+    @pytest.mark.pruned
     def test_rejects_unsupported_type(self):
         with pytest.raises(
             TypeError,

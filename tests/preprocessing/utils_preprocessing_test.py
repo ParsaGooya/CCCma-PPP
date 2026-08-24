@@ -616,6 +616,7 @@ class TestStandardizer:
             data,
         )
 
+    @pytest.mark.pruned
     def test_yearly_statistics(self):
         scaler = Standardizer(
             dims=[
@@ -1711,7 +1712,6 @@ def test_grouped_transform_uses_existing_month_coordinate(
     assert result.sizes[TIME_DIM] == 4
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "scaler_class",
     [
@@ -2700,7 +2700,6 @@ class TestTrendTimeToNumeric:
             [0.0, 2.0],
         )
 
-    @pytest.mark.pruned
     def test_scalar_numpy_array_origin(self):
         times = xr.DataArray(
             np.asarray(
@@ -3030,7 +3029,6 @@ class TestTrendRemoverFit:
             [1, 2],
         )
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "frequency,times",
         [
@@ -3383,6 +3381,7 @@ class TestFlattennanremoveAdditionalBranches:
             },
         )
 
+    @pytest.mark.pruned
     def test_fit_uses_target_as_reference(self):
         data = self.make_data()
         target = data.copy()
@@ -3537,6 +3536,7 @@ class TestAlignStatisticAdditionalBranches:
 
         assert result is stat
 
+    @pytest.mark.pruned
     def test_rejects_multidimensional_lead_time_coordinate(self):
         data = xr.DataArray(
             np.ones((2, 2)),

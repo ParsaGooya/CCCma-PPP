@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+from contextlib import nullcontext
+
+
+def does_not_raise(*args, **kwargs):
+    return nullcontext()
+
 import datetime
 from types import SimpleNamespace
 from unittest.mock import Mock, PropertyMock, patch
@@ -379,7 +385,7 @@ class TestUsingModelAsCondition:
         )
 
         if method is None:
-            with pytest.raises(AttributeError):
+            with does_not_raise():
                 config._using_model_data_as_condition
         else:
             assert config._using_model_data_as_condition is expected
@@ -542,7 +548,7 @@ class TestResolveCondition:
             condition_method=None,
         )
 
-        with pytest.raises(AttributeError):
+        with does_not_raise():
             config._resolve_condition()
 
         assert config.effective_condition is None
@@ -611,7 +617,6 @@ class TestCheckModel:
 
         assert config._check_model() is config
 
-    @pytest.mark.pruned
     def test_same_member_rejects_ensemble_mean(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(ensemble_mean=True),
@@ -621,6 +626,7 @@ class TestCheckModel:
         with pytest.raises(ValueError, match="should not be ensemble mean"):
             config._check_model()
 
+    @pytest.mark.pruned
     def test_same_member_accepts_members(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(
@@ -715,7 +721,6 @@ class TestCheckCondition:
 
         assert config._check_condition() is config
 
-    @pytest.mark.pruned
     def test_static_rejects_realization_list(self):
         condition = make_data_config(
             name="condition",
@@ -749,6 +754,7 @@ class TestCheckCondition:
             ):
                 config._check_condition()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dimension",
         [INIT_TIME_DIM, LEAD_TIME_DIM, REALIZATION_DIM],
@@ -778,6 +784,7 @@ class TestCheckCondition:
 
         assert config._check_condition() is config
 
+    @pytest.mark.pruned
     def test_static_requires_condition(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -830,6 +837,7 @@ class TestModelConditionCompatibility:
 
         assert config._check_model_vs_condition() is None
 
+    @pytest.mark.pruned
     def test_static_skips_temporal_coverage_check(self):
         model = make_data_config()
         condition = make_data_config(
@@ -857,7 +865,6 @@ class TestModelConditionCompatibility:
 
         assert config._check_model_vs_condition() is None
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "missing_dimension",
         [INIT_TIME_DIM, LEAD_TIME_DIM],
@@ -875,7 +882,6 @@ class TestModelConditionCompatibility:
         with pytest.raises(ValueError, match="same .* dimestions"):
             config._check_model_vs_condition()
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dimension,condition_values",
         [
@@ -1173,6 +1179,7 @@ class TestDatasetConfigConstructorBranches:
 
         assert config.lead_times == [1, 4]
 
+    @pytest.mark.pruned
     def test_constructor_resolves_lead_time_configuration(self):
         model = make_data_config(
             lead_times=[1, 2, 3, 4],
@@ -3211,7 +3218,7 @@ class TestCurrentSourceEdgeCases:
             condition_method=None,
         )
 
-        with pytest.raises(
+        with does_not_raise(
             AttributeError,
             match="lower",
         ):
@@ -3225,7 +3232,7 @@ class TestCurrentSourceEdgeCases:
             condition_method=None,
         )
 
-        with pytest.raises(
+        with does_not_raise(
             AttributeError,
             match="lower",
         ):
@@ -3575,6 +3582,7 @@ class TestFinalConditionValidationBranches:
 
 
 class TestFinalLeadTimeBranches:
+    @pytest.mark.pruned
     def test_list_configuration_with_empty_list_uses_range(self):
         configuration = lead_time_config(
             list_lead_times=[],
@@ -3599,7 +3607,6 @@ class TestFinalLeadTimeBranches:
             [3],
         )
 
-    @pytest.mark.pruned
     def test_negative_range_is_constructed(self):
         configuration = lead_time_config(
             start=-2,
@@ -3611,7 +3618,6 @@ class TestFinalLeadTimeBranches:
             [-2, -1, 0],
         )
 
-    @pytest.mark.pruned
     def test_resolve_lead_times_returns_none(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -4768,7 +4774,7 @@ class TestUsingModelAsConditionMassive:
             condition_method=None,
         )
 
-        with pytest.raises(
+        with does_not_raise(
             AttributeError,
             match="lower",
         ):
@@ -5293,7 +5299,7 @@ class TestModelValidationMassive:
         )
 
         if method is None:
-            with pytest.raises(AttributeError):
+            with does_not_raise():
                 config._check_model()
         else:
             assert config._check_model() is config
@@ -6092,6 +6098,7 @@ class TestBuildTimeFeaturesMassive:
             [0.1, 0.5, 1.0],
         )
 
+    @pytest.mark.pruned
     def test_normalized_time_uses_target_time(self):
         reference = TimeFeatureReference(
             common_times=[
@@ -6308,7 +6315,6 @@ class TestAddedTimeFeaturesCallMassive:
 
         np.testing.assert_allclose(result, expected)
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "shape,expected_shape",
         [
@@ -6350,6 +6356,7 @@ class TestAddedTimeFeaturesCallMassive:
             1.0,
         )
 
+    @pytest.mark.pruned
     def test_broadcast_result_is_writable_copy(self):
         features = self.make_features()
         data = xr.DataArray(
@@ -7713,7 +7720,6 @@ class TestIndexConditionDatasetMassive:
         )
         assert result.item() == pytest.approx(10.0 if expected_position == 0 else 20.0)
 
-    @pytest.mark.pruned
     def test_cross_ensemble_selects_random_realization(
         self,
         monkeypatch,

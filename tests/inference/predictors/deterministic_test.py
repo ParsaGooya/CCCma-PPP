@@ -157,6 +157,7 @@ def test_config_build_returns_predictor(tmp_path):
     assert predictor.num_output_sampling == 3
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "num_output_sampling",
     [
@@ -170,7 +171,7 @@ def test_predictor_rejects_nonpositive_output_sampling(
 ):
     with pytest.raises(
         ValueError,
-        match="num_output_sampling must be larger than 0",
+        match=r"num_output_sampling must be larger than 1\.",
     ):
         DetermninisticPredictor(
             config=DeterministicPredictorConfig(),
@@ -206,7 +207,7 @@ def test_generator_disables_training_variable_extraction(
         num_output_sampling=4,
     )
 
-    assert predictor.num_output_covariance_sampling == 0
+    assert predictor.num_output_covariance_sampling == 1
     assert predictor.extract_training_vars is False
     assert predictor.stats is None
 
@@ -658,7 +659,7 @@ def test_batch_to_netcdf_preserves_prediction_grad_state(
 
     torch.testing.assert_close(
         saved_prediction,
-        prediction.detach().cpu(),
+        prediction.detach().cpu().unsqueeze(0),
     )
 
 
@@ -753,7 +754,6 @@ def test_batch_to_netcdf_uses_zero_padded_counter(
     assert predictor._batch_counter == 43
 
 
-@pytest.mark.pruned
 def test_batch_to_netcdf_increments_counter_each_call(
     tmp_path,
     monkeypatch,

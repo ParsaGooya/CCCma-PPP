@@ -145,6 +145,10 @@ def make_data_config(
 
 
 class DummyDatasetConfig:
+    effective_condition_method = property(
+        lambda self: self.condition_method
+    )
+
     init_time_dim = INIT_TIME_DIM
     lead_time_dim = LEAD_TIME_DIM
     realization_dim = REALIZATION_DIM
@@ -209,6 +213,7 @@ class TestConfigObservation:
 
         assert operator.config_observation is observation
 
+    @pytest.mark.pruned
     def test_returns_none_when_attribute_is_absent(self):
         config = SimpleNamespace()
         operator = DatasetOperator(config)
@@ -286,7 +291,6 @@ class TestFitPreprocessors:
         assert kwargs["selection"][INIT_TIME_DIM] is train_times
         assert kwargs["selection"][LEAD_TIME_DIM] is model.info.coords[LEAD_TIME_DIM]
 
-    @pytest.mark.pruned
     def test_model_selection_includes_realizations(self):
         model = make_data_config(
             realizations=[
@@ -345,6 +349,7 @@ class TestFitPreprocessors:
             save_name="observation.joblib",
         )
 
+    @pytest.mark.pruned
     def test_observation_selection_includes_realizations(self):
         observation = make_data_config(
             realizations=[
@@ -410,7 +415,6 @@ class TestFitPreprocessors:
 
         assert selection[REALIZATION_DIM] is (condition.info.coords[REALIZATION_DIM])
 
-    @pytest.mark.pruned
     def test_fits_static_condition_with_empty_selection(self):
         condition = make_data_config()
         config = DummyDatasetConfig(
@@ -834,6 +838,7 @@ class TestGetWeights:
             is flattener
         )
 
+    @pytest.mark.pruned
     def test_matching_channel_weights(self):
         model = make_data_config(
             names=[
@@ -887,7 +892,6 @@ class TestGetWeights:
             "pr",
         ]
 
-    @pytest.mark.pruned
     def test_inconsistent_channel_weights_raise(self):
         model = make_data_config(
             names=[

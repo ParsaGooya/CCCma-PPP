@@ -317,6 +317,7 @@ def test_obs_data_config_check_realization_false():
     assert cfg.realization_list is None
 
 
+@pytest.mark.pruned
 def test_obs_data_config_check_realization_true():
     with patch_common():
         cfg = ObsDataConfig(
@@ -355,7 +356,6 @@ def test_obs_data_config_time_range():
     )
 
 
-@pytest.mark.pruned
 def test_obs_data_config_uses_default_single_lead_time():
     info = DummyInfo()
 
@@ -457,7 +457,6 @@ def test_condition_data_config_check_realization_false():
     assert cfg.realization_list is None
 
 
-@pytest.mark.pruned
 def test_condition_data_config_check_realization_true():
     with patch_common():
         cfg = ConditionDataConfig(
@@ -573,6 +572,7 @@ def test_condition_data_config_requires_both_time_bounds(
     )
 
 
+@pytest.mark.pruned
 def test_condition_data_config_uses_maximum_lead_time():
     info = DummyInfo(
         lead_times=make_lead_times(

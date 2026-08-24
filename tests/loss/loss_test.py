@@ -590,6 +590,7 @@ def test_saved_output_mask_rejects_unknown_extension(
         )
 
 
+@pytest.mark.pruned
 def test_loads_tensor_mask_from_pt(
     tmp_path,
 ):
@@ -705,6 +706,7 @@ def test_loads_mask_from_netcdf(
     )
 
 
+@pytest.mark.pruned
 def test_build_with_saved_mask_requires_output_shape():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -1340,7 +1342,6 @@ def test_output_mask_is_multiplied_with_target_mask(
     )
 
 
-@pytest.mark.pruned
 def test_masked_loss_disabled_clears_target_mask(
     monkeypatch,
 ):
@@ -1540,7 +1541,6 @@ def test_forward_individual_losses_are_detached(
     assert parameter.grad is not None
 
 
-@pytest.mark.pruned
 def test_weighted_total_loss_uses_configured_weights(
     monkeypatch,
 ):

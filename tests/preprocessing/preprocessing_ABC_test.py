@@ -156,7 +156,6 @@ class TestPreprocessModuleABC:
 
 
 class TestGetReductionDims:
-    @pytest.mark.pruned
     def test_none_dimensions_are_preserved(self):
         preprocessor = ConcretePreprocessor(
             dims=(),
@@ -302,6 +301,7 @@ class TestGetReductionDims:
 
         assert preprocessor.dims == ("samples",)
 
+    @pytest.mark.pruned
     def test_dataset_input_is_supported(self):
         preprocessor = ConcretePreprocessor(
             dims=("samples",),
@@ -439,7 +439,6 @@ class TestAddGroupingCoordinate:
         ):
             preprocessor._add_grouping_coordinate(data)
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "frequency",
         [
@@ -926,6 +925,7 @@ class TestCheckFitted:
                 )
             )
 
+    @pytest.mark.pruned
     def test_inverse_transform_checks_fitted_state(self):
         preprocessor = ConcretePreprocessor(
             fitted=False,
