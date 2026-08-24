@@ -3,9 +3,6 @@ from __future__ import annotations
 from contextlib import nullcontext
 
 
-def does_not_raise(*args, **kwargs):
-    return nullcontext()
-
 import datetime
 from types import SimpleNamespace
 from unittest.mock import Mock, PropertyMock, patch
@@ -29,6 +26,10 @@ from collections.abc import Sequence
 INIT_TIME_DIM = DatasetConfigABC.init_time_dim
 LEAD_TIME_DIM = DatasetConfigABC.lead_time_dim
 REALIZATION_DIM = DatasetConfigABC.realization_dim
+
+
+def does_not_raise(*args, **kwargs):
+    return nullcontext()
 
 
 def make_coord(values, dim):

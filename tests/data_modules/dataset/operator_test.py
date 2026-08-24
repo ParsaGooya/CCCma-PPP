@@ -145,9 +145,7 @@ def make_data_config(
 
 
 class DummyDatasetConfig:
-    effective_condition_method = property(
-        lambda self: self.condition_method
-    )
+    effective_condition_method = property(lambda self: self.condition_method)
 
     init_time_dim = INIT_TIME_DIM
     lead_time_dim = LEAD_TIME_DIM

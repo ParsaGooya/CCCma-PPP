@@ -2339,8 +2339,8 @@ def test_build_distributed_monitor_with_cuda(
         cpu=True,
         ram=True,
         gpus=[
-                0,
-                1,
+            0,
+            1,
         ],
         interval=0.1,
         rank=1,

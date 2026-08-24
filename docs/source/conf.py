@@ -49,8 +49,9 @@ exclude_external_modules = {
     "torch",
     "numpy",
     "timm",
-    "contextlib"
+    "contextlib",
 }
+
 
 def skip_member(app, what, name, obj, skip, options):
     module = getattr(obj, "__module__", "")
@@ -62,6 +63,7 @@ def skip_member(app, what, name, obj, skip, options):
             return True
 
     return skip
+
 
 def setup(app):
     app.connect("autodoc-skip-member", skip_member)
