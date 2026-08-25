@@ -844,10 +844,10 @@ class cVAEUNet(cVAEmodelsABC):
         outputs = []
 
         for latent_chunk in latent_samples.split(chunk_size, dim=0):
-            chunk_size = latent_chunk.shape[0]
+            current_chunk_size = latent_chunk.shape[0]
 
             latent_chunk = latent_chunk.reshape(
-                chunk_size * batch_size,
+                current_chunk_size * batch_size,
                 feature_size,
             )
 
@@ -859,13 +859,13 @@ class cVAEUNet(cVAEmodelsABC):
             if num_output_samples > 1:
                 out = out.reshape(
                     num_output_samples,
-                    chunk_size,
+                    current_chunk_size,
                     batch_size,
                     *out.shape[2:],
                 )
             else:
                 out = out.reshape(
-                    chunk_size,
+                    current_chunk_size,
                     batch_size,
                     *out.shape[1:],
                 )
@@ -1151,7 +1151,7 @@ class Generation(nn.Module):
                     block_config=config.block_config,
                     upsampling_method=config.upsampling_method,
                     skip_alignment_method=config.upsampling_alignment_method,
-                    transpose_kernel_size=config.transpose_kernel_sizes[index],
+                    upsampling_kernel_size=config.transpose_kernel_sizes[index],
                     inject_noise=inject_noise,
                     inject_noise_in_block=inject_noise_in_block,
                 )

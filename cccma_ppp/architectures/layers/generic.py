@@ -7,7 +7,7 @@ import torch.nn.functional as F
 InitMethod = Literal["default", "kaiming", "xavier", "trunc_normal"]
 ActivationName = Literal["relu", "gelu", "silu"]
 NormalizationMethod = Literal["batch", "group", "layer", "none"]
-UpsamplingMethod = Literal["transpose_conv", "bilinear"]
+UpsamplingMethod = Literal["transpose_conv", "bilinear", "pixelshuffle"]
 OutputActivation = Literal["identity", "sigmoid", "tanh"]
 MaskPoolingMethod = Literal["any", "all", "fraction"]
 AlignmentMethod = Literal["interpolation", "padd", "strict"]
