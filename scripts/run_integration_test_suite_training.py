@@ -1,10 +1,6 @@
 from __future__ import annotations
 
-from contextlib import (
-    contextmanager,
-    redirect_stderr,
-    redirect_stdout,
-)
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from copy import deepcopy
 from datetime import datetime
 from functools import partial
