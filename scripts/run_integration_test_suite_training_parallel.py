@@ -22,7 +22,6 @@ from typing import Any, Callable
 
 from tqdm import tqdm
 
-
 PARALLEL_WORKERS = 16
 THREADS_PER_WORKER = 1
 MAX_PENDING_TASKS = PARALLEL_WORKERS * 2

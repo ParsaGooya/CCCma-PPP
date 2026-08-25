@@ -24,7 +24,6 @@ from cccma_ppp.data_modules.utils import (
     suppress_stderr,
 )
 
-
 INIT_TIME_DIM = "time"
 LEAD_TIME_DIM = "lead_time"
 REALIZATION_DIM = "ensembles"

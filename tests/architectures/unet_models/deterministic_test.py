@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
@@ -13,17 +13,14 @@ from cccma_ppp.architectures.layers.conv import (
     PartialConvBlockConfig,
     TensorMask,
 )
+from cccma_ppp.architectures.layers.unet import (
+    UNetOutputSIC,
+)
 from cccma_ppp.architectures.unet.deterministic import (
     UNet,
     UNetConfig,
     UNetSIC,
     UNetSICConfig,
-)
-
-from unittest.mock import Mock
-
-from cccma_ppp.architectures.layers.unet import (
-    UNetOutputSIC,
 )
 
 

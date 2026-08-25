@@ -1,21 +1,22 @@
-import torch
-import numpy as np
-from pathlib import Path
-import dacite
 import dataclasses
 import gc
 import warnings
+from pathlib import Path
 
-from cccma_ppp.loss.loss import Losspipeline
-from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC, OutputABC
+import dacite
+import numpy as np
+import torch
+
 from cccma_ppp.architectures.models_abc import DeterministicRequest
+from cccma_ppp.core.core_abc import OutputABC, moduleABC, moduleConfigABC
 from cccma_ppp.core.selectors import (
     ModuleSelector,
-    deterministicModelSelector,
     _load_config_from_checkpoint,
+    deterministicModelSelector,
 )
-from cccma_ppp.train.dataloader import BatchData
 from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.loss.loss import Losspipeline
+from cccma_ppp.train.dataloader import BatchData
 
 
 @dataclasses.dataclass

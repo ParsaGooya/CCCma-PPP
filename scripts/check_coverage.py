@@ -1,7 +1,7 @@
-import subprocess
-import xml.etree.ElementTree as ET
-import sys
 import os
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
 
 result = subprocess.run(
     [

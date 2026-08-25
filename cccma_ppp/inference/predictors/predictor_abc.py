@@ -1,14 +1,14 @@
 import abc
-import torch
-from typing import final
-import pandas as pd
-import numpy as np
-import xarray as xr
 from pathlib import Path
-from typing import Callable
+from typing import Callable, final
 
-from cccma_ppp.data_modules.dataloader import BatchDataABC
+import numpy as np
+import pandas as pd
+import torch
+import xarray as xr
+
 from cccma_ppp.core.core_abc import OutputABC
+from cccma_ppp.data_modules.dataloader import BatchDataABC
 from cccma_ppp.generic.aggregator import RunningCovariance
 
 

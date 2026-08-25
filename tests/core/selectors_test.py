@@ -1,5 +1,5 @@
-from pathlib import Path
 import uuid
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -10,9 +10,9 @@ from cccma_ppp.core.selectors import (
     FlowSelector,
     ModelSelector,
     ModuleSelector,
+    _load_config_from_checkpoint,
     cVAEModelSelector,
     deterministicModelSelector,
-    _load_config_from_checkpoint,
 )
 
 

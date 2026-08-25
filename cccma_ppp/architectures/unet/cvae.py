@@ -1,58 +1,52 @@
 import dataclasses
-from dataclasses import field
-from typing import ClassVar
-import numpy as np
 import math
 import warnings
+from dataclasses import field
+from typing import ClassVar
+
+import numpy as np
 import torch
 import torch.nn as nn
 
-from cccma_ppp.core.selectors import cVAEModelSelector, deterministicModelSelector
-from cccma_ppp.core.models.cvae import cVAEOutput
-
-from cccma_ppp.configs import save_deterministic_guess_only
-
-from cccma_ppp.architectures.models_abc import (
-    cVAEmodelConfigABC,
-    cVAEmodelsABC,
-    cVAEForwardRequest,
-    cVAEPredictRequest,
-    DeterministicRequest,
-    GENERATORConfig,
+from cccma_ppp.architectures.layers.conv import (
+    ConvBlockConfig,
+    ConvNeXtBlockConfig,
+    LatentVector,
+    PartialConvBlockConfig,
+    TensorMask,
 )
-
 from cccma_ppp.architectures.layers.generic import (
-    InitMethod,
-    UpsamplingMethod,
-    MaskPoolingMethod,
-    OutputActivation,
-    NormalizationMethod,
     AlignmentMethod,
+    InitMethod,
+    MaskPoolingMethod,
+    NormalizationMethod,
+    OutputActivation,
+    UpsamplingMethod,
+)
+from cccma_ppp.architectures.layers.unet import (
+    DownBlock,
+    UNetOutput,
+    UNetOutputSIC,
+    UpBlock,
+    build_conv_block,
 )
 from cccma_ppp.architectures.layers.utils import (
     _broadcast_mask,
     _resize_tensor,
 )
-
-from cccma_ppp.architectures.layers.unet import (
-    build_conv_block,
-    UpBlock,
-    DownBlock,
-    UNetOutput,
-    UNetOutputSIC,
+from cccma_ppp.architectures.models_abc import (
+    DeterministicRequest,
+    GENERATORConfig,
+    cVAEForwardRequest,
+    cVAEmodelConfigABC,
+    cVAEmodelsABC,
+    cVAEPredictRequest,
 )
-
-
-from cccma_ppp.architectures.layers.conv import (
-    ConvBlockConfig,
-    PartialConvBlockConfig,
-    ConvNeXtBlockConfig,
-    TensorMask,
-    LatentVector,
-)
-
-from cccma_ppp.architectures.unet.utils import _unet_config_checks, _repeat_tensor_mask
 from cccma_ppp.architectures.unet.deterministic import UNetConfig
+from cccma_ppp.architectures.unet.utils import _repeat_tensor_mask, _unet_config_checks
+from cccma_ppp.configs import save_deterministic_guess_only
+from cccma_ppp.core.models.cvae import cVAEOutput
+from cccma_ppp.core.selectors import cVAEModelSelector, deterministicModelSelector
 
 
 @dataclasses.dataclass

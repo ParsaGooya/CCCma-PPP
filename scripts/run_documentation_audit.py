@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import ast
-import inspect
 import csv
+import inspect
 import json
 import re
 import sys
@@ -15,7 +15,6 @@ from typing import Any, Iterable
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-
 
 ROOT = Path("cccma_ppp")
 OUTPUT_DIR = Path("../output/documentation_audit_results")

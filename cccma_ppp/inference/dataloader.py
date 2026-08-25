@@ -1,18 +1,19 @@
-import dataclasses
-import torch
-from pathlib import Path
 import copy
+import dataclasses
+from pathlib import Path
 
-from cccma_ppp.train.dataloader import TrainDataloaderConfig
-from cccma_ppp.inference.dataset import InferenceDatasetConfig, _from_train
+import torch
+
 from cccma_ppp.data_modules.dataloader import (
+    BatchDataABC,
     Dataloader,
     DataloaderConfigABC,
-    BatchDataABC,
 )
 from cccma_ppp.data_modules.dataset.dataset_abc import AddedTimeFeatures
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.inference.dataset import InferenceDatasetConfig, _from_train
+from cccma_ppp.train.dataloader import TrainDataloaderConfig
 
 
 @dataclasses.dataclass

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from contextlib import nullcontext
-
-
 import datetime
+from collections.abc import Sequence
+from contextlib import nullcontext
 from types import SimpleNamespace
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -20,8 +19,6 @@ from cccma_ppp.data_modules.dataset.dataset_abc import (
     DatasetConfigABC,
     lead_time_config,
 )
-from collections.abc import Sequence
-
 
 INIT_TIME_DIM = DatasetConfigABC.init_time_dim
 LEAD_TIME_DIM = DatasetConfigABC.lead_time_dim

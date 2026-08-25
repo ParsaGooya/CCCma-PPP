@@ -1,8 +1,8 @@
 from typing import Literal
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 
 InitMethod = Literal["default", "kaiming", "xavier", "trunc_normal"]
 ActivationName = Literal["relu", "gelu", "silu"]

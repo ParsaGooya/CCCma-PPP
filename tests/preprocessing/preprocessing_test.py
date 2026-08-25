@@ -6,8 +6,8 @@ import pytest
 import xarray as xr
 
 import cccma_ppp.preprocessing.preprocessing as module
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 
 
 class AddPreprocessor:

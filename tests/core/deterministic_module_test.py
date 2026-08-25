@@ -1,11 +1,11 @@
+import numpy as np
 import pytest
 import torch
-import numpy as np
 
 from cccma_ppp.core.models.deterministic import (
-    deterministicOutput,
     deterministic,
     deterministicConfig,
+    deterministicOutput,
 )
 
 

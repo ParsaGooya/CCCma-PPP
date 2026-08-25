@@ -13,7 +13,6 @@ from cccma_ppp.data_modules.data.data_abc import (
 )
 from cccma_ppp.generic.runtime import RuntimeContext
 
-
 INIT_TIME_DIM = DataConfigABC.init_time_dim
 LEAD_TIME_DIM = DataConfigABC.lead_time_dim
 REALIZATION_DIM = DataConfigABC.realization_dim

@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import psutil
 
-
 if TYPE_CHECKING:
     from cccma_ppp.generic.distributed import Distributed
 

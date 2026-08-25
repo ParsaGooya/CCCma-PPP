@@ -41,6 +41,11 @@ filterwarnings = [
     "ignore:Importing from timm.models.layers is deprecated:FutureWarning"
 ]
 
+[tool.ruff.lint]
+select = [
+    "I",
+]
+
 [build-system]
 requires = [
     "hatchling",

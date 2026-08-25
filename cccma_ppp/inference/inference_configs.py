@@ -1,21 +1,22 @@
 import dataclasses
-import os
-import torch
-import logging
-from pathlib import Path
-import yaml
-import dacite
 import gc
+import logging
+import os
+from pathlib import Path
+
+import dacite
+import torch
+import yaml
 
 from cccma_ppp.core.selectors import ModuleSelector
-from cccma_ppp.inference.dataloader import InferenceDataloaderConfig
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.core.writer import WriterConfig
+from cccma_ppp.generic import registry_imports  # noqa: F401
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.inference.dataloader import InferenceDataloaderConfig
+from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
 from cccma_ppp.train.train_configs import set_seed
-from cccma_ppp.generic import registry_imports  # noqa: F401
 
 
 @dataclasses.dataclass

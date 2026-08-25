@@ -1,20 +1,21 @@
-import torch
-from pathlib import Path
 import dataclasses
-import torch.nn.functional as F
-from typing import Callable, ClassVar
 import warnings
+from pathlib import Path
+from typing import Callable, ClassVar
 
-from cccma_ppp.core.trainer import clear_memory
-from cccma_ppp.generic.distributed import Distributed
-from cccma_ppp.generic.aggregator import RunningCovariance
+import torch
+import torch.nn.functional as F
+
 from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.core.models.cvae import cVAEOutput
+from cccma_ppp.core.trainer import clear_memory
+from cccma_ppp.data_modules.dataloader import BatchDataABC
+from cccma_ppp.generic.aggregator import RunningCovariance
+from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.inference.predictors.predictor_abc import (
     PredictorABC,
     save_batch_to_netcdf,
 )
-from cccma_ppp.data_modules.dataloader import BatchDataABC
 
 
 @dataclasses.dataclass

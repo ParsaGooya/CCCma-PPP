@@ -12,7 +12,6 @@ from cccma_ppp.loss.utils_loss import (
     _check_generator_structure,
 )
 
-
 torch.manual_seed(0)
 
 

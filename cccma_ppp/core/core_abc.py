@@ -1,12 +1,12 @@
 import abc
+import dataclasses
+import gc
+from pathlib import Path
+from typing import ClassVar, final
+
 import numpy as np
 import torch
 import torch.nn as nn
-from typing import final
-import gc
-from pathlib import Path
-from typing import ClassVar
-import dataclasses
 
 
 class moduleConfigABC(abc.ABC):

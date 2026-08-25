@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pulp
 
-
 OUTPUT_DIR = Path("../output/test_suite_analysis")
 
 TEST_MAP_FILE = OUTPUT_DIR / "test_map.json"

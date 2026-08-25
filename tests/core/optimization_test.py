@@ -1,16 +1,16 @@
 import unittest
 
+import numpy as np
 import pytest
 import torch
 import torch.nn as nn
-import numpy as np
 
 from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.core.optimization import (
+    CosineAnnealingLRScheduler,
     LRSchedulerConfig,
     OptimizerConfig,
     OptimizerWrapper,
-    CosineAnnealingLRScheduler,
 )
 
 

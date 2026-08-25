@@ -1,9 +1,9 @@
+from dataclasses import dataclass
+
 import pytest
 import torch
 
-
-from dataclasses import dataclass
-from cccma_ppp.loss.kld import BetaAnnealing, KLD
+from cccma_ppp.loss.kld import KLD, BetaAnnealing
 
 
 @dataclass

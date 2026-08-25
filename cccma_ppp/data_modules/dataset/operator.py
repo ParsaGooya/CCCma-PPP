@@ -1,9 +1,10 @@
-import numpy as np
 import datetime
-import cftime
-from pathlib import Path
-import xarray as xr
 from collections.abc import Sequence
+from pathlib import Path
+
+import cftime
+import numpy as np
+import xarray as xr
 
 from cccma_ppp.data_modules.data.data_abc import DataConfigABC
 from cccma_ppp.data_modules.dataset.dataset_abc import DatasetConfigABC

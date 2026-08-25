@@ -1,9 +1,3 @@
-from contextlib import redirect_stderr, redirect_stdout
-from copy import deepcopy
-from datetime import datetime
-from importlib import import_module
-from itertools import product
-from pathlib import Path
 import csv
 import json
 import logging
@@ -11,18 +5,23 @@ import re
 import shutil
 import traceback
 import warnings
+from contextlib import redirect_stderr, redirect_stdout
+from copy import deepcopy
+from datetime import datetime
+from importlib import import_module
+from itertools import product
+from pathlib import Path
 
 import yaml
 from tqdm import tqdm
 
+from cccma_ppp.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
 from cccma_ppp.configs import required_sample_dimensions
 from cccma_ppp.generic import registry_imports  # noqa: F401
-from cccma_ppp.train.train import main as train_main
-from cccma_ppp.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
 from cccma_ppp.loss import kld as _loss_kld  # noqa: F401
 from cccma_ppp.loss import loss as _loss_pipeline  # noqa: F401
 from cccma_ppp.loss import utils_loss as _loss_utils  # noqa: F401
-
+from cccma_ppp.train.train import main as train_main
 
 warnings.filterwarnings("ignore")
 logging.raiseExceptions = False

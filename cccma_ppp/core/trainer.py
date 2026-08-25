@@ -1,21 +1,21 @@
-import torch
-from torch.cuda.amp import GradScaler
-from pathlib import Path
-import logging
 import dataclasses
 import gc
+import logging
 import os
 import time
+from pathlib import Path
+
+import torch
+from torch.cuda.amp import GradScaler
 from tqdm import tqdm
 
 from cccma_ppp.core.core_abc import moduleABC
-from cccma_ppp.core.optimization import OptimizerWrapper
 from cccma_ppp.core.models.cvae import cVAE
+from cccma_ppp.core.optimization import OptimizerWrapper
 from cccma_ppp.data_modules.dataloader import Dataloader
-from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.aggregator import MetricsAggregator
+from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext
-
 from cccma_ppp.loss.kld import BetaAnnealing
 
 

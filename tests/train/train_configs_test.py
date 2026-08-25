@@ -1,16 +1,17 @@
+import logging
+import os
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
-import os
-from pathlib import Path
-import logging
 import torch
+
 from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 from cccma_ppp.train.train_configs import (
+    RuntimeContext,
     TrainConfig,
     _check_IO,
     build_trainer,
-    RuntimeContext,
 )
 
 

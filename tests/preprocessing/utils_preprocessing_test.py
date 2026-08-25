@@ -6,8 +6,8 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from cccma_ppp.generic.runtime import RuntimeContext
 import cccma_ppp.preprocessing.utils_preprocessing as module
+from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.preprocessing.utils_preprocessing import (
     AnomaliesScaler,
     Flattennanremove,
@@ -16,7 +16,6 @@ from cccma_ppp.preprocessing.utils_preprocessing import (
     TrendRemover,
     align_stat_data_lead_time_inverse_transform,
 )
-
 
 TIME_DIM = module.init_time_dim
 LEAD_TIME_DIM = module.lead_time_dim

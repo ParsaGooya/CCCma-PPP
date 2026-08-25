@@ -1,6 +1,6 @@
+import warnings
 from types import SimpleNamespace
 from unittest.mock import Mock, PropertyMock, patch
-import warnings
 
 import cftime
 import numpy as np
@@ -14,7 +14,6 @@ from cccma_ppp.train.dataset import (
     TrainDataset,
     TrainDatasetConfig,
 )
-
 
 INIT_TIME_DIM = "time"
 LEAD_TIME_DIM = "lead_time"

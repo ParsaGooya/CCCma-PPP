@@ -1,32 +1,31 @@
 import abc
-from typing import ClassVar, final
 import dataclasses
-import numpy as np
 import datetime
-import cftime
-from torch.utils.data import Dataset
-import xarray as xr
-import dask
 from collections.abc import Sequence
+from typing import ClassVar, final
 
-from cccma_ppp.data_modules.data.data_configs import (
-    ModelDataConfig,
-    ConditionDataConfig,
-)
+import cftime
+import dask
+import numpy as np
+import xarray as xr
+from torch.utils.data import Dataset
 
 from cccma_ppp.configs import (
     lead_time_resolution,
-    supported_NN_dimensions_sorted,
-    required_sample_dimensions,
     realization_dim,
+    required_sample_dimensions,
+    supported_NN_dimensions_sorted,
 )
-
+from cccma_ppp.data_modules.data.data_configs import (
+    ConditionDataConfig,
+    ModelDataConfig,
+)
 from cccma_ppp.data_modules.utils import (
-    _validate_time_sequence,
-    _unwrap_data_variables,
     _create_train_mask,
-    suppress_stderr,
+    _unwrap_data_variables,
+    _validate_time_sequence,
     add_lead_times,
+    suppress_stderr,
 )
 
 init_time_dim, lead_time_dim = required_sample_dimensions

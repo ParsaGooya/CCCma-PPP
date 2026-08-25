@@ -1,5 +1,6 @@
-import pytest
 import dataclasses
+
+import pytest
 
 from cccma_ppp.loss.registery import Registery
 

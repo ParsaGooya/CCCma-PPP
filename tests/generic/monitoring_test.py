@@ -10,16 +10,16 @@ import pytest
 
 matplotlib.use("Agg")
 
-from cccma_ppp.generic.monitoring import Monitor, monitor
 import threading
 
 import cccma_ppp.generic.monitoring as module
-
 from cccma_ppp.generic.monitoring import (
+    Monitor,
     build_distributed_monitor,
     combine_rank_results,
     distributed_monitoring,
     export_results,
+    monitor,
     resolve_physical_gpu_index,
 )
 

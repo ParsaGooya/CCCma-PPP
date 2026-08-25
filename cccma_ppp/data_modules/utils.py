@@ -1,23 +1,22 @@
-import numpy as np
-import xarray as xr
-import os
-from typing import Literal
-from collections.abc import Sequence
+import calendar
 import contextlib
 import datetime
+import os
+from collections.abc import Iterator, Sequence
+from typing import Literal
+
 import cftime
-import calendar
+import numpy as np
 import pandas as pd
-from collections.abc import Iterator
+import xarray as xr
 
 from cccma_ppp.configs import (
-    supported_NN_dimensions_sorted,
-    required_sample_dimensions,
-    realization_dim,
-    lead_time_unit,
     lead_time_resolution,
+    lead_time_unit,
+    realization_dim,
+    required_sample_dimensions,
+    supported_NN_dimensions_sorted,
 )
-
 
 TimeTypes = Literal["datetime", "cftime"]
 TimeFrequency = Literal["day", "month", "year"]

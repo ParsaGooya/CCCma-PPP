@@ -1,22 +1,23 @@
+import dataclasses
+from typing import Literal, final
+
+import cftime
 import numpy as np
 import xarray as xr
-import dataclasses
-from typing import final, Literal
-import cftime
 
-from cccma_ppp.data_modules.data.data_abc import DataConfigABC
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.configs import (
-    lead_time_unit,
+    condition_data_allowed_dimensions,
+    condition_data_required_dimensions,
     lead_time_resolution,
-    required_sample_dimensions,
+    lead_time_unit,
     model_data_allowed_dimensions,
     model_data_required_dimensions,
     observation_data_allowed_dimensions,
     observation_data_required_dimensions,
-    condition_data_allowed_dimensions,
-    condition_data_required_dimensions,
+    required_sample_dimensions,
 )
+from cccma_ppp.data_modules.data.data_abc import DataConfigABC
+from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 
 spatialmethod = Literal["uniform", "cosine_lat"]
 init_time_dim, lead_time_dim = required_sample_dimensions

@@ -3,7 +3,6 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 OUTPUT_DIR = Path("../output/test_suite_analysis")

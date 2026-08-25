@@ -1,5 +1,7 @@
-import pytest
 import dataclasses
+
+import pytest
+
 from cccma_ppp.preprocessing.registery import Registery
 
 

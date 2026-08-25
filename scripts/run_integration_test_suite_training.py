@@ -1,12 +1,5 @@
 from __future__ import annotations
 
-from contextlib import contextmanager, redirect_stderr, redirect_stdout
-from copy import deepcopy
-from datetime import datetime
-from functools import partial
-from itertools import islice, product
-from pathlib import Path
-from typing import Any, Callable, Iterator
 import csv
 import json
 import logging
@@ -14,23 +7,34 @@ import re
 import shutil
 import traceback
 import warnings
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
+from copy import deepcopy
+from datetime import datetime
+from functools import partial
+from itertools import islice, product
+from pathlib import Path
+from typing import Any, Callable, Iterator
+
 import dacite
 import yaml
 from tqdm import tqdm
 
+from cccma_ppp.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
+from cccma_ppp.architectures.mlp import (
+    deterministic as _mlp_deterministic,  # noqa: F401
+)
+from cccma_ppp.architectures.unet import cvae as _unet_cvae  # noqa: F401
+from cccma_ppp.architectures.unet import (
+    deterministic as _unet_deterministic,  # noqa: F401
+)
 from cccma_ppp.configs import required_sample_dimensions
 from cccma_ppp.generic import registry_imports  # noqa: F401
+from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.loss import kld as _loss_kld  # noqa: F401
 from cccma_ppp.loss import loss as _loss_pipeline  # noqa: F401
 from cccma_ppp.loss import utils_loss as _loss_utils  # noqa: F401
-from cccma_ppp.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
-from cccma_ppp.architectures.mlp import deterministic as _mlp_deterministic  # noqa: F401
-from cccma_ppp.architectures.unet import cvae as _unet_cvae  # noqa: F401
-from cccma_ppp.architectures.unet import deterministic as _unet_deterministic  # noqa: F401
-from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.train.train import main as train_main
 from cccma_ppp.train.train_configs import TrainConfig, prepare_config
-
 
 warnings.filterwarnings("ignore")
 logging.raiseExceptions = False

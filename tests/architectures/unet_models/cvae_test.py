@@ -1,18 +1,24 @@
+import warnings
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
-import warnings
 
 import numpy as np
 import pytest
-from cccma_ppp.architectures.models_abc import DeterministicRequest
-from cccma_ppp.architectures.unet.deterministic import UNetConfig
 import torch
 import torch.nn as nn
+
 import cccma_ppp.architectures.unet.cvae as cvae_module
+from cccma_ppp.architectures.layers.conv import (
+    ConvBlockConfig,
+    ConvNeXtBlockConfig,
+    LatentVector,
+    PartialConvBlockConfig,
+    TensorMask,
+)
 from cccma_ppp.architectures.layers.unet import (
     UNetOutputSIC,
 )
-
+from cccma_ppp.architectures.models_abc import DeterministicRequest
 from cccma_ppp.architectures.unet.cvae import (
     Generation,
     Recognition,
@@ -21,13 +27,7 @@ from cccma_ppp.architectures.unet.cvae import (
     cVAEUNetSIC,
     cVAEUNetSICEConfig,
 )
-from cccma_ppp.architectures.layers.conv import (
-    ConvBlockConfig,
-    ConvNeXtBlockConfig,
-    LatentVector,
-    PartialConvBlockConfig,
-    TensorMask,
-)
+from cccma_ppp.architectures.unet.deterministic import UNetConfig
 
 
 def make_config(**overrides):

@@ -1,8 +1,10 @@
-import torch
-from torch.optim.lr_scheduler import SequentialLR, LinearLR, CosineAnnealingLR
 import dataclasses
-from typing import ClassVar
 import math
+from typing import ClassVar
+
+import torch
+from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
+
 from cccma_ppp.core.core_abc import moduleABC
 
 

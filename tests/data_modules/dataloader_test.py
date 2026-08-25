@@ -13,7 +13,6 @@ from cccma_ppp.data_modules.dataloader import (
     DataloaderConfigABC,
 )
 
-
 INIT_TIME_DIM = DataloaderConfigABC.init_time_dim
 LEAD_TIME_DIM = DataloaderConfigABC.lead_time_dim
 

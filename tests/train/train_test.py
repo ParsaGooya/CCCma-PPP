@@ -1,12 +1,13 @@
-from pathlib import Path
-import pytest
-import cccma_ppp.train.train as train_mod
-from cccma_ppp.train.train import main
-from contextlib import contextmanager
-from unittest.mock import Mock, call
-from cccma_ppp.train.train import get_parser
 import runpy
 import sys
+from contextlib import contextmanager
+from pathlib import Path
+from unittest.mock import Mock, call
+
+import pytest
+
+import cccma_ppp.train.train as train_mod
+from cccma_ppp.train.train import get_parser, main
 
 
 @pytest.mark.pruned

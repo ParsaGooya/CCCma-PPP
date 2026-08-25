@@ -1,52 +1,45 @@
 import dataclasses
+import math
 from dataclasses import field
 from typing import ClassVar
+
 import numpy as np
-import math
 import torch
 import torch.nn as nn
 
-
-from cccma_ppp.core.selectors import deterministicModelSelector
-from cccma_ppp.core.models.deterministic import deterministicOutput
-
-from cccma_ppp.architectures.models_abc import (
-    deterministicmodelsABC,
-    modelConfigABC,
-    DeterministicRequest,
-    GENERATORConfig,
+from cccma_ppp.architectures.layers.conv import (
+    ConvBlockConfig,
+    ConvNeXtBlockConfig,
+    PartialConvBlockConfig,
+    TensorMask,
 )
-
 from cccma_ppp.architectures.layers.generic import (
+    AlignmentMethod,
     InitMethod,
-    UpsamplingMethod,
     MaskPoolingMethod,
     OutputActivation,
-    AlignmentMethod,
+    UpsamplingMethod,
+)
+from cccma_ppp.architectures.layers.unet import (
+    DownBlock,
+    UNetOutput,
+    UNetOutputSIC,
+    UpBlock,
+    build_conv_block,
 )
 from cccma_ppp.architectures.layers.utils import (
     _broadcast_mask,
     _resize_tensor,
 )
-
-from cccma_ppp.architectures.layers.unet import (
-    build_conv_block,
-    UpBlock,
-    DownBlock,
-    UNetOutput,
-    UNetOutputSIC,
+from cccma_ppp.architectures.models_abc import (
+    DeterministicRequest,
+    GENERATORConfig,
+    deterministicmodelsABC,
+    modelConfigABC,
 )
-
-
-from cccma_ppp.architectures.layers.conv import (
-    ConvBlockConfig,
-    PartialConvBlockConfig,
-    ConvNeXtBlockConfig,
-    TensorMask,
-)
-
-
-from cccma_ppp.architectures.unet.utils import _unet_config_checks, _repeat_tensor_mask
+from cccma_ppp.architectures.unet.utils import _repeat_tensor_mask, _unet_config_checks
+from cccma_ppp.core.models.deterministic import deterministicOutput
+from cccma_ppp.core.selectors import deterministicModelSelector
 
 
 @deterministicModelSelector.register("unet")

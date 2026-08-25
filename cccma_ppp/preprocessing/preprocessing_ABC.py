@@ -1,16 +1,16 @@
 import abc
 from typing import ClassVar, final
-import xarray as xr
-import numpy as np
 
-from cccma_ppp.data_modules.utils import add_lead_times
+import numpy as np
+import xarray as xr
 
 from cccma_ppp.configs import (
-    required_sample_dimensions,
-    realization_dim,
-    lead_time_unit,
     lead_time_resolution,
+    lead_time_unit,
+    realization_dim,
+    required_sample_dimensions,
 )
+from cccma_ppp.data_modules.utils import add_lead_times
 
 init_time_dim, lead_time_dim = required_sample_dimensions
 

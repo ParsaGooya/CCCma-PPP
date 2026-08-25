@@ -1,3 +1,4 @@
+from copy import deepcopy
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -9,7 +10,6 @@ from cccma_ppp.inference.inference_configs import (
     InferenceConfig,
     build_writer,
 )
-from copy import deepcopy
 
 
 class DummyDistributed:

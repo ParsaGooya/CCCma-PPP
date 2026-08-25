@@ -16,7 +16,6 @@ from cccma_ppp.data_modules.data.data_configs import (
     build_time_range,
 )
 
-
 INIT_TIME_DIM, LEAD_TIME_DIM = required_sample_dimensions
 
 

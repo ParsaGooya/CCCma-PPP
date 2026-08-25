@@ -1,32 +1,29 @@
-import torch
-import torch.nn as nn
-import numpy as np
 import copy
 
-from cccma_ppp.architectures.layers.generic import (
-    LayerNorm2d,
-    MaskPoolingMethod,
-    UpsamplingMethod,
-    OutputActivation,
-    AlignmentMethod,
-    NormalizationMethod,
-)
-
-
-from cccma_ppp.architectures.layers.utils import align_to_skip, _noise_injection
+import numpy as np
+import torch
+import torch.nn as nn
 
 from cccma_ppp.architectures.layers.conv import (
-    ConvBlockConfig,
     ConvBlock,
-    PartialConvBlockConfig,
-    PartialConvBlock,
-    ConvNeXtBlockConfig,
+    ConvBlockConfig,
     ConvNeXtBlock,
+    ConvNeXtBlockConfig,
     LatentBlock,
+    PartialConvBlock,
+    PartialConvBlockConfig,
     TensorMask,
 )
-
+from cccma_ppp.architectures.layers.generic import (
+    AlignmentMethod,
+    LayerNorm2d,
+    MaskPoolingMethod,
+    NormalizationMethod,
+    OutputActivation,
+    UpsamplingMethod,
+)
 from cccma_ppp.architectures.layers.partialconv2d import PartialConv2d
+from cccma_ppp.architectures.layers.utils import _noise_injection, align_to_skip
 
 
 def build_conv_block(

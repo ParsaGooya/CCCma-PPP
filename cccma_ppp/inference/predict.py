@@ -1,12 +1,14 @@
+import argparse
+
+import dacite
+
+from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic.logger import setup_logger
 from cccma_ppp.inference.inference_configs import (
     InferenceConfig,
     build_writer,
     prepare_config,
 )
-from cccma_ppp.generic.distributed import Distributed
-from cccma_ppp.generic.logger import setup_logger
-import argparse
-import dacite
 
 
 def get_parser() -> argparse.ArgumentParser:

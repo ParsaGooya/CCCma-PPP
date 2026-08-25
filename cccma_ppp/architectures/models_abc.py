@@ -1,23 +1,23 @@
 import abc
+import dataclasses
+import gc
 import math
+from pathlib import Path
+from typing import ClassVar, final
+
 import numpy as np
 import torch
 import torch.nn as nn
-from typing import final, ClassVar
 from timm.models.layers import trunc_normal_
-import gc
-from pathlib import Path
-import dataclasses
 
-from cccma_ppp.architectures.layers.utils import _get_normal
-from cccma_ppp.core.core_abc import OutputABC
-from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.architectures.layers.generic import (
     ActivationName,
     InitMethod,
     NoiseLevel,
 )
-from cccma_ppp.architectures.layers.utils import _sample
+from cccma_ppp.architectures.layers.utils import _get_normal, _sample
+from cccma_ppp.core.core_abc import OutputABC
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 @dataclasses.dataclass

@@ -1,11 +1,10 @@
-import torch
-from torch.distributions import Normal, kl_divergence
 import dataclasses
 
-from cccma_ppp.loss.loss_abc import lossABC, Reduction
-
+import torch
+from torch.distributions import Normal, kl_divergence
 
 from cccma_ppp.architectures.normalized_flows import NormalizedFlowModel
+from cccma_ppp.loss.loss_abc import Reduction, lossABC
 
 
 @dataclasses.dataclass

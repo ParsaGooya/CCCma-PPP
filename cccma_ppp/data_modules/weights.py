@@ -1,15 +1,14 @@
-import numpy as np
-import xarray as xr
 import dataclasses
-from pathlib import Path
 import os
+from pathlib import Path
 from typing import Literal
 
+import numpy as np
+import xarray as xr
 
-from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
-from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.data_modules.utils import _unwrap_data_variables
-
+from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 
 spatialmethod = Literal["uniform", "cosine_lat"]
 

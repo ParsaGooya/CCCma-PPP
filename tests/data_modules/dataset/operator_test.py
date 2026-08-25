@@ -12,7 +12,6 @@ from cccma_ppp.data_modules.dataset.operator import (
 )
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
-
 INIT_TIME_DIM = "time"
 LEAD_TIME_DIM = "lead_time"
 REALIZATION_DIM = "ensembles"

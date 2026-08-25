@@ -1,21 +1,20 @@
+import abc
 import dataclasses
+from collections.abc import Callable, Iterator
+from functools import partial
+from itertools import islice
+from typing import ClassVar, final
+
 import torch
 import xarray as xr
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler
-from functools import partial
-import abc
-from typing import final, ClassVar
-from collections.abc import Callable, Iterator
-from itertools import islice
-
-
-from cccma_ppp.data_modules.dataset.dataset_abc import (
-    DatasetConfigABC,
-    AddedTimeFeatures,
-)
 
 from cccma_ppp.configs import required_sample_dimensions
+from cccma_ppp.data_modules.dataset.dataset_abc import (
+    AddedTimeFeatures,
+    DatasetConfigABC,
+)
 
 init_time_dim, lead_time_dim = required_sample_dimensions
 

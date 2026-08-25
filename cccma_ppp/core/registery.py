@@ -1,5 +1,6 @@
-import dacite
 import dataclasses
+
+import dacite
 
 
 class Registery:

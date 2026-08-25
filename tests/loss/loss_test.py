@@ -1,12 +1,12 @@
+from unittest.mock import Mock
+
+import numpy as np
 import pytest
 import torch
 import xarray as xr
-import numpy as np
-
-from cccma_ppp.loss.loss import LossStepConfig, LosspipelineConfig, Losspipeline
-from unittest.mock import Mock
 
 from cccma_ppp.core.core_abc import GenerativeContext
+from cccma_ppp.loss.loss import Losspipeline, LosspipelineConfig, LossStepConfig
 
 
 class DummyLoss(torch.nn.Module):

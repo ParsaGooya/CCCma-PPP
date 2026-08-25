@@ -1,33 +1,32 @@
 import abc
-from typing import final, ClassVar, Any
-from collections.abc import Mapping
-from pathlib import Path
+import dataclasses
 import gc
 import glob
-import xarray as xr
+from collections.abc import Mapping
+from pathlib import Path
+from typing import Any, ClassVar, final
+
 import numpy as np
 import pandas as pd
-import dataclasses
+import xarray as xr
 
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.configs import (
-    required_sample_dimensions,
-    realization_dim,
-    supported_NN_dimensions_sorted,
     lead_time_resolution,
+    realization_dim,
+    required_sample_dimensions,
+    supported_NN_dimensions_sorted,
 )
-
 from cccma_ppp.data_modules.utils import (
-    _load_xarray_data,
-    _create_train_mask,
-    _validate_time_sequence,
-    infer_time_resolution,
-    get_time_representation,
-    TimeTypes,
     TimeFrequency,
+    TimeTypes,
+    _create_train_mask,
+    _load_xarray_data,
+    _validate_time_sequence,
+    get_time_representation,
+    infer_time_resolution,
 )
 from cccma_ppp.generic.runtime import RuntimeContext
-
+from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 
 init_time_dim, lead_time_dim = required_sample_dimensions
 

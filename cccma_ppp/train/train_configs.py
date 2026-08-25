@@ -1,28 +1,25 @@
 import dataclasses
+import logging
 import os
+import shutil
+import warnings
+from pathlib import Path
+
+import dacite
 import numpy as np
 import torch
-import warnings
-import logging
-from pathlib import Path
-import shutil
 import yaml
-import dacite
 
-from cccma_ppp.loss.loss import LosspipelineConfig
-
-from cccma_ppp.train.dataloader import TrainDataloaderConfig
-from cccma_ppp.data_modules.weights import WeightsConfig
-
-from cccma_ppp.generic.distributed import Distributed
-from cccma_ppp.generic.runtime import RuntimeContext
-
+from cccma_ppp.core.core_abc import GenerativeContext
+from cccma_ppp.core.optimization import OptimizerConfig
 from cccma_ppp.core.selectors import ModuleSelector
 from cccma_ppp.core.trainer import TrainerConfig
-from cccma_ppp.core.optimization import OptimizerConfig
-from cccma_ppp.core.core_abc import GenerativeContext
-
+from cccma_ppp.data_modules.weights import WeightsConfig
 from cccma_ppp.generic import registry_imports  # noqa: F401
+from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.loss.loss import LosspipelineConfig
+from cccma_ppp.train.dataloader import TrainDataloaderConfig
 
 
 def set_seed(seed):
