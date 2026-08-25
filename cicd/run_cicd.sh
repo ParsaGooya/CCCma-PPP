@@ -9,6 +9,7 @@ compilation=True
 formatting_and_linting=True
 dependency_security_audit=False
 code_security_audit=False
+docstrings=True
 documentation_regeneration=True
 unit_test_suite=True
 integration_test_subset=False
@@ -91,6 +92,18 @@ if [ "$code_security_audit" = "True" ]; then
     fi
 
     echo "Code security audit passed."
+fi
+
+if [ "$docstrings" = "True" ]; then
+    echo ""
+
+    echo "Running docstring checks..."
+    if ! docsig .; then
+        echo "Docstring check failed."
+        exit 1
+    fi
+
+    echo "Docstring check passed."
 fi
 
 if [ "$documentation_regeneration" = "True" ]; then
