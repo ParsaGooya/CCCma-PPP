@@ -489,12 +489,10 @@ class cVAEPredictor(PredictorABC):
 
             num_output_dims = 1
             extra_dims_sorted = []
-            save_name = (
-                f"latent_rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
-            )
+            attrs = {"source" : "latent"}
 
             if self.infer_latent_samples_from_training:
-                attrs = {"infer_latent_samples_from_training": True}
+                attrs["infer_latent_samples_from_training"] = True
 
         else:
             prediction = output.output
@@ -505,10 +503,15 @@ class cVAEPredictor(PredictorABC):
             num_output_dims = self.raw_module.model_config.NUM_OUTPUT_DIMS
             extra_dims_sorted = ["output_samples", "latent_samples"]
             assign_coords = None
-            save_name = (
-                f"prediction_rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
-            )
+            attrs = {
+                "source" : "predictions",
+                "nstds": self.nstds
+            }
 
+        save_name = (
+                f"rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
+            )
+        
         save_batch_to_netcdf(
             prediction,
             metadata,

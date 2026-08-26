@@ -256,8 +256,10 @@ class DetermninisticPredictor(PredictorABC):
         num_output_dims = self.raw_module.model_config.NUM_OUTPUT_DIMS
         extra_dims_sorted = ["output_samples"]
         assign_coords = None
+        attrs = {"source" : "predictions"}
+
         save_name = (
-            f"prediction_rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
+            f"rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
         )
 
         save_batch_to_netcdf(
@@ -268,6 +270,7 @@ class DetermninisticPredictor(PredictorABC):
             self.temp_save_dir,
             extra_dims_sorted,
             assign_coords,
+            attrs
         )
 
         self._batch_counter += 1
