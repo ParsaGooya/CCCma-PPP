@@ -256,7 +256,7 @@ class Standardizer(PreprocessModuleABC):
                 grouped_data.groupby(self.frequency).mean(dim=reduction_dims).load()
             )
 
-            std = grouped_data.groupby(self.frequency).std(dim=reduction_dims).load()
+            std = grouped_data.groupby(self.frequency).std(dim=reduction_dims, dof = 1).load()
 
         self.std = std.where(std > 0)
 
