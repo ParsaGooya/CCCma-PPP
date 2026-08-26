@@ -38,7 +38,7 @@ class cVAEPredictorConfig:
 
     num_latent_samples: int
     nstds: float = 1.0
-    chunk_size: int | None = None,
+    chunk_size: int | None = None
     infer_latent_samples_from_training: bool = False
     save_latent: bool = False
 
