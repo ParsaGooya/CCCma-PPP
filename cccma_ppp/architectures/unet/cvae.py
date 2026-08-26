@@ -823,6 +823,7 @@ class cVAEUNet(cVAEmodelsABC):
         torch.Tensor
             Description not yet provided.
         """
+        
         latent_sample_size, batch_size = latent_samples.shape[:-1]
 
         if all([condition_embedding is not None, self.condemb_to_decoder]):
