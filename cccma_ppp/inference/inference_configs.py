@@ -335,33 +335,30 @@ def build_writer(
             else:
                 print(msg)
 
-    if not config.writer.aggregate_only:
+    log("Loading saved module ...")
 
-        log("Loading saved module ...")
+    module = config.load_module()
+    module = module.to(distributed.device)
 
-        module = config.load_module()
-        module = module.to(distributed.device)
 
-        
+    log("creating data loader ...")
 
-        log("creating data loader ...")
+    config.inference_loader.setup_distributed(config.train_loader, distributed)
 
-        config.inference_loader.setup_distributed(config.train_loader, distributed)
+    return_spatial_mask = module.model_config.EXPECTS_MASK
+    inference_loader = config.inference_loader.build_inference_loader(
+        return_spatial_mask=return_spatial_mask
+    )
 
-        return_spatial_mask = module.model_config.EXPECTS_MASK
-        inference_loader = config.inference_loader.build_inference_loader(
-            return_spatial_mask=return_spatial_mask
-        )
+    log("Checking module dataloader compatability ...")
 
-        log("Checking module dataloader compatability ...")
-
-        if not all(
-            [
-                module.input_shape == inference_loader.input_shape,
-                module.added_features_dim == inference_loader.added_features_dim,
-            ]
-        ):
-            raise RuntimeError("Data and model IO dimensions do not match!")
+    if not all(
+        [
+            module.input_shape == inference_loader.input_shape,
+            module.added_features_dim == inference_loader.added_features_dim,
+        ]
+    ):
+        raise RuntimeError("Data and model IO dimensions do not match!")
 
     log("Loading postprocessor ...")
     post_processor = PreprocessingPipeline().load_from_memory(
