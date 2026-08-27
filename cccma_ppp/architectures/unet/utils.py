@@ -28,11 +28,11 @@ def _unet_config_checks(config):
 
         for kernel in config.transpose_kernel_sizes:
             if isinstance(kernel, int):
-                check = kernel > 0
+                check = (kernel > 0 and kernel % 2 != 0)
 
             else:
                 check = len(kernel) == 2 and all(
-                    isinstance(value, int) and value > 0 for value in kernel
+                    isinstance(value, int) and value > 0 and value % 2 != 0 for value in kernel
                 )
 
             if not check:

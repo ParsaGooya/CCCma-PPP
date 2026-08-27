@@ -1,28 +1,32 @@
-import dataclasses
-import datetime
-import warnings
-from collections.abc import Sequence
-from pathlib import Path
-
-import cftime
 import numpy as np
-import torch
 import xarray as xr
+import torch
+import dataclasses
+import warnings
+import cftime
+import datetime
+from pathlib import Path
+from collections.abc import Sequence
 
-from cccma_ppp.configs import lead_time_resolution
-from cccma_ppp.data_modules.data.data_configs import (
-    ConditionDataConfig,
-    ModelDataConfig,
-    ObsDataConfig,
-)
 from cccma_ppp.data_modules.dataset.dataset_abc import (
-    AddedTimeFeatures,
-    DatasetABC,
     DatasetConfigABC,
     lead_time_config,
 )
+from cccma_ppp.data_modules.dataset.dataset_abc import (
+    DatasetABC,
+    AddedTimeFeatures,
+)
 from cccma_ppp.data_modules.dataset.operator import DatasetOperator
-from cccma_ppp.data_modules.utils import _unwrap_data_variables, add_lead_times
+from cccma_ppp.data_modules.data.data_configs import (
+    ModelDataConfig,
+    ObsDataConfig,
+    ConditionDataConfig,
+)
+
+from cccma_ppp.data_modules.utils import add_lead_times, _unwrap_data_variables
+
+
+from cccma_ppp.configs import lead_time_resolution
 
 
 @dataclasses.dataclass
@@ -87,7 +91,7 @@ class TrainDatasetConfig(DatasetConfigABC):
                     if not self.observation.coords[dim].equals(self.model.coords[dim]):
                         warnings.warn(
                             "\n=====================================================================\n"
-                            f"model and observation data do not have the same {dim} coordinates.\n"
+                            f"model and observation data do not have the same {dim} cooridnates.\n"
                             "=====================================================================\n"
                         )
 
@@ -166,20 +170,38 @@ class TrainDatasetConfig(DatasetConfigABC):
             Description not yet provided.
         """
         model_times = self.model.coords[self.init_time_dim].to_index()
+        common_times = self.get_common_time
         time_freq = self.model.init_time_frequency
 
         if time_freq == "year":
-            max_year = model_times.year.max()
             min_year = model_times.year.min()
+            max_year = model_times.year.max()
 
-            return self.get_common_time[
-                (self.get_common_time.year >= min_year)
-                & (self.get_common_time.year <= max_year)
+            return common_times[
+                (common_times.year >= min_year)
+                & (common_times.year <= max_year)
+            ]
+        
+        elif time_freq == "month" and self.lead_time_resolution == "day":
+            min_time = model_times.min()
+            max_time = model_times.max()
+
+            min_month = min_time.year * 12 + min_time.month
+            max_month = max_time.year * 12 + max_time.month
+
+            common_months = (
+                common_times.year * 12
+                + common_times.month
+            )
+
+            return common_times[
+                (common_months >= min_month)
+                & (common_months <= max_month)
             ]
 
-        return self.get_common_time[
-            (self.get_common_time >= model_times.min())
-            & (self.get_common_time <= model_times.max())
+        return common_times[
+            (common_times >= model_times.min())
+            & (common_times <= model_times.max())
         ]
 
     def fit_preprocessors(

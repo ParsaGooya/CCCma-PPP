@@ -1,29 +1,32 @@
-import copy
-
-import numpy as np
 import torch
 import torch.nn as nn
+import numpy as np
+import copy
 
-from cccma_ppp.architectures.layers.conv import (
-    ConvBlock,
-    ConvBlockConfig,
-    ConvNeXtBlock,
-    ConvNeXtBlockConfig,
-    LatentBlock,
-    PartialConvBlock,
-    PartialConvBlockConfig,
-    TensorMask,
-)
 from cccma_ppp.architectures.layers.generic import (
-    AlignmentMethod,
     LayerNorm2d,
     MaskPoolingMethod,
-    NormalizationMethod,
-    OutputActivation,
     UpsamplingMethod,
+    OutputActivation,
+    AlignmentMethod,
+    NormalizationMethod,
 )
+
+
+from cccma_ppp.architectures.layers.utils import align_to_skip, _noise_injection, _same_padding
+
+from cccma_ppp.architectures.layers.conv import (
+    ConvBlockConfig,
+    ConvBlock,
+    PartialConvBlockConfig,
+    PartialConvBlock,
+    ConvNeXtBlockConfig,
+    ConvNeXtBlock,
+    LatentBlock,
+    TensorMask,
+)
+
 from cccma_ppp.architectures.layers.partialconv2d import PartialConv2d
-from cccma_ppp.architectures.layers.utils import _noise_injection, align_to_skip
 
 
 def build_conv_block(
@@ -298,7 +301,7 @@ class UpBlock(nn.Module):
         Description not yet provided.
     skip_alignment_method : AlignmentMethod
         Description not yet provided.
-    transpose_kernel_size : int
+    upsampling_kernel_size : int
         Description not yet provided.
     inject_noise : bool
         Description not yet provided.
@@ -315,7 +318,7 @@ class UpBlock(nn.Module):
         block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig,
         upsampling_method: UpsamplingMethod,
         skip_alignment_method: AlignmentMethod,
-        transpose_kernel_size: int,
+        upsampling_kernel_size: int,
         inject_noise: bool = False,
         inject_noise_in_block: bool = False,
     ):
@@ -336,7 +339,7 @@ class UpBlock(nn.Module):
             Description not yet provided.
         skip_alignment_method : AlignmentMethod
             Description not yet provided.
-        transpose_kernel_size : int
+        upsampling_kernel_size : int
             Description not yet provided.
         inject_noise : bool
             Description not yet provided.
@@ -367,7 +370,7 @@ class UpBlock(nn.Module):
             self.upsample = nn.ConvTranspose2d(
                 input_channels + added_upsampling_channels,
                 out_channels,
-                kernel_size=transpose_kernel_size,
+                kernel_size=upsampling_kernel_size,
                 stride=2,
             )
             self.channel_projection = nn.Identity()
@@ -385,21 +388,42 @@ class UpBlock(nn.Module):
                 self.channel_projection = PartialConv2d(
                     input_channels + added_upsampling_channels,
                     out_channels,
-                    kernel_size=3,
+                    kernel_size=upsampling_kernel_size,
                     multi_channel=False,
                     return_mask=False,
-                    padding=1,
+                    padding=_same_padding(upsampling_kernel_size),
                 )
 
             else:
                 self.channel_projection = nn.Conv2d(
                     input_channels + added_upsampling_channels,
                     out_channels,
-                    kernel_size=3,
-                    padding=1,
+                    kernel_size=upsampling_kernel_size,
+                    padding=_same_padding(upsampling_kernel_size),
                     padding_mode=block_config.padding_method,
                 )
 
+        elif upsampling_method == "pixelshuffle":
+            if isinstance(block_config, PartialConvBlockConfig) or getattr(
+                block_config, "use_partial_conv", False
+            ):
+                self.upsample = PartialConv2d(
+                        input_channels  + added_upsampling_channels ,
+                        out_channels * 4,
+                        kernel_size=upsampling_kernel_size,
+                        multi_channel=False,
+                        return_mask=False,
+                        padding=_same_padding(upsampling_kernel_size),
+                    ) 
+            else:
+                self.upsample =  nn.Conv2d(
+                        input_channels  + added_upsampling_channels ,
+                        out_channels * 4,
+                        kernel_size=upsampling_kernel_size,
+                        padding=_same_padding(upsampling_kernel_size),
+                    )                      
+
+            self.channel_projection = nn.PixelShuffle(upscale_factor=2)
         else:
             raise ValueError(f"Unsupported upsampling mode: {upsampling_method!r}.")
 
@@ -453,10 +477,16 @@ class UpBlock(nn.Module):
                 x = self.upsample(x)
                 x = self.channel_projection(x)
 
-            else:
+            elif self.upsampling_method == "bilinear":
                 x = self.upsample(input.tensor)
                 x = _noise_injection(x)
                 x = self.channel_projection(x)
+
+            else:
+                x = _noise_injection(input.tensor)
+                x = self.upsample(x)
+                x = self.channel_projection(x)
+
         else:
             x = self.upsample(input.tensor)
             x = self.channel_projection(x)
@@ -480,6 +510,9 @@ class UpBlock(nn.Module):
             merged_tensor = align_to_skip(
                 x, resize_shape, self.skip_alignment_method, self.skip_padding_method
             )
+
+        else:
+            merged_tensor = x
 
         return self._block(
             TensorMask(

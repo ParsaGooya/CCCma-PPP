@@ -1,32 +1,33 @@
 import abc
-import dataclasses
-import gc
-import glob
+from typing import final, ClassVar, Any
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, ClassVar, final
-
+import gc
+import glob
+import xarray as xr
 import numpy as np
 import pandas as pd
-import xarray as xr
+import dataclasses
 
+from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.configs import (
-    lead_time_resolution,
-    realization_dim,
     required_sample_dimensions,
+    realization_dim,
     supported_NN_dimensions_sorted,
+    lead_time_resolution,
 )
+
 from cccma_ppp.data_modules.utils import (
-    TimeFrequency,
-    TimeTypes,
-    _create_train_mask,
     _load_xarray_data,
+    _create_train_mask,
     _validate_time_sequence,
-    get_time_representation,
     infer_time_resolution,
+    get_time_representation,
+    TimeTypes,
+    TimeFrequency,
 )
 from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
+
 
 init_time_dim, lead_time_dim = required_sample_dimensions
 
@@ -440,7 +441,7 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
                 invalid = ds_dims - dataconfig._allowed_dims()
                 if invalid:
                     raise ValueError(
-                        f"invalid data dimensions {list(ds.dims)} for {dataconfig.TYPE} data. Must be a subset of {sorted(dataconfig._allowed_dims())} for {p}"
+                        f"invalid data dimensions {list(ds.dims)} for {dataconfig.TYPE} data. Must be a subset ot {sorted(dataconfig._allowed_dims())} for {p}"
                     )
                 invalid = ds_dims - set(ds.coords.keys())
                 if invalid:

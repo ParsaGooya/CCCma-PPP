@@ -1,23 +1,21 @@
 import dataclasses
-import gc
-import logging
 import os
-from pathlib import Path
-
-import dacite
 import torch
+import logging
+from pathlib import Path
 import yaml
+import dacite
+import gc
 
 from cccma_ppp.core.selectors import ModuleSelector
-from cccma_ppp.core.writer import WriterConfig
-from cccma_ppp.generic import registry_imports  # noqa: F401
-from cccma_ppp.generic.distributed import Distributed
-from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.inference.dataloader import InferenceDataloaderConfig
 from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
+from cccma_ppp.core.writer import WriterConfig
+from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
 from cccma_ppp.train.train_configs import set_seed
-
+from cccma_ppp.generic import registry_imports
 
 @dataclasses.dataclass
 class InferenceConfig:
@@ -342,6 +340,7 @@ def build_writer(
     module = config.load_module()
     module = module.to(distributed.device)
 
+
     log("creating data loader ...")
 
     config.inference_loader.setup_distributed(config.train_loader, distributed)
@@ -351,7 +350,7 @@ def build_writer(
         return_spatial_mask=return_spatial_mask
     )
 
-    log("Checking module dataloader compatibility...")
+    log("Checking module dataloader compatability ...")
 
     if not all(
         [

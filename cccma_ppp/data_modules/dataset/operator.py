@@ -1,10 +1,9 @@
-import datetime
-from collections.abc import Sequence
-from pathlib import Path
-
-import cftime
 import numpy as np
+import datetime
+import cftime
+from pathlib import Path
 import xarray as xr
+from collections.abc import Sequence
 
 from cccma_ppp.data_modules.data.data_abc import DataConfigABC
 from cccma_ppp.data_modules.dataset.dataset_abc import DatasetConfigABC
@@ -253,7 +252,7 @@ class DatasetOperator:
             ref = self.config.model
         else:
             raise ValueError(
-                "No model or observation data is available. "
+                "No model or observation data is availablle. "
                 "Weights could not be generated"
             )
 
@@ -355,7 +354,7 @@ class DatasetOperator:
         if self.config_observation is None:
             if self.config.model is None:
                 raise ValueError(
-                    "No model or observation data is available. "
+                    "No model or observation data is availablle. "
                     "target variable metadata could not be generated"
                 )
 

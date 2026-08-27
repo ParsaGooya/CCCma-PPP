@@ -1,22 +1,21 @@
+import torch
+import numpy as np
+from pathlib import Path
+import dacite
 import dataclasses
 import gc
 import warnings
-from pathlib import Path
 
-import dacite
-import numpy as np
-import torch
-
+from cccma_ppp.loss.loss import Losspipeline
+from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC, OutputABC
 from cccma_ppp.architectures.models_abc import DeterministicRequest
-from cccma_ppp.core.core_abc import OutputABC, moduleABC, moduleConfigABC
 from cccma_ppp.core.selectors import (
     ModuleSelector,
-    _load_config_from_checkpoint,
     deterministicModelSelector,
+    _load_config_from_checkpoint,
 )
-from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.loss.loss import Losspipeline
 from cccma_ppp.train.dataloader import BatchData
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 @dataclasses.dataclass
@@ -304,7 +303,9 @@ class deterministic(moduleABC):
         )
 
     def predict(
-        self, data: BatchData, output_sample_size: int = 0
+        self, data: BatchData, 
+        output_sample_size: int = 1,
+        chunk_output_samples: bool = False
     ) -> deterministicOutput:
         """
         Document this function.
@@ -327,5 +328,6 @@ class deterministic(moduleABC):
                 input_mask=data.input_mask,
                 added_features=data.added_features,
                 output_sample_size=output_sample_size,
+                chunk_output_samples=chunk_output_samples
             )
         )

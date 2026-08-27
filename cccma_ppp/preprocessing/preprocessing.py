@@ -1,15 +1,14 @@
-import dataclasses
-import os
-from pathlib import Path
-from typing import ClassVar
-
-import joblib
 import numpy as np
+import dataclasses
+from typing import ClassVar
+import joblib
+from pathlib import Path
+import os
 import xarray as xr
 
-from cccma_ppp.configs import required_sample_dimensions, supported_NN_dimensions_sorted
 from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
+from cccma_ppp.configs import supported_NN_dimensions_sorted, required_sample_dimensions
 
 init_time_dim, lead_time_dim = required_sample_dimensions
 

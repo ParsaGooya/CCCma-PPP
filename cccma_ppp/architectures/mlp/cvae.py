@@ -1,23 +1,24 @@
-import dataclasses
-from typing import ClassVar
-
-import numpy as np
 import torch
 import torch.nn as nn
+import numpy as np
+from typing import ClassVar
+import dataclasses
 
-from cccma_ppp.architectures.layers.generic import (
-    ActivationName,
-    InitMethod,
-    _validate_dropout,
-)
-from cccma_ppp.architectures.layers.mlp import build_mlp
 from cccma_ppp.architectures.models_abc import (
-    cVAEForwardRequest,
-    cVAEmodelConfigABC,
     cVAEmodelsABC,
+    cVAEmodelConfigABC,
+    cVAEForwardRequest,
     cVAEPredictRequest,
 )
+from cccma_ppp.architectures.layers.mlp import build_mlp
 from cccma_ppp.core.models.cvae import cVAEOutput
+
+from cccma_ppp.architectures.layers.generic import (
+    InitMethod,
+    ActivationName,
+    _validate_dropout,
+)
+
 from cccma_ppp.core.selectors import cVAEModelSelector
 
 

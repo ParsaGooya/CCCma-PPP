@@ -1,24 +1,23 @@
-import dataclasses
-import gc
-import warnings
-from pathlib import Path
-
-import dacite
-import numpy as np
 import torch
+import numpy as np
+from pathlib import Path
+import warnings
+import dataclasses
+import dacite
+import gc
 
-from cccma_ppp.architectures.models_abc import cVAEForwardRequest, cVAEPredictRequest
-from cccma_ppp.architectures.normalized_flows import NormalizedFlowConfig
-from cccma_ppp.core.core_abc import OutputABC, moduleABC, moduleConfigABC
+from cccma_ppp.loss.loss import Losspipeline
+from cccma_ppp.loss.kld import KLD
+from cccma_ppp.core.core_abc import moduleABC, moduleConfigABC, OutputABC
 from cccma_ppp.core.selectors import (
     ModuleSelector,
-    _load_config_from_checkpoint,
     cVAEModelSelector,
+    _load_config_from_checkpoint,
 )
-from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.loss.kld import KLD
-from cccma_ppp.loss.loss import Losspipeline
+from cccma_ppp.architectures.normalized_flows import NormalizedFlowConfig
+from cccma_ppp.architectures.models_abc import cVAEPredictRequest, cVAEForwardRequest
 from cccma_ppp.train.dataloader import BatchData
+from cccma_ppp.generic.runtime import RuntimeContext
 
 
 @dataclasses.dataclass
@@ -469,7 +468,8 @@ class cVAE(moduleABC):
         latent_sample_size: int = 1,
         nstds: int = 1,
         latent_samples: torch.Tensor = None,
-        output_sample_size: int = 0,
+        output_sample_size: int = 1,
+        chunk_size: int | None = None
     ) -> cVAEOutput:
         """
         Document this function.
@@ -506,5 +506,6 @@ class cVAE(moduleABC):
                 nstds=nstds,
                 latent_samples=latent_samples,
                 output_sample_size=output_sample_size,
+                chunk_size=chunk_size,
             )
         )

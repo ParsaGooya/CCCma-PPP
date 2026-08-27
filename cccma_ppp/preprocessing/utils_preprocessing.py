@@ -1,21 +1,23 @@
-import datetime
-from pathlib import Path
-from typing import ClassVar, Literal
+import warnings
+warnings.filterwarnings('ignore')
 
-import cftime
-import joblib
 import numpy as np
 import xarray as xr
+from pathlib import Path
+import joblib
+import datetime
+import cftime
+from typing import ClassVar, Literal
 
-from cccma_ppp.configs import (
-    lead_time_unit,
-    required_sample_dimensions,
-    supported_NN_dimensions_sorted,
-)
-from cccma_ppp.data_modules.utils import add_lead_times
-from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
+from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
+from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.data_modules.utils import add_lead_times
+from cccma_ppp.configs import (
+    supported_NN_dimensions_sorted,
+    required_sample_dimensions,
+    lead_time_unit,
+)
 
 init_time_dim, lead_time_dim = required_sample_dimensions
 TemporalFrequency = Literal["year", "month", "day"]
@@ -257,7 +259,7 @@ class Standardizer(PreprocessModuleABC):
                 grouped_data.groupby(self.frequency).mean(dim=reduction_dims).load()
             )
 
-            std = grouped_data.groupby(self.frequency).std(dim=reduction_dims).load()
+            std = grouped_data.groupby(self.frequency).std(dim=reduction_dims, ddof = 1).load()
 
         self.std = std.where(std > 0)
 
@@ -931,7 +933,7 @@ class Flattennanremove(PreprocessModuleABC):
 
             if missing_dims:
                 raise ValueError(
-                    "The saved preprocessor and data pipelines are not compatible. "
+                    "The saved preprocessor and data pipelines are not compatable. "
                     f"Missing dimensions: {missing_dims}."
                 )
 

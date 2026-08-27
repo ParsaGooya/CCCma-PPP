@@ -1,31 +1,32 @@
 import abc
-import dataclasses
-import datetime
-from collections.abc import Sequence
 from typing import ClassVar, final
-
-import cftime
-import dask
+import dataclasses
 import numpy as np
-import xarray as xr
+import datetime
+import cftime
 from torch.utils.data import Dataset
+import xarray as xr
+import dask
+from collections.abc import Sequence
+
+from cccma_ppp.data_modules.data.data_configs import (
+    ModelDataConfig,
+    ConditionDataConfig,
+)
 
 from cccma_ppp.configs import (
     lead_time_resolution,
-    realization_dim,
-    required_sample_dimensions,
     supported_NN_dimensions_sorted,
+    required_sample_dimensions,
+    realization_dim,
 )
-from cccma_ppp.data_modules.data.data_configs import (
-    ConditionDataConfig,
-    ModelDataConfig,
-)
+
 from cccma_ppp.data_modules.utils import (
-    _create_train_mask,
-    _unwrap_data_variables,
     _validate_time_sequence,
-    add_lead_times,
+    _unwrap_data_variables,
+    _create_train_mask,
     suppress_stderr,
+    add_lead_times,
 )
 
 init_time_dim, lead_time_dim = required_sample_dimensions
@@ -246,7 +247,7 @@ class DatasetConfigABC(abc.ABC):
                         self.model.coords.get(dim)
                     ):
                         raise ValueError(
-                            f"model and condition data do not have the same {dim} coordinates."
+                            f"model and condition data do not have the same {dim} cooridnates."
                             / "when bias correcting to observations"
                         )
 
@@ -288,6 +289,7 @@ class DatasetConfigABC(abc.ABC):
             Description not yet provided.
         """
         if self.model is not None:
+            
             if self.effective_condition_method == "same_member":
                 if self.model.ensemble_mean:
                     raise ValueError(
@@ -420,6 +422,7 @@ class DatasetConfigABC(abc.ABC):
             Description not yet provided.
         """
         if self.condition is None:
+            
             return self.effective_condition_method in {
                 "ensemble_mean",
                 "cross_ensemble",
@@ -451,15 +454,9 @@ class DatasetConfigABC(abc.ABC):
     @final
     @property
     def effective_condition_method(self) -> str:
-        """
-        Document this function.
-
-        Returns
-        -------
-        str
-            Description not yet provided.
-        """
-        return None if self.condition_method is None else self.condition_method.lower()
+        return (None 
+                if self.condition_method is None 
+                else self.condition_method.lower())
 
     @final
     def _model_as_condition(self) -> ModelDataConfig:

@@ -1,52 +1,58 @@
 import dataclasses
-import math
-import warnings
 from dataclasses import field
 from typing import ClassVar
-
 import numpy as np
+import math
+import warnings
 import torch
 import torch.nn as nn
 
-from cccma_ppp.architectures.layers.conv import (
-    ConvBlockConfig,
-    ConvNeXtBlockConfig,
-    LatentVector,
-    PartialConvBlockConfig,
-    TensorMask,
+from cccma_ppp.core.selectors import cVAEModelSelector, deterministicModelSelector
+from cccma_ppp.core.models.cvae import cVAEOutput
+
+from cccma_ppp.configs import save_deterministic_guess_only
+
+from cccma_ppp.architectures.models_abc import (
+    cVAEmodelConfigABC,
+    cVAEmodelsABC,
+    cVAEForwardRequest,
+    cVAEPredictRequest,
+    DeterministicRequest,
+    GENERATORConfig,
 )
+
 from cccma_ppp.architectures.layers.generic import (
-    AlignmentMethod,
     InitMethod,
-    MaskPoolingMethod,
-    NormalizationMethod,
-    OutputActivation,
     UpsamplingMethod,
-)
-from cccma_ppp.architectures.layers.unet import (
-    DownBlock,
-    UNetOutput,
-    UNetOutputSIC,
-    UpBlock,
-    build_conv_block,
+    MaskPoolingMethod,
+    OutputActivation,
+    NormalizationMethod,
+    AlignmentMethod,
 )
 from cccma_ppp.architectures.layers.utils import (
     _broadcast_mask,
     _resize_tensor,
 )
-from cccma_ppp.architectures.models_abc import (
-    DeterministicRequest,
-    GENERATORConfig,
-    cVAEForwardRequest,
-    cVAEmodelConfigABC,
-    cVAEmodelsABC,
-    cVAEPredictRequest,
+
+from cccma_ppp.architectures.layers.unet import (
+    build_conv_block,
+    UpBlock,
+    DownBlock,
+    UNetOutput,
+    UNetOutputSIC,
 )
+
+
+from cccma_ppp.architectures.layers.conv import (
+    ConvBlockConfig,
+    PartialConvBlockConfig,
+    ConvNeXtBlockConfig,
+    TensorMask,
+    LatentVector,
+)
+
+from cccma_ppp.architectures.unet.utils import _unet_config_checks, _repeat_tensor_mask
 from cccma_ppp.architectures.unet.deterministic import UNetConfig
-from cccma_ppp.architectures.unet.utils import _repeat_tensor_mask, _unet_config_checks
-from cccma_ppp.configs import save_deterministic_guess_only
-from cccma_ppp.core.models.cvae import cVAEOutput
-from cccma_ppp.core.selectors import cVAEModelSelector, deterministicModelSelector
 
 
 @dataclasses.dataclass
@@ -664,6 +670,7 @@ class cVAEUNet(cVAEmodelsABC):
         """
         num_output_samples = request.output_sample_size
         latent_sample_size = request.latent_sample_size
+        chunk_size = request.chunk_size
 
         latent_samples, cond_mu, cond_log_var = self._sample_prior(request)
         batch_size = cond_mu.shape[0]
@@ -672,6 +679,7 @@ class cVAEUNet(cVAEmodelsABC):
             latent_samples,
             condition_embedding=cond_mu,
             num_output_samples=num_output_samples,
+            chunk_size = chunk_size,
         )
 
         if deterministic_guess_only:
@@ -796,6 +804,7 @@ class cVAEUNet(cVAEmodelsABC):
         latent_samples: torch.Tensor,
         condition_embedding: torch.Tensor | None = None,
         num_output_samples: int = 1,
+        chunk_size: int | None = None,
     ) -> torch.Tensor:
         """
         Document this function.
@@ -814,6 +823,7 @@ class cVAEUNet(cVAEmodelsABC):
         torch.Tensor
             Description not yet provided.
         """
+        
         latent_sample_size, batch_size = latent_samples.shape[:-1]
 
         if all([condition_embedding is not None, self.condemb_to_decoder]):
@@ -829,20 +839,44 @@ class cVAEUNet(cVAEmodelsABC):
 
         feature_size = latent_samples.shape[-1]
 
-        latent_samples = latent_samples.reshape(
-            latent_sample_size * batch_size, feature_size
-        )
-        out = self.generation(latent_samples, num_output_samples)
+        if chunk_size is None:
+            chunk_size = latent_sample_size
 
-        if num_output_samples > 1:
-            return out.reshape(
-                num_output_samples,
-                latent_sample_size,
-                batch_size,
-                *out.shape[2:],
+        outputs = []
+
+        for latent_chunk in latent_samples.split(chunk_size, dim=0):
+            current_chunk_size = latent_chunk.shape[0]
+
+            latent_chunk = latent_chunk.reshape(
+                current_chunk_size * batch_size,
+                feature_size,
             )
 
-        return out.reshape(latent_sample_size, batch_size, *out.shape[1:])
+            out = self.generation(
+                latent_chunk,
+                num_output_samples,
+            )
+
+            if num_output_samples > 1:
+                out = out.reshape(
+                    num_output_samples,
+                    current_chunk_size,
+                    batch_size,
+                    *out.shape[2:],
+                )
+            else:
+                out = out.reshape(
+                    current_chunk_size,
+                    batch_size,
+                    *out.shape[1:],
+                )
+
+            outputs.append(out)
+
+        if num_output_samples > 1:
+            return torch.cat(outputs, dim=1)
+
+        return torch.cat(outputs, dim=0)
 
     def _deterministic_guess(
         self,
@@ -1118,7 +1152,7 @@ class Generation(nn.Module):
                     block_config=config.block_config,
                     upsampling_method=config.upsampling_method,
                     skip_alignment_method=config.upsampling_alignment_method,
-                    transpose_kernel_size=config.transpose_kernel_sizes[index],
+                    upsampling_kernel_size=config.transpose_kernel_sizes[index],
                     inject_noise=inject_noise,
                     inject_noise_in_block=inject_noise_in_block,
                 )

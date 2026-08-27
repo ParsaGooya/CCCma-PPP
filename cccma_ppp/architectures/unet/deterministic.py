@@ -1,45 +1,52 @@
 import dataclasses
-import math
 from dataclasses import field
 from typing import ClassVar
-
 import numpy as np
+import math
 import torch
 import torch.nn as nn
 
-from cccma_ppp.architectures.layers.conv import (
-    ConvBlockConfig,
-    ConvNeXtBlockConfig,
-    PartialConvBlockConfig,
-    TensorMask,
+
+from cccma_ppp.core.selectors import deterministicModelSelector
+from cccma_ppp.core.models.deterministic import deterministicOutput
+
+from cccma_ppp.architectures.models_abc import (
+    deterministicmodelsABC,
+    modelConfigABC,
+    DeterministicRequest,
+    GENERATORConfig,
 )
+
 from cccma_ppp.architectures.layers.generic import (
-    AlignmentMethod,
     InitMethod,
+    UpsamplingMethod,
     MaskPoolingMethod,
     OutputActivation,
-    UpsamplingMethod,
-)
-from cccma_ppp.architectures.layers.unet import (
-    DownBlock,
-    UNetOutput,
-    UNetOutputSIC,
-    UpBlock,
-    build_conv_block,
+    AlignmentMethod,
 )
 from cccma_ppp.architectures.layers.utils import (
     _broadcast_mask,
     _resize_tensor,
 )
-from cccma_ppp.architectures.models_abc import (
-    DeterministicRequest,
-    GENERATORConfig,
-    deterministicmodelsABC,
-    modelConfigABC,
+
+from cccma_ppp.architectures.layers.unet import (
+    build_conv_block,
+    UpBlock,
+    DownBlock,
+    UNetOutput,
+    UNetOutputSIC,
 )
-from cccma_ppp.architectures.unet.utils import _repeat_tensor_mask, _unet_config_checks
-from cccma_ppp.core.models.deterministic import deterministicOutput
-from cccma_ppp.core.selectors import deterministicModelSelector
+
+
+from cccma_ppp.architectures.layers.conv import (
+    ConvBlockConfig,
+    PartialConvBlockConfig,
+    ConvNeXtBlockConfig,
+    TensorMask,
+)
+
+
+from cccma_ppp.architectures.unet.utils import _unet_config_checks, _repeat_tensor_mask
 
 
 @deterministicModelSelector.register("unet")
@@ -326,7 +333,7 @@ class UNet(deterministicmodelsABC):
                     block_config=config.block_config,
                     upsampling_method=config.upsampling_method,
                     skip_alignment_method=config.skip_alignment_method,
-                    transpose_kernel_size=config.transpose_kernel_sizes[index],
+                    upsampling_kernel_size=config.transpose_kernel_sizes[index],
                     inject_noise=inject_noise,
                     inject_noise_in_block=inject_noise_in_block,
                 )
@@ -437,6 +444,7 @@ class UNet(deterministicmodelsABC):
         output = self.output_block(unet_output_tensor)
 
         if self.config.GENERATOR is not None and num_output_samples > 1:
+
             output = output.reshape(
                 batch_size,
                 num_output_samples,
@@ -463,6 +471,7 @@ class UNet(deterministicmodelsABC):
         x_mask = request.input_mask
         added_features = request.added_features
         num_output_samples = request.output_sample_size
+        chunk_output_samples = request.chunk_output_samples
 
         if self.training and self.config.GENERATOR is not None:
             num_output_samples = self.config.GENERATOR.num_training_noise_samples
@@ -490,6 +499,41 @@ class UNet(deterministicmodelsABC):
 
         input = self.bottleneck(input)
 
+        if (
+            chunk_output_samples
+            and self.config.GENERATOR is not None
+            and num_output_samples > 1
+        ):
+            outputs = []
+
+            for _ in range(num_output_samples):
+                decoder_input = input
+
+                for up_block, feature in zip(
+                    self.up_blocks,
+                    reversed(down_features),
+                    strict=True,
+                ):
+                    if self.add_skip_connections:
+                        decoder_input = up_block(
+                            decoder_input,
+                            skip=feature,
+                        )
+                    else:
+                        decoder_input = up_block(
+                            decoder_input,
+                            resize_shape=feature,
+                        )
+
+                outputs.append(
+                    _resize_tensor(
+                        decoder_input.tensor,
+                        self.output_shape[-2:],
+                    )
+                )
+
+            return torch.cat(outputs, dim=0)
+
         if self.config.GENERATOR is not None and num_output_samples > 1:
             input = _repeat_tensor_mask(
                 input,
@@ -498,7 +542,10 @@ class UNet(deterministicmodelsABC):
 
             if self.add_skip_connections:
                 down_features = [
-                    _repeat_tensor_mask(skip, repeats=num_output_samples)
+                    _repeat_tensor_mask(
+                        skip,
+                        repeats=num_output_samples,
+                    )
                     for skip in down_features
                 ]
 
@@ -508,16 +555,20 @@ class UNet(deterministicmodelsABC):
             strict=True,
         ):
             if self.add_skip_connections:
-                input = up_block(input, skip=feature)
+                input = up_block(
+                    input,
+                    skip=feature,
+                )
             else:
-                input = up_block(input, resize_shape=feature)
+                input = up_block(
+                    input,
+                    resize_shape=feature,
+                )
 
-        output_tensor = _resize_tensor(
+        return _resize_tensor(
             input.tensor,
             self.output_shape[-2:],
         )
-
-        return output_tensor
 
     @property
     def output_block(self) -> UNetOutput:

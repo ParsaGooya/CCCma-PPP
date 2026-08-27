@@ -1,12 +1,11 @@
-import dataclasses
-import random
-import warnings
-from collections import defaultdict
-from pathlib import Path
-
-import matplotlib.pyplot as plt
 import numpy as np
+import dataclasses
 import torch
+from collections import defaultdict
+import warnings
+import matplotlib.pyplot as plt
+import random
+from pathlib import Path
 
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext

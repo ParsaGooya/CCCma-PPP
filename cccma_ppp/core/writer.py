@@ -1,25 +1,28 @@
-import dataclasses
+import torch
+from pathlib import Path
 import logging
+import dataclasses
 import os
 import time
-from pathlib import Path
-
-import numpy as np
-import torch
-import xarray as xr
 from tqdm import tqdm
+import numpy as np
+import xarray as xr
 
-from cccma_ppp.configs import realization_dim, required_sample_dimensions
-from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.core.trainer import clear_memory
+
 from cccma_ppp.data_modules.dataloader import Dataloader
-from cccma_ppp.generic.aggregator import RunningCovariance
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.inference.predictors.cvae import cVAEPredictorConfig
-from cccma_ppp.inference.predictors.deterministic import DeterministicPredictorConfig
-from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
+from cccma_ppp.generic.aggregator import RunningCovariance
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
+from cccma_ppp.core.core_abc import moduleABC
+
+from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
+
+from cccma_ppp.inference.predictors.deterministic import DeterministicPredictorConfig
+from cccma_ppp.inference.predictors.cvae import cVAEPredictorConfig
+
+from cccma_ppp.configs import required_sample_dimensions, realization_dim
 
 init_time_dim, lead_time_dim = required_sample_dimensions
 
@@ -39,12 +42,11 @@ class WriterConfig:
         Description not yet provided.
     """
 
-    predictor: DeterministicPredictorConfig | cVAEPredictorConfig = dataclasses.field(
-        default_factory=DeterministicPredictorConfig
-    )
-
+    predictor: DeterministicPredictorConfig | cVAEPredictorConfig | None = None
     num_output_sampling: int = 1
     get_trained_model_stats_from_validation: bool = False
+    aggregate_only: bool = False
+    predict_only: bool  = False
 
     def __post_init__(self):
         """
@@ -57,6 +59,7 @@ class WriterConfig:
         """
         if self.num_output_sampling <= 0:
             raise ValueError("num_output_sampling cannot be zero or negative.")
+
 
     def build(
         self,
@@ -92,11 +95,23 @@ class WriterConfig:
         RuntimeError
             Description not yet provided.
         """
-        if self.predictor._type != module.config._type.lower():
+        if self.aggregate_only and self.predict_only:
             raise RuntimeError(
-                f"The provided selector config matches {self.predictor._type}"
-                f" selector but the module is {module.config._type.lower()}"
+                "You can run the writer in aggregate_only OR predict_only mode OR neither. " \
+                "In case of the former, temporary batch predictions must have been saved " \
+                "on the disc previously. In case of the later, batch predictions will be saved temporarily " \
+                "but will not be aggregated year by year."
             )
+        if not self.aggregate_only:
+            if self.predictor is None:
+                self.predictor = DeterministicPredictorConfig()
+
+            if self.predictor._type != module.config._type.lower():
+                raise RuntimeError(
+                    f"The provided selector config matches {self.predictor._type}"
+                    f" selector but the module is {module.config._type.lower()}"
+                )
+
 
         return Writer(
             config=self,
@@ -209,26 +224,36 @@ class Writer:
             )
 
         self.temp_save_dir = Path(self.output_dir) / "_temp"
+
+        if self.config.aggregate_only:
+            if not (self.temp_save_dir.is_dir() and any(self.temp_save_dir.glob("*.nc"))):
+                raise RuntimeError(
+                    "With aggregate_only writer mode, a _temp folder with at least " \
+                    "one ''.nc'' file must exist!"
+                )
+
         if self.is_on_root:
             os.makedirs(self.temp_save_dir, exist_ok=True)
 
         if self.is_distributed:
             self.distributed.barrier()
 
-        self.predictor = self.config.predictor.build(
-            self.module,
-            self.distributed,
-            self.output_dir,
-            self.config.num_output_sampling,
-        )
+        if not self.config.aggregate_only:
 
-        if self.predictor.extract_training_vars:
-            self.log_root(
-                logging.INFO,
-                "Running the model to extract training statistics. \n"
-                "This might take a few minutes...",
+            self.predictor = self.config.predictor.build(
+                self.module,
+                self.distributed,
+                self.output_dir,
+                self.config.num_output_sampling,
             )
-            self._save_train_stats()
+
+            if self.predictor.extract_training_vars:
+                self.log_root(
+                    logging.INFO,
+                    "Running the model to extract training statistics. \n"
+                    "This might take a few minutes...",
+                )
+                self._save_train_stats()
 
         self._setup = True
         self.log_root(logging.INFO, "Writer setup complete.")
@@ -256,7 +281,10 @@ class Writer:
         """
         if not self._setup:
             raise RuntimeError("Call setup_distributed() before predict().")
-        self.log_root(logging.INFO, "Starting Inference Loop...")
+        if not self.config.aggregate_only:
+            self.log_root(logging.INFO, "Starting Inference Loop...")
+        else:
+            self.log_root(logging.INFO, "Starting aggregation...")
         self.start_time = time.time()
         clear_memory()
 
@@ -274,22 +302,27 @@ class Writer:
         loader = self.InferenceLoader
         do_post_process = True
 
-        if getattr(self.predictor, "save_latent", False):
+        if (not self.config.aggregate_only and 
+        getattr(self.predictor, "save_latent", False)):
+
             loader = self.build_train_loader(return_metadata=True, shuffle=False)
             do_post_process = False
+
         with torch.inference_mode():
-            for batch in tqdm(
-                loader,
-                disable=not self.is_on_root,
-                desc="Inference",
-            ):
-                batch = batch.to_device(self.device)
+            if not self.config.aggregate_only:
+                for batch in tqdm(
+                    loader,
+                    disable=not self.is_on_root,
+                    desc="Inference",
+                ):
+                    batch = batch.to_device(self.device)
 
-                self.predictor._infer_on_batch(batch)
+                    self.predictor._infer_on_batch(batch)
 
-            del loader
-            clear_memory()
-            self.aggregate_predictions_to_netcdf(do_post_process)
+                del loader
+                clear_memory()
+            if not self.config.predict_only:
+                self.aggregate_predictions_to_netcdf(do_post_process)
 
     def _save_train_stats(self):
         """
@@ -438,24 +471,11 @@ class Writer:
         if not do_post_process:
             post_processor = None
 
-        load_naming_convention = "prediction"
-        if getattr(self.predictor, "save_latent", False):
-            load_naming_convention = "latent"
-
-        save_naming_convention = load_naming_convention
-
-        if hasattr(self.predictor, "nstds"):
-            save_naming_convention += f"_{self.predictor.nstds}stds"
-
-        if self.config.num_output_sampling > 1:
-            save_naming_convention += "_output_ensemble"
-
         if self.is_on_root:
             aggregate_predictions(
                 post_processor=post_processor,
                 output_dir=self.output_dir,
-                load_naming_convention=load_naming_convention,
-                save_naming_convention=save_naming_convention,
+                output_ensemble=(self.config.num_output_sampling > 1),
                 logger_function=self.log_root,
             )
 
@@ -466,8 +486,7 @@ class Writer:
 def aggregate_predictions(
     post_processor: PreprocessingPipeline | None,
     output_dir: Path,
-    load_naming_convention: str = "prediction",
-    save_naming_convention: str = None,
+    output_ensemble: bool = False,
     logger_function: callable = None,
     cleanup_temp: bool = True,
     init_time_dim: str = init_time_dim,
@@ -483,9 +502,7 @@ def aggregate_predictions(
         Description not yet provided.
     output_dir : Path
         Description not yet provided.
-    load_naming_convention : str
-        Description not yet provided.
-    save_naming_convention : str
+    output_ensemble : bool
         Description not yet provided.
     logger_function : callable
         Description not yet provided.
@@ -503,17 +520,16 @@ def aggregate_predictions(
     RuntimeError
         Description not yet provided.
     """
-    if save_naming_convention is None:
-        save_naming_convention = load_naming_convention
-
     output_dir = Path(output_dir)
     temp_save_dir = output_dir / "_temp"
 
-    temp_files = sorted(temp_save_dir.glob(f"{load_naming_convention}_rank*_*.nc"))
+    temp_files = sorted(temp_save_dir.glob(f"rank*_*.nc"))
 
     if not temp_files:
-        raise RuntimeError(f"No temporary prediction files found in {temp_save_dir}.")
+        raise RuntimeError(f"No temporary prediction files found in {temp_save_dir}")
 
+    source = None
+    nstds = "NA"
     all_times = None
 
     for path in temp_files:
@@ -526,6 +542,12 @@ def aggregate_predictions(
             time_index = data.coords[init_time_dim].to_index()
 
             all_times = time_index if all_times is None else all_times.union(time_index)
+
+            if source is None:
+                source = data.attrs["source"]
+                
+            if nstds == "NA":
+                nstds = data.attrs.get("nstds", None)
 
     if all_times is None or len(all_times) == 0:
         raise RuntimeError(
@@ -673,7 +695,16 @@ def aggregate_predictions(
                 f"{data_year[init_time_dim].values}"
             )
 
-        output_path = output_dir / f"{save_naming_convention}_{int(year)}.nc"
+        save_name_ = f"{source}_{int(year)}"
+
+        if nstds is not None:
+            save_name_ += f"_nstds{nstds}"
+        if output_ensemble:
+            save_name_ += f"_output_ensemble"
+
+        save_name = save_name_ + ".nc"
+
+        output_path = output_dir / save_name
 
         if post_processor is not None:
             data_year = post_processor.inverse_rename(data_year)

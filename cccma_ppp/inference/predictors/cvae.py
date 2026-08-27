@@ -1,21 +1,20 @@
-import dataclasses
-import warnings
-from pathlib import Path
-from typing import Callable, ClassVar
-
 import torch
+from pathlib import Path
+import dataclasses
 import torch.nn.functional as F
+from typing import Callable, ClassVar
+import warnings
 
+from cccma_ppp.core.trainer import clear_memory
+from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic.aggregator import RunningCovariance
 from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.core.models.cvae import cVAEOutput
-from cccma_ppp.core.trainer import clear_memory
-from cccma_ppp.data_modules.dataloader import BatchDataABC
-from cccma_ppp.generic.aggregator import RunningCovariance
-from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.inference.predictors.predictor_abc import (
     PredictorABC,
     save_batch_to_netcdf,
 )
+from cccma_ppp.data_modules.dataloader import BatchDataABC
 
 
 @dataclasses.dataclass
@@ -29,6 +28,8 @@ class cVAEPredictorConfig:
         Description not yet provided.
     nstds : float
         Description not yet provided.
+    chunk_size: int 
+        Description not yet provided.
     infer_latent_samples_from_training : bool
         Description not yet provided.
     save_latent : bool
@@ -37,6 +38,7 @@ class cVAEPredictorConfig:
 
     num_latent_samples: int
     nstds: float = 1.0
+    chunk_size: int | None = None
     infer_latent_samples_from_training: bool = False
     save_latent: bool = False
 
@@ -267,7 +269,7 @@ class cVAEPredictor(PredictorABC):
 
             if self.num_output_covariance_sampling > 1:
                 num_output_sampling = 1
-            else:
+            else: 
                 num_output_sampling = self.num_output_sampling
 
             output = self.raw_module.predict(
@@ -276,11 +278,12 @@ class cVAEPredictor(PredictorABC):
                 nstds=self.nstds,
                 latent_samples=latent_samples,
                 output_sample_size=num_output_sampling,
+                chunk_size=self.config.chunk_size
             )
 
             if self.num_output_covariance_sampling > 1:
-                sample_size = output.output.shape[:2]
-                reshape_size = output.output.shape[2:]
+                sample_size = output.output.shape[:2]  # N x B
+                reshape_size = output.output.shape[2:]  # C x ...
                 output = self.add_decoder_noise(
                     output,
                     self.num_output_covariance_sampling,
@@ -486,12 +489,10 @@ class cVAEPredictor(PredictorABC):
 
             num_output_dims = 1
             extra_dims_sorted = []
-            save_name = (
-                f"latent_rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
-            )
+            attrs = {"source" : "latent"}
 
             if self.infer_latent_samples_from_training:
-                attrs = {"infer_latent_samples_from_training": True}
+                attrs["infer_latent_samples_from_training"] = True
 
         else:
             prediction = output.output
@@ -502,10 +503,15 @@ class cVAEPredictor(PredictorABC):
             num_output_dims = self.raw_module.model_config.NUM_OUTPUT_DIMS
             extra_dims_sorted = ["output_samples", "latent_samples"]
             assign_coords = None
-            save_name = (
-                f"prediction_rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
-            )
+            attrs = {
+                "source" : "predictions",
+                "nstds": self.nstds
+            }
 
+        save_name = (
+                f"rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
+            )
+        
         save_batch_to_netcdf(
             prediction,
             metadata,

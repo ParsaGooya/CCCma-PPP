@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import psutil
 
+
 if TYPE_CHECKING:
     from cccma_ppp.generic.distributed import Distributed
 
@@ -1641,32 +1642,20 @@ def build_distributed_monitor(
     Monitor
         Description not yet provided.
     """
+    import torch
+
     gpu_indices: list[int] = []
 
-    if gpu:
-        visible_devices = os.environ.get(
-            "CUDA_VISIBLE_DEVICES",
-            "",
-        ).strip()
-
-        if visible_devices:
-            for value in visible_devices.split(","):
-                value = value.strip()
-
-                if not value:
-                    continue
-
-                if not value.isdigit():
-                    logger.warning(
-                        "Ignoring non-numeric CUDA_VISIBLE_DEVICES "
-                        "entry %r while configuring GPU monitoring.",
-                        value,
-                    )
-                    continue
-
-                gpu_indices.append(int(value))
-        else:
-            gpu_indices.extend([0, 1])
+    if gpu and torch.cuda.is_available():
+        try:
+            gpu_indices.append(resolve_physical_gpu_index(distributed.local_rank))
+        except (TypeError, ValueError):
+            logger.warning(
+                "Rank %s could not resolve its physical GPU. "
+                "CPU and RAM monitoring will remain enabled.",
+                distributed.rank,
+                exc_info=True,
+            )
 
     return monitor(
         cpu=cpu,

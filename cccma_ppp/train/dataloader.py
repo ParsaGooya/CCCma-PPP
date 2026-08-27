@@ -1,20 +1,20 @@
+import numpy as np
 import dataclasses
 import warnings
+import torch
 from pathlib import Path
 
-import numpy as np
-import torch
 
-from cccma_ppp.data_modules.dataloader import (
-    BatchDataABC,
-    Dataloader,
-    DataloaderConfigABC,
-)
-from cccma_ppp.data_modules.dataset.dataset_abc import AddedTimeFeatures
+from cccma_ppp.train.dataset import TrainDatasetConfig
 from cccma_ppp.data_modules.utils import _create_train_mask
 from cccma_ppp.data_modules.weights import WeightsConfig
+from cccma_ppp.data_modules.dataset.dataset_abc import AddedTimeFeatures
+from cccma_ppp.data_modules.dataloader import (
+    Dataloader,
+    DataloaderConfigABC,
+    BatchDataABC,
+)
 from cccma_ppp.generic.distributed import Distributed
-from cccma_ppp.train.dataset import TrainDatasetConfig
 
 
 @dataclasses.dataclass
@@ -263,6 +263,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         train_mask = _create_train_mask(
             init_times=self.dataset_config.get_input_times(self.train_times),
             lead_times=self.dataset_config.input_lead_times,
+            max_allowed_time=self.dataset_config.get_common_time.max()
         )
 
         train_dataset = self.dataset_config.build_dataset(
@@ -328,6 +329,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             validation_mask = _create_train_mask(
                 init_times=self.dataset_config.get_input_times(self.validation_times),
                 lead_times=self.dataset_config.input_lead_times,
+                max_allowed_time=self.dataset_config.get_common_time.max()
             )
             validation_dataset = self.dataset_config.build_dataset(
                 times=self.validation_times,

@@ -1,8 +1,7 @@
 import abc
-from typing import Literal
-
 import torch
 import torch.nn as nn
+from typing import Literal
 
 from cccma_ppp.core.core_abc import GenerativeContext
 

@@ -1,7 +1,6 @@
+import yaml
 from pathlib import Path
 from typing import Literal
-
-import yaml
 
 lead_time_unit = Literal["day", "month"]
 

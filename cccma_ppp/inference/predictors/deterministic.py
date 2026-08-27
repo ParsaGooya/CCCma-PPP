@@ -1,19 +1,18 @@
-import dataclasses
+import torch
 from pathlib import Path
+import dataclasses
 from typing import ClassVar
 
-import torch
-
+from cccma_ppp.core.trainer import clear_memory
+from cccma_ppp.generic.distributed import Distributed
+from cccma_ppp.generic.aggregator import RunningCovariance
 from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.core.models.deterministic import deterministicOutput
-from cccma_ppp.core.trainer import clear_memory
-from cccma_ppp.data_modules.dataloader import BatchDataABC
-from cccma_ppp.generic.aggregator import RunningCovariance
-from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.inference.predictors.predictor_abc import (
     PredictorABC,
     save_batch_to_netcdf,
 )
+from cccma_ppp.data_modules.dataloader import BatchDataABC
 
 
 @dataclasses.dataclass
@@ -21,7 +20,7 @@ class DeterministicPredictorConfig:
     """
     Document this class.
     """
-
+    chunk_output_samples: bool = False,
     _type: ClassVar[str] = "deterministic"
 
     def build(
@@ -135,6 +134,7 @@ class DetermninisticPredictor(PredictorABC):
         Any
             Description not yet provided.
         """
+
         return self.num_output_covariance_sampling > 1
 
     @torch.no_grad()
@@ -182,11 +182,13 @@ class DetermninisticPredictor(PredictorABC):
 
             if self.num_output_covariance_sampling > 1:
                 num_output_sampling = 1
-            else:
+            else: 
                 num_output_sampling = self.num_output_sampling
 
             output = self.raw_module.predict(
-                data=batch, output_sample_size=num_output_sampling
+                data=batch, 
+                output_sample_size=num_output_sampling, 
+                chunk_output_samples = self.config.chunk_output_samples
             )
 
             if self.num_output_covariance_sampling > 1:
@@ -254,8 +256,10 @@ class DetermninisticPredictor(PredictorABC):
         num_output_dims = self.raw_module.model_config.NUM_OUTPUT_DIMS
         extra_dims_sorted = ["output_samples"]
         assign_coords = None
+        attrs = {"source" : "predictions"}
+
         save_name = (
-            f"prediction_rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
+            f"rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
         )
 
         save_batch_to_netcdf(
@@ -266,6 +270,7 @@ class DetermninisticPredictor(PredictorABC):
             self.temp_save_dir,
             extra_dims_sorted,
             assign_coords,
+            attrs
         )
 
         self._batch_counter += 1

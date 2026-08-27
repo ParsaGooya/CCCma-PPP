@@ -1,30 +1,30 @@
-import abc
 import dataclasses
-import math
 from typing import Literal, final
+import abc
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import math
+from cccma_ppp.architectures.layers.partialconv2d import PartialConv2d
 from cccma_ppp.architectures.layers.generic import (
-    ActivationName,
-    DropPath,
-    LayerNorm2d,
     MaskPoolingMethod,
     NormalizationMethod,
+    ActivationName,
     PaddingMethod,
-    _build_activation,
     _build_normalization,
+    _build_activation,
     _validate_dropout,
+    LayerNorm2d,
+    DropPath,
 )
-from cccma_ppp.architectures.layers.partialconv2d import PartialConv2d
 from cccma_ppp.architectures.layers.utils import (
-    _broadcast_mask,
-    _expand_mask,
-    _noise_injection,
     _same_padding,
+    _broadcast_mask,
 )
+
+from cccma_ppp.architectures.layers.utils import _noise_injection, _expand_mask
 
 
 @dataclasses.dataclass
