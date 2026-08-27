@@ -1,4 +1,4 @@
-experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rna002/output/cccma_PPP_tests/test1
+experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rna002/output/cccma_PPP_tests/test3
 max_epochs: 1
 train_loader:
   dataset_config:
