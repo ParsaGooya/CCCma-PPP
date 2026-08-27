@@ -1,71 +1,71 @@
 stages:
-- quality
-- docs
-- test
+  - quality
+  - docs
+  - test
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 cache:
   paths:
-  - .cache/pip/
+    - .cache/pip/
 
 before_script:
-- source /fs/site7/eccc/crd/cccma/users/rna002/venvs/uvenv/bin/activate
-- python --version
-- pip install -e .
+  - source /fs/site7/eccc/crd/cccma/users/rna002/venvs/uvenv/bin/activate
+  - python --version
+  - pip install -e .
 
 ruff:
   stage: quality
   script:
-  - ruff check . --fix-only
-  - ruff format --check .
+    - ruff check . --fix-only
+    - ruff format --check .
 
   only:
-  - branches
-  - merge_requests
+    - branches
+    - merge_requests
 
 docs:
   stage: docs
   script:
-  - python scripts/update_docs.py
-  - |
-    if ! git diff --exit-code; then
-      echo "Documentation is out of date."
-      exit 1
-    fi
+    - python scripts/update_docs.py
+    - |
+      if ! git diff --exit-code; then
+        echo "Documentation is out of date."
+        exit 1
+      fi
 
   only:
-  - branches
-  - merge_requests
+    - branches
+    - merge_requests
 
 tests:
   stage: test
   script:
-  - |
-    pytest tests \
-      --cov=s2dp_ml_post_processing \
-      --cov-report=term-missing \
-      --cov-report=xml \
-      --cov-branch \
-      --cov-fail-under=85
+    - |
+      pytest tests \
+        --cov=s2dp_ml_post_processing \
+        --cov-report=term-missing \
+        --cov-report=xml \
+        --cov-branch \
+        --cov-fail-under=85
 
-  - |
-    python <<'EOF'
-    import xml.etree.ElementTree as ET
-    import sys
+    - |
+      python <<'EOF'
+      import xml.etree.ElementTree as ET
+      import sys
 
-    tree = ET.parse("coverage.xml")
-    root = tree.getroot()
+      tree = ET.parse("coverage.xml")
+      root = tree.getroot()
 
-    branch_rate = float(root.attrib.get("branch-rate", 0)) * 100
+      branch_rate = float(root.attrib.get("branch-rate", 0)) * 100
 
-    print(f"Branch coverage: {branch_rate:.2f}%")
+      print(f"Branch coverage: {branch_rate:.2f}%")
 
-    if branch_rate < 85:
-        sys.exit(1)
-    EOF
+      if branch_rate < 85:
+          sys.exit(1)
+      EOF
 
   only:
-  - branches
-  - merge_requests
+    - branches
+    - merge_requests
