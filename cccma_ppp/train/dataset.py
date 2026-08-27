@@ -170,20 +170,38 @@ class TrainDatasetConfig(DatasetConfigABC):
             Description not yet provided.
         """
         model_times = self.model.coords[self.init_time_dim].to_index()
+        common_times = self.get_common_time
         time_freq = self.model.init_time_frequency
 
         if time_freq == "year":
-            max_year = model_times.year.max()
             min_year = model_times.year.min()
+            max_year = model_times.year.max()
 
-            return self.get_common_time[
-                (self.get_common_time.year >= min_year)
-                & (self.get_common_time.year <= max_year)
+            return common_times[
+                (common_times.year >= min_year)
+                & (common_times.year <= max_year)
+            ]
+        
+        elif time_freq == "month" and self.lead_time_resolution == "day":
+            min_time = model_times.min()
+            max_time = model_times.max()
+
+            min_month = min_time.year * 12 + min_time.month
+            max_month = max_time.year * 12 + max_time.month
+
+            common_months = (
+                common_times.year * 12
+                + common_times.month
+            )
+
+            return common_times[
+                (common_months >= min_month)
+                & (common_months <= max_month)
             ]
 
-        return self.get_common_time[
-            (self.get_common_time >= model_times.min())
-            & (self.get_common_time <= model_times.max())
+        return common_times[
+            (common_times >= model_times.min())
+            & (common_times <= model_times.max())
         ]
 
     def fit_preprocessors(

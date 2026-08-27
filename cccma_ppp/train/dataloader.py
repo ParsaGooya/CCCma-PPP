@@ -263,6 +263,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         train_mask = _create_train_mask(
             init_times=self.dataset_config.get_input_times(self.train_times),
             lead_times=self.dataset_config.input_lead_times,
+            max_allowed_time=self.dataset_config.get_common_time.max()
         )
 
         train_dataset = self.dataset_config.build_dataset(
@@ -328,6 +329,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             validation_mask = _create_train_mask(
                 init_times=self.dataset_config.get_input_times(self.validation_times),
                 lead_times=self.dataset_config.input_lead_times,
+                max_allowed_time=self.dataset_config.get_common_time.max()
             )
             validation_dataset = self.dataset_config.build_dataset(
                 times=self.validation_times,
