@@ -46,13 +46,11 @@ def make_target():
     return torch.zeros(2, 1, 2, 3)
 
 
-@pytest.mark.pruned
 def test_config_default_weights():
     cfg = LosspipelineConfig(loss_pipeline=[LossStepConfig(name="a")])
     assert cfg.loss_weights == [1.0]
 
 
-@pytest.mark.pruned
 def test_config_multiple_auto_weights():
     cfg = LosspipelineConfig(
         loss_pipeline=[LossStepConfig(name="a"), LossStepConfig(name="b")]
@@ -60,7 +58,6 @@ def test_config_multiple_auto_weights():
     assert sum(cfg.loss_weights) == pytest.approx(1.0)
 
 
-@pytest.mark.pruned
 def test_config_weights_valid_branch():
     cfg = LosspipelineConfig(
         loss_pipeline=[LossStepConfig(name="a"), LossStepConfig(name="b")],
@@ -85,7 +82,6 @@ def test_config_invalid_weight_sum():
         )
 
 
-@pytest.mark.pruned
 def test_config_invalid_reduction():
     LosspipelineConfig(
         loss_pipeline=[LossStepConfig(name="a")],
@@ -100,7 +96,6 @@ def test_config_invalid_args_forbidden_keys():
         )
 
 
-@pytest.mark.pruned
 def test_config_collect_loss_types():
     cfg = LosspipelineConfig(
         loss_pipeline=[LossStepConfig(name="a"), LossStepConfig(name="b")]
@@ -108,14 +103,12 @@ def test_config_collect_loss_types():
     assert "a" in cfg.loss_types and "b" in cfg.loss_types
 
 
-@pytest.mark.pruned
 def test_build_pipeline_basic():
     cfg = LosspipelineConfig(loss_pipeline=[LossStepConfig(name="a")])
     pipe = cfg.build(make_weights(), num_output_dimensions=3)
     assert len(pipe.pipeline) == 1
 
 
-@pytest.mark.pruned
 def test_build_pipeline_duplicate_names():
     cfg = LosspipelineConfig(
         loss_pipeline=[LossStepConfig(name="a"), LossStepConfig(name="a")]
@@ -124,7 +117,6 @@ def test_build_pipeline_duplicate_names():
     assert len(set(pipe.steps)) == 2
 
 
-@pytest.mark.pruned
 def test_build_pipeline_low_res_name_branch():
     cfg = LosspipelineConfig(
         loss_pipeline=[LossStepConfig(name="a", args={"low_ress_kernel_size": 2})]
@@ -133,7 +125,6 @@ def test_build_pipeline_low_res_name_branch():
     assert "low_ress" in pipe.steps[0]
 
 
-@pytest.mark.pruned
 def test_forward_single_loss():
     cfg = LosspipelineConfig(loss_pipeline=[LossStepConfig(name="a")])
     pipe = cfg.build(make_weights(), num_output_dimensions=3)
@@ -142,7 +133,6 @@ def test_forward_single_loss():
     assert len(indiv) == 1
 
 
-@pytest.mark.pruned
 def test_forward_multiple_losses_weighted():
     cfg = LosspipelineConfig(
         loss_pipeline=[LossStepConfig(name="a"), LossStepConfig(name="b")],
@@ -153,14 +143,12 @@ def test_forward_multiple_losses_weighted():
     assert len(indiv) == 2
 
 
-@pytest.mark.pruned
 def test_forward_dimension_check_pass():
     cfg = LosspipelineConfig(loss_pipeline=[LossStepConfig(name="a")])
     pipe = cfg.build(make_weights(), num_output_dimensions=3)
     pipe(make_data(), make_target())
 
 
-@pytest.mark.pruned
 def test_forward_dimension_check_fail():
     cfg = LosspipelineConfig(loss_pipeline=[LossStepConfig(name="a")])
     pipe = cfg.build(make_weights(), num_output_dimensions=3)
@@ -168,7 +156,6 @@ def test_forward_dimension_check_fail():
         pipe(make_data(), torch.zeros(2, 1, 10))
 
 
-@pytest.mark.pruned
 def test_forward_print_loss_flag():
     cfg = LosspipelineConfig(loss_pipeline=[LossStepConfig(name="a")])
     pipe = cfg.build(make_weights(), num_output_dimensions=3)
@@ -176,7 +163,6 @@ def test_forward_print_loss_flag():
     assert loss is not None
 
 
-@pytest.mark.pruned
 def test_forward_step_arguments_passthrough():
     cfg = LosspipelineConfig(loss_pipeline=[LossStepConfig(name="a")])
     pipe = cfg.build(make_weights(), num_output_dimensions=3)
@@ -184,7 +170,6 @@ def test_forward_step_arguments_passthrough():
     assert loss < 0
 
 
-@pytest.mark.pruned
 def test_forward_total_loss_branch():
     cfg = LosspipelineConfig(
         loss_pipeline=[LossStepConfig(name="a"), LossStepConfig(name="b")]
@@ -202,7 +187,6 @@ def test_checked_dimensionality_cache():
     assert pipe._checked_dimensionality is True
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "forbidden_key",
     [
@@ -229,7 +213,6 @@ def test_config_rejects_each_forbidden_step_argument(
         )
 
 
-@pytest.mark.pruned
 def test_config_allows_nonreserved_step_arguments():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -259,7 +242,6 @@ def test_config_rejects_empty_pipeline():
         )
 
 
-@pytest.mark.pruned
 def test_config_loss_types_collapses_duplicate_names():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -272,7 +254,6 @@ def test_config_loss_types_collapses_duplicate_names():
     assert config.loss_types == {"a", "b"}
 
 
-@pytest.mark.pruned
 def test_config_auto_weights_three_steps():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -291,7 +272,6 @@ def test_config_auto_weights_three_steps():
     )
 
 
-@pytest.mark.pruned
 def test_config_accepts_single_explicit_weight():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -303,7 +283,6 @@ def test_config_accepts_single_explicit_weight():
     assert config.loss_weights == [1.0]
 
 
-@pytest.mark.pruned
 def test_config_nonlist_weights_are_replaced_with_defaults():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -316,7 +295,6 @@ def test_config_nonlist_weights_are_replaced_with_defaults():
     assert config.loss_weights == [0.5, 0.5]
 
 
-@pytest.mark.pruned
 def test_config_build_forwards_all_arguments(
     monkeypatch,
 ):
@@ -418,7 +396,6 @@ class CapturingRegistry:
         return module
 
 
-@pytest.mark.pruned
 def test_loss_step_config_defaults_to_independent_empty_dicts():
     first = LossStepConfig(name="a")
     second = LossStepConfig(name="b")
@@ -431,7 +408,6 @@ def test_loss_step_config_defaults_to_independent_empty_dicts():
     assert second.args == {}
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "reserved_arguments",
     [
@@ -467,7 +443,6 @@ def test_config_reports_multiple_reserved_arguments(
         assert name in str(error.value)
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "loss_weights",
     [
@@ -493,7 +468,6 @@ def test_config_accepts_weights_within_tolerance(
     assert config.loss_weights is loss_weights
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "loss_weights",
     [
@@ -527,7 +501,6 @@ def test_config_rejects_weight_sums_outside_tolerance(
         )
 
 
-@pytest.mark.pruned
 def test_no_saved_output_mask_resolves_to_none():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -556,7 +529,6 @@ def test_saved_output_mask_missing_file_raises(
         )
 
 
-@pytest.mark.pruned
 def test_saved_output_mask_rejects_directory(
     tmp_path,
 ):
@@ -590,7 +562,6 @@ def test_saved_output_mask_rejects_unknown_extension(
         )
 
 
-@pytest.mark.pruned
 def test_loads_tensor_mask_from_pt(
     tmp_path,
 ):
@@ -706,7 +677,6 @@ def test_loads_mask_from_netcdf(
     )
 
 
-@pytest.mark.pruned
 def test_build_with_saved_mask_requires_output_shape():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -728,7 +698,6 @@ def test_build_with_saved_mask_requires_output_shape():
         )
 
 
-@pytest.mark.pruned
 def test_resolve_output_mask_adds_channel_dimension():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -755,7 +724,6 @@ def test_resolve_output_mask_adds_channel_dimension():
     )
 
 
-@pytest.mark.pruned
 def test_resolve_output_mask_preserves_matching_channel_mask():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -807,7 +775,6 @@ def test_resolve_output_mask_rejects_dimension_count():
         )
 
 
-@pytest.mark.pruned
 def test_resolve_output_mask_rejects_spatial_mismatch():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -868,7 +835,6 @@ def test_resolve_output_mask_rejects_invalid_channel_count(
         )
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "mask_channels",
     [
@@ -938,7 +904,6 @@ def test_build_resolves_mask_before_constructing_pipeline(
     constructor.assert_called_once()
 
 
-@pytest.mark.pruned
 def test_pipeline_uses_default_generative_context():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -957,7 +922,6 @@ def test_pipeline_uses_default_generative_context():
     )
 
 
-@pytest.mark.pruned
 def test_pipeline_preserves_explicit_generative_context():
     context = GenerativeContext()
     config = LosspipelineConfig(
@@ -974,7 +938,6 @@ def test_pipeline_preserves_explicit_generative_context():
     assert pipeline.generative_context is context
 
 
-@pytest.mark.pruned
 def test_pipeline_forwards_shared_arguments_to_registry(
     monkeypatch,
 ):
@@ -1019,7 +982,6 @@ def test_pipeline_forwards_shared_arguments_to_registry(
     assert call["args"]["generative_context"] is context
 
 
-@pytest.mark.pruned
 def test_pipeline_does_not_mutate_step_arguments(
     monkeypatch,
 ):
@@ -1052,7 +1014,6 @@ def test_pipeline_does_not_mutate_step_arguments(
     }
 
 
-@pytest.mark.pruned
 def test_pipeline_is_module_list():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -1070,7 +1031,6 @@ def test_pipeline_is_module_list():
     assert len(list(pipeline.parameters())) == 0
 
 
-@pytest.mark.pruned
 def test_register_lowercases_name(
     monkeypatch,
 ):
@@ -1097,7 +1057,6 @@ def test_register_lowercases_name(
     assert registered["name"] == ("mycustomloss")
 
 
-@pytest.mark.pruned
 def test_duplicate_step_names_are_numbered():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -1114,7 +1073,6 @@ def test_duplicate_step_names_are_numbered():
     ]
 
 
-@pytest.mark.pruned
 def test_three_duplicate_step_names_are_unique():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -1130,7 +1088,6 @@ def test_three_duplicate_step_names_are_unique():
     assert len(set(pipeline.steps)) == 2
 
 
-@pytest.mark.pruned
 def test_low_resolution_name_uses_kernel_size():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -1176,7 +1133,6 @@ def test_duplicate_low_resolution_names_are_numbered():
     ]
 
 
-@pytest.mark.pruned
 def test_masked_pipeline_registers_output_mask_as_buffer():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -1202,7 +1158,6 @@ def test_masked_pipeline_registers_output_mask_as_buffer():
     assert buffers["output_mask"] is pipeline.output_mask
 
 
-@pytest.mark.pruned
 def test_unmasked_pipeline_does_not_use_configured_output_mask():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -1225,7 +1180,6 @@ def test_unmasked_pipeline_does_not_use_configured_output_mask():
     assert pipeline.output_mask is None
 
 
-@pytest.mark.pruned
 def test_output_mask_is_used_when_target_mask_is_none(
     monkeypatch,
 ):
@@ -1276,7 +1230,6 @@ def test_output_mask_is_used_when_target_mask_is_none(
     assert received is pipeline.output_mask
 
 
-@pytest.mark.pruned
 def test_output_mask_is_multiplied_with_target_mask(
     monkeypatch,
 ):
@@ -1379,7 +1332,6 @@ def test_masked_loss_disabled_clears_target_mask(
     assert registry.modules[0].calls[0]["target_mask"] is None
 
 
-@pytest.mark.pruned
 def test_forward_passes_print_loss_to_every_step(
     monkeypatch,
 ):
@@ -1414,7 +1366,6 @@ def test_forward_passes_print_loss_to_every_step(
     )
 
 
-@pytest.mark.pruned
 def test_forward_does_not_add_print_loss_when_disabled(
     monkeypatch,
 ):
@@ -1486,7 +1437,6 @@ def test_forward_does_not_mutate_step_arguments(
     }
 
 
-@pytest.mark.pruned
 def test_forward_individual_losses_are_detached(
     monkeypatch,
 ):
@@ -1588,7 +1538,6 @@ def test_weighted_total_loss_uses_configured_weights(
     assert individual["second"].item() == (pytest.approx(6.0))
 
 
-@pytest.mark.pruned
 def test_dimension_check_runs_only_once(
     monkeypatch,
 ):
@@ -1627,7 +1576,6 @@ def test_dimension_check_runs_only_once(
     )
 
 
-@pytest.mark.pruned
 def test_generative_context_requires_extra_target_dimension():
     context = GenerativeContext()
     context.generative_modeling = True
@@ -1684,7 +1632,6 @@ def test_generative_context_rejects_nongenerative_target_shape():
         )
 
 
-@pytest.mark.pruned
 def test_non_generative_context_rejects_extra_sample_dimension():
     context = GenerativeContext()
     context.generative_modeling = False
