@@ -56,7 +56,7 @@ class ModelDataConfig(DataConfigABC):
     ensemble_mean: bool | None = True
     concat_dim: str = init_time_dim
     file_type: str = "*.nc"
-    rename_dict: dict = None
+    rename_dict: dict[str, str] = None
 
     def __post_init__(self) -> None:
         """
@@ -144,7 +144,7 @@ class ObsDataConfig(DataConfigABC):
     ensemble_mean: bool | None = True
     concat_dim: str = init_time_dim
     file_type: str = "*.nc"
-    rename_dict: dict = None
+    rename_dict: dict[str, str] = None
 
     def __post_init__(self):
         """
@@ -157,22 +157,24 @@ class ObsDataConfig(DataConfigABC):
         """
         super().__init__()
 
-        self.time_range = build_time_range(self.coords[init_time_dim])
         if self.init_time_frequency != self.lead_time_resolution:
             raise RuntimeError(
                 "Observation data must have same temporal frequency as the "
                 f"lead time. Got {self.init_time_frequency} vs {self.lead_time_resolution}"
             )
 
+        self.time_range = build_time_range(init_time=self.coords[init_time_dim], 
+                                           lead_time_resolution=self.init_time_frequency)
+
     @final
     @property
-    def TYPE(self):
+    def TYPE(self) -> str:
         """
         Document this function.
 
         Returns
         -------
-        Any
+        str
             Description not yet provided.
         """
         return "observation"
@@ -238,7 +240,7 @@ class ConditionDataConfig(DataConfigABC):
     ensemble_mean: bool | None = True
     concat_dim: str = init_time_dim
     file_type: str = "*.nc"
-    rename_dict: dict = None
+    rename_dict: dict[str, str] = None
 
     def __post_init__(self):
         """
@@ -252,16 +254,18 @@ class ConditionDataConfig(DataConfigABC):
                 n_lead_times=self.coords[lead_time_dim].max().item(),
                 lead_time_resolution=lead_time_resolution,
             )
+        else:
+            self.time_range = None
 
     @final
     @property
-    def TYPE(self):
+    def TYPE(self) -> str:
         """
         Document this function.
 
         Returns
         -------
-        Any
+        str
             Description not yet provided.
         """
         return "condition"
@@ -281,13 +285,13 @@ class ConditionDataConfig(DataConfigABC):
 
     @final
     @classmethod
-    def _required_dims(cls) -> frozenset:
+    def _required_dims(cls) -> frozenset[str]:
         """
         Document this function.
 
         Returns
         -------
-        frozenset
+        frozenset[str]
             Description not yet provided.
         """
         return condition_data_required_dimensions
@@ -299,7 +303,15 @@ def build_time_range(
     lead_time_resolution: lead_time_unit = "month",
 ) -> xr.CFTimeIndex | np.ndarray:
     """
-    Document this function.
+    Build a continuous temporal extent from init times and lead times.
+
+    Returns the inclusive continuous range [min(init_time),
+    max(init_time) + max_lead_time]. This is NOT a list of valid times
+    in the data, only the temporal extent covered.
+
+    Use for temporal validation (e.g., checking if all samples
+    fall within expected range), not for exact time matching.
+ 
 
     Parameters
     ----------
@@ -325,6 +337,9 @@ def build_time_range(
     if init_time.size == 0:
         raise ValueError("'init_time' cannot be empty.")
 
+    if init_time.ndim != 1:
+        raise ValueError("'init_time' must be one-dimensional.")
+
     if n_lead_times < 1:
         raise ValueError("'n_lead_times' must be at least 1.")
 
@@ -339,10 +354,16 @@ def build_time_range(
             "or cftime.datetime objects."
         )
 
-    frequency = {
+    frequencies = {
         "month": "MS",
         "day": "D",
-    }[lead_time_resolution]
+    }
+    if lead_time_resolution not in frequencies:
+        raise ValueError(
+            f"Unsupported lead-time resolution {lead_time_resolution!r}. "
+            f"Must be one of {list(frequencies.keys())}"
+        )
+    frequency = frequencies[lead_time_resolution]
 
     start_time = init_time.min().item()
     final_init_time = init_time.max().item()
