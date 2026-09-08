@@ -19,14 +19,8 @@ from cccma_ppp.data_modules.dataloader import BatchDataABC
 class DeterministicPredictorConfig:
     """
     Document this class.
-
-    Parameters
-    ----------
-    chunk_output_samples : bool
-        Description not yet provided.
     """
-
-    chunk_output_samples: bool = (False,)
+    chunk_output_samples: bool = False,
     _type: ClassVar[str] = "deterministic"
 
     def build(
@@ -140,6 +134,7 @@ class DetermninisticPredictor(PredictorABC):
         Any
             Description not yet provided.
         """
+
         return self.num_output_covariance_sampling > 1
 
     @torch.no_grad()
@@ -187,13 +182,13 @@ class DetermninisticPredictor(PredictorABC):
 
             if self.num_output_covariance_sampling > 1:
                 num_output_sampling = 1
-            else:
+            else: 
                 num_output_sampling = self.num_output_sampling
 
             output = self.raw_module.predict(
-                data=batch,
-                output_sample_size=num_output_sampling,
-                chunk_output_samples=self.config.chunk_output_samples,
+                data=batch, 
+                output_sample_size=num_output_sampling, 
+                chunk_output_samples = self.config.chunk_output_samples
             )
 
             if self.num_output_covariance_sampling > 1:
@@ -261,9 +256,11 @@ class DetermninisticPredictor(PredictorABC):
         num_output_dims = self.raw_module.model_config.NUM_OUTPUT_DIMS
         extra_dims_sorted = ["output_samples"]
         assign_coords = None
-        attrs = {"source": "predictions"}
+        attrs = {"source" : "predictions"}
 
-        save_name = f"rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
+        save_name = (
+            f"rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
+        )
 
         save_batch_to_netcdf(
             prediction,
@@ -273,7 +270,7 @@ class DetermninisticPredictor(PredictorABC):
             self.temp_save_dir,
             extra_dims_sorted,
             assign_coords,
-            attrs,
+            attrs
         )
 
         self._batch_counter += 1

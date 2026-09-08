@@ -1,5 +1,4 @@
 import abc
-import math
 import numpy as np
 import torch
 import torch.nn as nn
@@ -42,11 +41,6 @@ class GENERATORConfig:
     def __post_init__(self):
         """
         Document this function.
-
-        Raises
-        ------
-        ValueError
-            Description not yet provided.
         """
         if self.num_validation_noise_samples is None:
             self.num_validation_noise_samples = self.num_training_noise_samples
@@ -55,7 +49,6 @@ class GENERATORConfig:
             raise ValueError(
                 "For Generator training, at least two output ensemble samples are required."
             )
-
 
 @dataclasses.dataclass
 class CheckpointConfig:
@@ -430,8 +423,6 @@ class DeterministicRequest:
         Description not yet provided.
     output_sample_size : int
         Description not yet provided.
-    chunk_output_samples : bool
-        Description not yet provided.
     """
 
     input: torch.Tensor
@@ -593,8 +584,6 @@ class cVAEPredictRequest:
     latent_sample_size : int
         Description not yet provided.
     output_sample_size : int
-        Description not yet provided.
-    chunk_size : int | None
         Description not yet provided.
     """
 

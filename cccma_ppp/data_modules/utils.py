@@ -180,8 +180,6 @@ def _create_train_mask(
         Description not yet provided.
     lead_times : Sequence | xr.DataArray | np.ndarray | int
         Description not yet provided.
-    max_allowed_time : np.datetime64 | datetime.datetime | cftime.datetime | None
-        Description not yet provided.
     lead_time_resolution : lead_time_unit
         Description not yet provided.
     init_time_dim : str
@@ -239,15 +237,22 @@ def _create_train_mask(
     time_resolution = infer_time_resolution(init_times.coords[init_time_dim].to_index())
 
     if time_resolution == "year":
+
         cutoff_year = int(init_times.dt.year.max().item())
         mask = target_times.dt.year > cutoff_year
 
     elif time_resolution == "month" and lead_time_resolution == "day":
         latest_init_time = init_times.max()
 
-        cutoff_month = latest_init_time.dt.year * 12 + latest_init_time.dt.month
+        cutoff_month = (
+            latest_init_time.dt.year * 12
+            + latest_init_time.dt.month
+        )
 
-        target_month = target_times.dt.year * 12 + target_times.dt.month
+        target_month = (
+            target_times.dt.year * 12
+            + target_times.dt.month
+        )
 
         mask = target_month > cutoff_month
 
