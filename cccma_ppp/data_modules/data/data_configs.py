@@ -26,7 +26,7 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 class ModelDataConfig(DataConfigABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     paths : str
@@ -46,6 +46,7 @@ class ModelDataConfig(DataConfigABC):
     rename_dict : dict
         Description not yet provided.
     """
+
     paths: str
     names: list[str]
     preprocessing_pipeline: PreprocessingPipeline = dataclasses.field(
@@ -74,7 +75,7 @@ class ModelDataConfig(DataConfigABC):
     def TYPE(self) -> str:
         """
         Document this function.
-        
+
         Returns
         -------
         str
@@ -87,7 +88,7 @@ class ModelDataConfig(DataConfigABC):
     def _allowed_dims(cls) -> frozenset[str]:
         """
         Document this function.
-        
+
         Returns
         -------
         frozenset[str]
@@ -100,7 +101,7 @@ class ModelDataConfig(DataConfigABC):
     def _required_dims(cls) -> frozenset[str]:
         """
         Document this function.
-        
+
         Returns
         -------
         frozenset[str]
@@ -113,7 +114,7 @@ class ModelDataConfig(DataConfigABC):
 class ObsDataConfig(DataConfigABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     paths : str
@@ -133,6 +134,7 @@ class ObsDataConfig(DataConfigABC):
     rename_dict : dict
         Description not yet provided.
     """
+
     paths: str
     names: list[str]
     preprocessing_pipeline: PreprocessingPipeline = dataclasses.field(
@@ -147,7 +149,7 @@ class ObsDataConfig(DataConfigABC):
     def __post_init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         RuntimeError
@@ -167,7 +169,7 @@ class ObsDataConfig(DataConfigABC):
     def TYPE(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -180,7 +182,7 @@ class ObsDataConfig(DataConfigABC):
     def _allowed_dims(cls) -> frozenset[str]:
         """
         Document this function.
-        
+
         Returns
         -------
         frozenset[str]
@@ -193,7 +195,7 @@ class ObsDataConfig(DataConfigABC):
     def _required_dims(cls) -> frozenset[str]:
         """
         Document this function.
-        
+
         Returns
         -------
         frozenset[str]
@@ -206,7 +208,7 @@ class ObsDataConfig(DataConfigABC):
 class ConditionDataConfig(DataConfigABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     paths : str
@@ -226,6 +228,7 @@ class ConditionDataConfig(DataConfigABC):
     rename_dict : dict
         Description not yet provided.
     """
+
     paths: str
     names: list[str]
     preprocessing_pipeline: PreprocessingPipeline = dataclasses.field(
@@ -255,7 +258,7 @@ class ConditionDataConfig(DataConfigABC):
     def TYPE(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -268,7 +271,7 @@ class ConditionDataConfig(DataConfigABC):
     def _allowed_dims(cls) -> frozenset[str]:
         """
         Document this function.
-        
+
         Returns
         -------
         frozenset[str]
@@ -281,7 +284,7 @@ class ConditionDataConfig(DataConfigABC):
     def _required_dims(cls) -> frozenset:
         """
         Document this function.
-        
+
         Returns
         -------
         frozenset
@@ -297,7 +300,7 @@ def build_time_range(
 ) -> xr.CFTimeIndex | np.ndarray:
     """
     Document this function.
-    
+
     Parameters
     ----------
     init_time : xr.DataArray
@@ -306,12 +309,12 @@ def build_time_range(
         Description not yet provided.
     lead_time_resolution : lead_time_unit
         Description not yet provided.
-    
+
     Returns
     -------
     xr.CFTimeIndex | np.ndarray
         Description not yet provided.
-    
+
     Raises
     ------
     TypeError

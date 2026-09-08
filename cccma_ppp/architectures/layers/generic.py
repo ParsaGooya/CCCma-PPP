@@ -18,12 +18,12 @@ NoiseLevel = Literal["full", "medium", "low"]
 def _validate_dropout(value: float | None) -> None:
     """
     Document this function.
-    
+
     Parameters
     ----------
     value : float | None
         Description not yet provided.
-    
+
     Raises
     ------
     ValueError
@@ -36,17 +36,17 @@ def _validate_dropout(value: float | None) -> None:
 def _build_activation(name: ActivationName) -> nn.Module:
     """
     Document this function.
-    
+
     Parameters
     ----------
     name : ActivationName
         Description not yet provided.
-    
+
     Returns
     -------
     nn.Module
         Description not yet provided.
-    
+
     Raises
     ------
     ValueError
@@ -69,7 +69,7 @@ def _build_normalization(
 ) -> nn.Module:
     """
     Document this function.
-    
+
     Parameters
     ----------
     name : NormalizationMethod
@@ -78,12 +78,12 @@ def _build_normalization(
         Description not yet provided.
     group_norm_groups : int
         Description not yet provided.
-    
+
     Returns
     -------
     nn.Module
         Description not yet provided.
-    
+
     Raises
     ------
     ValueError
@@ -110,7 +110,7 @@ def _build_normalization(
 class LayerNorm2d(nn.Module):
     """
     Document this class.
-    
+
     Parameters
     ----------
     num_channels : int
@@ -118,10 +118,11 @@ class LayerNorm2d(nn.Module):
     eps : float
         Description not yet provided.
     """
+
     def __init__(self, num_channels: int, eps: float = 1e-6):
         """
         Document this function.
-        
+
         Parameters
         ----------
         num_channels : int
@@ -137,12 +138,12 @@ class LayerNorm2d(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Document this function.
-        
+
         Parameters
         ----------
         x : torch.Tensor
             Description not yet provided.
-        
+
         Returns
         -------
         torch.Tensor
@@ -160,16 +161,17 @@ class LayerNorm2d(nn.Module):
 class DropPath(nn.Module):
     """
     Document this class.
-    
+
     Parameters
     ----------
     drop_probability : float
         Description not yet provided.
     """
+
     def __init__(self, drop_probability: float = 0.0):
         """
         Document this function.
-        
+
         Parameters
         ----------
         drop_probability : float
@@ -181,12 +183,12 @@ class DropPath(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Document this function.
-        
+
         Parameters
         ----------
         x : torch.Tensor
             Description not yet provided.
-        
+
         Returns
         -------
         torch.Tensor

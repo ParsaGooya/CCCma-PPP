@@ -22,13 +22,13 @@ from cccma_ppp.core.trainer import TrainerConfig
 from cccma_ppp.core.optimization import OptimizerConfig
 from cccma_ppp.core.core_abc import GenerativeContext
 
-from cccma_ppp.generic import registry_imports
+from cccma_ppp.generic import registry_imports  # noqa: F401
 
 
 def set_seed(seed):
     """
     Document this function.
-    
+
     Parameters
     ----------
     seed : Any
@@ -42,7 +42,7 @@ def set_seed(seed):
 class TrainConfig:
     """
     Document this class.
-    
+
     Parameters
     ----------
     experiment_dir : str
@@ -70,6 +70,7 @@ class TrainConfig:
     resume_dir : str | None
         Description not yet provided.
     """
+
     experiment_dir: str
     max_epochs: int
     train_loader: TrainDataloaderConfig | None
@@ -88,7 +89,7 @@ class TrainConfig:
     def __post_init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         AssertionError
@@ -108,14 +109,14 @@ class TrainConfig:
     def _check_module_pipeline_compatability(self):
         """
         Document this function.
-        
+
         Raises
         ------
         RuntimeError
             Description not yet provided.
         ValueError
             Description not yet provided.
-        
+
         Warns
         -----
         UserWarning
@@ -171,7 +172,7 @@ class TrainConfig:
     def set_random_seed(self, rank: int):
         """
         Document this function.
-        
+
         Parameters
         ----------
         rank : int
@@ -184,7 +185,7 @@ class TrainConfig:
     def checkpoint_dir(self) -> str:
         """
         Document this function.
-        
+
         Returns
         -------
         str
@@ -196,7 +197,7 @@ class TrainConfig:
     def log_dir(self) -> str:
         """
         Document this function.
-        
+
         Returns
         -------
         str
@@ -208,7 +209,7 @@ class TrainConfig:
     def monitoring_dir(self) -> str:
         """
         Document this function.
-        
+
         Returns
         -------
         str
@@ -220,7 +221,7 @@ class TrainConfig:
     def figures_dir(self) -> str:
         """
         Document this function.
-        
+
         Returns
         -------
         str
@@ -243,7 +244,7 @@ class TrainConfig:
     def prepare_directory(self, distributed: Distributed, yaml_config: str = None):
         """
         Document this function.
-        
+
         Parameters
         ----------
         distributed : Distributed
@@ -279,7 +280,7 @@ class TrainConfig:
     def _resolve_resuming(self):
         """
         Document this function.
-        
+
         Raises
         ------
         ValueError
@@ -324,7 +325,7 @@ class TrainConfig:
     ) -> "TrainConfig":
         """
         Document this function.
-        
+
         Parameters
         ----------
         resume_dir : str | Path
@@ -333,12 +334,12 @@ class TrainConfig:
             Description not yet provided.
         max_epochs : int
             Description not yet provided.
-        
+
         Returns
         -------
         'TrainConfig'
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -362,12 +363,12 @@ class TrainConfig:
 def prepare_config(path: Path | str) -> dict:
     """
     Document this function.
-    
+
     Parameters
     ----------
     path : Path | str
         Description not yet provided.
-    
+
     Returns
     -------
     dict
@@ -383,7 +384,7 @@ def build_trainer(
 ):
     """
     Document this function.
-    
+
     Parameters
     ----------
     config : TrainConfig
@@ -392,16 +393,17 @@ def build_trainer(
         Description not yet provided.
     logger : logging.Logger | None
         Description not yet provided.
-    
+
     Returns
     -------
     Any
         Description not yet provided.
     """
+
     def log(msg, **kwargs):
         """
         Document this function.
-        
+
         Parameters
         ----------
         msg : Any
@@ -480,7 +482,7 @@ def build_trainer(
 def _check_IO(metadata: dict, model_dims: int, which: str = "input"):
     """
     Document this function.
-    
+
     Parameters
     ----------
     metadata : dict
@@ -489,7 +491,7 @@ def _check_IO(metadata: dict, model_dims: int, which: str = "input"):
         Description not yet provided.
     which : str
         Description not yet provided.
-    
+
     Raises
     ------
     RuntimeError

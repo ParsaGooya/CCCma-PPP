@@ -46,7 +46,7 @@ def build_conv_block(
 ) -> nn.Module:
     """
     Document this function.
-    
+
     Parameters
     ----------
     in_channels : int
@@ -65,12 +65,12 @@ def build_conv_block(
         Description not yet provided.
     inject_noise : bool
         Description not yet provided.
-    
+
     Returns
     -------
     nn.Module
         Description not yet provided.
-    
+
     Raises
     ------
     TypeError
@@ -135,7 +135,7 @@ def build_conv_block(
 class DownBlock(nn.Module):
     """
     Document this class.
-    
+
     Parameters
     ----------
     in_channels : int
@@ -153,6 +153,7 @@ class DownBlock(nn.Module):
     process_skip_connections : bool
         Description not yet provided.
     """
+
     def __init__(
         self,
         in_channels: int,
@@ -166,7 +167,7 @@ class DownBlock(nn.Module):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         in_channels : int
@@ -233,12 +234,12 @@ class DownBlock(nn.Module):
     ) -> TensorMask | tuple[TensorMask, TensorMask]:
         """
         Document this function.
-        
+
         Parameters
         ----------
         input : TensorMask
             Description not yet provided.
-        
+
         Returns
         -------
         TensorMask | tuple[TensorMask, TensorMask]
@@ -272,12 +273,12 @@ class DownBlock(nn.Module):
     def output_shape(self, input_shape: np.ndarray | tuple):
         """
         Document this function.
-        
+
         Parameters
         ----------
         input_shape : np.ndarray | tuple
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -289,7 +290,7 @@ class DownBlock(nn.Module):
 class UpBlock(nn.Module):
     """
     Document this class.
-    
+
     Parameters
     ----------
     input_channels : int
@@ -311,6 +312,7 @@ class UpBlock(nn.Module):
     inject_noise_in_block : bool
         Description not yet provided.
     """
+
     def __init__(
         self,
         input_channels: int,
@@ -326,7 +328,7 @@ class UpBlock(nn.Module):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         input_channels : int
@@ -347,7 +349,7 @@ class UpBlock(nn.Module):
             Description not yet provided.
         inject_noise_in_block : bool
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -453,7 +455,7 @@ class UpBlock(nn.Module):
     ) -> TensorMask:
         """
         Document this function.
-        
+
         Parameters
         ----------
         input : TensorMask
@@ -462,12 +464,12 @@ class UpBlock(nn.Module):
             Description not yet provided.
         resize_shape : tuple | None
             Description not yet provided.
-        
+
         Returns
         -------
         TensorMask
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -527,7 +529,7 @@ class UpBlock(nn.Module):
 class UNetOutput(nn.Module):
     """
     Document this class.
-    
+
     Parameters
     ----------
     in_channels : int
@@ -539,6 +541,7 @@ class UNetOutput(nn.Module):
     activation : OutputActivation
         Description not yet provided.
     """
+
     def __init__(
         self,
         in_channels: int,
@@ -549,7 +552,7 @@ class UNetOutput(nn.Module):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         in_channels : int
@@ -560,7 +563,7 @@ class UNetOutput(nn.Module):
             Description not yet provided.
         activation : OutputActivation
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -600,12 +603,12 @@ class UNetOutput(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Document this function.
-        
+
         Parameters
         ----------
         x : torch.Tensor
             Description not yet provided.
-        
+
         Returns
         -------
         torch.Tensor
@@ -617,7 +620,7 @@ class UNetOutput(nn.Module):
 class UNetOutputSIC(nn.Module):
     """
     Document this class.
-    
+
     Parameters
     ----------
     in_channels : int
@@ -631,6 +634,7 @@ class UNetOutputSIC(nn.Module):
     clip_output : bool
         Description not yet provided.
     """
+
     def __init__(
         self,
         in_channels: int,
@@ -642,7 +646,7 @@ class UNetOutputSIC(nn.Module):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         in_channels : int
@@ -655,7 +659,7 @@ class UNetOutputSIC(nn.Module):
             Description not yet provided.
         clip_output : bool
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -699,12 +703,12 @@ class UNetOutputSIC(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Document this function.
-        
+
         Parameters
         ----------
         x : torch.Tensor
             Description not yet provided.
-        
+
         Returns
         -------
         torch.Tensor

@@ -36,7 +36,7 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 class lead_time_config:
     """
     Document this class.
-    
+
     Parameters
     ----------
     list_lead_times : list | None
@@ -46,6 +46,7 @@ class lead_time_config:
     end : int
         Description not yet provided.
     """
+
     list_lead_times: list | None = None
     start: int = 1
     end: int = None
@@ -53,7 +54,7 @@ class lead_time_config:
     def __post_init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         ValueError
@@ -69,7 +70,7 @@ class lead_time_config:
     def build_lead_times(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -81,7 +82,7 @@ class lead_time_config:
 class DatasetConfigABC(abc.ABC):
     """
     Document this class.
-    
+
     Attributes
     ----------
     model : ModelDataConfig | None
@@ -95,6 +96,7 @@ class DatasetConfigABC(abc.ABC):
     _effective_condition : ConditionDataConfig | ModelDataConfig | None
         Description not yet provided.
     """
+
     _VALID_CONDITION_METHODS: ClassVar[frozenset[str]] = frozenset(
         {"ensemble_mean", "cross_ensemble", "same_member", "static"}
     )
@@ -114,7 +116,7 @@ class DatasetConfigABC(abc.ABC):
     def __init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         ValueError
@@ -144,12 +146,12 @@ class DatasetConfigABC(abc.ABC):
     def _check_required_input_source(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -166,7 +168,7 @@ class DatasetConfigABC(abc.ABC):
     def _check_model_vs_condition(self):
         """
         Document this function.
-        
+
         Raises
         ------
         ValueError
@@ -253,12 +255,12 @@ class DatasetConfigABC(abc.ABC):
     def _check_condition_method(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -275,12 +277,12 @@ class DatasetConfigABC(abc.ABC):
     def _check_model(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -298,12 +300,12 @@ class DatasetConfigABC(abc.ABC):
     def _check_condition(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -391,7 +393,7 @@ class DatasetConfigABC(abc.ABC):
     def input_lead_times(self) -> int:
         """
         Document this function.
-        
+
         Returns
         -------
         int
@@ -412,7 +414,7 @@ class DatasetConfigABC(abc.ABC):
     def _using_model_data_as_condition(self) -> bool:
         """
         Document this function.
-        
+
         Returns
         -------
         bool
@@ -439,7 +441,7 @@ class DatasetConfigABC(abc.ABC):
     def effective_condition(self) -> ConditionDataConfig | ModelDataConfig | None:
         """
         Document this function.
-        
+
         Returns
         -------
         ConditionDataConfig | ModelDataConfig | None
@@ -452,7 +454,7 @@ class DatasetConfigABC(abc.ABC):
     def effective_condition_method(self) -> str:
         """
         Document this function.
-        
+
         Returns
         -------
         str
@@ -464,7 +466,7 @@ class DatasetConfigABC(abc.ABC):
     def _model_as_condition(self) -> ModelDataConfig:
         """
         Document this function.
-        
+
         Returns
         -------
         ModelDataConfig
@@ -493,17 +495,17 @@ class DatasetConfigABC(abc.ABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         requested_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -532,7 +534,7 @@ class DatasetConfigABC(abc.ABC):
     def _resolve_condition(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -559,7 +561,7 @@ class DatasetConfigABC(abc.ABC):
 class AddedTimeFeatures:
     """
     Document this class.
-    
+
     Parameters
     ----------
     reference_config : DatasetConfigABC
@@ -567,13 +569,14 @@ class AddedTimeFeatures:
     time_features : list[str] | None
         Description not yet provided.
     """
+
     reference_config: DatasetConfigABC
     time_features: list[str] | None = None
 
     def __post_init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         ValueError
@@ -617,12 +620,12 @@ class AddedTimeFeatures:
     ) -> int:
         """
         Document this function.
-        
+
         Parameters
         ----------
         time : np.datetime64 | datetime.datetime | cftime.datetime
             Description not yet provided.
-        
+
         Returns
         -------
         int
@@ -656,17 +659,17 @@ class AddedTimeFeatures:
     ) -> "AddedTimeFeatures":
         """
         Document this function.
-        
+
         Parameters
         ----------
         sample_coords : dict[str, np.ndarray]
             Description not yet provided.
-        
+
         Returns
         -------
         'AddedTimeFeatures'
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -775,19 +778,19 @@ class AddedTimeFeatures:
     ) -> np.ndarray | None:
         """
         Document this function.
-        
+
         Parameters
         ----------
         ind : int
             Description not yet provided.
         input : xr.DataArray
             Description not yet provided.
-        
+
         Returns
         -------
         np.ndarray | None
             Description not yet provided.
-        
+
         Raises
         ------
         IndexError
@@ -822,7 +825,7 @@ class AddedTimeFeatures:
     def __len__(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -833,12 +836,12 @@ class AddedTimeFeatures:
     def __eq__(self, other):
         """
         Document this function.
-        
+
         Parameters
         ----------
         other : Any
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -861,7 +864,7 @@ class AddedTimeFeatures:
 class DatasetABC(Dataset, abc.ABC):
     """
     Document this class.
-    
+
     Attributes
     ----------
     config : DatasetConfigABC
@@ -877,6 +880,7 @@ class DatasetABC(Dataset, abc.ABC):
     load : bool
         Description not yet provided.
     """
+
     config: DatasetConfigABC
     requested_times: (
         Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
@@ -918,7 +922,7 @@ class DatasetABC(Dataset, abc.ABC):
     def _check_init(self):
         """
         Document this function.
-        
+
         Raises
         ------
         RuntimeError
@@ -948,7 +952,7 @@ class DatasetABC(Dataset, abc.ABC):
     def _resolve_mask(self):
         """
         Document this function.
-        
+
         Raises
         ------
         ValueError
@@ -975,7 +979,7 @@ class DatasetABC(Dataset, abc.ABC):
     def _sampling_times_selectors(self) -> dict:
         """
         Document this function.
-        
+
         Returns
         -------
         dict
@@ -1016,17 +1020,17 @@ class DatasetABC(Dataset, abc.ABC):
     def _prepare_sampling_mask(self, sampling_times_selectors: dict):
         """
         Document this function.
-        
+
         Parameters
         ----------
         sampling_times_selectors : dict
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -1063,7 +1067,7 @@ class DatasetABC(Dataset, abc.ABC):
     def get_sampling_coords(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -1086,17 +1090,17 @@ class DatasetABC(Dataset, abc.ABC):
     ) -> dict[str, np.ndarray] | None:
         """
         Document this function.
-        
+
         Parameters
         ----------
         sample_coords : dict[str, np.ndarray]
             Description not yet provided.
-        
+
         Returns
         -------
         dict[str, np.ndarray] | None
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -1130,17 +1134,17 @@ class DatasetABC(Dataset, abc.ABC):
     ) -> dict[str, np.ndarray] | None:
         """
         Document this function.
-        
+
         Parameters
         ----------
         sample_coords : dict[str, np.ndarray]
             Description not yet provided.
-        
+
         Returns
         -------
         dict[str, np.ndarray] | None
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -1192,7 +1196,7 @@ class DatasetABC(Dataset, abc.ABC):
     def get_input_shape(self) -> tuple:
         """
         Document this function.
-        
+
         Returns
         -------
         tuple
@@ -1229,7 +1233,7 @@ class DatasetABC(Dataset, abc.ABC):
     def get_added_features_dim(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -1241,12 +1245,12 @@ class DatasetABC(Dataset, abc.ABC):
     def _index_condition_dataset(self, ind: int) -> xr.DataArray | None:
         """
         Document this function.
-        
+
         Parameters
         ----------
         ind : int
             Description not yet provided.
-        
+
         Returns
         -------
         xr.DataArray | None
@@ -1280,12 +1284,12 @@ class DatasetABC(Dataset, abc.ABC):
     def _index_model_dataset(self, ind: int) -> xr.DataArray | None:
         """
         Document this function.
-        
+
         Parameters
         ----------
         ind : int
             Description not yet provided.
-        
+
         Returns
         -------
         xr.DataArray | None
@@ -1306,12 +1310,12 @@ class DatasetABC(Dataset, abc.ABC):
     def _compute(*arrays) -> tuple:
         """
         Document this function.
-        
+
         Parameters
         ----------
         *arrays : Any
             Description not yet provided.
-        
+
         Returns
         -------
         tuple
@@ -1324,7 +1328,7 @@ class DatasetABC(Dataset, abc.ABC):
     def __len__(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any

@@ -33,7 +33,7 @@ from cccma_ppp.configs import lead_time_resolution
 class TrainDatasetConfig(DatasetConfigABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     model : ModelDataConfig
@@ -47,6 +47,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     lead_times : lead_time_config | None
         Description not yet provided.
     """
+
     model: ModelDataConfig
     observation: ObsDataConfig | None = None
     condition: ConditionDataConfig | None = None
@@ -64,17 +65,17 @@ class TrainDatasetConfig(DatasetConfigABC):
     def _check_observation(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
             Description not yet provided.
-        
+
         Warns
         -----
         UserWarning
@@ -122,7 +123,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     def effective_input(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -134,7 +135,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     def ds_operator(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -146,7 +147,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     def get_common_time(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -162,7 +163,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     def available_times(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -211,7 +212,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         train_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray | slice
@@ -233,7 +234,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         """
         Document this function.
-        
+
         Parameters
         ----------
         load_dir : Path | str | None
@@ -244,7 +245,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     def add_fitted_preprocessor(self, preprocessor, index=0):
         """
         Document this function.
-        
+
         Parameters
         ----------
         preprocessor : Any
@@ -268,7 +269,7 @@ class TrainDatasetConfig(DatasetConfigABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
@@ -281,7 +282,7 @@ class TrainDatasetConfig(DatasetConfigABC):
             Description not yet provided.
         load : bool
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -301,7 +302,7 @@ class TrainDatasetConfig(DatasetConfigABC):
 class TrainDataset(DatasetABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     config : TrainDatasetConfig
@@ -317,6 +318,7 @@ class TrainDataset(DatasetABC):
     load : bool
         Description not yet provided.
     """
+
     config: TrainDatasetConfig
     requested_times: (
         Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
@@ -345,7 +347,7 @@ class TrainDataset(DatasetABC):
     def _autoencoding_model_data(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -357,7 +359,7 @@ class TrainDataset(DatasetABC):
     def _load_model(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -374,7 +376,7 @@ class TrainDataset(DatasetABC):
     def _write_condition_to_input(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -392,7 +394,7 @@ class TrainDataset(DatasetABC):
     def _concat_condition_to_input(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -409,17 +411,17 @@ class TrainDataset(DatasetABC):
     ) -> dict[str, np.ndarray] | None:
         """
         Document this function.
-        
+
         Parameters
         ----------
         sample_coords : dict[str, np.ndarray]
             Description not yet provided.
-        
+
         Returns
         -------
         dict[str, np.ndarray] | None
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -463,7 +465,7 @@ class TrainDataset(DatasetABC):
     def get_target_shape(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -501,12 +503,12 @@ class TrainDataset(DatasetABC):
     def _index_observation_dataset(self, ind: int) -> xr.DataArray | None:
         """
         Document this function.
-        
+
         Parameters
         ----------
         ind : int
             Description not yet provided.
-        
+
         Returns
         -------
         xr.DataArray | None
@@ -534,12 +536,12 @@ class TrainDataset(DatasetABC):
     def __getitem__(self, ind):
         """
         Document this function.
-        
+
         Parameters
         ----------
         ind : Any
             Description not yet provided.
-        
+
         Returns
         -------
         Any

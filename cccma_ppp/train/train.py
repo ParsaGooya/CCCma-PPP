@@ -17,7 +17,7 @@ from cccma_ppp.train.train_configs import (
 def get_parser() -> argparse.ArgumentParser:
     """
     Document this function.
-    
+
     Returns
     -------
     argparse.ArgumentParser
@@ -37,7 +37,7 @@ def get_parser() -> argparse.ArgumentParser:
 def main(yaml_config: str) -> None:
     """
     Document this function.
-    
+
     Parameters
     ----------
     yaml_config : str

@@ -12,7 +12,7 @@ from cccma_ppp.architectures.normalized_flows import NormalizedFlowModel
 class BetaAnnealing:
     """
     Document this class.
-    
+
     Parameters
     ----------
     beta : float
@@ -24,6 +24,7 @@ class BetaAnnealing:
     num_epochs_to_hold : int
         Description not yet provided.
     """
+
     beta: float = 1
     beta_min: float = 0
     num_epoch_to_warmup: int = 0
@@ -32,7 +33,7 @@ class BetaAnnealing:
     def __post_init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         AssertionError
@@ -46,7 +47,7 @@ class BetaAnnealing:
     def build(self, num_batches):
         """
         Document this function.
-        
+
         Parameters
         ----------
         num_batches : Any
@@ -68,17 +69,17 @@ class BetaAnnealing:
     def __call__(self, step: int):
         """
         Document this function.
-        
+
         Parameters
         ----------
         step : int
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         AssertionError
@@ -100,19 +101,20 @@ class BetaAnnealing:
 class KLD(lossABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     reduction : Reduction
         Description not yet provided.
     """
+
     def __init__(
         self,
         reduction: Reduction = "mean",
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         reduction : Reduction
@@ -133,7 +135,7 @@ class KLD(lossABC):
     ) -> torch.Tensor:
         """
         Document this function.
-        
+
         Parameters
         ----------
         mu : torch.Tensor
@@ -148,12 +150,12 @@ class KLD(lossABC):
             Description not yet provided.
         print_loss : Any
             Description not yet provided.
-        
+
         Returns
         -------
         torch.Tensor
             Description not yet provided.
-        
+
         Raises
         ------
         AssertionError
@@ -230,12 +232,12 @@ class KLD(lossABC):
     def _aggregate(self, loss):
         """
         Document this function.
-        
+
         Parameters
         ----------
         loss : Any
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -254,7 +256,7 @@ class KLD(lossABC):
     def _print_loss(self, loss):
         """
         Document this function.
-        
+
         Parameters
         ----------
         loss : Any
@@ -265,7 +267,7 @@ class KLD(lossABC):
     def sample(self, mu, log_var, sample_size=1, std=1):
         """
         Document this function.
-        
+
         Parameters
         ----------
         mu : Any
@@ -276,7 +278,7 @@ class KLD(lossABC):
             Description not yet provided.
         std : Any
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -290,14 +292,14 @@ class KLD(lossABC):
     def _get_normal(self, ref_tensor, std=1):
         """
         Document this function.
-        
+
         Parameters
         ----------
         ref_tensor : Any
             Description not yet provided.
         std : Any
             Description not yet provided.
-        
+
         Returns
         -------
         Any

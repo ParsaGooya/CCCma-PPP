@@ -18,7 +18,7 @@ spatialmethod = Literal["uniform", "cosine_lat"]
 class WeightsConfig:
     """
     Document this class.
-    
+
     Parameters
     ----------
     spatial_method : spatialmethod
@@ -28,6 +28,7 @@ class WeightsConfig:
     load_dir : Path | str | None
         Description not yet provided.
     """
+
     spatial_method: spatialmethod = "uniform"
     variable_weights: dict[str, float] | None = None
     load_dir: Path | str | None = None
@@ -35,7 +36,7 @@ class WeightsConfig:
     def __post_init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         FileNotFoundError
@@ -55,7 +56,7 @@ class WeightsConfig:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         target_coords : dict
@@ -68,12 +69,12 @@ class WeightsConfig:
             Description not yet provided.
         save_name : str | None
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError

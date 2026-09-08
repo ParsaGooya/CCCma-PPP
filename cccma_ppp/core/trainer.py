@@ -23,7 +23,7 @@ from cccma_ppp.loss.kld import BetaAnnealing
 class TrainerConfig:
     """
     Document this class.
-    
+
     Parameters
     ----------
     beta_finder : BetaAnnealing | None
@@ -39,6 +39,7 @@ class TrainerConfig:
     grad_clip : float | None
         Description not yet provided.
     """
+
     beta_finder: BetaAnnealing | None = None
     earlystoppingbuffer: float = float("inf")
     minimum_validation_improvement_percentage: float = 0.02
@@ -49,7 +50,7 @@ class TrainerConfig:
     def __post_init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         AssertionError
@@ -68,7 +69,7 @@ class TrainerConfig:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         train_data_loader : Dataloader
@@ -81,12 +82,12 @@ class TrainerConfig:
             Description not yet provided.
         max_epochs : int
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         ValueError
@@ -116,7 +117,7 @@ class TrainerConfig:
 class Trainer:
     """
     Document this class.
-    
+
     Parameters
     ----------
     config : TrainerConfig
@@ -132,6 +133,7 @@ class Trainer:
     validation_data_loader : Dataloader | None
         Description not yet provided.
     """
+
     def __init__(
         self,
         config: TrainerConfig,
@@ -143,7 +145,7 @@ class Trainer:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         config : TrainerConfig
@@ -194,7 +196,7 @@ class Trainer:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         distributed : Distributed
@@ -205,7 +207,7 @@ class Trainer:
             Description not yet provided.
         save_checkpoint : bool
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -294,7 +296,7 @@ class Trainer:
     def train(self):
         """
         Document this function.
-        
+
         Raises
         ------
         RuntimeError
@@ -420,7 +422,7 @@ class Trainer:
     def _train_on_epoch(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -460,14 +462,14 @@ class Trainer:
     def _train_on_batch(self, batch, accumulation_size: int):
         """
         Document this function.
-        
+
         Parameters
         ----------
         batch : Any
             Description not yet provided.
         accumulation_size : int
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -499,7 +501,7 @@ class Trainer:
     def _validate_on_epoch(self):
         """
         Document this function.
-        
+
         Raises
         ------
         RuntimeError
@@ -525,12 +527,12 @@ class Trainer:
     def _validate_on_batch(self, batch):
         """
         Document this function.
-        
+
         Parameters
         ----------
         batch : Any
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -575,12 +577,12 @@ class Trainer:
     def _is_improved(self, validation_loss: float | torch.Tensor) -> bool:
         """
         Document this function.
-        
+
         Parameters
         ----------
         validation_loss : float | torch.Tensor
             Description not yet provided.
-        
+
         Returns
         -------
         bool
@@ -602,7 +604,7 @@ class Trainer:
     def _should_stop_early(self) -> bool:
         """
         Document this function.
-        
+
         Returns
         -------
         bool
@@ -622,7 +624,7 @@ class Trainer:
     def _log_epoch(self, train_logs, validation_logs=None):
         """
         Document this function.
-        
+
         Parameters
         ----------
         train_logs : Any
@@ -652,7 +654,7 @@ class Trainer:
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         name : str
@@ -691,19 +693,19 @@ class Trainer:
     def _load_checkpoint(self, path: str | Path | None = None, strict: bool = True):
         """
         Document this function.
-        
+
         Parameters
         ----------
         path : str | Path | None
             Description not yet provided.
         strict : bool
             Description not yet provided.
-        
+
         Returns
         -------
         Any
             Description not yet provided.
-        
+
         Raises
         ------
         FileNotFoundError
@@ -763,7 +765,7 @@ class Trainer:
     def raw_module(self):
         """
         Document this function.
-        
+
         Returns
         -------
         Any
@@ -776,7 +778,7 @@ class Trainer:
     def log_root(self, level: int, msg: str, *args):
         """
         Document this function.
-        
+
         Parameters
         ----------
         level : int

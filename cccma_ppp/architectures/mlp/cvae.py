@@ -27,7 +27,7 @@ from cccma_ppp.core.selectors import cVAEModelSelector
 class cVAE_MLPConfig(cVAEmodelConfigABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     encoder_hidden_dims : list
@@ -53,6 +53,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     activation : ActivationName
         Description not yet provided.
     """
+
     encoder_hidden_dims: list
     latent_size: int
     condition_embedding_dims: list | None = None
@@ -73,7 +74,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     def __post_init__(self):
         """
         Document this function.
-        
+
         Raises
         ------
         ValueError
@@ -103,7 +104,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     def EXPECTS_MASK(self) -> bool:
         """
         Document this function.
-        
+
         Returns
         -------
         bool
@@ -119,7 +120,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         input_shape : np.ndarray
@@ -128,7 +129,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
             Description not yet provided.
         added_features_dim : int
             Description not yet provided.
-        
+
         Returns
         -------
         Any
@@ -145,7 +146,7 @@ class cVAE_MLPConfig(cVAEmodelConfigABC):
 class cVAE_MLP(cVAEmodelsABC):
     """
     Document this class.
-    
+
     Parameters
     ----------
     config : cVAE_MLPConfig
@@ -157,6 +158,7 @@ class cVAE_MLP(cVAEmodelsABC):
     added_features_dim : int
         Description not yet provided.
     """
+
     def __init__(
         self,
         config: cVAE_MLPConfig,
@@ -166,7 +168,7 @@ class cVAE_MLP(cVAEmodelsABC):
     ):
         """
         Document this function.
-        
+
         Parameters
         ----------
         config : cVAE_MLPConfig
@@ -177,7 +179,7 @@ class cVAE_MLP(cVAEmodelsABC):
             Description not yet provided.
         added_features_dim : int
             Description not yet provided.
-        
+
         Raises
         ------
         RuntimeError
@@ -288,12 +290,12 @@ class cVAE_MLP(cVAEmodelsABC):
     def forward(self, request: cVAEForwardRequest) -> cVAEOutput:
         """
         Document this function.
-        
+
         Parameters
         ----------
         request : cVAEForwardRequest
             Description not yet provided.
-        
+
         Returns
         -------
         cVAEOutput
@@ -353,12 +355,12 @@ class cVAE_MLP(cVAEmodelsABC):
     ) -> cVAEOutput:
         """
         Document this function.
-        
+
         Parameters
         ----------
         request : cVAEPredictRequest
             Description not yet provided.
-        
+
         Returns
         -------
         cVAEOutput
@@ -395,7 +397,7 @@ class cVAE_MLP(cVAEmodelsABC):
     ) -> tuple[torch.Tensor]:
         """
         Document this function.
-        
+
         Parameters
         ----------
         x : torch.Tensor
@@ -406,7 +408,7 @@ class cVAE_MLP(cVAEmodelsABC):
             Description not yet provided.
         added_features : torch.Tensor
             Description not yet provided.
-        
+
         Returns
         -------
         tuple[torch.Tensor]
@@ -442,7 +444,7 @@ class cVAE_MLP(cVAEmodelsABC):
     ) -> tuple[torch.Tensor]:
         """
         Document this function.
-        
+
         Parameters
         ----------
         condition : torch.Tensor
@@ -451,7 +453,7 @@ class cVAE_MLP(cVAEmodelsABC):
             Description not yet provided.
         added_features : torch.Tensor
             Description not yet provided.
-        
+
         Returns
         -------
         tuple[torch.Tensor]
@@ -487,7 +489,7 @@ class cVAE_MLP(cVAEmodelsABC):
     ) -> torch.Tensor:
         """
         Document this function.
-        
+
         Parameters
         ----------
         latent_samples : torch.Tensor
@@ -496,7 +498,7 @@ class cVAE_MLP(cVAEmodelsABC):
             Description not yet provided.
         added_features : torch.Tensor
             Description not yet provided.
-        
+
         Returns
         -------
         torch.Tensor
