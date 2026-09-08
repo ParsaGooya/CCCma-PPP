@@ -9,7 +9,12 @@ import warnings
 
 from cccma_ppp.core.registery import Registery
 from cccma_ppp.core.core_abc import moduleABC
-from cccma_ppp.architectures.models_abc import modelABC, flowABC, CheckpointConfig, modelConfigABC
+from cccma_ppp.architectures.models_abc import (
+    modelABC,
+    flowABC,
+    CheckpointConfig,
+    modelConfigABC,
+)
 
 
 @dataclasses.dataclass
@@ -119,10 +124,10 @@ class ModuleSelector:
 
         Returns
         -------
-        bool
+        str
             Description not yet provided.
         """
-        return self._module_config.ModelConfig.type     
+        return self._module_config.ModelConfig.type
 
     @property
     def model_config(self) -> modelConfigABC:
@@ -131,10 +136,10 @@ class ModuleSelector:
 
         Returns
         -------
-        bool
+        modelConfigABC
             Description not yet provided.
         """
-        return self._module_config.model_config              
+        return self._module_config.model_config
 
     def build_module(
         self,

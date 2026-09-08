@@ -34,11 +34,15 @@ class WriterConfig:
 
     Parameters
     ----------
-    predictor : DeterministicPredictorConfig | cVAEPredictorConfig
+    predictor : DeterministicPredictorConfig | cVAEPredictorConfig | None
         Description not yet provided.
     num_output_sampling : int
         Description not yet provided.
     get_trained_model_stats_from_validation : bool
+        Description not yet provided.
+    aggregate_only : bool
+        Description not yet provided.
+    predict_only : bool
         Description not yet provided.
     """
 
@@ -46,7 +50,7 @@ class WriterConfig:
     num_output_sampling: int = 1
     get_trained_model_stats_from_validation: bool = False
     aggregate_only: bool = False
-    predict_only: bool  = False
+    predict_only: bool = False
 
     def __post_init__(self):
         """
@@ -59,7 +63,6 @@ class WriterConfig:
         """
         if self.num_output_sampling <= 0:
             raise ValueError("num_output_sampling cannot be zero or negative.")
-
 
     def build(
         self,
@@ -97,9 +100,9 @@ class WriterConfig:
         """
         if self.aggregate_only and self.predict_only:
             raise RuntimeError(
-                "You can run the writer in aggregate_only OR predict_only mode OR neither. " \
-                "In case of the former, temporary batch predictions must have been saved " \
-                "on the disc previously. In case of the later, batch predictions will be saved temporarily " \
+                "You can run the writer in aggregate_only OR predict_only mode OR neither. "
+                "In case of the former, temporary batch predictions must have been saved "
+                "on the disc previously. In case of the later, batch predictions will be saved temporarily "
                 "but will not be aggregated year by year."
             )
         if not self.aggregate_only:
@@ -111,7 +114,6 @@ class WriterConfig:
                     f"The provided selector config matches {self.predictor._type}"
                     f" selector but the module is {module.config._type.lower()}"
                 )
-
 
         return Writer(
             config=self,
@@ -226,9 +228,11 @@ class Writer:
         self.temp_save_dir = Path(self.output_dir) / "_temp"
 
         if self.config.aggregate_only:
-            if not (self.temp_save_dir.is_dir() and any(self.temp_save_dir.glob("*.nc"))):
+            if not (
+                self.temp_save_dir.is_dir() and any(self.temp_save_dir.glob("*.nc"))
+            ):
                 raise RuntimeError(
-                    "With aggregate_only writer mode, a _temp folder with at least " \
+                    "With aggregate_only writer mode, a _temp folder with at least "
                     "one ''.nc'' file must exist!"
                 )
 
@@ -239,7 +243,6 @@ class Writer:
             self.distributed.barrier()
 
         if not self.config.aggregate_only:
-
             self.predictor = self.config.predictor.build(
                 self.module,
                 self.distributed,
@@ -302,9 +305,9 @@ class Writer:
         loader = self.InferenceLoader
         do_post_process = True
 
-        if (not self.config.aggregate_only and 
-        getattr(self.predictor, "save_latent", False)):
-
+        if not self.config.aggregate_only and getattr(
+            self.predictor, "save_latent", False
+        ):
             loader = self.build_train_loader(return_metadata=True, shuffle=False)
             do_post_process = False
 
@@ -545,7 +548,7 @@ def aggregate_predictions(
 
             if source is None:
                 source = data.attrs["source"]
-                
+
             if nstds == "NA":
                 nstds = data.attrs.get("nstds", None)
 

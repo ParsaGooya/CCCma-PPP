@@ -1,5 +1,5 @@
 import warnings
-warnings.filterwarnings('ignore')
+
 
 import numpy as np
 import xarray as xr
@@ -21,6 +21,8 @@ from cccma_ppp.configs import (
 
 init_time_dim, lead_time_dim = required_sample_dimensions
 TemporalFrequency = Literal["year", "month", "day"]
+
+warnings.filterwarnings("ignore")
 
 
 @PreprocessingStepSelector.register("normalizer")
@@ -259,7 +261,11 @@ class Standardizer(PreprocessModuleABC):
                 grouped_data.groupby(self.frequency).mean(dim=reduction_dims).load()
             )
 
-            std = grouped_data.groupby(self.frequency).std(dim=reduction_dims, ddof = 1).load()
+            std = (
+                grouped_data.groupby(self.frequency)
+                .std(dim=reduction_dims, ddof=1)
+                .load()
+            )
 
         self.std = std.where(std > 0)
 

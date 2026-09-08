@@ -28,7 +28,7 @@ class cVAEPredictorConfig:
         Description not yet provided.
     nstds : float
         Description not yet provided.
-    chunk_size: int 
+    chunk_size : int | None
         Description not yet provided.
     infer_latent_samples_from_training : bool
         Description not yet provided.
@@ -269,7 +269,7 @@ class cVAEPredictor(PredictorABC):
 
             if self.num_output_covariance_sampling > 1:
                 num_output_sampling = 1
-            else: 
+            else:
                 num_output_sampling = self.num_output_sampling
 
             output = self.raw_module.predict(
@@ -278,12 +278,12 @@ class cVAEPredictor(PredictorABC):
                 nstds=self.nstds,
                 latent_samples=latent_samples,
                 output_sample_size=num_output_sampling,
-                chunk_size=self.config.chunk_size
+                chunk_size=self.config.chunk_size,
             )
 
             if self.num_output_covariance_sampling > 1:
-                sample_size = output.output.shape[:2]  # N x B
-                reshape_size = output.output.shape[2:]  # C x ...
+                sample_size = output.output.shape[:2]
+                reshape_size = output.output.shape[2:]
                 output = self.add_decoder_noise(
                     output,
                     self.num_output_covariance_sampling,
@@ -489,7 +489,7 @@ class cVAEPredictor(PredictorABC):
 
             num_output_dims = 1
             extra_dims_sorted = []
-            attrs = {"source" : "latent"}
+            attrs = {"source": "latent"}
 
             if self.infer_latent_samples_from_training:
                 attrs["infer_latent_samples_from_training"] = True
@@ -503,15 +503,10 @@ class cVAEPredictor(PredictorABC):
             num_output_dims = self.raw_module.model_config.NUM_OUTPUT_DIMS
             extra_dims_sorted = ["output_samples", "latent_samples"]
             assign_coords = None
-            attrs = {
-                "source" : "predictions",
-                "nstds": self.nstds
-            }
+            attrs = {"source": "predictions", "nstds": self.nstds}
 
-        save_name = (
-                f"rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
-            )
-        
+        save_name = f"rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
+
         save_batch_to_netcdf(
             prediction,
             metadata,
