@@ -232,9 +232,69 @@ class ExternalConditionScenarios:
         "expected_result": "PASS",
     }
 
+    TAS_STDR_WITH_DIRECT_INDEXING = {
+        "name": "bias_correct_with_tas_stdr_direct_indexing",
+        "description": "Use tas_stdr without sampling method (direct time indexing).",
+        "model_present": True,
+        "condition_present": True,
+        "observation_present": True,
+        "condition_kind": "tas_stdr",
+        "condition_path": str(TAS_STDR_PATH),
+        "condition_method_requirement": "OPTIONAL",
+        "condition_method": None,
+        "model_ensemble_mean": False,
+        "condition_ensemble_mean": None,
+        "condition_has_ensemble": False,
+        "expected_input": "model and tas_stdr data at sampled init_time, lead_time",
+        "expected_target": "observation data at calculated valid time",
+        "expected_result": "PASS",
+    }
+
+    DUMMY_MASK_WITH_ENSEMBLE_MODEL = {
+        "name": "bias_correct_with_dummy_mask_ensemble_model",
+        "description": "Use static mask with model ensemble mean for feature combination.",
+        "model_present": True,
+        "condition_present": True,
+        "observation_present": True,
+        "condition_kind": "static",
+        "condition_path": str(DUMMY_MASK_PATH),
+        "condition_method_requirement": "MUST",
+        "condition_method": "static",
+        "model_ensemble_mean": True,
+        "condition_ensemble_mean": None,
+        "condition_has_ensemble": False,
+        "expected_input": "model ensemble mean concatenated with static mask channel",
+        "expected_target": "observation data at calculated valid time",
+        "expected_result": "PASS",
+    }
+
+    TAS_STDR_SAME_MEMBER_METHOD = {
+        "name": "bias_correct_with_tas_stdr_same_member",
+        "description": "Use tas_stdr with member matching (if ensemble exists in data).",
+        "model_present": True,
+        "condition_present": True,
+        "observation_present": True,
+        "condition_kind": "tas_stdr",
+        "condition_path": str(TAS_STDR_PATH),
+        "condition_method_requirement": "MUST",
+        "condition_method": "same_member",
+        "model_ensemble_mean": False,
+        "condition_ensemble_mean": False,
+        "condition_has_ensemble": False,
+        "expected_input": "model and tas_stdr at matched ensemble indices",
+        "expected_target": "observation data at calculated valid time",
+        "expected_result": "PASS",
+    }
+
     @classmethod
     def all(cls) -> list[dict[str, Any]]:
-        return [cls.TAS_STDR_CONDITION, cls.STATIC_MASK_CONDITION]
+        return [
+            cls.TAS_STDR_CONDITION,
+            cls.STATIC_MASK_CONDITION,
+            cls.TAS_STDR_WITH_DIRECT_INDEXING,
+            cls.DUMMY_MASK_WITH_ENSEMBLE_MODEL,
+            cls.TAS_STDR_SAME_MEMBER_METHOD,
+        ]
 
 
 class DataloaderScenarios:
