@@ -1,5 +1,6 @@
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 import numpy as np
 import xarray as xr
@@ -259,7 +260,11 @@ class Standardizer(PreprocessModuleABC):
                 grouped_data.groupby(self.frequency).mean(dim=reduction_dims).load()
             )
 
-            std = grouped_data.groupby(self.frequency).std(dim=reduction_dims, ddof = 1).load()
+            std = (
+                grouped_data.groupby(self.frequency)
+                .std(dim=reduction_dims, ddof=1)
+                .load()
+            )
 
         self.std = std.where(std > 0)
 

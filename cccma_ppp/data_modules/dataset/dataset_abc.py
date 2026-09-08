@@ -289,7 +289,6 @@ class DatasetConfigABC(abc.ABC):
             Description not yet provided.
         """
         if self.model is not None:
-            
             if self.effective_condition_method == "same_member":
                 if self.model.ensemble_mean:
                     raise ValueError(
@@ -422,7 +421,6 @@ class DatasetConfigABC(abc.ABC):
             Description not yet provided.
         """
         if self.condition is None:
-            
             return self.effective_condition_method in {
                 "ensemble_mean",
                 "cross_ensemble",
@@ -454,9 +452,7 @@ class DatasetConfigABC(abc.ABC):
     @final
     @property
     def effective_condition_method(self) -> str:
-        return (None 
-                if self.condition_method is None 
-                else self.condition_method.lower())
+        return None if self.condition_method is None else self.condition_method.lower()
 
     @final
     def _model_as_condition(self) -> ModelDataConfig:
