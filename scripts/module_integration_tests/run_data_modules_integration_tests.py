@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import csv
-import gc
 import inspect
 import json
 import logging
@@ -1827,7 +1826,7 @@ def run_task(task: dict[str, Any]) -> tuple[bool, str]:
             if hasattr(xr.backends, "netCDF4_"):
                 xr.backends.netCDF4_ = None
 
-        except Exception as e:
+        except Exception:
             pass
 
         gc.collect()

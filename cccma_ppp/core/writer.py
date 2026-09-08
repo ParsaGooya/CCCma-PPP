@@ -526,7 +526,7 @@ def aggregate_predictions(
     output_dir = Path(output_dir)
     temp_save_dir = output_dir / "_temp"
 
-    temp_files = sorted(temp_save_dir.glob(f"rank*_*.nc"))
+    temp_files = sorted(temp_save_dir.glob("rank*_*.nc"))
 
     if not temp_files:
         raise RuntimeError(f"No temporary prediction files found in {temp_save_dir}")
@@ -703,7 +703,7 @@ def aggregate_predictions(
         if nstds is not None:
             save_name_ += f"_nstds{nstds}"
         if output_ensemble:
-            save_name_ += f"_output_ensemble"
+            save_name_ += "_output_ensemble"
 
         save_name = save_name_ + ".nc"
 
