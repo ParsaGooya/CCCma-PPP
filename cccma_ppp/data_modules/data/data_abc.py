@@ -202,6 +202,7 @@ class DataConfigABC(abc.ABC):
 
         _base.close()
         del _base, _mask
+        gc.collect()
 
     @final
     def load_preprocessor_pipeline(self, load_dir: Path | str | None = None):
@@ -463,6 +464,7 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
                 _validate_time_sequence(time)
 
                 ds.close()
+                gc.collect()
 
     dataconfig.list_paths = list_paths
 

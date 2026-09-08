@@ -749,7 +749,8 @@ class Trainer:
         self.log_root(
             logging.INFO,
             (
-                f"Resumed at global_step={self.global_step}, "
+                f"Resumed at epoch={self._epochs_trained}, "
+                f"global_step={self.global_step}, "
                 f"scheduler_step={self.optimizer.lr_scheduler.num_steps}, "
                 f"lr={self.optimizer.learning_rate}"
             ),

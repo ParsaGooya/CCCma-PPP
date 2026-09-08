@@ -81,36 +81,35 @@ class WeightsConfig:
             Description not yet provided.
         """
         if self.load_dir is not None:
-            with xr.open_dataset(Path(self.load_dir)) as ds:
-                if isinstance(ds, xr.Dataset):
-                    weights = _unwrap_data_variables(ds)
-                else:
-                    weights = ds
+            weights = xr.open_dataset(Path(self.load_dir))
+            if isinstance(weights, xr.Dataset):
+                weights = _unwrap_data_variables(weights)
 
-                msg = f"the loaded weights from {self.load_dir} must have coordinates that match the target coordinates"
-                for coord in target_coords:
-                    if coord not in weights.coords:
-                        raise ValueError(msg)
-                    if not weights.coords[coord].equals(target_coords[coord]):
-                        raise ValueError(msg)
+            msg = f"the loaded weights from {self.load_dir} must have coordinates that match the target coordinates"
 
-                weights = weights.load()
+            for coord in target_coords:
+                if coord not in weights.coords:
+                    raise ValueError(msg)
+                if not weights.coords[coord].equals(target_coords[coord]):
+                    raise ValueError(msg)
 
-                if Flattennanremover is not None:
-                    weights = Flattennanremover.transform(weights)
         else:
             coords = xr.DataArray(dims=tuple(target_coords), coords=target_coords)
+
             dims = tuple(coords.sizes)
             shape = tuple(coords.sizes[dim] for dim in dims)
+
             weights = xr.DataArray(
                 np.ones(shape, dtype=np.float32),
                 dims=dims,
                 coords=coords.coords,
                 name="weights",
             )
+
             if self.spatial_method == "cosine_lat" and "lat" in weights.coords:
                 latitude_weights = np.cos(np.deg2rad(weights.coords["lat"]))
                 weights = weights * latitude_weights
+
             if self.variable_weights is not None:
                 variable_weights = xr.DataArray(
                     list(self.variable_weights.values()),
@@ -118,10 +117,8 @@ class WeightsConfig:
                     coords={"channels": list(self.variable_weights)},
                     name="variable_weights",
                 )
-                weights = variable_weights * weights
 
-            if Flattennanremover is not None:
-                weights = Flattennanremover.transform(weights)
+                weights = variable_weights * weights
 
         if self.load_dir is None and save:
             save_path = (
@@ -130,8 +127,13 @@ class WeightsConfig:
                 else Path(RuntimeContext.GLOBAL_EXP_DIR)
             )
             save_name = save_name or "spatial_weights.nc"
+
             if not os.path.isdir(save_path):
                 os.makedirs(save_path)
+
             weights.to_netcdf(save_path / save_name)
+
+        if Flattennanremover is not None:
+            weights = Flattennanremover.transform(weights)
 
         return weights

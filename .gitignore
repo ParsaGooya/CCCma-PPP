@@ -21,3 +21,6 @@ cccma_ppp/_internal/*
 *.py.bak
 _internal/*
 output/*
+
+*.sh
+*.txt

@@ -23,10 +23,6 @@ dependencies = [
     "pynvml>=13.0.1",
     "netcdf4>=1.7.4",
     "dask>=2026.6.0",
-    "pip-audit>=2.10.1",
-    "bandit>=1.9.4",
-    "codespell>=2.4.3",
-    "docsig>=0.96.0",
 ]
 name = "cccma-ppp"
 dynamic = ["version"]
@@ -39,11 +35,6 @@ markers = [
 
 filterwarnings = [
     "ignore:Importing from timm.models.layers is deprecated:FutureWarning"
-]
-
-[tool.ruff.lint]
-select = [
-    "I",
 ]
 
 [build-system]

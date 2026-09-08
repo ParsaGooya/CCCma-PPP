@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import psutil
 
+
 if TYPE_CHECKING:
     from cccma_ppp.generic.distributed import Distributed
 
@@ -67,44 +68,13 @@ def resolve_physical_gpu_index(local_rank: int) -> int:
 
     selected_device = devices[local_rank]
 
-    if selected_device.isdigit():
-        return int(selected_device)
-
-    if not selected_device.startswith("GPU-"):
+    if not selected_device.isdigit():
         raise ValueError(
-            "GPU monitoring requires numeric GPU indices or GPU UUIDs; "
+            "GPU monitoring requires numeric CUDA_VISIBLE_DEVICES entries; "
             f"received {selected_device!r} for local rank {local_rank}"
         )
 
-    try:
-        import pynvml
-
-        pynvml.nvmlInit()
-
-        try:
-            device_count = pynvml.nvmlDeviceGetCount()
-
-            for physical_index in range(device_count):
-                handle = pynvml.nvmlDeviceGetHandleByIndex(physical_index)
-                device_uuid = pynvml.nvmlDeviceGetUUID(handle)
-
-                if isinstance(device_uuid, bytes):
-                    device_uuid = device_uuid.decode()
-
-                if device_uuid == selected_device:
-                    return physical_index
-        finally:
-            pynvml.nvmlShutdown()
-
-    except Exception as error:
-        raise ValueError(
-            f"Could not resolve GPU UUID {selected_device!r} through NVML"
-        ) from error
-
-    raise ValueError(
-        f"GPU UUID {selected_device!r} was not found among the "
-        f"{device_count} physical GPU device(s) reported by NVML"
-    )
+    return int(selected_device)
 
 
 class Monitor:
@@ -1672,29 +1642,19 @@ def build_distributed_monitor(
     Monitor
         Description not yet provided.
     """
+    import torch
 
     gpu_indices: list[int] = []
 
-    if gpu:
+    if gpu and torch.cuda.is_available():
         try:
-            physical_gpu_index = resolve_physical_gpu_index(distributed.local_rank)
+            gpu_indices.append(resolve_physical_gpu_index(distributed.local_rank))
         except (TypeError, ValueError):
             logger.warning(
-                "Rank %s could not resolve the physical GPU for local rank %s. "
-                "CUDA_VISIBLE_DEVICES=%r. CPU and RAM monitoring will remain "
-                "enabled.",
+                "Rank %s could not resolve its physical GPU. "
+                "CPU and RAM monitoring will remain enabled.",
                 distributed.rank,
-                distributed.local_rank,
-                os.environ.get("CUDA_VISIBLE_DEVICES"),
                 exc_info=True,
-            )
-        else:
-            gpu_indices.append(physical_gpu_index)
-
-            logger.info(
-                "Rank %s will monitor physical GPU %s through NVML",
-                distributed.rank,
-                physical_gpu_index,
             )
 
     return monitor(
