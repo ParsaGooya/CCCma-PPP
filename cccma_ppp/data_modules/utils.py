@@ -105,58 +105,58 @@ def _load_xarray_data(
     ValueError
         Description not yet provided.
     """
-    ds = xr.open_mfdataset(
+
+    with xr.open_mfdataset(
         paths, combine="nested", concat_dim=concat_dim, chunks=chunks
-    )
+    ) as ds:
+        if rename_dict is not None:
+            ds = ds.rename(rename_dict)
 
-    if rename_dict is not None:
-        ds = ds.rename(rename_dict)
+        ds = ds.sel(selection) if selection is not None else ds
 
-    ds = ds.sel(selection) if selection is not None else ds
+        if realization_dim in ds.coords and ensemble_mean:
+            ds = ds.mean(realization_dim)
 
-    if realization_dim in ds.coords and ensemble_mean:
-        ds = ds.mean(realization_dim)
+        if names is not None:
+            ds = ds[names]
 
-    if names is not None:
-        ds = ds[names]
+        if add_time_auxiliary_coords:
+            if init_time_dim not in ds.coords:
+                raise ValueError(
+                    "Cannot add temporal auxiliary coordinates because "
+                    f"{init_time_dim!r} is not present in the data coordinates."
+                )
 
-    if add_time_auxiliary_coords:
-        if init_time_dim not in ds.coords:
-            raise ValueError(
-                "Cannot add temporal auxiliary coordinates because "
-                f"{init_time_dim!r} is not present in the data coordinates."
-            )
+            init_time = ds.coords[init_time_dim]
 
-        init_time = ds.coords[init_time_dim]
+            _validate_time_sequence(init_time)
 
-        _validate_time_sequence(init_time)
+            if init_time.ndim != 1 or init_time.dims != (init_time_dim,):
+                raise ValueError(
+                    f"Coordinate {init_time_dim!r} must be one-dimensional "
+                    f"over dimension {init_time_dim!r}, but found dimensions "
+                    f"{init_time.dims}."
+                )
 
-        if init_time.ndim != 1 or init_time.dims != (init_time_dim,):
-            raise ValueError(
-                f"Coordinate {init_time_dim!r} must be one-dimensional "
-                f"over dimension {init_time_dim!r}, but found dimensions "
-                f"{init_time.dims}."
-            )
+            try:
+                ds = ds.assign_coords(
+                    year=init_time.dt.year,
+                    month=init_time.dt.month,
+                    day=init_time.dt.dayofyear,
+                )
+            except (AttributeError, TypeError) as exc:
+                raise TypeError(
+                    f"Coordinate {init_time_dim!r} must contain datetime64 "
+                    "or cftime datetime values to derive year, month, and day."
+                ) from exc
 
-        try:
-            ds = ds.assign_coords(
-                year=init_time.dt.year,
-                month=init_time.dt.month,
-                day=init_time.dt.dayofyear,
-            )
-        except (AttributeError, TypeError) as exc:
-            raise TypeError(
-                f"Coordinate {init_time_dim!r} must contain datetime64 "
-                "or cftime datetime values to derive year, month, and day."
-            ) from exc
+        nn_dims = [dim for dim in supported_NN_dimensions_sorted if dim in ds.dims]
+        ds = ds.transpose(..., *nn_dims)
 
-    nn_dims = [dim for dim in supported_NN_dimensions_sorted if dim in ds.dims]
+        if load:
+            ds = ds.load()
 
-    ds = ds.transpose(..., *nn_dims)
-    if load:
-        ds = ds.load()
-
-    return ds
+        return ds
 
 
 def _create_train_mask(
@@ -237,22 +237,15 @@ def _create_train_mask(
     time_resolution = infer_time_resolution(init_times.coords[init_time_dim].to_index())
 
     if time_resolution == "year":
-
         cutoff_year = int(init_times.dt.year.max().item())
         mask = target_times.dt.year > cutoff_year
 
     elif time_resolution == "month" and lead_time_resolution == "day":
         latest_init_time = init_times.max()
 
-        cutoff_month = (
-            latest_init_time.dt.year * 12
-            + latest_init_time.dt.month
-        )
+        cutoff_month = latest_init_time.dt.year * 12 + latest_init_time.dt.month
 
-        target_month = (
-            target_times.dt.year * 12
-            + target_times.dt.month
-        )
+        target_month = target_times.dt.year * 12 + target_times.dt.month
 
         mask = target_month > cutoff_month
 

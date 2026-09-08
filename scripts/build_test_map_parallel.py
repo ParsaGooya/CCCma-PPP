@@ -127,7 +127,7 @@ with Pool(NUM_WORKERS) as pool:
         print(f"\n[{completed}/{total}] Finished: {test}", flush=True)
 
         if result["status"] != "ok":
-            print(f"❌ Failed: {result['status']}", flush=True)
+            print(f" Failed: {result['status']}", flush=True)
 
             print(result["stdout"])
             print(result["stderr"])
@@ -138,8 +138,8 @@ with Pool(NUM_WORKERS) as pool:
 
         total_branches = sum(len(v) for v in result["data"].values())
 
-        print(f"✅ Modules: {len(result['data'])}", flush=True)
-        print(f"✅ Branches: {total_branches}", flush=True)
+        print(f"Modules: {len(result['data'])}", flush=True)
+        print(f"Branches: {total_branches}", flush=True)
 
         with open(CHECKPOINT, "w") as f:
             json.dump(test_map, f, indent=2)
