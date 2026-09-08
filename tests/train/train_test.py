@@ -10,6 +10,7 @@ import cccma_ppp.train.train as train_mod
 from cccma_ppp.train.train import get_parser, main
 
 
+@pytest.mark.pruned
 def test_main_root_happy_path(monkeypatch, tmp_path):
     yaml_path = tmp_path / "config.yaml"
     yaml_path.write_text("experiment_dir: test\n", encoding="utf-8")
@@ -119,6 +120,7 @@ def test_main_non_root_skips_root_logging(monkeypatch, tmp_path):
     assert "Building objects:" not in logger.messages
 
 
+@pytest.mark.pruned
 def test_main_passes_yaml_data_to_dacite(monkeypatch, tmp_path):
     yaml_path = tmp_path / "config.yaml"
     yaml_path.write_text("experiment_dir: test\n", encoding="utf-8")
@@ -169,6 +171,7 @@ def test_main_passes_yaml_data_to_dacite(monkeypatch, tmp_path):
     assert captured["config"].strict is True
 
 
+@pytest.mark.pruned
 def test_main_setup_logger_called_with_training_name_and_log_dir(monkeypatch, tmp_path):
     yaml_path = tmp_path / "config.yaml"
     yaml_path.write_text("experiment_dir: test\n", encoding="utf-8")
@@ -217,6 +220,7 @@ def test_main_setup_logger_called_with_training_name_and_log_dir(monkeypatch, tm
     assert captured["log_dir"] == config_obj.log_dir
 
 
+@pytest.mark.pruned
 def test_main_build_trainer_receives_config_distributed_logger(monkeypatch, tmp_path):
     yaml_path = tmp_path / "config.yaml"
     yaml_path.write_text("experiment_dir: test\n", encoding="utf-8")
@@ -507,6 +511,7 @@ def patch_successful_main_dependencies(
     }
 
 
+@pytest.mark.pruned
 def test_get_parser_returns_argument_parser():
     parser = get_parser()
 
@@ -514,6 +519,7 @@ def test_get_parser_returns_argument_parser():
     assert parser.description == "Train model from config file"
 
 
+@pytest.mark.pruned
 def test_get_parser_parses_config_path():
     parser = get_parser()
 
@@ -526,6 +532,7 @@ def test_get_parser_parses_config_path():
     assert arguments.config == "training.yaml"
 
 
+@pytest.mark.pruned
 def test_get_parser_requires_config_argument():
     parser = get_parser()
 
@@ -535,6 +542,7 @@ def test_get_parser_requires_config_argument():
     assert error.value.code == 2
 
 
+@pytest.mark.pruned
 def test_get_parser_rejects_unknown_arguments():
     parser = get_parser()
 
@@ -549,6 +557,7 @@ def test_get_parser_rejects_unknown_arguments():
     assert error.value.code == 2
 
 
+@pytest.mark.pruned
 def test_main_gets_distributed_singleton(
     monkeypatch,
     tmp_path,
@@ -564,6 +573,7 @@ def test_main_gets_distributed_singleton(
     assert dependencies["distributed"].cleanup_called is True
 
 
+@pytest.mark.pruned
 def test_main_passes_yaml_path_to_prepare_config(
     monkeypatch,
     tmp_path,
@@ -577,6 +587,7 @@ def test_main_passes_yaml_path_to_prepare_config(
     train_mod.prepare_config.assert_called_once_with(str(yaml_path))
 
 
+@pytest.mark.pruned
 def test_main_constructs_strict_dacite_config(
     monkeypatch,
     tmp_path,
@@ -602,6 +613,7 @@ def test_main_constructs_strict_dacite_config(
     assert call_arguments.kwargs["config"].strict is True
 
 
+@pytest.mark.pruned
 def test_main_sets_seed_from_distributed_rank(
     monkeypatch,
     tmp_path,
@@ -623,6 +635,7 @@ def test_main_sets_seed_from_distributed_rank(
     config.set_random_seed.assert_called_once_with(7)
 
 
+@pytest.mark.pruned
 def test_main_passes_monitoring_directory(
     monkeypatch,
     tmp_path,
@@ -668,6 +681,7 @@ def test_main_passes_monitoring_directory(
     ]
 
 
+@pytest.mark.pruned
 def test_main_records_monitoring_spans_in_order(
     monkeypatch,
     tmp_path,
@@ -709,6 +723,7 @@ def test_main_records_monitoring_spans_in_order(
     ]
 
 
+@pytest.mark.pruned
 def test_main_records_trainer_ready_checkpoint(
     monkeypatch,
     tmp_path,
@@ -727,6 +742,7 @@ def test_main_records_trainer_ready_checkpoint(
     ]
 
 
+@pytest.mark.pruned
 def test_build_trainer_runs_inside_monitoring_span(
     monkeypatch,
     tmp_path,
@@ -758,6 +774,7 @@ def test_build_trainer_runs_inside_monitoring_span(
     main(str(tmp_path / "config.yaml"))
 
 
+@pytest.mark.pruned
 def test_setup_distributed_runs_inside_monitoring_span(
     monkeypatch,
     tmp_path,
@@ -790,6 +807,7 @@ def test_setup_distributed_runs_inside_monitoring_span(
     assert trainer.setup_called is True
 
 
+@pytest.mark.pruned
 def test_train_runs_inside_monitoring_span(
     monkeypatch,
     tmp_path,
@@ -817,6 +835,7 @@ def test_train_runs_inside_monitoring_span(
     assert trainer.train_called is True
 
 
+@pytest.mark.pruned
 def test_checkpoint_occurs_between_setup_and_train(
     monkeypatch,
     tmp_path,
@@ -850,6 +869,7 @@ def test_checkpoint_occurs_between_setup_and_train(
     assert events.index("checkpoint:trainer_ready") < events.index("start:train")
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "failing_stage",
@@ -971,6 +991,7 @@ def test_main_always_cleans_up_after_stage_failure(
     assert distributed.cleanup_called is True
 
 
+@pytest.mark.pruned
 def test_cleanup_runs_once_after_success(
     monkeypatch,
     tmp_path,
@@ -988,6 +1009,7 @@ def test_cleanup_runs_once_after_success(
     distributed.cleanup.assert_called_once_with()
 
 
+@pytest.mark.pruned
 def test_cleanup_runs_once_after_failure(
     monkeypatch,
     tmp_path,
@@ -1011,6 +1033,7 @@ def test_cleanup_runs_once_after_failure(
     distributed.cleanup.assert_called_once_with()
 
 
+@pytest.mark.pruned
 def test_cleanup_error_replaces_successful_result(
     monkeypatch,
     tmp_path,
@@ -1030,6 +1053,7 @@ def test_cleanup_error_replaces_successful_result(
         main(str(tmp_path / "config.yaml"))
 
 
+@pytest.mark.pruned
 def test_cleanup_error_replaces_original_error(
     monkeypatch,
     tmp_path,
@@ -1051,6 +1075,7 @@ def test_cleanup_error_replaces_original_error(
         main(str(tmp_path / "config.yaml"))
 
 
+@pytest.mark.pruned
 def test_non_root_still_prepares_directory(
     monkeypatch,
     tmp_path,
@@ -1075,6 +1100,7 @@ def test_non_root_still_prepares_directory(
     )
 
 
+@pytest.mark.pruned
 def test_root_logger_messages_are_emitted_once(
     monkeypatch,
     tmp_path,
@@ -1097,6 +1123,7 @@ def test_root_logger_messages_are_emitted_once(
     ]
 
 
+@pytest.mark.pruned
 def test_non_root_logger_info_is_not_called(
     monkeypatch,
     tmp_path,
@@ -1116,6 +1143,7 @@ def test_non_root_logger_info_is_not_called(
     logger.info.assert_not_called()
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "log_every_n_epochs",
@@ -1189,6 +1217,7 @@ def test_train_module_main_guard(monkeypatch):
     assert error.value.code == 2
 
 
+@pytest.mark.pruned
 def test_get_parser_accepts_config_path():
     parser = train_mod.get_parser()
 
@@ -1201,6 +1230,7 @@ def test_get_parser_accepts_config_path():
     assert arguments.config == "train_config.yaml"
 
 
+@pytest.mark.pruned
 def test_get_parser_requires_config_path():
     parser = train_mod.get_parser()
 

@@ -120,6 +120,7 @@ def make_dataset():
 
 
 class TestUnwrapDataVariables:
+    @pytest.mark.pruned
     def test_unwraps_single_variable(self):
         dataset = xr.Dataset(
             {
@@ -151,6 +152,7 @@ class TestUnwrapDataVariables:
         )
         assert result.sizes["channels"] == 1
 
+    @pytest.mark.pruned
     def test_unwraps_multiple_variables(self):
         dataset = xr.Dataset(
             {
@@ -206,6 +208,7 @@ class TestUnwrapDataVariables:
             ),
         )
 
+    @pytest.mark.pruned
     def test_squeezes_singleton_dimensions(self):
         dataset = xr.Dataset(
             {
@@ -242,6 +245,7 @@ class TestUnwrapDataVariables:
 
 
 class TestLoadXarrayData:
+    @pytest.mark.pruned
     def test_opens_multiple_files(self):
         expected = make_dataset()
 
@@ -289,6 +293,7 @@ class TestLoadXarrayData:
         assert "tas" in result.data_vars
         assert "old_tas" not in result.data_vars
 
+    @pytest.mark.pruned
     def test_applies_selection(self):
         dataset = make_dataset()
 
@@ -320,6 +325,7 @@ class TestLoadXarrayData:
 
         assert REALIZATION_DIM not in result.dims
 
+    @pytest.mark.pruned
     def test_ensemble_mean_ignored_without_realization_dimension(self):
         dataset = make_dataset().mean(REALIZATION_DIM)
 
@@ -334,6 +340,7 @@ class TestLoadXarrayData:
 
         assert REALIZATION_DIM not in result.dims
 
+    @pytest.mark.pruned
     def test_selects_names(self):
         dataset = make_dataset()
 
@@ -348,6 +355,7 @@ class TestLoadXarrayData:
 
         assert list(result.data_vars) == ["tas"]
 
+    @pytest.mark.pruned
     def test_applies_preprocessor(self):
         dataset = make_dataset()
 
@@ -363,6 +371,7 @@ class TestLoadXarrayData:
             result, dataset.transpose(..., "latitude", "longitude")
         )
 
+    @pytest.mark.pruned
     def test_passes_chunks_to_open_mfdataset(self):
         dataset = make_dataset()
         chunks = {
@@ -459,6 +468,7 @@ class TestLoadXarrayData:
                     init_time_dim=INIT_TIME_DIM,
                 )
 
+    @pytest.mark.pruned
     def test_auxiliary_coordinate_rejects_integer_times(self):
         dataset = make_dataset().assign_coords(
             {
@@ -484,6 +494,7 @@ class TestLoadXarrayData:
                     init_time_dim=INIT_TIME_DIM,
                 )
 
+    @pytest.mark.pruned
     def test_transposes_supported_dimensions_to_end(self):
         dataset = make_dataset().transpose(
             "latitude",
@@ -510,6 +521,7 @@ class TestLoadXarrayData:
             "longitude",
         )
 
+    @pytest.mark.pruned
     def test_load_true_calls_load(self):
         dataset = make_dataset()
         loaded = dataset
@@ -529,9 +541,11 @@ class TestLoadXarrayData:
 
 
 class TestValidateTimeSequence:
+    @pytest.mark.pruned
     def test_accepts_numpy_datetime_array(self):
         _validate_time_sequence(make_datetime_values())
 
+    @pytest.mark.pruned
     def test_accepts_datetime_data_array(self):
         _validate_time_sequence(make_datetime_coord())
 
@@ -594,6 +608,7 @@ class TestValidateTimeSequence:
                 )
             )
 
+    @pytest.mark.pruned
     def test_rejects_integer_values(self):
         with pytest.raises(
             TypeError,
@@ -606,6 +621,7 @@ class TestValidateTimeSequence:
                 ]
             )
 
+    @pytest.mark.pruned
     def test_rejects_mixed_cftime_and_datetime(self):
         with pytest.raises(
             TypeError,
@@ -686,6 +702,7 @@ class TestValidateTimeSequence:
 
 
 class TestCalculateTargetTimes:
+    @pytest.mark.pruned
     def test_daily_numpy_datetime(self):
         init_times = make_datetime_coord(
             [
@@ -724,6 +741,7 @@ class TestCalculateTargetTimes:
             expected,
         )
 
+    @pytest.mark.pruned
     def test_monthly_numpy_datetime(self):
         init_times = make_datetime_coord(
             [
@@ -797,6 +815,7 @@ class TestCalculateTargetTimes:
             3,
         )
 
+    @pytest.mark.pruned
     def test_monthly_cftime(self):
         init_times = xr.DataArray(
             [
@@ -844,6 +863,7 @@ class TestCalculateTargetTimes:
 
 
 class TestCreateTrainMask:
+    @pytest.mark.pruned
     def test_integer_lead_times(self):
         init_times = np.array(
             [
@@ -908,6 +928,7 @@ class TestCreateTrainMask:
             12,
         ]
 
+    @pytest.mark.pruned
     def test_yearly_initializations_use_cutoff_year(self):
         result = _create_train_mask(
             init_times=np.array(
@@ -1009,6 +1030,7 @@ class TestCreateTrainMask:
                 init_time_dim=INIT_TIME_DIM,
             )
 
+    @pytest.mark.pruned
     def test_rejects_multidimensional_lead_times(self):
         with pytest.raises(
             ValueError,
@@ -1043,6 +1065,7 @@ class TestCreateTrainMask:
                 init_time_dim=INIT_TIME_DIM,
             )
 
+    @pytest.mark.pruned
     def test_rejects_single_initialization_time(self):
         with pytest.raises(
             ValueError,
@@ -1061,6 +1084,7 @@ class TestCreateTrainMask:
 
 
 class TestAddMonths:
+    @pytest.mark.pruned
     def test_add_zero_months(self):
         result = _add_months(
             np.datetime64("2000-01-01"),
@@ -1069,6 +1093,7 @@ class TestAddMonths:
 
         assert result == np.datetime64("2000-01-01")
 
+    @pytest.mark.pruned
     def test_add_numpy_months(self):
         result = _add_months(
             np.datetime64("2000-01-01"),
@@ -1077,6 +1102,7 @@ class TestAddMonths:
 
         assert result == np.datetime64("2001-03-01")
 
+    @pytest.mark.pruned
     def test_add_cftime_months(self):
         result = _add_months(
             cftime.DatetimeNoLeap(
@@ -1124,6 +1150,7 @@ class TestAddLeadTimes:
             ),
         )
 
+    @pytest.mark.pruned
     def test_numpy_monthly_offsets(self):
         result = add_lead_times(
             init_times=np.array(
@@ -1182,6 +1209,7 @@ class TestAddLeadTimes:
             ),
         )
 
+    @pytest.mark.pruned
     def test_cftime_daily_offsets(self):
         result = add_lead_times(
             init_times=np.array(
@@ -1222,6 +1250,7 @@ class TestAddLeadTimes:
             ),
         ]
 
+    @pytest.mark.pruned
     def test_cftime_monthly_offsets(self):
         result = add_lead_times(
             init_times=np.array(
@@ -1365,6 +1394,7 @@ class TestAddLeadTimes:
                 lead_time_resolution="year",
             )
 
+    @pytest.mark.pruned
     def test_rejects_non_datetime_initializations(self):
         with pytest.raises(
             TypeError,
@@ -1404,6 +1434,7 @@ class TestAddCftimeOffset:
             3,
         )
 
+    @pytest.mark.pruned
     def test_monthly_offset_crosses_year(self):
         result = _add_cftime_offset(
             init_time=cftime.DatetimeNoLeap(
@@ -1421,6 +1452,7 @@ class TestAddCftimeOffset:
             15,
         )
 
+    @pytest.mark.pruned
     def test_monthly_offset_clamps_day(self):
         result = _add_cftime_offset(
             init_time=cftime.DatetimeNoLeap(
@@ -1438,6 +1470,7 @@ class TestAddCftimeOffset:
             28,
         )
 
+    @pytest.mark.pruned
     def test_preserves_time_fields(self):
         result = _add_cftime_offset(
             init_time=cftime.DatetimeNoLeap(
@@ -1463,6 +1496,7 @@ class TestAddCftimeOffset:
             123456,
         )
 
+    @pytest.mark.pruned
     def test_rejects_invalid_resolution(self):
         with pytest.raises(
             ValueError,
@@ -1490,6 +1524,7 @@ class TestDaysInCftimeMonth:
             == 30
         )
 
+    @pytest.mark.pruned
     def test_noleap_calendar(self):
         assert (
             _days_in_cftime_month(
@@ -1500,6 +1535,7 @@ class TestDaysInCftimeMonth:
             == 28
         )
 
+    @pytest.mark.pruned
     def test_365_day_calendar(self):
         assert (
             _days_in_cftime_month(
@@ -1510,6 +1546,7 @@ class TestDaysInCftimeMonth:
             == 28
         )
 
+    @pytest.mark.pruned
     def test_all_leap_calendar(self):
         assert (
             _days_in_cftime_month(
@@ -1520,6 +1557,7 @@ class TestDaysInCftimeMonth:
             == 29
         )
 
+    @pytest.mark.pruned
     def test_366_day_calendar(self):
         assert (
             _days_in_cftime_month(
@@ -1540,6 +1578,7 @@ class TestDaysInCftimeMonth:
             == 29
         )
 
+    @pytest.mark.pruned
     def test_standard_non_leap_year(self):
         assert (
             _days_in_cftime_month(
@@ -1635,6 +1674,7 @@ class TestAssignDatetimeInitTime:
             ),
         ]
 
+    @pytest.mark.pruned
     def test_supports_data_array(self):
         data = xr.DataArray(
             [
@@ -1686,6 +1726,7 @@ class TestAssignDatetimeInitTime:
                 init_time_dim=INIT_TIME_DIM,
             )
 
+    @pytest.mark.pruned
     def test_rejects_non_integer_years(self):
         dataset = xr.Dataset(
             {
@@ -1716,9 +1757,11 @@ class TestAssignDatetimeInitTime:
 
 
 class TestGetTimeRepresentation:
+    @pytest.mark.pruned
     def test_datetime_data_array(self):
         assert get_time_representation(make_datetime_coord()) == "datetime"
 
+    @pytest.mark.pruned
     def test_python_datetime_data_array(self):
         values = np.array(
             [
@@ -1818,6 +1861,7 @@ class TestGetTimeRepresentation:
 
 
 class TestInferTimeResolution:
+    @pytest.mark.pruned
     def test_daily_datetime_index(self):
         times = pd.DatetimeIndex(
             [
@@ -1829,6 +1873,7 @@ class TestInferTimeResolution:
 
         assert infer_time_resolution(times) == "day"
 
+    @pytest.mark.pruned
     def test_weekly_datetime_index_is_classified_as_day(self):
         times = pd.DatetimeIndex(
             [
@@ -1840,6 +1885,7 @@ class TestInferTimeResolution:
 
         assert infer_time_resolution(times) == "day"
 
+    @pytest.mark.pruned
     def test_monthly_datetime_index(self):
         times = pd.DatetimeIndex(
             [
@@ -1851,6 +1897,7 @@ class TestInferTimeResolution:
 
         assert infer_time_resolution(times) == "month"
 
+    @pytest.mark.pruned
     def test_yearly_datetime_index(self):
         times = pd.DatetimeIndex(
             [
@@ -1862,6 +1909,7 @@ class TestInferTimeResolution:
 
         assert infer_time_resolution(times) == "year"
 
+    @pytest.mark.pruned
     def test_uses_minimum_delta(self):
         times = pd.DatetimeIndex(
             [
@@ -1891,6 +1939,7 @@ class TestInferTimeResolution:
 
         assert infer_time_resolution(times) == "day"
 
+    @pytest.mark.pruned
     def test_monthly_cftime_index(self):
         times = xr.CFTimeIndex(
             [
@@ -1909,6 +1958,7 @@ class TestInferTimeResolution:
 
         assert infer_time_resolution(times) == "month"
 
+    @pytest.mark.pruned
     def test_yearly_cftime_index(self):
         times = xr.CFTimeIndex(
             [
@@ -1942,6 +1992,7 @@ class TestInferTimeResolution:
 
 
 class TestSuppressStderr:
+    @pytest.mark.pruned
     def test_suppresses_stderr(self, capfd):
         with suppress_stderr():
             os.write(
@@ -1953,6 +2004,7 @@ class TestSuppressStderr:
 
         assert "hidden-error" not in captured.err
 
+    @pytest.mark.pruned
     def test_restores_stderr(self, capfd):
         with suppress_stderr():
             os.write(
@@ -1970,6 +2022,7 @@ class TestSuppressStderr:
         assert "hidden-error" not in captured.err
         assert "visible-error" in captured.err
 
+    @pytest.mark.pruned
     def test_restores_stderr_after_exception(self, capfd):
         with pytest.raises(
             RuntimeError,
