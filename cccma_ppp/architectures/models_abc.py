@@ -23,7 +23,7 @@ from cccma_ppp.architectures.layers.utils import _sample
 class GENERATORConfig:
     """
     Document this class.
-
+    
     Parameters
     ----------
     noise_level : NoiseLevel
@@ -33,7 +33,6 @@ class GENERATORConfig:
     num_validation_noise_samples : int | None
         Description not yet provided.
     """
-
     noise_level: NoiseLevel = "full"
     num_training_noise_samples: int = 10
     num_validation_noise_samples: int | None = None
@@ -41,6 +40,11 @@ class GENERATORConfig:
     def __post_init__(self):
         """
         Document this function.
+        
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
         """
         if self.num_validation_noise_samples is None:
             self.num_validation_noise_samples = self.num_training_noise_samples
@@ -55,7 +59,7 @@ class GENERATORConfig:
 class CheckpointConfig:
     """
     Document this class.
-
+    
     Parameters
     ----------
     load_path : Path | str
@@ -73,7 +77,6 @@ class CheckpointConfig:
     freeze_weights : bool
         Description not yet provided.
     """
-
     load_path: Path | str
     checkpoint_input_shape: np.ndarray
     checkpoint_output_shape: np.ndarray
@@ -87,12 +90,11 @@ class flowABC(nn.Module, abc.ABC):
     """
     Document this class.
     """
-
     @abc.abstractmethod
     def forward(self, x, condition=None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         x : Any
@@ -106,7 +108,7 @@ class flowABC(nn.Module, abc.ABC):
     def inverse(self, z, condition=None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         z : Any
@@ -120,7 +122,7 @@ class flowABC(nn.Module, abc.ABC):
 class modelConfigABC(abc.ABC):
     """
     Document this class.
-
+    
     Attributes
     ----------
     activation : ActivationName
@@ -130,7 +132,6 @@ class modelConfigABC(abc.ABC):
     EXPECTS_MASK : bool
         Description not yet provided.
     """
-
     activation: ActivationName
     NUM_INPUT_DIMS: ClassVar[int | None]
     NUM_OUTPUT_DIMS: ClassVar[int | None]
@@ -148,7 +149,7 @@ class modelConfigABC(abc.ABC):
     def _add_checkpoint_config(self, checkpoint_config: CheckpointConfig) -> None:
         """
         Document this function.
-
+        
         Parameters
         ----------
         checkpoint_config : CheckpointConfig
@@ -161,7 +162,7 @@ class modelConfigABC(abc.ABC):
     def NUM_INPUT_DIMS(self) -> int:
         """
         Document this function.
-
+        
         Returns
         -------
         int
@@ -174,7 +175,7 @@ class modelConfigABC(abc.ABC):
     def NUM_OUTPUT_DIMS(self) -> int:
         """
         Document this function.
-
+        
         Returns
         -------
         int
@@ -187,7 +188,7 @@ class modelConfigABC(abc.ABC):
     def GENERATOR(self) -> bool:
         """
         Document this function.
-
+        
         Returns
         -------
         bool
@@ -213,7 +214,7 @@ class modelConfigABC(abc.ABC):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         input_shape : np.ndarray
@@ -231,13 +232,12 @@ class modelConfigABC(abc.ABC):
 class modelABC(nn.Module, abc.ABC):
     """
     Document this class.
-
+    
     Attributes
     ----------
     generative_modeling : bool
         Description not yet provided.
     """
-
     generative_modeling: bool
 
     @final
@@ -249,14 +249,14 @@ class modelABC(nn.Module, abc.ABC):
     ) -> None:
         """
         Document this function.
-
+        
         Parameters
         ----------
         input_shape : np.ndarray
             Description not yet provided.
         output_shape : np.ndarray
             Description not yet provided.
-
+        
         Raises
         ------
         RuntimeError
@@ -316,7 +316,7 @@ class modelABC(nn.Module, abc.ABC):
     ) -> None:
         """
         Document this function.
-
+        
         Parameters
         ----------
         init_method : Any
@@ -329,7 +329,7 @@ class modelABC(nn.Module, abc.ABC):
         def visit(module: nn.Module):
             """
             Document this function.
-
+            
             Parameters
             ----------
             module : nn.Module
@@ -349,7 +349,7 @@ class modelABC(nn.Module, abc.ABC):
     def _get_device(self) -> torch.device:
         """
         Document this function.
-
+        
         Returns
         -------
         torch.device
@@ -371,12 +371,12 @@ class modelABC(nn.Module, abc.ABC):
     def _load_state_dict(self, checkpoint_config: CheckpointConfig):
         """
         Document this function.
-
+        
         Parameters
         ----------
         checkpoint_config : CheckpointConfig
             Description not yet provided.
-
+        
         Raises
         ------
         FileNotFoundError
@@ -413,7 +413,7 @@ class modelABC(nn.Module, abc.ABC):
 class DeterministicRequest:
     """
     Document this class.
-
+    
     Parameters
     ----------
     input : torch.Tensor
@@ -424,8 +424,9 @@ class DeterministicRequest:
         Description not yet provided.
     output_sample_size : int
         Description not yet provided.
+    chunk_output_samples : bool
+        Description not yet provided.
     """
-
     input: torch.Tensor
     input_mask: torch.Tensor | None = None
     added_features: torch.Tensor | None = None
@@ -436,17 +437,16 @@ class DeterministicRequest:
 class deterministicmodelsABC(modelABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     config : modelConfigABC
         Description not yet provided.
     """
-
     def __init__(self, config: modelConfigABC):
         """
         Document this function.
-
+        
         Parameters
         ----------
         config : modelConfigABC
@@ -463,7 +463,7 @@ class deterministicmodelsABC(modelABC):
     ) -> OutputABC:
         """
         Document this function.
-
+        
         Parameters
         ----------
         request : DeterministicRequest
@@ -475,7 +475,7 @@ class deterministicmodelsABC(modelABC):
 class cVAEmodelConfigABC(modelConfigABC):
     """
     Document this class.
-
+    
     Attributes
     ----------
     latent_size : int
@@ -489,7 +489,6 @@ class cVAEmodelConfigABC(modelConfigABC):
     condemb_to_decoder : bool
         Description not yet provided.
     """
-
     latent_size: int
     condition_dependant_latent: bool
     condition_embedding_size: int
@@ -499,17 +498,17 @@ class cVAEmodelConfigABC(modelConfigABC):
     def _resolve_flow_settings(self, condition_dependant_flow: bool = False):
         """
         Document this function.
-
+        
         Parameters
         ----------
         condition_dependant_flow : bool
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError
@@ -532,7 +531,7 @@ class cVAEmodelConfigABC(modelConfigABC):
 class cVAEForwardRequest:
     """
     Document this class.
-
+    
     Parameters
     ----------
     target : torch.Tensor
@@ -552,7 +551,6 @@ class cVAEForwardRequest:
     posterior_variance_limits : list[torch.Tensor, torch.Tensor] | None
         Description not yet provided.
     """
-
     target: torch.Tensor
     condition: torch.Tensor
     target_mask: torch.Tensor | None = None
@@ -567,7 +565,7 @@ class cVAEForwardRequest:
 class cVAEPredictRequest:
     """
     Document this class.
-
+    
     Parameters
     ----------
     condition : torch.Tensor
@@ -586,8 +584,9 @@ class cVAEPredictRequest:
         Description not yet provided.
     output_sample_size : int
         Description not yet provided.
+    chunk_size : int | None
+        Description not yet provided.
     """
-
     condition: torch.Tensor
     condition_mask: torch.Tensor | None = None
     added_features: torch.Tensor | None = None
@@ -602,17 +601,16 @@ class cVAEPredictRequest:
 class cVAEmodelsABC(modelABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     config : cVAEmodelConfigABC
         Description not yet provided.
     """
-
     def __init__(self, config: cVAEmodelConfigABC):
         """
         Document this function.
-
+        
         Parameters
         ----------
         config : cVAEmodelConfigABC
@@ -630,7 +628,7 @@ class cVAEmodelsABC(modelABC):
     ) -> OutputABC:
         """
         Document this function.
-
+        
         Parameters
         ----------
         request : cVAEForwardRequest
@@ -645,7 +643,7 @@ class cVAEmodelsABC(modelABC):
     ) -> OutputABC:
         """
         Document this function.
-
+        
         Parameters
         ----------
         request : cVAEPredictRequest
@@ -678,7 +676,7 @@ class cVAEmodelsABC(modelABC):
     def _sample(self, mu, log_var, sample_size=1, std=1):
         """
         Document this function.
-
+        
         Parameters
         ----------
         mu : Any
@@ -689,7 +687,7 @@ class cVAEmodelsABC(modelABC):
             Description not yet provided.
         std : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -704,17 +702,17 @@ class cVAEmodelsABC(modelABC):
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor | None]:
         """
         Document this function.
-
+        
         Parameters
         ----------
         request : cVAEPredictRequest
             Description not yet provided.
-
+        
         Returns
         -------
         tuple[torch.Tensor, torch.Tensor, torch.Tensor | None]
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError
@@ -787,14 +785,14 @@ def weights_init(
 ):
     """
     Document this function.
-
+    
     Parameters
     ----------
     m : nn.Module
         Description not yet provided.
     method : InitMethod
         Description not yet provided.
-
+    
     Raises
     ------
     NotImplementedError

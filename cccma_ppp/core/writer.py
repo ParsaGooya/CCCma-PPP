@@ -31,17 +31,20 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 class WriterConfig:
     """
     Document this class.
-
+    
     Parameters
     ----------
-    predictor : DeterministicPredictorConfig | cVAEPredictorConfig
+    predictor : DeterministicPredictorConfig | cVAEPredictorConfig | None
         Description not yet provided.
     num_output_sampling : int
         Description not yet provided.
     get_trained_model_stats_from_validation : bool
         Description not yet provided.
+    aggregate_only : bool
+        Description not yet provided.
+    predict_only : bool
+        Description not yet provided.
     """
-
     predictor: DeterministicPredictorConfig | cVAEPredictorConfig | None = None
     num_output_sampling: int = 1
     get_trained_model_stats_from_validation: bool = False
@@ -51,7 +54,7 @@ class WriterConfig:
     def __post_init__(self):
         """
         Document this function.
-
+        
         Raises
         ------
         ValueError
@@ -70,7 +73,7 @@ class WriterConfig:
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         inference_data_loader : Dataloader
@@ -83,12 +86,12 @@ class WriterConfig:
             Description not yet provided.
         output_dir : Path | str
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         RuntimeError
@@ -124,7 +127,7 @@ class WriterConfig:
 class Writer:
     """
     Document this class.
-
+    
     Parameters
     ----------
     config : WriterConfig
@@ -140,7 +143,6 @@ class Writer:
     output_dir : Path | str
         Description not yet provided.
     """
-
     def __init__(
         self,
         config: WriterConfig,
@@ -152,7 +154,7 @@ class Writer:
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         config : WriterConfig
@@ -184,14 +186,14 @@ class Writer:
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         distributed : Distributed
             Description not yet provided.
         logger : logging.Logger
             Description not yet provided.
-
+        
         Raises
         ------
         RuntimeError
@@ -261,7 +263,7 @@ class Writer:
     def train_stats_save_dir(self):
         """
         Document this function.
-
+        
         Returns
         -------
         Any
@@ -272,7 +274,7 @@ class Writer:
     def predict(self):
         """
         Document this function.
-
+        
         Raises
         ------
         RuntimeError
@@ -360,7 +362,7 @@ class Writer:
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         from_validation : bool
@@ -369,7 +371,7 @@ class Writer:
             Description not yet provided.
         shuffle : bool | None
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -392,7 +394,7 @@ class Writer:
     def aggregate_train_stats(self, stats: dict[str, RunningCovariance]):
         """
         Document this function.
-
+        
         Parameters
         ----------
         stats : dict[str, RunningCovariance]
@@ -424,7 +426,7 @@ class Writer:
     def log_root(self, level: int, msg: str, *args):
         """
         Document this function.
-
+        
         Parameters
         ----------
         level : int
@@ -444,7 +446,7 @@ class Writer:
     def raw_module(self):
         """
         Document this function.
-
+        
         Returns
         -------
         Any
@@ -457,7 +459,7 @@ class Writer:
     def aggregate_predictions_to_netcdf(self, do_post_process: bool = True):
         """
         Document this function.
-
+        
         Parameters
         ----------
         do_post_process : bool
@@ -494,7 +496,7 @@ def aggregate_predictions(
 ):
     """
     Document this function.
-
+    
     Parameters
     ----------
     post_processor : PreprocessingPipeline | None
@@ -513,7 +515,7 @@ def aggregate_predictions(
         Description not yet provided.
     optional_sample_dimensions : tuple[str, ...]
         Description not yet provided.
-
+    
     Raises
     ------
     RuntimeError
@@ -582,12 +584,12 @@ def aggregate_predictions(
     ) -> xr.DataArray | xr.Dataset:
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : xr.DataArray | xr.Dataset
             Description not yet provided.
-
+        
         Returns
         -------
         xr.DataArray | xr.Dataset

@@ -23,7 +23,7 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 class BatchDataABC(abc.ABC):
     """
     Document this class.
-
+    
     Attributes
     ----------
     input : torch.Tensor
@@ -35,7 +35,6 @@ class BatchDataABC(abc.ABC):
     metadata : list[dict] | None
         Description not yet provided.
     """
-
     input: torch.Tensor
     target: torch.Tensor | None
     added_features: torch.Tensor | None
@@ -48,7 +47,7 @@ class BatchDataABC(abc.ABC):
     def to_device(self, device: torch.device | str):
         """
         Document this function.
-
+        
         Parameters
         ----------
         device : torch.device | str
@@ -60,7 +59,7 @@ class BatchDataABC(abc.ABC):
 class DataloaderConfigABC(abc.ABC):
     """
     Document this class.
-
+    
     Attributes
     ----------
     dataset_config : DatasetConfigABC
@@ -76,7 +75,6 @@ class DataloaderConfigABC(abc.ABC):
     reduce_spatial_mask : bool
         Description not yet provided.
     """
-
     dataset_config: DatasetConfigABC
     pin_memory: bool
     time_features: AddedTimeFeatures | list[str] | None
@@ -119,17 +117,17 @@ class DataloaderConfigABC(abc.ABC):
     ) -> xr.DataArray:
         """
         Document this function.
-
+        
         Parameters
         ----------
         requested_slice : slice
             Description not yet provided.
-
+        
         Returns
         -------
         xr.DataArray
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError
@@ -182,7 +180,7 @@ class DataloaderConfigABC(abc.ABC):
 class Dataloader:
     """
     Document this class.
-
+    
     Parameters
     ----------
     config : DataloaderConfigABC
@@ -200,7 +198,6 @@ class Dataloader:
     return_spatial_mask : bool
         Description not yet provided.
     """
-
     config: DataloaderConfigABC
     dataset: Dataset
     collate_fn: Callable
@@ -238,7 +235,7 @@ class Dataloader:
     def input_shape(self) -> tuple:
         """
         Document this function.
-
+        
         Returns
         -------
         tuple
@@ -250,7 +247,7 @@ class Dataloader:
     def target_shape(self):
         """
         Document this function.
-
+        
         Returns
         -------
         Any
@@ -262,7 +259,7 @@ class Dataloader:
     def added_features_dim(self):
         """
         Document this function.
-
+        
         Returns
         -------
         Any
@@ -274,7 +271,7 @@ class Dataloader:
     def __iter__(self) -> Iterator[BatchDataABC]:
         """
         Document this function.
-
+        
         Returns
         -------
         Iterator[BatchDataABC]
@@ -286,12 +283,12 @@ class Dataloader:
     def _get_dataloader_sampler(self, **kwargs) -> torch.utils.data.Sampler | None:
         """
         Document this function.
-
+        
         Parameters
         ----------
         **kwargs : Any
             Description not yet provided.
-
+        
         Returns
         -------
         torch.utils.data.Sampler | None
@@ -314,7 +311,7 @@ class Dataloader:
     def __len__(self) -> int:
         """
         Document this function.
-
+        
         Returns
         -------
         int
@@ -326,12 +323,12 @@ class Dataloader:
     def set_epoch(self, epoch):
         """
         Document this function.
-
+        
         Parameters
         ----------
         epoch : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -345,12 +342,12 @@ class Dataloader:
     def subset_loader(self, start_batch=0):
         """
         Document this function.
-
+        
         Parameters
         ----------
         start_batch : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any

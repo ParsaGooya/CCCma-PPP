@@ -17,7 +17,7 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 class PreprocessingPipeline:
     """
     Document this class.
-
+    
     Parameters
     ----------
     preprocessors_list : list[PreprocessingStepSelector]
@@ -31,7 +31,6 @@ class PreprocessingPipeline:
     supported_NN_dimensions : tuple[str]
         Description not yet provided.
     """
-
     preprocessors_list: list[PreprocessingStepSelector] = dataclasses.field(
         default_factory=list
     )
@@ -64,7 +63,7 @@ class PreprocessingPipeline:
     def set_name(self, name: str, rename_dict: dict[str, str] | None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         name : str
@@ -85,7 +84,7 @@ class PreprocessingPipeline:
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         base_data : xr.Dataset | xr.DataArray
@@ -98,7 +97,7 @@ class PreprocessingPipeline:
             Description not yet provided.
         save_path : Path | str | None
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -141,19 +140,19 @@ class PreprocessingPipeline:
     def transform(self, data: xr.DataArray, step_arguments=None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : xr.DataArray
             Description not yet provided.
         step_arguments : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError
@@ -175,19 +174,19 @@ class PreprocessingPipeline:
     def inverse_transform(self, data: xr.DataArray, step_arguments=None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : xr.DataArray
             Description not yet provided.
         step_arguments : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError
@@ -210,17 +209,17 @@ class PreprocessingPipeline:
     def to_dataset(self, data: xr.DataArray) -> xr.Dataset:
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : xr.DataArray
             Description not yet provided.
-
+        
         Returns
         -------
         xr.Dataset
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError
@@ -263,12 +262,12 @@ class PreprocessingPipeline:
     def inverse_rename(self, data: xr.Dataset):
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : xr.Dataset
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -282,17 +281,17 @@ class PreprocessingPipeline:
     def get_preprocessors(self, name=None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         name : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         RuntimeError
@@ -322,7 +321,7 @@ class PreprocessingPipeline:
     def add_fitted_preprocessor(self, preprocessor, name, index=None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         preprocessor : Any
@@ -331,7 +330,7 @@ class PreprocessingPipeline:
             Description not yet provided.
         index : Any
             Description not yet provided.
-
+        
         Raises
         ------
         AssertionError
@@ -348,12 +347,12 @@ class PreprocessingPipeline:
     def extract_output_coords_vars(self, base_data: xr.Dataset | xr.DataArray = None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         base_data : xr.Dataset | xr.DataArray
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError
@@ -375,17 +374,17 @@ class PreprocessingPipeline:
     def load_from_memory(self, load_dir: str | Path):
         """
         Document this function.
-
+        
         Parameters
         ----------
         load_dir : str | Path
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError

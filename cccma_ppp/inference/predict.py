@@ -12,7 +12,7 @@ import dacite
 def get_parser() -> argparse.ArgumentParser:
     """
     Document this function.
-
+    
     Returns
     -------
     argparse.ArgumentParser
@@ -34,7 +34,7 @@ def get_parser() -> argparse.ArgumentParser:
 def main(yaml_config: str):
     """
     Document this function.
-
+    
     Parameters
     ----------
     yaml_config : str

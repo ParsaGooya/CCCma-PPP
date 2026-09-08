@@ -15,17 +15,16 @@ from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 class DatasetOperator:
     """
     Document this class.
-
+    
     Parameters
     ----------
     config : DatasetConfigABC
         Description not yet provided.
     """
-
     def __init__(self, config: DatasetConfigABC):
         """
         Document this function.
-
+        
         Parameters
         ----------
         config : DatasetConfigABC
@@ -37,7 +36,7 @@ class DatasetOperator:
     def config_observation(self):
         """
         Document this function.
-
+        
         Returns
         -------
         Any
@@ -59,7 +58,7 @@ class DatasetOperator:
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         train_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
@@ -70,7 +69,7 @@ class DatasetOperator:
             Description not yet provided.
         save_name : str | None
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError
@@ -155,7 +154,7 @@ class DatasetOperator:
     def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         load_dir : Path | str | None
@@ -175,14 +174,14 @@ class DatasetOperator:
     def add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
         """
         Document this function.
-
+        
         Parameters
         ----------
         preprocessor : PreprocessModuleABC
             Description not yet provided.
         index : Any
             Description not yet provided.
-
+        
         Raises
         ------
         AssertionError
@@ -219,7 +218,7 @@ class DatasetOperator:
     ) -> xr.DataArray:
         """
         Document this function.
-
+        
         Parameters
         ----------
         config : WeightsConfig | None
@@ -230,12 +229,12 @@ class DatasetOperator:
             Description not yet provided.
         save_name : str | None
             Description not yet provided.
-
+        
         Returns
         -------
         xr.DataArray
             Description not yet provided.
-
+        
         Raises
         ------
         RuntimeError
@@ -289,7 +288,7 @@ class DatasetOperator:
     def get_input_var_metadata(self) -> dict:
         """
         Document this function.
-
+        
         Returns
         -------
         dict
@@ -337,12 +336,12 @@ class DatasetOperator:
     def get_target_var_metadata(self):
         """
         Document this function.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError
@@ -390,14 +389,14 @@ class DatasetOperator:
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         metadata : dict
             Description not yet provided.
         dataconfig : DataConfigABC
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -417,12 +416,12 @@ class DatasetOperator:
 def _build_chunks(config: DataConfigABC | None = None):
     """
     Document this function.
-
+    
     Parameters
     ----------
     config : DataConfigABC | None
         Description not yet provided.
-
+    
     Returns
     -------
     Any

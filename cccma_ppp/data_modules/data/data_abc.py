@@ -36,7 +36,7 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 class infoclass:
     """
     Document this class.
-
+    
     Parameters
     ----------
     sizes : dict | None
@@ -54,7 +54,6 @@ class infoclass:
     init_time_freq : TimeFrequency
         Description not yet provided.
     """
-
     sizes: dict | None
     start_time: xr.DataArray | np.ndarray | str | int | None
     final_time: xr.DataArray | np.ndarray | str | int | None
@@ -67,7 +66,7 @@ class infoclass:
 class DataConfigABC(abc.ABC):
     """
     Document this class.
-
+    
     Attributes
     ----------
     paths : str
@@ -87,7 +86,6 @@ class DataConfigABC(abc.ABC):
     rename_dict : dict
         Description not yet provided.
     """
-
     paths: str
     names: list[str]
     preprocessing_pipeline: PreprocessingPipeline
@@ -106,7 +104,7 @@ class DataConfigABC(abc.ABC):
     def __init__(self):
         """
         Document this function.
-
+        
         Raises
         ------
         AttributeError
@@ -163,7 +161,7 @@ class DataConfigABC(abc.ABC):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         selection : dict
@@ -208,12 +206,12 @@ class DataConfigABC(abc.ABC):
     def load_preprocessor_pipeline(self, load_dir: Path | str | None = None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         load_dir : Path | str | None
             Description not yet provided.
-
+        
         Raises
         ------
         RuntimeError
@@ -242,14 +240,14 @@ class DataConfigABC(abc.ABC):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         load : bool
             Description not yet provided.
         add_time_auxiliary_coords : bool
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -278,14 +276,14 @@ class DataConfigABC(abc.ABC):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         indexers : dict[str, Any] | None
             Description not yet provided.
         **indexers_kwargs : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -302,7 +300,7 @@ class DataConfigABC(abc.ABC):
     def coords(self) -> Mapping[str, int]:
         """
         Document this function.
-
+        
         Returns
         -------
         Mapping[str, int]
@@ -315,7 +313,7 @@ class DataConfigABC(abc.ABC):
     def sizes(self) -> Mapping[str, int]:
         """
         Document this function.
-
+        
         Returns
         -------
         Mapping[str, int]
@@ -328,7 +326,7 @@ class DataConfigABC(abc.ABC):
     def dims(self) -> tuple[str, ...] | Mapping[str, int]:
         """
         Document this function.
-
+        
         Returns
         -------
         tuple[str, ...] | Mapping[str, int]
@@ -341,7 +339,7 @@ class DataConfigABC(abc.ABC):
     def init_time_frequency(self) -> str:
         """
         Document this function.
-
+        
         Returns
         -------
         str
@@ -354,7 +352,7 @@ class DataConfigABC(abc.ABC):
     def indexes(self) -> Mapping[str, pd.Index]:
         """
         Document this function.
-
+        
         Returns
         -------
         Mapping[str, pd.Index]
@@ -367,7 +365,7 @@ class DataConfigABC(abc.ABC):
     def _check_opened(self):
         """
         Document this function.
-
+        
         Raises
         ------
         ValueError
@@ -383,14 +381,14 @@ class DataConfigABC(abc.ABC):
 def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
     """
     Document this function.
-
+    
     Parameters
     ----------
     dataconfig : DataConfigABC
         Description not yet provided.
     _do_checks : bool
         Description not yet provided.
-
+    
     Raises
     ------
     FileNotFoundError
@@ -472,12 +470,12 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
 def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
     """
     Document this function.
-
+    
     Parameters
     ----------
     dataconfig : DataConfigABC
         Description not yet provided.
-
+    
     Returns
     -------
     infoclass

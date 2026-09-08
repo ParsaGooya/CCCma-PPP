@@ -29,12 +29,12 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 def _unwrap_data_variables(dataset: xr.Dataset) -> xr.DataArray:
     """
     Document this function.
-
+    
     Parameters
     ----------
     dataset : xr.Dataset
         Description not yet provided.
-
+    
     Returns
     -------
     xr.DataArray
@@ -65,7 +65,7 @@ def _load_xarray_data(
 ):
     """
     Document this function.
-
+    
     Parameters
     ----------
     paths : list[str]
@@ -92,12 +92,12 @@ def _load_xarray_data(
         Description not yet provided.
     supported_NN_dimensions_sorted : tuple
         Description not yet provided.
-
+    
     Returns
     -------
     Any
         Description not yet provided.
-
+    
     Raises
     ------
     TypeError
@@ -173,12 +173,14 @@ def _create_train_mask(
 ) -> xr.DataArray:
     """
     Document this function.
-
+    
     Parameters
     ----------
     init_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
         Description not yet provided.
     lead_times : Sequence | xr.DataArray | np.ndarray | int
+        Description not yet provided.
+    max_allowed_time : np.datetime64 | datetime.datetime | cftime.datetime | None
         Description not yet provided.
     lead_time_resolution : lead_time_unit
         Description not yet provided.
@@ -186,12 +188,12 @@ def _create_train_mask(
         Description not yet provided.
     lead_time_dim : str
         Description not yet provided.
-
+    
     Returns
     -------
     xr.DataArray
         Description not yet provided.
-
+    
     Raises
     ------
     ValueError
@@ -267,7 +269,7 @@ def _calculate_target_times(
 ) -> np.ndarray:
     """
     Document this function.
-
+    
     Parameters
     ----------
     init_times : xr.DataArray
@@ -276,12 +278,12 @@ def _calculate_target_times(
         Description not yet provided.
     lead_time_resolution : lead_time_unit
         Description not yet provided.
-
+    
     Returns
     -------
     np.ndarray
         Description not yet provided.
-
+    
     Raises
     ------
     ValueError
@@ -332,14 +334,14 @@ def _add_months(
 ) -> np.datetime64 | cftime.datetime:
     """
     Document this function.
-
+    
     Parameters
     ----------
     time : np.datetime64 | cftime.datetime
         Description not yet provided.
     n_months : int
         Description not yet provided.
-
+    
     Returns
     -------
     np.datetime64 | cftime.datetime
@@ -363,12 +365,12 @@ def _validate_time_sequence(
 ) -> None:
     """
     Document this function.
-
+    
     Parameters
     ----------
     times_sequence : Sequence | np.ndarray | xr.DataArray
         Description not yet provided.
-
+    
     Raises
     ------
     TypeError
@@ -432,7 +434,7 @@ def _validate_time_sequence(
 def suppress_stderr() -> Iterator[None]:
     """
     Document this function.
-
+    
     Yields
     ------
     None
@@ -457,7 +459,7 @@ def add_lead_times(
 ) -> np.ndarray:
     """
     Document this function.
-
+    
     Parameters
     ----------
     init_times : np.ndarray | xr.DataArray
@@ -466,12 +468,12 @@ def add_lead_times(
         Description not yet provided.
     lead_time_resolution : lead_time_unit
         Description not yet provided.
-
+    
     Returns
     -------
     np.ndarray
         Description not yet provided.
-
+    
     Raises
     ------
     TypeError
@@ -535,7 +537,7 @@ def _add_cftime_offset(
 ) -> cftime.datetime:
     """
     Document this function.
-
+    
     Parameters
     ----------
     init_time : cftime.datetime
@@ -544,12 +546,12 @@ def _add_cftime_offset(
         Description not yet provided.
     resolution : lead_time_unit
         Description not yet provided.
-
+    
     Returns
     -------
     cftime.datetime
         Description not yet provided.
-
+    
     Raises
     ------
     ValueError
@@ -593,7 +595,7 @@ def _days_in_cftime_month(
 ) -> int:
     """
     Document this function.
-
+    
     Parameters
     ----------
     year : int
@@ -602,7 +604,7 @@ def _days_in_cftime_month(
         Description not yet provided.
     calendar_name : str
         Description not yet provided.
-
+    
     Returns
     -------
     int
@@ -655,7 +657,7 @@ def assign_datetime_init_time(
 ) -> xr.Dataset | xr.DataArray:
     """
     Document this function.
-
+    
     Parameters
     ----------
     ds : xr.Dataset | xr.DataArray
@@ -664,12 +666,12 @@ def assign_datetime_init_time(
         Description not yet provided.
     calendar : str | None
         Description not yet provided.
-
+    
     Returns
     -------
     xr.Dataset | xr.DataArray
         Description not yet provided.
-
+    
     Raises
     ------
     TypeError
@@ -706,17 +708,17 @@ def get_time_representation(
 ) -> TimeTypes:
     """
     Document this function.
-
+    
     Parameters
     ----------
     time : xr.DataArray | pd.DatetimeIndex | xr.CFTimeIndex
         Description not yet provided.
-
+    
     Returns
     -------
     TimeTypes
         Description not yet provided.
-
+    
     Raises
     ------
     TypeError
@@ -747,17 +749,17 @@ def infer_time_resolution(
 ) -> TimeFrequency:
     """
     Document this function.
-
+    
     Parameters
     ----------
     times : pd.DatetimeIndex | xr.CFTimeIndex
         Description not yet provided.
-
+    
     Returns
     -------
     TimeFrequency
         Description not yet provided.
-
+    
     Raises
     ------
     ValueError

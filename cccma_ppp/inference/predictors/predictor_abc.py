@@ -15,7 +15,7 @@ from cccma_ppp.generic.aggregator import RunningCovariance
 class PredictorABC(abc.ABC):
     """
     Document this class.
-
+    
     Attributes
     ----------
     output_dir : str | Path
@@ -25,7 +25,6 @@ class PredictorABC(abc.ABC):
     num_output_covariance_sampling : int | None
         Description not yet provided.
     """
-
     output_dir: str | Path
     output_sampler: Callable[..., torch.Tensor] | None
     num_output_covariance_sampling: int | None
@@ -34,7 +33,7 @@ class PredictorABC(abc.ABC):
     def temp_save_dir(self):
         """
         Document this function.
-
+        
         Returns
         -------
         Any
@@ -54,7 +53,7 @@ class PredictorABC(abc.ABC):
     def stats(self) -> dict[str, RunningCovariance]:
         """
         Document this function.
-
+        
         Returns
         -------
         dict[str, RunningCovariance]
@@ -67,7 +66,7 @@ class PredictorABC(abc.ABC):
     def _infer_on_batch(self, batch: BatchDataABC, _getting_train_stats: bool = False):
         """
         Document this function.
-
+        
         Parameters
         ----------
         batch : BatchDataABC
@@ -81,7 +80,7 @@ class PredictorABC(abc.ABC):
     def _batch_to_netcdf(self, output: OutputABC, metadata: list[dict]):
         """
         Document this function.
-
+        
         Parameters
         ----------
         output : OutputABC
@@ -95,7 +94,7 @@ class PredictorABC(abc.ABC):
     def _update_train_stats(self, output: OutputABC, batch: BatchDataABC):
         """
         Document this function.
-
+        
         Parameters
         ----------
         output : OutputABC
@@ -110,7 +109,7 @@ class PredictorABC(abc.ABC):
     def raw_module(self):
         """
         Document this function.
-
+        
         Returns
         -------
         Any
@@ -130,7 +129,7 @@ class PredictorABC(abc.ABC):
     ) -> OutputABC:
         """
         Document this function.
-
+        
         Parameters
         ----------
         output : OutputABC
@@ -141,7 +140,7 @@ class PredictorABC(abc.ABC):
             Description not yet provided.
         reshape_size : tuple
             Description not yet provided.
-
+        
         Returns
         -------
         OutputABC
@@ -166,12 +165,12 @@ class PredictorABC(abc.ABC):
     def build_output_sampler(self) -> Callable[..., torch.Tensor]:
         """
         Document this function.
-
+        
         Returns
         -------
         Callable[..., torch.Tensor]
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError
@@ -190,12 +189,12 @@ class PredictorABC(abc.ABC):
         def _sampler(sample_size: int | tuple[int, ...]):
             """
             Document this function.
-
+            
             Parameters
             ----------
             sample_size : int | tuple[int, ...]
                 Description not yet provided.
-
+            
             Returns
             -------
             Any
@@ -218,7 +217,7 @@ class PredictorABC(abc.ABC):
     ) -> torch.distributions.MultivariateNormal:
         """
         Document this function.
-
+        
         Parameters
         ----------
         mu : torch.Tensor
@@ -227,12 +226,12 @@ class PredictorABC(abc.ABC):
             Description not yet provided.
         std : float
             Description not yet provided.
-
+        
         Returns
         -------
         torch.distributions.MultivariateNormal
             Description not yet provided.
-
+        
         Raises
         ------
         RuntimeError
@@ -276,7 +275,7 @@ class PredictorABC(abc.ABC):
     ) -> torch.Tensor:
         """
         Document this function.
-
+        
         Parameters
         ----------
         mu : torch.Tensor
@@ -287,7 +286,7 @@ class PredictorABC(abc.ABC):
             Description not yet provided.
         std : float
             Description not yet provided.
-
+        
         Returns
         -------
         torch.Tensor
@@ -314,7 +313,7 @@ def save_batch_to_netcdf(
 ):
     """
     Document this function.
-
+    
     Parameters
     ----------
     prediction : torch.Tensor
@@ -333,7 +332,7 @@ def save_batch_to_netcdf(
         Description not yet provided.
     attrs : dict
         Description not yet provided.
-
+    
     Raises
     ------
     ValueError

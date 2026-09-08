@@ -3,6 +3,29 @@ import io
 import pathlib
 import tokenize
 
+
+PRESERVE_TAGS = {
+    "noqa",
+    "type:",
+    "pylint:",
+    "pyright:",
+    "mypy:",
+    "pragma:",
+    "fmt:",
+    "isort:",
+    "flake8:",
+    "yapf:",
+    "autopep8:",
+}
+
+
+def should_preserve_comment(comment_text):
+
+    text = comment_text.lstrip("#").strip()
+
+    return any(tag in text for tag in PRESERVE_TAGS)
+
+
 for path in pathlib.Path(".").rglob("*.py"):
     try:
         src = path.read_text(encoding="utf-8")
@@ -41,7 +64,8 @@ for path in pathlib.Path(".").rglob("*.py"):
 
         for tok in tokgen:
             if tok.type == tokenize.COMMENT:
-                continue
+                if not should_preserve_comment(tok.string):
+                    continue
             out.append(tok)
 
         path.write_text(tokenize.untokenize(out), encoding="utf-8")

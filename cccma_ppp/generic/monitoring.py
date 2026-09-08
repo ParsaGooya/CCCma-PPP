@@ -26,17 +26,17 @@ F = TypeVar("F", bound=Callable[..., Any])
 def resolve_physical_gpu_index(local_rank: int) -> int:
     """
     Document this function.
-
+    
     Parameters
     ----------
     local_rank : int
         Description not yet provided.
-
+    
     Returns
     -------
     int
         Description not yet provided.
-
+    
     Raises
     ------
     TypeError
@@ -110,7 +110,7 @@ def resolve_physical_gpu_index(local_rank: int) -> int:
 class Monitor:
     """
     Document this class.
-
+    
     Parameters
     ----------
     cpu : bool
@@ -132,7 +132,6 @@ class Monitor:
     world_size : int
         Description not yet provided.
     """
-
     def __init__(
         self,
         *,
@@ -148,7 +147,7 @@ class Monitor:
     ) -> None:
         """
         Document this function.
-
+        
         Parameters
         ----------
         cpu : bool
@@ -169,7 +168,7 @@ class Monitor:
             Description not yet provided.
         world_size : int
             Description not yet provided.
-
+        
         Raises
         ------
         TypeError
@@ -317,7 +316,7 @@ class Monitor:
     def _get_stack(self) -> list:
         """
         Document this function.
-
+        
         Returns
         -------
         list
@@ -343,7 +342,7 @@ class Monitor:
     def current_stage(self) -> str:
         """
         Document this function.
-
+        
         Returns
         -------
         str
@@ -355,7 +354,7 @@ class Monitor:
     def _current_sample_stage(self) -> str:
         """
         Document this function.
-
+        
         Returns
         -------
         str
@@ -378,7 +377,7 @@ class Monitor:
     def _ram_gb(self) -> float:
         """
         Document this function.
-
+        
         Returns
         -------
         float
@@ -389,7 +388,7 @@ class Monitor:
     def _cpu(self) -> float:
         """
         Document this function.
-
+        
         Returns
         -------
         float
@@ -400,12 +399,12 @@ class Monitor:
     def _gpu(self, index: int) -> tuple[float, float]:
         """
         Document this function.
-
+        
         Parameters
         ----------
         index : int
             Description not yet provided.
-
+        
         Returns
         -------
         tuple[float, float]
@@ -452,7 +451,7 @@ class Monitor:
     ) -> dict[str, Any]:
         """
         Document this function.
-
+        
         Parameters
         ----------
         stage : str
@@ -461,7 +460,7 @@ class Monitor:
             Description not yet provided.
         span_id : str | None
             Description not yet provided.
-
+        
         Returns
         -------
         dict[str, Any]
@@ -494,7 +493,7 @@ class Monitor:
     def _append_event(self, event: dict[str, Any]) -> None:
         """
         Document this function.
-
+        
         Parameters
         ----------
         event : dict[str, Any]
@@ -507,17 +506,17 @@ class Monitor:
     def span(self, name: str) -> Iterator:
         """
         Document this function.
-
+        
         Parameters
         ----------
         name : str
             Description not yet provided.
-
+        
         Yields
         ------
         Iterator
             Description not yet provided.
-
+        
         Raises
         ------
         TypeError
@@ -579,17 +578,17 @@ class Monitor:
     def observe(self, function: F) -> F:
         """
         Document this function.
-
+        
         Parameters
         ----------
         function : F
             Description not yet provided.
-
+        
         Returns
         -------
         F
             Description not yet provided.
-
+        
         Raises
         ------
         TypeError
@@ -602,14 +601,14 @@ class Monitor:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             """
             Document this function.
-
+            
             Parameters
             ----------
             *args : Any
                 Description not yet provided.
             **kwargs : Any
                 Description not yet provided.
-
+            
             Returns
             -------
             Any
@@ -623,12 +622,12 @@ class Monitor:
     def checkpoint(self, name: str) -> None:
         """
         Document this function.
-
+        
         Parameters
         ----------
         name : str
             Description not yet provided.
-
+        
         Raises
         ------
         TypeError
@@ -658,7 +657,7 @@ class Monitor:
     def _collect_sample(self) -> dict[str, Any]:
         """
         Document this function.
-
+        
         Returns
         -------
         dict[str, Any]
@@ -709,7 +708,7 @@ class Monitor:
     def start(self, *, clear: bool = False) -> None:
         """
         Document this function.
-
+        
         Parameters
         ----------
         clear : bool
@@ -748,12 +747,12 @@ class Monitor:
     def stop(self, timeout: float | None = None) -> None:
         """
         Document this function.
-
+        
         Parameters
         ----------
         timeout : float | None
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError
@@ -795,7 +794,7 @@ class Monitor:
     def running(self) -> bool:
         """
         Document this function.
-
+        
         Returns
         -------
         bool
@@ -807,7 +806,7 @@ class Monitor:
     def metric_names(self) -> tuple[str, ...]:
         """
         Document this function.
-
+        
         Returns
         -------
         tuple[str, ...]
@@ -837,7 +836,7 @@ class Monitor:
     def get_dataframe(self):
         """
         Document this function.
-
+        
         Returns
         -------
         Any
@@ -853,7 +852,7 @@ class Monitor:
     def __enter__(self) -> Monitor:
         """
         Document this function.
-
+        
         Returns
         -------
         Monitor
@@ -870,7 +869,7 @@ class Monitor:
     ) -> bool:
         """
         Document this function.
-
+        
         Parameters
         ----------
         exception_type : Any
@@ -879,7 +878,7 @@ class Monitor:
             Description not yet provided.
         traceback : Any
             Description not yet provided.
-
+        
         Returns
         -------
         bool
@@ -896,7 +895,7 @@ class Monitor:
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         values : Any
@@ -905,12 +904,12 @@ class Monitor:
             Description not yet provided.
         measurement_variance : float
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError
@@ -979,7 +978,7 @@ class Monitor:
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         series : Any
@@ -988,12 +987,12 @@ class Monitor:
             Description not yet provided.
         **kwargs : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError
@@ -1067,7 +1066,7 @@ class Monitor:
     ) -> None:
         """
         Document this function.
-
+        
         Parameters
         ----------
         ax : Any
@@ -1120,12 +1119,12 @@ class Monitor:
     ) -> tuple[str, str]:
         """
         Document this function.
-
+        
         Parameters
         ----------
         metric : str
             Description not yet provided.
-
+        
         Returns
         -------
         tuple[str, str]
@@ -1153,12 +1152,12 @@ class Monitor:
     ) -> list:
         """
         Document this function.
-
+        
         Parameters
         ----------
         samples : Any
             Description not yet provided.
-
+        
         Returns
         -------
         list
@@ -1176,12 +1175,12 @@ class Monitor:
     ) -> list[tuple[float, float, str]]:
         """
         Document this function.
-
+        
         Parameters
         ----------
         df : Any
             Description not yet provided.
-
+        
         Returns
         -------
         list[tuple[float, float, str]]
@@ -1227,7 +1226,7 @@ class Monitor:
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         df : Any
@@ -1242,12 +1241,12 @@ class Monitor:
             Description not yet provided.
         **smooth_kwargs : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         TypeError
@@ -1603,7 +1602,7 @@ def monitor(
 ) -> Monitor:
     """
     Document this function.
-
+    
     Parameters
     ----------
     cpu : bool
@@ -1624,7 +1623,7 @@ def monitor(
         Description not yet provided.
     world_size : int
         Description not yet provided.
-
+    
     Returns
     -------
     Monitor
@@ -1653,7 +1652,7 @@ def build_distributed_monitor(
 ) -> Monitor:
     """
     Document this function.
-
+    
     Parameters
     ----------
     distributed : Distributed
@@ -1666,13 +1665,12 @@ def build_distributed_monitor(
         Description not yet provided.
     interval : float
         Description not yet provided.
-
+    
     Returns
     -------
     Monitor
         Description not yet provided.
     """
-
     gpu_indices: list[int] = []
 
     if gpu:
@@ -1714,14 +1712,14 @@ def export_results(
 ) -> tuple[Path | None, Path | None]:
     """
     Document this function.
-
+    
     Parameters
     ----------
     resource_monitor : Monitor
         Description not yet provided.
     output_dir : str | os.PathLike[str]
         Description not yet provided.
-
+    
     Returns
     -------
     tuple[Path | None, Path | None]
@@ -1789,19 +1787,19 @@ def combine_rank_results(
 ) -> Path | None:
     """
     Document this function.
-
+    
     Parameters
     ----------
     output_dir : str | os.PathLike[str]
         Description not yet provided.
     world_size : int
         Description not yet provided.
-
+    
     Returns
     -------
     Path | None
         Description not yet provided.
-
+    
     Raises
     ------
     TypeError
@@ -1884,7 +1882,7 @@ def distributed_monitoring(
 ) -> Iterator:
     """
     Document this function.
-
+    
     Parameters
     ----------
     distributed : Distributed
@@ -1901,7 +1899,7 @@ def distributed_monitoring(
         Description not yet provided.
     combine_ranks : bool
         Description not yet provided.
-
+    
     Yields
     ------
     Iterator

@@ -6,7 +6,7 @@ from torch import nn
 class PartialConv2d(nn.Conv2d):
     """
     Document this class.
-
+    
     Parameters
     ----------
     *args : Any
@@ -14,11 +14,10 @@ class PartialConv2d(nn.Conv2d):
     **kwargs : Any
         Description not yet provided.
     """
-
     def __init__(self, *args, **kwargs):
         """
         Document this function.
-
+        
         Parameters
         ----------
         *args : Any
@@ -62,19 +61,19 @@ class PartialConv2d(nn.Conv2d):
     def forward(self, input, mask_in=None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         input : Any
             Description not yet provided.
         mask_in : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         AssertionError

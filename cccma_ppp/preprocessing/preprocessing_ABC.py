@@ -18,7 +18,7 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 class PreprocessModuleABC(abc.ABC):
     """
     Document this class.
-
+    
     Attributes
     ----------
     large_ensemble : bool
@@ -26,7 +26,6 @@ class PreprocessModuleABC(abc.ABC):
     fitted : bool
         Description not yet provided.
     """
-
     large_ensemble: bool
     fitted: bool
 
@@ -40,7 +39,7 @@ class PreprocessModuleABC(abc.ABC):
     def fit(self, data):
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : Any
@@ -52,7 +51,7 @@ class PreprocessModuleABC(abc.ABC):
     def transform(self, data, **kwargs):
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : Any
@@ -66,7 +65,7 @@ class PreprocessModuleABC(abc.ABC):
     def inverse_transform(self, data, **kwargs):
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : Any
@@ -83,12 +82,12 @@ class PreprocessModuleABC(abc.ABC):
     ) -> tuple[str, ...] | None:
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : xr.Dataset | xr.DataArray
             Description not yet provided.
-
+        
         Returns
         -------
         tuple[str, ...] | None
@@ -116,17 +115,17 @@ class PreprocessModuleABC(abc.ABC):
     ) -> xr.Dataset | xr.DataArray:
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : xr.Dataset | xr.DataArray
             Description not yet provided.
-
+        
         Returns
         -------
         xr.Dataset | xr.DataArray
             Description not yet provided.
-
+        
         Raises
         ------
         RuntimeError
@@ -159,19 +158,19 @@ class PreprocessModuleABC(abc.ABC):
     ) -> xr.DataArray:
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : xr.DataArray | xr.Dataset
             Description not yet provided.
         stat : xr.DataArray | xr.Dataset
             Description not yet provided.
-
+        
         Returns
         -------
         xr.DataArray
             Description not yet provided.
-
+        
         Raises
         ------
         RuntimeError
@@ -216,12 +215,12 @@ class PreprocessModuleABC(abc.ABC):
     ) -> xr.DataArray:
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : xr.DataArray | xr.Dataset
             Description not yet provided.
-
+        
         Returns
         -------
         xr.DataArray
@@ -262,7 +261,7 @@ class PreprocessModuleABC(abc.ABC):
     def _check_fitted(self) -> None:
         """
         Document this function.
-
+        
         Raises
         ------
         RuntimeError

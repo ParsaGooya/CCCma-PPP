@@ -17,7 +17,7 @@ CovarianceDim = Literal["spatial", "channel"]
 class WeightedMSE(lossABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     weights : xr.DataArray
@@ -39,7 +39,6 @@ class WeightedMSE(lossABC):
     **kwargs : Any
         Description not yet provided.
     """
-
     def __init__(
         self,
         weights: xr.DataArray,
@@ -54,7 +53,7 @@ class WeightedMSE(lossABC):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         weights : xr.DataArray
@@ -75,7 +74,7 @@ class WeightedMSE(lossABC):
             Description not yet provided.
         **kwargs : Any
             Description not yet provided.
-
+        
         Raises
         ------
         NotImplementedError
@@ -136,12 +135,12 @@ class WeightedMSE(lossABC):
     def _downsample(self, tensor: torch.Tensor) -> torch.Tensor:
         """
         Document this function.
-
+        
         Parameters
         ----------
         tensor : torch.Tensor
             Description not yet provided.
-
+        
         Returns
         -------
         torch.Tensor
@@ -172,7 +171,7 @@ class WeightedMSE(lossABC):
     ) -> torch.Tensor:
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : torch.Tensor
@@ -183,12 +182,12 @@ class WeightedMSE(lossABC):
             Description not yet provided.
         print_loss : Any
             Description not yet provided.
-
+        
         Returns
         -------
         torch.Tensor
             Description not yet provided.
-
+        
         Raises
         ------
         RuntimeError
@@ -234,7 +233,7 @@ class WeightedMSE(lossABC):
     def _print_loss(self, loss):
         """
         Document this function.
-
+        
         Parameters
         ----------
         loss : Any
@@ -248,19 +247,19 @@ class WeightedMSE(lossABC):
     def _aggregate(self, loss, mask):
         """
         Document this function.
-
+        
         Parameters
         ----------
         loss : Any
             Description not yet provided.
         mask : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         NotImplementedError
@@ -293,7 +292,7 @@ class WeightedMSE(lossABC):
 class WeightedCRPS(lossABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     weights : xr.DataArray
@@ -309,7 +308,6 @@ class WeightedCRPS(lossABC):
     **kwargs : Any
         Description not yet provided.
     """
-
     def __init__(
         self,
         weights: xr.DataArray,
@@ -321,7 +319,7 @@ class WeightedCRPS(lossABC):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         weights : xr.DataArray
@@ -336,7 +334,7 @@ class WeightedCRPS(lossABC):
             Description not yet provided.
         **kwargs : Any
             Description not yet provided.
-
+        
         Raises
         ------
         NotImplementedError
@@ -395,12 +393,12 @@ class WeightedCRPS(lossABC):
     def _downsample(self, tensor: torch.Tensor) -> torch.Tensor:
         """
         Document this function.
-
+        
         Parameters
         ----------
         tensor : torch.Tensor
             Description not yet provided.
-
+        
         Returns
         -------
         torch.Tensor
@@ -431,7 +429,7 @@ class WeightedCRPS(lossABC):
     ) -> torch.Tensor:
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : torch.Tensor
@@ -442,12 +440,12 @@ class WeightedCRPS(lossABC):
             Description not yet provided.
         print_loss : Any
             Description not yet provided.
-
+        
         Returns
         -------
         torch.Tensor
             Description not yet provided.
-
+        
         Raises
         ------
         RuntimeError
@@ -507,7 +505,7 @@ class WeightedCRPS(lossABC):
     def _print_loss(self, loss):
         """
         Document this function.
-
+        
         Parameters
         ----------
         loss : Any
@@ -521,19 +519,19 @@ class WeightedCRPS(lossABC):
     def _aggregate(self, loss, mask):
         """
         Document this function.
-
+        
         Parameters
         ----------
         loss : Any
             Description not yet provided.
         mask : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         NotImplementedError
@@ -566,7 +564,7 @@ class WeightedCRPS(lossABC):
 class Frobenius_norm(lossABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     weights : xr.DataArray
@@ -580,7 +578,6 @@ class Frobenius_norm(lossABC):
     covariance_dim : CovarianceDim
         Description not yet provided.
     """
-
     def __init__(
         self,
         weights: xr.DataArray,
@@ -591,7 +588,7 @@ class Frobenius_norm(lossABC):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         weights : xr.DataArray
@@ -626,7 +623,7 @@ class Frobenius_norm(lossABC):
     ) -> torch.Tensor:
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : torch.Tensor
@@ -637,12 +634,12 @@ class Frobenius_norm(lossABC):
             Description not yet provided.
         print_loss : bool
             Description not yet provided.
-
+        
         Returns
         -------
         torch.Tensor
             Description not yet provided.
-
+        
         Raises
         ------
         AssertionError
@@ -695,7 +692,7 @@ class Frobenius_norm(lossABC):
     def _print_loss(self, loss):
         """
         Document this function.
-
+        
         Parameters
         ----------
         loss : Any
@@ -706,19 +703,19 @@ class Frobenius_norm(lossABC):
     def _aggregate(self, loss, output_size=None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         loss : Any
             Description not yet provided.
         output_size : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         NotImplementedError
@@ -746,19 +743,19 @@ class Frobenius_norm(lossABC):
 def _check_generator_structure(data: torch.Tensor, target: torch.Tensor):
     """
     Document this function.
-
+    
     Parameters
     ----------
     data : torch.Tensor
         Description not yet provided.
     target : torch.Tensor
         Description not yet provided.
-
+    
     Returns
     -------
     Any
         Description not yet provided.
-
+    
     Raises
     ------
     ValueError

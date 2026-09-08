@@ -54,7 +54,7 @@ from cccma_ppp.architectures.unet.utils import _unet_config_checks, _repeat_tens
 class UNetConfig(modelConfigABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     channels : list[int]
@@ -84,7 +84,6 @@ class UNetConfig(modelConfigABC):
     GENERATOR : GENERATORConfig | None
         Description not yet provided.
     """
-
     channels: list[int]
     block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig = (
         field(default_factory=ConvBlockConfig)
@@ -124,7 +123,7 @@ class UNetConfig(modelConfigABC):
     def EXPECTS_MASK(self) -> bool:
         """
         Document this function.
-
+        
         Returns
         -------
         bool
@@ -142,7 +141,7 @@ class UNetConfig(modelConfigABC):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         input_shape : np.ndarray
@@ -151,7 +150,7 @@ class UNetConfig(modelConfigABC):
             Description not yet provided.
         added_features_dim : int | None
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -168,7 +167,7 @@ class UNetConfig(modelConfigABC):
 class UNet(deterministicmodelsABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     config : UNetConfig
@@ -180,7 +179,6 @@ class UNet(deterministicmodelsABC):
     added_features_dim : int | None
         Description not yet provided.
     """
-
     def __init__(
         self,
         config: UNetConfig,
@@ -190,7 +188,7 @@ class UNet(deterministicmodelsABC):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         config : UNetConfig
@@ -201,7 +199,7 @@ class UNet(deterministicmodelsABC):
             Description not yet provided.
         added_features_dim : int | None
             Description not yet provided.
-
+        
         Raises
         ------
         RuntimeError
@@ -360,14 +358,14 @@ class UNet(deterministicmodelsABC):
     ) -> nn.Module:
         """
         Document this function.
-
+        
         Parameters
         ----------
         in_channels : int
             Description not yet provided.
         out_channels : int
             Description not yet provided.
-
+        
         Returns
         -------
         nn.Module
@@ -388,7 +386,7 @@ class UNet(deterministicmodelsABC):
     ) -> TensorMask:
         """
         Document this function.
-
+        
         Parameters
         ----------
         x : torch.Tensor
@@ -397,7 +395,7 @@ class UNet(deterministicmodelsABC):
             Description not yet provided.
         added_features : torch.Tensor | None
             Description not yet provided.
-
+        
         Returns
         -------
         TensorMask
@@ -423,12 +421,12 @@ class UNet(deterministicmodelsABC):
     def forward(self, request: DeterministicRequest) -> deterministicOutput:
         """
         Document this function.
-
+        
         Parameters
         ----------
         request : DeterministicRequest
             Description not yet provided.
-
+        
         Returns
         -------
         deterministicOutput
@@ -455,12 +453,12 @@ class UNet(deterministicmodelsABC):
     def forward_decoder(self, request: DeterministicRequest) -> torch.Tensor:
         """
         Document this function.
-
+        
         Parameters
         ----------
         request : DeterministicRequest
             Description not yet provided.
-
+        
         Returns
         -------
         torch.Tensor
@@ -573,7 +571,7 @@ class UNet(deterministicmodelsABC):
     def output_block(self) -> UNetOutput:
         """
         Document this function.
-
+        
         Returns
         -------
         UNetOutput
@@ -587,13 +585,12 @@ class UNet(deterministicmodelsABC):
 class UNetSICConfig(UNetConfig):
     """
     Document this class.
-
+    
     Parameters
     ----------
     clip_output : bool
         Description not yet provided.
     """
-
     clip_output: bool = False
 
     def build(
@@ -604,7 +601,7 @@ class UNetSICConfig(UNetConfig):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         input_shape : np.ndarray
@@ -613,7 +610,7 @@ class UNetSICConfig(UNetConfig):
             Description not yet provided.
         added_features_dim : int | None
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -631,7 +628,6 @@ class UNetSIC(UNet):
     """
     Document this class.
     """
-
     def _build_output(
         self,
         in_channels: int,
@@ -639,14 +635,14 @@ class UNetSIC(UNet):
     ) -> nn.Module:
         """
         Document this function.
-
+        
         Parameters
         ----------
         in_channels : int
             Description not yet provided.
         out_channels : int
             Description not yet provided.
-
+        
         Returns
         -------
         nn.Module

@@ -13,7 +13,7 @@ from cccma_ppp.core.selectors import FlowSelector
 class flowOutput:
     """
     Document this class.
-
+    
     Parameters
     ----------
     e_samples : torch.Tensor
@@ -21,7 +21,6 @@ class flowOutput:
     log_det : torch.Tensor
         Description not yet provided.
     """
-
     e_samples: torch.Tensor
     log_det: torch.Tensor
 
@@ -30,7 +29,7 @@ class flowOutput:
 class NormalizedFlowConfig:
     """
     Document this class.
-
+    
     Parameters
     ----------
     list_flows : list[FlowSelector]
@@ -38,21 +37,20 @@ class NormalizedFlowConfig:
     flow_sample_size : int
         Description not yet provided.
     """
-
     list_flows: list[FlowSelector]
     flow_sample_size: int = 5000
 
     def build(self, latent_size: int, condition_size: int = None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         latent_size : int
             Description not yet provided.
         condition_size : int
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -66,7 +64,7 @@ class NormalizedFlowConfig:
 class NormalizedFlowModel(flowABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     config : NormalizedFlowConfig
@@ -76,13 +74,12 @@ class NormalizedFlowModel(flowABC):
     condition_size : int
         Description not yet provided.
     """
-
     def __init__(
         self, config: NormalizedFlowConfig, latent_size, condition_size: int = None
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         config : NormalizedFlowConfig
@@ -113,14 +110,14 @@ class NormalizedFlowModel(flowABC):
     def forward(self, x, condition=None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         x : Any
             Description not yet provided.
         condition : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -137,14 +134,14 @@ class NormalizedFlowModel(flowABC):
     def inverse(self, z, condition=None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         z : Any
             Description not yet provided.
         condition : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -163,7 +160,7 @@ class NormalizedFlowModel(flowABC):
 class FCNN(nn.Module):
     """
     Document this class.
-
+    
     Parameters
     ----------
     in_dim : Any
@@ -173,11 +170,10 @@ class FCNN(nn.Module):
     hidden_dim : Any
         Description not yet provided.
     """
-
     def __init__(self, in_dim, out_dim, hidden_dim):
         """
         Document this function.
-
+        
         Parameters
         ----------
         in_dim : Any
@@ -199,12 +195,12 @@ class FCNN(nn.Module):
     def forward(self, x):
         """
         Document this function.
-
+        
         Parameters
         ----------
         x : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -217,7 +213,7 @@ class FCNN(nn.Module):
 class MAF(flowABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     hidden_dim : Any
@@ -225,7 +221,6 @@ class MAF(flowABC):
     base_network : Any
         Description not yet provided.
     """
-
     def __init__(
         self,
         hidden_dim=16,
@@ -233,7 +228,7 @@ class MAF(flowABC):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         hidden_dim : Any
@@ -249,14 +244,14 @@ class MAF(flowABC):
     def build(self, dim, condition_size=None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         dim : Any
             Description not yet provided.
         condition_size : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -292,19 +287,19 @@ class MAF(flowABC):
     def forward(self, x, condition=None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         x : Any
             Description not yet provided.
         condition : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError
@@ -341,19 +336,19 @@ class MAF(flowABC):
     def inverse(self, z, condition=None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         z : Any
             Description not yet provided.
         condition : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError
@@ -393,7 +388,7 @@ class MAF(flowABC):
 class RealNVP(flowABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     hidden_dim : Any
@@ -401,11 +396,10 @@ class RealNVP(flowABC):
     base_network : Any
         Description not yet provided.
     """
-
     def __init__(self, hidden_dim=16, base_network=FCNN):
         """
         Document this function.
-
+        
         Parameters
         ----------
         hidden_dim : Any
@@ -421,14 +415,14 @@ class RealNVP(flowABC):
     def build(self, dim, condition_size=None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         dim : Any
             Description not yet provided.
         condition_size : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -457,19 +451,19 @@ class RealNVP(flowABC):
     def forward(self, x, condition=None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         x : Any
             Description not yet provided.
         condition : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError
@@ -505,19 +499,19 @@ class RealNVP(flowABC):
     def inverse(self, z, condition=None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         z : Any
             Description not yet provided.
         condition : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         ValueError

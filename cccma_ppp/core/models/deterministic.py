@@ -22,13 +22,12 @@ from cccma_ppp.generic.runtime import RuntimeContext
 class deterministicOutput(OutputABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     output : torch.Tensor
         Description not yet provided.
     """
-
     output: torch.Tensor
 
 
@@ -38,7 +37,7 @@ class deterministicOutput(OutputABC):
 class deterministicConfig(moduleConfigABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     ModelConfig : deterministicModelSelector | None
@@ -46,19 +45,18 @@ class deterministicConfig(moduleConfigABC):
     load_dir : str | None
         Description not yet provided.
     """
-
     ModelConfig: deterministicModelSelector | None = None
     load_dir: str | None = None
 
     def __post_init__(self):
         """
         Document this function.
-
+        
         Raises
         ------
         ValueError
             Description not yet provided.
-
+        
         Warns
         -----
         UserWarning
@@ -83,7 +81,7 @@ class deterministicConfig(moduleConfigABC):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         input_shape : np.ndarray | tuple
@@ -92,7 +90,7 @@ class deterministicConfig(moduleConfigABC):
             Description not yet provided.
         added_features_dim : int
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -108,12 +106,12 @@ class deterministicConfig(moduleConfigABC):
     def _load_from_checkpoint(self, load_path: Path | str):
         """
         Document this function.
-
+        
         Parameters
         ----------
         load_path : Path | str
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -137,7 +135,7 @@ class deterministicConfig(moduleConfigABC):
 class deterministic(moduleABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     config : deterministicConfig
@@ -149,7 +147,6 @@ class deterministic(moduleABC):
     added_features_dim : int
         Description not yet provided.
     """
-
     def __init__(
         self,
         config: deterministicConfig,
@@ -159,7 +156,7 @@ class deterministic(moduleABC):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         config : deterministicConfig
@@ -170,7 +167,7 @@ class deterministic(moduleABC):
             Description not yet provided.
         added_features_dim : int
             Description not yet provided.
-
+        
         Raises
         ------
         RuntimeError
@@ -226,7 +223,7 @@ class deterministic(moduleABC):
     def init_loss_function(self, reconstruction_loss: Losspipeline):
         """
         Document this function.
-
+        
         Parameters
         ----------
         reconstruction_loss : Losspipeline
@@ -237,17 +234,17 @@ class deterministic(moduleABC):
     def _compute_loss(self, data: BatchData):
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : BatchData
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         RuntimeError
@@ -277,12 +274,12 @@ class deterministic(moduleABC):
     def forward(self, data: BatchData) -> deterministicOutput:
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : BatchData
             Description not yet provided.
-
+        
         Returns
         -------
         deterministicOutput
@@ -310,14 +307,16 @@ class deterministic(moduleABC):
     ) -> deterministicOutput:
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : BatchData
             Description not yet provided.
         output_sample_size : int
             Description not yet provided.
-
+        chunk_output_samples : bool
+            Description not yet provided.
+        
         Returns
         -------
         deterministicOutput

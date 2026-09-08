@@ -24,7 +24,7 @@ from cccma_ppp.generic.runtime import RuntimeContext
 class cVAEOutput(OutputABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     output : torch.Tensor
@@ -42,7 +42,6 @@ class cVAEOutput(OutputABC):
     deterministic_guess : bool
         Description not yet provided.
     """
-
     output: torch.Tensor
     mu: torch.Tensor | None
     log_var: torch.Tensor | None
@@ -57,7 +56,7 @@ class cVAEOutput(OutputABC):
 class cVAEConfig(moduleConfigABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     ModelConfig : cVAEModelSelector | None
@@ -71,7 +70,6 @@ class cVAEConfig(moduleConfigABC):
     load_dir : str | None
         Description not yet provided.
     """
-
     ModelConfig: cVAEModelSelector | None = None
     posterior_variance_limits: (
         list[float | None, float | None] | tuple[float | None, float | None] | None
@@ -83,14 +81,14 @@ class cVAEConfig(moduleConfigABC):
     def __post_init__(self):
         """
         Document this function.
-
+        
         Raises
         ------
         AssertionError
             Description not yet provided.
         ValueError
             Description not yet provided.
-
+        
         Warns
         -----
         UserWarning
@@ -132,7 +130,7 @@ class cVAEConfig(moduleConfigABC):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         input_shape : np.ndarray | tuple
@@ -141,7 +139,7 @@ class cVAEConfig(moduleConfigABC):
             Description not yet provided.
         added_features_dim : int
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -157,12 +155,12 @@ class cVAEConfig(moduleConfigABC):
     def _load_from_checkpoint(self, load_path: Path | str):
         """
         Document this function.
-
+        
         Parameters
         ----------
         load_path : Path | str
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -200,7 +198,7 @@ class cVAEConfig(moduleConfigABC):
 class cVAE(moduleABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     config : cVAEConfig
@@ -212,7 +210,6 @@ class cVAE(moduleABC):
     added_features_dim : int
         Description not yet provided.
     """
-
     def __init__(
         self,
         config: cVAEConfig,
@@ -222,7 +219,7 @@ class cVAE(moduleABC):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         config : cVAEConfig
@@ -233,7 +230,7 @@ class cVAE(moduleABC):
             Description not yet provided.
         added_features_dim : int
             Description not yet provided.
-
+        
         Raises
         ------
         AssertionError
@@ -329,12 +326,12 @@ class cVAE(moduleABC):
     def init_loss_function(self, reconstruction_loss: Losspipeline):
         """
         Document this function.
-
+        
         Parameters
         ----------
         reconstruction_loss : Losspipeline
             Description not yet provided.
-
+        
         Raises
         ------
         RuntimeError
@@ -352,19 +349,19 @@ class cVAE(moduleABC):
     def _compute_loss(self, beta: float, data: BatchData):
         """
         Document this function.
-
+        
         Parameters
         ----------
         beta : float
             Description not yet provided.
         data : BatchData
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         RuntimeError
@@ -431,14 +428,14 @@ class cVAE(moduleABC):
     def forward(self, data: BatchData, latent_sample_size=1) -> cVAEOutput:
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : BatchData
             Description not yet provided.
         latent_sample_size : Any
             Description not yet provided.
-
+        
         Returns
         -------
         cVAEOutput
@@ -473,7 +470,7 @@ class cVAE(moduleABC):
     ) -> cVAEOutput:
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : BatchData
@@ -486,7 +483,9 @@ class cVAE(moduleABC):
             Description not yet provided.
         output_sample_size : int
             Description not yet provided.
-
+        chunk_size : int | None
+            Description not yet provided.
+        
         Returns
         -------
         cVAEOutput

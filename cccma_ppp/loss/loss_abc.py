@@ -11,7 +11,7 @@ Reduction = Literal["mean", "sum"]
 class lossABC(nn.Module, abc.ABC):
     """
     Document this class.
-
+    
     Attributes
     ----------
     generative_context : GenerativeContext
@@ -19,7 +19,6 @@ class lossABC(nn.Module, abc.ABC):
     generative_context : GenerativeContext
         Description not yet provided.
     """
-
     generative_context: GenerativeContext
 
     generative_context: GenerativeContext
@@ -33,7 +32,7 @@ class lossABC(nn.Module, abc.ABC):
     ) -> torch.Tensor:
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : torch.Tensor
@@ -49,7 +48,7 @@ class lossABC(nn.Module, abc.ABC):
     def _print_loss(self, loss):
         """
         Document this function.
-
+        
         Parameters
         ----------
         loss : Any
@@ -61,7 +60,7 @@ class lossABC(nn.Module, abc.ABC):
     def _aggregate(self, loss) -> torch.Tensor:
         """
         Document this function.
-
+        
         Parameters
         ----------
         loss : Any

@@ -16,7 +16,7 @@ from cccma_ppp.data_modules.utils import _unwrap_data_variables
 class LossStepConfig:
     """
     Document this class.
-
+    
     Parameters
     ----------
     name : str
@@ -24,7 +24,6 @@ class LossStepConfig:
     args : dict[str, object]
         Description not yet provided.
     """
-
     name: str
     args: dict[str, object] = dataclasses.field(default_factory=dict)
 
@@ -33,32 +32,20 @@ class LossStepConfig:
 class LosspipelineConfig:
     """
     Document this class.
-
+    
     Parameters
     ----------
-    loss_pipeline : list of LossStepConfig
-        Sequence of loss steps.
-
-    loss_weights : list of float or None, optional
-        Weights applied to each loss term.
-
-    reduction : {"mean", "sum"}, optional
-        Reduction method applied to individual losses.
-
-    saved_output_mask_dir: str or None
-
-        Location of a saved fixed output maks for loss
-        calculation. The mask could have any of the
-        following shapes:
-
-        1- C, D1, D2, ..
-        2- 1, D1, D2, ...
-        3- D1, D2, ...
-
-        where C is channel size and D1, D2, ... are output sizes.
-        The sizes must match that of the model and target data.
+    loss_pipeline : list[LossStepConfig]
+        Description not yet provided.
+    loss_weights : list[float]
+        Description not yet provided.
+    reduction : Reduction
+        Description not yet provided.
+    masked_loss_calculation : bool
+        Description not yet provided.
+    saved_output_mask_dir : str | None
+        Description not yet provided.
     """
-
     loss_pipeline: list[LossStepConfig]
     loss_weights: list[float] = None
     reduction: Reduction = "mean"
@@ -68,7 +55,7 @@ class LosspipelineConfig:
     def __post_init__(self):
         """
         Document this function.
-
+        
         Raises
         ------
         ValueError
@@ -121,7 +108,7 @@ class LosspipelineConfig:
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         weights : xr.DataArray
@@ -132,7 +119,7 @@ class LosspipelineConfig:
             Description not yet provided.
         output_shape : tuple[int, ...] | None
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -150,12 +137,12 @@ class LosspipelineConfig:
     def _resove_output_mask(self, output_shape: tuple[int, ...]):
         """
         Document this function.
-
+        
         Parameters
         ----------
         output_shape : tuple[int, ...]
             Description not yet provided.
-
+        
         Raises
         ------
         RuntimeError
@@ -205,12 +192,12 @@ class LosspipelineConfig:
     def _load_output_mask(self) -> torch.Tensor | None:
         """
         Document this function.
-
+        
         Returns
         -------
         torch.Tensor | None
             Description not yet provided.
-
+        
         Raises
         ------
         FileNotFoundError
@@ -255,7 +242,7 @@ class LosspipelineConfig:
 class Losspipeline(nn.Module):
     """
     Document this class.
-
+    
     Parameters
     ----------
     config : LosspipelineConfig
@@ -267,7 +254,6 @@ class Losspipeline(nn.Module):
     generative_context : GenerativeContext | None
         Description not yet provided.
     """
-
     registery: ClassVar[Registery] = Registery()
 
     def __init__(
@@ -279,7 +265,7 @@ class Losspipeline(nn.Module):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         config : LosspipelineConfig
@@ -335,12 +321,12 @@ class Losspipeline(nn.Module):
     def register(cls, name: str):
         """
         Document this function.
-
+        
         Parameters
         ----------
         name : str
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -358,7 +344,7 @@ class Losspipeline(nn.Module):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         data : Any
@@ -371,12 +357,12 @@ class Losspipeline(nn.Module):
             Description not yet provided.
         step_arguments : dict
             Description not yet provided.
-
+        
         Returns
         -------
         Any
             Description not yet provided.
-
+        
         Raises
         ------
         AssertionError

@@ -29,7 +29,7 @@ from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 class InferenceDatasetConfig(DatasetConfigABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     model : ModelDataConfig | None
@@ -41,7 +41,6 @@ class InferenceDatasetConfig(DatasetConfigABC):
     lead_times : lead_time_config | None
         Description not yet provided.
     """
-
     model: ModelDataConfig | None = None
     condition: ConditionDataConfig | None = None
     condition_method: str = None
@@ -57,7 +56,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
     def effective_input(self):
         """
         Document this function.
-
+        
         Returns
         -------
         Any
@@ -72,7 +71,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
     def ds_operator(self):
         """
         Document this function.
-
+        
         Returns
         -------
         Any
@@ -84,7 +83,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
     def available_times(self):
         """
         Document this function.
-
+        
         Returns
         -------
         Any
@@ -109,7 +108,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
     def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         """
         Document this function.
-
+        
         Parameters
         ----------
         load_dir : Path | str | None
@@ -120,7 +119,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
     def add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
         """
         Document this function.
-
+        
         Parameters
         ----------
         preprocessor : PreprocessModuleABC
@@ -143,7 +142,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
     ):
         """
         Document this function.
-
+        
         Parameters
         ----------
         times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
@@ -154,7 +153,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
             Description not yet provided.
         load : bool
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -173,7 +172,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
 class InferenceDataset(DatasetABC):
     """
     Document this class.
-
+    
     Parameters
     ----------
     config : InferenceDatasetConfig
@@ -189,7 +188,6 @@ class InferenceDataset(DatasetABC):
     mask : xr.DataArray | None
         Description not yet provided.
     """
-
     config: InferenceDatasetConfig
     requested_times: (
         Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
@@ -215,7 +213,7 @@ class InferenceDataset(DatasetABC):
     def _load_model(self):
         """
         Document this function.
-
+        
         Returns
         -------
         Any
@@ -232,7 +230,7 @@ class InferenceDataset(DatasetABC):
     def _write_condition_to_input(self):
         """
         Document this function.
-
+        
         Returns
         -------
         Any
@@ -246,7 +244,7 @@ class InferenceDataset(DatasetABC):
     def _concat_condition_to_input(self):
         """
         Document this function.
-
+        
         Returns
         -------
         Any
@@ -260,12 +258,12 @@ class InferenceDataset(DatasetABC):
     def __getitem__(self, ind):
         """
         Document this function.
-
+        
         Parameters
         ----------
         ind : Any
             Description not yet provided.
-
+        
         Returns
         -------
         Any
@@ -304,17 +302,17 @@ def _from_train(
 ) -> "InferenceDatasetConfig":
     """
     Document this function.
-
+    
     Parameters
     ----------
     train_dataset_config : TrainDatasetConfig
         Description not yet provided.
-
+    
     Returns
     -------
     'InferenceDatasetConfig'
         Description not yet provided.
-
+    
     Raises
     ------
     ValueError

@@ -9,7 +9,7 @@ from cccma_ppp.preprocessing.registery import Registery
 class PreprocessingStepSelector:
     """
     Document this class.
-
+    
     Parameters
     ----------
     name : str
@@ -17,7 +17,6 @@ class PreprocessingStepSelector:
     args : dict[str, object] | None
         Description not yet provided.
     """
-
     name: str
     args: dict[str, object] | None = None
     registery: ClassVar[Registery] = Registery()
@@ -25,7 +24,7 @@ class PreprocessingStepSelector:
     def get_preprocessor(self):
         """
         Document this function.
-
+        
         Returns
         -------
         Any
@@ -37,12 +36,12 @@ class PreprocessingStepSelector:
     def register(cls, name: str) -> Callable[..., PreprocessModuleABC]:
         """
         Document this function.
-
+        
         Parameters
         ----------
         name : str
             Description not yet provided.
-
+        
         Returns
         -------
         Callable[..., PreprocessModuleABC]
@@ -54,7 +53,7 @@ class PreprocessingStepSelector:
     def available(cls):
         """
         Document this function.
-
+        
         Returns
         -------
         Any

@@ -4,12 +4,12 @@ from cccma_ppp.architectures.layers.conv import TensorMask
 def _unet_config_checks(config):
     """
     Document this function.
-
+    
     Parameters
     ----------
     config : Any
         Description not yet provided.
-
+    
     Raises
     ------
     ValueError
@@ -116,14 +116,14 @@ def _repeat_tensor_mask(
 ) -> TensorMask:
     """
     Document this function.
-
+    
     Parameters
     ----------
     tensor_mask : TensorMask
         Description not yet provided.
     repeats : int
         Description not yet provided.
-
+    
     Returns
     -------
     TensorMask
