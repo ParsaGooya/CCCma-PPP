@@ -76,7 +76,9 @@ class lead_time_config:
         Any
             Description not yet provided.
         """
-        return self.list_lead_times or np.arange(self.start, self.end + 1)
+        if self.list_lead_times is not None:
+            return self.list_lead_times
+        return np.arange(self.start, self.end + 1)
 
 
 class DatasetConfigABC(abc.ABC):
@@ -127,11 +129,12 @@ class DatasetConfigABC(abc.ABC):
 
         self._check_required_input_source()
         self._check_condition_method()
+       
+        self._resolve_condition()
         self._check_model_vs_condition()
 
         self._resolve_lead_times()
-        self._resolve_condition()
-
+        
         self._check_model()
         self._check_condition()
 
@@ -239,16 +242,16 @@ class DatasetConfigABC(abc.ABC):
                 ]:
                     if self.condition.coords.get(dim, None) is None:
                         raise ValueError(
-                            "model and condition data must have the same NN dims."
-                            / "when bias correcting to observations"
+                            "model and condition data must have the same NN dims. "
+                            "when bias correcting to observations"
                         )
 
                     if not self.condition.coords.get(dim).equals(
                         self.model.coords.get(dim)
                     ):
                         raise ValueError(
-                            f"model and condition data do not have the same {dim} cooridnates."
-                            / "when bias correcting to observations"
+                            f"model and condition data do not have the same {dim} cooridnates. "
+                            f"when bias correcting to observations"
                         )
 
     @final
@@ -391,13 +394,13 @@ class DatasetConfigABC(abc.ABC):
         pass
 
     @property
-    def input_lead_times(self) -> int:
+    def input_lead_times(self) -> np.ndarray:
         """
         Document this function.
 
         Returns
         -------
-        int
+        np.ndarray
             Description not yet provided.
         """
         return self.effective_input.coords[self.lead_time_dim].values
@@ -703,6 +706,13 @@ class AddedTimeFeatures:
             )
 
         if self.init_time_dim in requested:
+
+            if self.time_span_ref == 0:
+                raise ValueError(
+                    "Cannot normalize time with zero-length reference span. "
+                    "Ensure reference_config.get_common_time has range > 0."
+                )
+
             normalized_times = np.asarray(
                 [
                     (time - self.min_time_ref) / self.time_span_ref
@@ -714,9 +724,15 @@ class AddedTimeFeatures:
             calculated_features[self.init_time_dim] = normalized_times
 
         if self.lead_time_dim in requested:
-            normalized_lead_times = lead_times.astype(np.float32) / float(
-                np.max(self.reference_config.lead_times)
-            )
+            max_lead_time = float(np.max(self.reference_config.lead_times))
+
+            if max_lead_time == 0:
+                raise ValueError(
+                    "Cannot normalize lead time when maximum is zero. "
+                    "Ensure at least one lead time > 0."
+                )
+            
+            normalized_lead_times = lead_times.astype(np.float32) / max_lead_time
 
             calculated_features[self.lead_time_dim] = normalized_lead_times
 
@@ -794,7 +810,7 @@ class AddedTimeFeatures:
         RuntimeError
             Description not yet provided.
         """
-        if self.time_features is None:
+        if not self.time_features:
             return
 
         if self.time_features_array is None:
@@ -888,13 +904,14 @@ class DatasetABC(Dataset, abc.ABC):
     return_metadata: bool
     load: bool
 
-    def __init__(self):
+    def __init__(self, seed: int | None = None):
         """
         Document this function.
         """
         self._check_init()
         self._resolve_mask()
         self._prepare_sampling_mask(self._sampling_times_selectors)
+        self._rng = np.random.default_rng(seed)
 
         if self._load_model:
             self.config.model.open_xarray_data(
@@ -1265,7 +1282,7 @@ class DatasetABC(Dataset, abc.ABC):
 
             if self.config.effective_condition_method == "cross_ensemble":
                 selection[self.config.realization_dim] = [
-                    np.random.randint(
+                    self._rng.integers(
                         self.config.effective_condition.sizes[
                             self.config.realization_dim
                         ]
