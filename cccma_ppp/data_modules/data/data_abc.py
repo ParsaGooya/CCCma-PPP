@@ -379,6 +379,16 @@ class DataConfigABC(abc.ABC):
                 "Make sure '_open_xarray_data' is called first."
             )
 
+    @final
+    def close_data(self):
+        """Close the xarray dataset and release OS file handles."""
+        if self.data is not None:
+            self.data.close()
+            self.data = None
+
+    def __del__(self):
+        self.close_data()
+
 
 def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
     """
