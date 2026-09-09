@@ -96,6 +96,12 @@ class DataloaderConfigABC(abc.ABC):
 
         if self.num_data_workers == 0:
             self.prefetch_factor = None
+        elif self.prefetch_factor is not None:
+            if self.prefetch_factor < 1:
+                raise ValueError(
+                    f"'prefetch_factor' must be at least 1 when workers > 0, "
+                    f"got {self.prefetch_factor}."
+                )
 
     @abc.abstractmethod
     def setup_distributed(self):
@@ -149,33 +155,49 @@ class DataloaderConfigABC(abc.ABC):
         available_start = times.dt.year.min().item()
         available_stop = times.dt.year.max().item()
 
+        requested_start = self._parse_year_bound(requested_slice.start)
+        requested_stop = self._parse_year_bound(requested_slice.stop)
+
         if (
-            eval(requested_slice.start) is not None
-            and eval(requested_slice.start) < available_start
+            requested_start is not None
+            and requested_start < available_start
         ):
             raise ValueError(
-                f"Requested start time {int(requested_slice.start)} is before "
+                f"Requested start time {requested_start} is before "
                 f"the first available time {available_start}."
             )
 
         if (
-            eval(requested_slice.stop) is not None
-            and eval(requested_slice.stop) > available_stop
+            requested_stop is not None
+            and requested_stop > available_stop
         ):
             raise ValueError(
-                f"Requested stop time {eval(requested_slice.stop)} is after "
+                f"Requested stop time {requested_stop} is after "
                 f"the final available time {available_stop}."
             )
 
-        selected = times.sel({self.init_time_dim: requested_slice})
+        selected = times.sel({self.init_time_dim: slice(f'{requested_start}', f'{requested_stop}')})
 
         if selected.size == 0:
             raise ValueError(
                 "No available times fall inside the requested range "
-                f"[{requested_slice.start}, {requested_slice.stop}]."
+                f"[{requested_start}, {requested_stop}]."
             )
 
         return selected
+
+    def _parse_year_bound(self, bound):
+        """Parse and validate a year bound."""
+        if bound is None:
+            return None
+        if isinstance(bound, int):
+            return bound
+        if isinstance(bound, str):
+            try:
+                return int(bound)
+            except ValueError:
+                raise ValueError(f"Invalid year bound: {bound}. Must be integer or string of integer.")
+        raise TypeError(f"Year bound must be int or str, got {type(bound)}")
 
 
 @dataclasses.dataclass
@@ -214,7 +236,10 @@ class Dataloader:
         Document this function.
         """
         self.sampler = self._get_dataloader_sampler()
-        shuffle = self.world_size == 1 if self.shuffle is None else self.shuffle
+        if self.sampler is not None:
+            shuffle = False
+        else:
+            shuffle = self.world_size == 1 if self.shuffle is None else self.shuffle
         num_workers = self.config.num_data_workers
 
         self._torch_loader = DataLoader(
@@ -298,7 +323,14 @@ class Dataloader:
             Description not yet provided.
         """
         if self.world_size > 1:
-            shuffle = self.world_size > 1 if self.shuffle is None else self.shuffle
+
+            if not 0 <= self.rank < self.world_size:
+                raise ValueError(
+                    f"'rank' must satisfy 0 <= rank < world_size, "
+                    f"got rank={self.rank}, world_size={self.world_size}."
+                )
+
+            shuffle = True if self.shuffle is None else self.shuffle
             return DistributedSampler(
                 self.dataset,
                 num_replicas=self.world_size,
@@ -342,18 +374,22 @@ class Dataloader:
         return self
 
     @final
-    def subset_loader(self, start_batch=0):
-        """
-        Document this function.
+    def subset_loader(self, start_batch: int = 0) -> Iterator[BatchDataABC]:
+        """Get an iterator starting from a specific batch.
 
         Parameters
         ----------
-        start_batch : Any
-            Description not yet provided.
+        start_batch : int, optional
+            Batch index to start from (must be >= 0). Default: 0
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        Iterator[BatchDataABC]
+            Iterator over batches starting from start_batch
         """
+        if not isinstance(start_batch, int):
+            raise TypeError(f"start_batch must be int, got {type(start_batch)}.")
+        if start_batch < 0:
+            raise ValueError(f"start_batch must be >= 0, got {start_batch}.")
+
         return islice(iter(self), start_batch, None)
