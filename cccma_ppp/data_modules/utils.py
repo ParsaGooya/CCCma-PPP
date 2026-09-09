@@ -273,27 +273,26 @@ def _calculate_target_times(
     lead_time_resolution: lead_time_unit,
 ) -> np.ndarray:
     """
-    Document this function.
+    Calculate valid times from init times and lead times.
 
     Parameters
     ----------
     init_times : xr.DataArray
-        Description not yet provided.
+        Initialization times.
     lead_times : np.ndarray
-        Description not yet provided.
+        One-based lead time offsets (1 means init_time, 2 means init_time + 1 period).
     lead_time_resolution : lead_time_unit
-        Description not yet provided.
+        Time unit for lead time offsets.
 
     Returns
     -------
     np.ndarray
-        Description not yet provided.
-
-    Raises
-    ------
-    ValueError
-        Description not yet provided.
+        Valid times with shape (len(init_times), len(lead_times)).
     """
+
+    if np.any(lead_times < 1):
+        raise ValueError("Lead times must be one-based (minimum value 1).")
+
     offsets = lead_times.astype(int) - 1
 
     first_time = init_times.values[0]
