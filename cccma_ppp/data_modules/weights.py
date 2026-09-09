@@ -11,7 +11,7 @@ from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.data_modules.utils import _unwrap_data_variables
 
 
-spatialmethod = Literal["uniform", "cosine_lat"]
+Spatialmethod = Literal["uniform", "cosine_lat"]
 
 
 @dataclasses.dataclass
@@ -21,7 +21,7 @@ class WeightsConfig:
 
     Parameters
     ----------
-    spatial_method : spatialmethod
+    spatial_method : Spatialmethod
         Description not yet provided.
     variable_weights : dict[str, float] | None
         Description not yet provided.
@@ -29,7 +29,7 @@ class WeightsConfig:
         Description not yet provided.
     """
 
-    spatial_method: spatialmethod = "uniform"
+    spatial_method: Spatialmethod = "uniform"
     variable_weights: dict[str, float] | None = None
     load_dir: Path | str | None = None
 
@@ -45,6 +45,13 @@ class WeightsConfig:
         if self.load_dir is not None:
             if not Path(self.load_dir).exists():
                 raise FileNotFoundError(f"weights file not found at {self.load_dir}")
+            
+        valid_methods = {"uniform", "cosine_lat"}
+        if self.spatial_method not in valid_methods:
+            raise ValueError(
+                f"Invalid spatial_method: {self.spatial_method!r}. "
+                f"Must be one of {sorted(valid_methods)}."
+            )
 
     def build_weights(
         self,
@@ -85,6 +92,9 @@ class WeightsConfig:
             if isinstance(weights, xr.Dataset):
                 weights = _unwrap_data_variables(weights)
 
+            weights.load()
+            weights.close()
+
             msg = f"the loaded weights from {self.load_dir} must have coordinates that match the target coordinates"
 
             for coord in target_coords:
@@ -106,11 +116,35 @@ class WeightsConfig:
                 name="weights",
             )
 
-            if self.spatial_method == "cosine_lat" and "lat" in weights.coords:
+            if self.spatial_method == "cosine_lat":
+                if "lat" not in weights.coords:
+                    raise ValueError(
+                        "Cosine-latitude weighting requires a 'lat' coordinate. "
+                        f"Available coordinates: {list(weights.coords.keys())}"
+                    )
+
                 latitude_weights = np.cos(np.deg2rad(weights.coords["lat"]))
                 weights = weights * latitude_weights
 
             if self.variable_weights is not None:
+
+                if "channels" in target_coords:
+                    expected_channels = set(target_coords["channels"].values)
+                    provided_channels = set(self.variable_weights.keys())
+
+                    if expected_channels != provided_channels:
+                        missing = sorted(expected_channels - provided_channels)
+                        unexpected = sorted(provided_channels - expected_channels)
+                        msg_parts = []
+                        if missing:
+                            msg_parts.append(f"Missing weights for: {missing}")
+                        if unexpected:
+                            msg_parts.append(f"Unexpected weights for: {unexpected}")
+                        raise ValueError(
+                            "Variable weights must match target channels exactly. " +
+                            "; ".join(msg_parts)
+                        )
+
                 variable_weights = xr.DataArray(
                     list(self.variable_weights.values()),
                     dims=("channels",),
@@ -119,6 +153,13 @@ class WeightsConfig:
                 )
 
                 weights = variable_weights * weights
+
+        if np.any(weights < 0):
+            raise ValueError(f"Weights must be non-negative, found minimum {weights.min()}")
+        if np.any(np.isnan(weights)):
+            raise ValueError("Weights contain NaN values")
+        if np.any(np.isinf(weights)):
+            raise ValueError("Weights contain infinite values")
 
         if self.load_dir is None and save:
             save_path = (
