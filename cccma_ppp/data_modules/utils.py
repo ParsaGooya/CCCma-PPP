@@ -154,7 +154,8 @@ def _load_xarray_data(
 
     ds = ds.transpose(..., *nn_dims)
     if load:
-        ds = ds.load()
+        ds.load()
+        ds.close()
 
     return ds
 
