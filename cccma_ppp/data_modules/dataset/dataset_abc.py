@@ -510,18 +510,18 @@ class DatasetConfigABC(abc.ABC):
         ValueError
             Description not yet provided.
         """
-        missing = [t for t in requested_times.values if t not in self.available_times]
-
-        if missing:
-            raise ValueError(
-                f"The following requested_times are unavailable: {missing}"
-            )
-
         if not isinstance(requested_times, xr.DataArray):
             requested_times = xr.DataArray(
                 requested_times,
                 dims=(self.init_time_dim,),
                 coords={self.init_time_dim: requested_times},
+            )
+            
+        missing = [t for t in requested_times.values if t not in self.available_times]
+
+        if missing:
+            raise ValueError(
+                f"The following requested_times are unavailable: {missing}"
             )
 
         input_times = self.effective_input.coords[self.init_time_dim].to_index()
