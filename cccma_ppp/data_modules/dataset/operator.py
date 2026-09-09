@@ -76,15 +76,17 @@ class DatasetOperator:
         ValueError
             Description not yet provided.
         """
+
+        train_times_array = np.asarray(train_times)
+
+        _validate_time_sequence(train_times)
+
         missing = [
-            t for t in train_times.values if t not in self.config.available_times
+            t for t in train_times_array if t not in self.config.available_times
         ]
 
         if missing:
             raise ValueError(f"The following train_times are unavailable: {missing}")
-
-        if not isinstance(train_times, slice):
-            _validate_time_sequence(train_times)
 
         if self.config.model is not None:
             selection = {
@@ -150,7 +152,7 @@ class DatasetOperator:
                 save_name=save_name,
             )
 
-        self.config._fitted_preprocessors = True
+        self.config._fitted_preprocessors = self._fitted_preprocessors
 
     def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         """
@@ -170,7 +172,7 @@ class DatasetOperator:
         if self.config.effective_condition is not None:
             self.config.effective_condition.load_preprocessor_pipeline(load_dir)
 
-        self.config._fitted_preprocessors = True
+        self.config._fitted_preprocessors = self._fitted_preprocessors
 
     def add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
         """
@@ -192,10 +194,12 @@ class DatasetOperator:
         """
         if not isinstance(preprocessor, PreprocessModuleABC):
             raise TypeError(
-                f"preprocessor must be an instance of ProcessorConfig, "
+                f"preprocessor must be an instance of PreprocessModuleABC, "
                 f"got {type(preprocessor)}"
             )
-        assert preprocessor.fitted, "The preprocessor must be fitted"
+        
+        if not preprocessor.fitted:
+            raise ValueError("The preprocessor must be fitted before adding.")
 
         if self.config.model is not None:
             self.config.model.preprocessing_pipeline.add_fitted_preprocessor(
@@ -281,7 +285,7 @@ class DatasetOperator:
 
         if "channels" in weights.dims:
             error_msg = f"inconsistent variable weights {weights.channels.values} for output variables {ref.names}"
-            if not np.array_equal(weights.channels.values, self.ref.names):
+            if not np.array_equal(weights.channels.values, ref.names):
                 raise RuntimeError(error_msg)
 
         return weights
@@ -412,6 +416,20 @@ class DatasetOperator:
             metadata["preprocessors"].append(preprocessor_names)
 
         return metadata
+
+    @property
+    def _fitted_preprocessors(self) -> bool:
+        """Check if all active pipelines are fitted."""
+        pipelines = []
+        if self.config.model is not None:
+            pipelines.append(self.config.model.preprocessing_pipeline.fitted)
+        if self.config_observation is not None:
+            pipelines.append(self.config_observation.preprocessing_pipeline.fitted)
+        if self.config.effective_condition is not None:
+            pipelines.append(self.config.effective_condition.preprocessing_pipeline.fitted)
+
+        return all(pipelines) if pipelines else False
+
 
 
 def _build_chunks(config: DataConfigABC | None = None):
