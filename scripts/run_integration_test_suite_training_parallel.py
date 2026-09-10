@@ -1,249 +1,1432 @@
-from __future__ import annotations
-
 import csv
-import multiprocessing as mp
-import os
+import json
+import logging
+import re
 import shutil
-import signal
-import sys
-import tempfile
 import traceback
-from concurrent.futures import (
-    FIRST_COMPLETED,
-    Future,
-    ProcessPoolExecutor,
-    wait,
-)
+import warnings
+from contextlib import redirect_stderr, redirect_stdout
 from copy import deepcopy
 from datetime import datetime
 from importlib import import_module
+from itertools import product
 from pathlib import Path
-from typing import Any, Callable
 
+import yaml
 from tqdm import tqdm
 
-PARALLEL_WORKERS = 16
-THREADS_PER_WORKER = 1
-MAX_PENDING_TASKS = PARALLEL_WORKERS * 2
+# Import architecture modules (registers them in the factory)
+from cccma_ppp.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
+from cccma_ppp.configs import required_sample_dimensions
+from cccma_ppp.generic import registry_imports  # noqa: F401
 
-CPU_ONLY = False
-MONITORED_GPU_IDS = (0, 1)
+# Import loss modules (registers them in the factory)
+from cccma_ppp.loss import kld as _loss_kld  # noqa: F401
+from cccma_ppp.loss import loss as _loss_pipeline  # noqa: F401
+from cccma_ppp.loss import utils_loss as _loss_utils  # noqa: F401
 
-ARCHIVE_INCOMPATIBLE_CHECKPOINT = True
-SUITE_MODULE_NAME = "run_integration_test_suite_training"
+# Import the training entry point
+from cccma_ppp.train.train import main as train_main
+
+# Suppress warnings and exceptions during tests
+warnings.filterwarnings("ignore")
+logging.raiseExceptions = False
 
 
-_WORKER_MODULE: Any | None = None
-_WORKER_TASKS: list[dict[str, Any]] | None = None
+# Find the project root (two levels up from this script)
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+# Base configuration files for training and prediction
+BASE_TRAIN_CONFIG = PROJECT_ROOT / "scripts" / "integration_suite_train_config.yaml"
+
+BASE_PREDICTION_CONFIG = (
+    PROJECT_ROOT / "scripts" / "integration_suite_prediction_config.yaml"
+)
+
+# Output directories for test results
+OUTPUT_DIR = PROJECT_ROOT / "../output" / "prediction_integration_test_results"
+
+# Directory where the trained model will be stored (shared across all prediction tests)
+TRAINING_EXPERIMENT_DIR = OUTPUT_DIR / "_trained_model"
+
+# Directory where individual prediction test cases go
+CASE_DIR = OUTPUT_DIR / "cases"
+
+# Paths for training artifacts
+TRAINING_CONFIG_PATH = TRAINING_EXPERIMENT_DIR / "training_config.yaml"
+
+TRAINING_LOG_PATH = TRAINING_EXPERIMENT_DIR / "training.log"
+
+# CSV file to log results from each prediction case
+RESULTS_CSV = OUTPUT_DIR / "prediction_results.csv"
+
+# Text summary of the test run
+SUMMARY_PATH = OUTPUT_DIR / "summary.txt"
 
 
-def configure_process_environment() -> None:
-    thread_count = str(THREADS_PER_WORKER)
+# Extract time dimension names from config (e.g., "init_time", "lead_time")
+INIT_TIME_DIM, LEAD_TIME_DIM = required_sample_dimensions
 
-    os.environ["OMP_NUM_THREADS"] = thread_count
-    os.environ["MKL_NUM_THREADS"] = thread_count
-    os.environ["OPENBLAS_NUM_THREADS"] = thread_count
-    os.environ["NUMEXPR_NUM_THREADS"] = thread_count
-    os.environ["VECLIB_MAXIMUM_THREADS"] = thread_count
-    os.environ["BLIS_NUM_THREADS"] = thread_count
 
-    if CPU_ONLY:
-        os.environ["CUDA_VISIBLE_DEVICES"] = ""
-    else:
-        os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(
-            str(gpu_id) for gpu_id in MONITORED_GPU_IDS
+# Control flags for the test suite
+TRAIN_MODEL = True  # Should we train a model, or use existing?
+REUSE_EXISTING_MODEL = False  # If model exists, reuse it instead of retraining
+
+# Prediction test modes
+RUN_BASELINE_CASE = True  # Run with default prediction config
+RUN_PREDICTION_GRID = True  # Run grid of different prediction parameter combinations
+
+# Limit number of prediction cases (for faster testing)
+MAX_PREDICTION_CASES = None
+
+# Training hyperparameters for the fixture model
+TRAINING_MAX_EPOCHS = 1
+
+# MLP architecture dimensions for the test model (small for fast training)
+TEST_ENCODER_HIDDEN_DIMS = [16]
+TEST_DECODER_HIDDEN_DIMS = [16]
+TEST_CONDITION_EMBEDDING_DIMS = [16]
+
+
+# Time features that are valid/supported
+VALID_TIME_FEATURES = {
+    INIT_TIME_DIM,
+    LEAD_TIME_DIM,
+    "month_sin",
+    "month_cos",
+    "day_sin",
+    "day_cos",
+}
+
+
+# Whether to require that prediction creates/modifies output artifacts
+REQUIRE_OUTPUT_ARTIFACT = False
+
+
+# Grid of prediction parameters to test (Cartesian product of these values)
+PREDICTION_GRID = {
+    "num_latent_samples": [
+        1,
+        10,
+    ],  # Number of samples to draw from latent distribution
+    "num_output_sampling": [
+        1,
+        2,
+    ],  # Number of output samples
+    "batch_size": [
+        1,
+        12,
+    ],  # Batch size for prediction
+    "prediction_years_slice": [
+        [2020, 2020],
+    ],  # Year range to run prediction on
+    "num_data_workers": [
+        0,
+    ],  # Number of parallel data loading workers
+    "load": [
+        False,
+        True,
+    ],  # Whether to load preprocessed data
+}
+
+
+# Column names for the results CSV file
+CSV_COLUMNS = [
+    "timestamp",
+    "suite",
+    "case_name",
+    "shared_training_experiment_dir",
+    "case_dir",
+    "num_latent_samples",
+    "num_output_sampling",
+    "batch_size",
+    "prediction_years_slice",
+    "num_data_workers",
+    "load",
+    "expected_result",
+    "expected_failure_reason",
+    "config_path",
+    "log_path",
+    "result",
+    "error",
+]
+
+
+def get_prediction_main():
+    """
+    Find and import the prediction main function.
+    Tries multiple possible module paths since the location might vary.
+    Returns the callable main function from the prediction module.
+    """
+    candidates = [
+        "cccma_ppp.prediction.prediction",
+        "cccma_ppp.prediction.main",
+        "cccma_ppp.prediction.predict",
+    ]
+
+    errors = []
+
+    # Try each candidate module path
+    for module_name in candidates:
+        try:
+            module = import_module(module_name)
+        except ImportError as exc:
+            errors.append(f"{module_name}: {exc}")
+            continue
+
+        # Try to get the 'main' function from this module
+        function = getattr(
+            module,
+            "main",
+            None,
         )
 
+        if callable(function):
+            return function
 
-def load_suite_module() -> Any:
-    configure_process_environment()
+        errors.append(f"{module_name}: no callable main")
 
-    return import_module(SUITE_MODULE_NAME)
+    # If we get here, none of the candidates worked
+    raise ImportError(
+        "Could not locate the prediction main function. Tried:\n- "
+        + "\n- ".join(errors)
+    )
 
 
-def clean_case_name(
-    value: Any,
-) -> str:
+def prepare_output_directories():
+    """Create all necessary output directories for test results."""
+    OUTPUT_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+    TRAINING_EXPERIMENT_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+    CASE_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+
+def cleanup_logging_handlers():
+    """
+    Close and remove all logging handlers.
+    Prevents resource leaks and file handle conflicts between test cases.
+    """
+    logger_names = [
+        "",
+        "training",
+        "prediction",
+        "writer",
+    ]
+
+    # Collect all loggers that start with the package name
+    for logger_name in list(logging.Logger.manager.loggerDict):
+        if logger_name.startswith("cccma_ppp"):
+            logger_names.append(logger_name)
+
+    # Remove all handlers from each logger
+    for logger_name in dict.fromkeys(logger_names):
+        logger = logging.getLogger(logger_name)
+
+        for handler in list(logger.handlers):
+            logger.removeHandler(handler)
+
+            # Flush and close the handler
+            try:
+                handler.flush()
+            except Exception:
+                pass
+
+            try:
+                handler.close()
+            except Exception:
+                pass
+
+        logger.propagate = False
+
+
+def init_csv():
+    """Create the results CSV file with headers."""
+    prepare_output_directories()
+
+    with RESULTS_CSV.open(
+        "w",
+        newline="",
+        encoding="utf-8",
+    ) as file:
+        writer = csv.DictWriter(
+            file,
+            fieldnames=CSV_COLUMNS,
+            lineterminator="\n",
+        )
+        writer.writeheader()
+
+
+def clean_name(value):
+    """
+    Convert a value to a filesystem-safe name.
+    Removes special characters and collapses multiple underscores.
+    """
     value = str(value).replace(
         "None",
         "none",
     )
+    # Replace special characters with underscores
+    value = re.sub(
+        r"[^A-Za-z0-9_.-]+",
+        "_",
+        value,
+    )
+    # Collapse multiple underscores
+    value = re.sub(
+        r"_+",
+        "_",
+        value,
+    )
 
-    characters: list[str] = []
+    return value.strip("_")
 
-    for character in value:
-        if character.isalnum() or character in "._-":
-            characters.append(character)
-        else:
-            characters.append("_")
 
-    cleaned = "".join(characters)
+def read_yaml(path):
+    """
+    Load and parse a YAML configuration file.
+    Returns the parsed configuration as a dictionary.
+    """
+    path = Path(path)
 
-    while "__" in cleaned:
-        cleaned = cleaned.replace(
-            "__",
-            "_",
+    if not path.is_file():
+        raise FileNotFoundError(f"Configuration file does not exist: {path}")
+
+    with path.open(
+        "r",
+        encoding="utf-8",
+    ) as file:
+        config = yaml.safe_load(file)
+
+    if config is None:
+        raise ValueError(f"Configuration file is empty: {path}")
+
+    if not isinstance(config, dict):
+        raise TypeError(f"Configuration must be a mapping: {path}")
+
+    return config
+
+
+def write_yaml(
+    config,
+    output_path,
+):
+    """Write a configuration dictionary to a YAML file."""
+    output_path = Path(output_path)
+
+    output_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    with output_path.open(
+        "w",
+        encoding="utf-8",
+    ) as file:
+        yaml.safe_dump(
+            deepcopy(config),
+            file,
+            sort_keys=False,
         )
 
-    return cleaned.strip("_")
+    return output_path
 
 
-def configure_suite_output_layout(
-    suite: Any,
-) -> None:
-    output_dir = Path(suite.OUTPUT_DIR)
-    cases_dir = output_dir / "cases"
+def run_silenced(
+    function,
+    log_path,
+):
+    """
+    Run a function and capture all stdout/stderr to a log file.
+    Useful for capturing training/prediction output.
+    """
+    log_path = Path(log_path)
 
-    suite.CASES_DIR = cases_dir
-
-    if hasattr(suite, "GENERATED_CONFIG_DIR"):
-        suite.GENERATED_CONFIG_DIR = cases_dir
-
-    if hasattr(suite, "LOG_DIR"):
-        suite.LOG_DIR = cases_dir
-
-    output_dir.mkdir(
+    log_path.parent.mkdir(
         parents=True,
         exist_ok=True,
     )
 
-    cases_dir.mkdir(
+    cleanup_logging_handlers()
+
+    with log_path.open(
+        "w",
+        encoding="utf-8",
+    ) as log_file:
+        try:
+            # Redirect all output to the log file
+            with (
+                redirect_stdout(log_file),
+                redirect_stderr(log_file),
+            ):
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    return function()
+        finally:
+            cleanup_logging_handlers()
+
+
+def append_exception_to_log(log_path):
+    """Append the current exception traceback to a log file."""
+    log_path = Path(log_path)
+
+    log_path.parent.mkdir(
         parents=True,
         exist_ok=True,
     )
 
-    for obsolete_directory in (
-        output_dir / "_generated_configs",
-        output_dir / "_logs",
-        output_dir / "_parallel_monitoring",
+    with log_path.open(
+        "a",
+        encoding="utf-8",
+    ) as log_file:
+        traceback.print_exc(file=log_file)
+
+
+def append_message_to_log(
+    log_path,
+    message,
+):
+    """Append a message to a log file."""
+    log_path = Path(log_path)
+
+    log_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    with log_path.open(
+        "a",
+        encoding="utf-8",
+    ) as log_file:
+        log_file.write(f"\n{message}\n")
+
+
+def validate_time_features(
+    loader_config,
+    *,
+    loader_name,
+):
+    """
+    Validate that time_features configuration is correct.
+    Ensures time_features are in the right location and have valid values.
+    """
+    dataset_config = loader_config.get("dataset_config")
+
+    if not isinstance(
+        dataset_config,
+        dict,
     ):
-        if obsolete_directory.exists():
-            shutil.rmtree(obsolete_directory)
+        raise ValueError(
+            f"{loader_name}.dataset_config must be configured as a mapping."
+        )
+
+    # time_features should be at loader level, not dataset level
+    if "time_features" in dataset_config:
+        raise ValueError(
+            "time_features must be configured "
+            f"under {loader_name}, not "
+            f"{loader_name}.dataset_config."
+        )
+
+    time_features = loader_config.get("time_features")
+
+    if time_features is None:
+        return
+
+    if not isinstance(
+        time_features,
+        list,
+    ):
+        raise TypeError(f"{loader_name}.time_features must be a list or null.")
+
+    # Check for unsupported time features
+    unsupported = set(time_features) - VALID_TIME_FEATURES
+
+    if unsupported:
+        raise ValueError(
+            f"Unsupported {loader_name}."
+            "time_features: "
+            f"{sorted(unsupported)}. "
+            "Supported values are "
+            f"{sorted(VALID_TIME_FEATURES)}."
+        )
 
 
-def suite_case_paths(
-    suite: Any,
-    case_name: str,
-) -> dict[str, Path]:
-    case_dir = Path(suite.CASES_DIR) / clean_case_name(case_name)
+def ensure_flattener(data_config):
+    """
+    Ensure that the flattener preprocessing step is included.
+    MLPs need flattened inputs, so this step is required.
+    """
+    if not isinstance(
+        data_config,
+        dict,
+    ):
+        return
+
+    pipeline = data_config.setdefault(
+        "preprocessing_pipeline",
+        {},
+    )
+    preprocessors = pipeline.setdefault(
+        "preprocessors_list",
+        [],
+    )
+
+    if not isinstance(
+        preprocessors,
+        list,
+    ):
+        raise TypeError("preprocessing_pipeline.preprocessors_list must be a list.")
+
+    # Check if flattener already exists
+    has_flattener = any(
+        isinstance(step, dict) and step.get("name") == "flattener"
+        for step in preprocessors
+    )
+
+    if not has_flattener:
+        # Add the flattener step
+        preprocessors.append(
+            {
+                "name": "flattener",
+            }
+        )
+
+
+def ensure_mlp_preprocessing(
+    dataset_config,
+):
+    """Ensure all data sources have flattener preprocessing for MLP models."""
+    for data_name in (
+        "model",
+        "observation",
+        "condition",
+    ):
+        ensure_flattener(dataset_config.get(data_name))
+
+
+def normalize_training_config(config):
+    """
+    Clean up and normalize a training configuration.
+    Removes None values and migrates deprecated field locations.
+    """
+    train_loader = config.get("train_loader")
+
+    if not isinstance(
+        train_loader,
+        dict,
+    ):
+        raise ValueError("train_loader must be configured as a mapping.")
+
+    validate_time_features(
+        train_loader,
+        loader_name="train_loader",
+    )
+
+    dataset_config = train_loader.get("dataset_config")
+
+    if not isinstance(
+        dataset_config,
+        dict,
+    ):
+        raise ValueError("train_loader.dataset_config must be a mapping.")
+
+    # Check for deprecated field names
+    if "lead_months" in dataset_config:
+        raise ValueError(
+            "lead_months is no longer a "
+            "DatasetConfig field. Use "
+            "train_loader.dataset_config."
+            "lead_times."
+        )
+
+    # Remove None values
+    if dataset_config.get("condition_method") is None:
+        dataset_config.pop(
+            "condition_method",
+            None,
+        )
+
+    if dataset_config.get("lead_times") is None:
+        dataset_config.pop(
+            "lead_times",
+            None,
+        )
+
+    if train_loader.get("time_features") is None:
+        train_loader.pop(
+            "time_features",
+            None,
+        )
+
+    # Clean up module configuration
+    module_config = config.get(
+        "module",
+        {},
+    ).get(
+        "config",
+        {},
+    )
+
+    module_config.pop(
+        "min_posterior_variance",
+        None,
+    )
+
+    if module_config.get("prior_flow_config") is None:
+        module_config.pop(
+            "prior_flow_config",
+            None,
+        )
+
+    model_config = module_config.get(
+        "ModelConfig",
+        {},
+    ).get(
+        "config",
+        {},
+    )
+
+    if model_config.get("dropout_rate") is None:
+        model_config.pop(
+            "dropout_rate",
+            None,
+        )
+
+    return config
+
+
+def validate_training_config(config):
+    """
+    Validate that all required training configuration fields are present and valid.
+    Raises ValueError/TypeError if validation fails.
+    """
+    if not config.get("experiment_dir"):
+        raise ValueError("experiment_dir must be configured.")
+
+    max_epochs = config.get("max_epochs")
+
+    # Ensure max_epochs is a positive integer (not bool, not float)
+    if (
+        not isinstance(
+            max_epochs,
+            int,
+        )
+        or isinstance(
+            max_epochs,
+            bool,
+        )
+        or max_epochs <= 0
+    ):
+        raise ValueError("max_epochs must be a positive integer.")
+
+    train_loader = config.get("train_loader")
+
+    if not isinstance(
+        train_loader,
+        dict,
+    ):
+        raise ValueError("train_loader must be configured as a mapping.")
+
+    validate_time_features(
+        train_loader,
+        loader_name="train_loader",
+    )
+
+    dataset_config = train_loader.get("dataset_config")
+
+    if not isinstance(
+        dataset_config,
+        dict,
+    ):
+        raise ValueError("train_loader.dataset_config must be configured as a mapping.")
+
+    if "lead_months" in dataset_config:
+        raise ValueError(
+            "train_loader.dataset_config.lead_months is invalid. Use lead_times."
+        )
+
+    lead_times = dataset_config.get("lead_times")
+
+    if lead_times is not None and not isinstance(
+        lead_times,
+        (dict, list),
+    ):
+        raise TypeError(
+            "train_loader.dataset_config.lead_times must be a mapping, list, or null."
+        )
+
+    num_data_workers = train_loader.get("num_data_workers")
+
+    if (
+        not isinstance(
+            num_data_workers,
+            int,
+        )
+        or isinstance(
+            num_data_workers,
+            bool,
+        )
+        or num_data_workers < 0
+    ):
+        raise ValueError(
+            "train_loader.num_data_workers must be a non-negative integer."
+        )
+
+    module = config.get("module")
+
+    if not isinstance(
+        module,
+        dict,
+    ):
+        raise ValueError("module must be configured as a mapping.")
+
+    module_config = module.get("config")
+
+    if not isinstance(
+        module_config,
+        dict,
+    ):
+        raise ValueError("module.config must be configured as a mapping.")
+
+    if "min_posterior_variance" in module_config:
+        raise ValueError(
+            "module.config."
+            "min_posterior_variance is not "
+            "supported by the current schema."
+        )
+
+    model_selector = module_config.get("ModelConfig")
+
+    if not isinstance(
+        model_selector,
+        dict,
+    ):
+        raise ValueError("module.config.ModelConfig must be configured as a mapping.")
+
+    # Ensure we're using an MLP model (required for this test)
+    if (
+        str(
+            model_selector.get(
+                "type",
+                "",
+            )
+        ).lower()
+        != "mlp"
+    ):
+        raise ValueError("The shared prediction fixture must use an MLP model.")
+
+    if not isinstance(
+        model_selector.get("config"),
+        dict,
+    ):
+        raise ValueError("module.config.ModelConfig.config must be a mapping.")
+
+    return config
+
+
+def build_training_fixture_config():
+    """
+    Create the training configuration for the shared model fixture.
+    Uses small, fast training settings for testing purposes.
+    """
+    config = read_yaml(BASE_TRAIN_CONFIG)
+
+    # Don't resume from checkpoint
+    config.pop(
+        "resume_dir",
+        None,
+    )
+
+    config["experiment_dir"] = str(TRAINING_EXPERIMENT_DIR.resolve())
+    config["max_epochs"] = TRAINING_MAX_EPOCHS
+    config["save_checkpoint"] = True
+
+    train_loader = config.get("train_loader")
+
+    if not isinstance(
+        train_loader,
+        dict,
+    ):
+        raise ValueError("The base training configuration must contain train_loader.")
+
+    dataset_config = train_loader.get("dataset_config")
+
+    if not isinstance(
+        dataset_config,
+        dict,
+    ):
+        raise ValueError(
+            "The base training configuration must contain train_loader.dataset_config."
+        )
+
+    if "time_features" in dataset_config:
+        raise ValueError(
+            "Move train_loader.dataset_config."
+            "time_features to "
+            "train_loader.time_features."
+        )
+
+    # Clean up deprecated fields
+    dataset_config.pop(
+        "lead_months",
+        None,
+    )
+
+    # Configure minimal training setup
+    train_loader["time_features"] = [
+        INIT_TIME_DIM,
+    ]
+    train_loader["num_data_workers"] = 0
+    train_loader["num_validation_years"] = 0
+    train_loader["train_years_slice"] = [1961, 1962]
+
+    dataset_config["condition_method"] = "ensemble_mean"
+    dataset_config["lead_times"] = {
+        "start": 1,
+        "end": 1,
+    }
+
+    model_data_config = dataset_config.get("model")
+
+    if not isinstance(
+        model_data_config,
+        dict,
+    ):
+        raise ValueError(
+            "train_loader.dataset_config.model must be configured as a mapping."
+        )
+
+    model_data_config["ensemble_mean"] = True
+
+    # Remove condition data for simplicity
+    dataset_config.pop(
+        "condition",
+        None,
+    )
+
+    ensure_mlp_preprocessing(dataset_config)
+
+    # Configure the neural network architecture
+    config["module"] = {
+        "type": "cVAE",
+        "config": {
+            "ModelConfig": {
+                "type": "MLP",
+                "config": {
+                    "encoder_hidden_dims": deepcopy(TEST_ENCODER_HIDDEN_DIMS),
+                    "decoder_hidden_dims": deepcopy(TEST_DECODER_HIDDEN_DIMS),
+                    "condition_embedding_dims": deepcopy(TEST_CONDITION_EMBEDDING_DIMS),
+                    "latent_size": 10,
+                    "condition_embedding_size": 10,
+                    "condition_dependant_latent": True,
+                    "condemb_to_decoder": True,
+                    "batch_normalization": False,
+                    "init_method": "xavier",
+                },
+            },
+            "combined_CGCN_weight": 0.0,
+        },
+    }
+
+    # Configure training hyperparameters
+    config.setdefault(
+        "trainer",
+        {},
+    ).setdefault(
+        "beta_finder",
+        {
+            "beta": 10,
+            "num_epoch_to_warmup": 10,
+        },
+    )
+
+    normalize_training_config(config)
+    validate_training_config(config)
+
+    return config
+
+
+def validate_training_experiment(
+    experiment_dir,
+):
+    """
+    Check that a training experiment exists and has checkpoint files.
+    Returns list of checkpoint files if valid.
+    """
+    experiment_dir = Path(experiment_dir)
+
+    if not experiment_dir.is_dir():
+        raise FileNotFoundError(
+            f"Training experiment directory does not exist: {experiment_dir}"
+        )
+
+    checkpoint_dir = experiment_dir / "checkpoints"
+
+    if not checkpoint_dir.is_dir():
+        raise FileNotFoundError(
+            f"Training checkpoint directory does not exist: {checkpoint_dir}"
+        )
+
+    checkpoint_files = sorted(checkpoint_dir.glob("*.pt"))
+
+    if not checkpoint_files:
+        raise FileNotFoundError(f"No checkpoints were found in {checkpoint_dir}")
+
+    return checkpoint_files
+
+
+def assert_training_completed(
+    *,
+    require_log=True,
+):
+    """Check that training completed successfully."""
+    validate_training_experiment(TRAINING_EXPERIMENT_DIR)
+
+    if not require_log:
+        return
+
+    if not TRAINING_LOG_PATH.is_file():
+        raise AssertionError(f"Training log does not exist: {TRAINING_LOG_PATH}")
+
+    log_text = TRAINING_LOG_PATH.read_text(
+        encoding="utf-8",
+        errors="replace",
+    )
+
+    if "Training finished" not in log_text:
+        raise AssertionError(
+            f"Training did not finish successfully. See {TRAINING_LOG_PATH}."
+        )
+
+
+def train_model_once():
+    """
+    Train or reuse the shared cVAE model fixture.
+    This model is used by all prediction test cases.
+    """
+    # Option to reuse an existing trained model
+    if REUSE_EXISTING_MODEL and TRAINING_EXPERIMENT_DIR.exists():
+        assert_training_completed(require_log=False)
+        return TRAINING_EXPERIMENT_DIR
+
+    # If training is disabled, just validate the model exists
+    if not TRAIN_MODEL:
+        validate_training_experiment(TRAINING_EXPERIMENT_DIR)
+        return TRAINING_EXPERIMENT_DIR
+
+    # Clean up old training artifacts
+    if TRAINING_EXPERIMENT_DIR.exists():
+        shutil.rmtree(TRAINING_EXPERIMENT_DIR)
+
+    TRAINING_EXPERIMENT_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    # Build and save training configuration
+    training_config = build_training_fixture_config()
+
+    write_yaml(
+        training_config,
+        TRAINING_CONFIG_PATH,
+    )
+
+    try:
+        # Run training, capturing output to log file
+        run_silenced(
+            lambda: train_main(str(TRAINING_CONFIG_PATH)),
+            TRAINING_LOG_PATH,
+        )
+    except KeyboardInterrupt:
+        append_message_to_log(
+            TRAINING_LOG_PATH,
+            "Training fixture interrupted by the user.",
+        )
+        raise
+
+    # Verify training completed successfully
+    assert_training_completed(require_log=True)
+
+    return TRAINING_EXPERIMENT_DIR
+
+
+def normalize_prediction_config(config):
+    """
+    Clean up and normalize a prediction configuration.
+    Handles legacy field names and removes deprecated settings.
+    """
+    config = deepcopy(config)
+
+    prediction_loader = config.get("prediction_loader")
+
+    if not isinstance(prediction_loader, dict):
+        raise ValueError("prediction_loader must be configured as a mapping.")
+
+    writer = config.get("writer")
+
+    if not isinstance(
+        writer,
+        dict,
+    ):
+        raise ValueError("writer must be configured as a mapping.")
+
+    # Normalize num_output_sampling (may have legacy name)
+    if "num_output_covariance_sampling" in writer:
+        if "num_output_sampling" not in writer:
+            writer["num_output_sampling"] = writer.pop("num_output_covariance_sampling")
+        else:
+            writer.pop("num_output_covariance_sampling")
+
+    return config
+
+
+def validate_prediction_config(config):
+    """
+    Validate that all required prediction configuration fields are present and valid.
+    Raises ValueError/TypeError if validation fails.
+    """
+    if not config.get("experiment_dir"):
+        raise ValueError("experiment_dir must be configured.")
+
+    prediction_loader = config.get("prediction_loader")
+
+    if not isinstance(
+        prediction_loader,
+        dict,
+    ):
+        raise ValueError("prediction_loader must be configured as a mapping.")
+
+    batch_size = prediction_loader.get("batch_size")
+
+    if (
+        not isinstance(
+            batch_size,
+            int,
+        )
+        or isinstance(
+            batch_size,
+            bool,
+        )
+        or batch_size <= 0
+    ):
+        raise ValueError("prediction_loader.batch_size must be a positive integer.")
+
+    prediction_years = prediction_loader.get("prediction_years_slice")
+
+    if (
+        not isinstance(
+            prediction_years,
+            list,
+        )
+        or len(prediction_years) != 2
+    ):
+        raise ValueError(
+            "prediction_loader.prediction_years must be a two-element list."
+        )
+
+    if not all(
+        isinstance(year, int) and not isinstance(year, bool)
+        for year in prediction_years
+    ):
+        raise TypeError("prediction_loader.prediction_years must contain integers.")
+
+    if prediction_years[0] > prediction_years[-1]:
+        raise ValueError(
+            "The first prediction year cannot be greater than the final prediction year."
+        )
+
+    num_data_workers = prediction_loader.get("num_data_workers")
+
+    if (
+        not isinstance(
+            num_data_workers,
+            int,
+        )
+        or isinstance(
+            num_data_workers,
+            bool,
+        )
+        or num_data_workers < 0
+    ):
+        raise ValueError(
+            "prediction_loader.num_data_workers must be a non-negative integer."
+        )
+
+    load = prediction_loader.get("load")
+
+    if not isinstance(
+        load,
+        bool,
+    ):
+        raise TypeError("prediction_loader.load must be a boolean.")
+
+    writer = config.get("writer")
+
+    if not isinstance(
+        writer,
+        dict,
+    ):
+        raise ValueError("writer must be configured as a mapping.")
+
+    # Check for legacy field name
+    if "num_output_covariance_sampling" in writer:
+        raise ValueError(
+            "The runtime configuration "
+            "contains the legacy writer."
+            "num_output_covariance_sampling "
+            "field."
+        )
+
+    num_output_sampling = writer.get("num_output_sampling")
+
+    if (
+        not isinstance(
+            num_output_sampling,
+            int,
+        )
+        or isinstance(
+            num_output_sampling,
+            bool,
+        )
+        or num_output_sampling <= 0
+    ):
+        raise ValueError("writer.num_output_sampling must be a positive integer.")
+
+    # Validate num_latent_samples if present
+    num_latent_samples = writer.get("num_latent_samples")
+
+    if num_latent_samples is not None:
+        if (
+            not isinstance(
+                num_latent_samples,
+                int,
+            )
+            or isinstance(
+                num_latent_samples,
+                bool,
+            )
+            or num_latent_samples <= 0
+        ):
+            raise ValueError("writer.num_latent_samples must be a positive integer.")
+
+    return config
+
+
+def load_base_prediction_config():
+    """
+    Load the base prediction configuration and prepare it for test cases.
+    Sets the trained model directory and validates the configuration.
+    """
+    config = read_yaml(BASE_PREDICTION_CONFIG)
+
+    config = normalize_prediction_config(config)
+
+    # Point to the trained model from the training fixture
+    config["experiment_dir"] = str(TRAINING_EXPERIMENT_DIR.resolve())
+
+    validate_prediction_config(config)
+
+    return config
+
+
+def apply_prediction_case(
+    base_config,
+    case,
+):
+    """
+    Apply a specific prediction test case's parameters to the base configuration.
+    Returns a modified copy of the configuration with case parameters applied.
+    """
+    config = deepcopy(base_config)
+
+    writer = config.setdefault(
+        "writer",
+        {},
+    )
+    prediction_loader = config.setdefault(
+        "prediction_loader",
+        {},
+    )
+
+    # Apply test case parameters
+    writer["num_latent_samples"] = case["num_latent_samples"]
+
+    writer["num_output_sampling"] = case["num_output_sampling"]
+
+    # Remove legacy field if present
+    writer.pop(
+        "num_output_covariance_sampling",
+        None,
+    )
+
+    prediction_loader["batch_size"] = case["batch_size"]
+    prediction_loader["prediction_years_slice"] = deepcopy(
+        case["prediction_years_slice"]
+    )
+    prediction_loader["num_data_workers"] = case["num_data_workers"]
+    prediction_loader["load"] = case["load"]
+
+    validate_prediction_config(config)
+
+    return config
+
+
+def make_case_name(case):
+    """Generate a filesystem-safe name for this prediction case."""
+    years = case["prediction_years_slice"]
+
+    return clean_name(
+        "prediction"
+        f"_latent_{case['num_latent_samples']}"
+        "_output_"
+        f"{case['num_output_sampling']}"
+        f"_batch_{case['batch_size']}"
+        f"_years_{years[0]}_{years[1]}"
+        f"_workers_{case['num_data_workers']}"
+        f"_load_{case['load']}"
+    )
+
+
+def generate_prediction_cases():
+    """
+    Generate all prediction test cases from the PREDICTION_GRID.
+    Creates a test case for every combination of grid parameters.
+    """
+    keys = list(PREDICTION_GRID)
+    values = [PREDICTION_GRID[key] for key in keys]
+
+    cases = []
+
+    # Generate all combinations of parameters (Cartesian product)
+    for combination in product(*values):
+        case = dict(
+            zip(
+                keys,
+                combination,
+            )
+        )
+
+        case["name"] = make_case_name(case)
+        case["expected_result"] = "PASS"
+        case["expected_failure_reason"] = ""
+
+        cases.append(case)
+
+    # Limit to MAX_PREDICTION_CASES if specified
+    if MAX_PREDICTION_CASES is not None:
+        cases = cases[:MAX_PREDICTION_CASES]
+
+    return cases
+
+
+def baseline_case_from_config(config):
+    """
+    Extract baseline prediction parameters from the base configuration.
+    Creates a test case representing the "default" prediction run.
+    """
+    prediction_loader = config["prediction_loader"]
+    writer = config["writer"]
 
     return {
-        "case_dir": case_dir,
-        "config_path": case_dir / "config.yaml",
-        "experiment_dir": case_dir,
-        "log_path": case_dir / "case.log",
+        "name": "prediction_baseline",
+        "num_latent_samples": (writer.get("num_latent_samples", 1)),
+        "num_output_sampling": (writer["num_output_sampling"]),
+        "batch_size": (prediction_loader["batch_size"]),
+        "prediction_years_slice": deepcopy(prediction_loader["prediction_years_slice"]),
+        "num_data_workers": (prediction_loader["num_data_workers"]),
+        "load": prediction_loader["load"],
+        "expected_result": "PASS",
+        "expected_failure_reason": "",
     }
 
 
-def install_case_paths(
-    suite: Any,
-) -> None:
-    def case_paths(
-        case_name: str,
-    ) -> dict[str, Path]:
-        paths = suite_case_paths(
-            suite,
-            case_name,
+def build_prediction_tasks(
+    base_config,
+):
+    """
+    Build all prediction test tasks.
+    Includes baseline case and grid cases if enabled.
+    """
+    tasks = []
+
+    # Add baseline case if enabled
+    if RUN_BASELINE_CASE:
+        tasks.append(
+            {
+                "case": (baseline_case_from_config(base_config)),
+                "config": deepcopy(base_config),
+            }
         )
 
-        return {
-            "config_path": paths["config_path"],
-            "experiment_dir": paths["experiment_dir"],
-            "log_path": paths["log_path"],
-        }
-
-    suite.case_paths = case_paths
-
-
-def prepare_suite(
-    suite: Any,
-) -> None:
-    configure_suite_output_layout(suite)
-    install_case_paths(suite)
-
-    Path(suite.OUTPUT_DIR).mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    Path(suite.CASES_DIR).mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-
-def build_tasks(
-    suite: Any,
-) -> list[dict[str, Any]]:
-    tasks: list[dict[str, Any]] = []
-
-    suite.add_baseline_tasks(tasks)
-    suite.add_train_loader_config_tasks(tasks)
-
-    suite.add_cvae_tasks(
-        tasks,
-        "MLP",
-    )
-
-    suite.add_cvae_tasks(
-        tasks,
-        "UNet",
-    )
-
-    suite.add_deterministic_tasks(
-        tasks,
-        "MLP",
-    )
-
-    suite.add_deterministic_tasks(
-        tasks,
-        "UNet",
-    )
-
-    suite.validate_tasks(tasks)
+    # Add grid cases if enabled
+    if RUN_PREDICTION_GRID:
+        for case in generate_prediction_cases():
+            tasks.append(
+                {
+                    "case": case,
+                    "config": (
+                        apply_prediction_case(
+                            base_config,
+                            case,
+                        )
+                    ),
+                }
+            )
 
     return tasks
 
 
-def task_key(
-    task: dict[str, Any],
-) -> tuple[str, str]:
-    return (
-        str(task["suite"]),
-        str(task["case_name"]),
+def snapshot_files(root_dir):
+    """
+    Create a snapshot of all files in a directory (modification time and size).
+    Used to detect if prediction created or modified output artifacts.
+    """
+    root_dir = Path(root_dir)
+
+    snapshot = {}
+
+    if not root_dir.exists():
+        return snapshot
+
+    for path in root_dir.rglob("*"):
+        if not path.is_file():
+            continue
+
+        try:
+            stat = path.stat()
+        except OSError:
+            continue
+
+        snapshot[str(path)] = (
+            stat.st_mtime_ns,
+            stat.st_size,
+        )
+
+    return snapshot
+
+
+def find_changed_files(
+    before,
+    after,
+):
+    """
+    Compare two file snapshots and return list of files that changed.
+    A file is considered changed if its mtime or size differs.
+    """
+    return [
+        Path(path)
+        for path, state in after.items()
+        if (path not in before or before[path] != state)
+    ]
+
+
+def assert_prediction_completed(
+    *,
+    log_path,
+    changed_files,
+):
+    """
+    Verify that prediction completed successfully.
+    Checks for errors in log and optionally verifies output artifacts were created.
+    """
+    log_path = Path(log_path)
+
+    if not log_path.is_file():
+        raise AssertionError(f"Prediction log does not exist: {log_path}")
+
+    log_text = log_path.read_text(
+        encoding="utf-8",
+        errors="replace",
     )
 
+    # Check for Python exceptions in the log
+    if "Traceback (most recent call last)" in log_text:
+        raise AssertionError(f"The prediction log contains a traceback: {log_path}")
 
-def row_key(
-    row: dict[str, Any],
-) -> tuple[str, str]:
-    return (
-        str(row.get("suite", "")),
-        str(row.get("case_name", "")),
-    )
-
-
-def task_paths(
-    suite: Any,
-    task: dict[str, Any],
-) -> dict[str, Path]:
-    return suite_case_paths(
-        suite,
-        str(task["case_name"]),
-    )
+    # Optionally require that output artifacts were created/modified
+    if REQUIRE_OUTPUT_ARTIFACT and not changed_files:
+        raise AssertionError(
+            "Prediction completed without creating or modifying an output artifact."
+        )
 
 
-def prepare_case_directory(
-    suite: Any,
-    task: dict[str, Any],
-) -> dict[str, Path]:
-    paths = task_paths(
-        suite,
-        task,
-    )
+def log_result(
+    *,
+    case,
+    case_dir,
+    config_path,
+    log_path,
+    passed,
+    error="",
+):
+    """Log the result of a prediction test case to the CSV file."""
+    row = {
+        "timestamp": (datetime.now().isoformat()),
+        "suite": "prediction",
+        "case_name": case["name"],
+        "shared_training_experiment_dir": str(TRAINING_EXPERIMENT_DIR),
+        "case_dir": str(case_dir),
+        "num_latent_samples": case["num_latent_samples"],
+        "num_output_sampling": (case["num_output_sampling"]),
+        "batch_size": case["batch_size"],
+        "prediction_years_slice": json.dumps(case["prediction_years_slice"]),
+        "num_data_workers": case["num_data_workers"],
+        "load": case["load"],
+        "expected_result": case.get(
+            "expected_result",
+            "PASS",
+        ),
+        "expected_failure_reason": case.get(
+            "expected_failure_reason",
+            "",
+        ),
+        "config_path": str(config_path),
+        "log_path": str(log_path),
+        "result": ("PASS" if passed else "FAIL"),
+        "error": error,
+    }
 
-    case_dir = paths["case_dir"]
+    with RESULTS_CSV.open(
+        "a",
+        newline="",
+        encoding="utf-8",
+    ) as file:
+        writer = csv.DictWriter(
+            file,
+            fieldnames=CSV_COLUMNS,
+            lineterminator="\n",
+        )
+        writer.writerow(row)
+        file.flush()
 
+
+def run_prediction_case(
+    prediction_main,
+    task,
+):
+    """
+    Run a single prediction test case.
+    Returns True if passed, False if failed.
+    Logs all results to CSV.
+    """
+    case = task["case"]
+    config = deepcopy(task["config"])
+
+    safe_name = clean_name(case["name"])
+
+    case_dir = CASE_DIR / safe_name
+    config_path = case_dir / "prediction_config.yaml"
+    log_path = case_dir / "prediction.log"
+
+    # Clean up old case directory
     if case_dir.exists():
         shutil.rmtree(case_dir)
 
@@ -252,438 +1435,139 @@ def prepare_case_directory(
         exist_ok=True,
     )
 
-    return paths
+    config["experiment_dir"] = str(TRAINING_EXPERIMENT_DIR.resolve())
+
+    validate_prediction_config(config)
+    validate_training_experiment(TRAINING_EXPERIMENT_DIR)
+
+    write_yaml(
+        config,
+        config_path,
+    )
+
+    # Snapshot files before prediction
+    before = snapshot_files(TRAINING_EXPERIMENT_DIR)
+
+    try:
+        # Run prediction, capturing output to log
+        run_silenced(
+            lambda: prediction_main(str(config_path)),
+            log_path,
+        )
+
+        # Snapshot files after prediction
+        after = snapshot_files(TRAINING_EXPERIMENT_DIR)
+
+        changed_files = find_changed_files(
+            before,
+            after,
+        )
+
+        # Verify prediction completed successfully
+        assert_prediction_completed(
+            log_path=log_path,
+            changed_files=changed_files,
+        )
+
+        passed = True
+        error = ""
+
+    except KeyboardInterrupt:
+        passed = False
+        error = "KeyboardInterrupt: prediction case was interrupted by the user."
+
+        append_message_to_log(
+            log_path,
+            error,
+        )
+
+        log_result(
+            case=case,
+            case_dir=case_dir,
+            config_path=config_path,
+            log_path=log_path,
+            passed=passed,
+            error=error,
+        )
+
+        raise
+
+    except Exception as exc:
+        passed = False
+        error = f"{type(exc).__name__}: {exc}"
+
+        append_exception_to_log(log_path)
+
+    log_result(
+        case=case,
+        case_dir=case_dir,
+        config_path=config_path,
+        log_path=log_path,
+        passed=passed,
+        error=error,
+    )
+
+    return passed
 
 
-def serialize_json(
-    suite: Any,
-    value: Any,
-) -> str:
-    return suite.serialize_json(value)
-
-
-def build_result_row(
-    suite: Any,
+def classify_result(
     *,
-    task: dict[str, Any],
-    passed: bool,
-    error: str,
-    paths: dict[str, Path],
-    worker_pid: int | None,
-) -> dict[str, Any]:
-    params = task["params"]
-
-    row = {
-        "timestamp": datetime.now().isoformat(),
-        "suite": task["suite"],
-        "case_name": task["case_name"],
-        "module_type": task["module_type"],
-        "architecture": task["architecture"],
-        "model_type": params.get("model_type"),
-        "condition_method": params.get("condition_method"),
-        "model_ensemble_mean": params.get("model_ensemble_mean"),
-        "condition_ensemble_mean": params.get("condition_ensemble_mean"),
-        "remove_observation": params.get("remove_observation"),
-        "add_condition": params.get("add_condition"),
-        "time_features": serialize_json(
-            suite,
-            params.get("time_features"),
-        ),
-        "lead_months": serialize_json(
-            suite,
-            params.get("lead_months"),
-        ),
-        "posterior_variance_limits": serialize_json(
-            suite,
-            params.get("posterior_variance_limits"),
-        ),
-        "use_prior_flow": params.get("use_prior_flow"),
-        "combined_CGCN_weight": params.get("combined_CGCN_weight"),
-        "latent_size": params.get("latent_size"),
-        "condition_dependant_latent": params.get("condition_dependant_latent"),
-        "condemb_to_decoder": params.get("condemb_to_decoder"),
-        "batch_normalization": params.get("batch_normalization"),
-        "dropout_rate": params.get("dropout_rate"),
-        "init_method": params.get("init_method"),
-        "append_mode": params.get("append_mode"),
-        "expected_result": params.get(
-            "expected_result",
-            "PASS",
-        ),
-        "expected_failure_reason": params.get(
-            "expected_failure_reason",
-            "",
-        ),
-        "expected_error_pattern": params.get(
-            "expected_error_pattern",
-            "",
-        ),
-        "config_path": str(paths["config_path"]),
-        "experiment_dir": str(paths["experiment_dir"]),
-        "log_path": str(paths["log_path"]),
-        "result": "PASS" if passed else "FAIL",
-        "error": error,
-    }
-
-    if "case_dir" in suite.CSV_COLUMNS:
-        row["case_dir"] = str(paths["case_dir"])
-
-    if "worker_pid" in suite.CSV_COLUMNS:
-        row["worker_pid"] = "" if worker_pid is None else worker_pid
-
-    return row
-
-
-def archive_checkpoint(
-    results_csv: Path,
-    reason: str,
-) -> Path:
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-    archive_path = results_csv.with_name(f"{results_csv.name}.{reason}.{timestamp}")
-
-    results_csv.replace(archive_path)
-
-    return archive_path
-
-
-def write_results_csv(
-    suite: Any,
-    rows: list[dict[str, Any]],
-) -> None:
-    prepare_suite(suite)
-
-    results_csv = Path(suite.RESULTS_CSV)
-
-    temporary_path = results_csv.with_suffix(results_csv.suffix + ".tmp")
-
-    with temporary_path.open(
-        "w",
-        newline="",
-        encoding="utf-8",
-    ) as file:
-        writer = csv.DictWriter(
-            file,
-            fieldnames=suite.CSV_COLUMNS,
-            extrasaction="ignore",
-            lineterminator="\n",
-        )
-
-        writer.writeheader()
-
-        for row in rows:
-            writer.writerow(
-                {column: row.get(column, "") for column in suite.CSV_COLUMNS}
-            )
-
-        file.flush()
-
-        try:
-            os.fsync(file.fileno())
-        except OSError:
-            pass
-
-    temporary_path.replace(results_csv)
-
-
-def append_result_row(
-    suite: Any,
-    row: dict[str, Any],
-) -> None:
-    results_csv = Path(suite.RESULTS_CSV)
-
-    with results_csv.open(
-        "a",
-        newline="",
-        encoding="utf-8",
-    ) as file:
-        writer = csv.DictWriter(
-            file,
-            fieldnames=suite.CSV_COLUMNS,
-            extrasaction="ignore",
-            lineterminator="\n",
-        )
-
-        writer.writerow({column: row.get(column, "") for column in suite.CSV_COLUMNS})
-
-        file.flush()
-
-        try:
-            os.fsync(file.fileno())
-        except OSError:
-            pass
-
-
-def read_checkpoint_rows(
-    suite: Any,
-) -> list[dict[str, str]]:
-    results_csv = Path(suite.RESULTS_CSV)
-
-    if not results_csv.is_file():
-        return []
-
-    if results_csv.stat().st_size == 0:
-        archive_path = archive_checkpoint(
-            results_csv,
-            "empty",
-        )
-
-        print(
-            f"The empty checkpoint was archived as: {archive_path}",
-            flush=True,
-        )
-
-        return []
-
-    with results_csv.open(
-        "r",
-        newline="",
-        encoding="utf-8",
-    ) as file:
-        reader = csv.DictReader(file)
-        fieldnames = reader.fieldnames
-
-        if not fieldnames:
-            archive_path = archive_checkpoint(
-                results_csv,
-                "headerless",
-            )
-
-            print(
-                f"The headerless checkpoint was archived as: {archive_path}",
-                flush=True,
-            )
-
-            return []
-
-        normalized_columns = {
-            str(column).strip() for column in fieldnames if column is not None
-        }
-
-        missing_columns = set(suite.CSV_COLUMNS) - normalized_columns
-
-        rows = [
-            dict(row) for row in reader if row.get("suite") and row.get("case_name")
-        ]
-
-    if missing_columns:
-        if ARCHIVE_INCOMPATIBLE_CHECKPOINT:
-            archive_path = archive_checkpoint(
-                results_csv,
-                "incompatible_schema",
-            )
-
-            print(
-                f"The incompatible checkpoint was archived as: {archive_path}",
-                flush=True,
-            )
-
-            return []
-
-        raise ValueError(
-            f"The checkpoint is missing required columns: {sorted(missing_columns)}"
-        )
-
-    return rows
-
-
-def validate_checkpoint_rows(
-    tasks: list[dict[str, Any]],
-    rows: list[dict[str, str]],
-) -> bool:
-    valid_keys = {task_key(task) for task in tasks}
-
-    observed_keys: set[tuple[str, str]] = set()
-
-    for row in rows:
-        key = row_key(row)
-
-        if key not in valid_keys:
-            return False
-
-        if key in observed_keys:
-            return False
-
-        observed_keys.add(key)
-
-    return True
-
-
-def prepare_checkpoint(
-    suite: Any,
-    tasks: list[dict[str, Any]],
-) -> tuple[
-    list[dict[str, Any]],
-    list[dict[str, str]],
-]:
-    prepare_suite(suite)
-
-    results_csv = Path(suite.RESULTS_CSV)
-    rows = read_checkpoint_rows(suite)
-
-    if rows and not validate_checkpoint_rows(
-        tasks,
-        rows,
-    ):
-        if not ARCHIVE_INCOMPATIBLE_CHECKPOINT:
-            raise ValueError("The checkpoint does not match the current task matrix.")
-
-        archive_path = archive_checkpoint(
-            results_csv,
-            "task_matrix_mismatch",
-        )
-
-        print(
-            "The checkpoint did not match the current task matrix "
-            f"and was archived as: {archive_path}",
-            flush=True,
-        )
-
-        rows = []
-
-    if not rows:
-        write_results_csv(
-            suite,
-            [],
-        )
-
-        print(
-            "No usable checkpoint found. Starting all tasks.",
-            flush=True,
-        )
-
-        return (
-            list(tasks),
-            [],
-        )
-
-    last_completed_row = rows[-1]
-    retained_rows = rows[:-1]
-
-    retained_keys = {row_key(row) for row in retained_rows}
-
-    pending_tasks = [task for task in tasks if task_key(task) not in retained_keys]
-
-    write_results_csv(
-        suite,
-        retained_rows,
+    case,
+    passed,
+    unexpected_failures,
+    expected_failures,
+    unexpected_passes,
+):
+    """
+    Classify a test result as expected or unexpected.
+    Tracks unexpected failures/passes for final reporting.
+    """
+    expected_result = case.get(
+        "expected_result",
+        "PASS",
     )
 
-    print(
-        "Checkpoint found.",
-        flush=True,
-    )
-
-    print(
-        f"Retained completed cases: {len(retained_rows)}",
-        flush=True,
-    )
-
-    print(
-        "Rerunning the last completed case: "
-        f"{last_completed_row['suite']}:"
-        f"{last_completed_row['case_name']}",
-        flush=True,
-    )
-
-    print(
-        f"Pending cases: {len(pending_tasks)}/{len(tasks)}",
-        flush=True,
-    )
-
-    return (
-        pending_tasks,
-        retained_rows,
-    )
+    if expected_result == "FAIL":
+        # Test was expected to fail
+        if passed:
+            # But it passed - this is unexpected!
+            unexpected_passes.append(case["name"])
+        else:
+            # It failed as expected
+            expected_failures.append(case["name"])
+    elif not passed:
+        # Test was expected to pass but failed - unexpected!
+        unexpected_failures.append(case["name"])
 
 
-def parse_passed(
-    row: dict[str, str],
-) -> bool:
-    value = (
-        str(
-            row.get(
-                "result",
-                "",
-            )
-        )
-        .strip()
-        .upper()
-    )
-
-    if value == "PASS":
-        return True
-
-    if value == "FAIL":
-        return False
-
-    raise ValueError(f"Invalid checkpoint result: {row.get('result')!r}")
-
-
-def restore_classification(
-    suite: Any,
-    *,
-    tasks: list[dict[str, Any]],
-    rows: list[dict[str, str]],
-    unexpected_failures: list[str],
-    expected_failures: list[str],
-    unexpected_passes: list[str],
-) -> None:
-    tasks_by_key = {task_key(task): task for task in tasks}
-
-    for row in rows:
-        task = tasks_by_key[row_key(row)]
-
-        suite.classify_result(
-            task=task,
-            passed=parse_passed(row),
-            error=row.get("error", ""),
-            unexpected_failures=unexpected_failures,
-            expected_failures=expected_failures,
-            unexpected_passes=unexpected_passes,
-        )
-
-
-def write_parallel_summary(
-    suite: Any,
-    *,
-    total_tasks: int,
-    completed_rows: list[dict[str, Any]],
-    unexpected_failures: list[str],
-    expected_failures: list[str],
-    unexpected_passes: list[str],
-) -> None:
-    completed_count = len(completed_rows)
-    remaining_count = total_tasks - completed_count
-
-    failure_count = len(unexpected_failures) + len(expected_failures)
-
-    pass_count = completed_count - failure_count
-    summary_path = Path(suite.SUMMARY_PATH)
-
-    with summary_path.open(
+def write_summary(
+    tasks,
+    completed_cases,
+    actual_passes,
+    unexpected_failures,
+    expected_failures,
+    unexpected_passes,
+    interrupted_case=None,
+):
+    """Write a summary report of the test run."""
+    with SUMMARY_PATH.open(
         "w",
         encoding="utf-8",
     ) as file:
-        file.write(f"parallel_workers: {PARALLEL_WORKERS}\n")
-        file.write(f"threads_per_worker: {THREADS_PER_WORKER}\n")
-        file.write(f"cpu_only: {CPU_ONLY}\n")
-        file.write(
-            "monitored_gpus: "
-            + ",".join(str(gpu_id) for gpu_id in MONITORED_GPU_IDS)
-            + "\n"
-        )
-        file.write(f"total_cases: {total_tasks}\n")
-        file.write(f"completed_cases: {completed_count}\n")
-        file.write(f"remaining_cases: {remaining_count}\n")
-        file.write(f"actual_passes: {pass_count}\n")
+        file.write(f"base_train_config: {BASE_TRAIN_CONFIG}\n")
+        file.write(f"base_prediction_config: {BASE_PREDICTION_CONFIG}\n")
+        file.write(f"shared_training_experiment_dir: {TRAINING_EXPERIMENT_DIR}\n")
+        file.write(f"prediction_case_dir: {CASE_DIR}\n")
+        file.write(f"total_prediction_cases: {len(tasks)}\n")
+        file.write(f"completed_cases: {completed_cases}\n")
+        file.write(f"actual_passes: {actual_passes}\n")
         file.write(f"unexpected_failures: {len(unexpected_failures)}\n")
         file.write(f"expected_failures: {len(expected_failures)}\n")
         file.write(f"unexpected_passes: {len(unexpected_passes)}\n")
-        file.write(f"cases_dir: {suite.CASES_DIR}\n")
-        file.write(f"results_csv: {suite.RESULTS_CSV}\n")
+        file.write(f"interrupted_case: {interrupted_case or ''}\n")
+        file.write(f"results_csv: {RESULTS_CSV}\n")
 
-        groups = (
+        groups = [
             (
                 "unexpected_failures",
                 unexpected_failures,
@@ -696,604 +1580,143 @@ def write_parallel_summary(
                 "unexpected_passes",
                 unexpected_passes,
             ),
-        )
+        ]
 
-        for heading, values in groups:
+        for title, values in groups:
             if not values:
                 continue
 
-            file.write(f"\n{heading}:\n")
+            file.write(f"\n{title}:\n")
 
             for value in values:
                 file.write(f"- {value}\n")
 
 
-def disabled_worker_log_result(
-    **kwargs: Any,
-) -> None:
-    del kwargs
+def main():
+    """
+    Main entry point for the prediction integration test suite.
+    Trains a shared model fixture and runs prediction test cases.
+    """
 
+    prepare_output_directories()
+    cleanup_logging_handlers()
 
-def worker_initializer() -> None:
-    global _WORKER_MODULE
-    global _WORKER_TASKS
+    # Find and load the prediction main function
+    prediction_main = get_prediction_main()
 
-    configure_process_environment()
+    print("Training one shared cVAE MLP model for prediction...")
 
-    suite = load_suite_module()
-    prepare_suite(suite)
+    # Train the shared model fixture
+    train_model_once()
 
-    suite.log_result = disabled_worker_log_result
-    suite.logging.raiseExceptions = False
+    print(f"Training fixture completed: {TRAINING_EXPERIMENT_DIR}")
 
-    try:
-        import torch
+    init_csv()
 
-        torch.set_num_threads(THREADS_PER_WORKER)
+    # Load base prediction config and generate test cases
+    base_prediction_config = load_base_prediction_config()
 
-        try:
-            torch.set_num_interop_threads(1)
-        except RuntimeError:
-            pass
+    tasks = build_prediction_tasks(base_prediction_config)
 
-    except Exception:
-        pass
+    unexpected_failures = []
+    expected_failures = []
+    unexpected_passes = []
 
-    if CPU_ONLY:
-        original_base_config = suite.base_config
-
-        def cpu_base_config() -> dict[str, Any]:
-            config = original_base_config()
-
-            config.setdefault(
-                "trainer",
-                {},
-            )["mixed_precision"] = False
-
-            return config
-
-        suite.base_config = cpu_base_config
-
-    _WORKER_MODULE = suite
-    _WORKER_TASKS = build_tasks(suite)
-
-
-def patch_training_task(
-    task: dict[str, Any],
-    paths: dict[str, Path],
-) -> dict[str, Any]:
-    patched_task = dict(task)
-    original_builder = patched_task.get("cfg_builder")
-
-    if not callable(original_builder):
-        raise TypeError(f"Task {task['case_name']!r} has no callable cfg_builder.")
-
-    def case_config_builder() -> dict[str, Any]:
-        config = original_builder()
-
-        if not isinstance(
-            config,
-            dict,
-        ):
-            raise TypeError(
-                "The configuration builder returned "
-                f"{type(config).__name__}, expected dict."
-            )
-
-        config = deepcopy(config)
-
-        config["experiment_dir"] = str(paths["experiment_dir"].resolve())
-
-        return config
-
-    patched_task["cfg_builder"] = case_config_builder
-
-    return patched_task
-
-
-def patch_baseline_task(
-    task: dict[str, Any],
-    paths: dict[str, Path],
-) -> dict[str, Any]:
-    patched_task = dict(task)
-
-    patched_task["config_path"] = paths["config_path"]
-    patched_task["experiment_dir"] = paths["experiment_dir"]
-    patched_task["log_path"] = paths["log_path"]
-
-    return patched_task
-
-
-def install_active_case_paths(
-    suite: Any,
-    *,
-    case_name: str,
-    execution_config_path: Path,
-    paths: dict[str, Path],
-) -> Callable[[str], dict[str, Path]]:
-    original_case_paths = suite.case_paths
-
-    def active_case_paths(
-        requested_case_name: str,
-    ) -> dict[str, Path]:
-        if requested_case_name == case_name:
-            return {
-                "config_path": execution_config_path,
-                "experiment_dir": paths["experiment_dir"],
-                "log_path": paths["log_path"],
-            }
-
-        return original_case_paths(requested_case_name)
-
-    suite.case_paths = active_case_paths
-
-    return original_case_paths
-
-
-def copy_final_config_if_needed(
-    source_path: Path,
-    destination_path: Path,
-) -> None:
-    source = source_path.resolve()
-    destination = destination_path.resolve()
-
-    if not source.exists():
-        return
-
-    destination.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    same_file = source == destination
-
-    if not same_file and destination.exists():
-        try:
-            same_file = source.samefile(destination)
-        except OSError:
-            same_file = False
-
-    if not same_file:
-        shutil.copy2(
-            source,
-            destination,
-        )
-
-
-def execute_task_in_worker(
-    task_index: int,
-) -> dict[str, Any]:
-    suite = _WORKER_MODULE
-    tasks = _WORKER_TASKS
-
-    if suite is None or tasks is None:
-        raise RuntimeError("The worker was not initialized.")
-
-    task = tasks[task_index]
-    worker_pid = os.getpid()
-
-    paths = prepare_case_directory(
-        suite,
-        task,
-    )
-
-    temporary_parent = Path(
-        tempfile.mkdtemp(prefix=(clean_case_name(task["case_name"]) + "_"))
-    )
-
-    execution_config_path = temporary_parent / paths["config_path"].name
-
-    original_case_paths = install_active_case_paths(
-        suite,
-        case_name=str(task["case_name"]),
-        execution_config_path=(execution_config_path),
-        paths=paths,
-    )
+    completed_cases = 0
+    actual_passes = 0
+    interrupted_case = None
 
     try:
-        if "runner" in task:
-            patched_task = patch_baseline_task(
-                task,
-                paths,
-            )
+        # Run all prediction test cases with progress bar
+        with tqdm(
+            total=len(tasks),
+            desc="prediction integration",
+            unit="case",
+            dynamic_ncols=True,
+            leave=True,
+            bar_format=(
+                "{l_bar}{bar}| "
+                "{n_fmt}/{total_fmt} "
+                "[{elapsed}<{remaining}, "
+                "{rate_fmt}] {postfix}"
+            ),
+        ) as progress:
+            for task in tasks:
+                case = task["case"]
 
-            passed, error = suite.run_baseline_task(patched_task)
-        else:
-            patched_task = patch_training_task(
-                task,
-                paths,
-            )
+                progress.set_postfix_str(case["name"][:80])
 
-            passed, error = suite.run_training_task(patched_task)
-
-        copy_final_config_if_needed(
-            execution_config_path,
-            paths["config_path"],
-        )
-
-        return {
-            "task_index": task_index,
-            "passed": bool(passed),
-            "error": str(error),
-            "worker_pid": worker_pid,
-            "paths": {name: str(path) for name, path in paths.items()},
-        }
-
-    except BaseException as exc:
-        error = f"{type(exc).__name__}: {exc}\n" + traceback.format_exc()
-
-        copy_final_config_if_needed(
-            execution_config_path,
-            paths["config_path"],
-        )
-
-        paths["log_path"].parent.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
-
-        with paths["log_path"].open(
-            "a",
-            encoding="utf-8",
-        ) as log_file:
-            log_file.write(error)
-            log_file.write("\n")
-
-        return {
-            "task_index": task_index,
-            "passed": False,
-            "error": error,
-            "worker_pid": worker_pid,
-            "paths": {name: str(path) for name, path in paths.items()},
-        }
-
-    finally:
-        suite.case_paths = original_case_paths
-
-        shutil.rmtree(
-            temporary_parent,
-            ignore_errors=True,
-        )
-
-        try:
-            suite.cleanup_logging_handlers()
-        except Exception:
-            pass
-
-
-def submit_available_tasks(
-    executor: ProcessPoolExecutor,
-    pending_futures: dict[Future, int],
-    task_indices: list[int],
-    next_position: int,
-) -> int:
-    while (
-        next_position < len(task_indices) and len(pending_futures) < MAX_PENDING_TASKS
-    ):
-        task_index = task_indices[next_position]
-
-        future = executor.submit(
-            execute_task_in_worker,
-            task_index,
-        )
-
-        pending_futures[future] = task_index
-
-        next_position += 1
-
-    return next_position
-
-
-def build_failed_future_result(
-    suite: Any,
-    tasks: list[dict[str, Any]],
-    *,
-    expected_index: int,
-    exception: BaseException,
-) -> dict[str, Any]:
-    paths = task_paths(
-        suite,
-        tasks[expected_index],
-    )
-
-    return {
-        "task_index": expected_index,
-        "passed": False,
-        "error": (
-            f"{type(exception).__name__}: {exception}\n" + traceback.format_exc()
-        ),
-        "worker_pid": None,
-        "paths": {name: str(path) for name, path in paths.items()},
-    }
-
-
-def process_completed_result(
-    suite: Any,
-    *,
-    result: dict[str, Any],
-    tasks: list[dict[str, Any]],
-    completed_rows: list[dict[str, Any]],
-    unexpected_failures: list[str],
-    expected_failures: list[str],
-    unexpected_passes: list[str],
-) -> int | None:
-    task_index = int(result["task_index"])
-
-    task = tasks[task_index]
-
-    passed = bool(result["passed"])
-
-    error = str(
-        result.get(
-            "error",
-            "",
-        )
-    )
-
-    paths = {name: Path(path) for name, path in result["paths"].items()}
-
-    raw_worker_pid = result.get("worker_pid")
-
-    worker_pid = None if raw_worker_pid is None else int(raw_worker_pid)
-
-    result_row = build_result_row(
-        suite,
-        task=task,
-        passed=passed,
-        error=error,
-        paths=paths,
-        worker_pid=worker_pid,
-    )
-
-    append_result_row(
-        suite,
-        result_row,
-    )
-
-    completed_rows.append(result_row)
-
-    suite.classify_result(
-        task=task,
-        passed=passed,
-        error=error,
-        unexpected_failures=(unexpected_failures),
-        expected_failures=(expected_failures),
-        unexpected_passes=(unexpected_passes),
-    )
-
-    return worker_pid
-
-
-def run_parallel_suite(
-    suite: Any,
-) -> None:
-    tasks = build_tasks(suite)
-
-    (
-        pending_tasks,
-        retained_rows,
-    ) = prepare_checkpoint(
-        suite,
-        tasks,
-    )
-
-    task_indices_by_key = {task_key(task): index for index, task in enumerate(tasks)}
-
-    pending_indices = [task_indices_by_key[task_key(task)] for task in pending_tasks]
-
-    unexpected_failures: list[str] = []
-    expected_failures: list[str] = []
-    unexpected_passes: list[str] = []
-
-    restore_classification(
-        suite,
-        tasks=tasks,
-        rows=retained_rows,
-        unexpected_failures=(unexpected_failures),
-        expected_failures=(expected_failures),
-        unexpected_passes=(unexpected_passes),
-    )
-
-    completed_rows: list[dict[str, Any]] = list(retained_rows)
-
-    write_parallel_summary(
-        suite,
-        total_tasks=len(tasks),
-        completed_rows=completed_rows,
-        unexpected_failures=(unexpected_failures),
-        expected_failures=(expected_failures),
-        unexpected_passes=(unexpected_passes),
-    )
-
-    if not pending_indices:
-        print(
-            "No pending cases remain.",
-            flush=True,
-        )
-        return
-
-    print(
-        f"Starting {len(pending_indices)} "
-        "pending case(s) with "
-        f"{PARALLEL_WORKERS} worker processes.",
-        flush=True,
-    )
-
-    print(
-        f"Threads per worker: {THREADS_PER_WORKER}",
-        flush=True,
-    )
-
-    print(
-        f"Monitored GPUs: {list(MONITORED_GPU_IDS)}",
-        flush=True,
-    )
-
-    print(
-        f"Cases: {suite.CASES_DIR}",
-        flush=True,
-    )
-
-    context = mp.get_context("spawn")
-
-    pending_futures: dict[
-        Future,
-        int,
-    ] = {}
-
-    next_position = 0
-
-    try:
-        with ProcessPoolExecutor(
-            max_workers=PARALLEL_WORKERS,
-            mp_context=context,
-            initializer=worker_initializer,
-        ) as executor:
-            next_position = submit_available_tasks(
-                executor,
-                pending_futures,
-                pending_indices,
-                next_position,
-            )
-
-            with tqdm(
-                total=len(tasks),
-                initial=len(retained_rows),
-                desc="integration",
-                unit="case",
-                dynamic_ncols=True,
-                leave=True,
-                bar_format=(
-                    "{l_bar}{bar}| "
-                    "{n_fmt}/{total_fmt} "
-                    "[{elapsed}<{remaining}, "
-                    "{rate_fmt}] "
-                    "{postfix}"
-                ),
-            ) as progress:
-                while pending_futures:
-                    (
-                        completed_futures,
-                        _,
-                    ) = wait(
-                        pending_futures,
-                        return_when=(FIRST_COMPLETED),
+                try:
+                    # Run the prediction case
+                    passed = run_prediction_case(
+                        prediction_main,
+                        task,
                     )
+                except KeyboardInterrupt:
+                    interrupted_case = case["name"]
+                    completed_cases += 1
+                    raise
 
-                    for future in completed_futures:
-                        expected_index = pending_futures.pop(future)
+                completed_cases += 1
 
-                        try:
-                            result = future.result()
-                        except BaseException as exc:
-                            result = build_failed_future_result(
-                                suite,
-                                tasks,
-                                expected_index=(expected_index),
-                                exception=exc,
-                            )
+                if passed:
+                    actual_passes += 1
 
-                        worker_pid = process_completed_result(
-                            suite,
-                            result=result,
-                            tasks=tasks,
-                            completed_rows=(completed_rows),
-                            unexpected_failures=(unexpected_failures),
-                            expected_failures=(expected_failures),
-                            unexpected_passes=(unexpected_passes),
-                        )
+                # Classify the result
+                classify_result(
+                    case=case,
+                    passed=passed,
+                    unexpected_failures=(unexpected_failures),
+                    expected_failures=(expected_failures),
+                    unexpected_passes=(unexpected_passes),
+                )
 
-                        progress.update(1)
+                # Update progress bar with current statistics
+                progress.set_postfix_str(
+                    "unexpected_failures="
+                    f"{len(unexpected_failures)} "
+                    "expected_failures="
+                    f"{len(expected_failures)} "
+                    "unexpected_passes="
+                    f"{len(unexpected_passes)}"
+                )
 
-                        progress.set_postfix_str(
-                            f"pid={worker_pid} "
-                            f"running="
-                            f"{len(pending_futures)} "
-                            "unexpected_failures="
-                            f"{len(unexpected_failures)} "
-                            "expected_failures="
-                            f"{len(expected_failures)} "
-                            "unexpected_passes="
-                            f"{len(unexpected_passes)}"
-                        )
-
-                        write_parallel_summary(
-                            suite,
-                            total_tasks=len(tasks),
-                            completed_rows=(completed_rows),
-                            unexpected_failures=(unexpected_failures),
-                            expected_failures=(expected_failures),
-                            unexpected_passes=(unexpected_passes),
-                        )
-
-                    next_position = submit_available_tasks(
-                        executor,
-                        pending_futures,
-                        pending_indices,
-                        next_position,
-                    )
+                progress.update(1)
 
     except KeyboardInterrupt:
-        print(
-            "\nInterrupt received. Cancelling pending cases...",
-            flush=True,
+        cleanup_logging_handlers()
+
+        write_summary(
+            tasks,
+            completed_cases,
+            actual_passes,
+            unexpected_failures,
+            expected_failures,
+            unexpected_passes,
+            interrupted_case=(interrupted_case),
         )
 
-        for future in pending_futures:
-            future.cancel()
-
-        write_parallel_summary(
-            suite,
-            total_tasks=len(tasks),
-            completed_rows=completed_rows,
-            unexpected_failures=(unexpected_failures),
-            expected_failures=(expected_failures),
-            unexpected_passes=(unexpected_passes),
-        )
-
-        print(
-            f"Checkpoint retained at: {suite.RESULTS_CSV}",
-            flush=True,
-        )
-
-        print(
-            "The next run will rerun the final completed case.",
-            flush=True,
-        )
+        print("\nPrediction integration suite interrupted.")
+        print(f"Interrupted case: {interrupted_case}")
+        print(f"Partial results: {RESULTS_CSV}")
+        print(f"Summary: {SUMMARY_PATH}")
 
         raise
 
-    except BaseException:
-        write_parallel_summary(
-            suite,
-            total_tasks=len(tasks),
-            completed_rows=completed_rows,
-            unexpected_failures=(unexpected_failures),
-            expected_failures=(expected_failures),
-            unexpected_passes=(unexpected_passes),
-        )
+    cleanup_logging_handlers()
 
-        print(
-            f"\nCheckpoint retained at: {suite.RESULTS_CSV}",
-            flush=True,
-        )
-
-        raise
-
-    finally:
-        suite.cleanup_logging_handlers()
-
-    write_parallel_summary(
-        suite,
-        total_tasks=len(tasks),
-        completed_rows=completed_rows,
-        unexpected_failures=(unexpected_failures),
-        expected_failures=(expected_failures),
-        unexpected_passes=(unexpected_passes),
+    write_summary(
+        tasks,
+        completed_cases,
+        actual_passes,
+        unexpected_failures,
+        expected_failures,
+        unexpected_passes,
     )
 
+    # Check for failures
     if unexpected_failures or unexpected_passes:
-        problems: list[str] = []
+        problems = []
 
         if unexpected_failures:
             problems.append(f"{len(unexpected_failures)} unexpected failure(s)")
@@ -1302,56 +1725,17 @@ def run_parallel_suite(
             problems.append(f"{len(unexpected_passes)} unexpected pass(es)")
 
         raise RuntimeError(
-            "Parallel integration suite "
-            "completed with "
-            + " and ".join(problems)
-            + f". See {suite.RESULTS_CSV} "
-            + f"and {suite.CASES_DIR}."
+            "Prediction integration suite "
+            "completed with " + " and ".join(problems) + f". See {RESULTS_CSV} "
+            f"and {CASE_DIR}."
         )
 
-    print("Parallel integration suite completed successfully.")
-
-    print(f"Cases: {suite.CASES_DIR}")
-
-    print(f"Results: {suite.RESULTS_CSV}")
-
-    print(f"Summary: {suite.SUMMARY_PATH}")
-
-
-def main() -> None:
-    configure_process_environment()
-
-    script_directory = Path(__file__).resolve().parent
-
-    if str(script_directory) not in sys.path:
-        sys.path.insert(
-            0,
-            str(script_directory),
-        )
-
-    suite: Any | None = None
-
-    try:
-        suite = load_suite_module()
-
-        prepare_suite(suite)
-        suite.cleanup_logging_handlers()
-
-        run_parallel_suite(suite)
-
-    finally:
-        if suite is not None:
-            suite.cleanup_logging_handlers()
+    print("Training and prediction integration suite completed successfully.")
+    print(f"Shared training model: {TRAINING_EXPERIMENT_DIR}")
+    print(f"Prediction cases: {CASE_DIR}")
+    print(f"Results: {RESULTS_CSV}")
+    print(f"Summary: {SUMMARY_PATH}")
 
 
 if __name__ == "__main__":
-    original_sigint_handler = signal.getsignal(signal.SIGINT)
-
-    try:
-        main()
-
-    finally:
-        signal.signal(
-            signal.SIGINT,
-            original_sigint_handler,
-        )
+    main()

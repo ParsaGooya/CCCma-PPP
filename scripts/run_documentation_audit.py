@@ -16,7 +16,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
+# Find the project root (documentation to audit)
 ROOT = Path("cccma_ppp")
+
+# Output directories for audit results
 OUTPUT_DIR = Path("../output/documentation_audit_results")
 OUTPUT_TEXT = OUTPUT_DIR / Path("audit.txt")
 OUTPUT_ISSUES_CSV = OUTPUT_DIR / Path("doc_audit_issues.csv")
@@ -26,6 +29,7 @@ OUTPUT_JSON = OUTPUT_DIR / Path("doc_audit.json")
 OUTPUT_HEATMAP = OUTPUT_DIR / Path("doc_audit_heatmap.png")
 OUTPUT_TOTALS = OUTPUT_DIR / Path("doc_audit_totals.png")
 
+# Directories to skip during audit (build artifacts, caches, venv, etc)
 IGNORED_DIRECTORIES = {
     ".git",
     ".github",
@@ -43,18 +47,22 @@ IGNORED_DIRECTORIES = {
     "venv",
 }
 
+# Specific files to skip during audit
 IGNORED_FILES: set[str] = set()
 
 
+# Methods that don't require docstrings (e.g., __repr__, __str__)
 OPTIONAL_DOCSTRING_METHODS = {
     "__repr__",
     "__str__",
 }
 
 
+# Methods that don't require Returns section (e.g., __init__)
 OPTIONAL_RETURNS_METHODS: set[str] = set()
 
 
+# Class attributes to skip (dunder fields, dataclass internals, etc)
 IGNORED_CLASS_ATTRIBUTES = {
     "__annotations__",
     "__dataclass_fields__",
@@ -63,37 +71,24 @@ IGNORED_CLASS_ATTRIBUTES = {
 }
 
 
-CHECK_PRIVATE_ATTRIBUTES = True
+# Audit configuration flags
+CHECK_PRIVATE_ATTRIBUTES = True  # Check private (underscore-prefixed) attributes
+CHECK_PRIVATE_SYMBOLS = True  # Check private functions/classes
+CHECK_MODULE_DOCSTRINGS = False  # Require module-level docstrings
+CHECK_TYPE_HINTS = True  # Verify type annotations on public symbols
+REQUIRE_EXAMPLES = False  # Require Examples section on public symbols
+REQUIRE_ABSTRACT_CLASS_NOTES = False  # Require Notes on abstract classes
+REQUIRE_RETURNS_FOR_EXPLICIT_NONE = (
+    False  # Treat explicit return None as documented return
+)
+INCLUDE_ASSERTION_ERRORS = True  # Add AssertionError when asserts are detected
+CHECK_WARNINGS = True  # Check warnings.warn() calls
+STRICT_ABSTRACT_METHOD_DOCS = True  # Require detailed summaries for abstract methods
 
-
-CHECK_PRIVATE_SYMBOLS = True
-
-
-CHECK_MODULE_DOCSTRINGS = False
-
-
-CHECK_TYPE_HINTS = True
-
-
-REQUIRE_EXAMPLES = False
-
-
-REQUIRE_ABSTRACT_CLASS_NOTES = False
-
-
-REQUIRE_RETURNS_FOR_EXPLICIT_NONE = False
-
-
-INCLUDE_ASSERTION_ERRORS = True
-
-
-CHECK_WARNINGS = True
-
-
-STRICT_ABSTRACT_METHOD_DOCS = True
-
+# Maximum length for docstring summary line (first line)
 SUMMARY_LINE_MAX_LENGTH = 88
 
+# NumPy docstring standard section names and order
 STANDARD_SECTIONS = (
     "Parameters",
     "Other Parameters",
@@ -110,6 +105,7 @@ STANDARD_SECTIONS = (
     "Examples",
 )
 
+# Sections that contain name:type entries (not just description)
 ENTRY_SECTIONS = {
     "Parameters",
     "Other Parameters",
@@ -122,12 +118,14 @@ ENTRY_SECTIONS = {
     "Methods",
 }
 
+# Sections where multiple names can appear on one line (x, y, z : type)
 MULTI_NAME_SECTIONS = {
     "Parameters",
     "Other Parameters",
     "Attributes",
 }
 
+# All possible issue checks performed by the auditor
 ISSUE_CHECKS = [
     "syntax_error",
     "missing_module_docstring",
@@ -192,69 +190,82 @@ ISSUE_CHECKS = [
 
 @dataclass
 class Issue:
-    file: str
-    line: int
-    column: int
-    symbol: str
-    qualified_name: str
-    symbol_type: str
-    check: str
-    severity: str
-    message: str
-    details: dict[str, Any]
+    """Represents a single documentation audit issue."""
+
+    file: str  # Python file path
+    line: int  # Line number where issue occurs
+    column: int  # Column number where issue occurs
+    symbol: str  # Name of the symbol (function, class, etc)
+    qualified_name: str  # Full qualified name (module.class.function)
+    symbol_type: str  # Type of symbol (function, class, method, etc)
+    check: str  # Name of the audit check that failed
+    severity: str  # Issue severity (error, warning, info)
+    message: str  # Human-readable issue description
+    details: dict[str, Any]  # Additional context/details about the issue
 
 
 @dataclass
 class SymbolRecord:
-    file: str
-    line: int
-    qualified_name: str
-    symbol_type: str
-    public: bool
-    documented: bool
-    issue_count: int = 0
-    error_count: int = 0
-    warning_count: int = 0
-    info_count: int = 0
+    """Tracks audit statistics for a single symbol."""
+
+    file: str  # Python file containing the symbol
+    line: int  # Line number of symbol definition
+    qualified_name: str  # Full qualified name
+    symbol_type: str  # Type of symbol (class, function, method, etc)
+    public: bool  # Whether symbol is public (no leading underscore)
+    documented: bool  # Whether symbol has a docstring
+    issue_count: int = 0  # Total issues found for this symbol
+    error_count: int = 0  # Number of errors
+    warning_count: int = 0  # Number of warnings
+    info_count: int = 0  # Number of informational issues
 
 
 @dataclass
 class Section:
-    name: str
-    body: str
-    start_line: int
-    end_line: int
+    """Represents a NumPy docstring section."""
+
+    name: str  # Section name (Parameters, Returns, etc)
+    body: str  # Section body text (content below the section header)
+    start_line: int  # Relative line number of section start
+    end_line: int  # Relative line number of section end
 
 
 @dataclass
 class DocEntry:
-    names: tuple[str, ...]
-    type_text: str | None
-    description: str
-    line: int
+    """Represents a single entry in a docstring section."""
+
+    names: tuple[str, ...]  # Parameter/attribute name(s) (can be multiple like "x, y")
+    type_text: str | None  # Documented type (e.g., "int" or "ndarray")
+    description: str  # Description text
+    line: int  # Relative line number in docstring
 
 
 def is_ignored(path: Path) -> bool:
+    """Check if a path should be skipped during audit."""
     if path.name in IGNORED_FILES:
         return True
     return any(part in IGNORED_DIRECTORIES for part in path.parts)
 
 
 def python_files(root: Path) -> list:
+    """Find all Python files under a root directory (excluding ignored paths)."""
     return sorted(
         path for path in root.rglob("*.py") if path.is_file() and not is_ignored(path)
     )
 
 
 def is_public_name(name: str) -> bool:
+    """Check if a name is public (not private)."""
     return not name.startswith("_") or (name.startswith("__") and name.endswith("__"))
 
 
 def clean_docstring(doc: str) -> str:
+    """Clean and normalize a docstring."""
     return inspect.cleandoc(doc).rstrip()
 
 
 def first_nonempty_line(doc: str) -> str:
+    """Extract the first non-empty line from a docstring."""
     for line in doc.splitlines():
         if line.strip():
             return line.strip()
@@ -262,14 +273,17 @@ def first_nonempty_line(doc: str) -> str:
 
 
 def node_end_lineno(node: ast.AST) -> int:
+    """Get the end line number of an AST node."""
     return getattr(node, "end_lineno", getattr(node, "lineno", 0))
 
 
 def qualified_name(stack: list[str], name: str) -> str:
+    """Build a qualified name from a scope stack and a name."""
     return ".".join([*stack, name]) if stack else name
 
 
 def decorator_name(decorator: ast.expr) -> str:
+    """Extract the name of a decorator (handles nested attributes, calls, etc)."""
     if isinstance(decorator, ast.Name):
         return decorator.id
     if isinstance(decorator, ast.Attribute):
@@ -283,6 +297,7 @@ def decorator_name(decorator: ast.expr) -> str:
 
 
 def annotation_text(node: ast.expr | None) -> str | None:
+    """Convert a type annotation AST node to string representation."""
     if node is None:
         return None
     try:
@@ -292,11 +307,16 @@ def annotation_text(node: ast.expr | None) -> str | None:
 
 
 def normalized_type(text: str | None) -> str:
+    """
+    Normalize a type string for comparison.
+    Removes module prefixes, standardizes unions, handles Optional, etc.
+    """
     if not text:
         return ""
 
     value = text.lower()
 
+    # Remove common module prefixes
     replacements = {
         "typing.": "",
         "numpy.": "np.",
@@ -309,8 +329,10 @@ def normalized_type(text: str | None) -> str:
     for old, new in replacements.items():
         value = value.replace(old, new)
 
+    # Normalize union syntax: "str or int" -> "str|int"
     value = re.sub(r"\s+or\s+", "|", value)
 
+    # Handle Optional[X] -> X|none
     optional_match = re.fullmatch(
         r"\s*optional\s*\[(.*)]\s*",
         value,
@@ -318,10 +340,12 @@ def normalized_type(text: str | None) -> str:
     if optional_match:
         value = f"{optional_match.group(1)}|none"
 
+    # Remove spaces and backticks
     value = value.replace(" ", "")
     value = value.replace("`", "")
     value = value.replace("~", "")
 
+    # Sort union members for consistent comparison
     if "|" in value:
         value = "|".join(sorted(value.split("|")))
 
@@ -329,12 +353,14 @@ def normalized_type(text: str | None) -> str:
 
 
 def likely_type_match(annotation: str, documented: str) -> bool:
+    """Check if an annotation and documented type are compatible."""
     ann = normalized_type(annotation)
     doc = normalized_type(documented)
 
     if not ann or not doc:
         return True
 
+    # Type aliases that should be considered equivalent
     aliases = {
         "ndarray": {"ndarray", "np.ndarray", "array-like", "arraylike"},
         "np.ndarray": {"ndarray", "np.ndarray", "array-like", "arraylike"},
@@ -346,9 +372,11 @@ def likely_type_match(annotation: str, documented: str) -> bool:
         "tensor": {"tensor", "torch.tensor"},
     }
 
+    # Direct match or substring match
     if ann == doc or ann in doc or doc in ann:
         return True
 
+    # Check type aliases
     for key, values in aliases.items():
         if key in ann and any(value in doc for value in values):
             return True
@@ -357,6 +385,7 @@ def likely_type_match(annotation: str, documented: str) -> bool:
 
 
 def severity_for(check: str) -> str:
+    """Determine the severity level for an audit check."""
     errors = {
         "syntax_error",
         "missing_docstring",
@@ -403,18 +432,27 @@ def severity_for(check: str) -> str:
     return "info"
 
 
+# Regular expressions for parsing NumPy docstring sections
+
+# Matches section header underlines (--- or longer)
 SECTION_UNDERLINE_RE = re.compile(r"^\s*-{3,}\s*$")
+
+# Matches typed parameter entries: "name : type" or "x, y : type"
 ENTRY_RE = re.compile(
     r"^(?P<indent>\s*)"
     r"(?P<names>\*{0,2}[A-Za-z_]\w*"
     r"(?:\s*,\s*\*{0,2}[A-Za-z_]\w*)*)"
     r"\s*:\s*(?P<type>.+?)\s*$"
 )
+
+# Matches return value entries: "type" or "name : type"
 RETURN_ENTRY_RE = re.compile(
     r"^(?P<indent>\s*)"
     r"(?:(?P<name>[A-Za-z_]\w*)\s*:\s*)?"
     r"(?P<type>.+?)\s*$"
 )
+
+# Matches exception entries: "ExceptionName" or "ExceptionError"
 EXCEPTION_ENTRY_RE = re.compile(
     r"^(?P<indent>\s*)"
     r"(?P<name>[A-Za-z_][\w.]*(?:Error|Exception|Warning))\s*$"
@@ -422,19 +460,26 @@ EXCEPTION_ENTRY_RE = re.compile(
 
 
 def parse_sections(doc: str) -> tuple[str, list[Section], list[tuple[int, str]]]:
+    """
+    Parse a NumPy docstring into summary and sections.
+    Returns: (summary_text, sections_list, malformed_section_errors)
+    """
     lines = doc.splitlines()
     headings: list[tuple[int, str]] = []
     malformed: list[tuple[int, str]] = []
 
+    # Find all section headers (identified by underline)
     for index, line in enumerate(lines):
         stripped = line.strip()
 
+        # Header followed by underline
         if index + 1 < len(lines) and SECTION_UNDERLINE_RE.match(lines[index + 1]):
             if stripped:
                 headings.append((index, stripped))
             else:
                 malformed.append((index + 1, "Section heading is empty."))
 
+        # Known section names without proper underline
         elif stripped in STANDARD_SECTIONS:
             next_line = lines[index + 1] if index + 1 < len(lines) else ""
             if not SECTION_UNDERLINE_RE.match(next_line):
@@ -445,9 +490,11 @@ def parse_sections(doc: str) -> tuple[str, list[Section], list[tuple[int, str]]]
     if not headings:
         return doc, [], malformed
 
+    # Extract summary (everything before first section)
     summary = "\n".join(lines[: headings[0][0]]).rstrip()
     sections: list[Section] = []
 
+    # Extract each section
     for position, (index, name) in enumerate(headings):
         body_start = index + 2
         body_end = (
@@ -466,6 +513,7 @@ def parse_sections(doc: str) -> tuple[str, list[Section], list[tuple[int, str]]]
 
 
 def section_map(sections: Iterable[Section]) -> dict[str, list[Section]]:
+    """Group sections by name."""
     result: dict[str, list[Section]] = defaultdict(list)
     for section in sections:
         result[section.name].append(section)
@@ -473,6 +521,10 @@ def section_map(sections: Iterable[Section]) -> dict[str, list[Section]]:
 
 
 def parse_typed_entries(section: Section) -> list[DocEntry]:
+    """
+    Parse a section containing typed entries (Parameters, Attributes, etc).
+    Handles multi-line descriptions and multiple names per entry.
+    """
     lines = section.body.splitlines()
     entries: list[DocEntry] = []
     index = 0
@@ -480,10 +532,12 @@ def parse_typed_entries(section: Section) -> list[DocEntry]:
     while index < len(lines):
         line = lines[index]
 
+        # Skip empty lines
         if not line.strip():
             index += 1
             continue
 
+        # Try to match entry header: "name : type"
         match = ENTRY_RE.match(line)
         if not match:
             index += 1
@@ -493,6 +547,7 @@ def parse_typed_entries(section: Section) -> list[DocEntry]:
         names = tuple(name.strip() for name in match.group("names").split(","))
         type_text = match.group("type").strip()
 
+        # Collect multi-line description
         description_lines: list[str] = []
         start_index = index
         index += 1
@@ -500,17 +555,20 @@ def parse_typed_entries(section: Section) -> list[DocEntry]:
         while index < len(lines):
             candidate = lines[index]
 
+            # Empty lines are preserved in description
             if not candidate.strip():
                 description_lines.append("")
                 index += 1
                 continue
 
+            # Check if this is the start of the next entry
             candidate_match = ENTRY_RE.match(candidate)
             candidate_indent = len(candidate) - len(candidate.lstrip())
 
             if candidate_match and candidate_indent <= base_indent:
                 break
 
+            # Stop if we hit a line with less indentation
             if candidate_indent <= base_indent:
                 break
 
@@ -530,6 +588,10 @@ def parse_typed_entries(section: Section) -> list[DocEntry]:
 
 
 def parse_return_entries(section: Section) -> list[DocEntry]:
+    """
+    Parse a Returns or Yields section.
+    Handles optional names and multi-line descriptions.
+    """
     lines = section.body.splitlines()
     entries: list[DocEntry] = []
     index = 0
@@ -537,6 +599,7 @@ def parse_return_entries(section: Section) -> list[DocEntry]:
     while index < len(lines):
         line = lines[index]
 
+        # Skip empty lines
         if not line.strip():
             index += 1
             continue
@@ -546,6 +609,7 @@ def parse_return_entries(section: Section) -> list[DocEntry]:
             index += 1
             continue
 
+        # Match return entry: "type" or "name : type"
         match = RETURN_ENTRY_RE.match(line)
         if not match:
             index += 1
@@ -557,6 +621,7 @@ def parse_return_entries(section: Section) -> list[DocEntry]:
         start_index = index
         index += 1
 
+        # Collect description lines (anything indented more than the entry)
         while index < len(lines):
             candidate = lines[index]
 
@@ -586,6 +651,10 @@ def parse_return_entries(section: Section) -> list[DocEntry]:
 
 
 def parse_exception_entries(section: Section) -> list[DocEntry]:
+    """
+    Parse a Raises or Warns section.
+    Handles exception names and multi-line descriptions.
+    """
     lines = section.body.splitlines()
     entries: list[DocEntry] = []
     index = 0
@@ -638,6 +707,12 @@ def parse_exception_entries(section: Section) -> list[DocEntry]:
 
 
 class ScopedFlowVisitor(ast.NodeVisitor):
+    """
+    AST visitor that collects control flow information within a function.
+    Tracks returns, yields, raises, asserts, and warnings.
+    Stops at nested function/class definitions.
+    """
+
     def __init__(self, root: ast.AST):
         self.root = root
         self.returns: list[ast.Return] = []
@@ -647,6 +722,7 @@ class ScopedFlowVisitor(ast.NodeVisitor):
         self.warning_calls: list[ast.Call] = []
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        # Only visit nested functions if this IS the root
         if node is self.root:
             self.generic_visit(node)
 
@@ -659,6 +735,7 @@ class ScopedFlowVisitor(ast.NodeVisitor):
             self.generic_visit(node)
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        # Only visit if this IS the root (class body)
         if node is self.root:
             self.generic_visit(node)
 
@@ -683,6 +760,7 @@ class ScopedFlowVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_Call(self, node: ast.Call) -> None:
+        # Track warnings.warn() calls
         name = decorator_name(node.func)
         if name in {"warnings.warn", "warn"}:
             self.warning_calls.append(node)
@@ -692,12 +770,14 @@ class ScopedFlowVisitor(ast.NodeVisitor):
 def analyze_flow(
     node: ast.FunctionDef | ast.AsyncFunctionDef,
 ) -> ScopedFlowVisitor:
+    """Analyze control flow of a function."""
     visitor = ScopedFlowVisitor(node)
     visitor.visit(node)
     return visitor
 
 
 def exception_name(expr: ast.expr | None) -> str | None:
+    """Extract exception class name from a raise expression."""
     if expr is None:
         return None
 
@@ -714,6 +794,7 @@ def exception_name(expr: ast.expr | None) -> str | None:
 
 
 def warning_name(call: ast.Call) -> str:
+    """Extract warning category from a warnings.warn() call."""
     if len(call.args) >= 2:
         category = exception_name(call.args[1])
 
@@ -733,20 +814,28 @@ def warning_name(call: ast.Call) -> str:
 def function_parameters(
     node: ast.FunctionDef | ast.AsyncFunctionDef,
 ) -> list[tuple[str, ast.arg, str]]:
+    """
+    Extract all parameters from a function signature.
+    Returns list of (name, arg_node, param_type) tuples.
+    """
     values: list[tuple[str, ast.arg, str]] = []
 
+    # Regular positional parameters (excluding self/cls)
     positional = [*node.args.posonlyargs, *node.args.args]
 
     for argument in positional:
         if argument.arg not in {"self", "cls"}:
             values.append((argument.arg, argument, "parameter"))
 
+    # *args
     if node.args.vararg is not None:
         values.append((f"*{node.args.vararg.arg}", node.args.vararg, "varargs"))
 
+    # Keyword-only parameters
     for argument in node.args.kwonlyargs:
         values.append((argument.arg, argument, "keyword-only"))
 
+    # **kwargs
     if node.args.kwarg is not None:
         values.append((f"**{node.args.kwarg.arg}", node.args.kwarg, "kwargs"))
 
@@ -754,6 +843,7 @@ def function_parameters(
 
 
 def return_arity(expr: ast.expr | None) -> int:
+    """Determine how many values are returned (tuple size or 1)."""
     if expr is None:
         return 0
     if isinstance(expr, (ast.Tuple, ast.List)):
@@ -764,6 +854,10 @@ def return_arity(expr: ast.expr | None) -> int:
 def meaningful_returns(
     flow: ScopedFlowVisitor,
 ) -> list[ast.Return]:
+    """
+    Filter out trivial returns (None) from control flow analysis.
+    Only keeps returns that actually return a value.
+    """
     result = []
 
     for statement in flow.returns:
@@ -783,6 +877,7 @@ def meaningful_returns(
 
 
 def assigned_names(target: ast.expr) -> set[str]:
+    """Extract variable names from an assignment target."""
     result: set[str] = set()
 
     if isinstance(target, ast.Name):
@@ -795,6 +890,7 @@ def assigned_names(target: ast.expr) -> set[str]:
 
 
 def self_attribute_names(target: ast.expr) -> set[str]:
+    """Extract self.attribute names from an assignment target."""
     result: set[str] = set()
 
     if (
@@ -814,6 +910,10 @@ def self_attribute_names(target: ast.expr) -> set[str]:
 def class_attributes(
     node: ast.ClassDef,
 ) -> dict[str, str | None]:
+    """
+    Extract class-level annotated attributes.
+    Excludes ClassVar and dunder attributes.
+    """
     attrs: dict[str, str | None] = {}
 
     for statement in node.body:
@@ -825,6 +925,7 @@ def class_attributes(
 
         annotation = annotation_text(statement.annotation)
 
+        # Skip ClassVar
         if annotation and "ClassVar" in annotation:
             continue
 
@@ -844,6 +945,7 @@ def class_attributes(
 def class_init_parameters(
     node: ast.ClassDef,
 ) -> list[tuple[str, ast.arg, str]]:
+    """Extract parameters from the __init__ method."""
     for statement in node.body:
         if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)):
             if statement.name == "__init__":
@@ -854,6 +956,7 @@ def class_init_parameters(
 def dataclass_fields(
     node: ast.ClassDef,
 ) -> dict[str, str | None]:
+    """Extract fields from a dataclass."""
     fields: dict[str, str | None] = {}
 
     for statement in node.body:
@@ -874,6 +977,7 @@ def dataclass_fields(
 
 
 def is_dataclass(node: ast.ClassDef) -> bool:
+    """Check if a class is decorated with @dataclass."""
     return any(
         decorator_name(decorator).endswith("dataclass")
         for decorator in node.decorator_list
@@ -881,6 +985,7 @@ def is_dataclass(node: ast.ClassDef) -> bool:
 
 
 def is_property(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    """Check if a function is a property (@property or @*.setter)."""
     return any(
         decorator_name(decorator) in {"property", "cached_property"}
         or decorator_name(decorator).endswith(".setter")
@@ -889,6 +994,7 @@ def is_property(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
 
 
 def is_abstract(node: ast.AST) -> bool:
+    """Check if a class or method has @abstractmethod decorator."""
     decorators = getattr(node, "decorator_list", [])
     return any(
         "abstractmethod" in decorator_name(decorator) for decorator in decorators
@@ -896,6 +1002,7 @@ def is_abstract(node: ast.AST) -> bool:
 
 
 def has_overload_decorator(node: ast.AST) -> bool:
+    """Check if a function has @overload decorator."""
     decorators = getattr(node, "decorator_list", [])
     return any(
         decorator_name(decorator).endswith("overload") for decorator in decorators
@@ -905,6 +1012,7 @@ def has_overload_decorator(node: ast.AST) -> bool:
 def source_docstring_location(
     node: ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef,
 ) -> tuple[int, int]:
+    """Find the line and column where a docstring starts."""
     if not node.body:
         return getattr(node, "lineno", 1), getattr(node, "col_offset", 0)
 
@@ -920,6 +1028,11 @@ def source_docstring_location(
 
 
 class Auditor:
+    """
+    Main auditor class that performs documentation audit on Python files.
+    Walks AST, parses docstrings, and reports issues.
+    """
+
     def __init__(self, root: Path):
         self.root = root
         self.issues: list[Issue] = []
@@ -943,6 +1056,10 @@ class Auditor:
         line: int | None = None,
         column: int | None = None,
     ) -> None:
+        """
+        Record an audit issue.
+        Prints to stdout and stores in issues list.
+        """
         relative = str(self.current_file)
         issue = Issue(
             file=relative,
@@ -959,6 +1076,7 @@ class Auditor:
         self.issues.append(issue)
         self.results[relative][check] += 1
 
+        # Print issue for real-time feedback
         detail_text = ""
         if issue.details:
             pairs = ", ".join(
@@ -973,6 +1091,7 @@ class Auditor:
         )
 
     def audit(self) -> None:
+        """Main entry point: audit all Python files in the root."""
         if not self.root.exists():
             raise FileNotFoundError(f"Audit root does not exist: {self.root}")
 
@@ -985,8 +1104,13 @@ class Auditor:
             self.audit_file(path)
 
     def audit_file(self, path: Path) -> None:
+        """
+        Audit a single Python file.
+        Handles syntax errors, parses AST, walks all classes/functions.
+        """
         self.current_file = path
 
+        # Try to read source with proper encoding detection
         try:
             with tokenize.open(path) as stream:
                 self.source = stream.read()
@@ -1008,6 +1132,7 @@ class Auditor:
 
         self.source_lines = self.source.splitlines()
 
+        # Parse Python source code into AST
         try:
             tree = ast.parse(
                 self.source,
@@ -1029,6 +1154,7 @@ class Auditor:
             )
             return
 
+        # Audit module docstring
         module_doc = ast.get_docstring(tree, clean=False)
 
         if CHECK_MODULE_DOCSTRINGS and module_doc is None:
@@ -1051,9 +1177,14 @@ class Auditor:
                 public=True,
             )
 
+        # Walk the AST to find classes and functions
         self.walk_scope(tree.body, [])
 
     def walk_scope(self, body: list[ast.stmt], stack: list[str]) -> None:
+        """
+        Recursively walk AST nodes at the current scope level.
+        Tracks class/function nesting via the stack.
+        """
         for node in body:
             if isinstance(node, ast.ClassDef):
                 qname = qualified_name(stack, node.name)
@@ -1066,11 +1197,16 @@ class Auditor:
                 self.walk_scope(node.body, [*stack, node.name])
 
     def should_check_symbol(self, name: str) -> bool:
+        """Decide whether to audit a symbol based on privacy settings."""
         if CHECK_PRIVATE_SYMBOLS:
             return True
         return is_public_name(name)
 
     def audit_class(self, node: ast.ClassDef, qname: str) -> None:
+        """
+        Audit a class definition.
+        Checks docstring, parameters (constructor), attributes, etc.
+        """
         public = is_public_name(node.name)
 
         if not self.should_check_symbol(node.name):
@@ -1090,6 +1226,7 @@ class Auditor:
 
         issue_start = len(self.issues)
 
+        # Check for missing docstring
         if doc is None:
             self.add_issue(
                 node,
@@ -1104,6 +1241,7 @@ class Auditor:
 
         doc = clean_docstring(doc)
 
+        # Parse and audit the docstring
         section_index = self.audit_docstring(
             node,
             node.name,
@@ -1113,6 +1251,7 @@ class Auditor:
             public=public,
         )
 
+        # Classes shouldn't have Methods section (auto-generated)
         if "Methods" in section_index:
             self.add_issue(
                 node,
@@ -1123,6 +1262,7 @@ class Auditor:
                 "Class docstring contains a Methods section.",
             )
 
+        # Determine if class is a dataclass
         class_is_dataclass = is_dataclass(node)
 
         if class_is_dataclass:
@@ -1134,12 +1274,15 @@ class Auditor:
 
             expected_attrs: dict[str, str | None] = {}
         else:
+            # Extract parameters from __init__ method
             expected_params = {
                 name.lstrip("*") for name, _, _ in class_init_parameters(node)
             }
 
+            # Extract class attributes
             expected_attrs = class_attributes(node)
 
+        # Parse documented parameters/attributes
         parameter_entries = [
             entry
             for section_name in ("Parameters", "Other Parameters")
@@ -1159,6 +1302,7 @@ class Auditor:
             for name in entry.names
         }
 
+        # Check for missing documented parameters
         for name in sorted(expected_params - documented_params):
             self.add_issue(
                 node,
@@ -1170,6 +1314,7 @@ class Auditor:
                 details={"parameter": name},
             )
 
+        # Check for extra documented parameters
         for name in sorted(documented_params - expected_params):
             self.add_issue(
                 node,
@@ -1182,6 +1327,7 @@ class Auditor:
                 details={"parameter": name},
             )
 
+        # Check for duplicate parameter documentation
         duplicate_params = [
             name for name, count in Counter(documented_param_list).items() if count > 1
         ]
@@ -1200,6 +1346,7 @@ class Auditor:
                 },
             )
 
+        # Check parameter types and descriptions
         if class_is_dataclass:
             expected_param_types = dataclass_field_map
         else:
@@ -1233,6 +1380,7 @@ class Auditor:
                     details={"parameter": name},
                 )
 
+            # Check for type mismatch between annotation and documentation
             annotation = expected_param_types.get(name)
 
             if (
@@ -1255,6 +1403,7 @@ class Auditor:
                     },
                 )
 
+        # Check class attributes
         attribute_entries = [
             entry
             for section in section_index.get("Attributes", [])
@@ -1273,6 +1422,7 @@ class Auditor:
 
         expected_attr_names = set(expected_attrs)
 
+        # Check for missing documented attributes
         for name in sorted(expected_attr_names - documented_attrs):
             self.add_issue(
                 node,
@@ -1284,6 +1434,7 @@ class Auditor:
                 details={"attribute": name},
             )
 
+        # Check for extra documented attributes
         for name in sorted(documented_attrs - expected_attr_names):
             if class_is_dataclass and name in expected_params:
                 message = (
@@ -1307,6 +1458,7 @@ class Auditor:
                 details={"attribute": name},
             )
 
+        # Check for duplicate attributes
         duplicate_attrs = [
             name for name, count in Counter(documented_attr_list).items() if count > 1
         ]
@@ -1325,6 +1477,7 @@ class Auditor:
                 },
             )
 
+        # Check attribute types and descriptions
         for name in sorted(expected_attr_names & documented_attrs):
             entry = attribute_entry_map[name]
 
@@ -1350,6 +1503,7 @@ class Auditor:
                     details={"attribute": name},
                 )
 
+            # Check type consistency
             annotation = expected_attrs.get(name)
 
             if (
@@ -1371,6 +1525,7 @@ class Auditor:
                     },
                 )
 
+        # Check for abstract class without Notes section
         if (
             REQUIRE_ABSTRACT_CLASS_NOTES
             and any(is_abstract(child) for child in node.body)
@@ -1392,11 +1547,16 @@ class Auditor:
         node: ast.FunctionDef | ast.AsyncFunctionDef,
         qname: str,
     ) -> None:
+        """
+        Audit a function definition.
+        Checks docstring, parameters, returns, raises, etc.
+        """
         public = is_public_name(node.name)
 
         if not self.should_check_symbol(node.name):
             return
 
+        # Skip optional docstring methods
         if node.name in OPTIONAL_DOCSTRING_METHODS and ast.get_docstring(node) is None:
             return
 
@@ -1416,6 +1576,7 @@ class Auditor:
         self.symbols.append(record)
         issue_start = len(self.issues)
 
+        # Check for missing docstring
         if doc is None:
             if not has_overload_decorator(node):
                 self.add_issue(
@@ -1439,6 +1600,7 @@ class Auditor:
             public=public,
         )
 
+        # Extract and check parameters
         parameters = function_parameters(node)
         expected_parameter_names = {name for name, _, _ in parameters}
 
@@ -1454,6 +1616,7 @@ class Auditor:
         ]
         documented_parameter_names = set(documented_parameter_list)
 
+        # Check for missing documented parameters
         for name in sorted(expected_parameter_names - documented_parameter_names):
             check = "missing_param"
             if name.startswith("**"):
@@ -1471,6 +1634,7 @@ class Auditor:
                 details={"parameter": name},
             )
 
+        # Check for extra documented parameters
         for name in sorted(documented_parameter_names - expected_parameter_names):
             self.add_issue(
                 node,
@@ -1482,6 +1646,7 @@ class Auditor:
                 details={"parameter": name},
             )
 
+        # Check for duplicate parameters
         duplicates = [
             name
             for name, count in Counter(documented_parameter_list).items()
@@ -1504,6 +1669,7 @@ class Auditor:
 
         arg_by_name = {name: arg for name, arg, _ in parameters}
 
+        # Check parameter types and descriptions
         for name in sorted(expected_parameter_names & documented_parameter_names):
             entry = entry_by_parameter[name]
             argument = arg_by_name[name]
@@ -1530,6 +1696,7 @@ class Auditor:
                     details={"parameter": name},
                 )
 
+            # Check for type annotation
             annotation = annotation_text(argument.annotation)
 
             if (
@@ -1548,6 +1715,7 @@ class Auditor:
                     details={"parameter": name},
                 )
 
+            # Check type consistency
             if (
                 annotation
                 and entry.type_text
@@ -1568,6 +1736,7 @@ class Auditor:
                     },
                 )
 
+        # Analyze function control flow (returns, yields, raises)
         flow = analyze_flow(node)
         returns = meaningful_returns(flow)
         yields = flow.yields
@@ -1578,6 +1747,7 @@ class Auditor:
         has_returns_section = bool(return_sections)
         has_yields_section = bool(yield_sections)
 
+        # Check return documentation
         if (
             returns
             and not has_returns_section
@@ -1606,6 +1776,7 @@ class Auditor:
                 "Docstring has a Returns section, but no value is returned.",
             )
 
+        # Constructors shouldn't document returns
         if node.name in {"__init__", "__post_init__"} and has_returns_section:
             self.add_issue(
                 node,
@@ -1617,6 +1788,7 @@ class Auditor:
                 "document a Returns section.",
             )
 
+        # Check yield documentation
         if yields and not has_yields_section:
             self.add_issue(
                 node,
@@ -1648,6 +1820,7 @@ class Auditor:
                 "generator return value is intentionally documented.",
             )
 
+        # Check return value details
         if return_sections:
             return_entries = [
                 entry
@@ -1676,6 +1849,7 @@ class Auditor:
                         "A return value has no description.",
                     )
 
+            # Check tuple return arity (number of values)
             arities = {
                 return_arity(statement.value)
                 for statement in returns
@@ -1701,6 +1875,7 @@ class Auditor:
                     },
                 )
 
+        # Check yield value details
         if yield_sections:
             yield_entries = [
                 entry
@@ -1729,6 +1904,7 @@ class Auditor:
                         "A yielded value has no description.",
                     )
 
+        # Check return type annotation
         if (
             CHECK_TYPE_HINTS
             and public
@@ -1744,6 +1920,7 @@ class Auditor:
                 "Public function has no return annotation.",
             )
 
+        # Check property returns
         if is_property(node) and returns and not has_returns_section:
             self.add_issue(
                 node,
@@ -1754,6 +1931,7 @@ class Auditor:
                 "Property returns a value but does not document it.",
             )
 
+        # Audit exceptions and warnings
         self.audit_raises_and_warnings(
             node,
             qname,
@@ -1762,6 +1940,7 @@ class Auditor:
             section_index,
         )
 
+        # Check important decorators
         decorators = {decorator_name(decorator) for decorator in node.decorator_list}
         important_decorators = {
             name
@@ -1788,6 +1967,7 @@ class Auditor:
                 details={"decorators": sorted(important_decorators)},
             )
 
+        # Check abstract method documentation
         if (
             STRICT_ABSTRACT_METHOD_DOCS
             and is_abstract(node)
@@ -1812,10 +1992,15 @@ class Auditor:
         flow: ScopedFlowVisitor,
         section_index: dict[str, list[Section]],
     ) -> None:
+        """
+        Audit raised exceptions and emitted warnings.
+        Compares detected raises/warns with documented ones.
+        """
         raised: list[str] = []
         dynamic_raise_count = 0
         bare_raise_count = 0
 
+        # Collect raised exceptions
         for statement in flow.raises:
             if statement.exc is None:
                 bare_raise_count += 1
@@ -1827,9 +2012,11 @@ class Auditor:
             else:
                 dynamic_raise_count += 1
 
+        # Add AssertionError if there are assertions
         if INCLUDE_ASSERTION_ERRORS and flow.asserts:
             raised.append("AssertionError")
 
+        # Parse documented raises
         raise_entries = [
             entry
             for section in section_index.get("Raises", [])
@@ -1837,6 +2024,7 @@ class Auditor:
         ]
         documented_raises = [entry.names[0] for entry in raise_entries if entry.names]
 
+        # Check for missing documented exceptions
         for name in sorted(set(raised) - set(documented_raises)):
             self.add_issue(
                 node,
@@ -1848,6 +2036,7 @@ class Auditor:
                 details={"exception": name},
             )
 
+        # Check for extra documented exceptions
         for name in sorted(set(documented_raises) - set(raised)):
             self.add_issue(
                 node,
@@ -1863,6 +2052,7 @@ class Auditor:
                 },
             )
 
+        # Check for duplicate raises
         duplicates = [
             name for name, count in Counter(documented_raises).items() if count > 1
         ]
@@ -1877,6 +2067,7 @@ class Auditor:
                 details={"exception": name},
             )
 
+        # Check raise descriptions
         for entry in raise_entries:
             if not entry.description:
                 self.add_issue(
@@ -1889,6 +2080,7 @@ class Auditor:
                     details={"exception": entry.names[0]},
                 )
 
+        # Report bare raises
         if bare_raise_count:
             self.add_issue(
                 node,
@@ -1901,6 +2093,7 @@ class Auditor:
                 details={"count": bare_raise_count},
             )
 
+        # Report dynamic raises
         if dynamic_raise_count:
             self.add_issue(
                 node,
@@ -1916,6 +2109,7 @@ class Auditor:
         if not CHECK_WARNINGS:
             return
 
+        # Check warnings
         emitted_warnings = [warning_name(call) for call in flow.warning_calls]
         warn_entries = [
             entry
@@ -1924,6 +2118,7 @@ class Auditor:
         ]
         documented_warnings = [entry.names[0] for entry in warn_entries if entry.names]
 
+        # Check for missing documented warnings
         for name in sorted(set(emitted_warnings) - set(documented_warnings)):
             self.add_issue(
                 node,
@@ -1935,6 +2130,7 @@ class Auditor:
                 details={"warning": name},
             )
 
+        # Check for extra documented warnings
         for name in sorted(set(documented_warnings) - set(emitted_warnings)):
             self.add_issue(
                 node,
@@ -1947,6 +2143,7 @@ class Auditor:
                 details={"warning": name},
             )
 
+        # Check warning descriptions
         for entry in warn_entries:
             if not entry.description:
                 self.add_issue(
@@ -1969,6 +2166,10 @@ class Auditor:
         *,
         public: bool,
     ) -> dict[str, list[Section]]:
+        """
+        Audit a docstring for format, sections, and completeness.
+        Returns a dict mapping section names to section lists.
+        """
         if not doc.strip():
             self.add_issue(
                 node,
@@ -1980,10 +2181,12 @@ class Auditor:
             )
             return {}
 
+        # Parse docstring into sections
         summary, sections, malformed = parse_sections(doc)
         index = section_map(sections)
         summary_line = first_nonempty_line(summary)
 
+        # Check summary line
         if not summary_line:
             self.add_issue(
                 node,
@@ -1994,6 +2197,7 @@ class Auditor:
                 "Docstring has no summary line.",
             )
         else:
+            # Check summary length
             if len(summary_line) > SUMMARY_LINE_MAX_LENGTH:
                 self.add_issue(
                     node,
@@ -2008,6 +2212,7 @@ class Auditor:
                     },
                 )
 
+            # Check summary punctuation
             if summary_line[-1:] not in {".", "!", "?", ":"}:
                 self.add_issue(
                     node,
@@ -2018,6 +2223,7 @@ class Auditor:
                     "Summary line does not end with punctuation.",
                 )
 
+            # Check imperative mood (for functions)
             if symbol_type in {"function", "async function"} and re.match(
                 r"^(This|The|A|An|It|Function|Method)\b",
                 summary_line,
@@ -2034,6 +2240,7 @@ class Auditor:
                     details={"summary": summary_line},
                 )
 
+        # Check for TODO/FIXME markers
         if re.search(r"(?mi)^\s*(TODO|FIXME|TBD|XXX)\b", doc):
             self.add_issue(
                 node,
@@ -2044,6 +2251,7 @@ class Auditor:
                 "Docstring contains an unfinished documentation marker.",
             )
 
+        # Report malformed sections
         for relative_line, message in malformed:
             doc_line, doc_column = source_docstring_location(node)
             self.add_issue(
@@ -2057,6 +2265,7 @@ class Auditor:
                 column=doc_column,
             )
 
+        # Check for duplicate and empty sections
         for name, instances in index.items():
             if len(instances) > 1:
                 self.add_issue(
@@ -2081,6 +2290,7 @@ class Auditor:
                         details={"section": name},
                     )
 
+        # Check for unknown sections
         unknown_sections = sorted(set(index) - set(STANDARD_SECTIONS))
         for name in unknown_sections:
             self.add_issue(
@@ -2094,6 +2304,7 @@ class Auditor:
                 details={"section": name},
             )
 
+        # Check section order
         observed_standard = [
             section.name for section in sections if section.name in STANDARD_SECTIONS
         ]
@@ -2113,6 +2324,7 @@ class Auditor:
                 details={"observed": observed_standard},
             )
 
+        # Check for Examples section
         if REQUIRE_EXAMPLES and public and "Examples" not in index:
             self.add_issue(
                 node,
@@ -2123,6 +2335,7 @@ class Auditor:
                 "Public symbol has no Examples section.",
             )
 
+        # Check for unbalanced code fences
         if doc.count("```") % 2:
             self.add_issue(
                 node,
@@ -2133,6 +2346,7 @@ class Auditor:
                 "Docstring contains an unbalanced Markdown code fence.",
             )
 
+        # Check for unbalanced backticks
         if doc.count("``") % 2:
             self.add_issue(
                 node,
@@ -2143,6 +2357,7 @@ class Auditor:
                 "Docstring may contain unbalanced double backticks.",
             )
 
+        # Check for trailing whitespace
         trailing_lines = [
             number
             for number, line in enumerate(doc.splitlines(), start=1)
@@ -2160,6 +2375,7 @@ class Auditor:
                 details={"docstring_lines": trailing_lines},
             )
 
+        # Check for private names in public API docs
         parameter_entries = [
             entry
             for section_name in ("Parameters", "Other Parameters")
@@ -2194,6 +2410,7 @@ class Auditor:
         record: SymbolRecord,
         issue_start: int,
     ) -> None:
+        """Calculate issue statistics for a symbol."""
         relevant = self.issues[issue_start:]
         counts = Counter(issue.severity for issue in relevant)
         record.issue_count = len(relevant)
@@ -2202,6 +2419,7 @@ class Auditor:
         record.info_count = counts["info"]
 
     def write_text_report(self, summary: pd.DataFrame) -> None:
+        """Write human-readable text report."""
         lines = []
 
         lines.append("=" * 88)
@@ -2209,11 +2427,13 @@ class Auditor:
         lines.append("=" * 88)
         lines.append("")
 
+        # Group issues by file
         issues_by_file = defaultdict(list)
 
         for issue in self.issues:
             issues_by_file[issue.file].append(issue)
 
+        # Print issues per file
         for file in sorted(issues_by_file):
             file_issues = issues_by_file[file]
 
@@ -2251,12 +2471,12 @@ class Auditor:
 
             lines.append("")
 
+        # Summary statistics
         errors = sum(issue.severity == "error" for issue in self.issues)
         warnings = sum(issue.severity == "warning" for issue in self.issues)
         information = sum(issue.severity == "info" for issue in self.issues)
 
         documented = sum(record.documented for record in self.symbols)
-
         coverage = 100.0 * documented / len(self.symbols) if self.symbols else 100.0
 
         lines.append("=" * 88)
@@ -2315,7 +2535,10 @@ class Auditor:
         )
 
     def write_outputs(self) -> None:
+        """Write all output reports (CSV, JSON, visualizations)."""
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+        # Write issues CSV
         issue_rows = []
         for issue in self.issues:
             row = asdict(issue)
@@ -2344,6 +2567,7 @@ class Auditor:
             writer.writeheader()
             writer.writerows(issue_rows)
 
+        # Build summary DataFrame
         all_checks = sorted(
             set(ISSUE_CHECKS)
             | {check for counter in self.results.values() for check in counter}
@@ -2363,6 +2587,7 @@ class Auditor:
         summary = summary.fillna(0).astype(int)
         summary.index.name = "file"
 
+        # Add severity breakdown
         severity_by_file = pd.DataFrame(
             [
                 {
@@ -2400,6 +2625,7 @@ class Auditor:
 
         self.write_text_report(summary)
 
+        # Write symbols CSV
         symbol_frame = pd.DataFrame([asdict(record) for record in self.symbols])
         if not symbol_frame.empty:
             symbol_frame["quality_score"] = (
@@ -2414,6 +2640,7 @@ class Auditor:
             )
         symbol_frame.to_csv(OUTPUT_SYMBOLS_CSV, index=False)
 
+        # Write JSON report
         payload = {
             "root": str(self.root),
             "configuration": {
@@ -2444,6 +2671,7 @@ class Auditor:
 
         self.create_visualizations(summary)
 
+        # Print summary to stdout
         print("\n" + "=" * 88)
         print("AUDIT SUMMARY")
         print("=" * 88)
@@ -2492,6 +2720,8 @@ class Auditor:
                 )
 
     def create_visualizations(self, summary: pd.DataFrame) -> None:
+        """Create heatmap and bar chart visualizations."""
+        # Heatmap: issues by check and file
         check_columns = [
             column
             for column in summary.columns
@@ -2540,6 +2770,7 @@ class Auditor:
             plt.savefig(OUTPUT_HEATMAP, dpi=300, bbox_inches="tight")
             plt.close()
 
+        # Bar chart: most frequent checks
         totals = Counter(issue.check for issue in self.issues)
 
         if totals:
@@ -2581,6 +2812,7 @@ class Auditor:
             plt.close()
 
 
+# Main entry point
 auditor = Auditor(ROOT)
 
 try:

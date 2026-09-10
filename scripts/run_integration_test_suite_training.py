@@ -19,6 +19,7 @@ import dacite
 import yaml
 from tqdm import tqdm
 
+# Import architecture modules (registers them in the factory)
 from cccma_ppp.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
 from cccma_ppp.architectures.mlp import (
     deterministic as _mlp_deterministic,  # noqa: F401
@@ -30,9 +31,13 @@ from cccma_ppp.architectures.unet import (
 from cccma_ppp.configs import required_sample_dimensions
 from cccma_ppp.generic import registry_imports  # noqa: F401
 from cccma_ppp.generic.distributed import Distributed
+
+# Import loss modules (registers them in the factory)
 from cccma_ppp.loss import kld as _loss_kld  # noqa: F401
 from cccma_ppp.loss import loss as _loss_pipeline  # noqa: F401
 from cccma_ppp.loss import utils_loss as _loss_utils  # noqa: F401
+
+# Import the training entry point
 from cccma_ppp.train.train import main as train_main
 from cccma_ppp.train.train_configs import TrainConfig, prepare_config
 
@@ -40,10 +45,13 @@ warnings.filterwarnings("ignore")
 logging.raiseExceptions = False
 
 
+# Find the project root (two levels up from this script)
 ROOT = Path(__file__).resolve().parents[1]
 
+# Base training configuration template
 BASE_TRAIN_CONFIG = ROOT / "scripts" / "integration_suite_train_config.yaml"
 
+# Output directories for test results
 OUTPUT_DIR = ROOT / "../output" / "train_integration_test_results"
 CASES_DIR = OUTPUT_DIR / "cases"
 GENERATED_CONFIG_DIR = OUTPUT_DIR / "_generated_configs"
@@ -52,17 +60,20 @@ RESULTS_CSV = OUTPUT_DIR / "integration_results.csv"
 SUMMARY_PATH = OUTPUT_DIR / "summary.txt"
 
 
+# Extract time dimension names from config (e.g., "init_time", "lead_time")
 INIT_TIME_DIM, LEAD_TIME_DIM = required_sample_dimensions
 
 
-RUN_BASELINE_TESTS = False
-RUN_TRAIN_LOADER_CONFIG_CASES = True
-RUN_CVAE_MLP_GRID = True
-RUN_CVAE_UNET_GRID = True
-RUN_DETERMINISTIC_MLP_GRID = True
-RUN_DETERMINISTIC_UNET_GRID = True
+# Control which test suites to run
+RUN_BASELINE_TESTS = False  # Special tests like resume and dataset pipeline
+RUN_TRAIN_LOADER_CONFIG_CASES = True  # Test different data loader configurations
+RUN_CVAE_MLP_GRID = True  # Test cVAE with MLP architecture
+RUN_CVAE_UNET_GRID = True  # Test cVAE with UNet architecture
+RUN_DETERMINISTIC_MLP_GRID = True  # Test deterministic regression with MLP
+RUN_DETERMINISTIC_UNET_GRID = True  # Test deterministic regression with UNet
 
 
+# Limit number of test cases per suite (for faster testing, set to None for all)
 MAX_TRAIN_LOADER_CONFIG_CASES = None
 MAX_CVAE_MLP_CASES = None
 MAX_CVAE_UNET_CASES = None
@@ -70,17 +81,21 @@ MAX_DETERMINISTIC_MLP_CASES = None
 MAX_DETERMINISTIC_UNET_CASES = None
 
 
-MAX_TRAIN_BATCHES_PER_CASE = 1
-MAX_VALIDATION_BATCHES_PER_CASE = 1
+# Batch limits for faster testing (data loader batches to run per test case)
+MAX_TRAIN_BATCHES_PER_CASE = 1  # Only run 1 training batch per case
+MAX_VALIDATION_BATCHES_PER_CASE = 1  # Only run 1 validation batch per case
 
+# Batch limits for baseline tests (resume, dataset pipeline)
 MAX_BASELINE_TRAIN_BATCHES = 1
 MAX_BASELINE_VALIDATION_BATCHES = 1
 
 
+# Small neural network architectures for fast testing
 TEST_ENCODER_HIDDEN_DIMS = [16]
 TEST_DECODER_HIDDEN_DIMS = [16]
 TEST_CONDITION_EMBEDDING_DIMS = [16]
 
+# Small UNet architecture for fast testing
 TEST_UNET_CHANNELS = [4, 8]
 TEST_UNET_CONDITION_CHANNELS = [4, 8]
 TEST_UNET_OUTPUT_BLOCK_HIDDEN_CHANNELS = 8
@@ -91,6 +106,7 @@ TEST_UNET_BLOCK_CONFIG = {
 }
 
 
+# Time features that are valid/supported
 VALID_TIME_FEATURES = {
     INIT_TIME_DIM,
     LEAD_TIME_DIM,
@@ -101,12 +117,18 @@ VALID_TIME_FEATURES = {
 }
 
 
+# Standard lead time (forecast lead distance) for most tests
 FULL_LEAD_MONTHS = {
     "start": 1,
     "end": 1,
 }
 
 
+# Test cases for data loader and dataset configuration
+# These test different combinations of:
+# - Conditioning methods (None, ensemble_mean, same_member, cross_ensemble, static)
+# - Data presence (observation present/missing, condition present/missing)
+# - Time features (none, init_time, production features, all)
 TRAIN_LOADER_CONFIG_CASES = [
     {
         "name": "tlc_condition_none_obs_present",
@@ -155,7 +177,7 @@ TRAIN_LOADER_CONFIG_CASES = [
     {
         "name": "tlc_same_member_invalid_model_mean",
         "condition_method": "same_member",
-        "model_ensemble_mean": True,
+        "model_ensemble_mean": True,  # Invalid combo: ensemble_mean contradicts same_member
         "remove_observation": False,
         "add_condition": False,
         "time_features": [INIT_TIME_DIM],
@@ -173,7 +195,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "name": "tlc_observation_missing_condition_none",
         "condition_method": None,
         "model_ensemble_mean": True,
-        "remove_observation": True,
+        "remove_observation": True,  # Missing observation
         "add_condition": False,
         "time_features": [INIT_TIME_DIM],
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
@@ -188,7 +210,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "name": "tlc_observation_missing_ensemble_mean",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
-        "remove_observation": True,
+        "remove_observation": True,  # Missing observation is OK with condition
         "add_condition": False,
         "time_features": [INIT_TIME_DIM],
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
@@ -201,7 +223,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "model_ensemble_mean": True,
         "remove_observation": False,
         "add_condition": False,
-        "time_features": None,
+        "time_features": None,  # No time features
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
         "expected_result": "PASS",
         "expected_failure_reason": "",
@@ -212,7 +234,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "model_ensemble_mean": True,
         "remove_observation": False,
         "add_condition": False,
-        "time_features": [INIT_TIME_DIM],
+        "time_features": [INIT_TIME_DIM],  # Only initialization time
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
         "expected_result": "PASS",
         "expected_failure_reason": "",
@@ -223,7 +245,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "model_ensemble_mean": True,
         "remove_observation": False,
         "add_condition": False,
-        "time_features": [
+        "time_features": [  # Production-ready time features
             LEAD_TIME_DIM,
             "month_sin",
             "month_cos",
@@ -238,7 +260,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "model_ensemble_mean": True,
         "remove_observation": False,
         "add_condition": False,
-        "time_features": [
+        "time_features": [  # All possible time features
             INIT_TIME_DIM,
             LEAD_TIME_DIM,
             "month_sin",
@@ -271,7 +293,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "remove_observation": False,
         "add_condition": False,
         "time_features": [INIT_TIME_DIM],
-        "lead_months": None,
+        "lead_months": None,  # No lead time specification
         "expected_result": "PASS",
         "expected_failure_reason": "",
     },
@@ -279,9 +301,9 @@ TRAIN_LOADER_CONFIG_CASES = [
         "name": "tlc_explicit_condition_ensemble_mean",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
-        "condition_ensemble_mean": True,
+        "condition_ensemble_mean": True,  # Explicit condition dataset
         "remove_observation": False,
-        "add_condition": True,
+        "add_condition": True,  # Include condition data
         "time_features": [INIT_TIME_DIM],
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
         "expected_result": "PASS",
@@ -301,10 +323,10 @@ TRAIN_LOADER_CONFIG_CASES = [
     },
     {
         "name": "tlc_static_without_condition",
-        "condition_method": "static",
+        "condition_method": "static",  # Requires explicit condition dataset
         "model_ensemble_mean": True,
         "remove_observation": False,
-        "add_condition": False,
+        "add_condition": False,  # But we didn't provide one
         "time_features": [INIT_TIME_DIM],
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
         "expected_result": "FAIL",
@@ -319,7 +341,7 @@ TRAIN_LOADER_CONFIG_CASES = [
         "model_ensemble_mean": True,
         "condition_ensemble_mean": True,
         "remove_observation": False,
-        "add_condition": True,
+        "add_condition": True,  # Condition is same as model data
         "time_features": [INIT_TIME_DIM],
         "lead_months": deepcopy(FULL_LEAD_MONTHS),
         "expected_result": "FAIL",
@@ -332,29 +354,31 @@ TRAIN_LOADER_CONFIG_CASES = [
 ]
 
 
+# Hyperparameter grids for cVAE model architecture
+# Each combination will be tested with both MLP and UNet
 CVAE_GRID = {
     "posterior_variance_limits": [
-        None,
-        [0.5, 2.0],
+        None,  # No explicit variance limits
+        [0.5, 2.0],  # Constrained variance range
     ],
     "use_prior_flow": [
-        False,
+        False,  # Standard prior
     ],
     "combined_CGCN_weight": [
-        0.0,
-        0.1,
+        0.0,  # No combined CGCN loss
+        0.1,  # Some combined CGCN loss
     ],
     "latent_size": [
-        4,
-        10,
+        4,  # Small latent space
+        10,  # Medium latent space
     ],
     "condition_dependant_latent": [
-        True,
-        False,
+        True,  # Condition affects latent distribution
+        False,  # Condition-independent latent
     ],
     "condemb_to_decoder": [
-        True,
-        False,
+        True,  # Pass condition embedding to decoder
+        False,  # Don't pass condition embedding to decoder
     ],
     "init_method": [
         "default",
@@ -364,18 +388,20 @@ CVAE_GRID = {
 }
 
 
+# MLP-specific hyperparameters (additional to CVAE_GRID)
 MLP_GRID = {
     "batch_normalization": [
         False,
         True,
     ],
     "dropout_rate": [
-        None,
-        0.5,
+        None,  # No dropout
+        0.5,  # 50% dropout
     ],
 }
 
 
+# Deterministic model hyperparameters
 DETERMINISTIC_GRID = {
     "init_method": [
         "default",
@@ -385,10 +411,11 @@ DETERMINISTIC_GRID = {
 }
 
 
+# MLP-specific deterministic hyperparameters
 DETERMINISTIC_MLP_GRID = {
     "append_mode": [
-        1,
-        2,
+        1,  # Different concatenation modes
+        2,  # for deterministic regression
         3,
     ],
     "batch_normalization": [
@@ -402,6 +429,7 @@ DETERMINISTIC_MLP_GRID = {
 }
 
 
+# Column names for the results CSV file
 CSV_COLUMNS = [
     "timestamp",
     "suite",
@@ -438,6 +466,11 @@ CSV_COLUMNS = [
 
 
 class LimitedLoader:
+    """
+    Wrapper around a data loader that limits the number of batches yielded.
+    Used to speed up tests by limiting data loading to a small number of batches.
+    """
+
     def __init__(
         self,
         loader: Any,
@@ -447,18 +480,22 @@ class LimitedLoader:
         self._max_batches = max_batches
 
     def __iter__(self) -> Iterator:
+        """Yield batches from the underlying loader, limited to max_batches."""
         iterator = iter(self._loader)
 
         if self._max_batches is None:
+            # No limit, yield everything
             yield from iterator
             return
 
+        # Limit to max_batches
         yield from islice(
             iterator,
             self._max_batches,
         )
 
     def __len__(self) -> int:
+        """Return the number of batches this loader will yield."""
         loader_length = len(self._loader)
 
         if self._max_batches is None:
@@ -473,6 +510,7 @@ class LimitedLoader:
         self,
         name: str,
     ) -> Any:
+        """Forward any other attribute access to the underlying loader."""
         return getattr(
             self._loader,
             name,
@@ -480,6 +518,7 @@ class LimitedLoader:
 
 
 def prepare_output_directories() -> None:
+    """Create all necessary output directories for test results."""
     for path in (
         OUTPUT_DIR,
         CASES_DIR,
@@ -493,23 +532,30 @@ def prepare_output_directories() -> None:
 
 
 def cleanup_logging_handlers() -> None:
+    """
+    Close and remove all logging handlers.
+    Prevents resource leaks and file handle conflicts between test cases.
+    """
     logger_names = [
         "",
         "training",
     ]
 
+    # Collect all loggers that start with the package name
     logger_names.extend(
         logger_name
         for logger_name in logging.Logger.manager.loggerDict
         if logger_name.startswith("cccma_ppp")
     )
 
+    # Remove all handlers from each logger
     for logger_name in dict.fromkeys(logger_names):
         logger = logging.getLogger(logger_name)
 
         for handler in list(logger.handlers):
             logger.removeHandler(handler)
 
+            # Flush and close the handler
             try:
                 handler.flush()
             except Exception:
@@ -524,6 +570,7 @@ def cleanup_logging_handlers() -> None:
 
 
 def init_csv() -> None:
+    """Create the results CSV file with headers."""
     prepare_output_directories()
 
     with RESULTS_CSV.open(
@@ -541,15 +588,21 @@ def init_csv() -> None:
 def clean_name(
     value: Any,
 ) -> str:
+    """
+    Convert a value to a filesystem-safe name.
+    Removes special characters and collapses multiple underscores.
+    """
     value = str(value).replace(
         "None",
         "none",
     )
+    # Replace special characters with underscores
     value = re.sub(
         r"[^A-Za-z0-9_.-]+",
         "_",
         value,
     )
+    # Collapse multiple underscores
     value = re.sub(
         r"_+",
         "_",
@@ -562,6 +615,7 @@ def clean_name(
 def serialize_json(
     value: Any,
 ) -> str:
+    """Convert a value to JSON for storing in CSV."""
     return json.dumps(
         value,
         sort_keys=True,
@@ -572,6 +626,10 @@ def serialize_json(
 def case_paths(
     case_name: str,
 ) -> dict[str, Path]:
+    """
+    Generate filesystem paths for a test case.
+    Returns dict with config_path, experiment_dir, and log_path.
+    """
     safe_name = clean_name(case_name)
 
     return {
@@ -588,6 +646,7 @@ def log_result(
     passed: bool,
     error: str,
 ) -> None:
+    """Log a test result to the CSV file."""
     params = task["params"]
 
     row = {
@@ -650,6 +709,10 @@ def log_result(
 def normalize_numeric_fields(
     cfg: dict[str, Any],
 ) -> dict[str, Any]:
+    """
+    Normalize numeric fields in the configuration.
+    Converts string numbers to floats where needed (e.g., "0.001" -> 0.001).
+    """
     optimization_cfg = cfg.get("optimization")
 
     if not isinstance(
@@ -658,6 +721,7 @@ def normalize_numeric_fields(
     ):
         return cfg
 
+    # Learning rate and weight decay might be strings
     numeric_fields = [
         (
             optimization_cfg,
@@ -724,6 +788,10 @@ def normalize_numeric_fields(
 def normalize_nullable_fields(
     cfg: dict[str, Any],
 ) -> dict[str, Any]:
+    """
+    Remove None-valued fields from configuration.
+    None values in YAML should be removed rather than kept.
+    """
     normalize_numeric_fields(cfg)
 
     train_loader_cfg = cfg.setdefault(
@@ -735,12 +803,14 @@ def normalize_nullable_fields(
         {},
     )
 
+    # Validate field locations
     if "time_features" in dataset_cfg:
         raise ValueError(
             "time_features is no longer a DatasetConfig field. "
             "Configure it under train_loader.time_features."
         )
 
+    # Remove None values
     if train_loader_cfg.get("time_features") is None:
         train_loader_cfg.pop(
             "time_features",
@@ -805,6 +875,10 @@ def normalize_nullable_fields(
 def validate_generated_config(
     cfg: dict[str, Any],
 ) -> dict[str, Any]:
+    """
+    Validate that all required fields are present and types are correct.
+    Checks for deprecated field names and invalid configurations.
+    """
     train_loader_cfg = cfg.get("train_loader")
 
     if not isinstance(
@@ -821,12 +895,14 @@ def validate_generated_config(
     ):
         raise ValueError("train_loader.dataset_config must be configured as a mapping.")
 
+    # Check for deprecated field location
     if "time_features" in dataset_cfg:
         raise ValueError(
             "time_features must be configured under "
             "train_loader, not train_loader.dataset_config."
         )
 
+    # Validate time features
     time_features = train_loader_cfg.get("time_features")
 
     if time_features is not None:
@@ -845,6 +921,7 @@ def validate_generated_config(
                 f"{sorted(VALID_TIME_FEATURES)}."
             )
 
+    # Validate module configuration
     module_cfg = cfg.get("module")
 
     if not isinstance(
@@ -868,11 +945,13 @@ def validate_generated_config(
     ):
         raise ValueError("module.config must be configured as a mapping.")
 
+    # Check for deprecated fields
     if "min_posterior_variance" in raw_module_config:
         raise ValueError(
             "min_posterior_variance is obsolete. Use posterior_variance_limits."
         )
 
+    # Validate model selector
     model_selector = raw_module_config.get("ModelConfig")
 
     if not isinstance(
@@ -894,6 +973,7 @@ def validate_generated_config(
 
     model_type = str(model_selector["type"]).lower()
 
+    # UNet-specific validation
     if model_type in {
         "unet",
         "unetsic",
@@ -909,9 +989,11 @@ def validate_generated_config(
         if not block_config.get("name"):
             raise ValueError("UNet ModelConfig.block_config requires a nonempty name.")
 
+        # Check for deprecated UNet fields
         if "process_skip" in model_config:
             raise ValueError("process_skip is obsolete. Use process_skip_connections.")
 
+        # Deterministic and cVAE use different skip alignment fields
         if (
             module_type == "deterministic"
             and "upsampling_alignment_method" in model_config
@@ -934,6 +1016,10 @@ def write_yaml(
     cfg: dict[str, Any],
     output_path: Path,
 ) -> Path:
+    """
+    Normalize, validate, and write a configuration to a YAML file.
+    Ensures the configuration is valid before writing.
+    """
     cfg = deepcopy(cfg)
 
     normalize_numeric_fields(cfg)
@@ -962,6 +1048,9 @@ def write_yaml(
 def load_train_config(
     config_path: Path,
 ) -> TrainConfig:
+    """
+    Load a training configuration from a YAML file and convert to TrainConfig dataclass.
+    """
     cfg_data = prepare_config(config_path)
 
     if cfg_data is None:
@@ -971,6 +1060,7 @@ def load_train_config(
     normalize_nullable_fields(cfg_data)
     validate_generated_config(cfg_data)
 
+    # Convert dict to TrainConfig dataclass with strict validation
     return dacite.from_dict(
         data_class=TrainConfig,
         data=cfg_data,
@@ -981,6 +1071,10 @@ def load_train_config(
 
 
 def base_config() -> dict[str, Any]:
+    """
+    Load and prepare the base training configuration template.
+    Sets common parameters and validates the result.
+    """
     cfg = prepare_config(BASE_TRAIN_CONFIG)
 
     if cfg is None:
@@ -990,6 +1084,7 @@ def base_config() -> dict[str, Any]:
 
     normalize_numeric_fields(cfg)
 
+    # Override key parameters for faster testing
     cfg["max_epochs"] = 1
     cfg["log_every_n_epochs"] = 1
     cfg["save_checkpoint"] = True
@@ -1017,6 +1112,7 @@ def base_config() -> dict[str, Any]:
             "Move dataset_config.time_features to train_loader.time_features."
         )
 
+    # Configure minimal data loading for fast tests
     train_loader_cfg["batch_size"] = 1
     train_loader_cfg["num_data_workers"] = 0
     train_loader_cfg["num_validation_years"] = 0
@@ -1025,8 +1121,9 @@ def base_config() -> dict[str, Any]:
         1981,
     ]
 
-    train_loader_cfg["load"] = False
+    train_loader_cfg["load"] = False  # Don't cache preprocessed data
 
+    # Remove optional fields that slow things down
     train_loader_cfg.pop(
         "prefetch_factor",
         None,
@@ -1042,6 +1139,10 @@ def run_silenced(
     function: Callable[[], Any],
     log_path: Path,
 ) -> Any:
+    """
+    Run a function and capture all stdout/stderr to a log file.
+    Useful for capturing training output.
+    """
     log_path = Path(log_path)
     log_path.parent.mkdir(
         parents=True,
@@ -1055,6 +1156,7 @@ def run_silenced(
         encoding="utf-8",
     ) as log_file:
         try:
+            # Redirect all output to the log file
             with (
                 redirect_stdout(log_file),
                 redirect_stderr(log_file),
@@ -1071,6 +1173,10 @@ def assert_training_completed(
     experiment_dir: Path,
     log_path: Path,
 ) -> None:
+    """
+    Verify that training completed successfully.
+    Checks for checkpoint files and completion message in log.
+    """
     experiment_dir = Path(experiment_dir)
     log_path = Path(log_path)
 
@@ -1105,6 +1211,10 @@ def assert_training_completed(
 def ensure_cvae_beta_finder(
     cfg: dict[str, Any],
 ) -> dict[str, Any]:
+    """
+    Add default beta finder configuration for cVAE models.
+    Beta finder controls the KL divergence weight during training.
+    """
     cfg.setdefault(
         "trainer",
         {},
@@ -1122,6 +1232,7 @@ def ensure_cvae_beta_finder(
 def remove_deterministic_beta_finder(
     cfg: dict[str, Any],
 ) -> dict[str, Any]:
+    """Remove beta finder configuration for deterministic models (not needed)."""
     cfg.setdefault(
         "trainer",
         {},
@@ -1137,15 +1248,21 @@ def apply_train_loader_config_params(
     cfg: dict[str, Any],
     params: dict[str, Any],
 ) -> dict[str, Any]:
+    """
+    Apply test case parameters to the base configuration.
+    Modifies data loading, conditioning, and time feature settings.
+    """
     train_loader_cfg = cfg["train_loader"]
     dataset_cfg = train_loader_cfg["dataset_config"]
 
     if "time_features" in dataset_cfg:
         raise ValueError("time_features must not be configured inside dataset_config.")
 
+    # Apply model ensemble mean setting
     if "model_ensemble_mean" in params:
         dataset_cfg["model"]["ensemble_mean"] = params["model_ensemble_mean"]
 
+    # Remove observation data if requested
     if params.get(
         "remove_observation",
         False,
@@ -1155,6 +1272,7 @@ def apply_train_loader_config_params(
             None,
         )
 
+    # Add or remove condition data
     if params.get(
         "add_condition",
         False,
@@ -1171,6 +1289,7 @@ def apply_train_loader_config_params(
             None,
         )
 
+    # Set conditioning method
     condition_method = params.get("condition_method")
 
     if condition_method is None:
@@ -1181,6 +1300,7 @@ def apply_train_loader_config_params(
     else:
         dataset_cfg["condition_method"] = condition_method
 
+    # Set time features
     if "time_features" in params:
         time_features = params["time_features"]
 
@@ -1192,6 +1312,7 @@ def apply_train_loader_config_params(
         else:
             train_loader_cfg["time_features"] = deepcopy(time_features)
 
+    # Set lead time configuration
     if "lead_months" in params:
         lead_months = params["lead_months"]
 
@@ -1219,6 +1340,10 @@ def build_mlp_model_config(
     append_mode: int | None = None,
     cvae: bool = False,
 ) -> dict[str, Any]:
+    """
+    Build an MLP model configuration.
+    Used for both cVAE and deterministic regression models.
+    """
     model_cfg = {
         "encoder_hidden_dims": deepcopy(TEST_ENCODER_HIDDEN_DIMS),
         "decoder_hidden_dims": deepcopy(TEST_DECODER_HIDDEN_DIMS),
@@ -1230,12 +1355,14 @@ def build_mlp_model_config(
         model_cfg["dropout_rate"] = dropout_rate
 
     if cvae:
+        # cVAE-specific parameters
         model_cfg["condition_embedding_dims"] = deepcopy(TEST_CONDITION_EMBEDDING_DIMS)
         model_cfg["latent_size"] = latent_size
         model_cfg["condition_embedding_size"] = latent_size
         model_cfg["condition_dependant_latent"] = condition_dependant_latent
         model_cfg["condemb_to_decoder"] = condemb_to_decoder
     else:
+        # Deterministic-specific parameters
         model_cfg["append_mode"] = append_mode
 
     return {
@@ -1254,6 +1381,10 @@ def build_unet_model_config(
     deterministic_guess_checkpoint: (str | Path | None) = None,
     cvae: bool = False,
 ) -> dict[str, Any]:
+    """
+    Build a UNet model configuration.
+    Used for both cVAE and deterministic regression models.
+    """
     model_cfg = {
         "channels": deepcopy(TEST_UNET_CHANNELS),
         "block_config": deepcopy(TEST_UNET_BLOCK_CONFIG),
@@ -1269,6 +1400,7 @@ def build_unet_model_config(
     }
 
     if cvae:
+        # cVAE-specific UNet parameters
         if latent_size is None:
             raise ValueError("latent_size is required for cVAE UNetSIC.")
 
@@ -1285,6 +1417,7 @@ def build_unet_model_config(
             }
         )
 
+        # Optional deterministic guess configuration
         if deterministic_guess_checkpoint is None:
             model_cfg["deterministic_guess_config"] = None
         else:
@@ -1304,6 +1437,7 @@ def build_unet_model_config(
                 "freeze_weights": True,
             }
     else:
+        # Deterministic-specific UNet parameters
         model_cfg.update(
             {
                 "skip_alignment_method": "padd",
@@ -1323,6 +1457,10 @@ def modify_preprocessors(
     *,
     add_flattener: bool,
 ) -> dict[str, Any]:
+    """
+    Add or remove the flattener preprocessing step.
+    MLPs need flattened inputs, but UNets work with spatial data.
+    """
     dataset_cfg = cfg["train_loader"]["dataset_config"]
 
     for data_name in (
@@ -1347,6 +1485,7 @@ def modify_preprocessors(
             [],
         )
 
+        # Remove any existing flattener
         preprocessors[:] = [
             step
             for step in preprocessors
@@ -1359,6 +1498,7 @@ def modify_preprocessors(
             )
         ]
 
+        # Add flattener if requested
         if add_flattener:
             preprocessors.append(
                 {
@@ -1372,6 +1512,10 @@ def modify_preprocessors(
 def build_cvae_config_from_params(
     params: dict[str, Any],
 ) -> dict[str, Any]:
+    """
+    Build a complete cVAE training configuration from test parameters.
+    Applies parameter overrides to the base configuration.
+    """
     cfg = base_config()
 
     cfg["module"]["type"] = "cVAE"
@@ -1385,11 +1529,13 @@ def build_cvae_config_from_params(
 
     original_flow_config = deepcopy(module_cfg.get("prior_flow_config"))
 
+    # Set combined CGCN weight
     module_cfg["combined_CGCN_weight"] = params.get(
         "combined_CGCN_weight",
         0.0,
     )
 
+    # Set posterior variance limits
     posterior_variance_limits = params.get("posterior_variance_limits")
 
     if posterior_variance_limits is None:
@@ -1400,6 +1546,7 @@ def build_cvae_config_from_params(
     else:
         module_cfg["posterior_variance_limits"] = deepcopy(posterior_variance_limits)
 
+    # Configure prior flow if requested
     if params.get(
         "use_prior_flow",
         False,
@@ -1421,6 +1568,7 @@ def build_cvae_config_from_params(
             None,
         )
 
+    # Configure architecture-specific model
     architecture = params["architecture"]
 
     modify_preprocessors(
@@ -1470,6 +1618,9 @@ def build_cvae_config_from_params(
 def build_deterministic_config_from_params(
     params: dict[str, Any],
 ) -> dict[str, Any]:
+    """
+    Build a complete deterministic regression training configuration from test parameters.
+    """
     cfg = base_config()
 
     apply_train_loader_config_params(
@@ -1484,6 +1635,7 @@ def build_deterministic_config_from_params(
         add_flattener=(architecture == "MLP"),
     )
 
+    # Build model selector based on architecture
     if architecture == "MLP":
         model_selector = build_mlp_model_config(
             batch_normalization=params["batch_normalization"],
@@ -1516,6 +1668,10 @@ def build_deterministic_config_from_params(
 
 
 def common_training_params() -> dict[str, Any]:
+    """
+    Return common parameters shared by all architecture tests.
+    Used as base for architecture-specific grids.
+    """
     return {
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
@@ -1533,6 +1689,10 @@ def common_training_params() -> dict[str, Any]:
 def grid_cases(
     grid: dict[str, list[Any]],
 ) -> Iterator[dict[str, Any]]:
+    """
+    Generate all combinations of parameters from a hyperparameter grid.
+    Uses Cartesian product of all grid values.
+    """
     keys = list(grid)
     values = [grid[key] for key in keys]
 
@@ -1548,11 +1708,17 @@ def grid_cases(
 def mark_cvae_expected_result(
     params: dict[str, Any],
 ) -> dict[str, Any]:
+    """
+    Mark cVAE test cases as expected pass/fail based on parameter validity.
+    Some parameter combinations are invalid and expected to fail.
+    """
+    # Invalid: prior flow with condition-independent latent
     invalid_prior_flow = (
         params.get("use_prior_flow") is True
         and params.get("condition_dependant_latent") is False
     )
 
+    # Invalid: condition-independent latent without decoder path
     invalid_condition_path = (
         params.get("condition_dependant_latent") is False
         and params.get(
@@ -1597,6 +1763,7 @@ def mark_cvae_expected_result(
 
 
 def generate_train_loader_config_cases() -> list[dict[str, Any]]:
+    """Generate the data loader configuration test cases."""
     cases = deepcopy(TRAIN_LOADER_CONFIG_CASES)
 
     if MAX_TRAIN_LOADER_CONFIG_CASES is not None:
@@ -1608,6 +1775,10 @@ def generate_train_loader_config_cases() -> list[dict[str, Any]]:
 def generate_cvae_cases(
     architecture: str,
 ) -> list[dict[str, Any]]:
+    """
+    Generate all cVAE test cases for a given architecture (MLP or UNet).
+    Creates Cartesian product of CVAE_GRID and architecture-specific parameters.
+    """
     grid = deepcopy(CVAE_GRID)
 
     if architecture == "MLP":
@@ -1620,6 +1791,7 @@ def generate_cvae_cases(
         params["architecture"] = architecture
         params["model_type"] = "MLP" if architecture == "MLP" else "UNetSIC"
 
+        # Mark expected pass/fail based on parameter validity
         mark_cvae_expected_result(params)
 
         params["name"] = clean_name(
@@ -1648,6 +1820,10 @@ def generate_cvae_cases(
 def generate_deterministic_cases(
     architecture: str,
 ) -> list[dict[str, Any]]:
+    """
+    Generate all deterministic regression test cases for a given architecture.
+    Creates Cartesian product of DETERMINISTIC_GRID and architecture-specific parameters.
+    """
     grid = deepcopy(DETERMINISTIC_GRID)
 
     if architecture == "MLP":
@@ -1687,6 +1863,7 @@ def generate_deterministic_cases(
 def append_exception_to_log(
     log_path: Path,
 ) -> None:
+    """Append the current exception traceback to a log file."""
     log_path = Path(log_path)
     log_path.parent.mkdir(
         parents=True,
@@ -1703,6 +1880,7 @@ def append_exception_to_log(
 def remove_existing_case_outputs(
     *paths: Path,
 ) -> None:
+    """Remove any existing output directories/files from a prior test run."""
     for path in paths:
         path = Path(path)
 
@@ -1719,6 +1897,10 @@ def limit_config_loader_batches(
     max_train_batches: int | None,
     max_validation_batches: int | None,
 ):
+    """
+    Context manager that patches data loaders to limit batch count.
+    Allows testing with just a few batches for speed without modifying the config file.
+    """
 
     config = load_train_config(config_path)
 
@@ -1729,6 +1911,7 @@ def limit_config_loader_batches(
 
     config_class = type(train_loader_config)
 
+    # Get the original builder methods
     original_train_builder = getattr(
         config_class,
         "build_train_loader",
@@ -1744,6 +1927,7 @@ def limit_config_loader_batches(
         None,
     )
 
+    # Track patches to restore later
     class_attribute_patches: list[tuple[type, str, Any]] = []
 
     def patch_attribute(
@@ -1751,6 +1935,7 @@ def limit_config_loader_batches(
         name: str,
         value: Any,
     ) -> None:
+        """Patch a class attribute and record the original value."""
         original_value = getattr(
             owner,
             name,
@@ -1768,6 +1953,7 @@ def limit_config_loader_batches(
             value,
         )
 
+    # Create wrapper that limits train batches
     def limited_train_builder(
         self,
         *args,
@@ -1790,6 +1976,7 @@ def limit_config_loader_batches(
         limited_train_builder,
     )
 
+    # Create wrapper that limits validation batches if builder exists
     if callable(original_validation_builder):
 
         def limited_validation_builder(
@@ -1820,6 +2007,7 @@ def limit_config_loader_batches(
     try:
         yield
     finally:
+        # Restore original methods
         for (
             owner,
             name,
@@ -1838,6 +2026,10 @@ def run_limited_training(
     max_train_batches: int | None,
     max_validation_batches: int | None,
 ) -> None:
+    """
+    Run training with limited batch counts for faster testing.
+    Patches data loaders to limit iterations without modifying the config.
+    """
     config_path = Path(config_path)
 
     with limit_config_loader_batches(
@@ -1851,8 +2043,13 @@ def run_limited_training(
 def run_training_task(
     task: dict[str, Any],
 ) -> tuple[bool, str]:
+    """
+    Run a single training test task.
+    Returns (passed, error) tuple.
+    """
     paths = case_paths(task["case_name"])
 
+    # Clean up old outputs from any prior run
     remove_existing_case_outputs(
         paths["experiment_dir"],
         paths["config_path"],
@@ -1860,6 +2057,7 @@ def run_training_task(
     )
 
     try:
+        # Get the configuration builder function
         cfg_builder = task.get("cfg_builder")
 
         if cfg_builder is None:
@@ -1872,6 +2070,7 @@ def run_training_task(
                 f"{task['case_name']}."
             )
 
+        # Build the test case configuration
         case_cfg = cfg_builder()
 
         if not isinstance(
@@ -1887,6 +2086,7 @@ def run_training_task(
         case_cfg = deepcopy(case_cfg)
         case_cfg["experiment_dir"] = str(paths["experiment_dir"])
 
+        # Write configuration to YAML file
         write_yaml(
             case_cfg,
             paths["config_path"],
@@ -1901,6 +2101,7 @@ def run_training_task(
             flush=True,
         )
 
+        # Run training with limited batches
         run_silenced(
             lambda: run_limited_training(
                 paths["config_path"],
@@ -1910,6 +2111,7 @@ def run_training_task(
             paths["log_path"],
         )
 
+        # Verify training completed successfully
         assert_training_completed(
             experiment_dir=(paths["experiment_dir"]),
             log_path=(paths["log_path"]),
@@ -1939,6 +2141,7 @@ def make_train_config(
     output_path: Path,
     experiment_dir: Path,
 ) -> Path:
+    """Create and save a training configuration for baseline tests."""
     params = {
         "architecture": "MLP",
         "model_type": "MLP",
@@ -1982,11 +2185,13 @@ def make_train_config(
 def run_resume_training(
     root_dir: Path,
 ) -> None:
+    """Test training resumption from checkpoints."""
     experiment_dir = root_dir / "resume"
 
     if experiment_dir.exists():
         shutil.rmtree(experiment_dir)
 
+    # First training run
     first_config = make_train_config(
         GENERATED_CONFIG_DIR / "resume_train.yaml",
         experiment_dir,
@@ -2009,6 +2214,7 @@ def run_resume_training(
         log_path=first_log,
     )
 
+    # Resume training from checkpoint
     resumed_cfg = prepare_config(first_config)
 
     if resumed_cfg is None:
@@ -2048,6 +2254,7 @@ def run_resume_training(
 def run_dataset_pipeline(
     root_dir: Path,
 ) -> None:
+    """Test the data loading and preprocessing pipeline."""
     experiment_dir = root_dir / "dataset_pipeline"
 
     if experiment_dir.exists():
@@ -2062,6 +2269,7 @@ def run_dataset_pipeline(
     remove_existing_case_outputs(log_path)
 
     def run_pipeline() -> None:
+        """Test that data loads and contains expected keys."""
         config = load_train_config(config_path)
         distributed = Distributed.get_instance()
 
@@ -2072,6 +2280,7 @@ def run_dataset_pipeline(
         if len(train_loader.dataset) <= 0:
             raise AssertionError("The training dataset is empty.")
 
+        # Check first sample contains required keys
         sample = train_loader.dataset[0]
 
         required_keys = {
@@ -2099,6 +2308,10 @@ def run_dataset_pipeline(
 def run_baseline_task(
     task: dict[str, Any],
 ) -> tuple[bool, str]:
+    """
+    Run a baseline test task (resume, dataset pipeline, etc).
+    Returns (passed, error) tuple.
+    """
     paths = {
         "config_path": Path(task["config_path"]),
         "experiment_dir": Path(task["experiment_dir"]),
@@ -2106,6 +2319,7 @@ def run_baseline_task(
     }
 
     try:
+        # Get the runner function
         runner = task.get("runner")
 
         if runner is None:
@@ -2152,6 +2366,7 @@ def run_baseline_task(
 def add_baseline_tasks(
     tasks: list[dict[str, Any]],
 ) -> None:
+    """Add baseline test tasks if enabled."""
     if not RUN_BASELINE_TESTS:
         return
 
@@ -2202,6 +2417,7 @@ def add_baseline_tasks(
 def add_train_loader_config_tasks(
     tasks: list[dict[str, Any]],
 ) -> None:
+    """Add train loader configuration test tasks if enabled."""
     if not RUN_TRAIN_LOADER_CONFIG_CASES:
         return
 
@@ -2250,6 +2466,7 @@ def add_cvae_tasks(
     tasks: list[dict[str, Any]],
     architecture: str,
 ) -> None:
+    """Add cVAE test tasks for a given architecture if enabled."""
     enabled = RUN_CVAE_MLP_GRID if architecture == "MLP" else RUN_CVAE_UNET_GRID
 
     if not enabled:
@@ -2277,6 +2494,7 @@ def add_deterministic_tasks(
     tasks: list[dict[str, Any]],
     architecture: str,
 ) -> None:
+    """Add deterministic regression test tasks for a given architecture if enabled."""
     enabled = (
         RUN_DETERMINISTIC_MLP_GRID
         if architecture == "MLP"
@@ -2307,6 +2525,7 @@ def add_deterministic_tasks(
 def validate_tasks(
     tasks: list[dict[str, Any]],
 ) -> None:
+    """Validate that all tasks are properly configured."""
     case_names = set()
 
     for index, task in enumerate(tasks):
@@ -2332,6 +2551,7 @@ def validate_tasks(
 
         case_names.add(case_name)
 
+        # Each task must have exactly one of runner or cfg_builder
         has_runner = "runner" in task
         has_builder = "cfg_builder" in task
 
@@ -2357,6 +2577,10 @@ def classify_result(
     expected_failures: list[str],
     unexpected_passes: list[str],
 ) -> None:
+    """
+    Classify a test result as expected or unexpected.
+    Tracks unexpected failures/passes for final reporting.
+    """
     case_name = task["case_name"]
     params = task["params"]
 
@@ -2366,10 +2590,13 @@ def classify_result(
     )
 
     if expected_result == "FAIL":
+        # Test was expected to fail
         if passed:
+            # But it passed - this is unexpected!
             unexpected_passes.append(case_name)
             return
 
+        # Verify it failed for the right reason
         expected_error_pattern = params.get("expected_error_pattern")
 
         if expected_error_pattern and not re.search(
@@ -2382,9 +2609,11 @@ def classify_result(
             )
             return
 
+        # Failed as expected
         expected_failures.append(case_name)
         return
 
+    # Test was expected to pass
     if not passed:
         unexpected_failures.append(f"{case_name}: {error}")
 
@@ -2395,6 +2624,7 @@ def write_summary(
     expected_failures: list[str],
     unexpected_passes: list[str],
 ) -> None:
+    """Write a summary report of the test run."""
     actual_failures = len(unexpected_failures) + len(expected_failures)
     actual_passes = len(tasks) - actual_failures
 
@@ -2440,12 +2670,14 @@ def write_summary(
 
 
 def main() -> None:
+    """Main entry point for the integration test suite."""
     prepare_output_directories()
     cleanup_logging_handlers()
     init_csv()
 
     tasks: list[dict[str, Any]] = []
 
+    # Add all test tasks based on enabled suites
     add_baseline_tasks(tasks)
     add_train_loader_config_tasks(tasks)
     add_cvae_tasks(
@@ -2471,6 +2703,7 @@ def main() -> None:
     expected_failures: list[str] = []
     unexpected_passes: list[str] = []
 
+    # Run all tasks with progress bar
     with tqdm(
         total=len(tasks),
         desc="integration",
@@ -2491,11 +2724,13 @@ def main() -> None:
 
             progress.set_postfix_str(f"{suite}:{case_name[:60]}")
 
+            # Run baseline or training task
             if "runner" in task:
                 passed, error = run_baseline_task(task)
             else:
                 passed, error = run_training_task(task)
 
+            # Classify the result
             classify_result(
                 task=task,
                 passed=passed,
@@ -2525,6 +2760,7 @@ def main() -> None:
         unexpected_passes,
     )
 
+    # Check for failures
     if unexpected_failures or unexpected_passes:
         problems = []
 

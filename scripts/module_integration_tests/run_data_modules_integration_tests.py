@@ -27,6 +27,10 @@ import torch
 import yaml
 from tqdm import tqdm
 
+# Import different model architectures we support
+# MLPs (simple dense networks) and UNets (encoder-decoder with skip connections)
+# Each has two variants: CVAE (Conditional Variational AutoEncoder - probabilistic)
+# and deterministic (direct prediction)
 from cccma_ppp.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
 from cccma_ppp.architectures.mlp import (
     deterministic as _mlp_deterministic,  # noqa: F401
@@ -44,76 +48,116 @@ from cccma_ppp.loss import loss as _loss_pipeline  # noqa: F401
 from cccma_ppp.loss import utils_loss as _loss_utils  # noqa: F401
 from cccma_ppp.train.train_configs import TrainConfig, prepare_config
 
+# Suppress warnings during testing - we're checking structure, not debugging warnings
 warnings.filterwarnings("ignore")
 logging.raiseExceptions = False
 
 
+# Find the project root (documentation to audit)
 ROOT = Path("/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/scripts")
+# These are the "template" configs we use as starting points for each test
 BASE_TRAIN_CONFIG = ROOT / "integration_suite_train_config.yaml"
 BASE_INFERENCE_CONFIG = ROOT / "scripts" / "integration_suite_inference_config.yaml"
+# All results go here - one subdirectory per test case
 OUTPUT_DIR = ROOT / "../../output" / "data_modules_integration_test_results"
 
+# Make subdirectories for organizing test results
+# Each test case gets its own directory under CASES_DIR
 CASES_DIR = OUTPUT_DIR / "cases"
+# Summary CSV file listing all test results (one row per case)
 RESULTS_CSV = OUTPUT_DIR / "integration_results.csv"
+# Overall summary statistics from entire test run
 SUMMARY_PATH = OUTPUT_DIR / "summary.txt"
 
+# These are the required time dimensions for samples
+# init_time: when the forecast starts (e.g., 2020-01)
+# lead_time: how far ahead we're predicting (e.g., 3 months)
 INIT_TIME_DIM, LEAD_TIME_DIM = required_sample_dimensions
 
-
+# Paths to actual data files we'll use in external condition tests
+# tas_stdr is temperature standard deviation (a real external data source)
 TAS_STDR_PATH = Path(
     "/space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas_std/forecast_data"
 )
+# dummy_mask is a static spatial mask (same for all time steps)
 DUMMY_MASK_PATH = Path(
     "/space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/dummy_mask"
 )
 
+# Toggle flags to run different test suites
+# Set to False to skip a test category (useful for quick debugging!)
+RUN_DATA_CONFIG_COMBINATIONS = (
+    True  # Test 5 ways to combine model/condition/observation
+)
+RUN_DATASET_GETITEM_CASES = True  # Test dataset[index] contract
+RUN_TRAIN_DATALOADER_CASES = True  # Test different dataloader configs
+RUN_INFERENCE_DATALOADER_CASES = True  # Test that inference uses same data as training
+RUN_MULTIWORKER_CASES = True  # Test parallel data loading
+RUN_FUTURE_MASK_CASES = True  # Test that no future data leaks in
+RUN_OBSERVATION_CUTOFF_CASES = True  # Test observation availability filtering
+RUN_DISTRIBUTED_PREPROCESSOR_CASES = True  # Test rank-0 preprocessing setup
+RUN_EXTERNAL_CONDITION_CASES = True  # Test external data files (tas_stdr, mask)
+RUN_CHANNEL_PLOTS = True  # Create PNG visualizations of data
+RUN_RAW_DATA_EXPORT = True  # Export raw data to NetCDF
 
-RUN_DATA_CONFIG_COMBINATIONS = True
-RUN_DATASET_GETITEM_CASES = True
-RUN_TRAIN_DATALOADER_CASES = True
-RUN_INFERENCE_DATALOADER_CASES = True
-RUN_MULTIWORKER_CASES = True
-RUN_FUTURE_MASK_CASES = True
-RUN_OBSERVATION_CUTOFF_CASES = True
-RUN_DISTRIBUTED_PREPROCESSOR_CASES = True
-RUN_EXTERNAL_CONDITION_CASES = True
-RUN_CHANNEL_PLOTS = True
-
+# Limits on how many cases/batches to test (prevents tests from taking forever)
+# None means "test everything"
 MAX_CASES: int | None = None
+# Only iterate through first N batches per test case (saves time)
 MAX_BATCHES_PER_CASE = 4
+# Only plot first N channels (too many channels = too many PNGs)
 MAX_PLOT_CHANNELS = 16
+# Random seed for reproducible shuffling
 SHUFFLE_SEED = 1847
 
 
 class DataCombinationScenarios:
+    """
+    Different ways we can combine model, condition, and observation data.
+    Each scenario is a dict describing what data should be present and how it should behave.
+
+    Think of these as "data recipes":
+    - Some use model data as input to reconstruct model data (autoencoding)
+    - Some use model+condition to bias-correct observations
+    - Some use just model to bias-correct observations
+    """
+
+    # Valid time features we can add to samples
+    # These are derived from the temporal metadata (init_time, lead_time)
     VALID_TIME_FEATURES = {
-        INIT_TIME_DIM,
-        LEAD_TIME_DIM,
-        "month_sin",
-        "month_cos",
-        "day_sin",
-        "day_cos",
+        INIT_TIME_DIM,  # Absolute time when forecast starts
+        LEAD_TIME_DIM,  # Months ahead being predicted
+        "month_sin",  # Sinusoidal encoding of month (captures seasonality)
+        "month_cos",  # Cosine version for orthogonality
+        "day_sin",  # Day of year encoding
+        "day_cos",  # Cosine version
     }
+    # These are the default time features we use in most tests
     DEFAULT_TIME_FEATURES = [LEAD_TIME_DIM, "month_sin", "month_cos"]
+    # Default lead time range for testing (1-12 months = seasonal forecast)
     FULL_LEAD_MONTHS = {"start": 1, "end": 12}
 
+    # Scenario 1: Just take model data and try to reconstruct it (no condition needed)
+    # This tests: can the model learn to copy its own output?
     AUTOENCODE_MODEL_ONLY = {
         "name": "autoencode_model_conditioned_on_itself",
         "description": (
             "Autoencode model data: reconstruct model data conditioned on itself. "
             "Condition is sampled according to condition_method."
         ),
-        "model_present": True,
-        "condition_present": False,
-        "observation_present": False,
-        "condition_method_requirement": "MUST",
-        "condition_method": "ensemble_mean",
-        "model_ensemble_mean": True,
+        "model_present": True,  # We have model forecast data
+        "condition_present": False,  # No external condition
+        "observation_present": False,  # No observation to validate against
+        "condition_method_requirement": "MUST",  # We need a way to sample model data
+        "condition_method": "ensemble_mean",  # Use mean over ensemble members
+        "model_ensemble_mean": True,  # Average ensemble members for input
         "expected_input": "model data selected according to condition_method",
         "expected_target": "model data at sampled init_time, lead_time, and ensemble coords",
         "expected_result": "PASS",
     }
 
+    # Scenario 2: Use explicit condition data along with model data
+    # This tests: can we learn with an external condition?
     AUTOENCODE_MODEL_WITH_CONDITION = {
         "name": "autoencode_model_with_explicit_condition",
         "description": (
@@ -121,17 +165,19 @@ class DataCombinationScenarios:
             "Condition is sampled according to condition_method."
         ),
         "model_present": True,
-        "condition_present": True,
+        "condition_present": True,  # We have a separate condition data source
         "observation_present": False,
         "condition_method_requirement": "MUST",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": True,
-        "condition_ensemble_mean": True,
+        "condition_ensemble_mean": True,  # Average condition ensemble too
         "expected_input": "explicit condition data selected according to condition_method",
         "expected_target": "model data at sampled init_time, lead_time, and ensemble coords",
         "expected_result": "PASS",
     }
 
+    # Scenario 3: Bias correction - correct model+condition using observations
+    # This tests: can we learn a correction from model/condition to observations?
     BIAS_CORRECT_MODEL_AND_CONDITION = {
         "name": "bias_correct_model_and_condition_to_observation",
         "description": (
@@ -140,16 +186,18 @@ class DataCombinationScenarios:
         ),
         "model_present": True,
         "condition_present": True,
-        "observation_present": True,
+        "observation_present": True,  # We have observations to correct toward
         "condition_method_requirement": "MUST",
-        "condition_method": "same_member",
-        "model_ensemble_mean": False,
-        "condition_ensemble_mean": False,
+        "condition_method": "same_member",  # Match condition ensemble member to model
+        "model_ensemble_mean": False,  # Keep individual ensemble members
+        "condition_ensemble_mean": False,  # Keep individual ensemble members
         "expected_input": "model + condition data at compatible sample coordinates",
         "expected_target": "observation data at calculated valid time",
         "expected_result": "PASS",
     }
 
+    # Scenario 4: Bias correction - correct model using observations (with method)
+    # This tests: do we need a condition, or is model alone enough for bias correction?
     BIAS_CORRECT_MODEL_WITH_METHOD = {
         "name": "bias_correct_model_to_observation_with_method",
         "description": (
@@ -157,16 +205,18 @@ class DataCombinationScenarios:
             "Model sampling is determined by condition_method."
         ),
         "model_present": True,
-        "condition_present": False,
+        "condition_present": False,  # No explicit condition data
         "observation_present": True,
-        "condition_method_requirement": "OPTIONAL",
-        "condition_method": "ensemble_mean",
+        "condition_method_requirement": "OPTIONAL",  # May or may not use sampling method
+        "condition_method": "ensemble_mean",  # Average model ensemble
         "model_ensemble_mean": True,
         "expected_input": "model data selected according to condition_method",
         "expected_target": "observation data at calculated valid time",
         "expected_result": "PASS",
     }
 
+    # Scenario 5: Direct indexing - just grab model at specific indices and correct it
+    # This tests: what if we don't use any ensemble averaging?
     BIAS_CORRECT_MODEL_DIRECT = {
         "name": "bias_correct_model_to_observation_without_method",
         "description": (
@@ -177,8 +227,8 @@ class DataCombinationScenarios:
         "condition_present": False,
         "observation_present": True,
         "condition_method_requirement": "OPTIONAL",
-        "condition_method": None,
-        "model_ensemble_mean": False,
+        "condition_method": None,  # No sampling method
+        "model_ensemble_mean": False,  # Direct indexing, no averaging
         "expected_input": "model data at sampled init_time, lead_time, and ensemble coords",
         "expected_target": "observation data at calculated valid time",
         "expected_result": "PASS",
@@ -186,6 +236,7 @@ class DataCombinationScenarios:
 
     @classmethod
     def all(cls) -> list[dict[str, Any]]:
+        """Return all scenarios as a list"""
         return [
             cls.AUTOENCODE_MODEL_ONLY,
             cls.AUTOENCODE_MODEL_WITH_CONDITION,
@@ -196,24 +247,37 @@ class DataCombinationScenarios:
 
 
 class ExternalConditionScenarios:
+    """
+    Test cases for using external data as conditions (like temperature stddev, masks, etc)
+
+    These test whether we can load data from different file paths and combine it with
+    model/observation data. Important for real-world use cases where you might have:
+    - Static masks (same for all times)
+    - Auxiliary fields (temperature stddev, elevation, etc)
+    - Different ensemble structures in different files
+    """
+
+    # Using tas_stdr (temperature standard deviation) as condition data
+    # This is a real external data source without ensemble members
     TAS_STDR_CONDITION = {
         "name": "bias_correct_with_tas_stdr_condition",
         "description": "Use tas_stdr as a real-data condition without ensemble dimension.",
         "model_present": True,
         "condition_present": True,
         "observation_present": True,
-        "condition_kind": "tas_stdr",
-        "condition_path": str(TAS_STDR_PATH),
+        "condition_kind": "tas_stdr",  # Type of external data
+        "condition_path": str(TAS_STDR_PATH),  # Where to find it
         "condition_method_requirement": "MUST",
         "condition_method": "ensemble_mean",
         "model_ensemble_mean": False,
-        "condition_ensemble_mean": None,
-        "condition_has_ensemble": False,
+        "condition_ensemble_mean": None,  # tas_stdr has no ensemble dimension
+        "condition_has_ensemble": False,  # Important: this data has no ensemble axis
         "expected_input": "model data concatenated with ensemble-free tas_stdr condition",
         "expected_target": "observation data at calculated valid time",
         "expected_result": "PASS",
     }
 
+    # Using a static mask (same for all time steps) as additional condition
     STATIC_MASK_CONDITION = {
         "name": "bias_correct_with_static_dummy_mask",
         "description": "Use static dummy mask as an additional static condition.",
@@ -223,7 +287,7 @@ class ExternalConditionScenarios:
         "condition_kind": "static",
         "condition_path": str(DUMMY_MASK_PATH),
         "condition_method_requirement": "MUST",
-        "condition_method": "static",
+        "condition_method": "static",  # Static data, not time-varying
         "model_ensemble_mean": False,
         "condition_ensemble_mean": None,
         "condition_has_ensemble": False,
@@ -232,6 +296,7 @@ class ExternalConditionScenarios:
         "expected_result": "PASS",
     }
 
+    # tas_stdr but without any sampling method (direct time indexing)
     TAS_STDR_WITH_DIRECT_INDEXING = {
         "name": "bias_correct_with_tas_stdr_direct_indexing",
         "description": "Use tas_stdr without sampling method (direct time indexing).",
@@ -241,7 +306,7 @@ class ExternalConditionScenarios:
         "condition_kind": "tas_stdr",
         "condition_path": str(TAS_STDR_PATH),
         "condition_method_requirement": "OPTIONAL",
-        "condition_method": None,
+        "condition_method": None,  # No sampling method
         "model_ensemble_mean": False,
         "condition_ensemble_mean": None,
         "condition_has_ensemble": False,
@@ -250,6 +315,7 @@ class ExternalConditionScenarios:
         "expected_result": "PASS",
     }
 
+    # Static mask with ensemble model members
     DUMMY_MASK_WITH_ENSEMBLE_MODEL = {
         "name": "bias_correct_with_dummy_mask_ensemble_model",
         "description": "Use static mask with model ensemble mean for feature combination.",
@@ -260,7 +326,7 @@ class ExternalConditionScenarios:
         "condition_path": str(DUMMY_MASK_PATH),
         "condition_method_requirement": "MUST",
         "condition_method": "static",
-        "model_ensemble_mean": True,
+        "model_ensemble_mean": True,  # Average model ensemble
         "condition_ensemble_mean": None,
         "condition_has_ensemble": False,
         "expected_input": "model ensemble mean concatenated with static mask channel",
@@ -268,6 +334,7 @@ class ExternalConditionScenarios:
         "expected_result": "PASS",
     }
 
+    # Try to match ensemble members between tas_stdr and model
     TAS_STDR_SAME_MEMBER_METHOD = {
         "name": "bias_correct_with_tas_stdr_same_member",
         "description": "Use tas_stdr with member matching (if ensemble exists in data).",
@@ -277,7 +344,7 @@ class ExternalConditionScenarios:
         "condition_kind": "tas_stdr",
         "condition_path": str(TAS_STDR_PATH),
         "condition_method_requirement": "MUST",
-        "condition_method": "same_member",
+        "condition_method": "same_member",  # Try to match ensemble members
         "model_ensemble_mean": False,
         "condition_ensemble_mean": False,
         "condition_has_ensemble": False,
@@ -288,6 +355,7 @@ class ExternalConditionScenarios:
 
     @classmethod
     def all(cls) -> list[dict[str, Any]]:
+        """Return all external condition scenarios"""
         return [
             cls.TAS_STDR_CONDITION,
             cls.STATIC_MASK_CONDITION,
@@ -298,28 +366,42 @@ class ExternalConditionScenarios:
 
 
 class DataloaderScenarios:
+    """
+    Different ways to configure the dataloader for training
+    (batch size, shuffling, time features, workers, etc)
+
+    These test various dataloader configurations to make sure:
+    - Different year ranges work
+    - Time features are included correctly
+    - Multiple workers don't break anything
+    - Shuffling still gets all samples
+    """
+
+    # Simple case: just load a specific year range
     YEAR_SLICE_ONLY = {
         "name": "train_year_slice",
         "description": "Select exactly the configured training-year range and iterate fully.",
-        "year_slice": [1980, 1981],
-        "num_data_workers": 0,
-        "shuffle": False,
+        "year_slice": [1980, 1981],  # Test years 1980-1981
+        "num_data_workers": 0,  # Single worker
+        "shuffle": False,  # Deterministic order
         "time_features": deepcopy(DataCombinationScenarios.DEFAULT_TIME_FEATURES),
-        "check": "year_slice",
+        "check": "year_slice",  # What to validate
         "expected_result": "PASS",
     }
 
+    # Test with no time features (just spatial/ensemble data)
     NO_TIME_FEATURES = {
         "name": "train_time_features_none",
         "description": "Build batches without any additional time features.",
         "year_slice": [1980, 1981],
         "num_data_workers": 0,
         "shuffle": False,
-        "time_features": None,
+        "time_features": None,  # Empty list = no time features
         "check": "time_features",
         "expected_result": "PASS",
     }
 
+    # Test with ALL possible time features
     ALL_TIME_FEATURES = {
         "name": "train_time_features_all",
         "description": "Build batches with all supported time features.",
@@ -331,6 +413,7 @@ class DataloaderScenarios:
         "expected_result": "PASS",
     }
 
+    # Multiple workers loading data in parallel (no shuffling)
     MULTIWORKER_NO_SHUFFLE = {
         "name": "train_multiworker_no_shuffle",
         "description": (
@@ -338,13 +421,14 @@ class DataloaderScenarios:
             "when shuffling is disabled."
         ),
         "year_slice": [1980, 1981],
-        "num_data_workers": 2,
-        "shuffle": False,
+        "num_data_workers": 2,  # Two parallel workers
+        "shuffle": False,  # Deterministic = must get same samples in same order as single worker
         "time_features": deepcopy(DataCombinationScenarios.DEFAULT_TIME_FEATURES),
         "check": "multiworker",
         "expected_result": "PASS",
     }
 
+    # Multiple workers with shuffling enabled
     MULTIWORKER_WITH_SHUFFLE = {
         "name": "train_multiworker_shuffle",
         "description": (
@@ -353,7 +437,7 @@ class DataloaderScenarios:
         ),
         "year_slice": [1980, 1981],
         "num_data_workers": 2,
-        "shuffle": True,
+        "shuffle": True,  # Shuffled = must get same samples but different order
         "time_features": deepcopy(DataCombinationScenarios.DEFAULT_TIME_FEATURES),
         "check": "multiworker",
         "expected_result": "PASS",
@@ -361,6 +445,7 @@ class DataloaderScenarios:
 
     @classmethod
     def all(cls) -> list[dict[str, Any]]:
+        """Return all dataloader scenarios"""
         return [
             cls.YEAR_SLICE_ONLY,
             cls.NO_TIME_FEATURES,
@@ -371,6 +456,17 @@ class DataloaderScenarios:
 
 
 class TemporalMaskScenarios:
+    """
+    Test what happens when we have an observation cutoff date
+    (i.e., observations only available up to a certain time)
+
+    In real forecasting, observations are delayed. You might have model forecasts
+    for 2025 but observations only up to 2024. These tests check that we correctly
+    exclude samples where the target (observation) isn't available yet.
+    """
+
+    # Cutoff is before all the times we're trying to predict
+    # Expected: should return no valid samples (nothing to train on)
     BEFORE_REQUESTED_TIMES = {
         "name": "observation_cutoff_before_requested_times",
         "description": (
@@ -378,10 +474,12 @@ class TemporalMaskScenarios:
             "Should return no valid samples."
         ),
         "observation_cutoff_position": "before",
-        "expected_available": 0,
+        "expected_available": 0,  # Expect zero samples
         "expected_result": "PASS",
     }
 
+    # Cutoff falls somewhere in the middle of our time range
+    # Expected: should partially filter samples (some valid, some not)
     BETWEEN_REQUESTED_TIMES = {
         "name": "observation_cutoff_between_requested_times",
         "description": (
@@ -392,6 +490,8 @@ class TemporalMaskScenarios:
         "expected_result": "PASS",
     }
 
+    # Cutoff is after all times we're predicting (no filtering needed)
+    # Expected: should return all samples (observations available for everything)
     AFTER_REQUESTED_TIMES = {
         "name": "observation_cutoff_after_requested_times",
         "description": (
@@ -404,6 +504,7 @@ class TemporalMaskScenarios:
 
     @classmethod
     def all(cls) -> list[dict[str, Any]]:
+        """Return all temporal mask scenarios"""
         return [
             cls.BEFORE_REQUESTED_TIMES,
             cls.BETWEEN_REQUESTED_TIMES,
@@ -411,36 +512,40 @@ class TemporalMaskScenarios:
         ]
 
 
+# Columns we'll write to the CSV results file
+# This is a comprehensive record of each test's configuration and outcome
 CSV_COLUMNS = [
-    "timestamp",
-    "suite",
-    "case_name",
-    "description",
-    "model_present",
-    "condition_present",
-    "observation_present",
-    "condition_kind",
-    "condition_method_requirement",
-    "condition_method",
-    "model_ensemble_mean",
-    "condition_ensemble_mean",
-    "time_features",
-    "year_slice",
-    "num_data_workers",
-    "expected_input",
-    "expected_target",
-    "expected_result",
-    "expected_failure_reason",
-    "expected_error_pattern",
-    "case_dir",
-    "config_path",
-    "log_path",
-    "preprocessor_dir",
-    "plot_dir",
-    "result",
-    "error",
+    "timestamp",  # When did this test run
+    "suite",  # Which test suite (data_config_combination, dataloader, etc)
+    "case_name",  # Name of this specific test case
+    "description",  # Human description of what we're testing
+    "model_present",  # Did this test use model data?
+    "condition_present",  # Did this test use condition data?
+    "observation_present",  # Did this test use observation data?
+    "condition_kind",  # Type of condition (dynamic, static, tas_stdr, etc)
+    "condition_method_requirement",  # Was condition_method required/optional?
+    "condition_method",  # How did we sample condition (ensemble_mean, same_member, etc)
+    "model_ensemble_mean",  # Did we average model ensemble members?
+    "condition_ensemble_mean",  # Did we average condition ensemble members?
+    "time_features",  # Which time features did we include?
+    "year_slice",  # Which years did we test?
+    "num_data_workers",  # How many parallel workers?
+    "expected_input",  # What kind of input data was expected?
+    "expected_target",  # What kind of target data was expected?
+    "expected_result",  # Did we expect this test to PASS or FAIL?
+    "expected_failure_reason",  # If failure expected, why?
+    "expected_error_pattern",  # If failure expected, what error message pattern?
+    "case_dir",  # Output directory for this test
+    "config_path",  # Path to config.yaml used
+    "log_path",  # Path to case.log
+    "preprocessor_dir",  # Path to preprocessor artifacts
+    "plot_dir",  # Path to PNG plots
+    "result",  # Actual result (PASS or FAIL)
+    "error",  # If failed, the error message
 ]
 
+# Field names that typically contain file/directory paths
+# Used when replacing paths in configs for external data
 PATH_FIELD_NAMES = {
     "path",
     "paths",
@@ -457,6 +562,8 @@ PATH_FIELD_NAMES = {
     "glob_pattern",
 }
 
+# Field names related to ensemble members
+# Used when removing ensemble config if data doesn't have ensemble dimension
 ENSEMBLE_FIELD_NAMES = {
     "ensemble",
     "ensembles",
@@ -472,28 +579,55 @@ ENSEMBLE_FIELD_NAMES = {
 
 
 def clean_name(value: Any) -> str:
+    """
+    Convert any value to a filesystem-safe name.
+    Removes special characters that might cause issues in file paths.
+    Example: "autoencode_model_conditioned_on_itself" -> "autoencode_model_conditioned_on_itself"
+             "condition=ensemble_mean" -> "condition_ensemble_mean"
+    """
     value = str(value).replace("None", "none")
+    # Replace special chars with underscore (keep alphanumeric, dash, dot only)
     value = re.sub(r"[^A-Za-z0-9_.-]+", "_", value)
+    # Remove duplicate underscores
     value = re.sub(r"_+", "_", value)
     return value.strip("_")
 
 
 def case_paths(case_name: str) -> dict[str, Path]:
+    """
+    Generate all the paths we need for a single test case.
+    Makes it easy to keep all files organized without hardcoding paths everywhere.
+    Returns a dict like:
+    {
+        'case_dir': Path/to/case_dir,
+        'config_path': Path/to/config.yaml,
+        'log_path': Path/to/case.log,
+        'plot_dir': Path/to/plots,
+        'raw_data_dir': Path/to/raw_data,
+        ...
+    }
+    """
     case_dir = CASES_DIR / clean_name(case_name)
     return {
         "case_dir": case_dir,
-        "config_path": case_dir / "config.yaml",
-        "log_path": case_dir / "case.log",
-        "preprocessor_dir": case_dir / "preprocessing_pipeline",
-        "plot_dir": case_dir / "plots",
-        "metadata_path": case_dir / "batch_metadata.json",
+        "config_path": case_dir / "config.yaml",  # The config used for this test
+        "log_path": case_dir / "case.log",  # Stdout/stderr from test execution
+        "preprocessor_dir": case_dir / "preprocessing_pipeline",  # Fitted preprocessors
+        "plot_dir": case_dir / "plots",  # PNG visualizations
+        "metadata_path": case_dir / "batch_metadata.json",  # Temporal info
+        "raw_data_dir": case_dir / "raw_data",  # NetCDF + summary stats
     }
 
 
 def prepare_output_directories() -> None:
+    """
+    Create output directories and clean up old ones.
+    Ensures we start fresh and don't have stale files from previous runs.
+    """
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     CASES_DIR.mkdir(parents=True, exist_ok=True)
 
+    # Remove old directories that are no longer used (legacy cleanup)
     obsolete = [
         OUTPUT_DIR / "_generated_configs",
         OUTPUT_DIR / "_logs",
@@ -506,10 +640,19 @@ def prepare_output_directories() -> None:
 
 
 def serialize_json(value: Any) -> str:
+    """
+    Convert anything to a JSON string.
+    Used for storing complex config dicts as CSV cell values.
+    Example: [1980, 1981] -> "[1980, 1981]"
+    """
     return json.dumps(value, sort_keys=True, default=str)
 
 
 def init_csv() -> None:
+    """
+    Create the CSV file with headers.
+    Called once at the start of the test run to set up the results file.
+    """
     prepare_output_directories()
     with RESULTS_CSV.open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(
@@ -525,6 +668,10 @@ def log_result(
     passed: bool,
     error: str,
 ) -> None:
+    """
+    Write one test result row to the CSV file.
+    Called after each test to record whether it passed/failed and why.
+    """
     params = task["params"]
     row = {
         "timestamp": datetime.now().isoformat(),
@@ -564,6 +711,11 @@ def log_result(
 
 
 def normalize_nullable_fields(cfg: dict[str, Any]) -> dict[str, Any]:
+    """
+    Clean up config by removing None values where they shouldn't be.
+    Some fields should be explicit about being None, others should just be absent.
+    This enforces that convention.
+    """
     loader_cfg = cfg.setdefault("train_loader", {})
     dataset_cfg = loader_cfg.setdefault("dataset_config", {})
 
@@ -572,12 +724,15 @@ def normalize_nullable_fields(cfg: dict[str, Any]) -> dict[str, Any]:
             "time_features moved to train_loader level, not dataset_config"
         )
 
+    # Remove None time_features if they exist (just pop it, don't set it)
     loader_cfg.pop("time_features", None) if loader_cfg.get(
         "time_features"
     ) is None else None
+    # Remove None condition_method (we'll omit it from the config entirely)
     dataset_cfg.pop("condition_method", None) if dataset_cfg.get(
         "condition_method"
     ) is None else None
+    # Remove None lead_times
     dataset_cfg.pop("lead_times", None) if dataset_cfg.get(
         "lead_times"
     ) is None else None
@@ -586,6 +741,14 @@ def normalize_nullable_fields(cfg: dict[str, Any]) -> dict[str, Any]:
 
 
 def validate_generated_config(cfg: dict[str, Any]) -> dict[str, Any]:
+    """
+    Check that the config is valid before using it.
+    Catches common mistakes early rather than failing mysteriously during test execution.
+    Examples:
+    - time_features at wrong nesting level
+    - Missing required fields (like model config)
+    - Invalid num_data_workers
+    """
     train_loader_cfg = cfg.get("train_loader")
     if not isinstance(train_loader_cfg, dict):
         raise ValueError("train_loader must be a mapping")
@@ -594,16 +757,20 @@ def validate_generated_config(cfg: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(dataset_cfg, dict):
         raise ValueError("train_loader.dataset_config must be a mapping")
 
+    # Runtime-only arguments shouldn't be in saved config
+    # (they're added at test time, not in config file)
     runtime_loader_arguments = {"shuffle", "return_metadata", "return_spatial_mask"}
     misplaced = runtime_loader_arguments & set(train_loader_cfg)
     if misplaced:
         raise ValueError(f"Runtime arguments in config: {sorted(misplaced)}")
 
+    # time_features must be at train_loader level, not dataset level
     if "time_features" in dataset_cfg:
         raise ValueError(
             "time_features must be in train_loader, not train_loader.dataset_config"
         )
 
+    # Validate time_features if present
     time_features = train_loader_cfg.get("time_features")
     if time_features is not None:
         if not isinstance(time_features, list):
@@ -612,9 +779,11 @@ def validate_generated_config(cfg: dict[str, Any]) -> dict[str, Any]:
         if unsupported:
             raise ValueError(f"Unsupported time_features: {sorted(unsupported)}")
 
+    # Model config is always required
     if "model" not in dataset_cfg:
         raise ValueError("dataset_config.model is required")
 
+    # Validate num_data_workers setting
     num_data_workers = train_loader_cfg.get("num_data_workers", 0)
     if (
         isinstance(num_data_workers, bool)
@@ -623,6 +792,7 @@ def validate_generated_config(cfg: dict[str, Any]) -> dict[str, Any]:
     ):
         raise ValueError("num_data_workers must be a non-negative integer")
 
+    # Can't prefetch if we're using single worker (doesn't make sense)
     if num_data_workers == 0 and train_loader_cfg.get("prefetch_factor") is not None:
         raise ValueError("prefetch_factor must be null when num_data_workers=0")
 
@@ -630,6 +800,10 @@ def validate_generated_config(cfg: dict[str, Any]) -> dict[str, Any]:
 
 
 def write_yaml(cfg: dict[str, Any], output_path: Path) -> Path:
+    """
+    Write a config dict to a YAML file.
+    Saves the generated config so we can review exactly what was tested.
+    """
     cfg = deepcopy(cfg)
     normalize_nullable_fields(cfg)
     validate_generated_config(cfg)
@@ -641,6 +815,10 @@ def write_yaml(cfg: dict[str, Any], output_path: Path) -> Path:
 
 
 def base_config() -> dict[str, Any]:
+    """
+    Load and prepare the base training config.
+    This is a template config we modify for each test case.
+    """
     cfg = prepare_config(BASE_TRAIN_CONFIG)
     if cfg is None:
         raise ValueError(f"Base config is empty: {BASE_TRAIN_CONFIG}")
@@ -657,12 +835,16 @@ def base_config() -> dict[str, Any]:
     if "time_features" in dataset_cfg:
         raise ValueError("Move time_features to train_loader level")
 
-    train_loader_cfg["batch_size"] = 2
-    train_loader_cfg["num_data_workers"] = 0
-    train_loader_cfg["num_validation_years"] = 0
-    train_loader_cfg["train_years_slice"] = [1980, 1981]
-    train_loader_cfg["load"] = False
+    # Set up default values for testing (small batch, single worker, quick run)
+    train_loader_cfg["batch_size"] = 2  # Small batch for quick testing
+    train_loader_cfg["num_data_workers"] = 0  # Single worker by default
+    train_loader_cfg["num_validation_years"] = (
+        0  # No validation set for integration test
+    )
+    train_loader_cfg["train_years_slice"] = [1980, 1981]  # Just 2 years for speed
+    train_loader_cfg["load"] = False  # Don't load old checkpoints
 
+    # Remove runtime-only arguments (added at test time, not in config)
     for key in ["shuffle", "return_metadata", "return_spatial_mask", "prefetch_factor"]:
         train_loader_cfg.pop(key, None)
 
@@ -672,6 +854,10 @@ def base_config() -> dict[str, Any]:
 
 
 def load_train_config(config_path: Path) -> TrainConfig:
+    """
+    Load and parse a training config file.
+    Returns a TrainConfig dataclass that we can use to build loaders.
+    """
     data = prepare_config(config_path)
     if data is None:
         raise ValueError(f"Config is empty: {config_path}")
@@ -679,6 +865,7 @@ def load_train_config(config_path: Path) -> TrainConfig:
     normalize_nullable_fields(data)
     validate_generated_config(data)
 
+    # Convert dict to TrainConfig dataclass
     return dacite.from_dict(
         data_class=TrainConfig,
         data=data,
@@ -687,17 +874,26 @@ def load_train_config(config_path: Path) -> TrainConfig:
 
 
 def replace_data_path(value: Any, new_path: str) -> tuple[Any, int]:
+    """
+    Recursively find all path-like fields in a dict/list and replace their values.
+    Used when we want to point config at a different data source.
+    Returns (modified_value, number_of_replacements_made).
+    Example: if config has {"data_path": "/old/path"}, returns ({"data_path": "/new/path"}, 1)
+    """
     replaced = 0
 
     if isinstance(value, dict):
         result = {}
         for key, child in value.items():
+            # Check if key looks like a path field
             if str(key).lower() in PATH_FIELD_NAMES or str(key).lower().endswith(
                 ("_path", "_paths", "_directory", "_file", "_files")
             ):
+                # Replace with new path (keep as list if it was a list)
                 result[key] = [new_path] if isinstance(child, list) else new_path
                 replaced += 1
             else:
+                # Recurse into child value
                 result[key], child_replaced = replace_data_path(child, new_path)
                 replaced += child_replaced
         return result, replaced
@@ -710,14 +906,22 @@ def replace_data_path(value: Any, new_path: str) -> tuple[Any, int]:
             replaced += child_replaced
         return result, replaced
 
+    # Base case: not a dict or list, return as-is
     return deepcopy(value), 0
 
 
 def remove_ensemble_configuration(value: Any) -> Any:
+    """
+    Recursively remove any ensemble-related config fields.
+    Useful when testing with data that doesn't have ensemble members.
+    Example: if config has {"ensemble_mean": True, "members": 10},
+    this removes both fields so the dataloader knows to not expect ensemble dimension.
+    """
     if isinstance(value, dict):
         return {
             key: remove_ensemble_configuration(child)
             for key, child in value.items()
+            # Skip ensemble-related keys
             if str(key).lower() not in ENSEMBLE_FIELD_NAMES
         }
     if isinstance(value, list):
@@ -728,12 +932,19 @@ def remove_ensemble_configuration(value: Any) -> Any:
 def apply_data_combination(
     cfg: dict[str, Any], params: dict[str, Any]
 ) -> dict[str, Any]:
+    """
+    Modify the base config to set up a specific data combination scenario.
+    This includes setting up model, condition, observation data configs.
+    We take a generic base config and customize it for this specific test.
+    """
     train_loader_cfg = cfg["train_loader"]
     dataset_cfg = train_loader_cfg["dataset_config"]
 
+    # Model is always required
     if not params.get("model_present", True):
         raise ValueError("Model data is required")
 
+    # Set up model config
     if "model_config_override" in params:
         dataset_cfg["model"] = deepcopy(params["model_config_override"])
 
@@ -741,10 +952,12 @@ def apply_data_combination(
     if "model_ensemble_mean" in params:
         model_cfg["ensemble_mean"] = params["model_ensemble_mean"]
 
+    # Set up condition config (if needed)
     if params.get("condition_present", False):
         if "condition_config_override" in params:
             condition_cfg = deepcopy(params["condition_config_override"])
         elif params.get("condition_path"):
+            # Build condition config from external data path
             source_cfg = dataset_cfg.get("condition", model_cfg)
             condition_cfg = build_external_condition_config(
                 source_cfg,
@@ -753,6 +966,7 @@ def apply_data_combination(
                 condition_kind=params.get("condition_kind", "dynamic"),
             )
         else:
+            # Use default condition config (usually a copy of model config)
             condition_cfg = deepcopy(dataset_cfg.get("condition", model_cfg))
 
         if params.get("condition_ensemble_mean") is not None:
@@ -760,8 +974,10 @@ def apply_data_combination(
 
         dataset_cfg["condition"] = condition_cfg
     else:
+        # Remove condition config if not needed for this test
         dataset_cfg.pop("condition", None)
 
+    # Set up observation config (if needed)
     if params.get("observation_present", False):
         if "observation_config_override" in params:
             dataset_cfg["observation"] = deepcopy(params["observation_config_override"])
@@ -770,29 +986,35 @@ def apply_data_combination(
                 "observation_present=True but no observation in base config"
             )
     else:
+        # Remove observation config if not needed
         dataset_cfg.pop("observation", None)
 
+    # Set condition_method (how to sample ensemble members, etc)
     condition_method = params.get("condition_method")
     if condition_method is None:
-        dataset_cfg.pop("condition_method", None)
+        dataset_cfg.pop("condition_method", None)  # Remove if None
     else:
         dataset_cfg["condition_method"] = condition_method
 
+    # Set time features (month_sin, month_cos, lead_time, etc)
     if "time_features" in params:
         if params["time_features"] is None:
             train_loader_cfg.pop("time_features", None)
         else:
             train_loader_cfg["time_features"] = deepcopy(params["time_features"])
 
+    # Set year slice for training data
     if "year_slice" in params:
         train_loader_cfg["train_years_slice"] = deepcopy(params["year_slice"])
 
+    # Set lead time range (1-12 months, etc)
     if "lead_months" in params:
         if params["lead_months"] is None:
             dataset_cfg.pop("lead_times", None)
         else:
             dataset_cfg["lead_times"] = deepcopy(params["lead_months"])
 
+    # Set number of parallel data loading workers
     if "num_data_workers" in params:
         num_data_workers = params["num_data_workers"]
         if (
@@ -803,12 +1025,14 @@ def apply_data_combination(
             raise ValueError("num_data_workers must be non-negative integer")
         train_loader_cfg["num_data_workers"] = num_data_workers
 
+    # Handle prefetch_factor (only makes sense with multiple workers)
     num_data_workers = train_loader_cfg.get("num_data_workers", 0)
     if num_data_workers == 0:
         train_loader_cfg.pop("prefetch_factor", None)
     else:
         train_loader_cfg.setdefault("prefetch_factor", 2)
 
+    # Remove runtime-only arguments
     for key in ["shuffle", "return_metadata", "return_spatial_mask"]:
         train_loader_cfg.pop(key, None)
 
@@ -824,15 +1048,22 @@ def build_external_condition_config(
     has_ensemble: bool,
     condition_kind: str,
 ) -> dict[str, Any]:
+    """
+    Build a condition config for external data (e.g., from a different file path).
+    Takes a source config and modifies it to point to external data.
+    """
     condition_cfg = deepcopy(source_cfg)
+    # Replace data paths with the external path
     condition_cfg, replacements = replace_data_path(condition_cfg, path)
 
     if replacements == 0:
         raise ValueError("No path-like fields found in condition config")
 
+    # Remove ensemble config if the external data doesn't have ensemble members
     if not has_ensemble:
         condition_cfg = remove_ensemble_configuration(condition_cfg)
 
+    # For static data, remove time-related config (same mask for all times)
     if condition_kind == "static":
         for key in [
             "lead_times",
@@ -848,7 +1079,12 @@ def build_external_condition_config(
 
 
 def cleanup_logging_handlers() -> None:
+    """
+    Close all active logging handlers to prevent resource leaks.
+    Important in multi-task scenarios where we create many loggers.
+    """
     logger_names = ["", "training", "inference"]
+    # Get all loggers that start with our package name
     logger_names.extend(
         name
         for name in logging.Logger.manager.loggerDict
@@ -871,11 +1107,16 @@ def cleanup_logging_handlers() -> None:
 
 
 def run_silenced(function: Callable[[], Any], log_path: Path) -> Any:
+    """
+    Run a function and capture all stdout/stderr to a log file.
+    This keeps test output from cluttering the console while still preserving it.
+    """
     log_path.parent.mkdir(parents=True, exist_ok=True)
     cleanup_logging_handlers()
 
     with log_path.open("w", encoding="utf-8") as log_file:
         try:
+            # Redirect stdout and stderr to log file
             with redirect_stdout(log_file), redirect_stderr(log_file):
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
@@ -885,12 +1126,17 @@ def run_silenced(function: Callable[[], Any], log_path: Path) -> Any:
 
 
 def append_exception_to_log(log_path: Path) -> None:
+    """Append the current exception traceback to a log file"""
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("a", encoding="utf-8") as file:
         traceback.print_exc(file=file)
 
 
 def configure_runtime_context(config_path: Path) -> Path:
+    """
+    Set up runtime environment for running a test (sets global experiment directory).
+    The RuntimeContext is used by the training code to know where to save artifacts.
+    """
     case_dir = Path(config_path).resolve().parent
     case_dir.mkdir(parents=True, exist_ok=True)
     RuntimeContext.GLOBAL_EXP_DIR = str(case_dir)
@@ -898,10 +1144,16 @@ def configure_runtime_context(config_path: Path) -> Path:
 
 
 def reset_runtime_context() -> None:
+    """Clear runtime context after test completes"""
     RuntimeContext.GLOBAL_EXP_DIR = None
 
 
 def call_with_supported_arguments(function: Callable[..., Any], **kwargs: Any) -> Any:
+    """
+    Call a function but only pass kwargs that it actually accepts.
+    Useful for calling functions with different signatures
+    (e.g., some versions have 'distributed', others don't).
+    """
     signature = inspect.signature(function)
     supported = {
         name: value for name, value in kwargs.items() if name in signature.parameters
@@ -917,14 +1169,20 @@ def setup_loader(
     return_spatial_mask: bool = True,
     shuffle: bool = False,
 ) -> Any:
+    """
+    Set up and return a data loader for the given config.
+    This initializes distributed setup and builds the actual dataloader.
+    """
     configure_runtime_context(config_path)
     distributed = Distributed.get_instance()
 
+    # Initialize distributed training setup (if multi-GPU)
     call_with_supported_arguments(
         config.train_loader.setup_distributed,
         distributed=distributed,
     )
 
+    # Build and return the actual loader
     return call_with_supported_arguments(
         config.train_loader.build_train_loader,
         return_metadata=return_metadata,
@@ -934,6 +1192,11 @@ def setup_loader(
 
 
 class LimitedLoader:
+    """
+    Wrapper that limits how many batches we iterate through.
+    Saves time during testing by not iterating through entire dataset.
+    """
+
     def __init__(self, loader: Any, max_batches: int | None) -> None:
         self._loader = loader
         self._max_batches = max_batches
@@ -949,20 +1212,28 @@ class LimitedLoader:
         return length if self._max_batches is None else min(length, self._max_batches)
 
     def __getattr__(self, name: str) -> Any:
+        # Delegate unknown attributes to wrapped loader
         return getattr(self._loader, name)
 
 
 def sample_get(sample: Any, name: str) -> Any:
+    """
+    Get a field from a sample (works with both dict and object with attributes).
+    Some dataloaders return dicts, some return objects with attributes.
+    This works with both to be flexible.
+    """
     if isinstance(sample, dict):
         return sample.get(name)
     return getattr(sample, name, None)
 
 
 def extract_metadata(batch: Any) -> Any:
+    """Get metadata from a batch"""
     return sample_get(batch, "metadata")
 
 
 def value_is_batched(value: Any) -> bool:
+    """Check if a value is batched (multiple samples) vs scalar"""
     if isinstance(value, str):
         return False
     if isinstance(value, torch.Tensor):
@@ -973,6 +1244,7 @@ def value_is_batched(value: Any) -> bool:
 
 
 def value_length(value: Any) -> int | None:
+    """Get the batch size of a value (None if not batched)"""
     if not value_is_batched(value):
         return None
     try:
@@ -982,10 +1254,12 @@ def value_length(value: Any) -> int | None:
 
 
 def index_value(value: Any, index: int) -> Any:
+    """Extract one sample from a batched value"""
     if not value_is_batched(value):
         return value
 
     indexed = value[index]
+    # Convert 0-d tensors/arrays to scalars
     if isinstance(indexed, torch.Tensor) and indexed.ndim == 0:
         return indexed.item()
     if isinstance(indexed, np.ndarray) and indexed.ndim == 0:
@@ -994,6 +1268,11 @@ def index_value(value: Any, index: int) -> Any:
 
 
 def flatten_metadata(metadata: Any) -> list:
+    """
+    Convert metadata from various formats into a list of dicts.
+    If metadata is batched (dict with array values), separate it into per-sample dicts.
+    This normalizes different ways the dataloader might return metadata.
+    """
     if metadata is None:
         return []
     if isinstance(metadata, list):
@@ -1001,6 +1280,7 @@ def flatten_metadata(metadata: Any) -> list:
     if isinstance(metadata, tuple):
         return list(metadata)
     if isinstance(metadata, dict):
+        # Check if any values are batched
         lengths = [
             length
             for value in metadata.values()
@@ -1008,11 +1288,14 @@ def flatten_metadata(metadata: Any) -> list:
         ]
 
         if not lengths:
+            # No batched values, return as single-item list
             return [metadata]
 
+        # All batched values should have same length
         if len(set(lengths)) != 1:
             raise AssertionError(f"Inconsistent metadata field lengths: {lengths}")
 
+        # Separate batched metadata into per-sample dicts
         count = lengths[0]
         return [
             {key: index_value(value, i) for key, value in metadata.items()}
@@ -1023,6 +1306,7 @@ def flatten_metadata(metadata: Any) -> list:
 
 
 def scalar_value(value: Any) -> Any:
+    """Convert tensors/arrays to Python scalars"""
     if isinstance(value, torch.Tensor):
         if value.numel() != 1:
             return value.detach().cpu().tolist()
@@ -1037,9 +1321,15 @@ def scalar_value(value: Any) -> Any:
 
 
 def canonical_value(value: Any) -> Any:
+    """
+    Recursively convert values to canonical form for comparison.
+    Converts tensors to lists, dicts to sorted dicts, etc.
+    Useful for comparing whether two samples are the same.
+    """
     value = scalar_value(value)
 
     if isinstance(value, dict):
+        # Sort keys for consistent comparison
         return {
             str(key): canonical_value(child)
             for key, child in sorted(value.items(), key=lambda pair: str(pair[0]))
@@ -1060,6 +1350,10 @@ def canonical_value(value: Any) -> Any:
 
 
 def canonical_sample_key(item: Any) -> str:
+    """
+    Generate a canonical key for a sample (used for detecting duplicates).
+    Converts to JSON so different representations of same data produce same key.
+    """
     if isinstance(item, dict):
         value = item
     elif hasattr(item, "__dict__"):
@@ -1071,6 +1365,7 @@ def canonical_sample_key(item: Any) -> str:
 
 
 def assert_tensor(name: str, value: Any) -> None:
+    """Check that a value is a valid tensor (not empty, all finite values)"""
     if not isinstance(value, torch.Tensor):
         raise AssertionError(f"{name} is not a tensor: {type(value).__name__}")
     if value.numel() == 0:
@@ -1080,6 +1375,7 @@ def assert_tensor(name: str, value: Any) -> None:
 
 
 def collect_loader_metadata(loader: Any, max_batches: int | None = None) -> list:
+    """Iterate through loader and collect all metadata from all batches"""
     items = []
     for index, batch in enumerate(loader):
         if max_batches is not None and index >= max_batches:
@@ -1090,6 +1386,7 @@ def collect_loader_metadata(loader: Any, max_batches: int | None = None) -> list
 
 
 def save_metadata(metadata: list[Any], output_path: Path) -> None:
+    """Save metadata list to a JSON file"""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as file:
         json.dump(
@@ -1097,13 +1394,283 @@ def save_metadata(metadata: list[Any], output_path: Path) -> None:
         )
 
 
+def export_batch_to_netcdf(
+    batch: Any,
+    *,
+    output_path: Path,
+    metadata: list[Any],
+    batch_index: int,
+) -> None:
+    """
+    Export batch data to NetCDF format.
+    """
+    try:
+        import xarray as xr
+    except ImportError:
+        print("Warning: xarray not installed, skipping NetCDF export")
+        return
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Extract tensors from batch
+    input_data = sample_get(batch, "input")
+    target_data = sample_get(batch, "target")
+    added_features = sample_get(batch, "added_features")
+
+    if input_data is None or target_data is None:
+        raise ValueError("Batch missing input or target data")
+
+    # Convert to numpy (remove from GPU if needed)
+    input_np = (
+        input_data.detach().cpu().numpy()
+        if isinstance(input_data, torch.Tensor)
+        else np.array(input_data)
+    )
+    target_np = (
+        target_data.detach().cpu().numpy()
+        if isinstance(target_data, torch.Tensor)
+        else np.array(target_data)
+    )
+
+    features_np = None
+    if added_features is not None:
+        features_np = (
+            added_features.detach().cpu().numpy()
+            if isinstance(added_features, torch.Tensor)
+            else np.array(added_features)
+        )
+
+    # Build data variables (what actually gets saved)
+    data_vars = {}
+
+    # Input shape: (batch, channels, height, width) or similar
+    # We need to figure out what dimensions it has
+    if input_np.ndim == 4:
+        data_vars["input"] = (["sample", "channel", "x", "y"], input_np)
+    elif input_np.ndim == 3:
+        data_vars["input"] = (["sample", "channel", "space"], input_np)
+    elif input_np.ndim == 2:
+        data_vars["input"] = (["sample", "feature"], input_np)
+    else:
+        data_vars["input"] = (["sample"], input_np)
+
+    # Target shape
+    if target_np.ndim == 4:
+        data_vars["target"] = (["sample", "channel", "x", "y"], target_np)
+    elif target_np.ndim == 3:
+        data_vars["target"] = (["sample", "channel", "space"], target_np)
+    elif target_np.ndim == 2:
+        data_vars["target"] = (["sample", "feature"], target_np)
+    else:
+        data_vars["target"] = (["sample"], target_np)
+
+    # Added features (time features, etc)
+    if features_np is not None:
+        if features_np.ndim == 2:
+            data_vars["added_features"] = (["sample", "feature"], features_np)
+        else:
+            data_vars["added_features"] = (["sample"], features_np)
+
+    # Create coordinates from metadata (init_time, lead_time, etc)
+    # These become the "index" dimensions that label each sample
+    coords = {}
+    if metadata:
+        # Extract all metadata keys that should become coordinates
+        for key in ["init_time", INIT_TIME_DIM, "lead_time", LEAD_TIME_DIM]:
+            values = [
+                (item.get(key) if isinstance(item, dict) else getattr(item, key, None))
+                for item in metadata
+            ]
+            if values and any(v is not None for v in values):
+                # Convert to string for NetCDF compatibility
+                coords[key] = ("sample", [str(v) for v in values])
+
+    # Create xarray Dataset (this is the main data container)
+    ds = xr.Dataset(data_vars=data_vars, coords=coords)
+
+    # Add attributes (metadata about the dataset - not dimension-specific)
+    ds.attrs["batch_index"] = batch_index
+    ds.attrs["batch_size"] = len(metadata) if metadata else input_np.shape[0]
+    ds.attrs["description"] = (
+        "Batch export from data_modules integration testing. "
+        "Input: model/condition data. Target: observation data. "
+        "Open with: import xarray as xr; ds = xr.open_dataset(filename)"
+    )
+
+    # Save to NetCDF (try netcdf4 engine first, fallback to scipy)
+    try:
+        ds.to_netcdf(output_path, engine="netcdf4", unlimited_dims=["sample"])
+    except Exception:
+        try:
+            ds.to_netcdf(output_path, engine="scipy")
+        except Exception as exc:
+            print(f"Failed to save NetCDF: {exc}")
+
+
+def create_data_summary_report(
+    batch: Any,
+    *,
+    output_path: Path,
+    metadata: list[Any],
+) -> None:
+    """
+    Create human-readable summary of batch statistics.
+    """
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with output_path.open("w", encoding="utf-8") as file:
+        file.write("=" * 88 + "\n")
+        file.write("DATA BATCH SUMMARY STATISTICS\n")
+        file.write("=" * 88 + "\n\n")
+
+        # INPUT STATISTICS
+        input_data = sample_get(batch, "input")
+        if input_data is not None:
+            inp = (
+                input_data.detach().cpu().numpy()
+                if isinstance(input_data, torch.Tensor)
+                else np.array(input_data)
+            )
+            file.write("INPUT DATA\n")
+            file.write("-" * 88 + "\n")
+            file.write(f"  Shape: {inp.shape}\n")
+            file.write(f"  Min:   {float(np.nanmin(inp)):.6f}\n")
+            file.write(f"  Max:   {float(np.nanmax(inp)):.6f}\n")
+            file.write(f"  Mean:  {float(np.nanmean(inp)):.6f}\n")
+            file.write(f"  Std:   {float(np.nanstd(inp)):.6f}\n")
+            file.write(f"  NaN count: {int(np.isnan(inp).sum())} / {inp.size}\n")
+            file.write(f"  Inf count: {int(np.isinf(inp).sum())} / {inp.size}\n")
+            file.write("\n")
+
+        # TARGET STATISTICS
+        target_data = sample_get(batch, "target")
+        if target_data is not None:
+            tgt = (
+                target_data.detach().cpu().numpy()
+                if isinstance(target_data, torch.Tensor)
+                else np.array(target_data)
+            )
+            file.write("TARGET DATA\n")
+            file.write("-" * 88 + "\n")
+            file.write(f"  Shape: {tgt.shape}\n")
+            file.write(f"  Min:   {float(np.nanmin(tgt)):.6f}\n")
+            file.write(f"  Max:   {float(np.nanmax(tgt)):.6f}\n")
+            file.write(f"  Mean:  {float(np.nanmean(tgt)):.6f}\n")
+            file.write(f"  Std:   {float(np.nanstd(tgt)):.6f}\n")
+            file.write(f"  NaN count: {int(np.isnan(tgt).sum())} / {tgt.size}\n")
+            file.write(f"  Inf count: {int(np.isinf(tgt).sum())} / {tgt.size}\n")
+            file.write("\n")
+
+        # INPUT vs TARGET COMPARISON
+        # (useful for bias correction checks - is model consistently too high/low?)
+        if input_data is not None and target_data is not None:
+            file.write("INPUT vs TARGET COMPARISON\n")
+            file.write("-" * 88 + "\n")
+            input_mean = float(np.nanmean(inp))
+            target_mean = float(np.nanmean(tgt))
+            file.write(f"  Input mean:  {input_mean:.6f}\n")
+            file.write(f"  Target mean: {target_mean:.6f}\n")
+            file.write(f"  Difference:  {abs(input_mean - target_mean):.6f}\n")
+            file.write(f"  Bias (input - target): {(input_mean - target_mean):.6f}\n")
+            file.write("\n")
+
+        # METADATA SUMMARY
+        if metadata:
+            file.write("METADATA SUMMARY\n")
+            file.write("-" * 88 + "\n")
+            file.write(f"  Samples: {len(metadata)}\n")
+
+            # Extract init_times and lead_times if present
+            init_times = [
+                (
+                    item.get(INIT_TIME_DIM)
+                    if isinstance(item, dict)
+                    else getattr(item, INIT_TIME_DIM, None)
+                )
+                for item in metadata
+            ]
+            lead_times = [
+                (
+                    item.get(LEAD_TIME_DIM)
+                    if isinstance(item, dict)
+                    else getattr(item, LEAD_TIME_DIM, None)
+                )
+                for item in metadata
+            ]
+
+            if any(t is not None for t in init_times):
+                init_times_clean = [t for t in init_times if t is not None]
+                file.write(f"  Init times (first 5): {init_times_clean[:5]}\n")
+
+            if any(t is not None for t in lead_times):
+                lead_times_clean = [t for t in lead_times if t is not None]
+                file.write(f"  Lead times (first 5): {lead_times_clean[:5]}\n")
+
+            file.write("\n")
+
+        file.write("CLIMATE SANITY CHECKS\n")
+        file.write("-" * 88 + "\n")
+
+        if input_data is not None:
+            inp_min = float(np.nanmin(inp))
+            inp_max = float(np.nanmax(inp))
+
+            # Temperature range check (assuming Celsius)
+            if -60 <= inp_min <= 60 and -60 <= inp_max <= 60:
+                file.write("  Input range looks reasonable for temperature\n")
+            else:
+                file.write(
+                    f"  ⚠ WARNING: Input range [{inp_min:.1f}, {inp_max:.1f}] "
+                    "may be unrealistic for temperature (-60°C to 60°C expected)\n"
+                )
+
+            # Variance check (constant data is suspicious)
+            inp_std = float(np.nanstd(inp))
+            if inp_std < 0.001:
+                file.write(
+                    f"  ⚠ WARNING: Input has very low variance (std={inp_std:.6f}), "
+                    "almost constant value\n"
+                )
+            else:
+                file.write(f"  Input has reasonable variance (std={inp_std:.6f})\n")
+
+            # NaN check (missing data)
+            nan_count = np.isnan(inp).sum()
+            nan_pct = 100.0 * nan_count / inp.size
+            if nan_pct > 0:
+                file.write(
+                    f"  ⚠ WARNING: {nan_pct:.2f}% NaN values in input "
+                    f"({int(nan_count)} / {inp.size})\n"
+                )
+            else:
+                file.write("  No NaN values in input\n")
+
+            # Inf check (exploding values)
+            inf_count = np.isinf(inp).sum()
+            if inf_count > 0:
+                file.write(
+                    f"  ⚠ ERROR: {int(inf_count)} Inf values in input! "
+                    "This is a serious data quality issue.\n"
+                )
+            else:
+                file.write("  No Inf values in input\n")
+
+        file.write("\n" + "=" * 88 + "\n")
+
+
 def channel_axis(tensor: torch.Tensor) -> int:
+    """Figure out which axis is the channel axis (0 or 1)"""
     return 0 if tensor.ndim < 2 else 1
 
 
 def first_channel_image(tensor: torch.Tensor, channel_index: int) -> np.ndarray:
+    """
+    Extract a 2D image from a tensor for a specific channel.
+    Handles various tensor shapes (batches, spatial dims, etc).
+    """
     value = tensor.detach().float().cpu()
 
+    # Remove batch dimension if present (4D+ tensor)
     if value.ndim >= 4:
         value = value[0, channel_index]
     elif value.ndim == 3:
@@ -1113,6 +1680,7 @@ def first_channel_image(tensor: torch.Tensor, channel_index: int) -> np.ndarray:
     else:
         value = value.reshape(1, -1)
 
+    # Keep squeezing until we have a 2D image
     while value.ndim > 2:
         value = value[0]
 
@@ -1126,6 +1694,10 @@ def plot_tensor_channels(
     output_dir: Path,
     metadata: Any,
 ) -> None:
+    """
+    Create plots of the first few channels of a tensor.
+    Useful for visually inspecting what data the model is seeing.
+    """
 
     if not RUN_CHANNEL_PLOTS:
         return
@@ -1134,9 +1706,11 @@ def plot_tensor_channels(
 
     axis = channel_axis(tensor)
 
+    # Skip if tensor is too low dimensional
     if tensor.ndim <= axis:
         return
 
+    # Plot up to MAX_PLOT_CHANNELS channels
     channels = min(
         int(tensor.shape[axis]),
         MAX_PLOT_CHANNELS,
@@ -1168,6 +1742,7 @@ def plot_tensor_channels(
 
         axes.set_title(f"{name}, channel {channel_index}")
 
+        # Use metadata as x-axis label (truncated for readability)
         axes.set_xlabel(clean_name(serialize_json(canonical_value(metadata)))[:80])
 
         figure.colorbar(
@@ -1188,9 +1763,14 @@ def plot_tensor_channels(
 
 
 def plot_first_batch(batch: Any, *, output_dir: Path) -> None:
+    """
+    Create plots of input, target, and other fields from the first batch.
+    Good for sanity-checking what data looks like.
+    """
     metadata = flatten_metadata(extract_metadata(batch))
     first_metadata = metadata[0] if metadata else {}
 
+    # Plot these fields if they exist in the batch
     for name in ("input", "target", "added_features", "input_mask", "target_mask"):
         tensor = sample_get(batch, name)
         if isinstance(tensor, torch.Tensor):
@@ -1200,6 +1780,11 @@ def plot_first_batch(batch: Any, *, output_dir: Path) -> None:
 
 
 def metadata_value(item: Any, names: tuple[str, ...]) -> Any:
+    """
+    Try to get a value from metadata using multiple possible key names.
+    Works with both dicts and objects with attributes.
+    Useful because different dataloaders might use different field names.
+    """
     for name in names:
         if isinstance(item, dict) and name in item:
             return item[name]
@@ -1209,19 +1794,23 @@ def metadata_value(item: Any, names: tuple[str, ...]) -> Any:
 
 
 def metadata_init_time(item: Any) -> Any:
+    """Get the initialization time from metadata"""
     return metadata_value(item, (INIT_TIME_DIM, "init_time", "initialization_time"))
 
 
 def metadata_lead_time(item: Any) -> Any:
+    """Get the lead time from metadata"""
     return metadata_value(item, (LEAD_TIME_DIM, "lead_time"))
 
 
 def to_datetime64_month(value: Any) -> np.datetime64:
+    """Convert a value to numpy datetime64 (month precision)"""
     value = scalar_value(value)
     return np.datetime64(value, "M")
 
 
 def to_integer_lead(value: Any) -> int:
+    """Convert a lead time value to an integer (in months)"""
     value = scalar_value(value)
     if isinstance(value, np.timedelta64):
         return int(value.astype("timedelta64[M]").astype(int))
@@ -1229,6 +1818,12 @@ def to_integer_lead(value: Any) -> int:
 
 
 def valid_time_from_metadata(item: Any) -> np.datetime64:
+    """
+    Calculate the valid time (when prediction is valid) from init_time and lead_time.
+    valid_time = init_time + lead_time (in months)
+    Example: if init_time is 2020-01 and lead_time is 3 months,
+    valid_time is 2020-04 (April 2020)
+    """
     init_time = metadata_init_time(item)
     lead_time = metadata_lead_time(item)
 
@@ -1243,6 +1838,13 @@ def valid_time_from_metadata(item: Any) -> np.datetime64:
 
 
 def assert_metadata_indexing(metadata: list[Any]) -> None:
+    """
+    Check that metadata is valid:
+    - Has init_time and lead_time
+    - No duplicate samples
+    - Lead times are 1-based (start at 1, not 0)
+    - Valid times are >= init times
+    """
     if not metadata:
         raise AssertionError("No metadata available")
 
@@ -1269,6 +1871,7 @@ def assert_metadata_indexing(metadata: list[Any]) -> None:
 
         keys.append(canonical_sample_key(item))
 
+    # Check for duplicates
     if len(keys) != len(set(keys)):
         counts = Counter(keys)
         duplicates = {key: count for key, count in counts.items() if count > 1}
@@ -1276,6 +1879,7 @@ def assert_metadata_indexing(metadata: list[Any]) -> None:
 
 
 def metadata_year(item: Any) -> int:
+    """Extract the year from an item's init_time"""
     value = metadata_init_time(item)
     if value is None:
         raise AssertionError("Could not extract init_time")
@@ -1284,19 +1888,30 @@ def metadata_year(item: Any) -> int:
     if hasattr(value, "year"):
         return int(value.year)
 
+    # Handle numpy datetime64
     return int(np.datetime64(value, "Y").astype(int) + 1970)
 
 
 def assert_dataset_getitem_contract(dataset: Any, params: dict[str, Any]) -> None:
+    """
+    Test that dataset.__getitem__ returns proper format:
+    - Returns tuple of (sample_dict, metadata_dict)
+    - sample_dict has "input" and "target" tensors
+    - metadata_dict has required fields
+
+    We test a few indices (start, middle, end) to catch edge cases.
+    """
     if len(dataset) <= 0:
         raise AssertionError("Dataset is empty")
 
+    # Test a few indices (start, middle, end)
     indices = sorted({0, len(dataset) // 2, len(dataset) - 1})
     metadata_keys = []
 
     for index in indices:
         sample = dataset[index]
 
+        # Should return 2-tuple
         if not isinstance(sample, tuple):
             raise AssertionError(
                 f"__getitem__ must return tuple, got {type(sample).__name__}"
@@ -1306,6 +1921,7 @@ def assert_dataset_getitem_contract(dataset: Any, params: dict[str, Any]) -> Non
 
         sample_data, metadata = sample
 
+        # sample_data should be a dict
         if not isinstance(sample_data, dict):
             raise AssertionError(
                 f"Sample data must be dict, got {type(sample_data).__name__}"
@@ -1315,6 +1931,7 @@ def assert_dataset_getitem_contract(dataset: Any, params: dict[str, Any]) -> Non
                 f"Metadata must be dict, got {type(metadata).__name__}"
             )
 
+        # Must have input and target tensors
         required_fields = {"input", "target"}
         missing = required_fields - set(sample_data)
         if missing:
@@ -1323,6 +1940,7 @@ def assert_dataset_getitem_contract(dataset: Any, params: dict[str, Any]) -> Non
         assert_tensor(f"sample[{index}].input", sample_data["input"])
         assert_tensor(f"sample[{index}].target", sample_data["target"])
 
+        # If time_features are configured, added_features should be populated
         features = params.get(
             "time_features", DataCombinationScenarios.DEFAULT_TIME_FEATURES
         )
@@ -1333,6 +1951,7 @@ def assert_dataset_getitem_contract(dataset: Any, params: dict[str, Any]) -> Non
         elif isinstance(added_features, torch.Tensor) and added_features.numel() > 0:
             raise AssertionError("added_features populated but time_features is empty")
 
+        # Must have required metadata
         required_meta = {INIT_TIME_DIM, LEAD_TIME_DIM}
         missing_meta = required_meta - set(metadata)
         if missing_meta:
@@ -1340,9 +1959,11 @@ def assert_dataset_getitem_contract(dataset: Any, params: dict[str, Any]) -> Non
 
         metadata_keys.append(canonical_sample_key(metadata))
 
+    # Check for duplicate samples at test indices
     if len(metadata_keys) != len(set(metadata_keys)):
         raise AssertionError(f"Duplicate metadata at indices {indices}")
 
+    # Check that config has expected fields
     dataset_config = getattr(dataset, "config", None)
     if params.get("observation_present"):
         if getattr(dataset_config, "observation", None) is None:
@@ -1362,7 +1983,14 @@ def assert_batch_contract(
     *,
     plot_dir: Path | None = None,
     metadata_path: Path | None = None,
+    raw_data_dir: Path | None = None,
 ) -> list:
+    """
+    Test that dataloader returns batches with proper format:
+    - Tensors are non-empty and finite
+    - Batch size matches metadata count
+    - Time features match config
+    """
     batches = 0
     all_metadata = []
 
@@ -1371,20 +1999,24 @@ def assert_batch_contract(
         target_tensor = sample_get(batch, "target")
         added_features = sample_get(batch, "added_features")
 
+        # Check input tensor
         assert_tensor("batch.input", input_tensor)
 
         if target_tensor is not None:
             assert_tensor("batch.target", target_tensor)
 
+        # Check added_features based on time_features config
         if time_features:
             assert_tensor("batch.added_features", added_features)
         elif isinstance(added_features, torch.Tensor) and added_features.numel() > 0:
             raise AssertionError("added_features populated but time_features is empty")
 
+        # Extract per-sample metadata from batch
         metadata = flatten_metadata(extract_metadata(batch))
         if not metadata:
             raise AssertionError("No metadata returned")
 
+        # Metadata count should match batch size
         batch_size = int(input_tensor.shape[0])
         if len(metadata) != batch_size:
             raise AssertionError(
@@ -1393,14 +2025,43 @@ def assert_batch_contract(
 
         all_metadata.extend(metadata)
 
+        # Plot first batch for visual inspection
         if batches == 0 and plot_dir is not None:
             plot_first_batch(batch, output_dir=plot_dir)
 
+        if batches == 0 and raw_data_dir is not None and RUN_RAW_DATA_EXPORT:
+            raw_data_dir.mkdir(parents=True, exist_ok=True)
+
+            # Export to NetCDF
+            netcdf_path = raw_data_dir / f"batch_{batches:04d}.nc"
+            try:
+                export_batch_to_netcdf(
+                    batch,
+                    output_path=netcdf_path,
+                    metadata=metadata,
+                    batch_index=batches,
+                )
+            except Exception as exc:
+                print(f"Warning: NetCDF export failed: {exc}")
+
+            # Create summary report for manual inspection
+            summary_path = raw_data_dir / f"batch_{batches:04d}_summary.txt"
+            try:
+                create_data_summary_report(
+                    batch,
+                    output_path=summary_path,
+                    metadata=metadata,
+                )
+            except Exception as exc:
+                print(f"Warning: Summary report failed: {exc}")
+
         batches += 1
 
+    # Should have iterated through at least one batch
     if batches == 0:
         raise AssertionError("Dataloader returned no batches")
 
+    # Save metadata to file for analysis
     if metadata_path is not None:
         save_metadata(all_metadata, metadata_path)
 
@@ -1408,6 +2069,10 @@ def assert_batch_contract(
 
 
 def assert_year_slice(loader: Any, year_slice: list[int]) -> None:
+    """
+    Check that all years in the loader are within the specified range.
+    Also check that all years within the range are present (no gaps).
+    """
     metadata = collect_loader_metadata(loader, max_batches=None)
 
     if not metadata:
@@ -1419,11 +2084,13 @@ def assert_year_slice(loader: Any, year_slice: list[int]) -> None:
     years = [metadata_year(item) for item in metadata]
     observed_years = set(years)
 
+    # Check bounds
     if min(years) < lower or max(years) > upper:
         raise AssertionError(
             f"Years outside [{lower}, {upper}]: {sorted(observed_years)}"
         )
 
+    # Check for gaps
     expected_years = set(range(lower, upper + 1))
     missing_years = expected_years - observed_years
 
@@ -1432,6 +2099,10 @@ def assert_year_slice(loader: Any, year_slice: list[int]) -> None:
 
 
 def assert_no_future_leakage(loader: Any, cutoff: Any) -> None:
+    """
+    Check that no samples look beyond a cutoff date.
+    Important to prevent the model from accidentally seeing future data during training.
+    """
     cutoff_month = to_datetime64_month(cutoff)
     metadata = collect_loader_metadata(loader, max_batches=None)
 
@@ -1452,6 +2123,7 @@ def assert_no_future_leakage(loader: Any, cutoff: Any) -> None:
 
 
 def requested_valid_times(loader: Any) -> list[np.datetime64]:
+    """Collect all unique valid times from the loader (sorted)"""
     metadata = collect_loader_metadata(loader, max_batches=None)
     return sorted({valid_time_from_metadata(item) for item in metadata})
 
@@ -1459,6 +2131,12 @@ def requested_valid_times(loader: Any) -> list[np.datetime64]:
 def cutoff_for_position(
     valid_times: list[np.datetime64], position: str
 ) -> np.datetime64:
+    """
+    Calculate a cutoff date based on position in the valid times.
+    "before": one month before first valid time
+    "between": halfway through valid times
+    "after": one month after last valid time
+    """
     if not valid_times:
         raise AssertionError("No valid times")
 
@@ -1473,6 +2151,10 @@ def cutoff_for_position(
 
 
 def assert_observation_cutoff_indexing(loader: Any, position: str) -> None:
+    """
+    Check that observation cutoff filtering works correctly.
+    Samples with valid_time > cutoff should be excluded.
+    """
     valid_times = requested_valid_times(loader)
     cutoff = cutoff_for_position(valid_times, position)
 
@@ -1503,6 +2185,7 @@ def assert_observation_cutoff_indexing(loader: Any, position: str) -> None:
 
 
 def set_torch_seed(seed: int) -> None:
+    """Set random seed for PyTorch (for reproducibility)"""
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
@@ -1511,9 +2194,15 @@ def set_torch_seed(seed: int) -> None:
 def assert_multiworker_consistency(
     config: TrainConfig, shuffle: bool, config_path: Path
 ) -> None:
+    """
+    Check that multi-worker dataloading gives same coverage as single-worker.
+    If shuffle=False, order should be identical.
+    If shuffle=True, items should be the same but order should differ.
+    """
     configure_runtime_context(config_path)
     distributed = Distributed.get_instance()
 
+    # Create single-worker loader
     single_cfg = deepcopy(config.train_loader)
     single_cfg.num_data_workers = 0
     if hasattr(single_cfg, "prefetch_factor"):
@@ -1531,6 +2220,7 @@ def assert_multiworker_consistency(
 
     single_items = collect_loader_metadata(single_loader, max_batches=None)
 
+    # Create multi-worker loader
     multi_cfg = deepcopy(config.train_loader)
     call_with_supported_arguments(multi_cfg.setup_distributed, distributed=distributed)
     set_torch_seed(SHUFFLE_SEED)
@@ -1544,29 +2234,39 @@ def assert_multiworker_consistency(
 
     multi_items = collect_loader_metadata(multi_loader, max_batches=None)
 
+    # Convert to canonical keys for comparison
     single_keys = [canonical_sample_key(item) for item in single_items]
     multi_keys = [canonical_sample_key(item) for item in multi_items]
 
+    # Same items should be present
     if Counter(multi_keys) != Counter(single_keys):
         raise AssertionError(
             f"Multi-worker changed coverage: single={len(single_keys)}, multi={len(multi_keys)}"
         )
 
+    # No duplicates
     if len(multi_keys) != len(set(multi_keys)):
         raise AssertionError("Multi-worker duplicated samples")
 
+    # If no shuffle, order should be identical
     if not shuffle and multi_keys != single_keys:
         raise AssertionError("No-shuffle multi-worker changed order")
 
+    # If shuffling, order should be different (very high probability)
     if shuffle and len(multi_keys) > 1 and multi_keys == single_keys:
         raise AssertionError("Shuffle had no effect")
 
 
 def preprocessor_files(directory: Path) -> list:
+    """Find all preprocessor pipeline files in a directory"""
     return sorted(directory.glob("*_preprocessing_pipeline.joblib"))
 
 
 def assert_rank_zero_preprocessor_setup(config: TrainConfig, config_path: Path) -> None:
+    """
+    Test that rank 0 creates preprocessors and other ranks load them.
+    This validates distributed preprocessing (important for multi-GPU training).
+    """
     case_dir = configure_runtime_context(config_path)
     preprocessor_dir = case_dir / "preprocessing_pipeline"
 
@@ -1575,6 +2275,7 @@ def assert_rank_zero_preprocessor_setup(config: TrainConfig, config_path: Path) 
 
     distributed = Distributed.get_instance()
 
+    # Non-rank-0 processes should load from preprocessor_dir (after rank 0 creates it)
     if distributed.rank != 0:
         loader_cfg = deepcopy(config.train_loader)
         call_with_supported_arguments(
@@ -1593,6 +2294,7 @@ def assert_rank_zero_preprocessor_setup(config: TrainConfig, config_path: Path) 
             raise AssertionError(f"Non-rank-0 did not load from {preprocessor_dir}")
         return
 
+    # Rank 0: first run to create preprocessors
     call_with_supported_arguments(
         config.train_loader.setup_distributed, distributed=distributed
     )
@@ -1607,10 +2309,12 @@ def assert_rank_zero_preprocessor_setup(config: TrainConfig, config_path: Path) 
     if not written:
         raise AssertionError(f"Rank-0 did not save to {preprocessor_dir}")
 
+    # Record file hashes before reload
     before_hashes = {
         path.name: (path.stat().st_size, path.stat().st_mtime_ns) for path in written
     }
 
+    # Second run: load existing preprocessors (shouldn't rewrite them)
     loader_cfg = deepcopy(config.train_loader)
     call_with_supported_arguments(
         loader_cfg.setup_distributed,
@@ -1629,6 +2333,7 @@ def assert_rank_zero_preprocessor_setup(config: TrainConfig, config_path: Path) 
         path.name: (path.stat().st_size, path.stat().st_mtime_ns) for path in after
     }
 
+    # Files shouldn't have changed
     if after_hashes != before_hashes:
         raise AssertionError("Reload phase rewrote artifacts")
 
@@ -1637,6 +2342,7 @@ def assert_rank_zero_preprocessor_setup(config: TrainConfig, config_path: Path) 
 
 
 def run_dataset_case(config_path: Path, params: dict[str, Any]) -> None:
+    """Test dataset.__getitem__ and batch contract"""
     config = load_train_config(config_path)
     loader = setup_loader(
         config,
@@ -1654,15 +2360,18 @@ def run_dataset_case(config_path: Path, params: dict[str, Any]) -> None:
         params.get("time_features", DataCombinationScenarios.DEFAULT_TIME_FEATURES),
         plot_dir=paths["plot_dir"],
         metadata_path=paths["metadata_path"],
+        raw_data_dir=paths["raw_data_dir"],
     )
 
     assert_metadata_indexing(metadata)
 
 
 def run_dataloader_case(config_path: Path, params: dict[str, Any]) -> None:
+    """Test dataloader with different configurations"""
     config = load_train_config(config_path)
     check = params["check"]
 
+    # Special case: test multi-worker consistency
     if check == "multiworker":
         assert_multiworker_consistency(config, params["shuffle"], config_path)
         return
@@ -1681,10 +2390,12 @@ def run_dataloader_case(config_path: Path, params: dict[str, Any]) -> None:
         params.get("time_features"),
         plot_dir=paths["plot_dir"],
         metadata_path=paths["metadata_path"],
+        raw_data_dir=paths["raw_data_dir"],
     )
 
     assert_metadata_indexing(metadata)
 
+    # If testing year slice, create fresh loader and validate
     if check == "year_slice":
         loader = setup_loader(
             config,
@@ -1697,6 +2408,7 @@ def run_dataloader_case(config_path: Path, params: dict[str, Any]) -> None:
 
 
 def run_future_mask_case(config_path: Path, params: dict[str, Any]) -> None:
+    """Test that no samples look beyond a cutoff date"""
     config = load_train_config(config_path)
     loader = setup_loader(
         config,
@@ -1709,6 +2421,7 @@ def run_future_mask_case(config_path: Path, params: dict[str, Any]) -> None:
 
 
 def run_observation_cutoff_case(config_path: Path, params: dict[str, Any]) -> None:
+    """Test observation cutoff filtering"""
     config = load_train_config(config_path)
     loader = setup_loader(
         config,
@@ -1723,16 +2436,19 @@ def run_observation_cutoff_case(config_path: Path, params: dict[str, Any]) -> No
 
 
 def run_preprocessor_case(config_path: Path, params: dict[str, Any]) -> None:
+    """Test distributed preprocessor setup"""
     config = load_train_config(config_path)
     assert_rank_zero_preprocessor_setup(config, config_path)
 
 
 def run_inference_case(config_path: Path, params: dict[str, Any]) -> None:
+    """Test inference loader compatibility with training config"""
     from cccma_ppp.inference.inference_configs import InferenceConfig
 
     configure_runtime_context(config_path)
     train_config = load_train_config(config_path)
 
+    # Load inference config
     inference_data = prepare_config(params["inference_config_path"])
     if inference_data is None:
         raise ValueError("Inference config is empty")
@@ -1743,14 +2459,17 @@ def run_inference_case(config_path: Path, params: dict[str, Any]) -> None:
         config=dacite.Config(strict=True),
     )
 
+    # Copy training config into inference loader config
     inference_loader_cfg = inference_config.inference_loader
     inference_loader_cfg.read_configs_from_train(train_config.train_loader)
 
+    # Check that time_features are preserved
     if inference_loader_cfg.time_features != train_config.train_loader.time_features:
         raise AssertionError("Inference did not preserve training time_features")
 
     distributed = Distributed.get_instance()
 
+    # Set up inference loader (with proper arguments)
     setup_func = inference_loader_cfg.setup_distributed
     sig = inspect.signature(setup_func)
     kwargs = {}
@@ -1770,6 +2489,7 @@ def run_inference_case(config_path: Path, params: dict[str, Any]) -> None:
     else:
         setup_func()
 
+    # Build and test inference loader
     loader = call_with_supported_arguments(
         inference_loader_cfg.build_inference_loader,
         return_metadata=True,
@@ -1782,21 +2502,25 @@ def run_inference_case(config_path: Path, params: dict[str, Any]) -> None:
         train_config.train_loader.time_features,
         plot_dir=paths["plot_dir"],
         metadata_path=paths["metadata_path"],
+        raw_data_dir=paths["raw_data_dir"],
     )
 
     assert_metadata_indexing(metadata)
 
+    # Check for future leakage if cutoff specified
     if "cutoff" in params:
         assert_no_future_leakage(loader, cutoff=params["cutoff"])
 
 
 def build_case_config(params: dict[str, Any]) -> dict[str, Any]:
+    """Build a full config from base config + params"""
     cfg = base_config()
     apply_data_combination(cfg, params)
     return cfg
 
 
 def task_defaults(case: dict[str, Any]) -> dict[str, Any]:
+    """Add default values to a case dict"""
     return {
         **deepcopy(case),
         "time_features": deepcopy(
@@ -1814,6 +2538,7 @@ def add_task(
     params: dict[str, Any],
     runner: Callable[..., Any],
 ) -> None:
+    """Add a task to the test suite"""
     tasks.append(
         {
             "suite": suite,
@@ -1826,9 +2551,14 @@ def add_task(
 
 
 def run_task(task: dict[str, Any]) -> tuple[bool, str]:
+    """
+    Run a single test task.
+    Returns (passed: bool, error_message: str).
+    """
     paths = case_paths(task["case_name"])
     case_dir = paths["case_dir"]
 
+    # Clean up old case directory
     if case_dir.exists():
         shutil.rmtree(case_dir)
 
@@ -1844,10 +2574,12 @@ def run_task(task: dict[str, Any]) -> tuple[bool, str]:
         if not callable(cfg_builder):
             raise TypeError(f"Invalid cfg_builder for {task['case_name']}")
 
+        # Build config
         cfg = cfg_builder()
         if not isinstance(cfg, dict):
             raise TypeError(f"cfg_builder returned {type(cfg).__name__}, expected dict")
 
+        # Write config to file
         write_yaml(cfg, paths["config_path"])
         configure_runtime_context(paths["config_path"])
 
@@ -1855,6 +2587,7 @@ def run_task(task: dict[str, Any]) -> tuple[bool, str]:
         print(f"Case directory: {case_dir}", flush=True)
         print(f"Log: {paths['log_path']}", flush=True)
 
+        # Run the actual test (capture output to log file)
         run_silenced(
             partial(task["runner"], paths["config_path"], params),
             paths["log_path"],
@@ -1870,11 +2603,13 @@ def run_task(task: dict[str, Any]) -> tuple[bool, str]:
     finally:
         reset_runtime_context()
 
+        # Clean up resources
         try:
             import gc
 
             import xarray as xr
 
+            # Clear xarray's file manager cache
             if hasattr(xr.backends, "file_manager"):
                 fm = xr.backends.file_manager
                 if hasattr(fm, "FILE_MANAGER"):
@@ -1889,18 +2624,22 @@ def run_task(task: dict[str, Any]) -> tuple[bool, str]:
         except Exception:
             pass
 
+        # Force garbage collection
         gc.collect()
         gc.collect()
         gc.collect()
 
+        # Clear GPU memory
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
+    # Log this result to CSV
     log_result(task=task, paths=paths, passed=passed, error=error)
     return passed, error
 
 
 def validate_tasks(tasks: list[dict[str, Any]]) -> None:
+    """Check that all tasks are valid"""
     names = set()
     required_fields = {"suite", "case_name", "params", "cfg_builder", "runner"}
 
@@ -1929,14 +2668,23 @@ def classify_result(
     expected_failures: list[str],
     unexpected_passes: list[str],
 ) -> None:
+    """
+    Classify a test result as:
+    - unexpected_failure: test failed but was expected to pass
+    - expected_failure: test failed and was expected to fail
+    - unexpected_pass: test passed but was expected to fail
+    """
     params = task["params"]
     expected = params.get("expected_result", "PASS")
 
     if expected == "FAIL":
+        # Test was expected to fail
         if passed:
+            # But it passed (unexpected!)
             unexpected_passes.append(task["case_name"])
             return
 
+        # It failed as expected, but check if error matches pattern
         pattern = params.get("expected_error_pattern")
         if pattern and not re.search(pattern, error, re.IGNORECASE | re.DOTALL):
             unexpected_failures.append(f"{task['case_name']}: wrong error: {error}")
@@ -1944,6 +2692,7 @@ def classify_result(
             expected_failures.append(task["case_name"])
         return
 
+    # Test was expected to pass
     if not passed:
         unexpected_failures.append(f"{task['case_name']}: {error}")
 
@@ -1954,6 +2703,7 @@ def write_summary(
     expected_failures: list[str],
     unexpected_passes: list[str],
 ) -> None:
+    """Write summary report to file"""
     with SUMMARY_PATH.open("w", encoding="utf-8") as file:
         file.write(f"total_cases: {len(tasks)}\n")
         file.write(f"unexpected_failures: {len(unexpected_failures)}\n")
@@ -1974,8 +2724,13 @@ def write_summary(
 
 
 def build_test_suite() -> list[dict[str, Any]]:
+    """
+    Build the entire test suite by creating all test cases.
+    Returns a list of task dicts that can be executed.
+    """
     tasks = []
 
+    # Test 1: Data combination scenarios
     if RUN_DATA_CONFIG_COMBINATIONS:
         for case in DataCombinationScenarios.all():
             params = task_defaults(case)
@@ -1986,11 +2741,13 @@ def build_test_suite() -> list[dict[str, Any]]:
                 runner=run_dataset_case,
             )
 
+    # Test 2: External condition scenarios
     if RUN_EXTERNAL_CONDITION_CASES:
         for case in ExternalConditionScenarios.all():
             condition_path = Path(case.get("condition_path", ""))
             params = task_defaults(case)
 
+            # Mark as failure if path doesn't exist
             if not condition_path.exists():
                 params["expected_result"] = "FAIL"
                 params["expected_failure_reason"] = (
@@ -2007,6 +2764,7 @@ def build_test_suite() -> list[dict[str, Any]]:
                 runner=run_dataset_case,
             )
 
+    # Test 3: Dataset __getitem__ contract
     if RUN_DATASET_GETITEM_CASES:
         for case in DataCombinationScenarios.all():
             params = task_defaults(case)
@@ -2015,6 +2773,7 @@ def build_test_suite() -> list[dict[str, Any]]:
                 tasks, suite="dataset_getitem", params=params, runner=run_dataset_case
             )
 
+    # Test 4: Dataloader scenarios
     if RUN_TRAIN_DATALOADER_CASES:
         base = deepcopy(DataCombinationScenarios.all()[-2])
         for case in DataloaderScenarios.all():
@@ -2028,6 +2787,7 @@ def build_test_suite() -> list[dict[str, Any]]:
                 runner=run_dataloader_case,
             )
 
+    # Test 5: Future leakage (no data after cutoff)
     if RUN_FUTURE_MASK_CASES:
         params = task_defaults(
             {
@@ -2047,6 +2807,7 @@ def build_test_suite() -> list[dict[str, Any]]:
         )
         add_task(tasks, suite="future_mask", params=params, runner=run_future_mask_case)
 
+    # Test 6: Observation cutoff (filter by available obs)
     if RUN_OBSERVATION_CUTOFF_CASES:
         base = deepcopy(DataCombinationScenarios.all()[-2])
         for case in TemporalMaskScenarios.all():
@@ -2065,6 +2826,7 @@ def build_test_suite() -> list[dict[str, Any]]:
                 runner=run_observation_cutoff_case,
             )
 
+    # Test 7: Distributed preprocessing
     if RUN_DISTRIBUTED_PREPROCESSOR_CASES:
         params = task_defaults(
             {
@@ -2087,6 +2849,7 @@ def build_test_suite() -> list[dict[str, Any]]:
             runner=run_preprocessor_case,
         )
 
+    # Test 8: Inference dataloader
     if RUN_INFERENCE_DATALOADER_CASES:
         if BASE_INFERENCE_CONFIG.is_file():
             params = task_defaults(
@@ -2115,13 +2878,16 @@ def build_test_suite() -> list[dict[str, Any]]:
 
 
 def main() -> None:
+    """Main entry point - run the entire integration test suite"""
     prepare_output_directories()
     cleanup_logging_handlers()
     init_csv()
 
+    # Build all test cases
     tasks = build_test_suite()
     validate_tasks(tasks)
 
+    # Optionally limit number of cases
     if MAX_CASES is not None:
         tasks = tasks[:MAX_CASES]
 
@@ -2130,6 +2896,7 @@ def main() -> None:
     unexpected_passes = []
 
     try:
+        # Run tasks with progress bar
         with tqdm(
             total=len(tasks),
             desc="data_modules",
@@ -2140,8 +2907,10 @@ def main() -> None:
             for task in tasks:
                 progress.set_postfix_str(f"{task['suite']}:{task['case_name'][:60]}")
 
+                # Run the task
                 passed, error = run_task(task)
 
+                # Classify result
                 classify_result(
                     task=task,
                     passed=passed,
@@ -2157,8 +2926,10 @@ def main() -> None:
         reset_runtime_context()
         cleanup_logging_handlers()
 
+    # Write results summary
     write_summary(tasks, unexpected_failures, expected_failures, unexpected_passes)
 
+    # Check for problems and exit
     if unexpected_failures or unexpected_passes:
         problems = []
         if unexpected_failures:
@@ -2171,7 +2942,7 @@ def main() -> None:
             f"See {RESULTS_CSV} and {CASES_DIR}."
         )
 
-    print("✓ Integration test suite completed successfully")
+    print("Integration test suite completed successfully")
     print(f"  Cases: {CASES_DIR}")
     print(f"  Results: {RESULTS_CSV}")
     print(f"  Summary: {SUMMARY_PATH}")
