@@ -110,6 +110,9 @@ def _load_xarray_data(
     )
 
     if rename_dict is not None:
+        invalid_keys = set(rename_dict) - set(ds.dims)
+        if invalid_keys:
+            raise ValueError(f"Invalid keys in rename_dict: {sorted(invalid_keys)}")
         ds = ds.rename(rename_dict)
 
     ds = ds.sel(selection) if selection is not None else ds

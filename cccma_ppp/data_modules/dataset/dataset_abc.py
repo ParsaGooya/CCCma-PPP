@@ -223,7 +223,7 @@ class DatasetConfigABC(abc.ABC):
                 ):
                     raise ValueError(
                         f"Condition data and model data must have {self.realization_dim} "
-                        "dims and coords."
+                        "dims and coords for same_member conditioning."
                     )
 
                 if not self.model.coords[self.realization_dim].equals(
