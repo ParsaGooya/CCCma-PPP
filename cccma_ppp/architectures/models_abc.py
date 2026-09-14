@@ -11,7 +11,11 @@ import dataclasses
 from cccma_ppp.architectures.layers.utils import _get_normal
 from cccma_ppp.core.core_abc import OutputABC
 from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.architectures.layers.generic import ActivationName, InitMethod, NoiseLevel
+from cccma_ppp.architectures.layers.generic import (
+    ActivationName,
+    InitMethod,
+    NoiseLevel,
+)
 from cccma_ppp.architectures.layers.utils import _sample
 
 
@@ -179,7 +183,6 @@ class modelConfigABC(abc.ABC):
 
         return getattr(self, "GENERATOR", None)
 
-    
     @property
     @abc.abstractmethod
     def EXPECTS_MASK(self) -> bool:
@@ -285,9 +288,8 @@ class modelABC(nn.Module, abc.ABC):
         pass
 
     @final
-    def _initialize_weights(self, 
-                            init_method="trunc_normal",
-                            exclude: tuple[nn.Module, ...] = ()
+    def _initialize_weights(
+        self, init_method="trunc_normal", exclude: tuple[nn.Module, ...] = ()
     ) -> None:
         """
         Initialize model weights.
@@ -465,14 +467,13 @@ class cVAEmodelConfigABC(modelConfigABC):
 
         self.condition_dependant_flow = condition_dependant_flow
 
-        if (self.condition_dependant_latent and 
-            not self.condition_dependant_flow):
-                if self.latent_size != self.condition_embedding_size:
-                    raise ValueError(
-                        f"for condition dependent latent when prior flow is off, "
-                        f"condition embedding size ({self.condition_embedding_size}) "
-                        f"must equal latent size ({self.latent_size})."
-                    )
+        if self.condition_dependant_latent and not self.condition_dependant_flow:
+            if self.latent_size != self.condition_embedding_size:
+                raise ValueError(
+                    f"for condition dependent latent when prior flow is off, "
+                    f"condition embedding size ({self.condition_embedding_size}) "
+                    f"must equal latent size ({self.latent_size})."
+                )
 
         return self
 
@@ -659,19 +660,17 @@ class cVAEmodelsABC(modelABC):
         return _sample(mu, var, sample_size, std)
 
     @final
-    def _sample_prior(self, 
-                      request: cVAEPredictRequest
+    def _sample_prior(
+        self, request: cVAEPredictRequest
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor | None]:
 
-
-        condition= request.condition
-        latent_samples= request.latent_samples
-        latent_sample_size= request.latent_sample_size
-        condition_mask= request.condition_mask
-        added_features= request.added_features
-        prior_flow= request.prior_flow
-        nstds= request.nstds
-
+        condition = request.condition
+        latent_samples = request.latent_samples
+        latent_sample_size = request.latent_sample_size
+        condition_mask = request.condition_mask
+        added_features = request.added_features
+        prior_flow = request.prior_flow
+        nstds = request.nstds
 
         B, C = condition.shape[:2]
         latent_ref_tensor = torch.zeros(
@@ -712,7 +711,9 @@ class cVAEmodelsABC(modelABC):
 
                 flow_output = prior_flow.inverse(latent_samples, cond)
                 latent_samples = flow_output.e_samples
-                latent_samples = latent_samples.reshape(latent_sample_size, batch_size, -1)
+                latent_samples = latent_samples.reshape(
+                    latent_sample_size, batch_size, -1
+                )
         else:
             expected_shape = (latent_sample_size, *latent_ref_tensor.shape)
             if not latent_samples.shape == expected_shape:
@@ -721,7 +722,7 @@ class cVAEmodelsABC(modelABC):
                     f"but expected shape {(expected_shape)}"
                 )
 
-        return  latent_samples, cond_mu, cond_log_var
+        return latent_samples, cond_mu, cond_log_var
 
 
 def weights_init(

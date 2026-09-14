@@ -1,8 +1,6 @@
-import runpy
-import sys
 from contextlib import contextmanager
 from pathlib import Path
-from unittest.mock import Mock, call
+from unittest.mock import Mock
 
 import pytest
 
@@ -555,5 +553,3 @@ def test_get_parser_rejects_unknown_arguments():
         )
 
     assert error.value.code == 2
-
-

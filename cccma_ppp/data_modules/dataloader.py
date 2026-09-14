@@ -6,7 +6,7 @@ from torch.utils.data.distributed import DistributedSampler
 from functools import partial
 import abc
 from typing import final, ClassVar
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterator
 from itertools import islice
 
 
@@ -18,6 +18,7 @@ from cccma_ppp.data_modules.dataset.dataset_abc import (
 from cccma_ppp.configs import required_sample_dimensions
 
 init_time_dim, lead_time_dim = required_sample_dimensions
+
 
 class BatchDataABC(abc.ABC):
     """
@@ -114,9 +115,8 @@ class DataloaderConfigABC(abc.ABC):
     def select_requested_times(
         self,
         requested_slice: slice,
-        ) -> xr.DataArray:
-    
-            
+    ) -> xr.DataArray:
+
         if isinstance(self.available_times, xr.DataArray):
             times = self.available_times
         else:
@@ -141,7 +141,7 @@ class DataloaderConfigABC(abc.ABC):
             )
 
         if (
-            eval(requested_slice.stop )is not None
+            eval(requested_slice.stop) is not None
             and eval(requested_slice.stop) > available_stop
         ):
             raise ValueError(
@@ -279,7 +279,7 @@ class Dataloader:
         """
 
         if self.world_size > 1:
-            shuffle= self.world_size > 1 if self.shuffle is None else self.shuffle
+            shuffle = self.world_size > 1 if self.shuffle is None else self.shuffle
             return DistributedSampler(
                 self.dataset,
                 num_replicas=self.world_size,

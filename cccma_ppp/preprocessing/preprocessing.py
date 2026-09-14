@@ -8,10 +8,11 @@ import xarray as xr
 
 from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
-from cccma_ppp.configs import (supported_NN_dimensions_sorted,
-                                required_sample_dimensions)
+from cccma_ppp.configs import supported_NN_dimensions_sorted, required_sample_dimensions
 
 init_time_dim, lead_time_dim = required_sample_dimensions
+
+
 @dataclasses.dataclass
 class PreprocessingPipeline:
     """
@@ -32,13 +33,8 @@ class PreprocessingPipeline:
     load_dir: str | Path = None
     num_instances: ClassVar[int] = 0
 
-
-    init_time_time: str = dataclasses.field(
-        init=False, default=init_time_dim
-    )
-    lead_time_time: str = dataclasses.field(
-        init=False, default=lead_time_dim
-    )
+    init_time_time: str = dataclasses.field(init=False, default=init_time_dim)
+    lead_time_time: str = dataclasses.field(init=False, default=lead_time_dim)
     supported_NN_dimensions: tuple[str] = dataclasses.field(
         init=False, default=supported_NN_dimensions_sorted
     )

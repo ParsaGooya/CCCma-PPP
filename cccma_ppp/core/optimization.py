@@ -75,15 +75,10 @@ class LRSchedulerConfig:
             raise ValueError("num_batches must be positive.")
 
         if gradient_accumulation_steps <= 0:
-            raise ValueError(
-                "gradient_accumulation_steps must be positive."
-            )
+            raise ValueError("gradient_accumulation_steps must be positive.")
 
         if self.warmup_epochs >= self.total_epochs:
-            raise ValueError(
-                "warmup_epochs must be smaller than total_epochs."
-            )
-
+            raise ValueError("warmup_epochs must be smaller than total_epochs.")
 
         self.total_steps = (
             math.ceil(num_batches / gradient_accumulation_steps) * self.total_epochs
@@ -445,7 +440,6 @@ class CosineAnnealingLRScheduler:
         else:
             self.scheduler.step()
             self.num_steps += 1
-
 
     def state_dict(self):
         """

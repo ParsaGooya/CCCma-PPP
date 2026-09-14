@@ -18,7 +18,6 @@ import re
 import shutil
 import traceback
 import warnings
-from collections import Counter
 from contextlib import redirect_stderr, redirect_stdout
 from copy import deepcopy
 from datetime import datetime
@@ -37,18 +36,10 @@ import torch
 import yaml
 from tqdm import tqdm
 
-from cccma_ppp.architectures.mlp import cvae as _mlp_cvae
-from cccma_ppp.architectures.mlp import deterministic as _mlp_deterministic
-from cccma_ppp.architectures.unet import cvae as _unet_cvae
-from cccma_ppp.architectures.unet import deterministic as _unet_deterministic
 
 from cccma_ppp.configs import required_sample_dimensions
-from cccma_ppp.generic import registry_imports
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.loss import kld as _loss_kld
-from cccma_ppp.loss import loss as _loss_pipeline
-from cccma_ppp.loss import utils_loss as _loss_utils
 from cccma_ppp.train.train_configs import TrainConfig, prepare_config
 
 warnings.filterwarnings("ignore")
@@ -987,7 +978,7 @@ def test_dataset_getitem_format(dataset: Any) -> None:
         if missing:
             raise AssertionError(f"Missing metadata: {sorted(missing)}")
 
-    print(f"✓ Dataset.__getitem__ validated")
+    print("✓ Dataset.__getitem__ validated")
 
 
 # ============================================================================
