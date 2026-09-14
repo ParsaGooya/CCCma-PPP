@@ -132,11 +132,6 @@ ENSEMBLE_FIELD_NAMES = {
 }
 
 
-# ============================================================================
-# HARDCODED SCENARIO CLASSES
-# ============================================================================
-
-
 class DataCombinationScenarios:
     """Hardcoded scenarios for data combinations with ALL 4 condition methods"""
 
@@ -431,11 +426,6 @@ class DataloaderScenarios:
         ]
 
 
-# ============================================================================
-# UTILITY FUNCTIONS
-# ============================================================================
-
-
 def clean_name(value: Any) -> str:
     """Convert value to filesystem-safe name"""
     value = str(value).replace("None", "none")
@@ -525,11 +515,6 @@ def log_result(
         )
         writer.writerow(row)
         file.flush()
-
-
-# ============================================================================
-# METADATA LOGGING (NEW)
-# ============================================================================
 
 
 def extract_metadata(batch: Any) -> Any:
@@ -684,11 +669,6 @@ def compute_metadata_statistics(metadata_list: list[Any]) -> dict[str, Any]:
             )
         ),
     }
-
-
-# ============================================================================
-# MASK TESTING (NEW - SEPARATE FROM VISUALIZATION)
-# ============================================================================
 
 
 def assert_tensor(name: str, value: Any) -> None:
@@ -932,11 +912,6 @@ def export_masks_and_data(
         json.dump(export_data, f, indent=2, default=str)
 
 
-# ============================================================================
-# DATASET TESTING (IMPROVED)
-# ============================================================================
-
-
 def test_dataset_getitem_format(dataset: Any) -> None:
     """Test that dataset.__getitem__ returns proper format"""
     if len(dataset) <= 0:
@@ -979,11 +954,6 @@ def test_dataset_getitem_format(dataset: Any) -> None:
             raise AssertionError(f"Missing metadata: {sorted(missing)}")
 
     print("✓ Dataset.__getitem__ validated")
-
-
-# ============================================================================
-# CONFIG & SETUP
-# ============================================================================
 
 
 def normalize_nullable_fields(cfg: dict[str, Any]) -> dict[str, Any]:
@@ -1228,11 +1198,6 @@ def write_yaml(cfg: dict[str, Any], output_path: Path) -> Path:
     return output_path
 
 
-# ============================================================================
-# LOGGING & CLEANUP
-# ============================================================================
-
-
 def cleanup_logging_handlers() -> None:
     """Close all logging handlers"""
     logger_names = ["", "training", "inference"]
@@ -1291,11 +1256,6 @@ def reset_runtime_context() -> None:
     RuntimeContext.GLOBAL_EXP_DIR = None
 
 
-# ============================================================================
-# LOADER SETUP
-# ============================================================================
-
-
 def call_with_supported_arguments(function: Callable[..., Any], **kwargs: Any) -> Any:
     """Call function with only supported kwargs"""
     signature = inspect.signature(function)
@@ -1346,11 +1306,6 @@ def load_train_config(config_path: Path) -> TrainConfig:
     )
 
 
-# ============================================================================
-# BATCH PROCESSING
-# ============================================================================
-
-
 class LimitedLoader:
     """Wrapper that limits batch iteration"""
 
@@ -1387,11 +1342,6 @@ def collect_batch_data(
             batch_sizes.append(len(batch_metadata))
 
     return all_metadata, batch_sizes
-
-
-# ============================================================================
-# TEST RUNNERS
-# ============================================================================
 
 
 def plot_tensor_channels(
@@ -1585,11 +1535,6 @@ def plot_masks_from_batch(batch: Any, *, output_dir: Path) -> None:
             plot_mask(mask, name=field_name, output_dir=output_dir)
 
 
-# ============================================================================
-# TASK MANAGEMENT
-# ============================================================================
-
-
 def add_task(
     tasks: list[dict[str, Any]],
     *,
@@ -1678,11 +1623,6 @@ def validate_tasks(tasks: list[dict[str, Any]]) -> None:
         names.add(case_name)
 
 
-# ============================================================================
-# SUITE BUILDING
-# ============================================================================
-
-
 def build_test_suite() -> list[dict[str, Any]]:
     """Build entire test suite using hardcoded scenarios"""
     tasks = []
@@ -1720,11 +1660,6 @@ def build_test_suite() -> list[dict[str, Any]]:
     return tasks
 
 
-# ============================================================================
-# SUMMARY
-# ============================================================================
-
-
 def write_summary(
     tasks: list[dict[str, Any]],
     passed_count: int,
@@ -1737,11 +1672,6 @@ def write_summary(
         file.write(f"failed: {failed_count}\n")
         file.write(f"cases_dir: {CASES_DIR}\n")
         file.write(f"results_csv: {RESULTS_CSV}\n")
-
-
-# ============================================================================
-# MAIN
-# ============================================================================
 
 
 def main() -> None:
