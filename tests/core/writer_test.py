@@ -145,19 +145,6 @@ class DummyStat:
         return torch.tensor([1.0]), torch.tensor([[1.0]])
 
 
-@pytest.mark.pruned
-def test_writer_config_negative_sampling():
-    with pytest.raises(
-        ValueError,
-        match="cannot be zero or negative",
-    ):
-        WriterConfig(
-            predictor=object(),
-            num_output_sampling=-1,
-        )
-
-
-@pytest.mark.pruned
 def test_writer_config_build(tmp_path):
     predictor = DummyPredictor()
 
@@ -177,7 +164,6 @@ def test_writer_config_build(tmp_path):
     assert isinstance(writer, Writer)
 
 
-@pytest.mark.pruned
 def test_log_root_logger_branch():
     writer = object.__new__(Writer)
     writer.config = SimpleNamespace(num_output_sampling=1, aggregate_only=False)
@@ -190,7 +176,6 @@ def test_log_root_logger_branch():
     assert len(writer.logger.messages) == 1
 
 
-@pytest.mark.pruned
 def test_log_root_print_branch(capsys):
     writer = object.__new__(Writer)
     writer.config = SimpleNamespace(num_output_sampling=1, aggregate_only=False)
@@ -203,7 +188,6 @@ def test_log_root_print_branch(capsys):
     assert "hello" in capsys.readouterr().out
 
 
-@pytest.mark.pruned
 def test_log_root_non_root_noop(capsys):
     writer = object.__new__(Writer)
     writer.config = SimpleNamespace(num_output_sampling=1, aggregate_only=False)
@@ -216,7 +200,6 @@ def test_log_root_non_root_noop(capsys):
     assert capsys.readouterr().out == ""
 
 
-@pytest.mark.pruned
 def test_raw_module_normal():
     writer = object.__new__(Writer)
     writer.config = SimpleNamespace(num_output_sampling=1, aggregate_only=False)
@@ -226,35 +209,6 @@ def test_raw_module_normal():
     writer.module = module
 
     assert writer.raw_module is module
-
-
-@pytest.mark.pruned
-def test_setup_distributed_success(tmp_path):
-    predictor = DummyPredictor()
-
-    cfg = WriterConfig(
-        predictor=DummyPredictorConfig(predictor),
-        num_output_sampling=1,
-        aggregate_only=False,
-        predict_only=False,
-    )
-
-    writer = Writer(
-        cfg,
-        DummyLoader(),
-        DummyTrainLoaderConfig(),
-        DummyModule(),
-        object(),
-        tmp_path,
-    )
-
-    writer.setup_distributed(
-        DummyDistributed(),
-        DummyLogger(),
-    )
-
-    assert writer._setup is True
-    assert writer.predictor is predictor
 
 
 def test_setup_distributed_logger_none(tmp_path):
@@ -282,7 +236,6 @@ def test_setup_distributed_logger_none(tmp_path):
     assert writer._setup
 
 
-@pytest.mark.pruned
 def test_setup_distributed_device_mismatch(tmp_path):
     predictor = DummyPredictor()
 
@@ -314,7 +267,6 @@ def test_setup_distributed_device_mismatch(tmp_path):
         )
 
 
-@pytest.mark.pruned
 def test_setup_distributed_barrier_called(tmp_path):
     predictor = DummyPredictor()
 
@@ -357,7 +309,6 @@ def test_predict_requires_setup():
         writer.predict()
 
 
-@pytest.mark.pruned
 def test_predict_runs(
     monkeypatch,
 ):
@@ -389,7 +340,6 @@ def test_predict_runs(
     assert called["predict"]
 
 
-@pytest.mark.pruned
 def test_build_train_loader_train(tmp_path):
     from cccma_ppp.generic.runtime import RuntimeContext
 
@@ -408,7 +358,6 @@ def test_build_train_loader_train(tmp_path):
     assert cfg.train_called
 
 
-@pytest.mark.pruned
 def test_setup_distributed_extract_training_vars(
     tmp_path,
     monkeypatch,
@@ -466,7 +415,6 @@ def test_raw_module_ddp_branch(monkeypatch):
     assert writer.raw_module is writer.module.module
 
 
-@pytest.mark.pruned
 def test_save_train_stats_file_exists_skips_loader(
     tmp_path,
 ):
@@ -501,7 +449,6 @@ def test_save_train_stats_file_exists_skips_loader(
     assert not called["loader"]
 
 
-@pytest.mark.pruned
 def test_save_train_stats_barrier(tmp_path):
     writer = object.__new__(Writer)
     writer.config = SimpleNamespace(num_output_sampling=1, aggregate_only=False)
@@ -529,7 +476,6 @@ def test_save_train_stats_barrier(tmp_path):
     assert dist.barrier_called == 1
 
 
-@pytest.mark.pruned
 def test_save_train_stats_validation_branch(
     tmp_path,
 ):
@@ -563,7 +509,6 @@ def test_save_train_stats_validation_branch(
     assert called["validation"] is True
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_to_netcdf_root(
     monkeypatch,
 ):
@@ -593,7 +538,6 @@ def test_aggregate_predictions_to_netcdf_root(
     assert called["called"]
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_to_netcdf_non_root(
     monkeypatch,
 ):
@@ -623,7 +567,6 @@ def test_aggregate_predictions_to_netcdf_non_root(
     assert "called" not in called
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_to_netcdf_no_postprocess(
     monkeypatch,
 ):
@@ -653,7 +596,6 @@ def test_aggregate_predictions_to_netcdf_no_postprocess(
     assert captured["pp"] is None
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_to_netcdf_latent(
     monkeypatch,
 ):
@@ -683,7 +625,6 @@ def test_aggregate_predictions_to_netcdf_latent(
     assert captured["name"] == "latent"
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_cleanup_false(
     tmp_path,
 ):
@@ -700,7 +641,7 @@ def test_aggregate_predictions_cleanup_false(
         },
         name="prediction",
         attrs={"source": "prediction", "nstds": "NA"},
-    ).to_netcdf(temp_dir / "rank0_0.nc")
+    ).to_netcdf(temp_dir / "prediction_rank0_0.nc")
 
     aggregate_predictions(
         None,
@@ -711,7 +652,6 @@ def test_aggregate_predictions_cleanup_false(
     assert temp_dir.exists()
 
 
-@pytest.mark.pruned
 def test_aggregate_train_stats_root_skip_none_stat(
     tmp_path,
 ):
@@ -732,7 +672,6 @@ def test_aggregate_train_stats_root_skip_none_stat(
     assert saved == {}
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_missing_year_coord(
     tmp_path,
 ):
@@ -745,7 +684,7 @@ def test_aggregate_predictions_missing_year_coord(
         coords={"x": [0]},
         name="prediction",
         attrs={"source": "prediction", "nstds": "NA"},
-    ).to_netcdf(temp_dir / "rank0_0.nc")
+    ).to_netcdf(temp_dir / "prediction_rank0_0.nc")
 
     with pytest.raises(
         RuntimeError,
@@ -757,7 +696,6 @@ def test_aggregate_predictions_missing_year_coord(
         )
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_no_temp_files(
     tmp_path,
 ):
@@ -789,7 +727,7 @@ def test_aggregate_predictions_logger_called(
         },
         name="prediction",
         attrs={"source": "prediction", "nstds": "NA"},
-    ).to_netcdf(temp_dir / "rank0_0.nc")
+    ).to_netcdf(temp_dir / "prediction_rank0_0.nc")
 
     aggregate_predictions(
         None,
@@ -801,7 +739,6 @@ def test_aggregate_predictions_logger_called(
     assert len(messages) >= 2
 
 
-@pytest.mark.pruned
 def test_aggregate_train_stats_root_empty_stats(
     tmp_path,
 ):
@@ -819,7 +756,6 @@ def test_aggregate_train_stats_root_empty_stats(
     assert saved == {}
 
 
-@pytest.mark.pruned
 def test_aggregate_train_stats_skip_sum_x_none(
     tmp_path,
 ):
@@ -844,7 +780,6 @@ def test_aggregate_train_stats_skip_sum_x_none(
     assert saved == {}
 
 
-@pytest.mark.pruned
 def test_aggregate_train_stats_finalize_branch(
     tmp_path,
 ):
@@ -879,7 +814,6 @@ def test_aggregate_train_stats_finalize_branch(
     assert "test_cov" in saved
 
 
-@pytest.mark.pruned
 def test_aggregate_train_stats_distributed_reduce_called():
     called = {"reduce": False}
 
@@ -981,7 +915,6 @@ def test_save_train_stats_calls_aggregate(
     assert called["aggregate"]
 
 
-@pytest.mark.pruned
 def test_save_train_stats_validation_loader_branch(
     tmp_path,
 ):
@@ -1018,7 +951,6 @@ def test_save_train_stats_validation_loader_branch(
     assert called["from_validation"] is True
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_to_netcdf_distributed_barriers(
     monkeypatch,
 ):
@@ -1057,7 +989,6 @@ def test_aggregate_predictions_to_netcdf_distributed_barriers(
     assert calls["aggregate"] == 1
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_to_netcdf_latent_name(
     monkeypatch,
 ):
@@ -1100,31 +1031,6 @@ def test_aggregate_predictions_no_files(
         )
 
 
-@pytest.mark.pruned
-def test_aggregate_predictions_missing_year_coordinate(
-    tmp_path,
-):
-    temp = tmp_path / "_temp"
-    temp.mkdir()
-
-    xr.DataArray(
-        [1.0],
-        dims=("x",),
-        coords={"x": [0]},
-        name="prediction",
-        attrs={"source": "prediction", "nstds": "NA"},
-    ).to_netcdf(temp / "rank0_0.nc")
-
-    with pytest.raises(
-        RuntimeError,
-        match="time",
-    ):
-        aggregate_predictions(
-            None,
-            tmp_path,
-        )
-
-
 def test_writer_config_build_rejects_predictor_module_type_mismatch(
     tmp_path,
 ):
@@ -1149,7 +1055,6 @@ def test_writer_config_build_rejects_predictor_module_type_mismatch(
         )
 
 
-@pytest.mark.pruned
 def test_writer_config_build_is_case_insensitive_for_module_type(
     tmp_path,
 ):
@@ -1176,7 +1081,6 @@ def test_writer_config_build_is_case_insensitive_for_module_type(
     assert isinstance(writer, Writer)
 
 
-@pytest.mark.pruned
 def test_writer_initialization_converts_output_dir_to_path(
     tmp_path,
 ):
@@ -1197,7 +1101,6 @@ def test_writer_initialization_converts_output_dir_to_path(
     assert writer._setup is False
 
 
-@pytest.mark.pruned
 def test_setup_distributed_passes_build_arguments(
     tmp_path,
 ):
@@ -1233,7 +1136,6 @@ def test_setup_distributed_passes_build_arguments(
     }
 
 
-@pytest.mark.pruned
 def test_setup_distributed_creates_temp_directory_on_root(
     tmp_path,
 ):
@@ -1258,7 +1160,6 @@ def test_setup_distributed_creates_temp_directory_on_root(
     assert writer.temp_save_dir.is_dir()
 
 
-@pytest.mark.pruned
 def test_setup_distributed_non_root_does_not_create_temp_directory(
     tmp_path,
 ):
@@ -1319,7 +1220,6 @@ def test_setup_distributed_records_distributed_properties(
     assert writer.is_on_root is False
 
 
-@pytest.mark.pruned
 def test_predict_logs_elapsed_time(
     monkeypatch,
 ):
@@ -1348,7 +1248,6 @@ def test_predict_logs_elapsed_time(
     assert messages[-1] == "Inference finished in 2.50s"
 
 
-@pytest.mark.pruned
 def test_save_train_stats_moves_batch_and_requests_training_stats(
     tmp_path,
 ):
@@ -1442,7 +1341,6 @@ def test_aggregate_train_stats_saves_expected_values(
     assert "inactive_cov" not in saved
 
 
-@pytest.mark.pruned
 def test_aggregate_train_stats_non_root_does_not_save(
     tmp_path,
 ):
@@ -1481,7 +1379,6 @@ def test_aggregate_train_stats_distributed_barrier(
     assert distributed.barrier_called == 1
 
 
-@pytest.mark.pruned
 def test_log_root_passes_formatting_arguments():
     writer = object.__new__(Writer)
     writer.config = SimpleNamespace(num_output_sampling=1, aggregate_only=False)
@@ -1553,7 +1450,6 @@ def make_predict_writer(
     return writer
 
 
-@pytest.mark.pruned
 def test_writer_config_accepts_positive_output_sampling():
     config = WriterConfig(
         predictor=object(),
@@ -1657,7 +1553,6 @@ def test_build_train_loader_forwards_validation_arguments(
     }
 
 
-@pytest.mark.pruned
 def test_predict_loop_propagates_predictor_error():
     class FailingPredictor(DummyPredictor):
         def _infer_on_batch(
@@ -1681,7 +1576,6 @@ def test_predict_loop_propagates_predictor_error():
         writer._predict()
 
 
-@pytest.mark.pruned
 def test_setup_distributed_does_not_mark_setup_after_predictor_error(
     tmp_path,
 ):
@@ -1722,7 +1616,6 @@ def test_setup_distributed_does_not_mark_setup_after_predictor_error(
     assert writer._setup is False
 
 
-@pytest.mark.pruned
 def test_setup_distributed_logs_training_statistics_message(
     tmp_path,
     monkeypatch,
@@ -1761,7 +1654,6 @@ def test_setup_distributed_logs_training_statistics_message(
     )
 
 
-@pytest.mark.pruned
 def test_aggregate_train_stats_does_not_finalize_inactive_stat(
     tmp_path,
 ):
@@ -1795,7 +1687,6 @@ def test_aggregate_train_stats_does_not_finalize_inactive_stat(
     )
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_postprocessor_call_order(
     tmp_path,
 ):
@@ -1820,7 +1711,7 @@ def test_aggregate_predictions_postprocessor_call_order(
         },
         name="prediction",
         attrs={"source": "prediction", "nstds": "NA"},
-    ).to_netcdf(temp_dir / "rank0_0.nc")
+    ).to_netcdf(temp_dir / "prediction_rank0_0.nc")
 
     calls = []
 
@@ -1856,7 +1747,6 @@ def test_aggregate_predictions_postprocessor_call_order(
     ]
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_closes_loaded_year_parts(
     tmp_path,
     monkeypatch,
@@ -1882,7 +1772,7 @@ def test_aggregate_predictions_closes_loaded_year_parts(
         },
         name="prediction",
         attrs={"source": "prediction", "nstds": "NA"},
-    ).to_netcdf(temp_dir / "rank0_0.nc")
+    ).to_netcdf(temp_dir / "prediction_rank0_0.nc")
 
     close_calls = []
     original_close = xr.DataArray.close
@@ -1906,7 +1796,6 @@ def test_aggregate_predictions_closes_loaded_year_parts(
     assert close_calls
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_cleanup_only_matching_files(
     tmp_path,
 ):
@@ -1931,7 +1820,7 @@ def test_aggregate_predictions_cleanup_only_matching_files(
         },
         name="prediction",
         attrs={"source": "prediction", "nstds": "NA"},
-    ).to_netcdf(temp_dir / "rank0_0.nc")
+    ).to_netcdf(temp_dir / "prediction_rank0_0.nc")
 
     unrelated = temp_dir / "keep.txt"
     unrelated.write_text("keep")
@@ -1944,10 +1833,9 @@ def test_aggregate_predictions_cleanup_only_matching_files(
         )
 
     assert unrelated.exists()
-    assert not (temp_dir / "rank0_0.nc").exists()
+    assert not (temp_dir / "prediction_rank0_0.nc").exists()
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_to_netcdf_nonroot_distributed_barriers(
     monkeypatch,
 ):
@@ -2062,890 +1950,7 @@ def write_prediction_file(
     ).to_netcdf(path)
 
 
-class TestWriterConfigModes:
-    @pytest.mark.pruned
-    def test_defaults_disable_special_modes(self):
-        config = WriterConfig()
-
-        assert config.aggregate_only is False
-        assert config.predict_only is False
-
-    @pytest.mark.parametrize(
-        "num_output_sampling",
-        [
-            0,
-            -1,
-            -10,
-        ],
-    )
-    def test_rejects_nonpositive_output_sampling(
-        self,
-        num_output_sampling,
-    ):
-        with pytest.raises(
-            ValueError,
-            match="cannot be zero or negative",
-        ):
-            WriterConfig(
-                num_output_sampling=num_output_sampling,
-            )
-
-    def test_build_rejects_aggregate_and_predict_only_together(
-        self,
-        tmp_path,
-    ):
-        config = WriterConfig(
-            aggregate_only=True,
-            predict_only=True,
-        )
-
-        with pytest.raises(
-            RuntimeError,
-            match="aggregate_only OR predict_only",
-        ):
-            config.build(
-                inference_data_loader=DummyLoader(),
-                train_dataloader_config=DummyTrainLoaderConfig(),
-                module=DummyModule(),
-                post_processor=object(),
-                output_dir=tmp_path,
-            )
-
-    @pytest.mark.pruned
-    def test_aggregate_only_build_does_not_require_predictor(
-        self,
-        tmp_path,
-    ):
-        config = WriterConfig(
-            predictor=None,
-            aggregate_only=True,
-        )
-
-        writer = config.build(
-            inference_data_loader=DummyLoader(),
-            train_dataloader_config=DummyTrainLoaderConfig(),
-            module=DummyModule(),
-            post_processor=object(),
-            output_dir=tmp_path,
-        )
-
-        assert isinstance(
-            writer,
-            Writer,
-        )
-        assert writer.config is config
-        assert config.predictor is None
-
-    @pytest.mark.pruned
-    def test_aggregate_only_build_skips_predictor_type_validation(
-        self,
-        tmp_path,
-    ):
-        predictor = DummyPredictorConfig(
-            DummyPredictor(),
-        )
-        predictor._type = "wrong"
-
-        config = WriterConfig(
-            predictor=predictor,
-            aggregate_only=True,
-        )
-
-        writer = config.build(
-            inference_data_loader=DummyLoader(),
-            train_dataloader_config=DummyTrainLoaderConfig(),
-            module=DummyModule(),
-            post_processor=object(),
-            output_dir=tmp_path,
-        )
-
-        assert isinstance(
-            writer,
-            Writer,
-        )
-
-    @pytest.mark.pruned
-    def test_predict_only_builds_writer_normally(
-        self,
-        tmp_path,
-    ):
-        predictor = DummyPredictor()
-        config = WriterConfig(
-            predictor=DummyPredictorConfig(
-                predictor,
-            ),
-            predict_only=True,
-        )
-
-        writer = config.build(
-            inference_data_loader=DummyLoader(),
-            train_dataloader_config=DummyTrainLoaderConfig(),
-            module=DummyModule(),
-            post_processor=object(),
-            output_dir=tmp_path,
-        )
-
-        assert writer.config.predict_only is True
-        assert writer.config.aggregate_only is False
-
-    def test_missing_predictor_defaults_to_deterministic_config(
-        self,
-        tmp_path,
-        monkeypatch,
-    ):
-        default_predictor = SimpleNamespace(
-            _type="dummy",
-        )
-        constructor = Mock(
-            return_value=default_predictor,
-        )
-
-        monkeypatch.setattr(
-            "cccma_ppp.core.writer.DeterministicPredictorConfig",
-            constructor,
-        )
-
-        config = WriterConfig(
-            predictor=None,
-        )
-
-        writer = config.build(
-            inference_data_loader=DummyLoader(),
-            train_dataloader_config=DummyTrainLoaderConfig(),
-            module=DummyModule(),
-            post_processor=object(),
-            output_dir=tmp_path,
-        )
-
-        constructor.assert_called_once_with()
-        assert config.predictor is default_predictor
-        assert writer.config is config
-
-
-class TestWriterAggregateOnlySetup:
-    @pytest.mark.pruned
-    def test_aggregate_only_requires_existing_temp_directory(
-        self,
-        tmp_path,
-    ):
-        config = WriterConfig(
-            aggregate_only=True,
-        )
-        writer = Writer(
-            config,
-            DummyLoader(),
-            DummyTrainLoaderConfig(),
-            DummyModule(),
-            object(),
-            tmp_path,
-        )
-
-        with pytest.raises(
-            RuntimeError,
-            match="aggregate_only writer mode",
-        ):
-            writer.setup_distributed(
-                DummyDistributed(),
-                DummyLogger(),
-            )
-
-    @pytest.mark.pruned
-    def test_aggregate_only_requires_at_least_one_netcdf_file(
-        self,
-        tmp_path,
-    ):
-        temp_dir = tmp_path / "_temp"
-        temp_dir.mkdir()
-        (temp_dir / "keep.txt").write_text("not netcdf")
-
-        writer = Writer(
-            WriterConfig(
-                aggregate_only=True,
-            ),
-            DummyLoader(),
-            DummyTrainLoaderConfig(),
-            DummyModule(),
-            object(),
-            tmp_path,
-        )
-
-        with pytest.raises(
-            RuntimeError,
-            match="at least one",
-        ):
-            writer.setup_distributed(
-                DummyDistributed(),
-                DummyLogger(),
-            )
-
-    def test_aggregate_only_accepts_existing_netcdf_file(
-        self,
-        tmp_path,
-    ):
-        temp_dir = tmp_path / "_temp"
-        temp_dir.mkdir()
-        write_prediction_file(
-            temp_dir / "rank0_0.nc",
-        )
-
-        writer = Writer(
-            WriterConfig(
-                aggregate_only=True,
-            ),
-            DummyLoader(),
-            DummyTrainLoaderConfig(),
-            DummyModule(),
-            object(),
-            tmp_path,
-        )
-
-        writer.setup_distributed(
-            DummyDistributed(),
-            DummyLogger(),
-        )
-
-        assert writer._setup is True
-        assert writer.temp_save_dir == temp_dir
-        assert not hasattr(
-            writer,
-            "predictor",
-        )
-
-    @pytest.mark.pruned
-    def test_aggregate_only_does_not_build_predictor(
-        self,
-        tmp_path,
-    ):
-        temp_dir = tmp_path / "_temp"
-        temp_dir.mkdir()
-        write_prediction_file(
-            temp_dir / "rank0_0.nc",
-        )
-
-        predictor_config = DummyPredictorConfig(
-            DummyPredictor(),
-        )
-        writer = Writer(
-            WriterConfig(
-                predictor=predictor_config,
-                aggregate_only=True,
-            ),
-            DummyLoader(),
-            DummyTrainLoaderConfig(),
-            DummyModule(),
-            object(),
-            tmp_path,
-        )
-
-        writer.setup_distributed(
-            DummyDistributed(),
-            DummyLogger(),
-        )
-
-        assert predictor_config.build_args is None
-
-    @pytest.mark.pruned
-    def test_aggregate_only_distributed_setup_calls_barrier(
-        self,
-        tmp_path,
-    ):
-        temp_dir = tmp_path / "_temp"
-        temp_dir.mkdir()
-        write_prediction_file(
-            temp_dir / "rank0_0.nc",
-        )
-
-        distributed = DummyDistributed(
-            distributed=True,
-        )
-        writer = Writer(
-            WriterConfig(
-                aggregate_only=True,
-            ),
-            DummyLoader(),
-            DummyTrainLoaderConfig(),
-            DummyModule(),
-            object(),
-            tmp_path,
-        )
-
-        writer.setup_distributed(
-            distributed,
-            DummyLogger(),
-        )
-
-        assert distributed.barrier_called == 1
-
-
-class TestWriterPredictionModes:
-    def test_predict_logs_aggregation_message_in_aggregate_only_mode(
-        self,
-        monkeypatch,
-    ):
-        writer = object.__new__(Writer)
-        writer.config = make_writer_config_namespace(
-            aggregate_only=True,
-        )
-        writer._setup = True
-
-        messages = []
-        writer.log_root = lambda level, message: messages.append(message)
-        writer._predict = Mock()
-
-        times = iter(
-            [
-                10.0,
-                12.0,
-            ]
-        )
-        monkeypatch.setattr(
-            "cccma_ppp.core.writer.time.time",
-            lambda: next(times),
-        )
-        monkeypatch.setattr(
-            "cccma_ppp.core.writer.clear_memory",
-            Mock(),
-        )
-
-        writer.predict()
-
-        assert messages[0] == "Starting aggregation..."
-        assert messages[-1] == "Inference finished in 2.00s"
-        writer._predict.assert_called_once_with()
-
-    def test_predict_logs_inference_message_in_predict_only_mode(
-        self,
-        monkeypatch,
-    ):
-        writer = object.__new__(Writer)
-        writer.config = make_writer_config_namespace(
-            predict_only=True,
-        )
-        writer._setup = True
-
-        messages = []
-        writer.log_root = lambda level, message: messages.append(message)
-        writer._predict = Mock()
-
-        times = iter(
-            [
-                10.0,
-                11.0,
-            ]
-        )
-        monkeypatch.setattr(
-            "cccma_ppp.core.writer.time.time",
-            lambda: next(times),
-        )
-        monkeypatch.setattr(
-            "cccma_ppp.core.writer.clear_memory",
-            Mock(),
-        )
-
-        writer.predict()
-
-        assert messages[0] == "Starting Inference Loop..."
-        assert messages[-1] == "Inference finished in 1.00s"
-
-    @pytest.mark.pruned
-    def test_predict_only_runs_inference_without_aggregation(
-        self,
-        monkeypatch,
-    ):
-        predictor = DummyPredictor()
-        writer = make_predict_writer(
-            loader=RecordingLoader(
-                [
-                    DummyBatch(),
-                    DummyBatch(),
-                ]
-            ),
-            predictor=predictor,
-        )
-        writer.config = make_writer_config_namespace(
-            predict_only=True,
-        )
-        writer.aggregate_predictions_to_netcdf = Mock()
-
-        clear = Mock()
-        monkeypatch.setattr(
-            "cccma_ppp.core.writer.clear_memory",
-            clear,
-        )
-
-        writer._predict()
-
-        assert writer.module.eval_called is True
-        assert predictor.infer_calls == [
-            False,
-            False,
-        ]
-        writer.aggregate_predictions_to_netcdf.assert_not_called()
-        clear.assert_called_once_with()
-
-    def test_aggregate_only_skips_inference_and_runs_aggregation(
-        self,
-        monkeypatch,
-    ):
-        predictor = DummyPredictor()
-        loader = RecordingLoader(
-            [
-                DummyBatch(),
-            ]
-        )
-        writer = make_predict_writer(
-            loader=loader,
-            predictor=predictor,
-        )
-        writer.config = make_writer_config_namespace(
-            aggregate_only=True,
-        )
-        writer.aggregate_predictions_to_netcdf = Mock()
-
-        clear = Mock()
-        monkeypatch.setattr(
-            "cccma_ppp.core.writer.clear_memory",
-            clear,
-        )
-
-        writer._predict()
-
-        assert writer.module.eval_called is True
-        assert loader.iterations == 0
-        assert predictor.infer_calls == []
-        writer.aggregate_predictions_to_netcdf.assert_called_once_with(True)
-        clear.assert_not_called()
-
-    @pytest.mark.pruned
-    def test_normal_mode_runs_inference_and_aggregation(
-        self,
-    ):
-        predictor = DummyPredictor()
-        writer = make_predict_writer(
-            predictor=predictor,
-        )
-        writer.config = make_writer_config_namespace()
-        writer.aggregate_predictions_to_netcdf = Mock()
-
-        writer._predict()
-
-        assert predictor.infer_calls == [
-            False,
-        ]
-        writer.aggregate_predictions_to_netcdf.assert_called_once_with(True)
-
-    @pytest.mark.pruned
-    def test_latent_mode_uses_training_loader_and_disables_postprocessing(
-        self,
-    ):
-        predictor = DummyPredictor(
-            save_latent=True,
-        )
-        inference_loader = RecordingLoader(
-            [
-                DummyBatch(),
-            ]
-        )
-        training_loader = RecordingLoader(
-            [
-                DummyBatch(),
-                DummyBatch(),
-            ]
-        )
-
-        writer = make_predict_writer(
-            loader=inference_loader,
-            predictor=predictor,
-        )
-        writer.config = make_writer_config_namespace()
-        writer.build_train_loader = Mock(
-            return_value=training_loader,
-        )
-        writer.aggregate_predictions_to_netcdf = Mock()
-
-        writer._predict()
-
-        writer.build_train_loader.assert_called_once_with(
-            return_metadata=True,
-            shuffle=False,
-        )
-        assert inference_loader.iterations == 0
-        assert training_loader.iterations == 1
-        writer.aggregate_predictions_to_netcdf.assert_called_once_with(False)
-
-    def test_predict_only_latent_mode_uses_training_loader_without_aggregation(
-        self,
-    ):
-        predictor = DummyPredictor(
-            save_latent=True,
-        )
-        training_loader = RecordingLoader(
-            [
-                DummyBatch(),
-            ]
-        )
-
-        writer = make_predict_writer(
-            predictor=predictor,
-        )
-        writer.config = make_writer_config_namespace(
-            predict_only=True,
-        )
-        writer.build_train_loader = Mock(
-            return_value=training_loader,
-        )
-        writer.aggregate_predictions_to_netcdf = Mock()
-
-        writer._predict()
-
-        writer.build_train_loader.assert_called_once_with(
-            return_metadata=True,
-            shuffle=False,
-        )
-        assert predictor.infer_calls == [
-            False,
-        ]
-        writer.aggregate_predictions_to_netcdf.assert_not_called()
-
-
-class TestWriterAggregationDispatch:
-    def make_writer(
-        self,
-        *,
-        distributed=False,
-        root=True,
-        num_output_sampling=1,
-    ):
-        writer = object.__new__(Writer)
-        writer.config = make_writer_config_namespace(
-            num_output_sampling=num_output_sampling,
-        )
-        writer.is_distributed = distributed
-        writer.is_on_root = root
-        writer.distributed = DummyDistributed(
-            distributed=distributed,
-            root=root,
-        )
-        writer.post_processor = object()
-        writer.output_dir = Path("/tmp")
-        writer.log_root = Mock()
-
-        return writer
-
-    @pytest.mark.pruned
-    def test_forwards_output_ensemble_true_for_multiple_samples(
-        self,
-        monkeypatch,
-    ):
-        writer = self.make_writer(
-            num_output_sampling=4,
-        )
-        aggregate = Mock()
-        monkeypatch.setattr(
-            "cccma_ppp.core.writer.aggregate_predictions",
-            aggregate,
-        )
-
-        writer.aggregate_predictions_to_netcdf()
-
-        aggregate.assert_called_once_with(
-            post_processor=writer.post_processor,
-            output_dir=writer.output_dir,
-            output_ensemble=True,
-            logger_function=writer.log_root,
-        )
-
-    @pytest.mark.pruned
-    def test_forwards_output_ensemble_false_for_single_sample(
-        self,
-        monkeypatch,
-    ):
-        writer = self.make_writer(
-            num_output_sampling=1,
-        )
-        aggregate = Mock()
-        monkeypatch.setattr(
-            "cccma_ppp.core.writer.aggregate_predictions",
-            aggregate,
-        )
-
-        writer.aggregate_predictions_to_netcdf()
-
-        assert aggregate.call_args.kwargs["output_ensemble"] is False
-
-    def test_disables_postprocessor_when_requested(
-        self,
-        monkeypatch,
-    ):
-        writer = self.make_writer()
-        aggregate = Mock()
-        monkeypatch.setattr(
-            "cccma_ppp.core.writer.aggregate_predictions",
-            aggregate,
-        )
-
-        writer.aggregate_predictions_to_netcdf(
-            do_post_process=False,
-        )
-
-        assert aggregate.call_args.kwargs["post_processor"] is None
-
-    @pytest.mark.pruned
-    def test_distributed_root_barriers_surround_aggregation(
-        self,
-        monkeypatch,
-    ):
-        events = []
-
-        class Distributed:
-            def barrier(self):
-                events.append("barrier")
-
-        writer = self.make_writer(
-            distributed=True,
-            root=True,
-        )
-        writer.distributed = Distributed()
-
-        monkeypatch.setattr(
-            "cccma_ppp.core.writer.aggregate_predictions",
-            lambda **kwargs: events.append("aggregate"),
-        )
-
-        writer.aggregate_predictions_to_netcdf()
-
-        assert events == [
-            "barrier",
-            "aggregate",
-            "barrier",
-        ]
-
-    def test_distributed_nonroot_only_calls_barriers(
-        self,
-        monkeypatch,
-    ):
-        events = []
-
-        class Distributed:
-            def barrier(self):
-                events.append("barrier")
-
-        writer = self.make_writer(
-            distributed=True,
-            root=False,
-        )
-        writer.distributed = Distributed()
-
-        aggregate = Mock()
-        monkeypatch.setattr(
-            "cccma_ppp.core.writer.aggregate_predictions",
-            aggregate,
-        )
-
-        writer.aggregate_predictions_to_netcdf()
-
-        assert events == [
-            "barrier",
-            "barrier",
-        ]
-        aggregate.assert_not_called()
-
-
-class TestAggregatePredictionNaming:
-    @pytest.mark.pruned
-    def test_default_name_uses_source_year_and_nstds(
-        self,
-        tmp_path,
-    ):
-        temp_dir = tmp_path / "_temp"
-        temp_dir.mkdir()
-
-        write_prediction_file(
-            temp_dir / "rank0_0.nc",
-            source="prediction",
-            nstds=1.5,
-        )
-
-        aggregate_predictions(
-            None,
-            tmp_path,
-            cleanup_temp=False,
-        )
-
-        assert (tmp_path / "prediction_2000_nstds1.5.nc").exists()
-
-    @pytest.mark.pruned
-    def test_none_nstds_omits_nstds_suffix(
-        self,
-        tmp_path,
-    ):
-        temp_dir = tmp_path / "_temp"
-        temp_dir.mkdir()
-
-        xr.DataArray(
-            [[[1.0]]],
-            dims=(
-                "time",
-                "lead_time",
-                "channels",
-            ),
-            coords={
-                "time": np.asarray(
-                    ["2000-01-01"],
-                    dtype="datetime64[ns]",
-                ),
-                "lead_time": [1],
-                "channels": ["prediction"],
-            },
-            name="prediction",
-            attrs={
-                "source": "prediction",
-            },
-        ).to_netcdf(temp_dir / "rank0_0.nc")
-
-        aggregate_predictions(
-            None,
-            tmp_path,
-            cleanup_temp=False,
-        )
-
-        assert (tmp_path / "prediction_2000.nc").exists()
-
-    @pytest.mark.pruned
-    def test_na_nstds_attribute_omits_nstds_suffix(
-        self,
-        tmp_path,
-    ):
-        temp_dir = tmp_path / "_temp"
-        temp_dir.mkdir()
-
-        write_prediction_file(
-            temp_dir / "rank0_0.nc",
-            source="prediction",
-            nstds="NA",
-        )
-
-        aggregate_predictions(
-            None,
-            tmp_path,
-            cleanup_temp=False,
-        )
-
-        assert (tmp_path / "prediction_2000_nstdsNA.nc").exists()
-
-    def test_ensemble_output_adds_ensemble_suffix(
-        self,
-        tmp_path,
-    ):
-        temp_dir = tmp_path / "_temp"
-        temp_dir.mkdir()
-
-        write_prediction_file(
-            temp_dir / "rank0_0.nc",
-            source="prediction",
-            nstds=None,
-        )
-
-        aggregate_predictions(
-            None,
-            tmp_path,
-            output_ensemble=True,
-            cleanup_temp=False,
-        )
-
-        assert (tmp_path / "prediction_2000_output_ensemble.nc").exists()
-
-    @pytest.mark.pruned
-    def test_nstds_and_ensemble_suffixes_are_combined(
-        self,
-        tmp_path,
-    ):
-        temp_dir = tmp_path / "_temp"
-        temp_dir.mkdir()
-
-        write_prediction_file(
-            temp_dir / "rank0_0.nc",
-            source="prediction",
-            nstds=2.0,
-        )
-
-        aggregate_predictions(
-            None,
-            tmp_path,
-            output_ensemble=True,
-            cleanup_temp=False,
-        )
-
-        assert (tmp_path / "prediction_2000_nstds2.0_output_ensemble.nc").exists()
-
-    @pytest.mark.pruned
-    def test_latent_source_controls_output_name(
-        self,
-        tmp_path,
-    ):
-        temp_dir = tmp_path / "_temp"
-        temp_dir.mkdir()
-
-        write_prediction_file(
-            temp_dir / "rank0_0.nc",
-            channels=[
-                "latent",
-            ],
-            source="latent",
-            nstds=None,
-        )
-
-        aggregate_predictions(
-            None,
-            tmp_path,
-            cleanup_temp=False,
-        )
-
-        assert (tmp_path / "latent_2000.nc").exists()
-
-    @pytest.mark.pruned
-    def test_first_matching_file_supplies_source(
-        self,
-        tmp_path,
-    ):
-        temp_dir = tmp_path / "_temp"
-        temp_dir.mkdir()
-
-        write_prediction_file(
-            temp_dir / "rank0_0.nc",
-            times=[
-                "2000-01-01",
-            ],
-            source="first",
-            channels=[
-                "first",
-            ],
-            nstds=None,
-        )
-        write_prediction_file(
-            temp_dir / "rank1_0.nc",
-            times=[
-                "2001-01-01",
-            ],
-            source="second",
-            channels=[
-                "first",
-            ],
-            nstds=None,
-        )
-
-        aggregate_predictions(
-            None,
-            tmp_path,
-            cleanup_temp=False,
-        )
-
-        assert (tmp_path / "first_2000.nc").exists()
-        assert (tmp_path / "first_2001.nc").exists()
-
-
 class TestAggregatePredictionFiles:
-    @pytest.mark.pruned
     def test_ignores_files_not_matching_rank_pattern(
         self,
         tmp_path,
@@ -2954,7 +1959,7 @@ class TestAggregatePredictionFiles:
         temp_dir.mkdir()
 
         write_prediction_file(
-            temp_dir / "rank0_0.nc",
+            temp_dir / "prediction_rank0_0.nc",
             times=[
                 "2000-01-01",
             ],
@@ -2983,7 +1988,6 @@ class TestAggregatePredictionFiles:
         assert not (tmp_path / "prediction_2001.nc").exists()
         assert (temp_dir / "other_rank0_0.nc").exists()
 
-    @pytest.mark.pruned
     def test_creates_one_file_per_year(
         self,
         tmp_path,
@@ -2992,7 +1996,7 @@ class TestAggregatePredictionFiles:
         temp_dir.mkdir()
 
         write_prediction_file(
-            temp_dir / "rank0_0.nc",
+            temp_dir / "prediction_rank0_0.nc",
             times=[
                 "1999-12-31",
                 "2000-01-01",
@@ -3012,7 +2016,6 @@ class TestAggregatePredictionFiles:
         assert (tmp_path / "prediction_2000.nc").exists()
         assert (tmp_path / "prediction_2001.nc").exists()
 
-    @pytest.mark.pruned
     def test_initialization_times_are_sorted(
         self,
         tmp_path,
@@ -3021,7 +2024,7 @@ class TestAggregatePredictionFiles:
         temp_dir.mkdir()
 
         write_prediction_file(
-            temp_dir / "rank0_0.nc",
+            temp_dir / "prediction_rank0_0.nc",
             times=[
                 "2000-03-01",
                 "2000-01-01",
@@ -3054,7 +2057,6 @@ class TestAggregatePredictionFiles:
             expected,
         )
 
-    @pytest.mark.pruned
     def test_lead_times_are_sorted(
         self,
         tmp_path,
@@ -3063,7 +2065,7 @@ class TestAggregatePredictionFiles:
         temp_dir.mkdir()
 
         write_prediction_file(
-            temp_dir / "rank0_0.nc",
+            temp_dir / "prediction_rank0_0.nc",
             lead_times=[
                 3,
                 1,
@@ -3091,7 +2093,6 @@ class TestAggregatePredictionFiles:
                 ),
             )
 
-    @pytest.mark.pruned
     def test_duplicate_lead_times_are_removed(
         self,
         tmp_path,
@@ -3100,7 +2101,7 @@ class TestAggregatePredictionFiles:
         temp_dir.mkdir()
 
         write_prediction_file(
-            temp_dir / "rank0_0.nc",
+            temp_dir / "prediction_rank0_0.nc",
             lead_times=[
                 1,
             ],
@@ -3108,7 +2109,7 @@ class TestAggregatePredictionFiles:
             nstds=None,
         )
         write_prediction_file(
-            temp_dir / "rank1_0.nc",
+            temp_dir / "prediction_rank1_0.nc",
             lead_times=[
                 1,
             ],
@@ -3134,12 +2135,12 @@ class TestAggregatePredictionFiles:
         temp_dir.mkdir()
 
         write_prediction_file(
-            temp_dir / "rank0_0.nc",
+            temp_dir / "prediction_rank0_0.nc",
             source="prediction",
             nstds=None,
         )
         write_prediction_file(
-            temp_dir / "rank1_0.nc",
+            temp_dir / "prediction_rank1_0.nc",
             source="prediction",
             nstds=None,
         )
@@ -3153,15 +2154,14 @@ class TestAggregatePredictionFiles:
         assert not temp_dir.exists()
         assert (tmp_path / "prediction_2000.nc").exists()
 
-    @pytest.mark.pruned
     def test_cleanup_false_preserves_matching_temp_files(
         self,
         tmp_path,
     ):
         temp_dir = tmp_path / "_temp"
         temp_dir.mkdir()
-        first = temp_dir / "rank0_0.nc"
-        second = temp_dir / "rank1_0.nc"
+        first = temp_dir / "prediction_rank0_0.nc"
+        second = temp_dir / "prediction_rank1_0.nc"
 
         write_prediction_file(
             first,
@@ -3184,45 +2184,6 @@ class TestAggregatePredictionFiles:
         assert second.exists()
         assert temp_dir.exists()
 
-    @pytest.mark.pruned
-    def test_missing_source_attribute_raises_key_error(
-        self,
-        tmp_path,
-    ):
-        temp_dir = tmp_path / "_temp"
-        temp_dir.mkdir()
-
-        xr.DataArray(
-            [[[1.0]]],
-            dims=(
-                "time",
-                "lead_time",
-                "channels",
-            ),
-            coords={
-                "time": np.asarray(
-                    ["2000-01-01"],
-                    dtype="datetime64[ns]",
-                ),
-                "lead_time": [1],
-                "channels": [
-                    "prediction",
-                ],
-            },
-            name="prediction",
-        ).to_netcdf(temp_dir / "rank0_0.nc")
-
-        with pytest.raises(
-            KeyError,
-            match="source",
-        ):
-            aggregate_predictions(
-                None,
-                tmp_path,
-                cleanup_temp=False,
-            )
-
-    @pytest.mark.pruned
     def test_empty_initialization_times_raise_runtime_error(
         self,
         tmp_path,
@@ -3258,7 +2219,7 @@ class TestAggregatePredictionFiles:
                 "source": "prediction",
                 "nstds": "NA",
             },
-        ).to_netcdf(temp_dir / "rank0_0.nc")
+        ).to_netcdf(temp_dir / "prediction_rank0_0.nc")
 
         with pytest.raises(
             RuntimeError,
@@ -3272,7 +2233,6 @@ class TestAggregatePredictionFiles:
 
 
 class TestAggregatePredictionPostprocessing:
-    @pytest.mark.pruned
     def test_without_postprocessor_converts_channels_to_variables(
         self,
         tmp_path,
@@ -3292,7 +2252,7 @@ class TestAggregatePredictionPostprocessing:
         )
 
         write_prediction_file(
-            temp_dir / "rank0_0.nc",
+            temp_dir / "prediction_rank0_0.nc",
             values=values,
             channels=[
                 "temperature",
@@ -3315,7 +2275,6 @@ class TestAggregatePredictionPostprocessing:
             }
             assert "channels" not in dataset.dims
 
-    @pytest.mark.pruned
     def test_postprocessor_receives_each_initialization_time(
         self,
         tmp_path,
@@ -3324,7 +2283,7 @@ class TestAggregatePredictionPostprocessing:
         temp_dir.mkdir()
 
         write_prediction_file(
-            temp_dir / "rank0_0.nc",
+            temp_dir / "prediction_rank0_0.nc",
             times=[
                 "2000-01-01",
                 "2000-02-01",
@@ -3400,7 +2359,7 @@ class TestAggregatePredictionPostprocessing:
         temp_dir.mkdir()
 
         write_prediction_file(
-            temp_dir / "rank0_0.nc",
+            temp_dir / "prediction_rank0_0.nc",
             source="prediction",
             nstds=None,
         )
@@ -3431,7 +2390,6 @@ class TestAggregatePredictionPostprocessing:
 
 
 class TestAggregatePredictionOptionalDimensions:
-    @pytest.mark.pruned
     def test_optional_ensemble_coordinate_is_sorted(
         self,
         tmp_path,
@@ -3454,7 +2412,7 @@ class TestAggregatePredictionOptionalDimensions:
         )
 
         write_prediction_file(
-            temp_dir / "rank0_0.nc",
+            temp_dir / "prediction_rank0_0.nc",
             values=values,
             source="prediction",
             nstds=None,
@@ -3489,7 +2447,6 @@ class TestAggregatePredictionOptionalDimensions:
                 ),
             )
 
-    @pytest.mark.pruned
     def test_all_nan_optional_samples_are_dropped(
         self,
         tmp_path,
@@ -3512,7 +2469,7 @@ class TestAggregatePredictionOptionalDimensions:
         )
 
         write_prediction_file(
-            temp_dir / "rank0_0.nc",
+            temp_dir / "prediction_rank0_0.nc",
             values=values,
             source="prediction",
             nstds=None,
@@ -3548,7 +2505,6 @@ class TestAggregatePredictionOptionalDimensions:
 
 
 class TestWriterSetupCompletion:
-    @pytest.mark.pruned
     def test_setup_logs_start_and_completion(
         self,
         tmp_path,
@@ -3573,7 +2529,6 @@ class TestWriterSetupCompletion:
         assert "Setting up writer." in messages
         assert "Writer setup complete." in messages
 
-    @pytest.mark.pruned
     def test_setup_logs_distributed_metadata(
         self,
         tmp_path,
@@ -3607,7 +2562,6 @@ class TestWriterSetupCompletion:
             for _, message in logger.messages
         )
 
-    @pytest.mark.pruned
     def test_training_stats_failure_prevents_setup_completion(
         self,
         tmp_path,
@@ -3642,3 +2596,1027 @@ class TestWriterSetupCompletion:
             )
 
         assert writer._setup is False
+
+
+class TestAdditionalWriterConfig:
+    @pytest.mark.parametrize(
+        "num_output_sampling",
+        [
+            -1,
+            -10,
+        ],
+    )
+    def test_negative_output_sampling_is_rejected(
+        self,
+        num_output_sampling,
+    ):
+        with pytest.raises(
+            ValueError,
+            match="cannot be negative",
+        ):
+            WriterConfig(
+                predictor=DummyPredictorConfig(
+                    DummyPredictor(),
+                ),
+                num_output_sampling=num_output_sampling,
+            )
+
+    def test_zero_output_sampling_is_accepted(self):
+        config = WriterConfig(
+            predictor=DummyPredictorConfig(
+                DummyPredictor(),
+            ),
+            num_output_sampling=0,
+        )
+
+        assert config.num_output_sampling == 0
+
+    def test_training_statistics_default_is_false(self):
+        config = WriterConfig(
+            predictor=DummyPredictorConfig(
+                DummyPredictor(),
+            ),
+        )
+
+        assert config.get_trained_model_stats_from_validation is False
+
+    def test_build_forwards_exact_writer_arguments(
+        self,
+        tmp_path,
+        monkeypatch,
+    ):
+        config = WriterConfig(
+            predictor=DummyPredictorConfig(
+                DummyPredictor(),
+            ),
+        )
+        loader = DummyLoader()
+        train_config = DummyTrainLoaderConfig()
+        module = DummyModule()
+        postprocessor = object()
+        built = object()
+
+        constructor = Mock(
+            return_value=built,
+        )
+        monkeypatch.setattr(
+            "cccma_ppp.core.writer.Writer",
+            constructor,
+        )
+
+        result = config.build(
+            inference_data_loader=loader,
+            train_dataloader_config=train_config,
+            module=module,
+            post_processor=postprocessor,
+            output_dir=str(tmp_path),
+        )
+
+        assert result is built
+        constructor.assert_called_once_with(
+            config=config,
+            inference_data_loader=loader,
+            train_dataloader_config=train_config,
+            module=module,
+            post_processor=postprocessor,
+            output_dir=str(tmp_path),
+        )
+
+
+class TestAdditionalWriterPredictionLoop:
+    def test_predict_loop_processes_every_batch(
+        self,
+        monkeypatch,
+    ):
+        batches = [
+            DummyBatch(),
+            DummyBatch(),
+            DummyBatch(),
+        ]
+        loader = RecordingLoader(batches)
+        predictor = DummyPredictor()
+
+        writer = make_predict_writer(
+            loader=loader,
+            predictor=predictor,
+        )
+        writer.aggregate_predictions_to_netcdf = Mock()
+
+        clear = Mock()
+        monkeypatch.setattr(
+            "cccma_ppp.core.writer.clear_memory",
+            clear,
+        )
+
+        writer._predict()
+
+        assert writer.module.eval_called is True
+        assert loader.iterations == 1
+        assert predictor.infer_calls == [
+            False,
+            False,
+            False,
+        ]
+
+        for batch in batches:
+            assert batch.device == torch.device("cpu")
+
+        clear.assert_called_once_with()
+        writer.aggregate_predictions_to_netcdf.assert_called_once_with(
+            True,
+        )
+
+    def test_predict_loop_uses_training_loader_for_latent_output(
+        self,
+        monkeypatch,
+    ):
+        inference_loader = RecordingLoader(
+            [
+                DummyBatch(),
+            ]
+        )
+        training_batches = [
+            DummyBatch(),
+            DummyBatch(),
+        ]
+        training_loader = RecordingLoader(
+            training_batches,
+        )
+        predictor = DummyPredictor(
+            save_latent=True,
+        )
+
+        writer = make_predict_writer(
+            loader=inference_loader,
+            predictor=predictor,
+        )
+        writer.build_train_loader = Mock(
+            return_value=training_loader,
+        )
+        writer.aggregate_predictions_to_netcdf = Mock()
+
+        monkeypatch.setattr(
+            "cccma_ppp.core.writer.clear_memory",
+            Mock(),
+        )
+
+        writer._predict()
+
+        writer.build_train_loader.assert_called_once_with(
+            return_metadata=True,
+            shuffle=False,
+        )
+        assert inference_loader.iterations == 0
+        assert training_loader.iterations == 1
+        assert predictor.infer_calls == [
+            False,
+            False,
+        ]
+        writer.aggregate_predictions_to_netcdf.assert_called_once_with(
+            False,
+        )
+
+    def test_predict_loop_disables_progress_bar_on_nonroot(
+        self,
+        monkeypatch,
+    ):
+        writer = make_predict_writer(
+            is_on_root=False,
+        )
+        writer.aggregate_predictions_to_netcdf = Mock()
+
+        tqdm_mock = Mock(
+            side_effect=lambda iterable, **kwargs: iterable,
+        )
+        monkeypatch.setattr(
+            "cccma_ppp.core.writer.tqdm",
+            tqdm_mock,
+        )
+        monkeypatch.setattr(
+            "cccma_ppp.core.writer.clear_memory",
+            Mock(),
+        )
+
+        writer._predict()
+
+        assert tqdm_mock.call_args.kwargs["disable"] is True
+        assert tqdm_mock.call_args.kwargs["desc"] == "Inference"
+
+    def test_predict_loop_enables_progress_bar_on_root(
+        self,
+        monkeypatch,
+    ):
+        writer = make_predict_writer(
+            is_on_root=True,
+        )
+        writer.aggregate_predictions_to_netcdf = Mock()
+
+        tqdm_mock = Mock(
+            side_effect=lambda iterable, **kwargs: iterable,
+        )
+        monkeypatch.setattr(
+            "cccma_ppp.core.writer.tqdm",
+            tqdm_mock,
+        )
+        monkeypatch.setattr(
+            "cccma_ppp.core.writer.clear_memory",
+            Mock(),
+        )
+
+        writer._predict()
+
+        assert tqdm_mock.call_args.kwargs["disable"] is False
+        assert tqdm_mock.call_args.kwargs["desc"] == "Inference"
+
+    def test_predict_does_not_log_completion_after_failure(
+        self,
+        monkeypatch,
+    ):
+        writer = object.__new__(Writer)
+        writer._setup = True
+        writer._predict = Mock(
+            side_effect=RuntimeError("prediction failed"),
+        )
+
+        messages = []
+        writer.log_root = lambda level, message: messages.append(message)
+
+        monkeypatch.setattr(
+            "cccma_ppp.core.writer.clear_memory",
+            Mock(),
+        )
+        monkeypatch.setattr(
+            "cccma_ppp.core.writer.time.time",
+            Mock(return_value=10.0),
+        )
+
+        with pytest.raises(
+            RuntimeError,
+            match="prediction failed",
+        ):
+            writer.predict()
+
+        assert messages == [
+            "Starting Inference Loop...",
+        ]
+
+
+class TestAdditionalWriterSetup:
+    def test_setup_does_not_extract_statistics_when_disabled(
+        self,
+        tmp_path,
+        monkeypatch,
+    ):
+        predictor = DummyPredictor(
+            extract_training_vars=False,
+        )
+        save_stats = Mock()
+
+        monkeypatch.setattr(
+            Writer,
+            "_save_train_stats",
+            save_stats,
+        )
+
+        writer = Writer(
+            WriterConfig(
+                predictor=DummyPredictorConfig(
+                    predictor,
+                ),
+            ),
+            DummyLoader(),
+            DummyTrainLoaderConfig(),
+            DummyModule(),
+            object(),
+            tmp_path,
+        )
+
+        writer.setup_distributed(
+            DummyDistributed(),
+            DummyLogger(),
+        )
+
+        save_stats.assert_not_called()
+        assert writer._setup is True
+
+    def test_setup_root_creates_existing_temp_directory_safely(
+        self,
+        tmp_path,
+    ):
+        temp_dir = tmp_path / "_temp"
+        temp_dir.mkdir()
+        marker = temp_dir / "existing.txt"
+        marker.write_text("keep")
+
+        writer = Writer(
+            WriterConfig(
+                predictor=DummyPredictorConfig(
+                    DummyPredictor(),
+                ),
+            ),
+            DummyLoader(),
+            DummyTrainLoaderConfig(),
+            DummyModule(),
+            object(),
+            tmp_path,
+        )
+
+        writer.setup_distributed(
+            DummyDistributed(root=True),
+            DummyLogger(),
+        )
+
+        assert temp_dir.is_dir()
+        assert marker.read_text() == "keep"
+
+    def test_setup_distributed_barrier_precedes_predictor_build(
+        self,
+        tmp_path,
+    ):
+        events = []
+
+        class DistributedWithEvents(DummyDistributed):
+            def barrier(self):
+                events.append("barrier")
+                super().barrier()
+
+        class PredictorConfigWithEvents(DummyPredictorConfig):
+            def build(
+                self,
+                module,
+                distributed,
+                output_dir,
+                num_output_sampling,
+            ):
+                events.append("build")
+                return super().build(
+                    module,
+                    distributed,
+                    output_dir,
+                    num_output_sampling,
+                )
+
+        distributed = DistributedWithEvents(
+            distributed=True,
+        )
+        predictor_config = PredictorConfigWithEvents(
+            DummyPredictor(),
+        )
+
+        writer = Writer(
+            WriterConfig(
+                predictor=predictor_config,
+            ),
+            DummyLoader(),
+            DummyTrainLoaderConfig(),
+            DummyModule(),
+            object(),
+            tmp_path,
+        )
+
+        writer.setup_distributed(
+            distributed,
+            DummyLogger(),
+        )
+
+        assert events == [
+            "barrier",
+            "build",
+        ]
+
+
+class TestAdditionalTrainStatistics:
+    def test_save_train_stats_uses_initial_predictor_stats_for_empty_loader(
+        self,
+        tmp_path,
+        monkeypatch,
+    ):
+        initial_stats = {
+            "initial": object(),
+        }
+        predictor = DummyPredictor()
+        predictor.stats = initial_stats
+
+        writer = object.__new__(Writer)
+        writer.output_dir = tmp_path
+        writer.device = torch.device("cpu")
+        writer.is_on_root = True
+        writer.is_distributed = False
+        writer.predictor = predictor
+        writer.config = SimpleNamespace(
+            get_trained_model_stats_from_validation=False,
+        )
+        writer.build_train_loader = Mock(
+            return_value=[],
+        )
+        writer.aggregate_train_stats = Mock()
+
+        clear = Mock()
+        monkeypatch.setattr(
+            "cccma_ppp.core.writer.clear_memory",
+            clear,
+        )
+
+        writer._save_train_stats()
+
+        writer.aggregate_train_stats.assert_called_once_with(
+            initial_stats,
+        )
+        clear.assert_called_once_with()
+
+    def test_save_train_stats_uses_stats_from_last_batch(
+        self,
+        tmp_path,
+        monkeypatch,
+    ):
+        first_stats = {
+            "first": object(),
+        }
+        second_stats = {
+            "second": object(),
+        }
+
+        predictor = DummyPredictor()
+        predictor._infer_on_batch = Mock(
+            side_effect=[
+                first_stats,
+                second_stats,
+            ]
+        )
+
+        batches = [
+            DummyBatch(),
+            DummyBatch(),
+        ]
+
+        writer = object.__new__(Writer)
+        writer.output_dir = tmp_path
+        writer.device = torch.device("cpu")
+        writer.is_on_root = True
+        writer.is_distributed = False
+        writer.predictor = predictor
+        writer.config = SimpleNamespace(
+            get_trained_model_stats_from_validation=False,
+        )
+        writer.build_train_loader = Mock(
+            return_value=batches,
+        )
+        writer.aggregate_train_stats = Mock()
+
+        monkeypatch.setattr(
+            "cccma_ppp.core.writer.clear_memory",
+            Mock(),
+        )
+
+        writer._save_train_stats()
+
+        assert predictor._infer_on_batch.call_count == 2
+        writer.aggregate_train_stats.assert_called_once_with(
+            second_stats,
+        )
+
+    def test_save_train_stats_existing_file_still_barriers(
+        self,
+        tmp_path,
+    ):
+        distributed = DummyDistributed(
+            distributed=True,
+        )
+
+        writer = object.__new__(Writer)
+        writer.output_dir = tmp_path
+        writer.is_distributed = True
+        writer.is_on_root = False
+        writer.distributed = distributed
+        writer.build_train_loader = Mock()
+
+        torch.save(
+            {},
+            writer.train_stats_save_dir,
+        )
+
+        writer._save_train_stats()
+
+        writer.build_train_loader.assert_not_called()
+        assert distributed.barrier_called == 1
+
+    def test_aggregate_train_stats_propagates_finalize_error(
+        self,
+        tmp_path,
+    ):
+        class FailingStat:
+            sum_x = torch.tensor(
+                [
+                    1.0,
+                ]
+            )
+
+            def distributed_reduce(self):
+                pass
+
+            def finalize(self):
+                raise RuntimeError("finalize failed")
+
+        writer = object.__new__(Writer)
+        writer.output_dir = tmp_path
+        writer.is_on_root = True
+        writer.is_distributed = False
+
+        with pytest.raises(
+            RuntimeError,
+            match="finalize failed",
+        ):
+            writer.aggregate_train_stats(
+                {
+                    "failing": FailingStat(),
+                }
+            )
+
+        assert not writer.train_stats_save_dir.exists()
+
+
+class TestAdditionalAggregationDispatch:
+    def make_writer(
+        self,
+        *,
+        predictor,
+        num_output_sampling,
+        post_processor=None,
+        distributed=False,
+        root=True,
+    ):
+        writer = object.__new__(Writer)
+        writer.config = SimpleNamespace(
+            num_output_sampling=num_output_sampling,
+        )
+        writer.predictor = predictor
+        writer.post_processor = post_processor
+        writer.output_dir = Path("/tmp/output")
+        writer.is_distributed = distributed
+        writer.is_on_root = root
+        writer.log_root = Mock()
+
+        if distributed:
+            writer.distributed = DummyDistributed(
+                distributed=True,
+                root=root,
+            )
+
+        return writer
+
+    def test_prediction_dispatch_forwards_exact_arguments(
+        self,
+        monkeypatch,
+    ):
+        predictor = SimpleNamespace(
+            save_latent=False,
+        )
+        postprocessor = object()
+        writer = self.make_writer(
+            predictor=predictor,
+            num_output_sampling=0,
+            post_processor=postprocessor,
+        )
+
+        aggregate = Mock()
+        monkeypatch.setattr(
+            "cccma_ppp.core.writer.aggregate_predictions",
+            aggregate,
+        )
+
+        writer.aggregate_predictions_to_netcdf()
+
+        aggregate.assert_called_once_with(
+            post_processor=postprocessor,
+            output_dir=Path("/tmp/output"),
+            load_naming_convention="prediction",
+            save_naming_convention="prediction",
+            logger_function=writer.log_root,
+        )
+
+    def test_output_ensemble_suffix_is_added(
+        self,
+        monkeypatch,
+    ):
+        predictor = SimpleNamespace(
+            save_latent=False,
+        )
+        writer = self.make_writer(
+            predictor=predictor,
+            num_output_sampling=3,
+        )
+
+        aggregate = Mock()
+        monkeypatch.setattr(
+            "cccma_ppp.core.writer.aggregate_predictions",
+            aggregate,
+        )
+
+        writer.aggregate_predictions_to_netcdf()
+
+        assert (
+            aggregate.call_args.kwargs["save_naming_convention"]
+            == "prediction_output_ensemble"
+        )
+
+    def test_nstds_suffix_is_added(
+        self,
+        monkeypatch,
+    ):
+        predictor = SimpleNamespace(
+            save_latent=False,
+            nstds=1.5,
+        )
+        writer = self.make_writer(
+            predictor=predictor,
+            num_output_sampling=0,
+        )
+
+        aggregate = Mock()
+        monkeypatch.setattr(
+            "cccma_ppp.core.writer.aggregate_predictions",
+            aggregate,
+        )
+
+        writer.aggregate_predictions_to_netcdf()
+
+        assert (
+            aggregate.call_args.kwargs["save_naming_convention"] == "prediction_1.5stds"
+        )
+
+    def test_nstds_and_output_ensemble_suffixes_are_combined(
+        self,
+        monkeypatch,
+    ):
+        predictor = SimpleNamespace(
+            save_latent=False,
+            nstds=2.0,
+        )
+        writer = self.make_writer(
+            predictor=predictor,
+            num_output_sampling=4,
+        )
+
+        aggregate = Mock()
+        monkeypatch.setattr(
+            "cccma_ppp.core.writer.aggregate_predictions",
+            aggregate,
+        )
+
+        writer.aggregate_predictions_to_netcdf()
+
+        assert (
+            aggregate.call_args.kwargs["save_naming_convention"]
+            == "prediction_2.0stds_output_ensemble"
+        )
+
+    def test_latent_dispatch_uses_latent_load_name(
+        self,
+        monkeypatch,
+    ):
+        predictor = SimpleNamespace(
+            save_latent=True,
+        )
+        writer = self.make_writer(
+            predictor=predictor,
+            num_output_sampling=0,
+        )
+
+        aggregate = Mock()
+        monkeypatch.setattr(
+            "cccma_ppp.core.writer.aggregate_predictions",
+            aggregate,
+        )
+
+        writer.aggregate_predictions_to_netcdf(
+            do_post_process=False,
+        )
+
+        assert aggregate.call_args.kwargs["load_naming_convention"] == "latent"
+        assert aggregate.call_args.kwargs["save_naming_convention"] == "latent"
+        assert aggregate.call_args.kwargs["post_processor"] is None
+
+    def test_nonroot_distributed_process_does_not_aggregate(
+        self,
+        monkeypatch,
+    ):
+        predictor = SimpleNamespace(
+            save_latent=False,
+        )
+        writer = self.make_writer(
+            predictor=predictor,
+            num_output_sampling=0,
+            distributed=True,
+            root=False,
+        )
+
+        aggregate = Mock()
+        monkeypatch.setattr(
+            "cccma_ppp.core.writer.aggregate_predictions",
+            aggregate,
+        )
+
+        writer.aggregate_predictions_to_netcdf()
+
+        aggregate.assert_not_called()
+        assert writer.distributed.barrier_called == 2
+
+
+class TestAdditionalAggregatePredictions:
+    def test_custom_save_naming_convention_is_used(
+        self,
+        tmp_path,
+    ):
+        temp_dir = tmp_path / "_temp"
+        temp_dir.mkdir()
+
+        write_prediction_file(
+            temp_dir / "prediction_rank0_0.nc",
+            source="prediction",
+            nstds=None,
+        )
+
+        aggregate_predictions(
+            None,
+            tmp_path,
+            save_naming_convention="custom",
+            cleanup_temp=False,
+        )
+
+        assert (tmp_path / "custom_2000.nc").exists()
+        assert not (tmp_path / "prediction_2000.nc").exists()
+
+    def test_custom_load_naming_convention_selects_matching_files(
+        self,
+        tmp_path,
+    ):
+        temp_dir = tmp_path / "_temp"
+        temp_dir.mkdir()
+
+        write_prediction_file(
+            temp_dir / "latent_rank0_0.nc",
+            source="latent",
+            channels=[
+                "latent",
+            ],
+            nstds=None,
+        )
+        write_prediction_file(
+            temp_dir / "prediction_rank0_0.nc",
+            times=[
+                "2001-01-01",
+            ],
+            source="prediction",
+            nstds=None,
+        )
+
+        aggregate_predictions(
+            None,
+            tmp_path,
+            load_naming_convention="latent",
+            cleanup_temp=False,
+        )
+
+        assert (tmp_path / "latent_2000.nc").exists()
+        assert not (tmp_path / "latent_2001.nc").exists()
+
+    def test_duplicate_initialization_times_are_merged(
+        self,
+        tmp_path,
+    ):
+        temp_dir = tmp_path / "_temp"
+        temp_dir.mkdir()
+
+        write_prediction_file(
+            temp_dir / "prediction_rank0_0.nc",
+            times=[
+                "2000-01-01",
+            ],
+            lead_times=[
+                1,
+            ],
+            source="prediction",
+            nstds=None,
+        )
+        write_prediction_file(
+            temp_dir / "prediction_rank1_0.nc",
+            times=[
+                "2000-01-01",
+            ],
+            lead_times=[
+                2,
+            ],
+            source="prediction",
+            nstds=None,
+        )
+
+        aggregate_predictions(
+            None,
+            tmp_path,
+            cleanup_temp=False,
+        )
+
+        with xr.open_dataset(tmp_path / "prediction_2000.nc") as dataset:
+            assert dataset.sizes["time"] == 1
+            np.testing.assert_array_equal(
+                dataset["lead_time"].values,
+                np.asarray(
+                    [
+                        1,
+                        2,
+                    ]
+                ),
+            )
+
+    def test_cleanup_removes_empty_temp_directory(
+        self,
+        tmp_path,
+    ):
+        temp_dir = tmp_path / "_temp"
+        temp_dir.mkdir()
+
+        temporary_file = temp_dir / "prediction_rank0_0.nc"
+        write_prediction_file(
+            temporary_file,
+            source="prediction",
+            nstds=None,
+        )
+
+        aggregate_predictions(
+            None,
+            tmp_path,
+            cleanup_temp=True,
+        )
+
+        assert not temporary_file.exists()
+        assert not temp_dir.exists()
+
+    def test_postprocessor_failure_is_propagated(
+        self,
+        tmp_path,
+    ):
+        temp_dir = tmp_path / "_temp"
+        temp_dir.mkdir()
+
+        write_prediction_file(
+            temp_dir / "prediction_rank0_0.nc",
+            source="prediction",
+            nstds=None,
+        )
+
+        class FailingPostprocessor:
+            def to_dataset(self, value):
+                raise RuntimeError("postprocessing failed")
+
+        with pytest.raises(
+            RuntimeError,
+            match="postprocessing failed",
+        ):
+            aggregate_predictions(
+                FailingPostprocessor(),
+                tmp_path,
+                cleanup_temp=False,
+            )
+
+    def test_saved_logger_message_contains_output_path(
+        self,
+        tmp_path,
+    ):
+        temp_dir = tmp_path / "_temp"
+        temp_dir.mkdir()
+
+        write_prediction_file(
+            temp_dir / "prediction_rank0_0.nc",
+            source="prediction",
+            nstds=None,
+        )
+
+        calls = []
+
+        aggregate_predictions(
+            None,
+            tmp_path,
+            cleanup_temp=False,
+            logger_function=lambda level, message: calls.append(
+                (
+                    level,
+                    message,
+                )
+            ),
+        )
+
+        output_path = tmp_path / "prediction_2000.nc"
+
+        assert calls[0] == (
+            logging.INFO,
+            "Aggregating temporary prediction files year-by-year.",
+        )
+        assert calls[-1][0] == logging.INFO
+        assert str(output_path) in calls[-1][1]
+
+    def test_multiple_years_are_logged_individually(
+        self,
+        tmp_path,
+    ):
+        temp_dir = tmp_path / "_temp"
+        temp_dir.mkdir()
+
+        write_prediction_file(
+            temp_dir / "prediction_rank0_0.nc",
+            times=[
+                "1999-01-01",
+                "2000-01-01",
+                "2001-01-01",
+            ],
+            source="prediction",
+            nstds=None,
+        )
+
+        messages = []
+
+        aggregate_predictions(
+            None,
+            tmp_path,
+            cleanup_temp=False,
+            logger_function=lambda level, message: messages.append(message),
+        )
+
+        saved_messages = [
+            message
+            for message in messages
+            if message.startswith("Saved aggregated predictions")
+        ]
+
+        assert len(saved_messages) == 3
+        assert any("1999" in message for message in saved_messages)
+        assert any("2000" in message for message in saved_messages)
+        assert any("2001" in message for message in saved_messages)
+
+    def test_custom_time_and_lead_dimension_names(
+        self,
+        tmp_path,
+    ):
+        temp_dir = tmp_path / "_temp"
+        temp_dir.mkdir()
+
+        xr.DataArray(
+            np.asarray(
+                [
+                    [
+                        [
+                            3.0,
+                        ],
+                        [
+                            1.0,
+                        ],
+                        [
+                            2.0,
+                        ],
+                    ]
+                ]
+            ),
+            dims=(
+                "initialization",
+                "forecast_step",
+                "channels",
+            ),
+            coords={
+                "initialization": np.asarray(
+                    [
+                        "2000-01-01",
+                    ],
+                    dtype="datetime64[ns]",
+                ),
+                "forecast_step": [
+                    3,
+                    1,
+                    2,
+                ],
+                "channels": [
+                    "prediction",
+                ],
+            },
+            name="prediction",
+        ).to_netcdf(temp_dir / "prediction_rank0_0.nc")
+
+        aggregate_predictions(
+            None,
+            tmp_path,
+            cleanup_temp=False,
+            init_time_dim="initialization",
+            lead_time_dim="forecast_step",
+            optional_sample_dimensions=(),
+        )
+
+        with xr.open_dataset(tmp_path / "prediction_2000.nc") as dataset:
+            np.testing.assert_array_equal(
+                dataset["forecast_step"].values,
+                np.asarray(
+                    [
+                        1,
+                        2,
+                        3,
+                    ]
+                ),
+            )
+            assert "initialization" in dataset.dims

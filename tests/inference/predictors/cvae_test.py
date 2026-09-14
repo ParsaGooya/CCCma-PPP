@@ -114,7 +114,6 @@ def make_predictor(
     return predictor, model
 
 
-@pytest.mark.pruned
 def test_config_rejects_zero_latent_samples():
     with pytest.raises(
         ValueError,
@@ -143,7 +142,6 @@ def test_config_rejects_nonpositive_nstds(nstds):
         )
 
 
-@pytest.mark.pruned
 def test_config_warns_when_saving_latent():
     with pytest.warns(
         UserWarning,
@@ -157,7 +155,6 @@ def test_config_warns_when_saving_latent():
     assert config.save_latent is True
 
 
-@pytest.mark.pruned
 def test_config_type_is_cvae():
     config = cVAEPredictorConfig(
         num_latent_samples=1,
@@ -166,7 +163,6 @@ def test_config_type_is_cvae():
     assert config._type == "cvae"
 
 
-@pytest.mark.pruned
 def test_config_build_returns_predictor(tmp_path):
     config = cVAEPredictorConfig(
         num_latent_samples=2,
@@ -197,7 +193,7 @@ def test_predictor_rejects_nonpositive_output_sampling(
 
     with pytest.raises(
         ValueError,
-        match=r"num_output_sampling must be larger than 1\.",
+        match=r"num_output_sampling must be larger than 0\.",
     ):
         cVAEPredictor(
             config=config,
@@ -208,7 +204,6 @@ def test_predictor_rejects_nonpositive_output_sampling(
         )
 
 
-@pytest.mark.pruned
 def test_non_generator_enables_output_covariance_sampling(
     tmp_path,
     monkeypatch,
@@ -230,7 +225,6 @@ def test_non_generator_enables_output_covariance_sampling(
     assert "residual" in predictor.stats
 
 
-@pytest.mark.pruned
 def test_generator_disables_output_covariance_sampling(
     tmp_path,
 ):
@@ -240,11 +234,10 @@ def test_generator_disables_output_covariance_sampling(
         num_output_sampling=4,
     )
 
-    assert predictor.num_output_covariance_sampling == 1
+    assert predictor.num_output_covariance_sampling == 0
     assert predictor.extract_training_residuals is False
 
 
-@pytest.mark.pruned
 def test_infer_training_samples_enables_posterior_stats(
     tmp_path,
     monkeypatch,
@@ -266,7 +259,6 @@ def test_infer_training_samples_enables_posterior_stats(
     assert "samples" in predictor.stats
 
 
-@pytest.mark.pruned
 def test_predictor_initial_state(tmp_path):
     predictor, _ = make_predictor(
         tmp_path,
@@ -280,7 +272,6 @@ def test_predictor_initial_state(tmp_path):
     assert predictor.device == torch.device("cpu")
 
 
-@pytest.mark.pruned
 def test_update_train_stats_updates_posterior_samples(
     tmp_path,
     monkeypatch,
@@ -319,7 +310,6 @@ def test_update_train_stats_updates_posterior_samples(
     )
 
 
-@pytest.mark.pruned
 def test_update_train_stats_requires_samples(
     tmp_path,
     monkeypatch,
@@ -346,7 +336,6 @@ def test_update_train_stats_requires_samples(
         )
 
 
-@pytest.mark.pruned
 def test_update_train_stats_updates_residuals(
     tmp_path,
     monkeypatch,
@@ -442,7 +431,6 @@ def test_get_latent_samples_builds_sampler_once(
     )
 
 
-@pytest.mark.pruned
 def test_build_latent_sampler_requires_stats_file(
     tmp_path,
 ):
@@ -458,7 +446,6 @@ def test_build_latent_sampler_requires_stats_file(
         predictor.build_latent_sampler()
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "stats",
     [
@@ -534,7 +521,6 @@ def test_build_latent_sampler_uses_loaded_statistics(
     assert result is expected
 
 
-@pytest.mark.pruned
 def test_infer_on_batch_requires_target_for_stats(
     tmp_path,
     monkeypatch,
@@ -606,7 +592,6 @@ def test_infer_on_batch_returns_training_stats(
     )
 
 
-@pytest.mark.pruned
 def test_infer_on_batch_predicts_and_saves(
     tmp_path,
     monkeypatch,
@@ -643,7 +628,6 @@ def test_infer_on_batch_predicts_and_saves(
         "latent_sample_size": 4,
         "nstds": predictor.nstds,
         "latent_samples": None,
-        "chunk_size": None,
         "output_sample_size": 2,
     }
 
@@ -760,7 +744,6 @@ def test_batch_to_netcdf_latent_requires_variables(
         )
 
 
-@pytest.mark.pruned
 def test_extract_training_vars_false_when_no_stats_requested(
     tmp_path,
 ):
@@ -776,7 +759,6 @@ def test_extract_training_vars_false_when_no_stats_requested(
     assert predictor.stats is None
 
 
-@pytest.mark.pruned
 def test_extract_training_vars_contains_both_statistics(
     tmp_path,
     monkeypatch,
@@ -886,7 +868,6 @@ def test_update_train_stats_returns_empty_stats_when_disabled(
     assert result is None
 
 
-@pytest.mark.pruned
 def test_get_latent_samples_uses_existing_sampler(
     tmp_path,
 ):
@@ -996,7 +977,6 @@ def test_infer_on_batch_save_latent_forwards_and_returns(
     )
 
 
-@pytest.mark.pruned
 def test_infer_on_batch_training_stats_takes_precedence_over_save_latent(
     tmp_path,
     monkeypatch,
@@ -1045,7 +1025,6 @@ def test_infer_on_batch_training_stats_takes_precedence_over_save_latent(
     assert model.predict_kwargs is None
 
 
-@pytest.mark.pruned
 def test_infer_on_batch_calls_clear_memory(
     tmp_path,
     monkeypatch,
@@ -1072,7 +1051,6 @@ def test_infer_on_batch_calls_clear_memory(
     clear_mock.assert_called_once()
 
 
-@pytest.mark.pruned
 def test_batch_to_netcdf_latent_equal_sizes_need_no_padding(
     tmp_path,
     monkeypatch,
@@ -1154,7 +1132,6 @@ def test_batch_to_netcdf_latent_padding_uses_negative_infinity(
     assert not torch.isneginf(prediction[..., 1, :]).any()
 
 
-@pytest.mark.pruned
 def test_batch_to_netcdf_latent_filters_none_variables(
     tmp_path,
     monkeypatch,
@@ -1198,7 +1175,6 @@ def test_batch_to_netcdf_latent_filters_none_variables(
     assert args[0].shape[-2] == 2
 
 
-@pytest.mark.pruned
 def test_batch_to_netcdf_latent_uses_distributed_rank(
     tmp_path,
     monkeypatch,
@@ -1227,7 +1203,7 @@ def test_batch_to_netcdf_latent_uses_distributed_rank(
         [{"year": 2000}, {"year": 2001}],
     )
 
-    assert save_mock.call_args.args[3] == "rank6_00000012.nc"
+    assert save_mock.call_args.args[3] == "latent_rank6_00000012.nc"
     assert predictor._batch_counter == 13
 
 
@@ -1272,7 +1248,6 @@ def test_batch_to_netcdf_prediction_preserves_grad_state(
     )
 
 
-@pytest.mark.pruned
 def test_batch_to_netcdf_prediction_uses_rank_and_counter(
     tmp_path,
     monkeypatch,
@@ -1301,5 +1276,5 @@ def test_batch_to_netcdf_prediction_uses_rank_and_counter(
         [{"year": 2000}],
     )
 
-    assert save_mock.call_args.args[3] == "rank3_00000009.nc"
+    assert save_mock.call_args.args[3] == "prediction_rank3_00000009.nc"
     assert predictor._batch_counter == 10

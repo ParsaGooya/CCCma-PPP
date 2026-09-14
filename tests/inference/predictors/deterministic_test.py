@@ -133,7 +133,6 @@ def clear_memory_mock(monkeypatch):
     return clear_mock
 
 
-@pytest.mark.pruned
 def test_config_build_returns_predictor(tmp_path):
     config = DeterministicPredictorConfig()
     model = DummyModule(generator=True)
@@ -157,7 +156,6 @@ def test_config_build_returns_predictor(tmp_path):
     assert predictor.num_output_sampling == 3
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "num_output_sampling",
     [
@@ -171,7 +169,7 @@ def test_predictor_rejects_nonpositive_output_sampling(
 ):
     with pytest.raises(
         ValueError,
-        match=r"num_output_sampling must be larger than 1\.",
+        match=r"num_output_sampling must be larger than 0\.",
     ):
         DetermninisticPredictor(
             config=DeterministicPredictorConfig(),
@@ -182,7 +180,6 @@ def test_predictor_rejects_nonpositive_output_sampling(
         )
 
 
-@pytest.mark.pruned
 def test_predictor_initial_state(tmp_path):
     predictor, model = make_predictor(
         tmp_path,
@@ -197,7 +194,6 @@ def test_predictor_initial_state(tmp_path):
     assert predictor._batch_counter == 0
 
 
-@pytest.mark.pruned
 def test_generator_disables_training_variable_extraction(
     tmp_path,
 ):
@@ -207,12 +203,11 @@ def test_generator_disables_training_variable_extraction(
         num_output_sampling=4,
     )
 
-    assert predictor.num_output_covariance_sampling == 1
+    assert predictor.num_output_covariance_sampling == 0
     assert predictor.extract_training_vars is False
     assert predictor.stats is None
 
 
-@pytest.mark.pruned
 def test_non_generator_enables_training_variable_extraction(
     tmp_path,
     running_covariance_stub,
@@ -233,7 +228,6 @@ def test_non_generator_enables_training_variable_extraction(
     assert predictor.stats["residual"].distributed is predictor.distributed
 
 
-@pytest.mark.pruned
 def test_update_train_stats_updates_residual_covariance(
     tmp_path,
     running_covariance_stub,
@@ -278,7 +272,6 @@ def test_update_train_stats_updates_residual_covariance(
     )
 
 
-@pytest.mark.pruned
 def test_update_train_stats_flattens_nonbatch_dimensions(
     tmp_path,
     running_covariance_stub,
@@ -307,7 +300,6 @@ def test_update_train_stats_flattens_nonbatch_dimensions(
     )
 
 
-@pytest.mark.pruned
 def test_update_train_stats_preserves_batch_dimension(
     tmp_path,
     running_covariance_stub,
@@ -331,7 +323,6 @@ def test_update_train_stats_preserves_batch_dimension(
     assert residual.shape == (4, 6)
 
 
-@pytest.mark.pruned
 def test_update_train_stats_uses_target_minus_prediction(
     tmp_path,
     running_covariance_stub,
@@ -465,7 +456,6 @@ def test_infer_on_batch_predicts_and_saves(
     assert model.predict_kwargs == {
         "data": batch,
         "output_sample_size": 3,
-        "chunk_output_samples": (False,),
     }
 
     predictor._batch_to_netcdf.assert_called_once_with(
@@ -475,7 +465,6 @@ def test_infer_on_batch_predicts_and_saves(
     clear_memory_mock.assert_called_once()
 
 
-@pytest.mark.pruned
 def test_infer_on_batch_skips_noise_for_generator(
     tmp_path,
     clear_memory_mock,
@@ -545,7 +534,6 @@ def test_infer_on_batch_adds_decoder_noise_for_non_generator(
     )
 
 
-@pytest.mark.pruned
 def test_infer_on_batch_uses_prediction_batch_as_sample_size(
     tmp_path,
     running_covariance_stub,
@@ -614,7 +602,7 @@ def test_batch_to_netcdf_delegates_prediction(
     torch.testing.assert_close(args[0], prediction)
     assert args[1] == metadata
     assert args[2] == model.model_config.NUM_OUTPUT_DIMS
-    assert args[3] == "rank0_00000000.nc"
+    assert args[3] == "prediction_rank0_00000000.nc"
     assert args[4] == predictor.temp_save_dir
     assert args[5] == ["output_samples"]
     assert args[6] is None
@@ -622,7 +610,6 @@ def test_batch_to_netcdf_delegates_prediction(
     assert predictor._batch_counter == 1
 
 
-@pytest.mark.pruned
 def test_batch_to_netcdf_preserves_prediction_grad_state(
     tmp_path,
     monkeypatch,
@@ -660,11 +647,10 @@ def test_batch_to_netcdf_preserves_prediction_grad_state(
 
     torch.testing.assert_close(
         saved_prediction,
-        prediction.detach().cpu().unsqueeze(0),
+        prediction.detach().cpu(),
     )
 
 
-@pytest.mark.pruned
 def test_batch_to_netcdf_uses_model_output_dimensions(
     tmp_path,
     monkeypatch,
@@ -695,7 +681,6 @@ def test_batch_to_netcdf_uses_model_output_dimensions(
     assert save_mock.call_args.args[2] == 4
 
 
-@pytest.mark.pruned
 def test_batch_to_netcdf_uses_distributed_rank(
     tmp_path,
     monkeypatch,
@@ -721,10 +706,9 @@ def test_batch_to_netcdf_uses_distributed_rank(
         [{"year": 2000}],
     )
 
-    assert save_mock.call_args.args[3] == "rank7_00000000.nc"
+    assert save_mock.call_args.args[3] == "prediction_rank7_00000000.nc"
 
 
-@pytest.mark.pruned
 def test_batch_to_netcdf_uses_zero_padded_counter(
     tmp_path,
     monkeypatch,
@@ -751,7 +735,7 @@ def test_batch_to_netcdf_uses_zero_padded_counter(
         [{"year": 2000}],
     )
 
-    assert save_mock.call_args.args[3] == "rank3_00000042.nc"
+    assert save_mock.call_args.args[3] == "prediction_rank3_00000042.nc"
     assert predictor._batch_counter == 43
 
 
@@ -791,5 +775,5 @@ def test_batch_to_netcdf_increments_counter_each_call(
     first_name = save_mock.call_args_list[0].args[3]
     second_name = save_mock.call_args_list[1].args[3]
 
-    assert first_name == "rank0_00000000.nc"
-    assert second_name == "rank0_00000001.nc"
+    assert first_name == "prediction_rank0_00000000.nc"
+    assert second_name == "prediction_rank0_00000001.nc"

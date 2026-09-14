@@ -188,7 +188,7 @@ class DatasetConfigABC(abc.ABC):
                 not self._using_model_data_as_condition,
             ]
         ):
-            if self.condition_method.lower() != "static":
+            if (self.condition_method or "").lower() != "static":
                 for dim in [
                     dim
                     for dim in self.model.coords
@@ -215,7 +215,7 @@ class DatasetConfigABC(abc.ABC):
                         f" cftime/datetime type time coordinates."
                     )           
 
-            if self.condition_method.lower() == "same_member":
+            if (self.condition_method or "").lower() == "same_member":
                 if any(
                     [
                         self.model.coords.get(self.realization_dim) is None,
@@ -270,7 +270,7 @@ class DatasetConfigABC(abc.ABC):
             If condition method is not supported.
         """
         if self.condition_method is not None:
-            if self.condition_method.lower() not in self._VALID_CONDITION_METHODS:
+            if (self.condition_method or "").lower() not in self._VALID_CONDITION_METHODS:
                 raise ValueError(
                     f"Invalid condition_method: {self.condition_method}. "
                     f"Must be a in {sorted(self._VALID_CONDITION_METHODS)}."
@@ -279,7 +279,7 @@ class DatasetConfigABC(abc.ABC):
 
     def _check_model(self):
         if self.model is not None:
-            if self.condition_method.lower() == "same_member":
+            if (self.condition_method or "").lower() == "same_member":
                 if self.model.ensemble_mean:
                     raise ValueError(
                         "for same member coniditioning the model data should not be ensemble mean."
@@ -294,7 +294,7 @@ class DatasetConfigABC(abc.ABC):
                     "You must specify condition_method for conditioning dataset!"
                 )
 
-            if self.condition_method.lower() in ["cross_ensemble", "same_member"]:
+            if (self.condition_method or "").lower() in ["cross_ensemble", "same_member"]:
                 if self.effective_condition.ensemble_mean:
                     raise ValueError(
                         "condition ensemble_mean cannot be True for cross_ensemble or same_member conditioning."
@@ -303,7 +303,7 @@ class DatasetConfigABC(abc.ABC):
                     raise ValueError(
                         f"For cross_ensemble or same_member conditioning a {self.realization_dim} dim must exist in the condition."
                     )
-            elif self.condition_method.lower() == "ensemble_mean":
+            elif (self.condition_method or "").lower() == "ensemble_mean":
                 if self.effective_condition.ensemble_mean is not True:
                     raise ValueError(
                         "Ensemble mean must be True for ensemble_mean conditioning."
@@ -318,7 +318,7 @@ class DatasetConfigABC(abc.ABC):
                         "'static' conditioning method cannot point to the same model data!"
                     )
 
-            if self.condition_method.lower() == "static":
+            if (self.condition_method or "").lower() == "static":
                 checklist = [
                     dim in self.effective_condition.coords
                     for dim in ((self.init_time_dim, self.lead_time_dim, self.realization_dim))
@@ -331,7 +331,7 @@ class DatasetConfigABC(abc.ABC):
                     )
 
         elif self.condition_method is not None:
-            if self.condition_method.lower() == "static":
+            if (self.condition_method or "").lower() == "static":
                 raise ValueError(
                     "For static conditioning method condition dataset must be specified!"
                 )
@@ -419,7 +419,7 @@ class DatasetConfigABC(abc.ABC):
         variables, and ensemble members as the model dataset.
         """
         if self.condition is None:
-            return self.condition_method.lower() in {
+            return (self.condition_method or "").lower() in {
                 "ensemble_mean",
                 "cross_ensemble",
                 "same_member",
@@ -455,7 +455,7 @@ class DatasetConfigABC(abc.ABC):
         -------
         ModelDataConfig
         """
-        ensemble_mean = self.condition_method.lower() == "ensemble_mean"
+        ensemble_mean = (self.condition_method or "").lower() == "ensemble_mean"
         return ModelDataConfig(
             paths=self.model.paths,
             names=self.model.names,
