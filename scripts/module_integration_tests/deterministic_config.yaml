@@ -1,0 +1,93 @@
+experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rna002/output/cccma_PPP_tests/test9
+max_epochs: 1
+train_loader:
+  dataset_config:
+    model:
+      paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/forecast_data/datetime
+      names: [tas]
+      preprocessing_pipeline:
+        preprocessors_list:
+          - name: anomalies
+            args:
+              dims: [time]
+          - name: flattener
+
+      ensemble_mean: True
+      concat_dim: time
+      rename_dict:
+        year: time
+
+    observation:
+      paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5/datetime
+      names: [tas]
+      preprocessing_pipeline:
+        preprocessors_list:
+          - name: anomalies
+            args:
+              dims: [time]
+              frequency: month
+          - name: flattener
+
+      concat_dim: time
+
+    condition_method: ensemble_mean
+    lead_times:
+      start: 1
+      end: 12
+
+  batch_size: 10
+  time_features:
+    - time
+    - lead_time
+    - month_sin
+    - month_cos
+
+  train_years_slice: [1980, 1981]
+  num_validation_years: 0
+  prefetch_factor: null
+  num_data_workers: 0
+  reduce_spatial_mask: True
+  load: True
+
+module:
+  type: deterministic
+  config:
+    ModelConfig:
+      type: MLP
+      config:
+        encoder_hidden_dims: [3000, 3000, 3000]
+        decoder_hidden_dims: [3000, 3000, 3000]
+        batch_normalization: True
+        dropout_rate: 0.5
+        init_method: xavier
+
+losspipeline:
+  loss_pipeline:
+    - name: mse
+
+  reduction: mean
+
+trainer:
+  beta_finder:
+    beta: 10
+    num_epoch_to_warmup: 10
+  #     gradient_accumulation_steps: 2
+  earlystoppingbuffer: 10
+
+  mixed_precision: True
+
+optimization:
+  lr: 0.0001
+  optimizer_type: adam
+  lr_scheduler_config:
+    min_lr: 0.00001
+    warmup_epochs: 1
+    total_epochs: 10
+    hold_min_lr: True
+
+weights:
+  spatial_method: uniform
+
+log_every_n_epochs: 2
+save_checkpoint: True
+seed: 10

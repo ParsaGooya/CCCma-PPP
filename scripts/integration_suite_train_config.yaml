@@ -1,4 +1,4 @@
-experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rna002/output/cccma_PPP_tests/test8
+experiment_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rna002/output/cccma_PPP_tests/test9
 max_epochs: 1
 train_loader:
   dataset_config:
@@ -10,7 +10,7 @@ train_loader:
           - name: anomalies
             args:
               dims: [time]
-        # - name: flattener
+          # - name: flattener
 
       ensemble_mean: True
       concat_dim: time
@@ -26,7 +26,7 @@ train_loader:
             args:
               dims: [time]
               frequency: month
-        # - name : flattener
+          # - name: flattener
 
       concat_dim: time
 
@@ -90,9 +90,9 @@ losspipeline:
   reduction: mean
 
 trainer:
-  # beta_finder :
-  #           beta : 10
-  #           num_epoch_to_warmup : 10
+  beta_finder:
+    beta: 10
+    num_epoch_to_warmup: 10
   #     gradient_accumulation_steps: 2
   earlystoppingbuffer: 10
 
