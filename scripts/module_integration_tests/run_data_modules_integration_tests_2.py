@@ -1,13 +1,3 @@
-"""
-Data Modules Integration Test Suite (Hardcoded Scenarios)
-
-Improvements over original:
-1. Rich metadata logging: Per-sample metadata + temporal statistics
-2. All 4 condition methods: ensemble_mean, cross_ensemble, same_member, static
-3. Better __getitem__ testing: Tuple format validation, mask analysis
-4. Separate mask testing: Binary validation separate from channel visualization
-"""
-
 from __future__ import annotations
 
 import csv
