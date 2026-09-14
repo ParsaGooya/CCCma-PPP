@@ -5,15 +5,33 @@ import os
 
 class Distributed:
     """
-    Document this class.
+    Single class for managing distributed training setup.
+
+    Attributes
+    ----------
+    distributed : bool
+        Whether distributed training is enabled.
+    rank : int
+        Global process rank.
+    local_rank : int
+        Local process rank (GPU index).
+    world_size : int
+        Total number of processes.
+    device : torch.device
+        Device assigned to the current process.
     """
 
     _instance = None
 
     def __init__(self):
         """
-        Document this function.
+        Initialize distributed environment.
+
+        Returns
+        -------
+        None
         """
+
         self.distributed = "RANK" in os.environ and "WORLD_SIZE" in os.environ
 
         if self.distributed:
@@ -37,64 +55,86 @@ class Distributed:
     @classmethod
     def get_instance(cls):
         """
-        Document this function.
+        Retrieve singleton instance.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        Distributed
+            Shared instance.
         """
+
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
 
     def cleanup(self):
         """
-        Document this function.
+        Destroy distributed process group.
+
+        Returns
+        -------
+        None
         """
+
         if dist.is_available() and dist.is_initialized():
             dist.destroy_process_group()
 
     def is_root(self) -> bool:
         """
-        Document this function.
+        Check if current process is the root process.
 
         Returns
         -------
         bool
-            Description not yet provided.
+            True if rank is 0.
         """
+
         return self.rank == 0
 
     def barrier(self):
         """
-        Document this function.
+        Synchronize all processes.
+
+        Returns
+        -------
+        None
         """
+
         if self.distributed:
             dist.barrier()
 
     def all_reduce_sum(self, local: torch.Tensor):
         """
-        Document this function.
+        Perform all-reduce sum across processes.
 
         Parameters
         ----------
         local : torch.Tensor
-            Description not yet provided.
+            Tensor to be summed across all ranks.
+
+        Returns
+        -------
+        None
         """
+
         if dist.is_available() and dist.is_initialized():
             dist.all_reduce(local, op=dist.ReduceOp.SUM)
 
     def broadcast(self, local: torch.Tensor, src=0):
         """
-        Document this function.
+        Broadcast tensor from source process to all processes.
 
         Parameters
         ----------
         local : torch.Tensor
-            Description not yet provided.
-        src : Any
-            Description not yet provided.
+            Tensor to broadcast.
+        src : int, optional
+            Source rank.
+
+        Returns
+        -------
+        None
         """
+
         if dist.is_available() and dist.is_initialized():
             dist.broadcast(local, src=src)

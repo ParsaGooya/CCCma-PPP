@@ -1,38 +1,35 @@
 class Registery:
     """
-    Document this class.
+    Registry for mapping string names to classes.
     """
 
     def __init__(self):
         """
-        Document this function.
+        Initialize empty registry.
+
+        Returns
+        -------
+        None
         """
+
         self._modules = {}
 
     def register(self, name):
         """
-        Document this function.
+        Register a class under a given name.
 
         Parameters
         ----------
-        name : Any
-            Description not yet provided.
+        name : str
+            Identifier used to register the class.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        Callable
+            Decorator that registers the class.
         """
 
         def decorator(cls):
-            """
-            Document this function.
-
-            Returns
-            -------
-            Any
-                Description not yet provided.
-            """
             self._modules[name] = cls
             return cls
 
@@ -40,25 +37,27 @@ class Registery:
 
     def get(self, name, config=None):
         """
-        Document this function.
+        Retrieve and optionally instantiate a registered class.
 
         Parameters
         ----------
-        name : Any
-            Description not yet provided.
-        config : Any
-            Description not yet provided.
+        name : str
+            Name of the registered class.
+        config : dict or None, optional
+            Initialization arguments.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        object
+            Instantiated object if config is provided,
+            otherwise the class itself.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If the name is not registered.
         """
+
         if name not in self._modules:
             raise ValueError(f"{name} not registered. should be in {self.available()}")
 
@@ -70,11 +69,12 @@ class Registery:
 
     def available(self):
         """
-        Document this function.
+        Available registered names.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        list of str
+            Registered identifiers.
         """
+
         return list(self._modules.keys())

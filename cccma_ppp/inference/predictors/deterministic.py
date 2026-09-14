@@ -17,16 +17,6 @@ from cccma_ppp.data_modules.dataloader import BatchDataABC
 
 @dataclasses.dataclass
 class DeterministicPredictorConfig:
-    """
-    Document this class.
-
-    Parameters
-    ----------
-    chunk_output_samples : bool
-        Description not yet provided.
-    """
-
-    chunk_output_samples: bool = (False,)
     _type: ClassVar[str] = "deterministic"
 
     def build(
@@ -34,87 +24,32 @@ class DeterministicPredictorConfig:
         module: moduleABC,
         distributed: Distributed,
         output_dir: Path | str,
-        num_output_sampling: int = 1,
+        num_output_sampling: int = 0,
     ):
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        module : moduleABC
-            Description not yet provided.
-        distributed : Distributed
-            Description not yet provided.
-        output_dir : Path | str
-            Description not yet provided.
-        num_output_sampling : int
-            Description not yet provided.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
         return DetermninisticPredictor(
             self, module, distributed, output_dir, num_output_sampling
         )
 
 
 class DetermninisticPredictor(PredictorABC):
-    """
-    Document this class.
-
-    Parameters
-    ----------
-    config : DeterministicPredictorConfig
-        Description not yet provided.
-    module : moduleABC
-        Description not yet provided.
-    distributed : Distributed
-        Description not yet provided.
-    output_dir : Path | str
-        Description not yet provided.
-    num_output_sampling : int
-        Description not yet provided.
-    """
-
     def __init__(
         self,
         config: DeterministicPredictorConfig,
         module: moduleABC,
         distributed: Distributed,
         output_dir: Path | str,
-        num_output_sampling: int = 1,
+        num_output_sampling: int = 0,
     ):
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        config : DeterministicPredictorConfig
-            Description not yet provided.
-        module : moduleABC
-            Description not yet provided.
-        distributed : Distributed
-            Description not yet provided.
-        output_dir : Path | str
-            Description not yet provided.
-        num_output_sampling : int
-            Description not yet provided.
-
-        Raises
-        ------
-        ValueError
-            Description not yet provided.
-        """
         self.config = config
         self.module = module
         self.num_output_sampling = num_output_sampling
-        self.num_output_covariance_sampling = 1
+        self.num_output_covariance_sampling = 0
         self.output_dir = Path(output_dir)
 
-        if num_output_sampling <= 0:
-            raise ValueError("num_output_sampling must be larger than 1.")
+        if num_output_sampling < 0:
+            raise ValueError("num_output_sampling must be larger than 0.")
 
         if module.model_config.GENERATOR is None:
             self.num_output_covariance_sampling = num_output_sampling
@@ -132,15 +67,7 @@ class DetermninisticPredictor(PredictorABC):
 
     @property
     def extract_training_vars(self):
-        """
-        Document this function.
-
-        Returns
-        -------
-        Any
-            Description not yet provided.
-        """
-        return self.num_output_covariance_sampling > 1
+        return self.num_output_covariance_sampling > 0
 
     @torch.no_grad()
     def _infer_on_batch(
@@ -148,26 +75,7 @@ class DetermninisticPredictor(PredictorABC):
         batch: BatchDataABC,
         _getting_train_stats: bool = False,
     ) -> deterministicOutput | dict[str, RunningCovariance]:
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        batch : BatchDataABC
-            Description not yet provided.
-        _getting_train_stats : bool
-            Description not yet provided.
-
-        Returns
-        -------
-        deterministicOutput | dict[str, RunningCovariance]
-            Description not yet provided.
-
-        Raises
-        ------
-        RuntimeError
-            Description not yet provided.
-        """
         clear_memory()
         self.raw_module.eval()
 
@@ -185,18 +93,16 @@ class DetermninisticPredictor(PredictorABC):
                 stats = self._update_train_stats(output, batch)
                 return stats
 
-            if self.num_output_covariance_sampling > 1:
-                num_output_sampling = 1
-            else:
+            if self.num_output_covariance_sampling > 0:
+                num_output_sampling = 0
+            else: 
                 num_output_sampling = self.num_output_sampling
 
             output = self.raw_module.predict(
-                data=batch,
-                output_sample_size=num_output_sampling,
-                chunk_output_samples=self.config.chunk_output_samples,
+                data=batch, output_sample_size=num_output_sampling
             )
 
-            if self.num_output_covariance_sampling > 1:
+            if self.num_output_covariance_sampling > 0:
                 sample_size = (output.output.shape[0],)
                 reshape_size = output.output.shape[1:]
                 output = self.add_decoder_noise(
@@ -214,21 +120,7 @@ class DetermninisticPredictor(PredictorABC):
         output: deterministicOutput,
         data: BatchDataABC,
     ) -> dict[str, RunningCovariance]:
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        output : deterministicOutput
-            Description not yet provided.
-        data : BatchDataABC
-            Description not yet provided.
-
-        Returns
-        -------
-        dict[str, RunningCovariance]
-            Description not yet provided.
-        """
         prediction = output.output
         target = data.target
         residual = target - prediction
@@ -243,27 +135,18 @@ class DetermninisticPredictor(PredictorABC):
         output: deterministicOutput,
         metadata: list[dict],
     ):
-        """
-        Document this function.
 
-        Parameters
-        ----------
-        output : deterministicOutput
-            Description not yet provided.
-        metadata : list[dict]
-            Description not yet provided.
-        """
         prediction = output.output
 
-        if self.num_output_sampling == 1:
+        if self.num_output_sampling == 0:
             prediction = prediction.unsqueeze(0)
 
         num_output_dims = self.raw_module.model_config.NUM_OUTPUT_DIMS
         extra_dims_sorted = ["output_samples"]
         assign_coords = None
-        attrs = {"source": "predictions"}
-
-        save_name = f"rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
+        save_name = (
+            f"prediction_rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
+        )
 
         save_batch_to_netcdf(
             prediction,
@@ -273,7 +156,6 @@ class DetermninisticPredictor(PredictorABC):
             self.temp_save_dir,
             extra_dims_sorted,
             assign_coords,
-            attrs,
         )
 
         self._batch_counter += 1
