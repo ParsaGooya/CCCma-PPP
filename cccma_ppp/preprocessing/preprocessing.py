@@ -5,9 +5,13 @@ import joblib
 from pathlib import Path
 import os
 import xarray as xr
+import uuid
+from datetime import datetime
+
 
 from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
+from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 from cccma_ppp.configs import supported_NN_dimensions_sorted, required_sample_dimensions
 
 init_time_dim, lead_time_dim = required_sample_dimensions
@@ -36,7 +40,6 @@ class PreprocessingPipeline:
         default_factory=list
     )
     load_dir: str | Path = None
-    num_instances: ClassVar[int] = 0
 
     init_time_time: str = dataclasses.field(init=False, default=init_time_dim)
     lead_time_time: str = dataclasses.field(init=False, default=lead_time_dim)
@@ -48,18 +51,26 @@ class PreprocessingPipeline:
         """
         Document this function.
         """
-        self.fitted = False
-        self.mask = None
-        self.fitted_based_time = None
-        self.reference_coords = None
-        self.reference_var = None
-        self.num_instances += 1
+
         if self.load_dir is None:
-            self.name = f"instance_{self.num_instances}"
-            self.rename_dict = None
+
+            self.fitted = False
+            self.mask = None
+            self.fitted_based_time = None
+            self.reference_coords = None
+            self.reference_var = None
+            self.steps = []
+            self.fitted_preprocessors = []
             self.pipeline = []
+
+            self.name = f"pipeline_{uuid.uuid4().hex[:8]}"
+            self.rename_dict = None
+            
             for step in self.preprocessors_list:
                 self.pipeline.append((step.name.lower(), step.get_preprocessor()))
+
+        else:
+            self._load_from_memory(Path(self.load_dir))
 
     def set_name(self, name: str, rename_dict: dict[str, str] | None):
         """
@@ -108,8 +119,7 @@ class PreprocessingPipeline:
             data_processed = base_data
             self.mask = mask
             self.fitted_based_time = base_data[self.init_time_time].values
-            self.steps = []
-            self.fitted_preprocessors = []
+
 
             for step_name, preprocessor in self.pipeline:
                 preprocessor.fit(data=data_processed, mask=mask)
@@ -132,9 +142,6 @@ class PreprocessingPipeline:
                     os.makedirs(save_path)
 
                 joblib.dump(self, save_path / save_name)
-
-        else:
-            self._load_from_memory(Path(self.load_dir))
 
         return self
 
@@ -159,6 +166,8 @@ class PreprocessingPipeline:
         ValueError
             Description not yet provided.
         """
+        self._check_fitted()
+
         if step_arguments is None:
             step_arguments = dict()
         for a in step_arguments.keys():
@@ -193,6 +202,8 @@ class PreprocessingPipeline:
         ValueError
             Description not yet provided.
         """
+        self._check_fitted()
+
         if step_arguments is None:
             step_arguments = dict()
         for a in step_arguments.keys():
@@ -206,6 +217,30 @@ class PreprocessingPipeline:
             args = dict(step_arguments.get(step, {}))
             data_processed = preprocessor.inverse_transform(data_processed, **args)
         return data_processed
+
+    @property
+    def has_flattener(self) -> bool:
+        """Check if pipeline includes Flattennanremove step."""
+        return any(
+            isinstance(item, Flattennanremove)
+            for item in self.fitted_preprocessors
+        )
+
+    def get_flattener(self) -> Flattennanremove:
+        """Get flattener preprocessor."""
+        flattener = None
+        for preprocessor in self.fitted_preprocessors:
+            if isinstance(preprocessor, Flattennanremove):
+                flattener = preprocessor
+                break
+
+        if flattener is None:
+            raise ValueError(
+                "Pipeline does not contain a Flattennanremove step. "
+                "Cannot reconstruct spatial coordinates."
+            )
+        return flattener
+
 
     def to_dataset(self, data: xr.DataArray) -> xr.Dataset:
         """
@@ -226,6 +261,16 @@ class PreprocessingPipeline:
         ValueError
             Description not yet provided.
         """
+
+        if not self.fitted:
+            raise RuntimeError("Pipeline must be fitted before calling to_dataset().")
+
+        if 'channels' not in data.dims:
+            raise ValueError(
+                f"Input data must have 'channels' dimension. "
+                f"Got dimensions: {list(data.dims)}"
+            )
+
         if len(data.channels) != len(self.reference_var):
             raise ValueError(
                 "The dataset does not match the preprocessing pipeline."
@@ -234,17 +279,11 @@ class PreprocessingPipeline:
 
         output_dims = [dim for dim in data.dims if "output_dim_" in dim]
 
-        from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
-
-        checklist = [
-            isinstance(item, Flattennanremove) for item in self.fitted_preprocessors
-        ]
-
-        if any(checklist):
+        if self.has_flattener:
             data = data.rename({"output_dim_0": "ref"})
-            data = data.assign_coords(
-                ref=self.get_preprocessors("flattener").final_locations
-            )
+            flattener = self.get_flattener()
+            data = data.assign_coords(ref=flattener.final_locations)
+
         else:
             data = data.rename(
                 {
@@ -364,6 +403,12 @@ class PreprocessingPipeline:
                 "Spatial coords can only be extracted for a fitted pipeline."
             )
 
+        if set(base_data.dims).isdisjoint(self.supported_NN_dimensions):
+            raise ValueError(
+                "No supported NN dimensions found in base_data. "
+                "Cannot create reference coords."
+            )
+
         self.reference_coords = {
             dim: base_data[dim]
             for dim in self.supported_NN_dimensions
@@ -371,6 +416,13 @@ class PreprocessingPipeline:
         }
 
         self.reference_var = list(base_data.data_vars)
+
+        if not self.reference_var:
+            raise ValueError(
+                "No data variables found in base_data. "
+                "Cannot create reference variables."
+            )
+
 
     def load_from_memory(self, load_dir: str | Path):
         """
@@ -408,3 +460,18 @@ class PreprocessingPipeline:
         self.name = loaded.name
         del loaded
         return self
+
+    def _check_fitted(self) -> None:
+        """
+        Validate pipeline is fitted.
+
+        Raises
+        ------
+        RuntimeError
+            If pipeline not fitted.
+        """
+        if not self.fitted:
+            raise RuntimeError(
+                "Pipeline must be fitted before calling transform() "
+                "or inverse_transform(). Call fit() first."
+            )
