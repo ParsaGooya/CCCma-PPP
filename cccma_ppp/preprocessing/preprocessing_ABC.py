@@ -273,3 +273,20 @@ class PreprocessModuleABC(abc.ABC):
                 "The preprocessor must be fitted before calling "
                 "'transform' or 'inverse_transform'."
             )
+
+    @final
+    def _check_zeros(self, data: xr.Dataset | xr.DataArray):
+
+        zero_range_vars = []
+        if isinstance(data, xr.Dataset):
+            for var in data.data_vars:
+                if (data[var] == 0).any():
+                    zero_range_vars.append(var)
+        else:
+            if (data == 0).any():
+                zero_range_vars.append(data.name or "data")
+
+        if zero_range_vars:
+            raise ValueError(
+                f"{zero_range_vars} variables have zero values that cause undefined behaviour in .transform()."
+            )

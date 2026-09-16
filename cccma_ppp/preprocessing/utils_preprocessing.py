@@ -112,6 +112,7 @@ class Normalizer(PreprocessModuleABC):
                 grouped_data.groupby(self.frequency).max(dim=reduction_dims).load()
             )
 
+        self._check_zeros(self.max - self.min)
         self.fitted = True
         return self
 
@@ -177,7 +178,7 @@ class Normalizer(PreprocessModuleABC):
 @PreprocessingStepSelector.register("standardizer")
 class Standardizer(PreprocessModuleABC):
     """
-    Document this class.
+    Document this class. 
 
     Parameters
     ----------
@@ -187,6 +188,10 @@ class Standardizer(PreprocessModuleABC):
         Description not yet provided.
     **kwargs : Any
         Description not yet provided.
+
+    Note
+    ---------
+    Should explicitly mention that std zero will be masked.
     """
 
     def __init__(
@@ -460,7 +465,7 @@ class TrendRemover(PreprocessModuleABC):
     **kwargs : Any
         Description not yet provided.
     """
-
+    
     def __init__(
         self,
         frequency: Literal["month", "day"] | None = None,
@@ -480,6 +485,10 @@ class TrendRemover(PreprocessModuleABC):
         ------
         ValueError
             Description not yet provided.
+
+        Notes
+        -------
+        Frequency cannot be year for trend remover.
         """
         if frequency not in {None, "month", "day"}:
             raise ValueError(
@@ -534,10 +543,11 @@ class TrendRemover(PreprocessModuleABC):
         if values.size == 0:
             raise ValueError("Time coordinate cannot be empty.")
 
+        SECONDS_PER_DAY = 24 * 60 * 60
         if isinstance(values.reshape(-1)[0], cftime.datetime):
             numeric = np.asarray(
                 [
-                    (time - origin).total_seconds() / 86400.0
+                    (time - origin).total_seconds() / SECONDS_PER_DAY
                     for time in values.reshape(-1)
                 ],
                 dtype=np.float64,
