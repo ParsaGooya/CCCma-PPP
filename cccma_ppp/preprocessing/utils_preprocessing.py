@@ -67,7 +67,6 @@ class Normalizer(PreprocessModuleABC):
         self.dims = tuple(dims) if dims is not None else tuple()
         self.frequency = frequency
 
-        self.large_ensemble = False
         self.fitted = False
 
         if self.frequency not in self.supported_frequencies:
@@ -223,7 +222,6 @@ class Standardizer(PreprocessModuleABC):
         self.dims = tuple(dims) if dims is not None else tuple()
         self.frequency = frequency
 
-        self.large_ensemble = False
         self.fitted = False
 
         if self.frequency not in self.supported_frequencies:
@@ -368,7 +366,6 @@ class AnomaliesScaler(PreprocessModuleABC):
         self.dims = tuple(dims) if dims is not None else tuple()
         self.frequency = frequency
 
-        self.large_ensemble = False
         self.fitted = False
 
     def fit(self, data: xr.Dataset | xr.DataArray, mask: xr.DataArray = None):
