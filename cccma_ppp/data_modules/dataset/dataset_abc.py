@@ -1215,22 +1215,15 @@ class DatasetABC(Dataset, abc.ABC):
         tuple
             Description not yet provided.
         """
-        from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
-
-        checklist = [
-            isinstance(item, Flattennanremove)
-            for item in self.config.effective_input.preprocessing_pipeline.fitted_preprocessors
-        ]
 
         len_names = len(self.config.effective_input.names)
         if self._concat_condition_to_input:
             len_names += len(self.config.effective_condition.names)
 
-        if any(checklist):
+        if self.config.effective_input.preprocessing_pipeline.has_flattener:
+            flattener = self.config.effective_input.preprocessing_pipeline.get_flattener()
             in_shape = (
-                self.config.effective_input.preprocessing_pipeline.get_preprocessors(
-                    "flattener"
-                ).final_locations.shape
+                flattener.final_locations.shape
             )
 
         else:

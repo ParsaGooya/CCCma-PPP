@@ -266,18 +266,14 @@ class DatasetOperator:
         ]:
             target_coords[dim] = ref.coords[dim]
 
-        from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
-
-        checklist = [
-            isinstance(item, Flattennanremove)
-            for item in ref.preprocessing_pipeline.fitted_preprocessors
-        ]
+        if ref.preprocessing_pipeline.has_flattener:
+            flattener = ref.preprocessing_pipeline.get_flattener()
+        else:
+            flattener = None
 
         weights = config.build_weights(
             target_coords,
-            Flattennanremover=ref.preprocessing_pipeline.get_preprocessors("flattener")
-            if any(checklist)
-            else None,
+            Flattennanremover=flattener,
             save=save,
             save_path=save_path,
             save_name=save_name,
