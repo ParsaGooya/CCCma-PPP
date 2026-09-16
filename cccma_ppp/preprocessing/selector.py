@@ -22,6 +22,31 @@ class PreprocessingStepSelector:
     args: dict[str, object] | None = None
     registery: ClassVar[Registery] = Registery()
 
+    def __post_init__(self):
+        if self.args is not None and not isinstance(self.args, dict):
+            raise TypeError(
+                f"Args must be dict or None, got {type(self.args).__name__}. "
+                f"Provided args: {self.args}"
+            )
+
+        if not isinstance(self.name, str):
+            raise TypeError(
+                f"Step name must be string, got {type(self.name)}."
+            )
+
+        if not self.name:
+            raise ValueError("Step name cannot be empty.")
+
+        self.name = self.name.lower()
+
+        available = self.registery.available()
+        if self.name not in available:
+            raise ValueError(
+                f"Preprocessing step '{self.name}' is not registered. "
+                f"Available: {available}"
+            )
+
+
     def get_preprocessor(self):
         """
         Document this function.
@@ -31,7 +56,7 @@ class PreprocessingStepSelector:
         Any
             Description not yet provided.
         """
-        return self.registery.get(self.name.lower(), self.args)
+        return self.registery.get(self.name, self.args)
 
     @classmethod
     def register(cls, name: str) -> Callable[..., PreprocessModuleABC]:
