@@ -477,21 +477,14 @@ class TrainDataset(DatasetABC):
         Any
             Description not yet provided.
         """
-        from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
-
         if self.config.observation is not None:
-            checklist = [
-                isinstance(item, Flattennanremove)
-                for item in self.config.observation.preprocessing_pipeline.fitted_preprocessors
-            ]
 
             len_names = len(self.config.observation.names)
 
-            if any(checklist):
+            if self.config.observation.preprocessing_pipeline.has_flattener:
+                flattener = self.config.observation.preprocessing_pipeline.get_flattener()
                 out_shape = (
-                    self.config.observation.preprocessing_pipeline.get_preprocessors(
-                        "flattener"
-                    ).final_locations.shape
+                    flattener.final_locations.shape
                 )
 
             else:
