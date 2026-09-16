@@ -29,6 +29,8 @@ class PreprocessModuleABC(abc.ABC):
 
     large_ensemble: bool
     fitted: bool
+    dims: tuple[str, ...]
+    frequency: str | None
 
     lead_time_resolution: ClassVar[lead_time_unit] = lead_time_resolution
     init_time_dim: ClassVar[int] = init_time_dim
@@ -95,6 +97,13 @@ class PreprocessModuleABC(abc.ABC):
             Description not yet provided.
         """
         reduction_dims = self.dims
+        self.large_ensemble = False
+        missing_dims = set(reduction_dims) - set(data.dims)
+        if missing_dims:
+            raise ValueError(
+                f"Dimensions {missing_dims} in preprocessing config dims"
+                f"not found in data. Available: {set(data.dims)}"
+            )
 
         if (
             self.realization_dim in data.dims
@@ -108,6 +117,49 @@ class PreprocessModuleABC(abc.ABC):
             return None
 
         return reduction_dims
+
+    @final
+    def _extract_temporal_coordinate(
+        self,
+        init_time: xr.DataArray,
+        frequency: str | None,
+    ) -> xr.DataArray:
+        """
+        Extract temporal coordinate based on frequency.
+
+        Single source of truth for temporal extraction logic.
+
+        Parameters
+        ----------
+        init_time : xr.DataArray
+            Initialization time coordinate to extract from.
+        frequency : str | None
+            Temporal frequency: 'year', 'month', 'day', or None.
+
+        Returns
+        -------
+        xr.DataArray
+            Extracted temporal coordinate matching frequency.
+
+        Raises
+        ------
+        ValueError
+            If frequency is not supported.
+        """
+        if frequency is None:
+            return init_time
+
+        if frequency == "year":
+            return init_time.dt.year
+        elif frequency == "month":
+            return init_time.dt.month
+        elif frequency == "day":
+            return init_time.dt.dayofyear
+        else:
+            raise ValueError(
+                f"Unsupported frequency {frequency!r}. "
+                f"Must be one of {self.supported_frequencies}."
+            )
 
     @final
     def _add_grouping_coordinate(
@@ -136,18 +188,7 @@ class PreprocessModuleABC(abc.ABC):
             return data
 
         init_time = data[self.init_time_dim]
-
-        if self.frequency == "year":
-            grouping_coord = init_time.dt.year
-
-        elif self.frequency == "month":
-            grouping_coord = init_time.dt.month
-
-        elif self.frequency == "day":
-            grouping_coord = init_time.dt.dayofyear
-
-        else:
-            raise RuntimeError(f"Unexpected temporal frequency {self.frequency!r}.")
+        grouping_coord = self._extract_temporal_coordinate(init_time, self.frequency)
 
         return data.assign_coords({self.frequency: grouping_coord})
 
@@ -190,22 +231,11 @@ class PreprocessModuleABC(abc.ABC):
                 raise ValueError(
                     f"Data must contain either the auxiliary coordinate "
                     f"{self.frequency!r} or the initialization-time "
-                    f"coordinate {init_time_dim!r}."
+                    f"coordinate {self.init_time_dim!r}."
                 )
 
             init_time = data[self.init_time_dim]
-
-            if self.frequency == "year":
-                temporal_indexer = init_time.dt.year
-
-            elif self.frequency == "month":
-                temporal_indexer = init_time.dt.month
-
-            elif self.frequency == "day":
-                temporal_indexer = init_time.dt.dayofyear
-
-            else:
-                raise RuntimeError(f"Unexpected temporal frequency {self.frequency!r}.")
+            temporal_indexer = self._extract_temporal_coordinate(init_time, self.frequency)
 
         return stat.sel({self.frequency: temporal_indexer})
 
@@ -226,6 +256,10 @@ class PreprocessModuleABC(abc.ABC):
         -------
         xr.DataArray
             Description not yet provided.
+        
+        Notes
+        ------
+        Assumes UTC timezones.
         """
         init_times = np.asarray(data[self.init_time_dim].values)
 
@@ -244,7 +278,21 @@ class PreprocessModuleABC(abc.ABC):
             init_times=init_grid.reshape(-1),
             lead_times=lead_grid.reshape(-1),
             lead_time_resolution=self.lead_time_resolution,
-        ).reshape(init_grid.shape)
+        )
+
+        if np.isnat(target_times).any():
+            raise ValueError(
+                f"add_lead_times produced NaT (Not a Time) values. "
+                f"Check that init_times and lead_times are compatible."
+            )
+
+        if target_times.shape != init_grid.reshape(-1).shape:
+            raise RuntimeError(
+                f"add_lead_times returned wrong shape. "
+                f"Expected {init_grid.reshape(-1).shape}, got {target_times.shape}"
+            )
+
+        target_times = target_times.reshape(init_grid.shape)
 
         return xr.DataArray(
             target_times,
