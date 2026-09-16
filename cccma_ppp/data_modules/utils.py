@@ -437,7 +437,13 @@ def _validate_time_sequence(
                 "with other datetime types."
             )
 
+        offsets = {value.utcoffset() for value in values}
 
+        if any(offset not in {None, datetime.timedelta(0)} for offset in offsets):
+            raise ValueError(
+                "'time_sequence' contains non-UTC datetime values."
+            )
+        
 @contextlib.contextmanager
 def suppress_stderr() -> Iterator[None]:
     """
