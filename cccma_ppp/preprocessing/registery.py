@@ -78,10 +78,10 @@ class Registery:
         ValueError
             Description not yet provided.
         """
-        if name.lower() not in self._modules:
+        if name not in self._modules:
             raise ValueError(f"{name} not registered. should be in {self.available()}")
 
-        cls = self._modules[name.lower()]
+        cls = self._modules[name]
 
         if config is None:
             return cls()
