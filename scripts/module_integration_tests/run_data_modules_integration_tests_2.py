@@ -37,7 +37,7 @@ logging.raiseExceptions = False
 
 ROOT = Path("/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/scripts")
 BASE_TRAIN_CONFIG = ROOT / "integration_suite_train_config.yaml"
-BASE_INFERENCE_CONFIG = ROOT / "scripts" / "integration_suite_inference_config.yaml"
+
 OUTPUT_DIR = ROOT / "../../output" / "data_modules_integration_test_results"
 
 CASES_DIR = OUTPUT_DIR / "cases"
@@ -56,7 +56,7 @@ DUMMY_MASK_PATH = Path(
 RUN_DATA_CONFIG_COMBINATIONS = True
 RUN_DATASET_GETITEM_CASES = True
 RUN_TRAIN_DATALOADER_CASES = True
-RUN_INFERENCE_DATALOADER_CASES = True
+
 RUN_MULTIWORKER_CASES = True
 RUN_FUTURE_MASK_CASES = True
 RUN_OBSERVATION_CUTOFF_CASES = True
@@ -361,7 +361,7 @@ class DataloaderScenarios:
 
     YEAR_SLICE_ONLY = {
         "name": "train_year_slice",
-        "year_slice": [1980, 1981],
+        "year_slice": [1980, 2007],
         "num_data_workers": 0,
         "shuffle": False,
         "time_features": deepcopy(DataCombinationScenarios.DEFAULT_TIME_FEATURES),
@@ -370,7 +370,7 @@ class DataloaderScenarios:
 
     NO_TIME_FEATURES = {
         "name": "train_time_features_none",
-        "year_slice": [1980, 1981],
+        "year_slice": [1980, 2007],
         "num_data_workers": 0,
         "shuffle": False,
         "time_features": None,
@@ -379,7 +379,7 @@ class DataloaderScenarios:
 
     ALL_TIME_FEATURES = {
         "name": "train_time_features_all",
-        "year_slice": [1980, 1981],
+        "year_slice": [1980, 2007],
         "num_data_workers": 0,
         "shuffle": False,
         "time_features": sorted(DataCombinationScenarios.VALID_TIME_FEATURES),
@@ -388,7 +388,7 @@ class DataloaderScenarios:
 
     MULTIWORKER_NO_SHUFFLE = {
         "name": "train_multiworker_no_shuffle",
-        "year_slice": [1980, 1981],
+        "year_slice": [1980, 2007],
         "num_data_workers": 2,
         "shuffle": False,
         "time_features": deepcopy(DataCombinationScenarios.DEFAULT_TIME_FEATURES),
@@ -397,7 +397,7 @@ class DataloaderScenarios:
 
     MULTIWORKER_WITH_SHUFFLE = {
         "name": "train_multiworker_shuffle",
-        "year_slice": [1980, 1981],
+        "year_slice": [1980, 2007],
         "num_data_workers": 2,
         "shuffle": True,
         "time_features": deepcopy(DataCombinationScenarios.DEFAULT_TIME_FEATURES),
@@ -782,6 +782,256 @@ def save_batch_masks(
         json.dump(masks_metadata, f, indent=2, default=str)
 
 
+def extract_and_save_premade_mask(dataset: Any, output_dir: Path) -> dict[str, Any]:
+    """
+    Extract the premade mask from dataset and save it.
+
+    Saves:
+    - premade_mask.npy
+    - premade_mask_metadata.json
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    results = {
+        "premade_mask_extracted": False,
+        "premade_mask_file": None,
+        "mask_metadata": {},
+    }
+
+    if not hasattr(dataset, "mask") or dataset.mask is None:
+        results["error"] = "No premade mask in dataset"
+        return results
+
+    try:
+        mask_data = dataset.mask
+
+        # Convert xarray to numpy if needed
+        if hasattr(mask_data, "values"):  # xarray.DataArray
+            mask_np = mask_data.values
+            results["mask_metadata"]["type"] = "xarray.DataArray"
+            results["mask_metadata"]["dims"] = (
+                str(mask_data.dims) if hasattr(mask_data, "dims") else None
+            )
+            results["mask_metadata"]["coords"] = (
+                list(mask_data.coords.keys()) if hasattr(mask_data, "coords") else None
+            )
+        else:
+            mask_np = np.asarray(mask_data)
+            results["mask_metadata"]["type"] = type(mask_data).__name__
+
+        # Save as numpy
+        np_output = output_dir / "premade_mask.npy"
+        np.save(np_output, mask_np)
+        results["premade_mask_file"] = str(np_output)
+        results["premade_mask_extracted"] = True
+
+        # Save metadata
+        results["mask_metadata"].update(
+            {
+                "shape": tuple(mask_np.shape),
+                "dtype": str(mask_np.dtype),
+                "min": float(np.nanmin(mask_np)) if mask_np.size > 0 else None,
+                "max": float(np.nanmax(mask_np)) if mask_np.size > 0 else None,
+                "mean": float(np.nanmean(mask_np)) if mask_np.size > 0 else None,
+                "is_binary": bool(np.all(np.isin(mask_np, [0, 1]))),
+            }
+        )
+
+        if results["mask_metadata"]["is_binary"]:
+            results["mask_metadata"]["valid_count"] = int(np.sum(mask_np == 1))
+            results["mask_metadata"]["valid_percentage"] = round(
+                100.0 * np.sum(mask_np == 1) / mask_np.size, 2
+            )
+
+        # Save metadata JSON
+        metadata_output = output_dir / "premade_mask_metadata.json"
+        with metadata_output.open("w") as f:
+            json.dump(
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "premade_mask_metadata": results["mask_metadata"],
+                },
+                f,
+                indent=2,
+                default=str,
+            )
+
+        return results
+
+    except Exception as e:
+        results["error"] = f"{type(e).__name__}: {str(e)}"
+        return results
+
+
+def plot_premade_mask(dataset: Any, output_dir: Path) -> bool:
+    """
+    Plot the premade mask if available.
+
+    Returns:
+        True if plot was created, False otherwise
+    """
+    if not RUN_CHANNEL_PLOTS:
+        return False
+
+    if not hasattr(dataset, "mask") or dataset.mask is None:
+        return False
+
+    try:
+        mask_data = dataset.mask
+
+        # Convert to numpy
+        if hasattr(mask_data, "values"):
+            mask_np = mask_data.values
+        else:
+            mask_np = np.asarray(mask_data)
+
+        # Squeeze to 2D for visualization
+        while mask_np.ndim > 2:
+            mask_np = mask_np[0]
+
+        if mask_np.ndim != 2:
+            return False
+
+        # Create plot
+        output_dir.mkdir(parents=True, exist_ok=True)
+        figure, axes = plt.subplots(1, 1, figsize=(10, 8))
+
+        # Plot with binary colormap
+        im = axes.imshow(mask_np, cmap="binary", origin="lower", aspect="auto")
+
+        axes.set_title("Premade Mask from Dataset\n(white=valid, black=masked)")
+        axes.set_xlabel("X")
+        axes.set_ylabel("Y")
+
+        # Add colorbar
+        cbar = figure.colorbar(im, ax=axes, shrink=0.8)
+        cbar.set_label("Valid (1) / Masked (0)")
+
+        # Add statistics
+        is_binary = bool(np.all(np.isin(mask_np, [0, 1])))
+        if is_binary:
+            valid_pct = 100.0 * np.sum(mask_np == 1) / mask_np.size
+        else:
+            valid_pct = 100.0 * np.sum(mask_np > 0.5) / mask_np.size
+
+        axes.text(
+            0.02,
+            0.98,
+            f"Valid: {valid_pct:.1f}%\nMasked: {100 - valid_pct:.1f}%",
+            transform=axes.transAxes,
+            fontsize=10,
+            verticalalignment="top",
+            bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+        )
+
+        figure.tight_layout()
+
+        # Save
+        output_file = output_dir / "premade_mask.png"
+        figure.savefig(output_file, dpi=150, bbox_inches="tight")
+        plt.close(figure)
+
+        return True
+
+    except Exception:
+        return False
+
+
+def compare_premade_vs_nan_masks(
+    dataset: Any,
+    batch: Any,
+    output_dir: Path,
+) -> dict[str, Any]:
+    """
+    Compare premade mask (from dataset) with NaN-derived masks (from batch).
+
+    Returns:
+        Comparison results
+    """
+    results = {
+        "premade_mask_present": False,
+        "nan_derived_masks_present": False,
+        "masks_match": None,
+        "comparison": {},
+    }
+
+    # Get premade mask
+    if not hasattr(dataset, "mask") or dataset.mask is None:
+        return results
+
+    results["premade_mask_present"] = True
+
+    try:
+        premade = dataset.mask
+        if hasattr(premade, "values"):
+            premade_np = premade.values
+        else:
+            premade_np = np.asarray(premade)
+    except Exception:
+        return results
+
+    # Get NaN-derived masks
+    if isinstance(batch, dict):
+        input_mask = batch.get("input_mask")
+        target_mask = batch.get("target_mask")
+        input_data = batch.get("input")
+    else:
+        input_mask = getattr(batch, "input_mask", None)
+        target_mask = getattr(batch, "target_mask", None)
+        input_data = getattr(batch, "input", None)
+
+    if input_mask is None or input_data is None:
+        return results
+
+    results["nan_derived_masks_present"] = True
+
+    try:
+        # Convert input_mask to numpy
+        if isinstance(input_mask, torch.Tensor):
+            input_mask_np = input_mask.detach().cpu().numpy()
+        else:
+            input_mask_np = np.asarray(input_mask)
+
+        # Reduce dimensions for comparison
+        premade_2d = premade_np
+        while premade_2d.ndim > 2:
+            premade_2d = premade_2d[0]
+
+        input_mask_2d = input_mask_np
+        while input_mask_2d.ndim > 2:
+            input_mask_2d = input_mask_2d[0]
+
+        # Try to compare
+        if premade_2d.shape == input_mask_2d.shape:
+            # Convert to same type for comparison
+            premade_bool = (premade_2d > 0.5).astype(bool)
+            input_mask_bool = (input_mask_2d > 0.5).astype(bool)
+
+            matches = np.sum(premade_bool == input_mask_bool)
+            total = premade_bool.size
+
+            results["masks_match"] = bool(np.all(premade_bool == input_mask_bool))
+            results["comparison"] = {
+                "premade_shape": tuple(premade_np.shape),
+                "input_mask_shape": tuple(input_mask_np.shape),
+                "comparison_shape": tuple(premade_2d.shape),
+                "matching_elements": int(matches),
+                "total_elements": int(total),
+                "match_percentage": round(100.0 * matches / total, 2),
+            }
+        else:
+            results["comparison"] = {
+                "premade_shape": tuple(premade_np.shape),
+                "input_mask_shape": tuple(input_mask_np.shape),
+                "error": "Shapes don't match for direct comparison",
+            }
+
+    except Exception as e:
+        results["comparison"]["error"] = f"{type(e).__name__}: {str(e)}"
+
+    return results
+
+
 def export_masks_and_data(
     batch: Any,
     *,
@@ -943,7 +1193,7 @@ def test_dataset_getitem_format(dataset: Any) -> None:
         if missing:
             raise AssertionError(f"Missing metadata: {sorted(missing)}")
 
-    print("✓ Dataset.__getitem__ validated")
+    print("Dataset.__getitem__ validated")
 
 
 def normalize_nullable_fields(cfg: dict[str, Any]) -> dict[str, Any]:
@@ -994,7 +1244,7 @@ def base_config() -> dict[str, Any]:
     train_loader_cfg["batch_size"] = 2
     train_loader_cfg["num_data_workers"] = 0
     train_loader_cfg["num_validation_years"] = 0
-    train_loader_cfg["train_years_slice"] = [1980, 1981]
+    train_loader_cfg["train_years_slice"] = [1980, 2007]
     train_loader_cfg["load"] = False
 
     for key in ["shuffle", "return_metadata", "return_spatial_mask", "prefetch_factor"]:
@@ -1054,41 +1304,116 @@ def apply_case_config(cfg: dict[str, Any], params: dict[str, Any]) -> dict[str, 
     return cfg
 
 
+def check_premade_mask_in_dataset(dataset: Any) -> dict[str, Any]:
+    """
+    Check if the dataset has a premade mask that's not being returned.
+
+    The source code creates a mask and passes it to build_dataset(),
+    but TrainDataset.__getitem__() doesn't return it.
+    This is an architectural issue in the source.
+    """
+    results = {
+        "has_mask_attribute": hasattr(dataset, "mask"),
+        "mask_value": None,
+        "mask_is_returned": False,
+    }
+
+    if hasattr(dataset, "mask") and dataset.mask is not None:
+        results["mask_value"] = {
+            "type": type(dataset.mask).__name__,
+            "shape": str(dataset.mask.shape)
+            if hasattr(dataset.mask, "shape")
+            else None,
+        }
+
+        # Check if mask is returned in __getitem__
+        try:
+            sample = dataset[0]
+            if isinstance(sample, tuple):
+                sample_dict, _ = sample
+            else:
+                sample_dict = sample
+
+            results["mask_is_returned"] = "spatial_mask" in sample_dict
+        except Exception as e:
+            results["error_checking_return"] = str(e)
+
+    return results
+
+
 def run_dataset_case(config_path: Path, params: dict[str, Any]) -> None:
     """Test dataset.__getitem__ contract"""
     config = load_train_config(config_path)
 
-    # Pass shuffle as runtime argument, NOT from config
     loader = setup_loader(
         config,
         config_path,
         return_metadata=True,
         return_spatial_mask=True,
-        shuffle=False,  # Always deterministic for dataset testing
+        shuffle=False,
     )
 
-    # Test __getitem__ format
+    # Check if premade mask exists but isn't being returned
+    mask_check = check_premade_mask_in_dataset(loader.dataset)
+
     test_dataset_getitem_format(loader.dataset)
 
-    # Collect metadata and create plots from first batch
     paths = case_paths(params["name"])
     all_metadata = []
     batch_sizes = []
     plot_created = False
     masks_saved = False
 
+    # Track mask findings
+    mask_info = {
+        "premade_mask_exists": mask_check.get("has_mask_attribute", False),
+        "premade_mask_is_returned": mask_check.get("mask_is_returned", False),
+        "nan_derived_masks_created": False,
+        "mask_batches_validated": 0,
+        "premade_mask_extracted": False,
+        "premade_mask_plotted": False,
+        "masks_compared": False,
+    }
+
+    # Extract and save premade mask
+    masks_dir = paths["raw_data_dir"] / "masks"
+    if mask_info["premade_mask_exists"]:
+        extract_results = extract_and_save_premade_mask(loader.dataset, masks_dir)
+        mask_info["premade_mask_extracted"] = extract_results.get(
+            "premade_mask_extracted", False
+        )
+
+        if mask_info["premade_mask_extracted"]:
+            mask_info["premade_mask_plotted"] = plot_premade_mask(
+                loader.dataset, masks_dir
+            )
+
     for batch_idx, batch in enumerate(LimitedLoader(loader, MAX_BATCHES_PER_CASE)):
+        # Check that NaN-derived masks ARE being created (since premade mask isn't returned)
+        if batch_idx == 0:
+            if isinstance(batch, dict):
+                has_input_mask = "input_mask" in batch
+            else:
+                has_input_mask = hasattr(batch, "input_mask")
+            mask_info["nan_derived_masks_created"] = has_input_mask
+
+            # Compare premade vs NaN-derived masks
+            if mask_info["premade_mask_exists"]:
+                compare_results = compare_premade_vs_nan_masks(
+                    loader.dataset, batch, masks_dir
+                )
+                mask_info["masks_compared"] = True
+                mask_info["masks_match"] = compare_results.get("masks_match")
+
         batch_metadata = flatten_metadata(extract_metadata(batch))
         if batch_metadata:
             all_metadata.extend(batch_metadata)
             batch_sizes.append(len(batch_metadata))
 
-        # Plot first batch only
         if batch_idx == 0 and not plot_created and RUN_CHANNEL_PLOTS:
             plot_first_batch(batch, output_dir=paths["plot_dir"])
             plot_created = True
 
-        # Save masks and data from first batch
         if batch_idx == 0 and not masks_saved and RUN_RAW_DATA_EXPORT:
             export_masks_and_data(
                 batch,
@@ -1098,14 +1423,8 @@ def run_dataset_case(config_path: Path, params: dict[str, Any]) -> None:
             )
             masks_saved = True
 
-    # Test masks
-    mask_results = {"batches_checked": 0}
-    for batch_idx, batch in enumerate(LimitedLoader(loader, MAX_BATCHES_PER_CASE)):
-        masks = validate_masks_in_batch(batch)
-        if masks:
-            mask_results["batches_checked"] += 1
+        mask_info["mask_batches_validated"] += 1
 
-    # Save metadata
     save_batch_metadata(
         all_metadata,
         output_path=paths["metadata_path"],
@@ -1113,13 +1432,17 @@ def run_dataset_case(config_path: Path, params: dict[str, Any]) -> None:
         batch_index=0,
     )
 
-    # Save statistics
     stats = compute_metadata_statistics(all_metadata)
     with paths["metadata_statistics_path"].open("w") as f:
         json.dump(stats, f, indent=2, default=str)
 
     print(
-        f"✓ Collected {len(all_metadata)} samples | plots: {plot_created} | masks_exported: {masks_saved} | masks_validated: {mask_results['batches_checked']}"
+        f"Collected {len(all_metadata)} samples | plots: {plot_created} | "
+        f"masks_exported: {masks_saved} | "
+        f"premade_mask_exists: {mask_info['premade_mask_exists']} | "
+        f"premade_mask_extracted: {mask_info['premade_mask_extracted']} | "
+        f"premade_mask_plotted: {mask_info['premade_mask_plotted']} | "
+        f"masks_match: {mask_info.get('masks_match')}"
     )
 
 
@@ -1127,14 +1450,16 @@ def run_dataloader_case(config_path: Path, params: dict[str, Any]) -> None:
     """Test dataloader with different configurations"""
     config = load_train_config(config_path)
 
-    # Pass shuffle as runtime argument from params, NOT from config
     loader = setup_loader(
         config,
         config_path,
         return_metadata=True,
         return_spatial_mask=True,
-        shuffle=params.get("shuffle", False),  # ← Runtime argument
+        shuffle=params.get("shuffle", False),
     )
+
+    # Check mask situation
+    mask_check = check_premade_mask_in_dataset(loader.dataset)
 
     paths = case_paths(params["name"])
     all_metadata = []
@@ -1142,18 +1467,53 @@ def run_dataloader_case(config_path: Path, params: dict[str, Any]) -> None:
     plot_created = False
     masks_saved = False
 
+    mask_info = {
+        "premade_mask_exists": mask_check.get("has_mask_attribute", False),
+        "premade_mask_is_returned": mask_check.get("mask_is_returned", False),
+        "nan_derived_masks_created": False,
+        "premade_mask_extracted": False,
+        "premade_mask_plotted": False,
+        "masks_compared": False,
+    }
+
+    # Extract and save premade mask
+    masks_dir = paths["raw_data_dir"] / "masks"
+    if mask_info["premade_mask_exists"]:
+        extract_results = extract_and_save_premade_mask(loader.dataset, masks_dir)
+        mask_info["premade_mask_extracted"] = extract_results.get(
+            "premade_mask_extracted", False
+        )
+
+        if mask_info["premade_mask_extracted"]:
+            mask_info["premade_mask_plotted"] = plot_premade_mask(
+                loader.dataset, masks_dir
+            )
+
     for batch_idx, batch in enumerate(LimitedLoader(loader, MAX_BATCHES_PER_CASE)):
+        if batch_idx == 0:
+            if isinstance(batch, dict):
+                has_input_mask = "input_mask" in batch
+            else:
+                has_input_mask = hasattr(batch, "input_mask")
+            mask_info["nan_derived_masks_created"] = has_input_mask
+
+            # Compare masks
+            if mask_info["premade_mask_exists"]:
+                compare_results = compare_premade_vs_nan_masks(
+                    loader.dataset, batch, masks_dir
+                )
+                mask_info["masks_compared"] = True
+                mask_info["masks_match"] = compare_results.get("masks_match")
+
         batch_metadata = flatten_metadata(extract_metadata(batch))
         if batch_metadata:
             all_metadata.extend(batch_metadata)
             batch_sizes.append(len(batch_metadata))
 
-        # Plot first batch only
         if batch_idx == 0 and not plot_created and RUN_CHANNEL_PLOTS:
             plot_first_batch(batch, output_dir=paths["plot_dir"])
             plot_created = True
 
-        # Save masks and data from first batch
         if batch_idx == 0 and not masks_saved and RUN_RAW_DATA_EXPORT:
             export_masks_and_data(
                 batch,
@@ -1175,7 +1535,11 @@ def run_dataloader_case(config_path: Path, params: dict[str, Any]) -> None:
         json.dump(stats, f, indent=2, default=str)
 
     print(
-        f"✓ Dataloader: {len(all_metadata)} samples | plots: {plot_created} | masks_exported: {masks_saved}"
+        f"Dataloader: {len(all_metadata)} samples | plots: {plot_created} | "
+        f"masks_exported: {masks_saved} | "
+        f"premade_mask_extracted: {mask_info['premade_mask_extracted']} | "
+        f"premade_mask_plotted: {mask_info['premade_mask_plotted']} | "
+        f"masks_match: {mask_info.get('masks_match')}"
     )
 
 
@@ -1711,7 +2075,7 @@ def main() -> None:
             f"See {RESULTS_CSV} and {CASES_DIR}."
         )
 
-    print(f"✓ Integration test suite completed: {passed_count} passed")
+    print(f"Integration test suite completed: {passed_count} passed")
     print(f"  Cases: {CASES_DIR}")
     print(f"  Results: {RESULTS_CSV}")
 

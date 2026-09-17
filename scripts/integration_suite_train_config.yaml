@@ -33,7 +33,7 @@ train_loader:
     condition_method: ensemble_mean
     lead_times:
       start: 1
-      end: 12
+      end: 120
 
   batch_size: 10
   time_features:
