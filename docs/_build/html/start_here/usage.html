@@ -91,6 +91,11 @@
              
   <section id="usage">
 <h1>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h1>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>qsub<span class="w"> </span>-I<span class="w"> </span>-lselect<span class="o">=</span><span class="m">1</span>:ncpus<span class="o">=</span><span class="m">96</span>:mpiprocs<span class="o">=</span><span class="m">6</span>:ngpus<span class="o">=</span><span class="m">1</span>:mem<span class="o">=</span>400G:vntype<span class="o">=</span>gpu<span class="w"> </span>-lwalltime<span class="o">=</span><span class="m">3</span>:0:0<span class="w"> </span><span class="c1">#-v TERM</span>
+
+torchrun<span class="w"> </span>--nproc_per_node<span class="o">=</span>gpu<span class="w"> </span>-m<span class="w"> </span>cccma_ppp.train<span class="w"> </span>scripts/integration_suite_train_config.yaml
+</pre></div>
+</div>
 </section>
 
 
