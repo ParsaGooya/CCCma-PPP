@@ -16,16 +16,10 @@ CCCma PPP
 
    module_overviews/*
 
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: API Reference
- 
-   api/cccma_ppp.architectures
-   api/cccma_ppp.core
-   api/cccma_ppp.data_modules
-   api/cccma_ppp.train
-   api/cccma_ppp.inference
-   api/cccma_ppp.loss
-   api/cccma_ppp.preprocessing
-   api/cccma_ppp.generic
-   api/cccma_ppp.configs
+   :glob:
+
+   api/modules
