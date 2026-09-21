@@ -15,12 +15,12 @@ from pathlib import Path
 import yaml
 from tqdm import tqdm
 
-# Import architecture modules (registers them in the factory)
+# Import architecture modules
 from cccma_ppp.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
 from cccma_ppp.configs import required_sample_dimensions
 from cccma_ppp.generic import registry_imports  # noqa: F401
 
-# Import loss modules (registers them in the factory)
+# Import loss modules
 from cccma_ppp.loss import kld as _loss_kld  # noqa: F401
 from cccma_ppp.loss import loss as _loss_pipeline  # noqa: F401
 from cccma_ppp.loss import utils_loss as _loss_utils  # noqa: F401
@@ -105,28 +105,12 @@ REQUIRE_OUTPUT_ARTIFACT = False
 
 # Grid of inference parameters to test (Cartesian product of these values)
 INFERENCE_GRID = {
-    "num_latent_samples": [
-        1,
-        10,
-    ],  # Number of samples to draw from latent distribution
-    "num_output_covariance_sampling": [
-        1,
-        2,
-    ],  # Number of covariance samples
-    "batch_size": [
-        1,
-        12,
-    ],  # Batch size for inference
-    "inference_years_slice": [
-        [2020, 2020],
-    ],  # Year range to run inference on
-    "num_data_workers": [
-        0,
-    ],  # Number of parallel data loading workers
-    "load": [
-        False,
-        True,
-    ],  # Whether to load preprocessed data
+    "num_latent_samples": [1, 10],
+    "num_output_sampling": [1, 2],
+    "batch_size": [1, 12],
+    "inference_years_slice": [[2020, 2020]],
+    "num_data_workers": [0],
+    "load": [False, True],
 }
 
 
@@ -138,7 +122,7 @@ CSV_COLUMNS = [
     "shared_training_experiment_dir",
     "case_dir",
     "num_latent_samples",
-    "num_output_covariance_sampling",
+    "num_output_sampling",
     "batch_size",
     "inference_years_slice",
     "num_data_workers",
@@ -175,11 +159,7 @@ def get_inference_main():
             continue
 
         # Try to get the 'main' function from this module
-        function = getattr(
-            module,
-            "main",
-            None,
-        )
+        function = getattr(module, "main", None)
 
         if callable(function):
             return function
@@ -194,18 +174,9 @@ def get_inference_main():
 
 def prepare_output_directories():
     """Create all necessary output directories for test results."""
-    OUTPUT_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-    TRAINING_EXPERIMENT_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-    CASE_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    TRAINING_EXPERIMENT_DIR.mkdir(parents=True, exist_ok=True)
+    CASE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def cleanup_logging_handlers():
@@ -251,11 +222,7 @@ def init_csv():
     """Create the results CSV file with headers."""
     prepare_output_directories()
 
-    with RESULTS_CSV.open(
-        "w",
-        newline="",
-        encoding="utf-8",
-    ) as file:
+    with RESULTS_CSV.open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(
             file,
             fieldnames=CSV_COLUMNS,
@@ -269,23 +236,11 @@ def clean_name(value):
     Convert a value to a filesystem-safe name.
     Removes special characters and collapses multiple underscores.
     """
-    value = str(value).replace(
-        "None",
-        "none",
-    )
+    value = str(value).replace("None", "none")
     # Replace special characters with underscores
-    value = re.sub(
-        r"[^A-Za-z0-9_.-]+",
-        "_",
-        value,
-    )
+    value = re.sub(r"[^A-Za-z0-9_.-]+", "_", value)
     # Collapse multiple underscores
-    value = re.sub(
-        r"_+",
-        "_",
-        value,
-    )
-
+    value = re.sub(r"_+", "_", value)
     return value.strip("_")
 
 
@@ -299,10 +254,7 @@ def read_yaml(path):
     if not path.is_file():
         raise FileNotFoundError(f"Configuration file does not exist: {path}")
 
-    with path.open(
-        "r",
-        encoding="utf-8",
-    ) as file:
+    with path.open("r", encoding="utf-8") as file:
         config = yaml.safe_load(file)
 
     if config is None:
@@ -314,52 +266,30 @@ def read_yaml(path):
     return config
 
 
-def write_yaml(
-    config,
-    output_path,
-):
+def write_yaml(config, output_path):
     """Write a configuration dictionary to a YAML file."""
     output_path = Path(output_path)
 
-    output_path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with output_path.open(
-        "w",
-        encoding="utf-8",
-    ) as file:
-        yaml.safe_dump(
-            deepcopy(config),
-            file,
-            sort_keys=False,
-        )
+    with output_path.open("w", encoding="utf-8") as file:
+        yaml.safe_dump(deepcopy(config), file, sort_keys=False)
 
     return output_path
 
 
-def run_silenced(
-    function,
-    log_path,
-):
+def run_silenced(function, log_path):
     """
     Run a function and capture all stdout/stderr to a log file.
     Useful for capturing training/inference output.
     """
     log_path = Path(log_path)
 
-    log_path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    log_path.parent.mkdir(parents=True, exist_ok=True)
 
     cleanup_logging_handlers()
 
-    with log_path.open(
-        "w",
-        encoding="utf-8",
-    ) as log_file:
+    with log_path.open("w", encoding="utf-8") as log_file:
         try:
             # Redirect all output to the log file
             with (
@@ -377,52 +307,30 @@ def append_exception_to_log(log_path):
     """Append the current exception traceback to a log file."""
     log_path = Path(log_path)
 
-    log_path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with log_path.open(
-        "a",
-        encoding="utf-8",
-    ) as log_file:
+    with log_path.open("a", encoding="utf-8") as log_file:
         traceback.print_exc(file=log_file)
 
 
-def append_message_to_log(
-    log_path,
-    message,
-):
+def append_message_to_log(log_path, message):
     """Append a message to a log file."""
     log_path = Path(log_path)
 
-    log_path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with log_path.open(
-        "a",
-        encoding="utf-8",
-    ) as log_file:
+    with log_path.open("a", encoding="utf-8") as log_file:
         log_file.write(f"\n{message}\n")
 
 
-def validate_time_features(
-    loader_config,
-    *,
-    loader_name,
-):
+def validate_time_features(loader_config, *, loader_name):
     """
     Validate that time_features configuration is correct.
     Ensures time_features are in the right location and have valid values.
     """
     dataset_config = loader_config.get("dataset_config")
 
-    if not isinstance(
-        dataset_config,
-        dict,
-    ):
+    if not isinstance(dataset_config, dict):
         raise ValueError(
             f"{loader_name}.dataset_config must be configured as a mapping."
         )
@@ -440,10 +348,7 @@ def validate_time_features(
     if time_features is None:
         return
 
-    if not isinstance(
-        time_features,
-        list,
-    ):
+    if not isinstance(time_features, list):
         raise TypeError(f"{loader_name}.time_features must be a list or null.")
 
     # Check for unsupported time features
@@ -451,8 +356,7 @@ def validate_time_features(
 
     if unsupported:
         raise ValueError(
-            f"Unsupported {loader_name}."
-            "time_features: "
+            f"Unsupported {loader_name}.time_features: "
             f"{sorted(unsupported)}. "
             "Supported values are "
             f"{sorted(VALID_TIME_FEATURES)}."
@@ -464,25 +368,13 @@ def ensure_flattener(data_config):
     Ensure that the flattener preprocessing step is included.
     MLPs need flattened inputs, so this step is required.
     """
-    if not isinstance(
-        data_config,
-        dict,
-    ):
+    if not isinstance(data_config, dict):
         return
 
-    pipeline = data_config.setdefault(
-        "preprocessing_pipeline",
-        {},
-    )
-    preprocessors = pipeline.setdefault(
-        "preprocessors_list",
-        [],
-    )
+    pipeline = data_config.setdefault("preprocessing_pipeline", {})
+    preprocessors = pipeline.setdefault("preprocessors_list", [])
 
-    if not isinstance(
-        preprocessors,
-        list,
-    ):
+    if not isinstance(preprocessors, list):
         raise TypeError("preprocessing_pipeline.preprocessors_list must be a list.")
 
     # Check if flattener already exists
@@ -493,22 +385,12 @@ def ensure_flattener(data_config):
 
     if not has_flattener:
         # Add the flattener step
-        preprocessors.append(
-            {
-                "name": "flattener",
-            }
-        )
+        preprocessors.append({"name": "flattener"})
 
 
-def ensure_mlp_preprocessing(
-    dataset_config,
-):
+def ensure_mlp_preprocessing(dataset_config):
     """Ensure all data sources have flattener preprocessing for MLP models."""
-    for data_name in (
-        "model",
-        "observation",
-        "condition",
-    ):
+    for data_name in ("model", "observation", "condition"):
         ensure_flattener(dataset_config.get(data_name))
 
 
@@ -519,23 +401,14 @@ def normalize_training_config(config):
     """
     train_loader = config.get("train_loader")
 
-    if not isinstance(
-        train_loader,
-        dict,
-    ):
+    if not isinstance(train_loader, dict):
         raise ValueError("train_loader must be configured as a mapping.")
 
-    validate_time_features(
-        train_loader,
-        loader_name="train_loader",
-    )
+    validate_time_features(train_loader, loader_name="train_loader")
 
     dataset_config = train_loader.get("dataset_config")
 
-    if not isinstance(
-        dataset_config,
-        dict,
-    ):
+    if not isinstance(dataset_config, dict):
         raise ValueError("train_loader.dataset_config must be a mapping.")
 
     # Check for deprecated field names
@@ -543,62 +416,31 @@ def normalize_training_config(config):
         raise ValueError(
             "lead_months is no longer a "
             "DatasetConfig field. Use "
-            "train_loader.dataset_config."
-            "lead_times."
+            "train_loader.dataset_config.lead_times."
         )
 
     # Remove None values
     if dataset_config.get("condition_method") is None:
-        dataset_config.pop(
-            "condition_method",
-            None,
-        )
+        dataset_config.pop("condition_method", None)
 
     if dataset_config.get("lead_times") is None:
-        dataset_config.pop(
-            "lead_times",
-            None,
-        )
+        dataset_config.pop("lead_times", None)
 
     if train_loader.get("time_features") is None:
-        train_loader.pop(
-            "time_features",
-            None,
-        )
+        train_loader.pop("time_features", None)
 
     # Clean up module configuration
-    module_config = config.get(
-        "module",
-        {},
-    ).get(
-        "config",
-        {},
-    )
+    module_config = config.get("module", {}).get("config", {})
 
-    module_config.pop(
-        "min_posterior_variance",
-        None,
-    )
+    module_config.pop("min_posterior_variance", None)
 
     if module_config.get("prior_flow_config") is None:
-        module_config.pop(
-            "prior_flow_config",
-            None,
-        )
+        module_config.pop("prior_flow_config", None)
 
-    model_config = module_config.get(
-        "ModelConfig",
-        {},
-    ).get(
-        "config",
-        {},
-    )
+    model_config = module_config.get("ModelConfig", {}).get("config", {})
 
     if model_config.get("dropout_rate") is None:
-        model_config.pop(
-            "dropout_rate",
-            None,
-        )
+        model_config.pop("dropout_rate", None)
 
     return config
 
@@ -615,37 +457,22 @@ def validate_training_config(config):
 
     # Ensure max_epochs is a positive integer (not bool, not float)
     if (
-        not isinstance(
-            max_epochs,
-            int,
-        )
-        or isinstance(
-            max_epochs,
-            bool,
-        )
+        not isinstance(max_epochs, int)
+        or isinstance(max_epochs, bool)
         or max_epochs <= 0
     ):
         raise ValueError("max_epochs must be a positive integer.")
 
     train_loader = config.get("train_loader")
 
-    if not isinstance(
-        train_loader,
-        dict,
-    ):
+    if not isinstance(train_loader, dict):
         raise ValueError("train_loader must be configured as a mapping.")
 
-    validate_time_features(
-        train_loader,
-        loader_name="train_loader",
-    )
+    validate_time_features(train_loader, loader_name="train_loader")
 
     dataset_config = train_loader.get("dataset_config")
 
-    if not isinstance(
-        dataset_config,
-        dict,
-    ):
+    if not isinstance(dataset_config, dict):
         raise ValueError("train_loader.dataset_config must be configured as a mapping.")
 
     if "lead_months" in dataset_config:
@@ -655,10 +482,7 @@ def validate_training_config(config):
 
     lead_times = dataset_config.get("lead_times")
 
-    if lead_times is not None and not isinstance(
-        lead_times,
-        (dict, list),
-    ):
+    if lead_times is not None and not isinstance(lead_times, (dict, list)):
         raise TypeError(
             "train_loader.dataset_config.lead_times must be a mapping, list, or null."
         )
@@ -666,14 +490,8 @@ def validate_training_config(config):
     num_data_workers = train_loader.get("num_data_workers")
 
     if (
-        not isinstance(
-            num_data_workers,
-            int,
-        )
-        or isinstance(
-            num_data_workers,
-            bool,
-        )
+        not isinstance(num_data_workers, int)
+        or isinstance(num_data_workers, bool)
         or num_data_workers < 0
     ):
         raise ValueError(
@@ -682,51 +500,30 @@ def validate_training_config(config):
 
     module = config.get("module")
 
-    if not isinstance(
-        module,
-        dict,
-    ):
+    if not isinstance(module, dict):
         raise ValueError("module must be configured as a mapping.")
 
     module_config = module.get("config")
 
-    if not isinstance(
-        module_config,
-        dict,
-    ):
+    if not isinstance(module_config, dict):
         raise ValueError("module.config must be configured as a mapping.")
 
     if "min_posterior_variance" in module_config:
         raise ValueError(
-            "module.config."
-            "min_posterior_variance is not "
+            "module.config.min_posterior_variance is not "
             "supported by the current schema."
         )
 
     model_selector = module_config.get("ModelConfig")
 
-    if not isinstance(
-        model_selector,
-        dict,
-    ):
+    if not isinstance(model_selector, dict):
         raise ValueError("module.config.ModelConfig must be configured as a mapping.")
 
     # Ensure we're using an MLP model (required for this test)
-    if (
-        str(
-            model_selector.get(
-                "type",
-                "",
-            )
-        ).lower()
-        != "mlp"
-    ):
+    if str(model_selector.get("type", "")).lower() != "mlp":
         raise ValueError("The shared inference fixture must use an MLP model.")
 
-    if not isinstance(
-        model_selector.get("config"),
-        dict,
-    ):
+    if not isinstance(model_selector.get("config"), dict):
         raise ValueError("module.config.ModelConfig.config must be a mapping.")
 
     return config
@@ -740,10 +537,7 @@ def build_training_fixture_config():
     config = read_yaml(BASE_TRAIN_CONFIG)
 
     # Don't resume from checkpoint
-    config.pop(
-        "resume_dir",
-        None,
-    )
+    config.pop("resume_dir", None)
 
     config["experiment_dir"] = str(TRAINING_EXPERIMENT_DIR.resolve())
     config["max_epochs"] = TRAINING_MAX_EPOCHS
@@ -751,55 +545,37 @@ def build_training_fixture_config():
 
     train_loader = config.get("train_loader")
 
-    if not isinstance(
-        train_loader,
-        dict,
-    ):
+    if not isinstance(train_loader, dict):
         raise ValueError("The base training configuration must contain train_loader.")
 
     dataset_config = train_loader.get("dataset_config")
 
-    if not isinstance(
-        dataset_config,
-        dict,
-    ):
+    if not isinstance(dataset_config, dict):
         raise ValueError(
             "The base training configuration must contain train_loader.dataset_config."
         )
 
     if "time_features" in dataset_config:
         raise ValueError(
-            "Move train_loader.dataset_config."
-            "time_features to "
+            "Move train_loader.dataset_config.time_features to "
             "train_loader.time_features."
         )
 
     # Clean up deprecated fields
-    dataset_config.pop(
-        "lead_months",
-        None,
-    )
+    dataset_config.pop("lead_months", None)
 
     # Configure minimal training setup
-    train_loader["time_features"] = [
-        INIT_TIME_DIM,
-    ]
+    train_loader["time_features"] = [INIT_TIME_DIM]
     train_loader["num_data_workers"] = 0
     train_loader["num_validation_years"] = 0
     train_loader["train_years_slice"] = [1961, 1962]
 
     dataset_config["condition_method"] = "ensemble_mean"
-    dataset_config["lead_times"] = {
-        "start": 1,
-        "end": 1,
-    }
+    dataset_config["lead_times"] = {"start": 1, "end": 1}
 
     model_data_config = dataset_config.get("model")
 
-    if not isinstance(
-        model_data_config,
-        dict,
-    ):
+    if not isinstance(model_data_config, dict):
         raise ValueError(
             "train_loader.dataset_config.model must be configured as a mapping."
         )
@@ -807,10 +583,7 @@ def build_training_fixture_config():
     model_data_config["ensemble_mean"] = True
 
     # Remove condition data for simplicity
-    dataset_config.pop(
-        "condition",
-        None,
-    )
+    dataset_config.pop("condition", None)
 
     ensure_mlp_preprocessing(dataset_config)
 
@@ -837,10 +610,7 @@ def build_training_fixture_config():
     }
 
     # Configure training hyperparameters
-    config.setdefault(
-        "trainer",
-        {},
-    ).setdefault(
+    config.setdefault("trainer", {}).setdefault(
         "beta_finder",
         {
             "beta": 10,
@@ -854,9 +624,7 @@ def build_training_fixture_config():
     return config
 
 
-def validate_training_experiment(
-    experiment_dir,
-):
+def validate_training_experiment(experiment_dir):
     """
     Check that a training experiment exists and has checkpoint files.
     Returns list of checkpoint files if valid.
@@ -883,10 +651,7 @@ def validate_training_experiment(
     return checkpoint_files
 
 
-def assert_training_completed(
-    *,
-    require_log=True,
-):
+def assert_training_completed(*, require_log=True):
     """Check that training completed successfully."""
     validate_training_experiment(TRAINING_EXPERIMENT_DIR)
 
@@ -896,10 +661,7 @@ def assert_training_completed(
     if not TRAINING_LOG_PATH.is_file():
         raise AssertionError(f"Training log does not exist: {TRAINING_LOG_PATH}")
 
-    log_text = TRAINING_LOG_PATH.read_text(
-        encoding="utf-8",
-        errors="replace",
-    )
+    log_text = TRAINING_LOG_PATH.read_text(encoding="utf-8", errors="replace")
 
     if "Training finished" not in log_text:
         raise AssertionError(
@@ -926,18 +688,12 @@ def train_model_once():
     if TRAINING_EXPERIMENT_DIR.exists():
         shutil.rmtree(TRAINING_EXPERIMENT_DIR)
 
-    TRAINING_EXPERIMENT_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    TRAINING_EXPERIMENT_DIR.mkdir(parents=True, exist_ok=True)
 
     # Build and save training configuration
     training_config = build_training_fixture_config()
 
-    write_yaml(
-        training_config,
-        TRAINING_CONFIG_PATH,
-    )
+    write_yaml(training_config, TRAINING_CONFIG_PATH)
 
     try:
         # Run training, capturing output to log file
@@ -972,61 +728,31 @@ def normalize_inference_config(config):
 
     writer = config.get("writer")
 
-    if not isinstance(
-        writer,
-        dict,
-    ):
+    if not isinstance(writer, dict):
         raise ValueError("writer must be configured as a mapping.")
 
     predictor = writer.get("predictor")
 
-    if not isinstance(
-        predictor,
-        dict,
-    ):
+    if not isinstance(predictor, dict):
         raise ValueError("writer.predictor must be configured as a mapping.")
 
     # Handle nested predictor config (flatten it)
-    nested_config = predictor.pop(
-        "config",
-        None,
-    )
+    nested_config = predictor.pop("config", None)
 
     if nested_config is not None:
-        if not isinstance(
-            nested_config,
-            dict,
-        ):
+        if not isinstance(nested_config, dict):
             raise ValueError("writer.predictor.config must be a mapping.")
 
         duplicate_fields = set(predictor) & set(nested_config)
 
         if duplicate_fields:
             raise ValueError(
-                "Predictor fields are "
-                "duplicated in writer.predictor "
+                "Predictor fields are duplicated in writer.predictor "
                 "and writer.predictor.config: "
                 f"{sorted(duplicate_fields)}."
             )
 
         predictor.update(nested_config)
-
-    # Handle legacy field name for covariance sampling
-    legacy_sampling = writer.pop(
-        "num_output_covariance_sampling",
-        None,
-    )
-
-    if legacy_sampling is not None:
-        if "num_output_sampling" in writer:
-            raise ValueError(
-                "Both writer."
-                "num_output_covariance_sampling "
-                "and writer.num_output_sampling "
-                "are configured."
-            )
-
-        writer["num_output_sampling"] = legacy_sampling
 
     return config
 
@@ -1041,36 +767,21 @@ def validate_inference_config(config):
 
     inference_loader = config.get("inference_loader")
 
-    if not isinstance(
-        inference_loader,
-        dict,
-    ):
+    if not isinstance(inference_loader, dict):
         raise ValueError("inference_loader must be configured as a mapping.")
 
     batch_size = inference_loader.get("batch_size")
 
     if (
-        not isinstance(
-            batch_size,
-            int,
-        )
-        or isinstance(
-            batch_size,
-            bool,
-        )
+        not isinstance(batch_size, int)
+        or isinstance(batch_size, bool)
         or batch_size <= 0
     ):
         raise ValueError("inference_loader.batch_size must be a positive integer.")
 
     inference_years = inference_loader.get("inference_years_slice")
 
-    if (
-        not isinstance(
-            inference_years,
-            list,
-        )
-        or len(inference_years) != 2
-    ):
+    if not isinstance(inference_years, list) or len(inference_years) != 2:
         raise ValueError("inference_loader.inference_years must be a two-element list.")
 
     if not all(
@@ -1086,14 +797,8 @@ def validate_inference_config(config):
     num_data_workers = inference_loader.get("num_data_workers")
 
     if (
-        not isinstance(
-            num_data_workers,
-            int,
-        )
-        or isinstance(
-            num_data_workers,
-            bool,
-        )
+        not isinstance(num_data_workers, int)
+        or isinstance(num_data_workers, bool)
         or num_data_workers < 0
     ):
         raise ValueError(
@@ -1102,50 +807,26 @@ def validate_inference_config(config):
 
     load = inference_loader.get("load")
 
-    if not isinstance(
-        load,
-        bool,
-    ):
+    if not isinstance(load, bool):
         raise TypeError("inference_loader.load must be a boolean.")
 
     writer = config.get("writer")
 
-    if not isinstance(
-        writer,
-        dict,
-    ):
+    if not isinstance(writer, dict):
         raise ValueError("writer must be configured as a mapping.")
-
-    # Check for legacy field name
-    if "num_output_covariance_sampling" in writer:
-        raise ValueError(
-            "The runtime configuration "
-            "contains the legacy writer."
-            "num_output_covariance_sampling "
-            "field."
-        )
 
     num_output_sampling = writer.get("num_output_sampling")
 
     if (
-        not isinstance(
-            num_output_sampling,
-            int,
-        )
-        or isinstance(
-            num_output_sampling,
-            bool,
-        )
+        not isinstance(num_output_sampling, int)
+        or isinstance(num_output_sampling, bool)
         or num_output_sampling <= 0
     ):
         raise ValueError("writer.num_output_sampling must be a positive integer.")
 
     predictor = writer.get("predictor")
 
-    if not isinstance(
-        predictor,
-        dict,
-    ):
+    if not isinstance(predictor, dict):
         raise ValueError("writer.predictor must be configured as a mapping.")
 
     # Predictor config should be flattened, not nested
@@ -1155,14 +836,8 @@ def validate_inference_config(config):
     num_latent_samples = predictor.get("num_latent_samples")
 
     if (
-        not isinstance(
-            num_latent_samples,
-            int,
-        )
-        or isinstance(
-            num_latent_samples,
-            bool,
-        )
+        not isinstance(num_latent_samples, int)
+        or isinstance(num_latent_samples, bool)
         or num_latent_samples <= 0
     ):
         raise ValueError(
@@ -1189,45 +864,22 @@ def load_base_inference_config():
     return config
 
 
-def apply_inference_case(
-    base_config,
-    case,
-):
-    """
-    Apply a specific inference test case's parameters to the base configuration.
-    Returns a modified copy of the configuration with case parameters applied.
-    """
+def apply_inference_case(base_config, case):
+    """Apply inference case parameters to base config."""
     config = deepcopy(base_config)
 
-    writer = config.setdefault(
-        "writer",
-        {},
-    )
-    predictor = writer.setdefault(
-        "predictor",
-        {},
-    )
-    inference_loader = config.setdefault(
-        "inference_loader",
-        {},
-    )
+    writer = config.setdefault("writer", {})
+    predictor = writer.setdefault("predictor", {})
+    inference_loader = config.setdefault("inference_loader", {})
 
-    # Remove nested predictor config if present
-    predictor.pop(
-        "config",
-        None,
-    )
+    predictor.pop("config", None)
 
-    # Apply test case parameters
     predictor["num_latent_samples"] = case["num_latent_samples"]
 
-    writer["num_output_sampling"] = case["num_output_covariance_sampling"]
+    value = case["num_output_sampling"]
 
-    # Remove legacy field if present
-    writer.pop(
-        "num_output_covariance_sampling",
-        None,
-    )
+    writer["num_output_sampling"] = value
+    writer.pop("num_output_covariance_sampling", None)
 
     inference_loader["batch_size"] = case["batch_size"]
     inference_loader["inference_years_slice"] = deepcopy(case["inference_years_slice"])
@@ -1246,8 +898,8 @@ def make_case_name(case):
     return clean_name(
         "inference"
         f"_latent_{case['num_latent_samples']}"
-        "_covariance_"
-        f"{case['num_output_covariance_sampling']}"
+        "_output_"
+        f"{case['num_output_sampling']}"
         f"_batch_{case['batch_size']}"
         f"_years_{years[0]}_{years[1]}"
         f"_workers_{case['num_data_workers']}"
@@ -1267,12 +919,7 @@ def generate_inference_cases():
 
     # Generate all combinations of parameters (Cartesian product)
     for combination in product(*values):
-        case = dict(
-            zip(
-                keys,
-                combination,
-            )
-        )
+        case = dict(zip(keys, combination))
 
         case["name"] = make_case_name(case)
         case["expected_result"] = "PASS"
@@ -1298,20 +945,18 @@ def baseline_case_from_config(config):
 
     return {
         "name": "inference_baseline",
-        "num_latent_samples": (predictor["num_latent_samples"]),
-        "num_output_covariance_sampling": (writer["num_output_sampling"]),
-        "batch_size": (inference_loader["batch_size"]),
+        "num_latent_samples": predictor["num_latent_samples"],
+        "num_output_sampling": writer["num_output_sampling"],
+        "batch_size": inference_loader["batch_size"],
         "inference_years_slice": deepcopy(inference_loader["inference_years_slice"]),
-        "num_data_workers": (inference_loader["num_data_workers"]),
+        "num_data_workers": inference_loader["num_data_workers"],
         "load": inference_loader["load"],
         "expected_result": "PASS",
         "expected_failure_reason": "",
     }
 
 
-def build_inference_tasks(
-    base_config,
-):
+def build_inference_tasks(base_config):
     """
     Build all inference test tasks.
     Includes baseline case and grid cases if enabled.
@@ -1322,7 +967,7 @@ def build_inference_tasks(
     if RUN_BASELINE_CASE:
         tasks.append(
             {
-                "case": (baseline_case_from_config(base_config)),
+                "case": baseline_case_from_config(base_config),
                 "config": deepcopy(base_config),
             }
         )
@@ -1333,12 +978,7 @@ def build_inference_tasks(
             tasks.append(
                 {
                     "case": case,
-                    "config": (
-                        apply_inference_case(
-                            base_config,
-                            case,
-                        )
-                    ),
+                    "config": apply_inference_case(base_config, case),
                 }
             )
 
@@ -1366,18 +1006,12 @@ def snapshot_files(root_dir):
         except OSError:
             continue
 
-        snapshot[str(path)] = (
-            stat.st_mtime_ns,
-            stat.st_size,
-        )
+        snapshot[str(path)] = (stat.st_mtime_ns, stat.st_size)
 
     return snapshot
 
 
-def find_changed_files(
-    before,
-    after,
-):
+def find_changed_files(before, after):
     """
     Compare two file snapshots and return list of files that changed.
     A file is considered changed if its mtime or size differs.
@@ -1389,11 +1023,7 @@ def find_changed_files(
     ]
 
 
-def assert_inference_completed(
-    *,
-    log_path,
-    changed_files,
-):
+def assert_inference_completed(*, log_path, changed_files):
     """
     Verify that inference completed successfully.
     Checks for errors in log and optionally verifies output artifacts were created.
@@ -1403,10 +1033,7 @@ def assert_inference_completed(
     if not log_path.is_file():
         raise AssertionError(f"Inference log does not exist: {log_path}")
 
-    log_text = log_path.read_text(
-        encoding="utf-8",
-        errors="replace",
-    )
+    log_text = log_path.read_text(encoding="utf-8", errors="replace")
 
     # Check for Python exceptions in the log
     if "Traceback (most recent call last)" in log_text:
@@ -1419,47 +1046,29 @@ def assert_inference_completed(
         )
 
 
-def log_result(
-    *,
-    case,
-    case_dir,
-    config_path,
-    log_path,
-    passed,
-    error="",
-):
+def log_result(*, case, case_dir, config_path, log_path, passed, error=""):
     """Log the result of an inference test case to the CSV file."""
     row = {
-        "timestamp": (datetime.now().isoformat()),
+        "timestamp": datetime.now().isoformat(),
         "suite": "inference",
         "case_name": case["name"],
         "shared_training_experiment_dir": str(TRAINING_EXPERIMENT_DIR),
         "case_dir": str(case_dir),
         "num_latent_samples": case["num_latent_samples"],
-        "num_output_covariance_sampling": (case["num_output_covariance_sampling"]),
+        "num_output_sampling": case["num_output_sampling"],
         "batch_size": case["batch_size"],
         "inference_years_slice": json.dumps(case["inference_years_slice"]),
         "num_data_workers": case["num_data_workers"],
         "load": case["load"],
-        "expected_result": case.get(
-            "expected_result",
-            "PASS",
-        ),
-        "expected_failure_reason": case.get(
-            "expected_failure_reason",
-            "",
-        ),
+        "expected_result": case.get("expected_result", "PASS"),
+        "expected_failure_reason": case.get("expected_failure_reason", ""),
         "config_path": str(config_path),
         "log_path": str(log_path),
-        "result": ("PASS" if passed else "FAIL"),
+        "result": "PASS" if passed else "FAIL",
         "error": error,
     }
 
-    with RESULTS_CSV.open(
-        "a",
-        newline="",
-        encoding="utf-8",
-    ) as file:
+    with RESULTS_CSV.open("a", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(
             file,
             fieldnames=CSV_COLUMNS,
@@ -1469,10 +1078,7 @@ def log_result(
         file.flush()
 
 
-def run_inference_case(
-    inference_main,
-    task,
-):
+def run_inference_case(inference_main, task):
     """
     Run a single inference test case.
     Returns True if passed, False if failed.
@@ -1491,20 +1097,14 @@ def run_inference_case(
     if case_dir.exists():
         shutil.rmtree(case_dir)
 
-    case_dir.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    case_dir.mkdir(parents=True, exist_ok=True)
 
     config["experiment_dir"] = str(TRAINING_EXPERIMENT_DIR.resolve())
 
     validate_inference_config(config)
     validate_training_experiment(TRAINING_EXPERIMENT_DIR)
 
-    write_yaml(
-        config,
-        config_path,
-    )
+    write_yaml(config, config_path)
 
     # Snapshot files before inference
     before = snapshot_files(TRAINING_EXPERIMENT_DIR)
@@ -1519,16 +1119,10 @@ def run_inference_case(
         # Snapshot files after inference
         after = snapshot_files(TRAINING_EXPERIMENT_DIR)
 
-        changed_files = find_changed_files(
-            before,
-            after,
-        )
+        changed_files = find_changed_files(before, after)
 
         # Verify inference completed successfully
-        assert_inference_completed(
-            log_path=log_path,
-            changed_files=changed_files,
-        )
+        assert_inference_completed(log_path=log_path, changed_files=changed_files)
 
         passed = True
         error = ""
@@ -1537,10 +1131,7 @@ def run_inference_case(
         passed = False
         error = "KeyboardInterrupt: inference case was interrupted by the user."
 
-        append_message_to_log(
-            log_path,
-            error,
-        )
+        append_message_to_log(log_path, error)
 
         log_result(
             case=case,
@@ -1572,21 +1163,13 @@ def run_inference_case(
 
 
 def classify_result(
-    *,
-    case,
-    passed,
-    unexpected_failures,
-    expected_failures,
-    unexpected_passes,
+    *, case, passed, unexpected_failures, expected_failures, unexpected_passes
 ):
     """
     Classify a test result as expected or unexpected.
     Tracks unexpected failures/passes for final reporting.
     """
-    expected_result = case.get(
-        "expected_result",
-        "PASS",
-    )
+    expected_result = case.get("expected_result", "PASS")
 
     if expected_result == "FAIL":
         # Test was expected to fail
@@ -1611,10 +1194,7 @@ def write_summary(
     interrupted_case=None,
 ):
     """Write a summary report of the test run."""
-    with SUMMARY_PATH.open(
-        "w",
-        encoding="utf-8",
-    ) as file:
+    with SUMMARY_PATH.open("w", encoding="utf-8") as file:
         file.write(f"base_train_config: {BASE_TRAIN_CONFIG}\n")
         file.write(f"base_inference_config: {BASE_INFERENCE_CONFIG}\n")
         file.write(f"shared_training_experiment_dir: {TRAINING_EXPERIMENT_DIR}\n")
@@ -1629,18 +1209,9 @@ def write_summary(
         file.write(f"results_csv: {RESULTS_CSV}\n")
 
         groups = [
-            (
-                "unexpected_failures",
-                unexpected_failures,
-            ),
-            (
-                "expected_failures",
-                expected_failures,
-            ),
-            (
-                "unexpected_passes",
-                unexpected_passes,
-            ),
+            ("unexpected_failures", unexpected_failures),
+            ("expected_failures", expected_failures),
+            ("unexpected_passes", unexpected_passes),
         ]
 
         for title, values in groups:
@@ -1709,10 +1280,7 @@ def main():
 
                 try:
                     # Run the inference case
-                    passed = run_inference_case(
-                        inference_main,
-                        task,
-                    )
+                    passed = run_inference_case(inference_main, task)
                 except KeyboardInterrupt:
                     interrupted_case = case["name"]
                     completed_cases += 1
@@ -1727,9 +1295,9 @@ def main():
                 classify_result(
                     case=case,
                     passed=passed,
-                    unexpected_failures=(unexpected_failures),
-                    expected_failures=(expected_failures),
-                    unexpected_passes=(unexpected_passes),
+                    unexpected_failures=unexpected_failures,
+                    expected_failures=expected_failures,
+                    unexpected_passes=unexpected_passes,
                 )
 
                 # Update progress bar with current statistics
@@ -1754,7 +1322,7 @@ def main():
             unexpected_failures,
             expected_failures,
             unexpected_passes,
-            interrupted_case=(interrupted_case),
+            interrupted_case=interrupted_case,
         )
 
         print("\nInference integration suite interrupted.")
