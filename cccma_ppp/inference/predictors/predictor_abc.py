@@ -131,7 +131,7 @@ class PredictorABC(abc.ABC):
                     loc=mu,
                     covariance_matrix=cov + jitter * eye,
                 )
-                
+
             except ValueError:
                 jitter *= 10
 

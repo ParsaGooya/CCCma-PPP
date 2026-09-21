@@ -3,7 +3,6 @@ import xarray as xr
 import dataclasses
 from typing import final, Literal
 import cftime
-import datetime
 
 from cccma_ppp.data_modules.data.data_abc import DataConfigABC
 from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
@@ -21,6 +20,7 @@ from cccma_ppp.configs import (
 
 spatialmethod = Literal["uniform", "cosine_lat"]
 init_time_dim, lead_time_dim = required_sample_dimensions
+
 
 @dataclasses.dataclass
 class ModelDataConfig(DataConfigABC):
@@ -163,8 +163,8 @@ class ObsDataConfig(DataConfigABC):
         self.time_range = build_time_range(self.coords[init_time_dim])
         if self.init_time_frequency != self.lead_time_resolution:
             raise RuntimeError(
-                "Observation data must have same temporal frequency as the " \
-                f"lead time. Got {self.init_time_frequency } vs {self.lead_time_resolution}"
+                "Observation data must have same temporal frequency as the "
+                f"lead time. Got {self.init_time_frequency} vs {self.lead_time_resolution}"
             )
 
     @final
@@ -288,9 +288,6 @@ class ConditionDataConfig(DataConfigABC):
         return condition_data_required_dimensions
 
 
-
-
-
 def build_time_range(
     init_time: xr.DataArray,
     n_lead_times: int = 1,
@@ -328,11 +325,7 @@ def build_time_range(
     start_time = init_time.min().item()
     final_init_time = init_time.max().item()
 
-    calendar = (
-        final_init_time.calendar
-        if is_cftime
-        else "proleptic_gregorian"
-    )
+    calendar = final_init_time.calendar if is_cftime else "proleptic_gregorian"
 
     # The last valid time is n_lead_times - 1 periods after the
     # final initialization time.

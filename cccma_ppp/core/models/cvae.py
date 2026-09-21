@@ -69,7 +69,9 @@ class cVAEConfig(moduleConfigABC):
     """
 
     ModelConfig: cVAEModelSelector | None = None
-    posterior_variance_limits: list[float | None, float | None] | tuple[float | None, float | None] | None = None
+    posterior_variance_limits: (
+        list[float | None, float | None] | tuple[float | None, float | None] | None
+    ) = None
     prior_flow_config: NormalizedFlowConfig | None = None
     combined_CGCN_weight: float = None
     load_dir: str | None = None
@@ -242,11 +244,13 @@ class cVAE(moduleABC):
         self.combined_CGCN_weight = self.config.combined_CGCN_weight
 
         if self.posterior_variance_limits is not None:
-            assert all([limit > 0 for limit in 
-                        self.posterior_variance_limits 
-                        if limit is not None]), (
-                "posterior_variance_limits must be positive or None."
-            )
+            assert all(
+                [
+                    limit > 0
+                    for limit in self.posterior_variance_limits
+                    if limit is not None
+                ]
+            ), "posterior_variance_limits must be positive or None."
         if getattr(self.config, "condition_dependant_flow", False):
             self.flow_condition_size = self.model_config.condition_embedding_size
         else:
@@ -284,20 +288,24 @@ class cVAE(moduleABC):
                 )
 
         if self.posterior_variance_limits is not None:
-            min = torch.log(
-                torch.tensor(self.posterior_variance_limits[0])
-            ) if self.posterior_variance_limits[0] is not None else None
+            min = (
+                torch.log(torch.tensor(self.posterior_variance_limits[0]))
+                if self.posterior_variance_limits[0] is not None
+                else None
+            )
 
-            max = torch.log(
-                torch.tensor(self.posterior_variance_limits[1])
-            ) if self.posterior_variance_limits[1] is not None else None
+            max = (
+                torch.log(torch.tensor(self.posterior_variance_limits[1]))
+                if self.posterior_variance_limits[1] is not None
+                else None
+            )
 
             self.posterior_variance_limits = [min, max]
-            
+
         self.input_shape = input_shape
         self.output_shape = output_shape
         self.added_features_dim = added_features_dim
-        
+
         self.model = self.model_config.build(
             input_shape=input_shape,
             output_shape=output_shape,
@@ -373,11 +381,10 @@ class cVAE(moduleABC):
         target = data.target
         target_mask = data.target_mask
 
-
         target = target.unsqueeze(0).expand(
-            latent_sample_size, # Z 
-            *target.shape, # B x C x ...
-        ) # Z x B x C x ...
+            latent_sample_size,  # Z
+            *target.shape,  # B x C x ...
+        )  # Z x B x C x ...
 
         if target_mask is not None and target_mask.shape != target.shape:
             target_mask = target_mask.unsqueeze(0).expand_as(target)

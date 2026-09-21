@@ -327,11 +327,10 @@ class cVAE_MLP(cVAEmodelsABC):
 
         if posterior_variance_limits is not None:
             log_var = torch.clamp(
-                log_var, 
-                min=posterior_variance_limits[0].type_as(mu), 
+                log_var,
+                min=posterior_variance_limits[0].type_as(mu),
                 max=posterior_variance_limits[1].type_as(mu),
             )
-
 
         latent_samples = self._sample(mu, log_var, latent_sample_size)
 
@@ -381,7 +380,7 @@ class cVAE_MLP(cVAEmodelsABC):
         _shape_model_output = (latent_sample_size, B, C, -1)
 
         latent_samples, cond_mu, cond_log_var = self._sample_prior(request)
-        
+
         output = self._generate(
             latent_samples, condition=cond_mu, added_features=added_features
         )
@@ -515,7 +514,9 @@ class cVAE_MLP(cVAEmodelsABC):
             latent_samples = torch.cat(
                 [
                     latent_samples,
-                    x_features.unsqueeze(0).expand((latent_sample_size, *x_features.shape)),
+                    x_features.unsqueeze(0).expand(
+                        (latent_sample_size, *x_features.shape)
+                    ),
                 ],
                 dim=-1,
             )
@@ -531,7 +532,9 @@ class cVAE_MLP(cVAEmodelsABC):
 
         feature_size = latent_samples.shape[-1]
 
-        latent_samples = latent_samples.reshape(latent_sample_size * batch_size, feature_size)
+        latent_samples = latent_samples.reshape(
+            latent_sample_size * batch_size, feature_size
+        )
         out = self.decoder(latent_samples)
 
         return out.reshape(latent_sample_size, batch_size, -1)

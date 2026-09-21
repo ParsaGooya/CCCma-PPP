@@ -95,7 +95,7 @@ class DetermninisticPredictor(PredictorABC):
 
             if self.num_output_covariance_sampling > 0:
                 num_output_sampling = 0
-            else: 
+            else:
                 num_output_sampling = self.num_output_sampling
 
             output = self.raw_module.predict(

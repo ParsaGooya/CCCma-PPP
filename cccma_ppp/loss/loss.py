@@ -11,6 +11,7 @@ from cccma_ppp.loss.registery import Registery
 from cccma_ppp.core.core_abc import GenerativeContext
 from cccma_ppp.data_modules.utils import _unwrap_data_variables
 
+
 @dataclasses.dataclass
 class LossStepConfig:
     """
@@ -48,7 +49,7 @@ class LosspipelineConfig:
     reduction: Reduction = "mean"
     masked_loss_calculation: bool = True
     saved_output_mask_dir: str | None = None
-    
+
     def __post_init__(self):
         """
         Validate loss pipeline configuration.
@@ -91,8 +92,7 @@ class LosspipelineConfig:
 
         if self.loss_weights is None:
             self.loss_weights = [
-                1.0 / len(self.loss_pipeline)
-                for _ in self.loss_pipeline
+                1.0 / len(self.loss_pipeline) for _ in self.loss_pipeline
             ]
         else:
             if len(self.loss_weights) != len(self.loss_pipeline):
@@ -108,7 +108,7 @@ class LosspipelineConfig:
         weights: xr.DataArray,
         num_output_dimensions: int = 2,
         generative_context: GenerativeContext | None = None,
-        output_shape: tuple[int, ...] | None = None
+        output_shape: tuple[int, ...] | None = None,
     ):
         """
         Construct loss pipeline.
@@ -129,9 +129,9 @@ class LosspipelineConfig:
         self._resove_output_mask(output_shape)
 
         return Losspipeline(
-            self, 
-            weights, 
-            num_output_dimensions, 
+            self,
+            weights,
+            num_output_dimensions,
             generative_context=generative_context,
         )
 
@@ -203,9 +203,7 @@ class LosspipelineConfig:
         mask_path = Path(self.saved_output_mask_dir)
 
         if not mask_path.is_file():
-            raise FileNotFoundError(
-                f"Saved mask file does not exist: {mask_path}"
-            )
+            raise FileNotFoundError(f"Saved mask file does not exist: {mask_path}")
 
         if mask_path.suffix == ".pt":
             mask = torch.load(
@@ -224,7 +222,6 @@ class LosspipelineConfig:
 
         if mask_path.suffix == ".nc":
             with xr.open_dataset(mask_path) as ds:
- 
                 mask = _unwrap_data_variables(ds).values
 
             return torch.as_tensor(mask, dtype=torch.float32)
@@ -314,11 +311,7 @@ class Losspipeline(nn.Module):
 
         self.pipeline = torch.nn.ModuleList(self.pipeline)
 
-        output_mask = (
-            config.output_mask
-            if self.masked_loss_calculation
-            else None
-        )
+        output_mask = config.output_mask if self.masked_loss_calculation else None
         self.register_buffer("output_mask", output_mask)
 
     @classmethod
@@ -379,8 +372,12 @@ class Losspipeline(nn.Module):
             If input dimensionality does not match expectations.
         """
         if self.output_mask is not None:
-            target_mask = self.output_mask if target_mask is None else target_mask * self.output_mask
-        
+            target_mask = (
+                self.output_mask
+                if target_mask is None
+                else target_mask * self.output_mask
+            )
+
         if not self.masked_loss_calculation:
             target_mask = None
 
@@ -416,7 +413,3 @@ class Losspipeline(nn.Module):
             total_loss = total_loss + loss * self.config.loss_weights[ind]
 
         return total_loss, indiv_loses
-
-
-
-

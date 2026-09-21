@@ -23,7 +23,6 @@ from cccma_ppp.architectures.layers.conv import (
     ConvNeXtBlockConfig,
     ConvNeXtBlock,
     LatentBlock,
-    MaskPool2d,
     TensorMask,
 )
 
@@ -128,26 +127,22 @@ class DownBlock(nn.Module):
             else None
         )
 
-        self.use_partial_conv_downsample = (
-            isinstance(block_config, PartialConvBlockConfig) or getattr(
-                block_config, "use_partial_conv", False
-            )
-        )
+        self.use_partial_conv_downsample = isinstance(
+            block_config, PartialConvBlockConfig
+        ) or getattr(block_config, "use_partial_conv", False)
 
         if self.use_partial_conv_downsample:
-                
             self.tensor_downsample = PartialConv2d(
-                    in_channels,
-                    out_channels,
-                    kernel_size=3,
-                    stride=2,
-                    padding=1,
-                    padding_mode=block_config.padding_method,
-                    multi_channel=True,
-                    return_mask=True,
-                )
+                in_channels,
+                out_channels,
+                kernel_size=3,
+                stride=2,
+                padding=1,
+                padding_mode=block_config.padding_method,
+                multi_channel=True,
+                return_mask=True,
+            )
         else:
-                        
             self.tensor_downsample = nn.Conv2d(
                 in_channels,
                 out_channels,
@@ -157,7 +152,6 @@ class DownBlock(nn.Module):
                 padding_mode=block_config.padding_method,
             )
 
-
     def forward(
         self,
         input: TensorMask,
@@ -165,7 +159,9 @@ class DownBlock(nn.Module):
         skip = self._block(input)
 
         if self.use_partial_conv_downsample:
-            downsampled_tensor , downsampled_mask = self.tensor_downsample(skip.tensor, skip.mask)
+            downsampled_tensor, downsampled_mask = self.tensor_downsample(
+                skip.tensor, skip.mask
+            )
 
         else:
             downsampled_tensor = self.tensor_downsample(skip.tensor)
@@ -188,10 +184,7 @@ class DownBlock(nn.Module):
             return downsampled
 
     def output_shape(self, input_shape: np.ndarray | tuple):
-            return tuple(
-                (shape + 1) // 2
-                for shape in input_shape
-            )
+        return tuple((shape + 1) // 2 for shape in input_shape)
 
 
 class UpBlock(nn.Module):
@@ -385,7 +378,7 @@ class UNetOutputSIC(nn.Module):
         *,
         hidden_channels: int | None,
         activation: OutputActivation,
-        clip_output: bool = False
+        clip_output: bool = False,
     ):
         super().__init__()
 
@@ -395,7 +388,7 @@ class UNetOutputSIC(nn.Module):
             layers: list[nn.Module] = [
                 LayerNorm2d(in_channels),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(in_channels, out_channels, kernel_size=1)
+                nn.Conv2d(in_channels, out_channels, kernel_size=1),
             ]
         else:
             layers = [

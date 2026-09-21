@@ -164,7 +164,6 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         if self.train_years_slice is None:
             self.train_times = self.available_times
         else:
-
             self.train_years_slice = slice(
                 *[str(item) for item in self.train_years_slice]
             )
@@ -174,16 +173,17 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             )
 
         if self.num_validation_years > 0:
-
             last_train_year = self.train_times[-1].dt.year
 
             validation_mask = np.asarray(
-                [t.dt.year > last_train_year - self.num_validation_years
-                for t in self.train_times]
+                [
+                    t.dt.year > last_train_year - self.num_validation_years
+                    for t in self.train_times
+                ]
             )
 
             self.validation_times = self.train_times[validation_mask]
-            self.train_times = self.train_times[~validation_mask]    
+            self.train_times = self.train_times[~validation_mask]
 
     @property
     def available_times(self):
@@ -285,7 +285,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             rank=self.rank,
             shuffle=shuffle,
             world_size=self.world_size,
-            return_spatial_mask=return_spatial_mask
+            return_spatial_mask=return_spatial_mask,
         )
 
     def build_validation_loader(
@@ -342,7 +342,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
                 rank=self.rank,
                 shuffle=shuffle,
                 world_size=self.world_size,
-                return_spatial_mask=return_spatial_mask
+                return_spatial_mask=return_spatial_mask,
             )
 
         else:

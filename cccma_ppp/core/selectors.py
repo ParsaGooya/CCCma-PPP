@@ -11,6 +11,7 @@ from cccma_ppp.core.registery import Registery
 from cccma_ppp.core.core_abc import moduleABC
 from cccma_ppp.architectures.models_abc import modelABC, flowABC, CheckpointConfig
 
+
 @dataclasses.dataclass
 class ModuleSelector:
     """
@@ -69,7 +70,6 @@ class ModuleSelector:
         """
 
         return cls.registery.available()
-    
 
     @property
     def NUM_INPUT_DIMS(self) -> int:
@@ -154,7 +154,6 @@ class ModuleSelector:
         )
 
 
-
 @dataclasses.dataclass
 class ModelSelector:
     """
@@ -201,14 +200,13 @@ class ModelSelector:
         if all([self.load_dir is None, self.freeze_weights]):
             raise ValueError(
                 "When ''load_dir'' is not provided for a checkpoint model, ''freeze_weights'' must be False or None."
-            )            
+            )
 
         if self.load_dir is not None:
             self._freeze_weights = self.freeze_weights or False
 
             checkpoint_module, self.checkpoint_config = _load_config_from_checkpoint(
-                self.load_dir,
-                self._freeze_weights
+                self.load_dir, self._freeze_weights
             )
             checkpoint_model = checkpoint_module.get("ModelConfig")
             assert self.type.lower() == checkpoint_model.get("type").lower(), (
@@ -285,7 +283,6 @@ class deterministicModelSelector(ModelSelector):
     registery: ClassVar[Registery] = Registery()
 
 
-
 @dataclasses.dataclass
 class FlowSelector:
     """
@@ -358,9 +355,9 @@ class FlowSelector:
         return self.registery.get(self.type.lower(), self.args)
 
 
-def _load_config_from_checkpoint(load_path: Path | str, 
-                                 freeze_weights: bool = False, 
-                                 strict: bool = True):
+def _load_config_from_checkpoint(
+    load_path: Path | str, freeze_weights: bool = False, strict: bool = True
+):
     """
     Load configuration metadata from checkpoint.
 
@@ -390,9 +387,9 @@ def _load_config_from_checkpoint(load_path: Path | str,
     if not Path(load_path).exists():
         raise FileNotFoundError(f"Checkpoint not found: {load_path}")
 
-    checkpoint = torch.load(Path(load_path), 
-                            weights_only=False, 
-                            map_location=torch.device('cpu'))
+    checkpoint = torch.load(
+        Path(load_path), weights_only=False, map_location=torch.device("cpu")
+    )
 
     checkpoint_module = checkpoint.get("module_config")
     checkpoint_input_shape = checkpoint.get("input_shape")
