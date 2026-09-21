@@ -10,15 +10,12 @@ from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.data_modules.utils import add_lead_times
-from cccma_ppp.configs import (
-    supported_NN_dimensions_sorted,
-    required_sample_dimensions,
-    lead_time_unit,
-)
+from cccma_ppp.configs import (supported_NN_dimensions_sorted, 
+                               required_sample_dimensions,
+                               lead_time_unit)
 
 init_time_dim, lead_time_dim = required_sample_dimensions
 TemporalFrequency = Literal["year", "month", "day"]
-
 
 @PreprocessingStepSelector.register("normalizer")
 class Normalizer(PreprocessModuleABC):
@@ -83,7 +80,7 @@ class Normalizer(PreprocessModuleABC):
         if mask is not None:
             data = data.where(~mask)
 
-        if self.frequency is None or self.init_time_dim not in self.dims:
+        if (self.frequency is None or self.init_time_dim not in self.dims):
             self.min = data.min(reduction_dims).load()
             self.max = data.max(reduction_dims).load()
 
@@ -91,11 +88,17 @@ class Normalizer(PreprocessModuleABC):
             grouped_data = self._add_grouping_coordinate(data)
 
             self.min = (
-                grouped_data.groupby(self.frequency).min(dim=reduction_dims).load()
+                grouped_data
+                .groupby(self.frequency)
+                .min(dim=reduction_dims)
+                .load()
             )
 
             self.max = (
-                grouped_data.groupby(self.frequency).max(dim=reduction_dims).load()
+                grouped_data
+                .groupby(self.frequency)
+                .max(dim=reduction_dims)
+                .load()
             )
 
         self.fitted = True
@@ -136,7 +139,7 @@ class Normalizer(PreprocessModuleABC):
         """
         Reverse normalization.
 
-        Temporal statistics will be aligned using valid forecast times,
+        Temporal statistics will be aligned using valid forecast times, 
         if the data has lead_time and stats has init_time but no lead_time so
         lead time is taken into account.
 
@@ -238,7 +241,7 @@ class Standardizer(PreprocessModuleABC):
         if mask is not None:
             data = data.where(~mask)
 
-        if self.frequency is None or self.init_time_dim not in self.dims:
+        if (self.frequency is None or self.init_time_dim not in self.dims):
             self.mean = data.mean(reduction_dims).load()
             std = data.std(reduction_dims).load()
 
@@ -246,10 +249,18 @@ class Standardizer(PreprocessModuleABC):
             grouped_data = self._add_grouping_coordinate(data)
 
             self.mean = (
-                grouped_data.groupby(self.frequency).mean(dim=reduction_dims).load()
+                grouped_data
+                .groupby(self.frequency)
+                .mean(dim=reduction_dims)
+                .load()
             )
 
-            std = grouped_data.groupby(self.frequency).std(dim=reduction_dims).load()
+            std = (
+                grouped_data
+                .groupby(self.frequency)
+                .std(dim=reduction_dims)
+                .load()
+            )
 
         self.std = std.where(std > 0)
 
@@ -369,14 +380,17 @@ class AnomaliesScaler(PreprocessModuleABC):
         if mask is not None:
             data = data.where(~mask)
 
-        if self.frequency is None or self.init_time_dim not in self.dims:
+        if (self.frequency is None or self.init_time_dim not in self.dims):
             self.mean = data.mean(reduction_dims).load()
 
         else:
             grouped_data = self._add_grouping_coordinate(data)
-
+            
             self.mean = (
-                grouped_data.groupby(self.frequency).mean(dim=reduction_dims).load()
+                grouped_data
+                .groupby(self.frequency)
+                .mean(dim=reduction_dims)
+                .load()
             )
 
         self.fitted = True
@@ -402,7 +416,7 @@ class AnomaliesScaler(PreprocessModuleABC):
             data=data,
             stat=self.mean,
         )
-
+       
         return data - mean
 
     def inverse_transform(self, data: xr.Dataset):
@@ -472,7 +486,10 @@ class TrendRemover(PreprocessModuleABC):
     @staticmethod
     def _time_to_numeric(
         times: xr.DataArray,
-        origin: (np.datetime64 | datetime.datetime | cftime.datetime),
+        origin: (np.datetime64
+                | datetime.datetime
+                | cftime.datetime
+                ),  
     ) -> xr.DataArray:
         """
         Convert datetime-like values to elapsed days from a reference time.
@@ -513,7 +530,9 @@ class TrendRemover(PreprocessModuleABC):
             ).reshape(values.shape)
 
         else:
-            numeric = ((values - origin) / np.timedelta64(1, "D")).astype(np.float64)
+            numeric = (
+                (values - origin) / np.timedelta64(1, "D")
+            ).astype(np.float64)
 
         return xr.DataArray(
             numeric,
@@ -596,17 +615,20 @@ class TrendRemover(PreprocessModuleABC):
             data = data.where(~mask)
 
         self.time_origin = data[self.init_time_dim].min()
+            
 
         if self.frequency is None:
             self.slope, self.intercept = self._fit_linear_trend(data)
-
+                
         else:
             grouped_data = self._add_grouping_coordinate(data)
 
             slopes = []
             intercepts = []
 
-            for group_value, group in grouped_data.groupby(self.frequency):
+            for group_value, group in grouped_data.groupby(
+                self.frequency
+            ):
                 if group.sizes[self.init_time_dim] < 2:
                     raise ValueError(
                         "At least two initialization times are required "
@@ -617,10 +639,16 @@ class TrendRemover(PreprocessModuleABC):
 
                 slope, intercept = self._fit_linear_trend(group)
 
-                slopes.append(slope.expand_dims({self.frequency: [group_value]}))
+                slopes.append(
+                    slope.expand_dims(
+                        {self.frequency: [group_value]}
+                    )
+                )
 
                 intercepts.append(
-                    intercept.expand_dims({self.frequency: [group_value]})
+                    intercept.expand_dims(
+                        {self.frequency: [group_value]}
+                    )
                 )
 
             self.slope = xr.concat(
@@ -722,7 +750,6 @@ class TrendRemover(PreprocessModuleABC):
 
         return data + trend
 
-
 @PreprocessingStepSelector.register("flattener")
 class Flattennanremove(PreprocessModuleABC):
     """
@@ -733,7 +760,6 @@ class Flattennanremove(PreprocessModuleABC):
     load_dir : pathlib.Path or str or None, optional
         Path to a previously fitted preprocessor.
     """
-
     supported_NN_dimensions_sorted: ClassVar[tuple] = supported_NN_dimensions_sorted
 
     def __init__(self, load_dir: Path | str = None, **kwargs):
@@ -1011,19 +1037,26 @@ def align_stat_data_lead_time_inverse_transform(
 
     if init_time_dim not in ds.coords:
         raise ValueError(
-            f"Data must contain the initialization-time coordinate {init_time_dim!r}."
+            f"Data must contain the initialization-time coordinate "
+            f"{init_time_dim!r}."
         )
 
+    
     init_times = np.asarray(ds[init_time_dim].values)
 
     if init_times.ndim != 1:
-        raise ValueError(f"Coordinate {init_time_dim!r} must be one-dimensional.")
+        raise ValueError(
+            f"Coordinate {init_time_dim!r} must be one-dimensional."
+        )
+
 
     if lead_time_dim in ds.dims:
         lead_times = np.asarray(ds[lead_time_dim].values)
 
         if lead_times.ndim != 1:
-            raise ValueError(f"Coordinate {lead_time_dim!r} must be one-dimensional.")
+            raise ValueError(
+                f"Coordinate {lead_time_dim!r} must be one-dimensional."
+            )
 
         init_time_grid, lead_time_grid = np.meshgrid(
             init_times,
@@ -1051,6 +1084,7 @@ def align_stat_data_lead_time_inverse_transform(
         temporal_coords = {
             init_time_dim: ds[init_time_dim],
         }
+
 
     target_time = xr.DataArray(
         target_times,

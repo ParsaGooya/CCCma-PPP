@@ -34,7 +34,7 @@ from cccma_ppp.architectures.layers.unet import (
     UpBlock,
     DownBlock,
     UNetOutput,
-    UNetOutputSIC,
+    UNetOutputSIC
 )
 
 
@@ -52,6 +52,7 @@ from cccma_ppp.architectures.unet.utils import _unet_config_checks, _repeat_tens
 @deterministicModelSelector.register("unet")
 @dataclasses.dataclass
 class UNetConfig(modelConfigABC):
+
     channels: list[int]
     block_config: ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig = (
         field(default_factory=ConvBlockConfig)
@@ -87,10 +88,11 @@ class UNetConfig(modelConfigABC):
 
     @property
     def EXPECTS_MASK(self) -> bool:
-        return isinstance(self.block_config, PartialConvBlockConfig) or getattr(
-            self.block_config, "use_partial_conv", False
+        return (
+            isinstance(self.block_config, PartialConvBlockConfig)
+            or getattr(self.block_config, "use_partial_conv", False)
         )
-
+    
     def build(
         self,
         input_shape: np.ndarray,
@@ -180,7 +182,7 @@ class UNet(deterministicmodelsABC):
         output_channels = output_shape[0]
 
         channels = config.channels
-
+        
         self.initial_mapping = build_conv_block(
             input_channels,
             channels[0],
@@ -207,7 +209,7 @@ class UNet(deterministicmodelsABC):
 
         for block in self.down_blocks:
             shape = block.output_shape(shape)
-            self.spatial_shapes.append(shape)
+            self.spatial_shapes.append(shape)            
 
         self.bottleneck = build_conv_block(
             channels[-1],
@@ -225,18 +227,15 @@ class UNet(deterministicmodelsABC):
         up_blocks: list[nn.Module] = []
         for index, skip_channels in enumerate(reversed_skips):
             inject_noise = generator_enabled and (
-                config.GENERATOR.noise_level != "medium"
-                or index == len(reversed_skips) - 1
+                config.GENERATOR.noise_level != "medium" or index == len(reversed_skips) - 1
             )
 
             out_channels = skip_channels
-
+            
             up_blocks.append(
-                UpBlock(
+                UpBlock( 
                     input_channels=input_channels,
-                    skip_channels=skip_channels
-                    if config.add_skip_connections
-                    else None,
+                    skip_channels=skip_channels if config.add_skip_connections else None,
                     out_channels=out_channels,
                     block_config=config.block_config,
                     upsampling_method=config.upsampling_method,
@@ -257,9 +256,10 @@ class UNet(deterministicmodelsABC):
 
         if config.checkpoint_config is not None:
             self._load_state_dict(config.checkpoint_config)
-
+            
         else:
             self._initialize_weights(config.init_method)
+            
 
     def _build_output(
         self,
@@ -299,6 +299,7 @@ class UNet(deterministicmodelsABC):
 
     def forward(self, request: DeterministicRequest) -> deterministicOutput:
 
+
         num_output_samples = request.output_sample_size
         batch_size = request.input.shape[0]
 
@@ -309,6 +310,7 @@ class UNet(deterministicmodelsABC):
         output = self.output_block(unet_output_tensor)
 
         if self.config.GENERATOR is not None and num_output_samples > 0:
+            
             output = output.reshape(
                 batch_size,
                 num_output_samples,
@@ -318,7 +320,7 @@ class UNet(deterministicmodelsABC):
         return deterministicOutput(output=output)
 
     def forward_decoder(self, request: DeterministicRequest) -> torch.Tensor:
-
+    
         x = request.input
         x_mask = request.input_mask
         added_features = request.added_features
@@ -344,12 +346,12 @@ class UNet(deterministicmodelsABC):
 
         else:
             down_features = self.spatial_shapes[:-1]
-
+            
             for down_block in self.down_blocks:
                 input = down_block(input)
 
         input = self.bottleneck(input)
-
+    
         if self.config.GENERATOR is not None and num_output_samples > 0:
             input = _repeat_tensor_mask(
                 input,
@@ -357,9 +359,9 @@ class UNet(deterministicmodelsABC):
             )
 
             if self.add_skip_connections:
+
                 down_features = [
-                    _repeat_tensor_mask(skip, repeats=num_output_samples)
-                    for skip in down_features
+                    _repeat_tensor_mask(skip, repeats=num_output_samples) for skip in down_features
                 ]
 
         for up_block, feature in zip(
@@ -382,6 +384,8 @@ class UNet(deterministicmodelsABC):
     @property
     def output_block(self) -> UNetOutput:
         return self.output
+    
+
 
 
 @deterministicModelSelector.register("unetsic")
@@ -402,8 +406,8 @@ class UNetSICConfig(UNetConfig):
             added_features_dim=added_features_dim,
         )
 
-
 class UNetSIC(UNet):
+
     def _build_output(
         self,
         in_channels: int,
@@ -414,5 +418,6 @@ class UNetSIC(UNet):
             out_channels=out_channels,
             hidden_channels=self.config.output_block_hidden_channels,
             activation=self.config.output_activation,
-            clip_output=self.config.clip_output,
+            clip_output=self.config.clip_output
         )
+

@@ -26,12 +26,10 @@ from cccma_ppp.data_modules.utils import (
     _unwrap_data_variables,
     _create_train_mask,
     suppress_stderr,
-    add_lead_times,
+    add_lead_times
 )
 
 init_time_dim, lead_time_dim = required_sample_dimensions
-
-
 @dataclasses.dataclass
 class lead_time_config:
     """
@@ -108,7 +106,7 @@ class DatasetConfigABC(abc.ABC):
     init_time_dim: ClassVar[str] = init_time_dim
     lead_time_dim: ClassVar[str] = lead_time_dim
     realization_dim: ClassVar[str] = realization_dim
-    lead_time_resolution: ClassVar[str] = lead_time_resolution
+    lead_time_resolution: ClassVar[str] = lead_time_resolution 
     supported_NN_dimensions: ClassVar[tuple] = supported_NN_dimensions_sorted
 
     def __init__(self):
@@ -190,7 +188,7 @@ class DatasetConfigABC(abc.ABC):
                 not self._using_model_data_as_condition,
             ]
         ):
-            if (self.condition_method or "").lower() != "static":
+            if self.condition_method.lower() != "static":
                 for dim in [
                     dim
                     for dim in self.model.coords
@@ -209,22 +207,19 @@ class DatasetConfigABC(abc.ABC):
                             "Condition data should be available"
                             f" on the same {dim} coordinates as model data."
                         )
+                
+                if self.model.info.time_coords_type != self.condition.info.time_coords_type:
 
-                if (
-                    self.model.info.time_coords_type
-                    != self.condition.info.time_coords_type
-                ):
                     raise ValueError(
                         "Condition data and model data must have the same"
-                        " cftime/datetime type time coordinates."
-                    )
+                        f" cftime/datetime type time coordinates."
+                    )           
 
-            if (self.condition_method or "").lower() == "same_member":
+            if self.condition_method.lower() == "same_member":
                 if any(
                     [
                         self.model.coords.get(self.realization_dim) is None,
-                        self.effective_condition.coords.get(self.realization_dim)
-                        is None,
+                        self.effective_condition.coords.get(self.realization_dim) is None,
                     ]
                 ):
                     raise ValueError(
@@ -275,9 +270,7 @@ class DatasetConfigABC(abc.ABC):
             If condition method is not supported.
         """
         if self.condition_method is not None:
-            if (
-                self.condition_method or ""
-            ).lower() not in self._VALID_CONDITION_METHODS:
+            if self.condition_method.lower() not in self._VALID_CONDITION_METHODS:
                 raise ValueError(
                     f"Invalid condition_method: {self.condition_method}. "
                     f"Must be a in {sorted(self._VALID_CONDITION_METHODS)}."
@@ -286,7 +279,7 @@ class DatasetConfigABC(abc.ABC):
 
     def _check_model(self):
         if self.model is not None:
-            if (self.condition_method or "").lower() == "same_member":
+            if self.condition_method.lower() == "same_member":
                 if self.model.ensemble_mean:
                     raise ValueError(
                         "for same member coniditioning the model data should not be ensemble mean."
@@ -301,10 +294,7 @@ class DatasetConfigABC(abc.ABC):
                     "You must specify condition_method for conditioning dataset!"
                 )
 
-            if (self.condition_method or "").lower() in [
-                "cross_ensemble",
-                "same_member",
-            ]:
+            if self.condition_method.lower() in ["cross_ensemble", "same_member"]:
                 if self.effective_condition.ensemble_mean:
                     raise ValueError(
                         "condition ensemble_mean cannot be True for cross_ensemble or same_member conditioning."
@@ -313,7 +303,7 @@ class DatasetConfigABC(abc.ABC):
                     raise ValueError(
                         f"For cross_ensemble or same_member conditioning a {self.realization_dim} dim must exist in the condition."
                     )
-            elif (self.condition_method or "").lower() == "ensemble_mean":
+            elif self.condition_method.lower() == "ensemble_mean":
                 if self.effective_condition.ensemble_mean is not True:
                     raise ValueError(
                         "Ensemble mean must be True for ensemble_mean conditioning."
@@ -328,12 +318,10 @@ class DatasetConfigABC(abc.ABC):
                         "'static' conditioning method cannot point to the same model data!"
                     )
 
-            if (self.condition_method or "").lower() == "static":
+            if self.condition_method.lower() == "static":
                 checklist = [
                     dim in self.effective_condition.coords
-                    for dim in (
-                        (self.init_time_dim, self.lead_time_dim, self.realization_dim)
-                    )
+                    for dim in ((self.init_time_dim, self.lead_time_dim, self.realization_dim))
                 ]
                 if any(checklist):
                     raise ValueError(
@@ -343,7 +331,7 @@ class DatasetConfigABC(abc.ABC):
                     )
 
         elif self.condition_method is not None:
-            if (self.condition_method or "").lower() == "static":
+            if self.condition_method.lower() == "static":
                 raise ValueError(
                     "For static conditioning method condition dataset must be specified!"
                 )
@@ -431,7 +419,7 @@ class DatasetConfigABC(abc.ABC):
         variables, and ensemble members as the model dataset.
         """
         if self.condition is None:
-            return (self.condition_method or "").lower() in {
+            return self.condition_method.lower() in {
                 "ensemble_mean",
                 "cross_ensemble",
                 "same_member",
@@ -467,7 +455,7 @@ class DatasetConfigABC(abc.ABC):
         -------
         ModelDataConfig
         """
-        ensemble_mean = (self.condition_method or "").lower() == "ensemble_mean"
+        ensemble_mean = self.condition_method.lower() == "ensemble_mean"
         return ModelDataConfig(
             paths=self.model.paths,
             names=self.model.names,
@@ -480,13 +468,10 @@ class DatasetConfigABC(abc.ABC):
         )
 
     @final
-    def get_input_times(
-        self,
-        requested_times: (
-            Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
+    def get_input_times(self, requested_times: (Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
             | np.ndarray
             | xr.DataArray
-        ),
+        )
     ):
         """
         Select the available input times within the requested_times
@@ -499,9 +484,12 @@ class DatasetConfigABC(abc.ABC):
 
         Returns
         -------
-        xr.DataArray containing input times within requested_times.
+        xr.DataArray containing input times within requested_times.           
         """
-        missing = [t for t in requested_times.values if t not in self.available_times]
+        missing = [
+            t for t in requested_times.values
+            if t not in self.available_times
+        ]
 
         if missing:
             raise ValueError(
@@ -514,11 +502,12 @@ class DatasetConfigABC(abc.ABC):
                 dims=(self.init_time_dim,),
                 coords={self.init_time_dim: requested_times},
             )
-
+        
         input_times = self.effective_input.coords[self.init_time_dim].to_index()
         return requested_times.sel(
             {self.init_time_dim: requested_times.to_index().intersection(input_times)}
         )
+
 
     @final
     def _resolve_condition(self):
@@ -564,8 +553,8 @@ class AddedTimeFeatures:
 
         self.min_time_ref = self.reference_config.get_common_time.min()
         self.max_time_ref = self.reference_config.get_common_time.max()
-        self.time_span_ref = self.max_time_ref - self.min_time_ref
-
+        self.time_span_ref =  self.max_time_ref - self.min_time_ref 
+        
         self.feature_indices = {
             self.init_time_dim: 0,
             self.lead_time_dim: 1,
@@ -586,8 +575,11 @@ class AddedTimeFeatures:
             )
 
         self.time_features = tuple(
-            feature for feature in self.feature_indices if feature in requested_features
+            feature
+            for feature in self.feature_indices
+            if feature in requested_features
         )
+
 
     @staticmethod
     def _days_in_year(
@@ -611,10 +603,10 @@ class AddedTimeFeatures:
         year = int(xr.DataArray(time).dt.year.item())
 
         return (
-            (np.datetime64(f"{year + 1}-01-01") - np.datetime64(f"{year}-01-01"))
-            .astype("timedelta64[D]")
-            .astype(int)
-        )
+            np.datetime64(f"{year + 1}-01-01")
+            - np.datetime64(f"{year}-01-01")
+        ).astype("timedelta64[D]").astype(int)
+
 
     def build_time_features(
         self,
@@ -641,9 +633,13 @@ class AddedTimeFeatures:
                 f"dimensions: {missing}."
             )
 
-        init_times = np.asarray(sample_coords[self.init_time_dim])
-        lead_times = np.asarray(sample_coords[self.lead_time_dim])
-
+        init_times = np.asarray(
+            sample_coords[self.init_time_dim]
+        )
+        lead_times = np.asarray(
+            sample_coords[self.lead_time_dim]
+        )
+        
         if not self.time_features:
             return self
 
@@ -669,61 +665,69 @@ class AddedTimeFeatures:
             )
 
             calculated_features[self.init_time_dim] = normalized_times
-
+                
         if self.lead_time_dim in requested:
-            normalized_lead_times = lead_times.astype(np.float32) / float(
-                np.max(self.reference_config.lead_times)
+            
+            normalized_lead_times = (
+                lead_times.astype(np.float32)
+                / float(np.max(self.reference_config.lead_times))
             )
 
             calculated_features[self.lead_time_dim] = normalized_lead_times
 
-        if bool(requested & {"month_sin", "month_cos", "day_sin", "day_cos"}):
+        if bool(
+            requested
+            & {"month_sin", "month_cos","day_sin", "day_cos"}
+        ):   
+ 
+        
             target_time_da = xr.DataArray(
                 target_times,
                 dims=("sample",),
             )
 
         if requested & {"month_sin", "month_cos"}:
+            
             target_month = np.asarray(
                 target_time_da.dt.month.values,
                 dtype=np.float32,
             )
-
+            
             if "month_sin" in requested:
-                calculated_features["month_sin"] = np.sin(
-                    2 * np.pi * (target_month - 1) / 12.0
-                )
+                calculated_features["month_sin"] = np.sin(2 * np.pi * (target_month - 1) / 12.0)
             if "month_cos" in requested:
-                calculated_features["month_cos"] = np.cos(
-                    2 * np.pi * (target_month - 1) / 12.0
-                )
+                calculated_features["month_cos"] = np.cos(2 * np.pi * (target_month - 1) / 12.0)           
 
         if requested & {"day_sin", "day_cos"}:
+
             target_days = np.asarray(
                 target_time_da.dt.dayofyear.values,
                 dtype=np.float32,
             )
 
             days_in_year = np.asarray(
-                [self._days_in_year(time) for time in target_times],
+                [
+                    self._days_in_year(time)
+                    for time in target_times
+                ],
                 dtype=np.float32,
             )
             if "day_sin" in requested:
-                calculated_features["day_sin"] = np.sin(
-                    2 * np.pi * (target_days - 1) / days_in_year
-                )
+                calculated_features["day_sin"] = np.sin(2 * np.pi * (target_days - 1) / days_in_year)
             if "day_cos" in requested:
-                calculated_features["day_cos"] = np.cos(
-                    2 * np.pi * (target_days - 1) / days_in_year
-                )
+                calculated_features["day_cos"] = np.cos(2 * np.pi * (target_days - 1) / days_in_year)
 
         self.time_features_array = np.stack(
-            [calculated_features[feature] for feature in self.time_features],
+            [
+                calculated_features[feature]
+                for feature in self.time_features
+            ],
             axis=-1,
         ).astype(np.float32, copy=False)
 
         return self
-
+        
+    
     def __call__(
         self,
         ind: int,
@@ -743,7 +747,7 @@ class AddedTimeFeatures:
                 f"Time-feature index {ind} is out of bounds for "
                 f"{len(self.time_features_array)} samples."
             )
-
+            
         time_features = self.time_features_array[ind]
 
         if input.ndim > 2:
@@ -808,6 +812,7 @@ class DatasetABC(Dataset, abc.ABC):
         self.time_features = dataclasses.replace(self.time_features)
         self.time_features.build_time_features(self.sample_coords)
 
+
     @final
     def _check_init(self):
 
@@ -817,10 +822,9 @@ class DatasetABC(Dataset, abc.ABC):
             raise RuntimeError(
                 "Make sure to fit preprocessors first!. Hint:  TrainDatasetConfig._fit_preprocessors()"
             )
-
+ 
         missing = [
-            t
-            for t in self.requested_times.values
+            t for t in self.requested_times.values
             if t not in self.config.available_times
         ]
 
@@ -836,13 +840,11 @@ class DatasetABC(Dataset, abc.ABC):
             mask = _create_train_mask(
                 init_times=self.config.available_times,
                 lead_times=self.config.input_lead_times,
-                lead_time_resolution=lead_time_resolution,
+                lead_time_resolution=lead_time_resolution
             )
             self.mask = xr.full_like(mask, fill_value=False)
 
-        missing = set((self.config.init_time_dim, self.config.lead_time_dim)) - set(
-            self.mask.dims
-        )
+        missing = set((self.config.init_time_dim, self.config.lead_time_dim)) - set(self.mask.dims)
 
         if missing:
             raise ValueError(
@@ -852,12 +854,7 @@ class DatasetABC(Dataset, abc.ABC):
     @property
     def _sampling_times_selectors(self) -> dict:
 
-        return {
-            self.config.init_time_dim: self.config.get_input_times(
-                self.requested_times
-            ),
-            self.config.lead_time_dim: self.config.lead_times,
-        }
+        return {self.config.init_time_dim: self.config.get_input_times(self.requested_times), self.config.lead_time_dim: self.config.lead_times}
 
     @property
     @abc.abstractmethod
@@ -880,25 +877,18 @@ class DatasetABC(Dataset, abc.ABC):
     @final
     def _prepare_sampling_mask(self, sampling_times_selectors: dict):
 
-        missing = (
-            set((self.config.init_time_dim, self.config.lead_time_dim))
-            - sampling_times_selectors.keys()
-        )
+        missing = set((self.config.init_time_dim, self.config.lead_time_dim)) - sampling_times_selectors.keys()
 
         if missing:
             raise ValueError(f"No selectors provided for dimensions: {missing}")
 
         mask = self.mask.sel(
-            {
-                dim: sampling_times_selectors[dim]
-                for dim in (self.config.init_time_dim, self.config.lead_time_dim)
-            }
+            {dim: sampling_times_selectors[dim] for dim in (self.config.init_time_dim, self.config.lead_time_dim)}
         )
 
-        if (
-            not self.config.effective_input.ensemble_mean
-            and self.config.realization_dim in self.config.effective_input.coords
-        ):
+        if (not self.config.effective_input.ensemble_mean
+            and self.config.realization_dim in self.config.effective_input.coords):
+                
             coords = self.config.effective_input.coords[self.config.realization_dim]
 
             mask = mask.expand_dims({self.config.realization_dim: coords}, axis=0)
@@ -920,12 +910,16 @@ class DatasetABC(Dataset, abc.ABC):
         sample_dims = tuple(self.mask.sizes)
 
         stacked_mask = (
-            self.mask.stack(batch=sample_dims)
+            self.mask
+            .stack(batch=sample_dims)
             .transpose("batch", ...)
             .dropna(dim="batch")
         )
 
-        return {dim: np.asarray(stacked_mask.coords[dim].values) for dim in sample_dims}
+        return {
+            dim: np.asarray(stacked_mask.coords[dim].values)
+            for dim in sample_dims
+        }
 
     @final
     def get_model_indexes(
@@ -1002,8 +996,7 @@ class DatasetABC(Dataset, abc.ABC):
         condition_coords = {
             dim: np.asarray(values)
             for dim, values in sample_coords.items()
-            if dim in self.config.effective_condition.dims
-            and dim != self.config.realization_dim
+            if dim in self.config.effective_condition.dims and dim != self.config.realization_dim 
         }
 
         if self.config.condition_method.lower() == "same_member":
@@ -1012,9 +1005,7 @@ class DatasetABC(Dataset, abc.ABC):
                     f"'same_member' conditioning requires {self.config.realization_dim} coordinates."
                 )
 
-            condition_coords[self.config.realization_dim] = np.asarray(
-                sample_coords[self.config.realization_dim]
-            )
+            condition_coords[self.config.realization_dim] = np.asarray(sample_coords[self.config.realization_dim])
 
         indexes = {
             dim: self.config.effective_condition.indexes[dim].get_indexer(values)
@@ -1106,15 +1097,11 @@ class DatasetABC(Dataset, abc.ABC):
 
             if self.config.condition_method.lower() == "cross_ensemble":
                 selection[self.config.realization_dim] = [
-                    np.random.randint(
-                        self.config.effective_condition.sizes[
-                            self.config.realization_dim
-                        ]
-                    )
+                    np.random.randint(self.config.effective_condition.sizes[self.config.realization_dim])
                 ]
 
         condition = self.config.effective_condition.isel(**selection)
-
+        
         return _unwrap_data_variables(condition)
 
     @final

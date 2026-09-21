@@ -178,9 +178,7 @@ class Trainer:
             self.beta_finder = self.config.beta_finder
 
         self.num_batches = len(self.TrainLoader)
-        self.remainder_batch_size = (
-            self.num_batches % self.config.gradient_accumulation_steps
-        )
+        self.remainder_batch_size = self.num_batches % self.config.gradient_accumulation_steps
 
         self._setup = False
         self._skip_training = False
@@ -356,7 +354,7 @@ class Trainer:
                     )
 
             if self.is_distributed:
-                self.distributed.barrier()
+                    self.distributed.barrier()
 
             if self.is_on_root:
                 if (self._epochs_trained) % self.log_every_n_epochs == 0:
@@ -371,7 +369,9 @@ class Trainer:
 
             should_stop = self._should_stop_early()
             if self.is_distributed:
-                stop_tensor = torch.tensor(int(should_stop), device=self.device)
+                stop_tensor = torch.tensor(
+                    int(should_stop), device=self.device
+                )
                 self.distributed.broadcast(stop_tensor, src=0)
                 should_stop = bool(stop_tensor.item())
 
@@ -447,16 +447,12 @@ class Trainer:
             current_lr = self.optimizer.learning_rate
             current_accumulation_size = (
                 self.remainder_batch_size
-                if (
-                    self.remainder_batch_size != 0
-                    and batch_id >= self.num_batches - self.remainder_batch_size
-                )
+                if (self.remainder_batch_size != 0 and 
+                batch_id >= self.num_batches - self.remainder_batch_size)
                 else self.config.gradient_accumulation_steps
             )
-
-            batch_loss_dict, kwargs = self._train_on_batch(
-                batch, current_accumulation_size
-            )
+                
+            batch_loss_dict, kwargs = self._train_on_batch(batch, current_accumulation_size)
 
             self.train_aggregator.record(batch_loss_dict, current_lr, kwargs)
 
@@ -484,6 +480,8 @@ class Trainer:
 
         batch.to_device(self.device)
         kwargs = {}
+
+
 
         if hasattr(self, "beta_finder"):
             beta = self.beta_finder(self.global_step)
@@ -535,6 +533,7 @@ class Trainer:
 
             self.validation_aggregator.record(batch_loss_dict)
 
+        
     @torch.no_grad()
     def _validate_on_batch(self, batch):
         """

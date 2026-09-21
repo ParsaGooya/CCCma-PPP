@@ -96,7 +96,7 @@ class InferenceDatasetConfig(DatasetConfigABC):
 @dataclasses.dataclass
 class InferenceDataset(DatasetABC):
     config: InferenceDatasetConfig
-    requested_times: (
+    requested_times:(
         Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
         | np.ndarray
         | xr.DataArray

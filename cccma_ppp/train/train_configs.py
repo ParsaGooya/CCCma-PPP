@@ -22,6 +22,7 @@ from cccma_ppp.core.trainer import TrainerConfig
 from cccma_ppp.core.optimization import OptimizerConfig
 from cccma_ppp.core.core_abc import GenerativeContext
 
+import cccma_ppp.generic.registry_imports
 
 def set_seed(seed):
     """
@@ -432,12 +433,8 @@ def build_trainer(
     config.train_loader.setup_distributed(distributed)
     return_spatial_mask = config.module.EXPECTS_MASK
 
-    train_loader = config.train_loader.build_train_loader(
-        return_spatial_mask=return_spatial_mask
-    )
-    validation_loader = config.train_loader.build_validation_loader(
-        return_spatial_mask=return_spatial_mask
-    )
+    train_loader = config.train_loader.build_train_loader(return_spatial_mask=return_spatial_mask)
+    validation_loader = config.train_loader.build_validation_loader(return_spatial_mask=return_spatial_mask)
     weights = config.train_loader.get_weights(config.weights)
 
     num_train_batches = len(train_loader)
@@ -461,7 +458,7 @@ def build_trainer(
         weights=weights,
         num_output_dimensions=config.module.NUM_OUTPUT_DIMS or len(output_shape),
         generative_context=generative_context,
-        output_shape=output_shape,
+        output_shape=output_shape
     )
 
     module.init_loss_function(reconstruction_loss)

@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 from cccma_ppp.data_modules.data.data_abc import DataConfigABC
 from cccma_ppp.data_modules.dataset.dataset_abc import DatasetConfigABC
-from cccma_ppp.data_modules.utils import _validate_time_sequence
+from cccma_ppp.data_modules.utils import  _validate_time_sequence
 from cccma_ppp.data_modules.weights import WeightsConfig
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
@@ -49,10 +49,10 @@ class DatasetOperator:
         if hasattr(self.config, "observation"):
             return self.config.observation
 
+
     def fit_preprocessors(
         self,
-        train_times: (
-            Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
+        train_times: (Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
             | np.ndarray
             | xr.DataArray
         ),
@@ -82,26 +82,26 @@ class DatasetOperator:
         Applies fitting to model, observation, and condition datasets.
         """
         missing = [
-            t for t in train_times.values if t not in self.config.available_times
+            t for t in train_times.values
+            if t not in self.config.available_times
         ]
 
         if missing:
-            raise ValueError(f"The following train_times are unavailable: {missing}")
-
+            raise ValueError(
+                f"The following train_times are unavailable: {missing}"
+            )
+        
         if not isinstance(train_times, slice):
             _validate_time_sequence(train_times)
 
         if self.config.model is not None:
+
             selection = {
                 self.config.init_time_dim: self.config.get_input_times(train_times),
-                self.config.lead_time_dim: self.config.model.coords[
-                    self.config.lead_time_dim
-                ],
+                self.config.lead_time_dim: self.config.model.coords[self.config.lead_time_dim],
             }
             if self.config.model.coords.get(self.config.realization_dim) is not None:
-                selection[self.config.realization_dim] = self.config.model.coords[
-                    self.config.realization_dim
-                ]
+                selection[self.config.realization_dim] = self.config.model.coords[self.config.realization_dim]
 
             self.config.model.fit_preprocessor_pipeline(
                 selection=selection,
@@ -113,10 +113,7 @@ class DatasetOperator:
 
         if self.config_observation is not None:
             selection = {self.config.init_time_dim: train_times}
-            if (
-                self.config_observation.coords.get(self.config.realization_dim)
-                is not None
-            ):
+            if self.config_observation.coords.get(self.config.realization_dim) is not None:
                 selection[self.config.realization_dim] = self.config_observation.coords[
                     self.config.realization_dim
                 ]
@@ -129,6 +126,7 @@ class DatasetOperator:
             if self.config.condition_method.lower() == "static":
                 selection = {}
             else:
+                
                 selection = {
                     self.config.init_time_dim: self.config.get_input_times(train_times),
                     self.config.lead_time_dim: self.config.effective_condition.coords[
@@ -136,15 +134,11 @@ class DatasetOperator:
                     ],
                 }
                 if (
-                    self.config.effective_condition.coords.get(
-                        self.config.realization_dim
-                    )
+                    self.config.effective_condition.coords.get(self.config.realization_dim)
                     is not None
                 ):
                     selection[self.config.realization_dim] = (
-                        self.config.effective_condition.coords[
-                            self.config.realization_dim
-                        ]
+                        self.config.effective_condition.coords[self.config.realization_dim]
                     )
 
             self.config.effective_condition.fit_preprocessor_pipeline(

@@ -5,6 +5,7 @@ import dataclasses
 import warnings
 import cftime
 import datetime
+import calendar
 from pathlib import Path
 from collections.abc import Sequence
 
@@ -23,7 +24,8 @@ from cccma_ppp.data_modules.data.data_configs import (
     ConditionDataConfig,
 )
 
-from cccma_ppp.data_modules.utils import add_lead_times, _unwrap_data_variables
+from cccma_ppp.data_modules.utils import (add_lead_times, 
+                                          _unwrap_data_variables)
 
 
 from cccma_ppp.configs import lead_time_resolution
@@ -86,7 +88,9 @@ class TrainDatasetConfig(DatasetConfigABC):
                 if dim in self.observation.coords
             ]:
                 if dim in self.model.coords:
-                    if not self.observation.coords[dim].equals(self.model.coords[dim]):
+                    if not self.observation.coords[dim].equals(
+                        self.model.coords[dim]
+                    ):
                         warnings.warn(
                             "\n=====================================================================\n"
                             f"model and observation data do not have the same {dim} cooridnates.\n"
@@ -100,14 +104,12 @@ class TrainDatasetConfig(DatasetConfigABC):
                         "======================================================================\n"
                     )
 
-                if (
-                    self.model.info.time_coords_type
-                    != self.observation.info.time_coords_type
-                ):
+                if self.model.info.time_coords_type != self.observation.info.time_coords_type:
+
                     raise ValueError(
                         "Observation data and model data must have the same"
-                        " cftime/datetime type time coordinates."
-                    )
+                        f" cftime/datetime type time coordinates."
+                    )                      
 
         else:
             if self.condition_method is None:
@@ -147,7 +149,9 @@ class TrainDatasetConfig(DatasetConfigABC):
             return self.model.time_range
 
         else:
-            return self.model.time_range.intersection(self.observation.time_range)
+            return self.model.time_range.intersection(
+                self.observation.time_range
+            )
 
     @property
     def available_times(self):
@@ -158,7 +162,7 @@ class TrainDatasetConfig(DatasetConfigABC):
         -------
         If the model init_time resolution is year,
         maintains that entire year rather than cutting
-        at the specific last init_time.
+        at the specific last init_time. 
 
         Returns
         -------
@@ -180,17 +184,16 @@ class TrainDatasetConfig(DatasetConfigABC):
             (self.get_common_time >= model_times.min())
             & (self.get_common_time <= model_times.max())
         ]
-
+    
     def fit_preprocessors(
         self,
-        train_times: (
-            Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
+        train_times: (Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
             | np.ndarray
             | xr.DataArray
             | slice
         ),
         save: bool = False,
-        save_path: str | Path | None = None,
+        save_path: str | Path | None =None,
         save_name: str | None = None,
     ):
         """
@@ -270,15 +273,15 @@ class TrainDataset(DatasetABC):
     Parameters
     ----------
     config : TrainDatasetConfig
-    requested_times :
-        Sequence-like or xr.DataArray
+    requested_times : 
+        Sequence-like or xr.DataArray 
         Items must be datetime or cftime objects.
     mask : xr.DataArray or None, optional
     return_metadata : bool, optional
     """
 
     config: TrainDatasetConfig
-    requested_times: (
+    requested_times:(
         Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
         | np.ndarray
         | xr.DataArray
@@ -307,7 +310,7 @@ class TrainDataset(DatasetABC):
 
         if self.config.observation is not None:
             self.config.observation.open_xarray_data(
-                load=self.load, add_time_auxiliary_coords=True
+                load=self.load, add_time_auxiliary_coords= True
             )
 
         self.obs_indexes = self.get_obs_indexes(self.sample_coords)
@@ -520,16 +523,14 @@ class TrainDataset(DatasetABC):
         if self.config.observation is None:
             return None
 
-        selection = {dim: [indexes[ind]] for dim, indexes in self.obs_indexes.items()}
+        selection = {
+            dim: [indexes[ind]] for dim, indexes in self.obs_indexes.items()
+        }
 
-        if (
-            not self.config.observation.ensemble_mean
-            and self.config.realization_dim in self.config.observation.dims
-        ):
+        if (not self.config.observation.ensemble_mean and
+            self.config.realization_dim in self.config.observation.dims):
             selection[self.config.realization_dim] = [
-                np.random.randint(
-                    self.config.observation.data.sizes[self.config.realization_dim]
-                )
+                np.random.randint(self.config.observation.data.sizes[self.config.realization_dim])
             ]
 
         obs = self.config.observation.isel(**selection)
@@ -583,3 +584,8 @@ class TrainDataset(DatasetABC):
             return datadict, selection
         else:
             return datadict
+
+
+
+
+

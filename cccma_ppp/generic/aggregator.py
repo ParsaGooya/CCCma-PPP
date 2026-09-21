@@ -5,6 +5,7 @@ from collections import defaultdict
 import warnings
 import matplotlib.pyplot as plt
 import random
+import csv
 from pathlib import Path
 
 from cccma_ppp.generic.distributed import Distributed
@@ -417,23 +418,17 @@ class MetricsAggregator:
                 old_csv.unlink()
 
             with csv_path.open("w") as f:
-                f.write(
-                    "epoch,"
-                    + ",".join(agg.name for agg in aggregator_list if agg is not None)
-                    + "\n"
-                )
+                f.write("epoch," + ",".join(
+                    agg.name for agg in aggregator_list if agg is not None
+                ) + "\n")
 
                 for i, epoch in enumerate(epochs_range):
                     values = [
-                        str(
-                            agg.epoch_metric_terms.get(
-                                loss_name, [np.nan] * metric_lengths
-                            )[i]
-                        )
+                        str(agg.epoch_metric_terms.get(loss_name, [np.nan] * metric_lengths)[i])
                         for agg in aggregator_list
                         if agg is not None
                     ]
-                    f.write(f"{epoch}," + ",".join(values) + "\n")
+                    f.write(f"{epoch}," + ",".join(values) + "\n")            
 
         fig, ax = plt.subplots(1, 1, figsize=figsize)
 
@@ -538,7 +533,7 @@ class RunningCovariance:
         self.distributed.all_reduce_sum(self.sum_xxT)
         self.distributed.all_reduce_sum(self.count)
 
-    def finalize(self, print_checks=False):
+    def finalize(self, print_checks = False):
         mean = self.sum_x / self.count
 
         if self.count <= 1:

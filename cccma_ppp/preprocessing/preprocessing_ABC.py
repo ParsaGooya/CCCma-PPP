@@ -5,16 +5,12 @@ import numpy as np
 
 from cccma_ppp.data_modules.utils import add_lead_times
 
-from cccma_ppp.configs import (
-    required_sample_dimensions,
-    realization_dim,
-    lead_time_unit,
-    lead_time_resolution,
-)
+from cccma_ppp.configs import (required_sample_dimensions,
+                               realization_dim,
+                               lead_time_unit,
+                               lead_time_resolution)
 
 init_time_dim, lead_time_dim = required_sample_dimensions
-
-
 class PreprocessModuleABC(abc.ABC):
     """
     Abstract base class for preprocessing modules.
@@ -23,7 +19,7 @@ class PreprocessModuleABC(abc.ABC):
         lead_time_resolution : {"month", "day"}, optional
             Temporal unit represented by one lead-time increment.
     """
-
+    
     large_ensemble: bool
     fitted: bool
 
@@ -33,6 +29,7 @@ class PreprocessModuleABC(abc.ABC):
     realization_dim: ClassVar[int] = realization_dim
     supported_frequencies: ClassVar = {None, "year", "month", "day"}
 
+    
     @abc.abstractmethod
     def fit(self, data):
         """
@@ -110,9 +107,9 @@ class PreprocessModuleABC(abc.ABC):
 
         if len(reduction_dims) == 0:
             return None
-
+        
         return reduction_dims
-
+    
     @final
     def _add_grouping_coordinate(
         self,
@@ -121,7 +118,7 @@ class PreprocessModuleABC(abc.ABC):
         """
         Derive and attach the temporal coordinate used during fitting.
 
-        """
+        """        
         if self.frequency is None:
             return data
 
@@ -137,9 +134,13 @@ class PreprocessModuleABC(abc.ABC):
             grouping_coord = init_time.dt.dayofyear
 
         else:
-            raise RuntimeError(f"Unexpected temporal frequency {self.frequency!r}.")
+            raise RuntimeError(
+                f"Unexpected temporal frequency {self.frequency!r}."
+            )
 
-        return data.assign_coords({self.frequency: grouping_coord})
+        return data.assign_coords(
+            {self.frequency: grouping_coord}
+        )
 
     @final
     def _align_stat_for_transform(
@@ -150,9 +151,9 @@ class PreprocessModuleABC(abc.ABC):
         """
         Align a fitted statistic for forward transformation.
 
-        This alignment depends only on initialization time.
+        This alignment depends only on initialization time. 
         """
-        if self.frequency is None or self.init_time_dim not in self.dims:
+        if (self.frequency is None or self.init_time_dim not in self.dims):
             return stat
 
         # If the temporal auxilary coordinates were added while loading data
@@ -182,9 +183,13 @@ class PreprocessModuleABC(abc.ABC):
                 temporal_indexer = init_time.dt.dayofyear
 
             else:
-                raise RuntimeError(f"Unexpected temporal frequency {self.frequency!r}.")
+                raise RuntimeError(
+                    f"Unexpected temporal frequency {self.frequency!r}."
+                )
 
-        return stat.sel({self.frequency: temporal_indexer})
+        return stat.sel(
+            {self.frequency: temporal_indexer}
+        )
 
     @final
     def _get_inverse_target_time(
@@ -192,12 +197,16 @@ class PreprocessModuleABC(abc.ABC):
         data: xr.DataArray | xr.Dataset,
     ) -> xr.DataArray:
 
-        init_times = np.asarray(data[self.init_time_dim].values)
+        init_times = np.asarray(
+            data[self.init_time_dim].values
+        )
 
         if self.lead_time_dim not in data.dims:
             return data[self.init_time_dim]
 
-        lead_times = np.asarray(data[self.lead_time_dim].values)
+        lead_times = np.asarray(
+            data[self.lead_time_dim].values
+        )
 
         init_grid, lead_grid = np.meshgrid(
             init_times,
@@ -218,10 +227,13 @@ class PreprocessModuleABC(abc.ABC):
                 self.lead_time_dim,
             ),
             coords={
-                self.init_time_dim: data[self.init_time_dim],
-                self.lead_time_dim: data[self.lead_time_dim],
+                self.init_time_dim:
+                    data[self.init_time_dim],
+                self.lead_time_dim:
+                    data[self.lead_time_dim],
             },
         )
+
 
     @final
     def _check_fitted(self) -> None:

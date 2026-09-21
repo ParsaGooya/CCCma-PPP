@@ -13,14 +13,18 @@ from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
 from cccma_ppp.core.writer import WriterConfig
 from cccma_ppp.generic.distributed import Distributed
 from cccma_ppp.generic.runtime import RuntimeContext
+from cccma_ppp.data_modules.dataloader import Dataloader
 from cccma_ppp.train.dataloader import TrainDataloaderConfig
 from cccma_ppp.train.train_configs import set_seed
+import cccma_ppp.generic.registry_imports
 
 
 @dataclasses.dataclass
 class InferenceConfig:
     experiment_dir: str
-    writer: WriterConfig = dataclasses.field(default_factory=WriterConfig)
+    writer: WriterConfig = dataclasses.field(
+        default_factory=WriterConfig
+    )
     inference_loader: InferenceDataloaderConfig = dataclasses.field(
         default_factory=InferenceDataloaderConfig
     )
@@ -127,7 +131,9 @@ class InferenceConfig:
             config=dacite.Config(strict=False),
         )
 
-    def load_module(self, strict: bool = False):
+    def load_module(
+        self, strict: bool = False
+    ):
 
         path = Path(self.experiment_dir) / "checkpoints"
 
@@ -205,10 +211,8 @@ def build_writer(
 
     config.inference_loader.setup_distributed(config.train_loader, distributed)
 
-    return_spatial_mask = module.model_config.EXPECTS_MASK
-    inference_loader = config.inference_loader.build_inference_loader(
-        return_spatial_mask=return_spatial_mask
-    )
+    return_spatial_mask= module.model_config.EXPECTS_MASK
+    inference_loader = config.inference_loader.build_inference_loader(return_spatial_mask=return_spatial_mask)
 
     log("Checking module dataloader compatability ...")
 

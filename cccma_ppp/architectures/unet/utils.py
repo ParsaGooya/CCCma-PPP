@@ -72,11 +72,9 @@ def _unet_config_checks(config):
             raise ValueError(f"{key} must be a positive integer.")
 
     if getattr(config, "condition_dependant_latent", None) is not None:
-        if (
-            not config.condition_dependant_latent
-            and config.deterministic_guess_config is None
-            and not config.condemb_to_decoder
-        ):
+        if (not config.condition_dependant_latent and 
+            config.deterministic_guess_config is None and
+            not config.condemb_to_decoder):
             raise ValueError(
                 "condition embedding has to be passed to decoder for cVAE when latent is not condition dependant "
                 "and a deterministic guess does not exist."

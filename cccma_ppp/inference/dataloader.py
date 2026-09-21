@@ -1,3 +1,4 @@
+import numpy as np
 import dataclasses
 import torch
 from pathlib import Path
@@ -86,12 +87,10 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
         if self.dataset_config is not None:
             _ = self._inference_times
-
-        self.inference_years_slice = (
-            slice(*[str(item) for item in self.inference_years_slice])
-            if self.inference_years_slice is not None
-            else None
-        )
+        
+        self.inference_years_slice = (slice(
+            *[str(item) for item in self.inference_years_slice]
+        ) if self.inference_years_slice is not None else None)
 
     def _check_config(self):
         if self.dataset_config is None:
@@ -188,7 +187,8 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
         self._setup = True
 
-    def build_inference_loader(self, return_spatial_mask: bool = False):
+    def build_inference_loader(self,
+                               return_spatial_mask: bool = False):
         if not self._setup:
             raise RuntimeError(
                 "Dataloader has to be setup for distributed training first by calling .setup_distributed()"
@@ -208,7 +208,7 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
             rank=self.rank,
             world_size=self.world_size,
             shuffle=False,
-            return_spatial_mask=return_spatial_mask,
+            return_spatial_mask=return_spatial_mask
         )
 
     @property

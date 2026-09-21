@@ -9,10 +9,9 @@ from typing import Literal
 from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
 from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.data_modules.utils import _unwrap_data_variables
-
+                    
 
 spatialmethod = Literal["uniform", "cosine_lat"]
-
 
 @dataclasses.dataclass
 class WeightsConfig:

@@ -39,7 +39,7 @@ from cccma_ppp.architectures.layers.unet import (
     UpBlock,
     DownBlock,
     UNetOutput,
-    UNetOutputSIC,
+    UNetOutputSIC
 )
 
 
@@ -54,7 +54,6 @@ from cccma_ppp.architectures.layers.conv import (
 from cccma_ppp.architectures.unet.utils import _unet_config_checks, _repeat_tensor_mask
 from cccma_ppp.architectures.unet.deterministic import UNetConfig
 
-
 @dataclasses.dataclass
 class UNetSelector(deterministicModelSelector):
     type: str = "unet"
@@ -64,6 +63,8 @@ class UNetSelector(deterministicModelSelector):
 @cVAEModelSelector.register("unet")
 @dataclasses.dataclass
 class cVAEUNetConfig(cVAEmodelConfigABC):
+
+
     channels: list[int]
     latent_size: int
     condition_embedding_channels: list | None = None
@@ -116,13 +117,9 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
 
         if self.deterministic_guess_config is not None:
             self.share_output_block = self.deterministic_guess_config.share_output_block
-            self.freeze_deterministic = (
-                self.deterministic_guess_config.checkpoint_config.freeze_weights
-            )
+            self.freeze_deterministic = self.deterministic_guess_config.checkpoint_config.freeze_weights
 
-            self.deterministic_guess_config = (
-                self.deterministic_guess_config.get_model_config()
-            )
+            self.deterministic_guess_config = self.deterministic_guess_config.get_model_config()
 
             if not isinstance(self.deterministic_guess_config, UNetConfig):
                 raise TypeError(
@@ -131,54 +128,52 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
                     f"{type(self.deterministic_guess_config).__name__}."
                 )
 
-            if self.deterministic_guess_config.channels[0] != self.channels[0]:
+            if (self.deterministic_guess_config.channels[0] !=
+                self.channels[0]):
                 raise ValueError(
-                    "The cVAE UNet model and the configured deterministic guess "
-                    "model must have the same number of channels before output block "
-                    f"for summation of the deterministic guess at that level. Expected : {self.channels[0]} "
+                    "The cVAE UNet model and the configured deterministic guess " \
+                    "model must have the same number of channels before output block " \
+                    f"for summation of the deterministic guess at that level. Expected : {self.channels[0]} " \
                     f"got {self.deterministic_guess_config.channels[0]}"
                 )
 
             if self.deterministic_guess_config.GENERATOR is not None:
+
                 raise ValueError(
-                    "The deterministic guess UNet model cannot have GENERATOR on. "
-                )
+                    "The deterministic guess UNet model cannot have GENERATOR on. " \
+                )  
 
             if self.share_output_block:
-                if any(
-                    [
-                        (
-                            self.output_activation
-                            != self.deterministic_guess_config.output_activation
-                        ),
-                        (
-                            self.output_block_hidden_channels
-                            != self.deterministic_guess_config.output_block_hidden_channels
-                        ),
-                        (
-                            getattr(self, "clip_output", None)
-                            != getattr(
-                                self.deterministic_guess_config, "clip_output", None
-                            )
-                        ),
-                    ]
-                ):
+                if any([(
+                    self.output_activation
+                    != self.deterministic_guess_config.output_activation
+                    ),
+                    (
+                    self.output_block_hidden_channels
+                    != self.deterministic_guess_config.output_block_hidden_channels
+                    ),
+                    (getattr(self, "clip_output", None)
+                    != getattr(self.deterministic_guess_config, "clip_output", None)
+                    ),
+                ]):
                     raise ValueError(
                         "With share_output_block=True, the cVAE and deterministic "
                         "guess must use compatible output-block settings "
                         "(activation, hidden channels, and clip_output)."
                     )
 
+    
         else:
-            self.share_output_block = False
-            self.freeze_deterministic = False
+            self.share_output_block = False    
+            self.freeze_deterministic = False         
 
     @property
     def EXPECTS_MASK(self) -> bool:
-        return isinstance(self.block_config, PartialConvBlockConfig) or getattr(
-            self.block_config, "use_partial_conv", False
+        return (
+            isinstance(self.block_config, PartialConvBlockConfig)
+            or getattr(self.block_config, "use_partial_conv", False)
         )
-
+    
     def build(
         self,
         input_shape: np.ndarray,
@@ -209,11 +204,12 @@ class cVAEUNet(cVAEmodelsABC):
         self.condition_embedding_channels = config.condition_embedding_channels
         self.condition_embedding_size = config.condition_embedding_size
         self.condition_dependant_latent = config.condition_dependant_latent
-        self.condemb_to_decoder = config.condemb_to_decoder
+        self.condemb_to_decoder = config.condemb_to_decoder 
         self.deterministic_guess_config = config.deterministic_guess_config
         self.share_output_block = config.share_output_block
         self.freeze_deterministic = config.freeze_deterministic
         self.deterministic_guess = None
+
 
         if output_shape is None:
             output_shape = input_shape
@@ -261,7 +257,7 @@ class cVAEUNet(cVAEmodelsABC):
         output_channels = output_shape[0]
         output_spatial_shape = output_shape[1:]
         channels = config.channels
-
+        
         recognition_input_channels = (
             output_shape[0] + input_shape[0] + self.added_features_dim
         )
@@ -305,22 +301,26 @@ class cVAEUNet(cVAEmodelsABC):
         )
 
         if self.deterministic_guess_config is not None:
+
             self.deterministic_guess = self.deterministic_guess_config.build(
                 input_shape=input_shape,
                 output_shape=output_shape,
                 added_features_dim=added_features_dim,
             )
 
-        if self.share_output_block:
+        if self.share_output_block: 
+            
             self.output = self.deterministic_guess.output_block
 
         elif self.freeze_deterministic:
+
             for param in self.deterministic_guess.output_block.parameters():
                 param.requires_grad = True
 
             self.output = self.deterministic_guess.output_block
 
         else:
+
             self.output = self._build_output(
                 in_channels=reversed_channels[-1],
                 out_channels=output_channels,
@@ -330,8 +330,8 @@ class cVAEUNet(cVAEmodelsABC):
             self._load_state_dict(config.checkpoint_config)
         else:
             self._initialize_weights(
-                config.init_method, exclude=(self.deterministic_guess,)
-            )
+                config.init_method,
+                exclude=(self.deterministic_guess,))
 
         self._predict_called: bool = False
 
@@ -340,7 +340,7 @@ class cVAEUNet(cVAEmodelsABC):
         in_channels: int,
         out_channels: int,
     ) -> nn.Module:
-
+        
         return UNetOutput(
             in_channels=in_channels,
             out_channels=out_channels,
@@ -430,8 +430,8 @@ class cVAEUNet(cVAEmodelsABC):
 
         if posterior_variance_limits is not None:
             log_var = torch.clamp(
-                log_var,
-                min=posterior_variance_limits[0].type_as(mu),
+                log_var, 
+                min=posterior_variance_limits[0].type_as(mu), 
                 max=posterior_variance_limits[1].type_as(mu),
             )
 
@@ -450,16 +450,18 @@ class cVAEUNet(cVAEmodelsABC):
             sample_sizes = (latent_sample_size, batch_size)
 
         deterministic_guess = self._deterministic_guess(
-            input=condition,
-            input_mask=condition_mask,
-            added_features=added_features,
+                input = condition,
+                input_mask = condition_mask,
+                added_features = added_features,
         )
 
         if deterministic_guess is not None:
             out = out + deterministic_guess
 
-        output = self._output_block(out, sample_sizes)
-
+        output = self._output_block(out, 
+                                    sample_sizes)
+                                    
+                                    
         return cVAEOutput(
             output=output,
             mu=mu,
@@ -472,7 +474,7 @@ class cVAEUNet(cVAEmodelsABC):
     def predict(
         self,
         request: cVAEPredictRequest,
-        deterministic_guess_only: bool = save_deterministic_guess_only,
+        deterministic_guess_only: bool = save_deterministic_guess_only
     ) -> cVAEOutput:
         """
         Generate samples from learned prior.
@@ -511,24 +513,23 @@ class cVAEUNet(cVAEmodelsABC):
             sample_sizes = (latent_sample_size, batch_size)
 
         deterministic_guess = self._deterministic_guess(
-            input=request.condition,
-            input_mask=request.condition_mask,
-            added_features=request.added_features,
+                input = request.condition,
+                input_mask = request.condition_mask,
+                added_features = request.added_features,
         )
 
         if deterministic_guess is not None:
             if deterministic_guess_only:
                 if not self._predict_called:
-                    warnings.warn(
-                        "======================================================\n"
-                        "YOU ARE SAVING DETERMINISTIC GUESS BRANCH OUTPUT ONLY! \n"
-                        "======================================================"
-                    )
+                    warnings.warn("======================================================\n"
+                                  "YOU ARE SAVING DETERMINISTIC GUESS BRANCH OUTPUT ONLY! \n"
+                                  "======================================================")
                 out = deterministic_guess.unsqueeze(0)
             else:
                 out = out + deterministic_guess
 
-        output = self._output_block(out, sample_sizes)
+        output = self._output_block(out, 
+                                    sample_sizes)
         self._predict_called = True
         return cVAEOutput(
             output=output,
@@ -537,7 +538,7 @@ class cVAEUNet(cVAEmodelsABC):
             samples=None,
             cond_mu=cond_mu,
             cond_log_var=cond_log_var,
-            deterministic_guess=deterministic_guess_only,
+            deterministic_guess=deterministic_guess_only
         )
 
     def _recognition(
@@ -603,9 +604,7 @@ class cVAEUNet(cVAEmodelsABC):
 
         feature_size = latent_samples.shape[-1]
 
-        latent_samples = latent_samples.reshape(
-            latent_sample_size * batch_size, feature_size
-        )
+        latent_samples = latent_samples.reshape(latent_sample_size * batch_size, feature_size)
         out = self.generation(latent_samples, num_output_samples)
 
         if num_output_samples > 0:
@@ -619,10 +618,10 @@ class cVAEUNet(cVAEmodelsABC):
         return out.reshape(latent_sample_size, batch_size, *out.shape[1:])
 
     def _deterministic_guess(
-        self,
-        input: torch.Tensor,
-        input_mask: torch.Tensor | None = None,
-        added_features: torch.Tensor | None = None,
+            self,
+            input: torch.Tensor,
+            input_mask: torch.Tensor | None = None,
+            added_features: torch.Tensor | None = None,
     ) -> torch.Tensor | None:
 
         if self.deterministic_guess is None:
@@ -632,19 +631,20 @@ class cVAEUNet(cVAEmodelsABC):
             input,
             input_mask,
             added_features,
-        )
+        )   
 
-        return self.deterministic_guess.forward_decoder(request)
+        return self.deterministic_guess.forward_decoder(request) 
+
 
     def _output_block(
         self,
         input: torch.Tensor,
         sample_sizes: tuple[int, ...],
     ) -> torch.Tensor:
-
+        
         input = input.reshape(
             math.prod(sample_sizes),
-            *input.shape[len(sample_sizes) :],
+            *input.shape[len(sample_sizes):],
         )
 
         output = self.output(input)
@@ -653,7 +653,6 @@ class cVAEUNet(cVAEmodelsABC):
             *sample_sizes,
             *output.shape[1:],
         )
-
 
 class Recognition(nn.Module):
     def __init__(
@@ -761,8 +760,7 @@ class Generation(nn.Module):
         up_blocks: list[nn.Module] = []
         for index, out_channels in enumerate(channels[1:]):
             inject_noise = generator_enabled and (
-                config.GENERATOR.noise_level != "medium"
-                or index == len(self.resize_shapes) - 1
+                config.GENERATOR.noise_level != "medium" or index == len(self.resize_shapes) - 1
             )
 
             up_blocks.append(
@@ -818,11 +816,14 @@ class Generation(nn.Module):
         return output
 
 
+
+
 @cVAEModelSelector.register("unetsic")
 @dataclasses.dataclass
 class cVAEUNetSICEConfig(cVAEUNetConfig):
-    clip_output: bool = False
 
+    clip_output: bool = False
+    
     def build(
         self,
         input_shape: np.ndarray,
@@ -836,18 +837,19 @@ class cVAEUNetSICEConfig(cVAEUNetConfig):
             added_features_dim=added_features_dim,
         )
 
-
 class cVAEUNetSIC(cVAEUNet):
+
     def _build_output(
         self,
         in_channels: int,
         out_channels: int,
     ) -> nn.Module:
-
+        
         return UNetOutputSIC(
             in_channels=in_channels,
             out_channels=out_channels,
             hidden_channels=self.config.output_block_hidden_channels,
             activation=self.config.output_activation,
-            clip_output=self.config.clip_output,
+            clip_output=self.config.clip_output
         )
+

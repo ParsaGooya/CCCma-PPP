@@ -43,7 +43,7 @@ def align_to_skip(
 def padd(
     x: torch.Tensor, target_size: tuple[int, int], padding_mode: PaddingMethod = "zeros"
 ) -> torch.Tensor:
-
+    
     mode = "constant" if padding_mode == "zeros" else padding_mode
     target_h, target_w = target_size
     current_h, current_w = x.shape[-2:]
