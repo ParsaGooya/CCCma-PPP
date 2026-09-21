@@ -1208,7 +1208,7 @@ def main() -> None:
                     passed_count += 1
                 else:
                     failed_count += 1
-                    print(f"  ✗ {loader_type}:{task['case_name']}: {error[:80]}")
+                    print(f"  {loader_type}:{task['case_name']}: {error[:80]}")
 
                 pbar.update(1)
 
