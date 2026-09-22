@@ -241,22 +241,15 @@ def _create_train_mask(
     time_resolution = infer_time_resolution(init_times.coords[init_time_dim].to_index())
 
     if time_resolution == "year":
-
         cutoff_year = int(init_times.dt.year.max().item())
         mask = target_times.dt.year > cutoff_year
 
     elif time_resolution == "month" and lead_time_resolution == "day":
         latest_init_time = init_times.max()
 
-        cutoff_month = (
-            latest_init_time.dt.year * 12
-            + latest_init_time.dt.month
-        )
+        cutoff_month = latest_init_time.dt.year * 12 + latest_init_time.dt.month
 
-        target_month = (
-            target_times.dt.year * 12
-            + target_times.dt.month
-        )
+        target_month = target_times.dt.year * 12 + target_times.dt.month
 
         mask = target_month > cutoff_month
 
@@ -440,10 +433,9 @@ def _validate_time_sequence(
         offsets = {value.utcoffset() for value in values}
 
         if any(offset not in {None, datetime.timedelta(0)} for offset in offsets):
-            raise ValueError(
-                "'time_sequence' contains non-UTC datetime values."
-            )
-        
+            raise ValueError("'time_sequence' contains non-UTC datetime values.")
+
+
 @contextlib.contextmanager
 def suppress_stderr() -> Iterator[None]:
     """

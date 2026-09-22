@@ -38,7 +38,7 @@ class LosspipelineConfig:
     ----------
     loss_pipeline : list of LossStepConfig
         Sequence of loss steps.
-        
+
     loss_weights : list of float or None, optional
         Weights applied to each loss term.
 
@@ -48,9 +48,9 @@ class LosspipelineConfig:
     saved_output_mask_dir: str or None
 
         Location of a saved fixed output maks for loss
-        calculation. The mask could have any of the 
+        calculation. The mask could have any of the
         following shapes:
-        
+
         1- C, D1, D2, ..
         2- 1, D1, D2, ...
         3- D1, D2, ...

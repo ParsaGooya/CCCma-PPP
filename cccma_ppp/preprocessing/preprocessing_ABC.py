@@ -235,7 +235,9 @@ class PreprocessModuleABC(abc.ABC):
                 )
 
             init_time = data[self.init_time_dim]
-            temporal_indexer = self._extract_temporal_coordinate(init_time, self.frequency)
+            temporal_indexer = self._extract_temporal_coordinate(
+                init_time, self.frequency
+            )
 
         return stat.sel({self.frequency: temporal_indexer})
 
@@ -256,7 +258,7 @@ class PreprocessModuleABC(abc.ABC):
         -------
         xr.DataArray
             Description not yet provided.
-        
+
         Notes
         ------
         Assumes UTC timezones.
@@ -282,8 +284,8 @@ class PreprocessModuleABC(abc.ABC):
 
         if np.isnat(target_times).any():
             raise ValueError(
-                f"add_lead_times produced NaT (Not a Time) values. "
-                f"Check that init_times and lead_times are compatible."
+                "add_lead_times produced NaT (Not a Time) values. "
+                "Check that init_times and lead_times are compatible."
             )
 
         if target_times.shape != init_grid.reshape(-1).shape:

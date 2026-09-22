@@ -45,7 +45,7 @@ class WeightsConfig:
         if self.load_dir is not None:
             if not Path(self.load_dir).exists():
                 raise FileNotFoundError(f"weights file not found at {self.load_dir}")
-            
+
         valid_methods = {"uniform", "cosine_lat"}
         if self.spatial_method not in valid_methods:
             raise ValueError(
@@ -127,7 +127,6 @@ class WeightsConfig:
                 weights = weights * latitude_weights
 
             if self.variable_weights is not None:
-
                 if "channels" in target_coords:
                     expected_channels = set(target_coords["channels"].values)
                     provided_channels = set(self.variable_weights.keys())
@@ -141,8 +140,8 @@ class WeightsConfig:
                         if unexpected:
                             msg_parts.append(f"Unexpected weights for: {unexpected}")
                         raise ValueError(
-                            "Variable weights must match target channels exactly. " +
-                            "; ".join(msg_parts)
+                            "Variable weights must match target channels exactly. "
+                            + "; ".join(msg_parts)
                         )
 
                 variable_weights = xr.DataArray(
@@ -155,7 +154,9 @@ class WeightsConfig:
                 weights = variable_weights * weights
 
         if np.any(weights < 0):
-            raise ValueError(f"Weights must be non-negative, found minimum {weights.min()}")
+            raise ValueError(
+                f"Weights must be non-negative, found minimum {weights.min()}"
+            )
         if np.any(np.isnan(weights)):
             raise ValueError("Weights contain NaN values")
         if np.any(np.isinf(weights)):

@@ -1,5 +1,6 @@
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 import numpy as np
 import xarray as xr
@@ -177,7 +178,7 @@ class Normalizer(PreprocessModuleABC):
 @PreprocessingStepSelector.register("standardizer")
 class Standardizer(PreprocessModuleABC):
     """
-    Document this class. 
+    Document this class.
 
     Parameters
     ----------
@@ -262,7 +263,11 @@ class Standardizer(PreprocessModuleABC):
                 grouped_data.groupby(self.frequency).mean(dim=reduction_dims).load()
             )
 
-            std = grouped_data.groupby(self.frequency).std(dim=reduction_dims, ddof = 1).load()
+            std = (
+                grouped_data.groupby(self.frequency)
+                .std(dim=reduction_dims, ddof=1)
+                .load()
+            )
 
         self.std = std.where(std > 0)
 
@@ -462,7 +467,7 @@ class TrendRemover(PreprocessModuleABC):
     **kwargs : Any
         Description not yet provided.
     """
-    
+
     def __init__(
         self,
         frequency: Literal["month", "day"] | None = None,

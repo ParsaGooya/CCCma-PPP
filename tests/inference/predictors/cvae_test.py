@@ -642,7 +642,7 @@ def test_infer_on_batch_predicts_and_saves(
         "nstds": predictor.nstds,
         "latent_samples": None,
         "output_sample_size": 2,
-            "chunk_size": None,
+        "chunk_size": None,
     }
 
     predictor._batch_to_netcdf.assert_called_once_with(

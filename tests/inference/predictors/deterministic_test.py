@@ -464,7 +464,7 @@ def test_infer_on_batch_predicts_and_saves(
     assert model.predict_kwargs == {
         "data": batch,
         "output_sample_size": 3,
-            "chunk_output_samples": (False,),
+        "chunk_output_samples": (False,),
     }
 
     predictor._batch_to_netcdf.assert_called_once_with(

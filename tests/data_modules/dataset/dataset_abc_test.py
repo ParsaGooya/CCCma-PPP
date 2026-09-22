@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import datetime
-from collections.abc import Sequence
 from contextlib import nullcontext
 from types import SimpleNamespace
 from unittest.mock import Mock, PropertyMock, patch

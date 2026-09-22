@@ -1438,7 +1438,6 @@ class LegacyToDataset:
         )
 
 
-from unittest.mock import patch
 
 
 def make_fitted_pipeline():

@@ -1764,7 +1764,8 @@ class TestAdditionalCVAEUNetConfig:
     @pytest.mark.pruned
     def test_false_partial_conv_attribute_does_not_expect_mask(self):
         config = object.__new__(cVAEUNetConfig)
-        config.block_config = SimpleNamespace(chunk_size=None, 
+        config.block_config = SimpleNamespace(
+            chunk_size=None,
             use_partial_conv=False,
         )
 
@@ -1779,7 +1780,8 @@ class TestAdditionalCVAEUNetConfig:
             output_activation="tanh",
             output_block_hidden_channels=7,
         )
-        selector = SimpleNamespace(chunk_size=None, 
+        selector = SimpleNamespace(
+            chunk_size=None,
             checkpoint_config=SimpleNamespace(chunk_size=None, freeze_weights=False),
             share_output_block=False,
             get_model_config=Mock(
@@ -1821,11 +1823,12 @@ class TestAdditionalCVAEUNetInitialization:
             ),
         ):
             recognition.side_effect = [
-                SimpleNamespace(chunk_size=None, 
+                SimpleNamespace(
+                    chunk_size=None,
                     spatial_shapes=[
                         (8, 8),
                         (4, 4),
-                    ]
+                    ],
                 ),
                 Mock(),
             ]
@@ -1867,11 +1870,12 @@ class TestAdditionalCVAEUNetInitialization:
             ),
         ):
             recognition.side_effect = [
-                SimpleNamespace(chunk_size=None, 
+                SimpleNamespace(
+                    chunk_size=None,
                     spatial_shapes=[
                         (8, 8),
                         (4, 4),
-                    ]
+                    ],
                 ),
                 Mock(),
             ]
@@ -2037,7 +2041,8 @@ class TestAdditionalForwardPredict:
     def test_forward_eval_keeps_requested_output_samples(self):
         helper = TestForward()
         model = helper.make_stubbed_model()
-        model.config.GENERATOR = SimpleNamespace(chunk_size=None, 
+        model.config.GENERATOR = SimpleNamespace(
+            chunk_size=None,
             num_training_noise_samples=7,
         )
         model.eval()
@@ -2161,8 +2166,10 @@ def make_deterministic_selector(
     share_output_block=False,
     freeze_weights=False,
 ):
-    return SimpleNamespace(chunk_size=None, 
-        checkpoint_config=SimpleNamespace(chunk_size=None, 
+    return SimpleNamespace(
+        chunk_size=None,
+        checkpoint_config=SimpleNamespace(
+            chunk_size=None,
             freeze_weights=freeze_weights,
         ),
         share_output_block=share_output_block,
@@ -2208,7 +2215,8 @@ class TestAdditionalDeterministicGuessConfiguration:
 
     def test_resolved_configuration_must_be_unet_config(self):
         selector = make_deterministic_selector(
-            SimpleNamespace(chunk_size=None, 
+            SimpleNamespace(
+                chunk_size=None,
                 channels=[4, 8],
             )
         )
@@ -2350,11 +2358,12 @@ class TestAdditionalInitializationBranches:
             ),
         ):
             recognition.side_effect = [
-                SimpleNamespace(chunk_size=None, 
+                SimpleNamespace(
+                    chunk_size=None,
                     spatial_shapes=[
                         (8, 8),
                         (4, 4),
-                    ]
+                    ],
                 ),
                 Mock(),
             ]
@@ -2430,7 +2439,8 @@ class TestAdditionalInitializationBranches:
         self,
     ):
         shared_output = nn.Identity()
-        deterministic_model = SimpleNamespace(chunk_size=None, 
+        deterministic_model = SimpleNamespace(
+            chunk_size=None,
             output_block=shared_output,
         )
         deterministic_config = Mock(
@@ -2463,7 +2473,8 @@ class TestAdditionalInitializationBranches:
         for parameter in output.parameters():
             parameter.requires_grad = False
 
-        deterministic_model = SimpleNamespace(chunk_size=None, 
+        deterministic_model = SimpleNamespace(
+            chunk_size=None,
             output_block=output,
         )
         deterministic_config = Mock(
@@ -2489,7 +2500,8 @@ class TestAdditionalInitializationBranches:
     def test_unfrozen_unshared_branch_builds_new_output(
         self,
     ):
-        deterministic_model = SimpleNamespace(chunk_size=None, 
+        deterministic_model = SimpleNamespace(
+            chunk_size=None,
             output_block=nn.Identity(),
         )
         deterministic_config = Mock(
@@ -2866,7 +2878,8 @@ class TestAdditionalDeterministicGuessRequest:
                 8,
             )
         )
-        model.deterministic_guess = SimpleNamespace(chunk_size=None, 
+        model.deterministic_guess = SimpleNamespace(
+            chunk_size=None,
             forward_decoder=decoder,
         )
 
@@ -3011,7 +3024,8 @@ class TestAdditionalGenerationConfiguration:
         expected_noise,
         expected_block_noise,
     ):
-        generator = SimpleNamespace(chunk_size=None, 
+        generator = SimpleNamespace(
+            chunk_size=None,
             noise_level=noise_level,
             num_training_noise_samples=2,
         )
@@ -3043,7 +3057,8 @@ class TestAdditionalGenerationConfiguration:
     def test_medium_noise_only_injects_upsampling_noise_in_final_block(
         self,
     ):
-        generator = SimpleNamespace(chunk_size=None, 
+        generator = SimpleNamespace(
+            chunk_size=None,
             noise_level="medium",
             num_training_noise_samples=2,
         )
@@ -3095,7 +3110,8 @@ class TestAdditionalGenerationConfiguration:
     def test_low_noise_disables_internal_block_noise(
         self,
     ):
-        generator = SimpleNamespace(chunk_size=None, 
+        generator = SimpleNamespace(
+            chunk_size=None,
             noise_level="low",
             num_training_noise_samples=2,
         )
@@ -3148,7 +3164,8 @@ class TestAdditionalGenerationConfiguration:
     def test_full_noise_enables_noise_in_all_blocks(
         self,
     ):
-        generator = SimpleNamespace(chunk_size=None, 
+        generator = SimpleNamespace(
+            chunk_size=None,
             noise_level="full",
             num_training_noise_samples=2,
         )
@@ -3202,7 +3219,8 @@ class TestAdditionalGenerationForward:
         self,
         monkeypatch,
     ):
-        generator = SimpleNamespace(chunk_size=None, 
+        generator = SimpleNamespace(
+            chunk_size=None,
             noise_level="full",
             num_training_noise_samples=3,
         )
@@ -3296,7 +3314,8 @@ class TestAdditionalGenerationForward:
         self,
         monkeypatch,
     ):
-        generator = SimpleNamespace(chunk_size=None, 
+        generator = SimpleNamespace(
+            chunk_size=None,
             noise_level="full",
             num_training_noise_samples=3,
         )
@@ -3384,7 +3403,8 @@ class TestAdditionalGenerationForward:
                 8,
             ),
         ]
-        generation.config = SimpleNamespace(chunk_size=None, 
+        generation.config = SimpleNamespace(
+            chunk_size=None,
             GENERATOR=None,
         )
         generation.combine_latent = nn.Linear(
