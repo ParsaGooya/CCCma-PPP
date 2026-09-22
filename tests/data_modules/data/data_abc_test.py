@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
@@ -921,7 +921,8 @@ def test_load_preprocessor_pipeline_default_path(
     monkeypatch.setattr(
         RuntimeContext,
         "GLOBAL_EXP_DIR",
-        str(tmp_path),
+        tmp_path,
+        raising=False,
     )
 
     cfg = DummyDataConfig(tmp_path)
@@ -961,3 +962,847 @@ def test_load_preprocessor_pipeline_fitted_success(tmp_path):
     cfg.preprocessing_pipeline.load_from_memory = lambda path: None
 
     cfg.load_preprocessor_pipeline(tmp_path)
+
+
+class TestDataConfigInitialization:
+    def test_base_initialization_sets_pipeline_name_and_state(
+        self,
+        tmp_path,
+    ):
+        pipeline = Mock()
+        pipeline.set_name = Mock()
+
+        class InitializedConfig(DummyDataConfig):
+            def __init__(self):
+                self.paths = tmp_path
+                self.names = ["var"]
+                self.preprocessing_pipeline = pipeline
+                self.realization_list = None
+                self.ensemble_mean = False
+                self.concat_dim = None
+                self.file_type = "*.nc"
+                self.rename_dict = {
+                    "old": "new",
+                }
+
+                DataConfigABC.__init__(self)
+
+        expected_info = infoclass(
+            sizes={},
+            start_time=None,
+            final_time=None,
+            coords={},
+            dims=(),
+            time_coords_type=None,
+            init_time_freq=None,
+        )
+
+        with (
+            patch(
+                "cccma_ppp.data_modules.data.data_abc._resolve_data",
+            ) as resolve,
+            patch(
+                "cccma_ppp.data_modules.data.data_abc._get_ds_info",
+                return_value=expected_info,
+            ) as get_info,
+        ):
+            config = InitializedConfig()
+
+        assert config.data is None
+        assert config._check_ensemble is False
+        assert config.info is expected_info
+
+        pipeline.set_name.assert_called_once_with(
+            "dummy",
+            {
+                "old": "new",
+            },
+        )
+        resolve.assert_called_once_with(config)
+        get_info.assert_called_once_with(config)
+
+    def test_base_initialization_enables_ensemble_check(
+        self,
+        tmp_path,
+    ):
+        pipeline = Mock()
+
+        class EnsembleConfig(DummyDataConfig):
+            def __init__(self):
+                self.paths = tmp_path
+                self.names = ["var"]
+                self.preprocessing_pipeline = pipeline
+                self.realization_list = [
+                    1,
+                    2,
+                ]
+                self.ensemble_mean = False
+                self.concat_dim = None
+                self.file_type = "*.nc"
+                self.rename_dict = None
+
+                DataConfigABC.__init__(self)
+
+        with (
+            patch(
+                "cccma_ppp.data_modules.data.data_abc._resolve_data",
+            ),
+            patch(
+                "cccma_ppp.data_modules.data.data_abc._get_ds_info",
+                return_value=Mock(),
+            ),
+        ):
+            config = EnsembleConfig()
+
+        assert config._check_ensemble is True
+
+
+class TestDataConfigProperties:
+    def test_coords_delegates_to_info(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        expected = {
+            INIT_TIME_DIM: make_valid_ds()[INIT_TIME_DIM],
+        }
+        config.info = Mock(
+            coords=expected,
+        )
+
+        assert config.coords is expected
+
+    def test_sizes_delegates_to_info(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        expected = {
+            INIT_TIME_DIM: 2,
+            LEAD_TIME_DIM: 3,
+        }
+        config.info = Mock(
+            sizes=expected,
+        )
+
+        assert config.sizes is expected
+
+    def test_dims_delegates_to_info(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        expected = (
+            INIT_TIME_DIM,
+            LEAD_TIME_DIM,
+            NN_DIM,
+        )
+        config.info = Mock(
+            dims=expected,
+        )
+
+        assert config.dims is expected
+
+    def test_init_time_frequency_delegates_to_info(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        config.info = Mock(
+            init_time_freq="year",
+        )
+
+        assert config.init_time_frequency == "year"
+
+
+class TestOpenXarrayData:
+    def test_opens_data_without_realization_selection(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        config.list_paths = [
+            "first.nc",
+            "second.nc",
+        ]
+        config.info = Mock(
+            coords={
+                INIT_TIME_DIM: make_valid_ds()[INIT_TIME_DIM],
+            },
+        )
+
+        expected = make_valid_ds()
+
+        with patch(
+            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            return_value=expected,
+        ) as load_data:
+            result = config.open_xarray_data(
+                load=True,
+                add_time_auxiliary_coords=True,
+            )
+
+        assert result is config
+        assert config.data is expected
+
+        load_data.assert_called_once_with(
+            [
+                "first.nc",
+                "second.nc",
+            ],
+            names=["var"],
+            ensemble_mean=False,
+            selection=None,
+            concat_dim=None,
+            rename_dict={},
+            add_time_auxiliary_coords=True,
+            load=True,
+        )
+
+    def test_opens_data_with_realization_selection(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(
+            tmp_path,
+            realization_list=[
+                0,
+                1,
+            ],
+        )
+        config.list_paths = [
+            "ensemble.nc",
+        ]
+
+        realization_coordinate = make_ensemble_ds()[REALIZATION_DIM]
+        config.info = Mock(
+            coords={
+                REALIZATION_DIM: realization_coordinate,
+            },
+        )
+
+        expected = make_ensemble_ds()
+
+        with patch(
+            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            return_value=expected,
+        ) as load_data:
+            result = config.open_xarray_data()
+
+        assert result is config
+
+        assert load_data.call_args.kwargs["selection"] == {
+            REALIZATION_DIM: realization_coordinate,
+        }
+
+    def test_open_uses_default_flags(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        config.list_paths = [
+            "data.nc",
+        ]
+        config.info = Mock(
+            coords={},
+        )
+
+        with patch(
+            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            return_value=make_valid_ds(),
+        ) as load_data:
+            config.open_xarray_data()
+
+        assert load_data.call_args.kwargs["load"] is False
+        assert load_data.call_args.kwargs["add_time_auxiliary_coords"] is False
+
+
+class TestDataConfigIndexing:
+    def test_isel_requires_opened_data(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        config.data = None
+
+        with pytest.raises(
+            ValueError,
+            match="No data is currently opened",
+        ):
+            config.isel(
+                {
+                    INIT_TIME_DIM: 0,
+                }
+            )
+
+    def test_isel_forwards_indexer_mapping(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        config.data = make_valid_ds()
+
+        transformed = object()
+        config.preprocessing_pipeline.transform = Mock(
+            return_value=transformed,
+        )
+
+        result = config.isel(
+            {
+                INIT_TIME_DIM: 1,
+                LEAD_TIME_DIM: 0,
+            }
+        )
+
+        expected_selection = config.data.isel(
+            {
+                INIT_TIME_DIM: 1,
+                LEAD_TIME_DIM: 0,
+            }
+        )
+
+        passed = config.preprocessing_pipeline.transform.call_args.args[0]
+
+        xr.testing.assert_identical(
+            passed,
+            expected_selection,
+        )
+        assert result is transformed
+
+    def test_isel_forwards_keyword_indexers(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        config.data = make_valid_ds()
+
+        config.preprocessing_pipeline.transform = Mock(
+            side_effect=lambda data: data,
+        )
+
+        result = config.isel(
+            **{
+                INIT_TIME_DIM: 0,
+                LEAD_TIME_DIM: 1,
+            }
+        )
+
+        expected = config.data.isel(
+            {
+                INIT_TIME_DIM: 0,
+                LEAD_TIME_DIM: 1,
+            }
+        )
+
+        xr.testing.assert_identical(
+            result,
+            expected,
+        )
+
+    def test_indexes_requires_opened_data(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        config.data = None
+
+        with pytest.raises(
+            ValueError,
+            match="No data is currently opened",
+        ):
+            _ = config.indexes
+
+
+class TestDataConfigClosing:
+    def test_close_data_closes_dataset_and_clears_reference(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        data = Mock()
+        config.data = data
+
+        result = config.close_data()
+
+        assert result is None
+        data.close.assert_called_once_with()
+        assert config.data is None
+
+    def test_close_data_is_idempotent(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        config.data = None
+
+        assert config.close_data() is None
+        assert config.data is None
+
+    def test_close_data_can_be_called_twice(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        data = Mock()
+        config.data = data
+
+        config.close_data()
+        config.close_data()
+
+        data.close.assert_called_once_with()
+        assert config.data is None
+
+    def test_destructor_closes_open_data(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        data = Mock()
+        config.data = data
+
+        config.__del__()
+
+        data.close.assert_called_once_with()
+        assert config.data is None
+
+
+class TestFitPreprocessorPipelineCleanup:
+    def test_fit_loads_base_data_before_passing_to_pipeline(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        config.list_paths = [
+            "data.nc",
+        ]
+
+        base = Mock()
+        loaded_base = object()
+        base.load.return_value = loaded_base
+
+        with patch(
+            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            return_value=base,
+        ):
+            config.fit_preprocessor_pipeline(
+                selection={},
+                save=False,
+            )
+
+        base.load.assert_called_once_with()
+
+        assert config.preprocessing_pipeline.fit_kwargs["base_data"] is loaded_base
+
+    def test_fit_closes_base_dataset(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        config.list_paths = [
+            "data.nc",
+        ]
+
+        base = Mock()
+        base.load.return_value = base
+
+        with patch(
+            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            return_value=base,
+        ):
+            config.fit_preprocessor_pipeline(
+                selection={},
+                save=False,
+            )
+
+        base.close.assert_called_once_with()
+
+    def test_fit_invokes_garbage_collection(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        config.list_paths = [
+            "data.nc",
+        ]
+
+        base = Mock()
+        base.load.return_value = base
+
+        with (
+            patch(
+                "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+                return_value=base,
+            ),
+            patch(
+                "cccma_ppp.data_modules.data.data_abc.gc.collect",
+            ) as collect,
+        ):
+            config.fit_preprocessor_pipeline(
+                selection={},
+                save=False,
+            )
+
+        collect.assert_called_once_with()
+
+    def test_mask_builder_receives_time_coordinates(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        config.list_paths = [
+            "data.nc",
+        ]
+        base = make_valid_ds()
+        expected_mask = object()
+
+        with (
+            patch(
+                "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+                return_value=base,
+            ),
+            patch(
+                "cccma_ppp.data_modules.data.data_abc._create_train_mask",
+                return_value=expected_mask,
+            ) as create_mask,
+        ):
+            config.fit_preprocessor_pipeline(
+                selection={},
+                mask=True,
+                save=False,
+            )
+
+        init_time_argument = create_mask.call_args.args[0]
+        lead_time_argument = create_mask.call_args.args[1]
+
+        xr.testing.assert_identical(
+            init_time_argument,
+            base[INIT_TIME_DIM],
+        )
+        xr.testing.assert_identical(
+            lead_time_argument,
+            base[LEAD_TIME_DIM],
+        )
+
+    def test_mask_builder_is_not_called_when_mask_disabled(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        config.list_paths = [
+            "data.nc",
+        ]
+
+        with (
+            patch(
+                "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+                return_value=make_valid_ds(),
+            ),
+            patch(
+                "cccma_ppp.data_modules.data.data_abc._create_train_mask",
+            ) as create_mask,
+        ):
+            config.fit_preprocessor_pipeline(
+                selection={},
+                mask=False,
+                save=False,
+            )
+
+        create_mask.assert_not_called()
+
+
+class TestAdditionalResolveData:
+    def test_resolve_data_uses_configured_file_pattern(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(
+            tmp_path,
+            file_type="*.zarr",
+        )
+
+        with (
+            patch(
+                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                return_value=[
+                    "data.zarr",
+                ],
+            ) as resolve_paths,
+            patch(
+                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                return_value=make_valid_ds(),
+            ),
+        ):
+            _resolve_data(config)
+
+        expected_pattern = str(tmp_path / "*.zarr")
+        resolve_paths.assert_called_once_with(expected_pattern)
+
+    def test_resolve_data_opens_each_path_as_path_object(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+
+        with (
+            patch(
+                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                return_value=[
+                    "first.nc",
+                    "second.nc",
+                ],
+            ),
+            patch(
+                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                side_effect=[
+                    make_valid_ds(),
+                    make_valid_ds(),
+                ],
+            ) as open_dataset,
+        ):
+            _resolve_data(config)
+
+        assert open_dataset.call_args_list == [
+            ((Path("first.nc"),),),
+            ((Path("second.nc"),),),
+        ]
+
+    def test_resolve_data_validates_time_sequence(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        dataset = make_valid_ds()
+
+        with (
+            patch(
+                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                return_value=[
+                    "data.nc",
+                ],
+            ),
+            patch(
+                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                return_value=dataset,
+            ),
+            patch(
+                "cccma_ppp.data_modules.data.data_abc._validate_time_sequence",
+            ) as validate,
+        ):
+            _resolve_data(config)
+
+        validate.assert_called_once()
+
+        xr.testing.assert_identical(
+            validate.call_args.args[0],
+            dataset.coords[INIT_TIME_DIM],
+        )
+
+    def test_resolve_data_invokes_garbage_collection_per_file(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+
+        with (
+            patch(
+                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                return_value=[
+                    "first.nc",
+                    "second.nc",
+                ],
+            ),
+            patch(
+                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                side_effect=[
+                    make_valid_ds(),
+                    make_valid_ds(),
+                ],
+            ),
+            patch(
+                "cccma_ppp.data_modules.data.data_abc.gc.collect",
+            ) as collect,
+        ):
+            _resolve_data(config)
+
+        assert collect.call_count == 2
+
+    def test_resolve_data_error_does_not_assign_list_paths(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(
+            tmp_path,
+            names=[
+                "missing",
+            ],
+        )
+
+        with (
+            patch(
+                "cccma_ppp.data_modules.data.data_abc.glob.glob",
+                return_value=[
+                    "data.nc",
+                ],
+            ),
+            patch(
+                "cccma_ppp.data_modules.data.data_abc.xr.open_dataset",
+                return_value=make_valid_ds(),
+            ),
+        ):
+            with pytest.raises(
+                ValueError,
+                match="missing variables",
+            ):
+                _resolve_data(config)
+
+        assert config.list_paths is None
+
+    def test_resolve_data_error_reports_missing_path(
+        self,
+        tmp_path,
+    ):
+        missing = tmp_path / "missing"
+        config = DummyDataConfig(missing)
+
+        with pytest.raises(
+            FileNotFoundError,
+            match=str(missing),
+        ):
+            _resolve_data(config)
+
+
+class TestAdditionalGetDatasetInfo:
+    def test_load_receives_exact_arguments_without_realizations(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        config.list_paths = [
+            "data.nc",
+        ]
+
+        with patch(
+            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            return_value=make_valid_ds(),
+        ) as load_data:
+            _get_ds_info(config)
+
+        load_data.assert_called_once_with(
+            [
+                "data.nc",
+            ],
+            names=[
+                "var",
+            ],
+            selection=None,
+            concat_dim=None,
+            rename_dict={},
+        )
+
+    def test_load_receives_realization_selection(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(
+            tmp_path,
+            realization_list=[
+                1,
+            ],
+        )
+        config.list_paths = [
+            "ensemble.nc",
+        ]
+
+        with patch(
+            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            return_value=make_ensemble_ds(),
+        ) as load_data:
+            _get_ds_info(config)
+
+        assert load_data.call_args.kwargs["selection"] == {
+            REALIZATION_DIM: [
+                1,
+            ],
+        }
+
+    def test_info_dimensions_match_dataset_dimensions(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        dataset = make_valid_ds()
+
+        with patch(
+            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            return_value=dataset,
+        ):
+            info = _get_ds_info(config)
+
+        assert info.dims == dataset.dims
+
+    def test_info_coordinates_preserve_dataarrays(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+        dataset = make_valid_ds()
+
+        with patch(
+            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            return_value=dataset,
+        ):
+            info = _get_ds_info(config)
+
+        for dimension in (
+            INIT_TIME_DIM,
+            LEAD_TIME_DIM,
+            NN_DIM,
+        ):
+            xr.testing.assert_identical(
+                info.coords[dimension],
+                dataset.coords[dimension],
+            )
+
+    def test_get_ds_info_start_and_end_use_minimum_and_maximum(
+        self,
+        tmp_path,
+    ):
+        dataset = make_valid_ds().assign_coords(
+            {
+                INIT_TIME_DIM: np.asarray(
+                    [
+                        "2002-01-01",
+                        "2000-01-01",
+                    ],
+                    dtype="datetime64[ns]",
+                )
+            }
+        )
+        config = DummyDataConfig(tmp_path)
+
+        with patch(
+            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            return_value=dataset,
+        ):
+            info = _get_ds_info(config)
+
+        assert info.start_time == np.datetime64("2000-01-01T00:00:00.000000000")
+        assert info.final_time == np.datetime64("2002-01-01T00:00:00.000000000")
+
+    def test_get_ds_info_includes_realization_size_without_selection(
+        self,
+        tmp_path,
+    ):
+        config = DummyDataConfig(tmp_path)
+
+        with patch(
+            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
+            return_value=make_ensemble_ds(),
+        ):
+            info = _get_ds_info(config)
+
+        assert info.sizes == {
+            REALIZATION_DIM: 2,
+            INIT_TIME_DIM: 2,
+            LEAD_TIME_DIM: 2,
+        }
