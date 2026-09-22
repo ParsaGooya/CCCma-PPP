@@ -1,80 +1,106 @@
+import inspect
+from typing import Any
 class Registery:
     """
-    Registry for mapping string names to classes.
+    Document this class.
     """
 
     def __init__(self):
         """
-        Initialize empty registry.
-
-        Returns
-        -------
-        None
+        Document this function.
         """
-
         self._modules = {}
 
-    def register(self, name):
+    def register(self, name: str):
         """
-        Register a class under a given name.
+        Document this function.
 
         Parameters
         ----------
-        name : str
-            Identifier used to register the class.
+        name : Any
+            Description not yet provided.
 
         Returns
         -------
-        Callable
-            Decorator that registers the class.
+        Any
+            Description not yet provided.
         """
+        if not isinstance(name, str):
+            raise TypeError(f"Name must be string, got {type(name)}.")
+
+        if not name:
+            raise ValueError("Name cannot be empty string.")
+
+        if name in self._modules:
+            raise ValueError(
+                f"Name {name!r} already registered. "
+                f"Available: {self.available()}"
+            )
 
         def decorator(cls):
+            """
+            Document this function.
+
+            Returns
+            -------
+            Any
+                Description not yet provided.
+            """
+            if not inspect.isclass(cls):
+                raise TypeError(
+                    f"Can only register classes"
+                    f"Got {type(cls).__name__} for {name!r}."
+                )
+
             self._modules[name] = cls
             return cls
 
         return decorator
 
-    def get(self, name, config=None):
+    def get(self, name: str, config: dict | None = None) -> Any:
         """
-        Retrieve and optionally instantiate a registered class.
+        Document this function.
 
         Parameters
         ----------
-        name : str
-            Name of the registered class.
-        config : dict or None, optional
-            Initialization arguments.
+        name : Any
+            Description not yet provided.
+        config : Any
+            Description not yet provided.
 
         Returns
         -------
-        object
-            Instantiated object if config is provided,
-            otherwise the class itself.
+        Any
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If the name is not registered.
+            Description not yet provided.
         """
-
         if name not in self._modules:
             raise ValueError(f"{name} not registered. should be in {self.available()}")
 
         cls = self._modules[name]
-        if config is not None:
-            return cls(**(config))
-        else:
+
+        if config is None:
             return cls()
+
+        if not isinstance(config, dict):
+            raise TypeError(
+                f"Config must be dict or None, got {type(config).__name__}. "
+                f"For class {cls.__name__}: {config}"
+            )
+
+        return cls(**(config))
 
     def available(self):
         """
-        Available registered names.
+        Document this function.
 
         Returns
         -------
-        list of str
-            Registered identifiers.
+        Any
+            Description not yet provided.
         """
-
         return list(self._modules.keys())

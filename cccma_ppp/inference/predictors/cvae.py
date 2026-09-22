@@ -19,14 +19,45 @@ from cccma_ppp.data_modules.dataloader import BatchDataABC
 
 @dataclasses.dataclass
 class cVAEPredictorConfig:
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    num_latent_samples : int
+        Description not yet provided.
+    nstds : float
+        Description not yet provided.
+    chunk_size: int 
+        Description not yet provided.
+    infer_latent_samples_from_training : bool
+        Description not yet provided.
+    save_latent : bool
+        Description not yet provided.
+    """
+
     num_latent_samples: int
     nstds: float = 1.0
+    chunk_size: int | None = None
     infer_latent_samples_from_training: bool = False
     save_latent: bool = False
 
     _type: ClassVar[str] = "cvae"
 
     def __post_init__(self) -> None:
+        """
+        Document this function.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+
+        Warns
+        -----
+        UserWarning
+            Description not yet provided.
+        """
         if self.num_latent_samples < 1:
             raise ValueError("num_latent_samples must be at least 1.")
 
@@ -45,30 +76,85 @@ class cVAEPredictorConfig:
         module: moduleABC,
         distributed: Distributed,
         output_dir: Path | str,
-        num_output_sampling: int = 0,
+        num_output_sampling: int = 1,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        module : moduleABC
+            Description not yet provided.
+        distributed : Distributed
+            Description not yet provided.
+        output_dir : Path | str
+            Description not yet provided.
+        num_output_sampling : int
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return cVAEPredictor(self, module, distributed, output_dir, num_output_sampling)
 
 
 class cVAEPredictor(PredictorABC):
+    """
+    Document this class.
+
+    Parameters
+    ----------
+    config : cVAEPredictorConfig
+        Description not yet provided.
+    module : moduleABC
+        Description not yet provided.
+    distributed : Distributed
+        Description not yet provided.
+    output_dir : Path | str
+        Description not yet provided.
+    num_output_sampling : int
+        Description not yet provided.
+    """
+
     def __init__(
         self,
         config: cVAEPredictorConfig,
         module: moduleABC,
         distributed: Distributed,
         output_dir: Path | str,
-        num_output_sampling: int = 0,
+        num_output_sampling: int = 1,
     ):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        config : cVAEPredictorConfig
+            Description not yet provided.
+        module : moduleABC
+            Description not yet provided.
+        distributed : Distributed
+            Description not yet provided.
+        output_dir : Path | str
+            Description not yet provided.
+        num_output_sampling : int
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         self.config = config
         self.module = module
         self.num_output_sampling = num_output_sampling
-        self.num_output_covariance_sampling = 0
+        self.num_output_covariance_sampling = 1
         self.output_dir = Path(output_dir)
 
-        if num_output_sampling < 0:
-            raise ValueError("num_output_sampling must be larger than 0.")
+        if num_output_sampling <= 0:
+            raise ValueError("num_output_sampling must be larger than 1.")
 
         if module.model_config.GENERATOR is None:
             self.num_output_covariance_sampling = num_output_sampling
@@ -96,15 +182,39 @@ class cVAEPredictor(PredictorABC):
 
     @property
     def extract_training_vars(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return any([self.extract_posterior_samples, self.extract_training_residuals])
 
     @property
     def extract_posterior_samples(self):
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         return self.infer_latent_samples_from_training
 
     @property
     def extract_training_residuals(self):
-        return self.num_output_covariance_sampling > 0
+        """
+        Document this function.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
+        return self.num_output_covariance_sampling > 1
 
     @torch.no_grad()
     def _infer_on_batch(
@@ -112,7 +222,26 @@ class cVAEPredictor(PredictorABC):
         batch: BatchDataABC,
         _getting_train_stats: bool = False,
     ) -> cVAEOutput | dict[str, RunningCovariance]:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        batch : BatchDataABC
+            Description not yet provided.
+        _getting_train_stats : bool
+            Description not yet provided.
+
+        Returns
+        -------
+        cVAEOutput | dict[str, RunningCovariance]
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         clear_memory()
         self.raw_module.eval()
         latent_samples = None
@@ -138,9 +267,9 @@ class cVAEPredictor(PredictorABC):
             if self.infer_latent_samples_from_training:
                 latent_samples = self._get_latent_samples_based_on_train(data=batch)
 
-            if self.num_output_covariance_sampling > 0:
-                num_output_sampling = 0
-            else:
+            if self.num_output_covariance_sampling > 1:
+                num_output_sampling = 1
+            else: 
                 num_output_sampling = self.num_output_sampling
 
             output = self.raw_module.predict(
@@ -149,9 +278,10 @@ class cVAEPredictor(PredictorABC):
                 nstds=self.nstds,
                 latent_samples=latent_samples,
                 output_sample_size=num_output_sampling,
+                chunk_size=self.config.chunk_size
             )
 
-            if self.num_output_covariance_sampling > 0:
+            if self.num_output_covariance_sampling > 1:
                 sample_size = output.output.shape[:2]  # N x B
                 reshape_size = output.output.shape[2:]  # C x ...
                 output = self.add_decoder_noise(
@@ -169,7 +299,26 @@ class cVAEPredictor(PredictorABC):
         output: cVAEOutput,
         data: BatchDataABC,
     ) -> dict[str, RunningCovariance]:
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        output : cVAEOutput
+            Description not yet provided.
+        data : BatchDataABC
+            Description not yet provided.
+
+        Returns
+        -------
+        dict[str, RunningCovariance]
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         if self.extract_posterior_samples:
             if output.samples is None:
                 raise RuntimeError(
@@ -190,6 +339,19 @@ class cVAEPredictor(PredictorABC):
         return self.stats
 
     def _get_latent_samples_based_on_train(self, data: BatchDataABC):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        data : BatchDataABC
+            Description not yet provided.
+
+        Returns
+        -------
+        Any
+            Description not yet provided.
+        """
         if self.infer_latent_samples_from_training and self.latent_sampler is None:
             self.latent_sampler = self.build_latent_sampler()
 
@@ -203,6 +365,19 @@ class cVAEPredictor(PredictorABC):
         return latent_samples.to(self.device)
 
     def build_latent_sampler(self) -> Callable[..., torch.Tensor]:
+        """
+        Document this function.
+
+        Returns
+        -------
+        Callable[..., torch.Tensor]
+            Description not yet provided.
+
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
+        """
         stats_path = self.output_dir / "training_variable_stats.pt"
 
         if not stats_path.exists():
@@ -226,6 +401,21 @@ class cVAEPredictor(PredictorABC):
             raise ValueError("The loaded training stats is not for a cVAE model.")
 
         def _sampler(sample_size: int | tuple[int, ...], std: float):
+            """
+            Document this function.
+
+            Parameters
+            ----------
+            sample_size : int | tuple[int, ...]
+                Description not yet provided.
+            std : float
+                Description not yet provided.
+
+            Returns
+            -------
+            Any
+                Description not yet provided.
+            """
             return self._sample(
                 stats["samples_mean"],
                 stats["samples_cov"],
@@ -240,6 +430,21 @@ class cVAEPredictor(PredictorABC):
         output: cVAEOutput,
         metadata: list[dict],
     ):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        output : cVAEOutput
+            Description not yet provided.
+        metadata : list[dict]
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
+        """
         attrs = None
         if self.save_latent:
             latent_vars = {
@@ -284,26 +489,29 @@ class cVAEPredictor(PredictorABC):
 
             num_output_dims = 1
             extra_dims_sorted = []
-            save_name = (
-                f"latent_rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
-            )
+            attrs = {"source" : "latent"}
 
             if self.infer_latent_samples_from_training:
-                attrs = {"infer_latent_samples_from_training": True}
+                attrs["infer_latent_samples_from_training"] = True
 
         else:
             prediction = output.output
 
-            if self.num_output_sampling == 0:
+            if self.num_output_sampling == 1:
                 prediction = prediction.unsqueeze(0)
 
             num_output_dims = self.raw_module.model_config.NUM_OUTPUT_DIMS
             extra_dims_sorted = ["output_samples", "latent_samples"]
             assign_coords = None
-            save_name = (
-                f"prediction_rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
-            )
+            attrs = {
+                "source" : "predictions",
+                "nstds": self.nstds
+            }
 
+        save_name = (
+                f"rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
+            )
+        
         save_batch_to_netcdf(
             prediction,
             metadata,

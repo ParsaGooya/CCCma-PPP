@@ -11,14 +11,7 @@ import dataclasses
 
 class moduleConfigABC(abc.ABC):
     """
-    Abstract base class for module configuration objects.
-
-    Methods
-    -------
-    build(input_shape, output_shape=None, added_features_dim=None)
-        Construct module instance.
-    _load_from_checkpoint()
-        Load configuration from checkpoint.
+    Document this class.
     """
 
     _type: ClassVar[str | None] = None
@@ -26,7 +19,12 @@ class moduleConfigABC(abc.ABC):
     @classmethod
     def check_registered(cls):
         """
-        Class attribute _type will only be set if the class is registered.
+        Document this function.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
         """
         if cls._type is None:
             raise RuntimeError(f"{cls.__name__} has not been registered.")
@@ -39,136 +37,83 @@ class moduleConfigABC(abc.ABC):
         added_features_dim: int = None,
     ):
         """
-        Construct and return a module instance.
+        Document this function.
 
         Parameters
         ----------
         input_shape : np.ndarray
-            Shape of the input data expected by the module.
-        output_shape : np.ndarray or None, optional
-            Shape of the target/output data. If None, the module may assume
-            the same shape as the input or infer it internally.
-        added_features_dim : int, optional
-            Number of additional feature dimensions provided alongside the input.
-
-        Returns
-        -------
-        moduleABC
-            Instantiated and optionally initialized module ready for training
-            or inference.
+            Description not yet provided.
+        output_shape : np.ndarray | None
+            Description not yet provided.
+        added_features_dim : int
+            Description not yet provided.
         """
-
         pass
 
     @abc.abstractmethod
     def _load_from_checkpoint(self):
         """
-        Load configuration from a saved checkpoint.
-
-        Returns
-        -------
-        None
+        Document this function.
         """
-
         pass
 
 
 class moduleABC(nn.Module, abc.ABC):
     """
-    Abstract base class for trainable modules.
-
-    Methods
-    -------
-    init_loss_function(reconstruction_loss, **kwargs)
-        Initialize loss function.
-    _compute_loss()
-        Compute training loss.
-    forward()
-        Perform forward pass.
-    predict()
-        Perform inference.
+    Document this class.
     """
 
     def __init__(self):
         """
-        Initialize base module.
-
-        Returns
-        -------
-        None
+        Document this function.
         """
-
         super().__init__()
 
     @abc.abstractmethod
     def init_loss_function(self, reconstruction_loss: nn.Module, **kwargs):
         """
-        Initialize loss function for training.
+        Document this function.
 
         Parameters
         ----------
-        reconstruction_loss : Losspipeline
-            Loss pipeline used for computing reconstruction loss.
-        **kwargs
-            Additional arguments for loss initialization.
-
-        Returns
-        -------
-        None
+        reconstruction_loss : nn.Module
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
         """
-
         pass
 
     @abc.abstractmethod
     def _compute_loss(self):
         """
-        Compute total training loss.
-
-        Returns
-        -------
-        tuple
-            Loss tensor and dictionary of loss components.
+        Document this function.
         """
-
         pass
 
     @abc.abstractmethod
     def forward(self):
         """
-        Perform forward pass.
-
-        Returns
-        -------
-        object
-            Model output (implementation-dependent).
+        Document this function.
         """
-
         pass
 
     @abc.abstractmethod
     def predict(self):
         """
-        Perform inference using the model.
-
-        Returns
-        -------
-        object
-            Model predictions.
+        Document this function.
         """
-
         pass
 
     @final
     def _get_device(self):
         """
-        Determine device on which the module resides.
+        Document this function.
 
         Returns
         -------
-        torch.device
-            Device of parameters or buffers. Defaults to CPU if none exist.
+        Any
+            Description not yet provided.
         """
-
         param = next(self.parameters(), None)
 
         if param is not None:
@@ -184,25 +129,20 @@ class moduleABC(nn.Module, abc.ABC):
     @final
     def _load_state_dict(self, load_path: Path | str, strict: bool = True):
         """
-        Load model weights from checkpoint.
+        Document this function.
 
         Parameters
         ----------
-        load_path : pathlib.Path or str
-            Path to checkpoint file.
-        strict : bool, optional
-            Whether to enforce strict parameter matching.
-
-        Returns
-        -------
-        None
+        load_path : Path | str
+            Description not yet provided.
+        strict : bool
+            Description not yet provided.
 
         Raises
         ------
         FileNotFoundError
-            If the checkpoint file does not exist.
+            Description not yet provided.
         """
-
         if not Path(load_path).exists():
             raise FileNotFoundError(f"Checkpoint not found: {load_path}")
 
@@ -216,21 +156,23 @@ class moduleABC(nn.Module, abc.ABC):
 
 class GenerativeContext:
     """
-    Determining if the module for which the loss fucntion will
-    be used is a generative model or not and if it has a generator
-    or not.
+    Document this class.
 
-    Note
-    ----
-    - If the module is generative (generative_modeling = True),
-    there would be a latent_samples dimension in the module predictions.
-
-    - If the module has a generator (generator = True),
-    there would be output_samples dimension in the module predictions.
+    Parameters
+    ----------
+    module : moduleABC | None
+        Description not yet provided.
     """
 
     def __init__(self, module: moduleABC | None = None):
+        """
+        Document this function.
 
+        Parameters
+        ----------
+        module : moduleABC | None
+            Description not yet provided.
+        """
         if module is not None:
             self.generator = getattr(module.model_config, "GENERATOR", None) is not None
             self.generative_modeling = getattr(
@@ -245,7 +187,12 @@ class GenerativeContext:
 @dataclasses.dataclass
 class OutputABC:
     """
-    Base container for model outputs.
+    Document this class.
+
+    Parameters
+    ----------
+    output : torch.Tensor
+        Description not yet provided.
     """
 
     output: torch.Tensor

@@ -14,37 +14,34 @@ from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 class DatasetOperator:
     """
-    Class for managing dataset-level operations.
+    Document this class.
 
     Parameters
     ----------
     config : DatasetConfigABC
-        Dataset configuration.
+        Description not yet provided.
     """
 
     def __init__(self, config: DatasetConfigABC):
         """
-        Initialize dataset operator.
+        Document this function.
 
         Parameters
         ----------
         config : DatasetConfigABC
-
-        Returns
-        -------
-        None
+            Description not yet provided.
         """
         self.config = config
 
     @property
     def config_observation(self):
         """
-        Observation dataset configuration if available.
+        Document this function.
 
         Returns
         -------
-        ObsDataConfig or None
-            Observation configuration if present, otherwise None.
+        Any
+            Description not yet provided.
         """
         if hasattr(self.config, "observation"):
             return self.config.observation
@@ -61,35 +58,35 @@ class DatasetOperator:
         save_name: str | None = None,
     ):
         """
-        Fit preprocessing pipelines for all datasets.
+        Document this function.
 
         Parameters
         ----------
-        train_times : array-like
-            Training times used for fitting. Values must be either NumPy
-            datetime64 or cftime datetime objects.
-        save : bool, optional
-            Whether to persist fitted pipelines.
-        save_path : pathlib.Path or str or None, optional
-        save_name : str or None, optional
+        train_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
+            Description not yet provided.
+        save : Any
+            Description not yet provided.
+        save_path : Path | str | None
+            Description not yet provided.
+        save_name : str | None
+            Description not yet provided.
 
-        Returns
-        -------
-        None
-
-        Notes
-        -----
-        Applies fitting to model, observation, and condition datasets.
+        Raises
+        ------
+        ValueError
+            Description not yet provided.
         """
+
+        train_times_array = np.asarray(train_times)
+
+        _validate_time_sequence(train_times)
+
         missing = [
-            t for t in train_times.values if t not in self.config.available_times
+            t for t in train_times_array if t not in self.config.available_times
         ]
 
         if missing:
             raise ValueError(f"The following train_times are unavailable: {missing}")
-
-        if not isinstance(train_times, slice):
-            _validate_time_sequence(train_times)
 
         if self.config.model is not None:
             selection = {
@@ -126,7 +123,7 @@ class DatasetOperator:
             )
 
         if self.config.effective_condition is not None:
-            if self.config.condition_method.lower() == "static":
+            if self.config.effective_condition_method == "static":
                 selection = {}
             else:
                 selection = {
@@ -155,21 +152,17 @@ class DatasetOperator:
                 save_name=save_name,
             )
 
-        self.config._fitted_preprocessors = True
+        self.config._fitted_preprocessors = self._fitted_preprocessors
 
     def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         """
-        Load fitted preprocessing pipelines.
+        Document this function.
 
         Parameters
         ----------
-        load_dir : pathlib.Path or str or None
-
-        Returns
-        -------
-        None
+        load_dir : Path | str | None
+            Description not yet provided.
         """
-
         if self.config.model is not None:
             self.config.model.load_preprocessor_pipeline(load_dir)
 
@@ -179,35 +172,34 @@ class DatasetOperator:
         if self.config.effective_condition is not None:
             self.config.effective_condition.load_preprocessor_pipeline(load_dir)
 
-        self.config._fitted_preprocessors = True
+        self.config._fitted_preprocessors = self._fitted_preprocessors
 
     def add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
         """
-        Add a fitted preprocessor to all relevant pipelines.
+        Document this function.
 
         Parameters
         ----------
         preprocessor : PreprocessModuleABC
-        index : int, optional
-
-        Returns
-        -------
-        None
+            Description not yet provided.
+        index : Any
+            Description not yet provided.
 
         Raises
         ------
-        TypeError
-            If preprocessor type is invalid.
         AssertionError
-            If preprocessor is not fitted.
+            Description not yet provided.
+        TypeError
+            Description not yet provided.
         """
-
         if not isinstance(preprocessor, PreprocessModuleABC):
             raise TypeError(
-                f"preprocessor must be an instance of ProcessorConfig, "
+                f"preprocessor must be an instance of PreprocessModuleABC, "
                 f"got {type(preprocessor)}"
             )
-        assert preprocessor.fitted, "The preprocessor must be fitted"
+        
+        if not preprocessor.fitted:
+            raise ValueError("The preprocessor must be fitted before adding.")
 
         if self.config.model is not None:
             self.config.model.preprocessing_pipeline.add_fitted_preprocessor(
@@ -230,30 +222,30 @@ class DatasetOperator:
         save_name: str | None = None,
     ) -> xr.DataArray:
         """
-        Compute spatial and variable weights.
+        Document this function.
 
         Parameters
         ----------
-        config : WeightsConfig or None, optional
-            Configuration controlling weight computation.
-        save : bool, optional
-            Whether to save computed weights.
-        save_path : pathlib.Path or str or None, optional
-            Directory where weights should be saved.
-        save_name : str or None, optional
-            Filename for saved weights.
+        config : WeightsConfig | None
+            Description not yet provided.
+        save : bool
+            Description not yet provided.
+        save_path : Path | str | None
+            Description not yet provided.
+        save_name : str | None
+            Description not yet provided.
 
         Returns
         -------
         xr.DataArray
-            Computed spatial and variable weights.
+            Description not yet provided.
 
         Raises
         ------
-        ValueError
-            If no valid dataset is available.
         RuntimeError
-            If variable weights do not match expected variables.
+            Description not yet provided.
+        ValueError
+            Description not yet provided.
         """
         if config is None:
             config = WeightsConfig()
@@ -274,18 +266,14 @@ class DatasetOperator:
         ]:
             target_coords[dim] = ref.coords[dim]
 
-        from cccma_ppp.preprocessing.utils_preprocessing import Flattennanremove
-
-        checklist = [
-            isinstance(item, Flattennanremove)
-            for item in ref.preprocessing_pipeline.fitted_preprocessors
-        ]
+        if ref.preprocessing_pipeline.has_flattener:
+            flattener = ref.preprocessing_pipeline.get_flattener()
+        else:
+            flattener = None
 
         weights = config.build_weights(
             target_coords,
-            Flattennanremover=ref.preprocessing_pipeline.get_preprocessors("flattener")
-            if any(checklist)
-            else None,
+            Flattennanremover=flattener,
             save=save,
             save_path=save_path,
             save_name=save_name,
@@ -293,21 +281,20 @@ class DatasetOperator:
 
         if "channels" in weights.dims:
             error_msg = f"inconsistent variable weights {weights.channels.values} for output variables {ref.names}"
-            if not np.array_equal(weights.channels.values, self.ref.names):
+            if not np.array_equal(weights.channels.values, ref.names):
                 raise RuntimeError(error_msg)
 
         return weights
 
     def get_input_var_metadata(self) -> dict:
         """
-        Retrieve metadata for input variables.
+        Document this function.
 
         Returns
         -------
         dict
-            Variable names and preprocessing steps.
+            Description not yet provided.
         """
-
         metadata = dict(variables=list(), preprocessors=list())
         NN_dims = []
 
@@ -349,18 +336,18 @@ class DatasetOperator:
 
     def get_target_var_metadata(self):
         """
-        Retrieve metadata for target variables.
+        Document this function.
 
         Returns
         -------
-        dict
+        Any
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If no target data is available.
+            Description not yet provided.
         """
-
         metadata = dict(variables=list(), preprocessors=list())
         NN_dims = []
 
@@ -402,16 +389,19 @@ class DatasetOperator:
         self, metadata: dict, dataconfig: DataConfigABC
     ):
         """
-        Update metadata with dataset configuration information.
+        Document this function.
 
         Parameters
         ----------
         metadata : dict
+            Description not yet provided.
         dataconfig : DataConfigABC
+            Description not yet provided.
 
         Returns
         -------
-        dict
+        Any
+            Description not yet provided.
         """
         preprocessor_names = [
             processor[0].lower()
@@ -423,9 +413,35 @@ class DatasetOperator:
 
         return metadata
 
+    @property
+    def _fitted_preprocessors(self) -> bool:
+        """Check if all active pipelines are fitted."""
+        pipelines = []
+        if self.config.model is not None:
+            pipelines.append(self.config.model.preprocessing_pipeline.fitted)
+        if self.config_observation is not None:
+            pipelines.append(self.config_observation.preprocessing_pipeline.fitted)
+        if self.config.effective_condition is not None:
+            pipelines.append(self.config.effective_condition.preprocessing_pipeline.fitted)
+
+        return all(pipelines) if pipelines else False
+
+
 
 def _build_chunks(config: DataConfigABC | None = None):
+    """
+    Document this function.
 
+    Parameters
+    ----------
+    config : DataConfigABC | None
+        Description not yet provided.
+
+    Returns
+    -------
+    Any
+        Description not yet provided.
+    """
     if config is None:
         return
     required_sample_dimensions = (config.init_time_dim, config.lead_time_dim)
