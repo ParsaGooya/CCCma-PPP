@@ -19,7 +19,7 @@ import dacite
 import yaml
 from tqdm import tqdm
 
-# Import architecture modules (registers them in the factory)
+# Import architecture modules
 from cccma_ppp.architectures.mlp import cvae as _mlp_cvae  # noqa: F401
 from cccma_ppp.architectures.mlp import (
     deterministic as _mlp_deterministic,  # noqa: F401
@@ -32,7 +32,7 @@ from cccma_ppp.configs import required_sample_dimensions
 from cccma_ppp.generic import registry_imports  # noqa: F401
 from cccma_ppp.generic.distributed import Distributed
 
-# Import loss modules (registers them in the factory)
+# Import loss modules
 from cccma_ppp.loss import kld as _loss_kld  # noqa: F401
 from cccma_ppp.loss import loss as _loss_pipeline  # noqa: F401
 from cccma_ppp.loss import utils_loss as _loss_utils  # noqa: F401
