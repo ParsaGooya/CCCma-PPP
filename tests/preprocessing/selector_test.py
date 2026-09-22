@@ -33,6 +33,7 @@ def isolated_registry(monkeypatch):
 
 
 class TestPreprocessingStepSelectorInitialization:
+    @pytest.mark.pruned
     def test_constructs_registered_step_without_arguments(
         self,
         isolated_registry,
@@ -48,6 +49,7 @@ class TestPreprocessingStepSelectorInitialization:
         assert selector.name == "dummy"
         assert selector.args is None
 
+    @pytest.mark.pruned
     def test_constructs_registered_step_with_arguments(
         self,
         isolated_registry,
@@ -69,6 +71,7 @@ class TestPreprocessingStepSelectorInitialization:
         assert selector.name == "dummy"
         assert selector.args is args
 
+    @pytest.mark.pruned
     def test_name_is_normalized_to_lowercase(
         self,
         isolated_registry,
@@ -83,6 +86,7 @@ class TestPreprocessingStepSelectorInitialization:
 
         assert selector.name == "dummy"
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "name",
         [
@@ -107,6 +111,7 @@ class TestPreprocessingStepSelectorInitialization:
 
         assert selector.name == "dummy"
 
+    @pytest.mark.pruned
     def test_name_is_normalized_before_availability_check(
         self,
         isolated_registry,
@@ -121,6 +126,7 @@ class TestPreprocessingStepSelectorInitialization:
 
         assert selector.name == "standardizer"
 
+    @pytest.mark.pruned
     def test_args_dictionary_is_not_copied(
         self,
         isolated_registry,
@@ -140,6 +146,7 @@ class TestPreprocessingStepSelectorInitialization:
 
         assert selector.args is args
 
+    @pytest.mark.pruned
     def test_empty_arguments_dictionary_is_preserved(
         self,
         isolated_registry,
@@ -158,9 +165,11 @@ class TestPreprocessingStepSelectorInitialization:
         assert selector.args is args
         assert selector.args == {}
 
+    @pytest.mark.pruned
     def test_selector_is_a_dataclass(self):
         assert dataclasses.is_dataclass(PreprocessingStepSelector)
 
+    @pytest.mark.pruned
     def test_registry_is_class_variable(self):
         dataclass_fields = {
             field.name for field in dataclasses.fields(PreprocessingStepSelector)
@@ -170,6 +179,7 @@ class TestPreprocessingStepSelectorInitialization:
 
 
 class TestPreprocessingStepSelectorArgumentValidation:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "args",
         [
@@ -199,6 +209,7 @@ class TestPreprocessingStepSelectorArgumentValidation:
                 args=args,
             )
 
+    @pytest.mark.pruned
     def test_argument_error_reports_argument_type(
         self,
         isolated_registry,
@@ -219,6 +230,7 @@ class TestPreprocessingStepSelectorArgumentValidation:
                 ],
             )
 
+    @pytest.mark.pruned
     def test_argument_error_reports_provided_value(
         self,
         isolated_registry,
@@ -239,6 +251,7 @@ class TestPreprocessingStepSelectorArgumentValidation:
                 ],
             )
 
+    @pytest.mark.pruned
     def test_none_arguments_are_accepted(
         self,
         isolated_registry,
@@ -254,6 +267,7 @@ class TestPreprocessingStepSelectorArgumentValidation:
 
         assert selector.args is None
 
+    @pytest.mark.pruned
     def test_dictionary_arguments_are_accepted(
         self,
         isolated_registry,
@@ -288,6 +302,7 @@ class TestPreprocessingStepSelectorArgumentValidation:
 
 
 class TestPreprocessingStepSelectorNameValidation:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "name",
         [
@@ -336,6 +351,7 @@ class TestPreprocessingStepSelectorNameValidation:
                 name="",
             )
 
+    @pytest.mark.pruned
     def test_whitespace_name_is_not_considered_empty(
         self,
         isolated_registry,
@@ -350,6 +366,7 @@ class TestPreprocessingStepSelectorNameValidation:
 
         assert selector.name == " "
 
+    @pytest.mark.pruned
     def test_name_is_not_stripped(
         self,
         isolated_registry,
@@ -368,6 +385,7 @@ class TestPreprocessingStepSelectorNameValidation:
 
 
 class TestPreprocessingStepSelectorRegistrationValidation:
+    @pytest.mark.pruned
     def test_rejects_unregistered_step(
         self,
         isolated_registry,
@@ -380,6 +398,7 @@ class TestPreprocessingStepSelectorRegistrationValidation:
                 name="missing",
             )
 
+    @pytest.mark.pruned
     def test_unregistered_error_reports_normalized_name(
         self,
         isolated_registry,
@@ -392,6 +411,7 @@ class TestPreprocessingStepSelectorRegistrationValidation:
                 name="MISSING",
             )
 
+    @pytest.mark.pruned
     def test_unregistered_error_lists_available_steps(
         self,
         isolated_registry,
@@ -417,6 +437,7 @@ class TestPreprocessingStepSelectorRegistrationValidation:
         assert "second" in message
         assert "Available" in message
 
+    @pytest.mark.pruned
     def test_empty_registry_is_reported(
         self,
         isolated_registry,
@@ -431,6 +452,7 @@ class TestPreprocessingStepSelectorRegistrationValidation:
 
 
 class TestGetPreprocessor:
+    @pytest.mark.pruned
     def test_builds_registered_preprocessor_without_arguments(
         self,
         isolated_registry,
@@ -452,6 +474,7 @@ class TestGetPreprocessor:
         )
         assert result.value == 1
 
+    @pytest.mark.pruned
     def test_builds_registered_preprocessor_with_arguments(
         self,
         isolated_registry,
@@ -483,6 +506,7 @@ class TestGetPreprocessor:
         assert result.value == 7
         assert result.enabled is False
 
+    @pytest.mark.pruned
     def test_get_preprocessor_delegates_to_registry(
         self,
         isolated_registry,
@@ -520,6 +544,7 @@ class TestGetPreprocessor:
         )
         assert result is expected
 
+    @pytest.mark.pruned
     def test_none_arguments_are_forwarded_as_none(
         self,
         isolated_registry,
@@ -552,6 +577,7 @@ class TestGetPreprocessor:
         )
         assert result is expected
 
+    @pytest.mark.pruned
     def test_empty_arguments_are_forwarded_as_empty_dictionary(
         self,
         isolated_registry,
@@ -585,6 +611,7 @@ class TestGetPreprocessor:
         )
         assert result is expected
 
+    @pytest.mark.pruned
     def test_constructor_type_error_is_propagated(
         self,
         isolated_registry,
@@ -605,6 +632,7 @@ class TestGetPreprocessor:
         with pytest.raises(TypeError):
             selector.get_preprocessor()
 
+    @pytest.mark.pruned
     def test_constructor_runtime_error_is_propagated(
         self,
         isolated_registry,
@@ -624,6 +652,7 @@ class TestGetPreprocessor:
         ):
             selector.get_preprocessor()
 
+    @pytest.mark.pruned
     def test_each_call_creates_new_preprocessor(
         self,
         isolated_registry,
@@ -643,6 +672,7 @@ class TestGetPreprocessor:
 
 
 class TestClassRegister:
+    @pytest.mark.pruned
     def test_register_adds_class_to_registry(
         self,
         isolated_registry,
@@ -653,6 +683,7 @@ class TestClassRegister:
 
         assert "dummy" in (PreprocessingStepSelector.available())
 
+    @pytest.mark.pruned
     def test_register_returns_original_class(
         self,
         isolated_registry,
@@ -664,6 +695,7 @@ class TestClassRegister:
 
         assert returned is RegisteredDummy
 
+    @pytest.mark.pruned
     def test_register_normalizes_name_to_lowercase(
         self,
         isolated_registry,
@@ -686,6 +718,7 @@ class TestClassRegister:
             RegisteredDummy,
         )
 
+    @pytest.mark.pruned
     def test_register_delegates_to_registry(
         self,
         isolated_registry,
@@ -725,6 +758,7 @@ class TestClassRegister:
             class Second:
                 pass
 
+    @pytest.mark.pruned
     def test_non_string_registration_name_fails_before_registry(
         self,
         isolated_registry,
@@ -734,6 +768,7 @@ class TestClassRegister:
         ):
             PreprocessingStepSelector.register(123)
 
+    @pytest.mark.pruned
     def test_non_class_registration_error_is_propagated(
         self,
         isolated_registry,
@@ -748,6 +783,7 @@ class TestClassRegister:
 
 
 class TestClassAvailable:
+    @pytest.mark.pruned
     def test_available_returns_registry_names(
         self,
         isolated_registry,
@@ -765,6 +801,7 @@ class TestClassAvailable:
             "second",
         ]
 
+    @pytest.mark.pruned
     def test_available_delegates_to_registry(
         self,
         isolated_registry,
@@ -790,6 +827,7 @@ class TestClassAvailable:
             "two",
         ]
 
+    @pytest.mark.pruned
     def test_available_is_empty_for_isolated_empty_registry(
         self,
         isolated_registry,
@@ -798,6 +836,7 @@ class TestClassAvailable:
 
 
 class TestSharedRegistryBehavior:
+    @pytest.mark.pruned
     def test_instances_use_current_class_registry(
         self,
         isolated_registry,
@@ -816,6 +855,7 @@ class TestSharedRegistryBehavior:
         assert first.registery is isolated_registry
         assert second.registery is isolated_registry
 
+    @pytest.mark.pruned
     def test_registration_is_visible_to_new_selectors(
         self,
         isolated_registry,
@@ -873,6 +913,7 @@ class TestSharedRegistryBehavior:
 
 
 class TestDataclassBehavior:
+    @pytest.mark.pruned
     def test_equal_selectors_compare_equal(
         self,
         isolated_registry,
@@ -896,6 +937,7 @@ class TestDataclassBehavior:
 
         assert first == second
 
+    @pytest.mark.pruned
     def test_different_names_compare_not_equal(
         self,
         isolated_registry,
@@ -917,6 +959,7 @@ class TestDataclassBehavior:
 
         assert first != second
 
+    @pytest.mark.pruned
     def test_different_arguments_compare_not_equal(
         self,
         isolated_registry,
@@ -940,6 +983,7 @@ class TestDataclassBehavior:
 
         assert first != second
 
+    @pytest.mark.pruned
     def test_repr_contains_normalized_name(
         self,
         isolated_registry,

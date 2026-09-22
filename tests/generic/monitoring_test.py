@@ -161,6 +161,7 @@ def wait_until(condition, timeout=1.0, interval=0.01):
     return bool(condition())
 
 
+@pytest.mark.pruned
 def test_default_configuration():
     instance = Monitor()
 
@@ -172,6 +173,7 @@ def test_default_configuration():
     assert instance.running is False
 
 
+@pytest.mark.pruned
 def test_monitor_factory():
     instance = monitor(
         cpu=True,
@@ -185,6 +187,7 @@ def test_monitor_factory():
     assert instance.interval == pytest.approx(0.25)
 
 
+@pytest.mark.pruned
 def test_gpu_zero_configuration(fake_pynvml):
     instance = Monitor(
         cpu=False,
@@ -213,6 +216,7 @@ def test_gpu_one_configuration(fake_pynvml):
     )
 
 
+@pytest.mark.pruned
 def test_multiple_gpu_configuration(fake_pynvml):
     instance = Monitor(
         cpu=False,
@@ -229,6 +233,7 @@ def test_multiple_gpu_configuration(fake_pynvml):
     )
 
 
+@pytest.mark.pruned
 def test_combined_gpu_configuration(fake_pynvml):
     instance = Monitor(
         cpu=False,
@@ -252,6 +257,7 @@ def test_invalid_interval(interval):
         Monitor(interval=interval)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "indices",
     [
@@ -267,6 +273,7 @@ def test_negative_gpu_index(indices):
         Monitor(gpus=indices)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "indices",
     [
@@ -284,6 +291,7 @@ def test_invalid_gpu_index_type(indices):
         Monitor(gpus=indices)
 
 
+@pytest.mark.pruned
 def test_ram_collection(basic_monitor):
     value = basic_monitor._ram_gb()
 
@@ -291,6 +299,7 @@ def test_ram_collection(basic_monitor):
     assert value >= 0.0
 
 
+@pytest.mark.pruned
 def test_cpu_collection(basic_monitor):
     basic_monitor._process.cpu_percent(interval=None)
 
@@ -300,6 +309,7 @@ def test_cpu_collection(basic_monitor):
     assert value >= 0.0
 
 
+@pytest.mark.pruned
 def test_cpu_and_ram_sample(basic_monitor, monkeypatch):
     monkeypatch.setattr(
         basic_monitor,
@@ -322,6 +332,7 @@ def test_cpu_and_ram_sample(basic_monitor, monkeypatch):
     assert "vram0" not in sample
 
 
+@pytest.mark.pruned
 def test_disabled_metrics_are_not_collected():
     instance = Monitor(
         cpu=False,
@@ -335,6 +346,7 @@ def test_disabled_metrics_are_not_collected():
     assert "ram" not in sample
 
 
+@pytest.mark.pruned
 def test_gpu_handles_are_initialized(fake_pynvml):
     instance = Monitor(
         cpu=False,
@@ -350,6 +362,7 @@ def test_gpu_handles_are_initialized(fake_pynvml):
     }
 
 
+@pytest.mark.pruned
 def test_gpu_zero_collection(fake_pynvml):
     instance = Monitor(
         cpu=False,
@@ -363,6 +376,7 @@ def test_gpu_zero_collection(fake_pynvml):
     assert vram == pytest.approx(50.0)
 
 
+@pytest.mark.pruned
 def test_gpu_one_collection(fake_pynvml):
     instance = Monitor(
         cpu=False,
@@ -405,6 +419,7 @@ def test_unavailable_gpu_returns_nan(fake_pynvml):
     assert 5 in instance._unavailable_gpus
 
 
+@pytest.mark.pruned
 def test_failed_gpu_initialization(monkeypatch):
     pynvml = Mock()
     pynvml.nvmlInit.side_effect = RuntimeError("NVML unavailable")
@@ -447,10 +462,12 @@ def test_gpu_query_failure(fake_pynvml):
     assert 0 in instance._unavailable_gpus
 
 
+@pytest.mark.pruned
 def test_initial_stage_is_root(basic_monitor):
     assert basic_monitor.current_stage() == "root"
 
 
+@pytest.mark.pruned
 def test_span_records_start_and_end(basic_monitor):
     with basic_monitor.span("work"):
         assert basic_monitor.current_stage() == "main.work"
@@ -477,6 +494,7 @@ def test_span_records_start_and_end(basic_monitor):
     assert dataframe.iloc[1]["t"] >= dataframe.iloc[0]["t"]
 
 
+@pytest.mark.pruned
 def test_nested_spans(basic_monitor):
     with basic_monitor.span("outer"):
         assert basic_monitor.current_stage() == "main.outer"
@@ -504,6 +522,7 @@ def test_nested_spans(basic_monitor):
     ]
 
 
+@pytest.mark.pruned
 def test_span_ends_after_exception(basic_monitor):
     with pytest.raises(RuntimeError):
         with basic_monitor.span("failure"):
@@ -536,6 +555,7 @@ def test_invalid_span_name_type(basic_monitor):
             pass
 
 
+@pytest.mark.pruned
 def test_root_checkpoint(basic_monitor):
     basic_monitor.checkpoint("ready")
 
@@ -546,6 +566,7 @@ def test_root_checkpoint(basic_monitor):
     assert dataframe.iloc[0]["stage"] == "main.ready"
 
 
+@pytest.mark.pruned
 def test_checkpoint_inside_span(basic_monitor):
     with basic_monitor.span("work"):
         basic_monitor.checkpoint("ready")
@@ -565,6 +586,7 @@ def test_empty_checkpoint_name(basic_monitor):
         basic_monitor.checkpoint("  ")
 
 
+@pytest.mark.pruned
 def test_invalid_checkpoint_name_type(basic_monitor):
     with pytest.raises(
         TypeError,
@@ -603,6 +625,7 @@ def test_observe_rejects_non_callable(basic_monitor):
         basic_monitor.observe(123)
 
 
+@pytest.mark.pruned
 def test_start_and_stop_monitoring(basic_monitor):
     basic_monitor.start()
 
@@ -636,6 +659,7 @@ def test_start_twice_does_not_create_new_thread(
     basic_monitor.stop(timeout=1.0)
 
 
+@pytest.mark.pruned
 def test_start_with_clear(basic_monitor):
     basic_monitor.checkpoint("old")
 
@@ -654,6 +678,7 @@ def test_start_with_clear(basic_monitor):
     assert "checkpoint" not in set(dataframe["event"])
 
 
+@pytest.mark.pruned
 def test_stop_before_start(basic_monitor):
     basic_monitor.stop(timeout=1.0)
 
@@ -668,6 +693,7 @@ def test_negative_stop_timeout(basic_monitor):
         basic_monitor.stop(timeout=-1.0)
 
 
+@pytest.mark.pruned
 def test_context_manager():
     instance = Monitor(
         cpu=True,
@@ -685,6 +711,7 @@ def test_context_manager():
     assert instance.running is False
 
 
+@pytest.mark.pruned
 def test_context_manager_does_not_suppress_exception():
     instance = Monitor(
         cpu=True,
@@ -699,6 +726,7 @@ def test_context_manager_does_not_suppress_exception():
     assert instance.running is False
 
 
+@pytest.mark.pruned
 def test_clear_data(basic_monitor):
     basic_monitor.checkpoint("ready")
 
@@ -709,6 +737,7 @@ def test_clear_data(basic_monitor):
     assert basic_monitor.get_dataframe().empty
 
 
+@pytest.mark.pruned
 def test_dataframe_returns_copy(basic_monitor):
     basic_monitor.checkpoint("ready")
 
@@ -744,6 +773,7 @@ def test_empty_kalman_filter():
     assert result.size == 0
 
 
+@pytest.mark.pruned
 def test_kalman_filter_preserves_length():
     values = np.array([1.0, 2.0, 3.0, 4.0])
 
@@ -753,6 +783,7 @@ def test_kalman_filter_preserves_length():
     assert np.isfinite(result).all()
 
 
+@pytest.mark.pruned
 def test_kalman_filter_handles_nan():
     values = np.array([np.nan, 2.0, np.nan, 4.0])
 
@@ -805,6 +836,7 @@ def test_no_smoothing():
     assert result is series
 
 
+@pytest.mark.pruned
 def test_ema_smoothing():
     series = pd.Series([1.0, 2.0, 3.0])
 
@@ -833,6 +865,7 @@ def test_invalid_ema_alpha():
         )
 
 
+@pytest.mark.pruned
 def test_rolling_smoothing():
     series = pd.Series([1.0, 2.0, 3.0, 4.0])
 
@@ -875,6 +908,7 @@ def test_kalman_smoothing():
     assert len(result) == 4
 
 
+@pytest.mark.pruned
 def test_unknown_smoothing_method():
     series = pd.Series([1.0, 2.0, 3.0])
 
@@ -904,6 +938,7 @@ def test_metric_labels(metric, expected):
     assert Monitor._metric_label(metric) == expected
 
 
+@pytest.mark.pruned
 def test_available_metrics(sample_dataframe):
     instance = Monitor(
         cpu=True,
@@ -924,6 +959,7 @@ def test_available_metrics(sample_dataframe):
     ]
 
 
+@pytest.mark.pruned
 def test_span_intervals(sample_dataframe):
     sample_dataframe = sample_dataframe.copy()
     sample_dataframe["elapsed"] = sample_dataframe["t"] - sample_dataframe["t"].min()
@@ -990,6 +1026,7 @@ def test_plot_with_rolling_smoothing(
     plt.close(figure)
 
 
+@pytest.mark.pruned
 def test_plot_timeline_contains_span_bar(
     sample_dataframe,
 ):
@@ -1075,6 +1112,7 @@ def test_plot_calls_show(
     plt.close(figure)
 
 
+@pytest.mark.pruned
 def test_plot_does_not_call_show(
     sample_dataframe,
     monkeypatch,
@@ -1116,6 +1154,7 @@ def test_plot_empty_dataframe():
     assert result is None
 
 
+@pytest.mark.pruned
 def test_plot_without_samples():
     instance = Monitor()
 
@@ -1140,6 +1179,7 @@ def test_plot_without_samples():
     assert result is None
 
 
+@pytest.mark.pruned
 def test_plot_without_timeline_events():
     instance = Monitor(
         cpu=True,
@@ -1206,6 +1246,7 @@ def test_plot_missing_required_columns():
         )
 
 
+@pytest.mark.pruned
 def test_plot_missing_stage_column():
     instance = Monitor()
 
@@ -1262,6 +1303,7 @@ def test_plot_rejects_unknown_metric(
         )
 
 
+@pytest.mark.pruned
 def test_plot_removes_duplicate_metrics(
     sample_dataframe,
 ):
@@ -1321,6 +1363,7 @@ def test_plot_returns_none_for_nan_metric():
     assert result is None
 
 
+@pytest.mark.pruned
 def test_sample_stage_tracks_active_span(
     basic_monitor,
 ):
@@ -1330,6 +1373,7 @@ def test_sample_stage_tracks_active_span(
     assert stage == "main.processing"
 
 
+@pytest.mark.pruned
 def test_sample_stage_returns_root_without_span(
     basic_monitor,
 ):
@@ -1363,6 +1407,7 @@ def test_resolve_physical_gpu_index_rejects_negative_rank():
         resolve_physical_gpu_index(-1)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "visible_devices",
     [
@@ -1388,6 +1433,7 @@ def test_resolve_physical_gpu_index_without_visible_devices(
     assert resolve_physical_gpu_index(3) == 3
 
 
+@pytest.mark.pruned
 def test_resolve_physical_gpu_index_uses_visible_device_mapping(
     monkeypatch,
 ):
@@ -1516,6 +1562,7 @@ def test_monitor_rejects_invalid_distributed_value_types(
         Monitor(**arguments)
 
 
+@pytest.mark.pruned
 def test_monitor_rejects_negative_rank():
     with pytest.raises(
         ValueError,
@@ -1527,6 +1574,7 @@ def test_monitor_rejects_negative_rank():
         )
 
 
+@pytest.mark.pruned
 def test_monitor_rejects_negative_local_rank():
     with pytest.raises(
         ValueError,
@@ -1537,6 +1585,7 @@ def test_monitor_rejects_negative_local_rank():
         )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "world_size",
     [
@@ -1556,6 +1605,7 @@ def test_monitor_rejects_nonpositive_world_size(
         )
 
 
+@pytest.mark.pruned
 def test_monitor_rejects_rank_equal_to_world_size():
     with pytest.raises(
         ValueError,
@@ -1567,6 +1617,7 @@ def test_monitor_rejects_rank_equal_to_world_size():
         )
 
 
+@pytest.mark.pruned
 def test_monitor_stores_distributed_metadata():
     instance = Monitor(
         rank=2,
@@ -1585,6 +1636,7 @@ def test_monitor_stores_distributed_metadata():
     assert instance.pid > 0
 
 
+@pytest.mark.pruned
 def test_create_event_contains_distributed_metadata():
     instance = Monitor(
         cpu=False,
@@ -1610,6 +1662,7 @@ def test_create_event_contains_distributed_metadata():
     assert event["pid"] == instance.pid
 
 
+@pytest.mark.pruned
 def test_create_event_adds_enabled_metric_placeholders(
     fake_pynvml,
 ):
@@ -1635,6 +1688,7 @@ def test_create_event_adds_enabled_metric_placeholders(
     assert event["vram1"] is None
 
 
+@pytest.mark.pruned
 def test_gpu_initialization_marks_handle_failure_unavailable(
     monkeypatch,
 ):
@@ -1671,6 +1725,7 @@ def test_gpu_initialization_marks_handle_failure_unavailable(
     }
 
 
+@pytest.mark.pruned
 def test_repeated_failed_gpu_query_does_not_log_again(
     fake_pynvml,
     monkeypatch,
@@ -1696,6 +1751,7 @@ def test_repeated_failed_gpu_query_does_not_log_again(
     exception_logger.assert_called_once()
 
 
+@pytest.mark.pruned
 def test_shutdown_gpus_returns_when_not_initialized():
     instance = Monitor(
         cpu=False,
@@ -1727,6 +1783,7 @@ def test_shutdown_gpus_clears_nvml_state(
     assert instance._gpu_handles == {}
 
 
+@pytest.mark.pruned
 def test_shutdown_gpus_clears_state_after_failure(
     fake_pynvml,
 ):
@@ -1745,6 +1802,7 @@ def test_shutdown_gpus_clears_state_after_failure(
     assert instance._gpu_handles == {}
 
 
+@pytest.mark.pruned
 def test_remove_empty_stack_preserves_nonempty_stack(
     basic_monitor,
 ):
@@ -1758,6 +1816,7 @@ def test_remove_empty_stack_preserves_nonempty_stack(
     assert thread_id in (basic_monitor._thread_stacks)
 
 
+@pytest.mark.pruned
 def test_span_recovers_from_modified_stack(
     basic_monitor,
 ):
@@ -1790,6 +1849,7 @@ def test_span_removes_itself_from_modified_stack(
     assert basic_monitor.current_stage() == "root"
 
 
+@pytest.mark.pruned
 def test_current_sample_stage_combines_unique_active_stages(
     basic_monitor,
 ):
@@ -1812,6 +1872,7 @@ def test_current_sample_stage_combines_unique_active_stages(
     assert basic_monitor._current_sample_stage() == "main.current | main.other"
 
 
+@pytest.mark.pruned
 def test_current_sample_stage_excludes_sampler_thread(
     basic_monitor,
 ):
@@ -1833,6 +1894,7 @@ def test_current_sample_stage_excludes_sampler_thread(
     basic_monitor._thread = None
 
 
+@pytest.mark.pruned
 def test_sampler_survives_collection_failure(
     basic_monitor,
     monkeypatch,
@@ -1866,6 +1928,7 @@ def test_sampler_survives_collection_failure(
     assert calls >= 2
 
 
+@pytest.mark.pruned
 def test_sampler_uses_zero_wait_when_collection_exceeds_interval(
     basic_monitor,
     monkeypatch,
@@ -1936,6 +1999,7 @@ def test_stop_warns_when_thread_remains_alive(
     assert basic_monitor._thread is fake_thread
 
 
+@pytest.mark.pruned
 def test_close_stops_and_shuts_down(
     basic_monitor,
     monkeypatch,
@@ -1960,6 +2024,7 @@ def test_close_stops_and_shuts_down(
     shutdown.assert_called_once_with()
 
 
+@pytest.mark.pruned
 def test_context_manager_returns_same_monitor():
     instance = Monitor(
         interval=0.01,
@@ -1971,6 +2036,7 @@ def test_context_manager_returns_same_monitor():
     assert instance.running is False
 
 
+@pytest.mark.pruned
 def test_kalman_filter_zero_denominator():
     result = Monitor._kalman_filter(
         [
@@ -1984,6 +2050,7 @@ def test_kalman_filter_zero_denominator():
     assert np.isfinite(result).all()
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "alpha",
     [
@@ -2011,6 +2078,7 @@ def test_invalid_ema_alpha_additional_cases(
         )
 
 
+@pytest.mark.pruned
 def test_smoothing_method_is_case_insensitive():
     series = pd.Series(
         [
@@ -2032,6 +2100,7 @@ def test_smoothing_method_is_case_insensitive():
     )
 
 
+@pytest.mark.pruned
 def test_plot_metric_without_smoothing():
     axis = Mock()
     values = pd.Series(
@@ -2136,6 +2205,7 @@ def test_plot_uses_internal_dataframe(
     plt.close(figure)
 
 
+@pytest.mark.pruned
 def test_plot_filters_selected_metric_with_only_nan_values(
     sample_dataframe,
 ):
@@ -2194,6 +2264,7 @@ def test_plot_save_path_without_directory(
     plt.close(figure)
 
 
+@pytest.mark.pruned
 def test_build_distributed_monitor_without_cuda(
     monkeypatch,
 ):
@@ -2234,6 +2305,7 @@ def test_build_distributed_monitor_without_cuda(
     )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "error",
     [
@@ -2370,6 +2442,7 @@ def test_export_results_writes_csv_and_plot(
     close.assert_called_once_with(figure)
 
 
+@pytest.mark.pruned
 def test_export_results_does_not_close_none_figure(
     tmp_path,
     monkeypatch,
@@ -2457,6 +2530,7 @@ def test_combine_rank_results_returns_none_without_files(
     )
 
 
+@pytest.mark.pruned
 def test_combine_rank_results_combines_and_sorts_files(
     tmp_path,
 ):
@@ -2632,6 +2706,7 @@ def test_distributed_monitoring_handles_export_failure(
     )
 
 
+@pytest.mark.pruned
 def test_distributed_monitoring_nonroot_does_not_combine(
     tmp_path,
     monkeypatch,
@@ -2675,6 +2750,7 @@ def test_distributed_monitoring_nonroot_does_not_combine(
     module.combine_rank_results.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_distributed_monitoring_combine_disabled(
     tmp_path,
     monkeypatch,
@@ -2713,6 +2789,7 @@ def test_distributed_monitoring_combine_disabled(
     module.combine_rank_results.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_distributed_monitoring_forwards_monitor_options(
     tmp_path,
     monkeypatch,

@@ -85,10 +85,12 @@ def make_time_data(
 
 
 class TestPreprocessModuleABC:
+    @pytest.mark.pruned
     def test_abstract_class_cannot_be_instantiated(self):
         with pytest.raises(TypeError):
             PreprocessModuleABC()
 
+    @pytest.mark.pruned
     def test_class_configuration(self):
         assert PreprocessModuleABC.init_time_dim is not None
         assert PreprocessModuleABC.lead_time_dim is not None
@@ -101,6 +103,7 @@ class TestPreprocessModuleABC:
             "day",
         }
 
+    @pytest.mark.pruned
     def test_concrete_fit_returns_self(self):
         preprocessor = ConcretePreprocessor()
 
@@ -117,6 +120,7 @@ class TestPreprocessModuleABC:
         assert result is preprocessor
         assert preprocessor.fitted is True
 
+    @pytest.mark.pruned
     def test_concrete_transform_returns_data(self):
         preprocessor = ConcretePreprocessor(
             fitted=True,
@@ -133,6 +137,7 @@ class TestPreprocessModuleABC:
 
         assert result is data
 
+    @pytest.mark.pruned
     def test_concrete_inverse_transform_returns_data(self):
         preprocessor = ConcretePreprocessor(
             fitted=True,
@@ -151,6 +156,7 @@ class TestPreprocessModuleABC:
 
 
 class TestGetReductionDims:
+    @pytest.mark.pruned
     def test_none_dimensions_are_preserved(self):
         preprocessor = ConcretePreprocessor(
             dims=(),
@@ -173,6 +179,7 @@ class TestGetReductionDims:
         assert result is None
         assert preprocessor.large_ensemble is False
 
+    @pytest.mark.pruned
     def test_dimensions_without_realization_are_preserved(self):
         preprocessor = ConcretePreprocessor(
             dims=("samples",),
@@ -187,6 +194,7 @@ class TestGetReductionDims:
         assert result == ("samples",)
         assert preprocessor.large_ensemble is False
 
+    @pytest.mark.pruned
     def test_realization_dimension_is_added(self):
         preprocessor = ConcretePreprocessor(
             dims=("samples",),
@@ -212,6 +220,7 @@ class TestGetReductionDims:
         )
         assert preprocessor.large_ensemble is True
 
+    @pytest.mark.pruned
     def test_existing_realization_dimension_is_not_duplicated(self):
         preprocessor = ConcretePreprocessor(
             dims=(
@@ -240,6 +249,7 @@ class TestGetReductionDims:
         )
         assert preprocessor.large_ensemble is False
 
+    @pytest.mark.pruned
     def test_list_dimensions_are_converted_when_realization_is_added(self):
         preprocessor = ConcretePreprocessor(
             dims=[
@@ -270,6 +280,7 @@ class TestGetReductionDims:
             tuple,
         )
 
+    @pytest.mark.pruned
     def test_preprocessor_dimensions_are_not_mutated(self):
         preprocessor = ConcretePreprocessor(
             dims=("samples",),
@@ -291,6 +302,7 @@ class TestGetReductionDims:
 
         assert preprocessor.dims == ("samples",)
 
+    @pytest.mark.pruned
     def test_dataset_input_is_supported(self):
         preprocessor = ConcretePreprocessor(
             dims=("samples",),
@@ -333,6 +345,7 @@ class TestAddGroupingCoordinate:
 
         assert result is data
 
+    @pytest.mark.pruned
     def test_missing_time_reduction_dimension_returns_original_data(self):
         preprocessor = ConcretePreprocessor(
             dims=(
@@ -347,6 +360,7 @@ class TestAddGroupingCoordinate:
 
         assert "month" in result.coords
 
+    @pytest.mark.pruned
     def test_year_coordinate_is_added(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -369,6 +383,7 @@ class TestAddGroupingCoordinate:
         )
         assert result["year"].dims == (PreprocessModuleABC.init_time_dim,)
 
+    @pytest.mark.pruned
     def test_month_coordinate_is_added(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -390,6 +405,7 @@ class TestAddGroupingCoordinate:
             ),
         )
 
+    @pytest.mark.pruned
     def test_day_coordinate_is_added(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -411,6 +427,7 @@ class TestAddGroupingCoordinate:
             ),
         )
 
+    @pytest.mark.pruned
     def test_unexpected_frequency_raises(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -424,6 +441,7 @@ class TestAddGroupingCoordinate:
         ):
             preprocessor._add_grouping_coordinate(data)
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "frequency",
         [
@@ -456,6 +474,7 @@ class TestAddGroupingCoordinate:
 
 
 class TestAlignStatForTransform:
+    @pytest.mark.pruned
     def test_none_frequency_returns_original_statistic(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -471,6 +490,7 @@ class TestAlignStatForTransform:
 
         assert result is stat
 
+    @pytest.mark.pruned
     def test_missing_time_reduction_dimension_returns_statistic(self):
         preprocessor = ConcretePreprocessor(
             dims=(
@@ -502,6 +522,7 @@ class TestAlignStatForTransform:
 
         assert result is stat
 
+    @pytest.mark.pruned
     def test_uses_existing_auxiliary_coordinate(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -551,6 +572,7 @@ class TestAlignStatForTransform:
         )
         assert result.dims == (PreprocessModuleABC.init_time_dim,)
 
+    @pytest.mark.pruned
     def test_builds_year_indexer_from_initialization_time(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -587,6 +609,7 @@ class TestAlignStatForTransform:
             ),
         )
 
+    @pytest.mark.pruned
     def test_builds_month_indexer_from_initialization_time(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -624,6 +647,7 @@ class TestAlignStatForTransform:
             ),
         )
 
+    @pytest.mark.pruned
     def test_builds_day_indexer_from_initialization_time(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -661,6 +685,7 @@ class TestAlignStatForTransform:
             ),
         )
 
+    @pytest.mark.pruned
     def test_missing_temporal_coordinates_raises(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -724,6 +749,7 @@ class TestAlignStatForTransform:
                 stat,
             )
 
+    @pytest.mark.pruned
     def test_unexpected_frequency_uses_existing_auxiliary_coordinate(
         self,
     ):
@@ -766,6 +792,7 @@ class TestAlignStatForTransform:
             ),
         )
 
+    @pytest.mark.pruned
     def test_preserves_non_temporal_statistic_dimensions(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -816,6 +843,7 @@ class TestAlignStatForTransform:
             ),
         )
 
+    @pytest.mark.pruned
     def test_dataset_input_can_be_aligned(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -861,6 +889,7 @@ class TestAlignStatForTransform:
 
 
 class TestCheckFitted:
+    @pytest.mark.pruned
     def test_unfitted_preprocessor_raises(self):
         preprocessor = ConcretePreprocessor(
             fitted=False,
@@ -875,6 +904,7 @@ class TestCheckFitted:
         ):
             preprocessor._check_fitted()
 
+    @pytest.mark.pruned
     def test_fitted_preprocessor_is_accepted(self):
         preprocessor = ConcretePreprocessor(
             fitted=True,
@@ -882,6 +912,7 @@ class TestCheckFitted:
 
         assert preprocessor._check_fitted() is None
 
+    @pytest.mark.pruned
     def test_transform_checks_fitted_state(self):
         preprocessor = ConcretePreprocessor(
             fitted=False,
@@ -918,6 +949,7 @@ class TestCheckFitted:
                 )
             )
 
+    @pytest.mark.pruned
     def test_fit_enables_transform(self):
         preprocessor = ConcretePreprocessor(
             fitted=False,
@@ -934,6 +966,7 @@ class TestCheckFitted:
 
         assert preprocessor.transform(data) is data
 
+    @pytest.mark.pruned
     def test_fit_enables_inverse_transform(self):
         preprocessor = ConcretePreprocessor(
             fitted=False,
@@ -981,6 +1014,7 @@ class TestAdditionalReductionDims:
         ):
             preprocessor._get_reduction_dims(data)
 
+    @pytest.mark.pruned
     def test_missing_dimension_error_lists_available_dimensions(self):
         preprocessor = ConcretePreprocessor(
             dims=("missing",),
@@ -1004,6 +1038,7 @@ class TestAdditionalReductionDims:
         ):
             preprocessor._get_reduction_dims(data)
 
+    @pytest.mark.pruned
     def test_large_ensemble_flag_is_reset_between_calls(self):
         preprocessor = ConcretePreprocessor(
             dims=("samples",),
@@ -1038,6 +1073,7 @@ class TestAdditionalReductionDims:
         assert result == ("samples",)
         assert preprocessor.large_ensemble is False
 
+    @pytest.mark.pruned
     def test_empty_dimensions_with_no_realization_returns_none(self):
         preprocessor = ConcretePreprocessor(
             dims=(),
@@ -1054,6 +1090,7 @@ class TestAdditionalReductionDims:
         assert result is None
         assert preprocessor.large_ensemble is False
 
+    @pytest.mark.pruned
     def test_realization_only_reduction_is_preserved(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.realization_dim,),
@@ -1078,6 +1115,7 @@ class TestAdditionalReductionDims:
         assert result == (PreprocessModuleABC.realization_dim,)
         assert preprocessor.large_ensemble is False
 
+    @pytest.mark.pruned
     def test_multiple_reduction_dimensions_preserve_order(self):
         preprocessor = ConcretePreprocessor(
             dims=(
@@ -1123,6 +1161,7 @@ class TestExtractTemporalCoordinate:
 
         assert result is init_time
 
+    @pytest.mark.pruned
     def test_extracts_year(self):
         preprocessor = ConcretePreprocessor()
         init_time = make_time_data()[PreprocessModuleABC.init_time_dim]
@@ -1143,6 +1182,7 @@ class TestExtractTemporalCoordinate:
             ),
         )
 
+    @pytest.mark.pruned
     def test_extracts_month(self):
         preprocessor = ConcretePreprocessor()
         init_time = make_time_data()[PreprocessModuleABC.init_time_dim]
@@ -1163,6 +1203,7 @@ class TestExtractTemporalCoordinate:
             ),
         )
 
+    @pytest.mark.pruned
     def test_extracts_day_of_year(self):
         preprocessor = ConcretePreprocessor()
         init_time = make_time_data()[PreprocessModuleABC.init_time_dim]
@@ -1183,6 +1224,7 @@ class TestExtractTemporalCoordinate:
             ),
         )
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "frequency",
         [
@@ -1210,6 +1252,7 @@ class TestExtractTemporalCoordinate:
 
 
 class TestAdditionalGroupingCoordinate:
+    @pytest.mark.pruned
     def test_existing_grouping_coordinate_is_replaced(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -1241,6 +1284,7 @@ class TestAdditionalGroupingCoordinate:
             ),
         )
 
+    @pytest.mark.pruned
     def test_original_data_is_not_modified(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -1256,6 +1300,7 @@ class TestAdditionalGroupingCoordinate:
         assert "month" in result.coords
         assert result is not data
 
+    @pytest.mark.pruned
     def test_missing_initialization_coordinate_raises(self):
         preprocessor = ConcretePreprocessor(
             dims=("samples",),
@@ -1273,6 +1318,7 @@ class TestAdditionalGroupingCoordinate:
                 data,
             )
 
+    @pytest.mark.pruned
     def test_grouping_coordinate_preserves_initialization_dimension(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -1292,6 +1338,7 @@ class TestAdditionalGroupingCoordinate:
 
 
 class TestAdditionalAlignStatistic:
+    @pytest.mark.pruned
     def test_frequency_is_ignored_when_init_time_not_reduced(self):
         preprocessor = ConcretePreprocessor(
             dims=("latitude",),
@@ -1319,6 +1366,7 @@ class TestAdditionalAlignStatistic:
 
         assert result is stat
 
+    @pytest.mark.pruned
     def test_existing_auxiliary_coordinate_takes_precedence(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -1365,6 +1413,7 @@ class TestAdditionalAlignStatistic:
             ),
         )
 
+    @pytest.mark.pruned
     def test_existing_auxiliary_coordinate_avoids_temporal_extraction(
         self,
     ):
@@ -1418,6 +1467,7 @@ class TestAdditionalAlignStatistic:
             ),
         )
 
+    @pytest.mark.pruned
     def test_dataset_statistic_is_aligned(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -1481,6 +1531,7 @@ class TestAdditionalAlignStatistic:
             ),
         )
 
+    @pytest.mark.pruned
     def test_missing_statistical_group_raises_key_error(self):
         preprocessor = ConcretePreprocessor(
             dims=(PreprocessModuleABC.init_time_dim,),
@@ -1518,6 +1569,7 @@ class TestAdditionalAlignStatistic:
 
 
 class TestInverseTargetTime:
+    @pytest.mark.pruned
     def test_without_lead_dimension_returns_initialization_coordinate(
         self,
     ):
@@ -1580,6 +1632,7 @@ class TestInverseTargetTime:
             data[PreprocessModuleABC.lead_time_dim].values,
         )
 
+    @pytest.mark.pruned
     def test_flattens_init_and_lead_time_grids_before_calling_helper(
         self,
     ):
@@ -1704,6 +1757,7 @@ class TestInverseTargetTime:
                     data,
                 )
 
+    @pytest.mark.pruned
     def test_wrong_target_time_shape_raises(self):
         preprocessor = ConcretePreprocessor()
         data = xr.DataArray(
@@ -1751,6 +1805,7 @@ class TestInverseTargetTime:
                     data,
                 )
 
+    @pytest.mark.pruned
     def test_target_times_are_reshaped_in_init_lead_order(self):
         preprocessor = ConcretePreprocessor()
         data = xr.DataArray(
@@ -1805,6 +1860,7 @@ class TestInverseTargetTime:
             ),
         )
 
+    @pytest.mark.pruned
     def test_dataset_input_is_supported(self):
         preprocessor = ConcretePreprocessor()
         data = xr.Dataset(
@@ -1851,6 +1907,7 @@ class TestInverseTargetTime:
 
 
 class TestCheckZeros:
+    @pytest.mark.pruned
     def test_nonzero_dataarray_is_accepted(self):
         preprocessor = ConcretePreprocessor()
         data = xr.DataArray(
@@ -1883,6 +1940,7 @@ class TestCheckZeros:
         ):
             preprocessor._check_zeros(data)
 
+    @pytest.mark.pruned
     def test_unnamed_dataarray_with_zero_uses_data_name(self):
         preprocessor = ConcretePreprocessor()
         data = xr.DataArray(
@@ -1899,6 +1957,7 @@ class TestCheckZeros:
         ):
             preprocessor._check_zeros(data)
 
+    @pytest.mark.pruned
     def test_dataset_with_no_zeros_is_accepted(self):
         preprocessor = ConcretePreprocessor()
         data = xr.Dataset(
@@ -1922,6 +1981,7 @@ class TestCheckZeros:
 
         assert preprocessor._check_zeros(data) is None
 
+    @pytest.mark.pruned
     def test_dataset_reports_one_zero_variable(self):
         preprocessor = ConcretePreprocessor()
         data = xr.Dataset(
@@ -1949,6 +2009,7 @@ class TestCheckZeros:
         ):
             preprocessor._check_zeros(data)
 
+    @pytest.mark.pruned
     def test_dataset_reports_all_zero_variables(self):
         preprocessor = ConcretePreprocessor()
         data = xr.Dataset(
@@ -1986,6 +2047,7 @@ class TestCheckZeros:
         assert "pr" in str(error.value)
         assert "psl" not in str(error.value)
 
+    @pytest.mark.pruned
     def test_nan_values_are_not_treated_as_zeros(self):
         preprocessor = ConcretePreprocessor()
         data = xr.DataArray(
@@ -2000,6 +2062,7 @@ class TestCheckZeros:
 
         assert preprocessor._check_zeros(data) is None
 
+    @pytest.mark.pruned
     def test_negative_values_are_not_treated_as_zeros(self):
         preprocessor = ConcretePreprocessor()
         data = xr.DataArray(

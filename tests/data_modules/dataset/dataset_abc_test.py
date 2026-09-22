@@ -273,6 +273,7 @@ class TestLeadTimeConfig:
         with pytest.raises(ValueError, match="Provide a list"):
             lead_time_config()
 
+    @pytest.mark.pruned
     def test_explicit_list(self):
         config = lead_time_config(
             list_lead_times=[1, 3, 5],
@@ -280,6 +281,7 @@ class TestLeadTimeConfig:
 
         assert config.build_lead_times() == [1, 3, 5]
 
+    @pytest.mark.pruned
     def test_inclusive_range(self):
         config = lead_time_config(
             start=2,
@@ -291,6 +293,7 @@ class TestLeadTimeConfig:
             [2, 3, 4, 5],
         )
 
+    @pytest.mark.pruned
     def test_list_takes_precedence(self):
         config = lead_time_config(
             list_lead_times=[10, 20],
@@ -302,12 +305,14 @@ class TestLeadTimeConfig:
 
 
 class TestDatasetConfigRequiredSource:
+    @pytest.mark.pruned
     def test_rejects_no_sources(self):
         config = ConcreteDatasetConfig()
 
         with pytest.raises(ValueError, match="either model or condition"):
             config._check_required_input_source()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "model,condition",
         [
@@ -348,6 +353,7 @@ class TestConditionMethod:
 
         assert config._check_condition_method() is config
 
+    @pytest.mark.pruned
     def test_rejects_invalid_method(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -359,6 +365,7 @@ class TestConditionMethod:
 
 
 class TestUsingModelAsCondition:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method,expected",
         [
@@ -382,6 +389,7 @@ class TestUsingModelAsCondition:
         else:
             assert config._using_model_data_as_condition is expected
 
+    @pytest.mark.pruned
     def test_matching_sources(self):
         model = make_data_config(
             paths=["shared.nc"],
@@ -402,6 +410,7 @@ class TestUsingModelAsCondition:
 
         assert config._using_model_data_as_condition
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "field,value",
         [
@@ -432,6 +441,7 @@ class TestUsingModelAsCondition:
 
         assert not config._using_model_data_as_condition
 
+    @pytest.mark.pruned
     def test_condition_without_model(self):
         config = ConcreteDatasetConfig(
             model=None,
@@ -443,6 +453,7 @@ class TestUsingModelAsCondition:
 
 
 class TestResolveLeadTimes:
+    @pytest.mark.pruned
     def test_explicit_configuration(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -455,6 +466,7 @@ class TestResolveLeadTimes:
 
         assert config.lead_times == [1, 3]
 
+    @pytest.mark.pruned
     def test_range_configuration(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -471,6 +483,7 @@ class TestResolveLeadTimes:
             [2, 3, 4],
         )
 
+    @pytest.mark.pruned
     def test_plain_list_unchanged(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -481,6 +494,7 @@ class TestResolveLeadTimes:
 
         assert config.lead_times == [1, 2]
 
+    @pytest.mark.pruned
     def test_input_lead_times(self):
         model = make_data_config(
             lead_times=[1, 2, 4],
@@ -494,6 +508,7 @@ class TestResolveLeadTimes:
 
 
 class TestResolveCondition:
+    @pytest.mark.pruned
     def test_explicit_condition(self):
         condition = make_data_config(name="condition")
         config = ConcreteDatasetConfig(
@@ -505,6 +520,7 @@ class TestResolveCondition:
         assert config._resolve_condition() is config
         assert config.effective_condition is condition
 
+    @pytest.mark.pruned
     def test_model_is_converted_to_condition(self):
         model = make_data_config()
         config = ConcreteDatasetConfig(
@@ -524,6 +540,7 @@ class TestResolveCondition:
         converter.assert_called_once_with()
         assert config.effective_condition is converted
 
+    @pytest.mark.pruned
     def test_no_effective_condition(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -538,6 +555,7 @@ class TestResolveCondition:
 
 
 class TestModelAsCondition:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method,expected_ensemble_mean",
         [
@@ -589,6 +607,7 @@ class TestModelAsCondition:
 
 
 class TestCheckModel:
+    @pytest.mark.pruned
     def test_none_model(self):
         config = ConcreteDatasetConfig(
             model=None,
@@ -598,6 +617,7 @@ class TestCheckModel:
 
         assert config._check_model() is config
 
+    @pytest.mark.pruned
     def test_same_member_rejects_ensemble_mean(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(ensemble_mean=True),
@@ -607,6 +627,7 @@ class TestCheckModel:
         with pytest.raises(ValueError, match="should not be ensemble mean"):
             config._check_model()
 
+    @pytest.mark.pruned
     def test_same_member_accepts_members(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(
@@ -629,6 +650,7 @@ class TestCheckCondition:
         config._effective_condition = condition
         return config
 
+    @pytest.mark.pruned
     def test_effective_condition_requires_method(self):
         condition = make_data_config(name="condition")
         config = self.make_config(condition, None)
@@ -636,6 +658,7 @@ class TestCheckCondition:
         with pytest.raises(ValueError, match="specify condition_method"):
             config._check_condition()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         ["cross_ensemble", "same_member"],
@@ -651,6 +674,7 @@ class TestCheckCondition:
         with pytest.raises(ValueError, match="ensemble_mean cannot be True"):
             config._check_condition()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         ["cross_ensemble", "same_member"],
@@ -680,6 +704,7 @@ class TestCheckCondition:
 
         assert config._check_condition() is config
 
+    @pytest.mark.pruned
     def test_ensemble_mean_requires_ensemble_mean_data(self):
         condition = make_data_config(
             name="condition",
@@ -690,6 +715,7 @@ class TestCheckCondition:
         with pytest.raises(ValueError, match="Ensemble mean must be True"):
             config._check_condition()
 
+    @pytest.mark.pruned
     def test_ensemble_mean_accepts_ensemble_mean_data(self):
         condition = make_data_config(
             name="condition",
@@ -699,6 +725,7 @@ class TestCheckCondition:
 
         assert config._check_condition() is config
 
+    @pytest.mark.pruned
     def test_static_rejects_realization_list(self):
         condition = make_data_config(
             name="condition",
@@ -732,6 +759,7 @@ class TestCheckCondition:
             ):
                 config._check_condition()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dimension",
         [INIT_TIME_DIM, LEAD_TIME_DIM, REALIZATION_DIM],
@@ -750,6 +778,7 @@ class TestCheckCondition:
         ):
             config._check_condition()
 
+    @pytest.mark.pruned
     def test_static_accepts_no_sampling_coordinates(self):
         condition = make_data_config(name="condition")
         condition.realization_list = None
@@ -760,6 +789,7 @@ class TestCheckCondition:
 
         assert config._check_condition() is config
 
+    @pytest.mark.pruned
     def test_static_requires_condition(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -792,6 +822,7 @@ class TestModelConditionCompatibility:
         config._effective_condition = condition
         return config
 
+    @pytest.mark.pruned
     def test_no_check_without_both_sources(self):
         config = self.make_config(
             make_data_config(),
@@ -800,6 +831,7 @@ class TestModelConditionCompatibility:
 
         assert config._check_model_vs_condition() is None
 
+    @pytest.mark.pruned
     def test_no_check_when_same_source(self):
         model = make_data_config()
         config = self.make_config(
@@ -810,6 +842,7 @@ class TestModelConditionCompatibility:
 
         assert config._check_model_vs_condition() is None
 
+    @pytest.mark.pruned
     def test_static_skips_temporal_coverage_check(self):
         model = make_data_config()
         condition = make_data_config(
@@ -837,6 +870,7 @@ class TestModelConditionCompatibility:
 
         assert config._check_model_vs_condition() is None
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "missing_dimension",
         [INIT_TIME_DIM, LEAD_TIME_DIM],
@@ -854,6 +888,7 @@ class TestModelConditionCompatibility:
         with pytest.raises(ValueError, match="same .* dimestions"):
             config._check_model_vs_condition()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dimension,condition_values",
         [
@@ -884,6 +919,7 @@ class TestModelConditionCompatibility:
         with pytest.raises(ValueError, match="same .* coordinates"):
             config._check_model_vs_condition()
 
+    @pytest.mark.pruned
     def test_rejects_time_type_mismatch(self):
         model = make_data_config(
             time_coords_type="datetime",
@@ -900,6 +936,7 @@ class TestModelConditionCompatibility:
         ):
             config._check_model_vs_condition()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "model_members,condition_members",
         [
@@ -930,6 +967,7 @@ class TestModelConditionCompatibility:
         with pytest.raises(ValueError, match="dims and coords"):
             config._check_model_vs_condition()
 
+    @pytest.mark.pruned
     def test_same_member_rejects_member_mismatch(self):
         model = make_data_config(
             realizations=[0, 1],
@@ -969,6 +1007,7 @@ class TestModelConditionCompatibility:
 
 
 class TestGetInputTimes:
+    @pytest.mark.pruned
     def test_rejects_unavailable_requested_times(self):
         model = make_data_config(
             times=np.asarray(
@@ -992,6 +1031,7 @@ class TestGetInputTimes:
         with pytest.raises(ValueError, match="requested_times are unavailable"):
             config.get_input_times(requested)
 
+    @pytest.mark.pruned
     def test_intersects_requested_and_input_times(self):
         model_times = np.asarray(
             ["2000-01-01", "2000-03-01"],
@@ -1018,6 +1058,7 @@ class TestGetInputTimes:
 
 
 class TestAddedTimeFeaturesInitialization:
+    @pytest.mark.pruned
     def test_none_features_become_empty_tuple(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -1028,6 +1069,7 @@ class TestAddedTimeFeaturesInitialization:
         assert len(features) == 0
         assert features.time_features_array is None
 
+    @pytest.mark.pruned
     def test_canonical_feature_order(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -1053,6 +1095,7 @@ class TestAddedTimeFeaturesInitialization:
                 ["unsupported"],
             )
 
+    @pytest.mark.pruned
     def test_length(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -1063,6 +1106,7 @@ class TestAddedTimeFeaturesInitialization:
 
 
 class TestDaysInYear:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "time,expected",
         [
@@ -1111,6 +1155,7 @@ class TestDatasetConfigConstructorBranches:
         ):
             yield
 
+    @pytest.mark.pruned
     def test_constructor_uses_all_input_lead_times(self):
         model = make_data_config(
             lead_times=[1, 2, 3],
@@ -1129,6 +1174,7 @@ class TestDatasetConfigConstructorBranches:
             [1, 2, 3],
         )
 
+    @pytest.mark.pruned
     def test_constructor_accepts_requested_lead_time_subset(self):
         model = make_data_config(
             lead_times=[1, 2, 3, 4],
@@ -1194,6 +1240,7 @@ class TestDatasetConfigConstructorBranches:
                 run_parent=True,
             )
 
+    @pytest.mark.pruned
     def test_constructor_rejects_invalid_condition_method(self):
         with pytest.raises(
             ValueError,
@@ -1289,6 +1336,7 @@ class TestMoreConditionValidationBranches:
         config._effective_condition = condition
         return config
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         [
@@ -1310,6 +1358,7 @@ class TestMoreConditionValidationBranches:
         ):
             config._check_condition()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         [
@@ -1331,6 +1380,7 @@ class TestMoreConditionValidationBranches:
         ):
             config._check_condition()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         [
@@ -1348,6 +1398,7 @@ class TestMoreConditionValidationBranches:
 
         assert config._check_condition() is config
 
+    @pytest.mark.pruned
     def test_ensemble_mean_method_rejects_non_mean_condition(self):
         condition = make_data_config(
             name="condition",
@@ -1364,6 +1415,7 @@ class TestMoreConditionValidationBranches:
         ):
             config._check_condition()
 
+    @pytest.mark.pruned
     def test_ensemble_mean_method_accepts_mean_condition(self):
         condition = make_data_config(
             name="condition",
@@ -1376,6 +1428,7 @@ class TestMoreConditionValidationBranches:
 
         assert config._check_condition() is config
 
+    @pytest.mark.pruned
     def test_static_rejects_realization_list(self):
         condition = make_data_config(
             name="condition",
@@ -1399,6 +1452,7 @@ class TestMoreConditionValidationBranches:
         ):
             config._check_condition()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dimension",
         [
@@ -1428,6 +1482,7 @@ class TestMoreConditionValidationBranches:
         ):
             config._check_condition()
 
+    @pytest.mark.pruned
     def test_static_accepts_spatial_only_condition(self):
         condition = make_data_config(name="condition")
         condition.realization_list = None
@@ -1445,6 +1500,7 @@ class TestMoreConditionValidationBranches:
 
         assert config._check_condition() is config
 
+    @pytest.mark.pruned
     def test_static_without_condition_rejected(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -1459,6 +1515,7 @@ class TestMoreConditionValidationBranches:
         ):
             config._check_condition()
 
+    @pytest.mark.pruned
     def test_same_member_model_rejects_ensemble_mean(self):
         model = make_data_config(
             ensemble_mean=True,
@@ -1476,6 +1533,7 @@ class TestMoreConditionValidationBranches:
         ):
             config._check_model()
 
+    @pytest.mark.pruned
     def test_non_same_member_model_skips_ensemble_check(self):
         model = make_data_config(
             ensemble_mean=True,
@@ -1490,6 +1548,7 @@ class TestMoreConditionValidationBranches:
 
 
 class TestMoreInputTimeBranches:
+    @pytest.mark.pruned
     def test_plain_sequence_is_converted_to_dataarray(self):
         model_times = np.asarray(
             [
@@ -1531,6 +1590,7 @@ class TestMoreInputTimeBranches:
             model_times,
         )
 
+    @pytest.mark.pruned
     def test_rejects_one_missing_requested_time(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -1570,6 +1630,7 @@ class TestMoreInputTimeBranches:
 
 
 class TestMoreAddedTimeFeaturesBranches:
+    @pytest.mark.pruned
     def test_feature_order_is_canonical(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -1588,6 +1649,7 @@ class TestMoreAddedTimeFeaturesBranches:
             "day_cos",
         )
 
+    @pytest.mark.pruned
     def test_duplicate_requested_features_are_collapsed(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -1604,6 +1666,7 @@ class TestMoreAddedTimeFeaturesBranches:
             "month_cos",
         )
 
+    @pytest.mark.pruned
     def test_no_features_does_not_call_add_lead_times(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -1630,6 +1693,7 @@ class TestMoreAddedTimeFeaturesBranches:
         add_times.assert_not_called()
         assert features.time_features_array is None
 
+    @pytest.mark.pruned
     def test_only_initialization_time_feature(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(
@@ -1658,6 +1722,7 @@ class TestMoreAddedTimeFeaturesBranches:
         assert features.time_features_array[0, 0] == pytest.approx(0.0)
         assert 0.0 < features.time_features_array[1, 0] < 1.0
 
+    @pytest.mark.pruned
     def test_only_lead_time_feature(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(
@@ -1740,6 +1805,7 @@ class TestMoreAddedTimeFeaturesBranches:
             atol=1e-6,
         )
 
+    @pytest.mark.pruned
     def test_all_features_have_float32_dtype(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -1769,6 +1835,7 @@ class TestMoreAddedTimeFeaturesBranches:
         assert features.time_features_array.shape == (2, 6)
         assert features.time_features_array.dtype == np.float32
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "calendar_time,expected",
         [
@@ -1805,6 +1872,7 @@ class TestMoreAddedTimeFeaturesBranches:
     ):
         assert AddedTimeFeatures._days_in_year(calendar_time) == expected
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "date,expected",
         [
@@ -1841,6 +1909,7 @@ class TestMoreAddedTimeFeaturesBranches:
     ):
         assert AddedTimeFeatures._days_in_year(date) == expected
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "input_shape,expected_shape",
         [
@@ -1892,6 +1961,7 @@ class TestMoreAddedTimeFeaturesBranches:
 
         assert result.shape == expected_shape
 
+    @pytest.mark.pruned
     def test_call_returns_independent_broadcast_array(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -1973,6 +2043,7 @@ class TestMoreDatasetInitializationBranches:
             [LEAD_TIME_DIM],
         )
 
+    @pytest.mark.pruned
     def test_check_init_calls_time_validation(self):
         config = self.make_config()
         dataset = ConcreteDataset(
@@ -2082,6 +2153,7 @@ class TestMoreDatasetInitializationBranches:
         assert dataset.cond_indexes is not None
         assert dataset.time_features is not features
 
+    @pytest.mark.pruned
     def test_initialize_skips_model_and_condition_loading(self):
         config = self.make_config(
             condition=None,
@@ -2175,6 +2247,7 @@ class TestMoreMaskBranches:
             config=config,
         )
 
+    @pytest.mark.pruned
     def test_resolve_mask_passes_expected_arguments(self):
         dataset = self.make_dataset()
         template = xr.DataArray(
@@ -2213,6 +2286,7 @@ class TestMoreMaskBranches:
         assert dataset.mask.dtype == bool
         assert not dataset.mask.any()
 
+    @pytest.mark.pruned
     def test_existing_mask_is_preserved(self):
         dataset = self.make_dataset()
         existing = xr.DataArray(
@@ -2242,6 +2316,7 @@ class TestMoreMaskBranches:
         creator.assert_not_called()
         assert dataset.mask is existing
 
+    @pytest.mark.pruned
     def test_prepare_mask_drops_masked_samples(self):
         dataset = self.make_dataset(
             ensemble_mean=True,
@@ -2318,6 +2393,7 @@ class TestMoreMaskBranches:
 
 
 class TestMoreIndexBranches:
+    @pytest.mark.pruned
     def test_model_indexes_cover_realization_dimension(self):
         model = make_data_config(
             realizations=[0, 1],
@@ -2346,6 +2422,7 @@ class TestMoreIndexBranches:
             [1],
         )
 
+    @pytest.mark.pruned
     def test_model_indexes_reports_multiple_missing_dimensions(self):
         model = make_data_config(
             realizations=[0, 1],
@@ -2378,6 +2455,7 @@ class TestMoreIndexBranches:
         assert LEAD_TIME_DIM in message
         assert REALIZATION_DIM in message
 
+    @pytest.mark.pruned
     def test_condition_indexes_ignore_unknown_dimensions(self):
         condition = make_data_config(
             name="condition",
@@ -2406,6 +2484,7 @@ class TestMoreIndexBranches:
 
         assert "unused" not in result
 
+    @pytest.mark.pruned
     def test_cross_ensemble_excludes_realization_index(self):
         condition = make_data_config(
             name="condition",
@@ -2435,6 +2514,7 @@ class TestMoreIndexBranches:
 
         assert REALIZATION_DIM not in result
 
+    @pytest.mark.pruned
     def test_condition_indexes_report_multiple_missing_values(self):
         condition = make_data_config(
             name="condition",
@@ -2473,9 +2553,11 @@ class TestMoreIndexBranches:
 
 
 class TestMoreComputeBranches:
+    @pytest.mark.pruned
     def test_compute_without_arrays(self):
         assert ConcreteDataset._compute() == ()
 
+    @pytest.mark.pruned
     def test_compute_three_arrays_preserves_order(self):
         first = xr.DataArray([1.0])
         second = xr.DataArray([2.0])
@@ -2492,6 +2574,7 @@ class TestMoreComputeBranches:
         xr.testing.assert_equal(result[1], second)
         xr.testing.assert_equal(result[2], third)
 
+    @pytest.mark.pruned
     def test_dataset_length_uses_first_mapping_entry(self):
         dataset = ConcreteDataset(
             config=ConcreteDatasetConfig(
@@ -2507,6 +2590,7 @@ class TestMoreComputeBranches:
 
 
 class TestCurrentSourceEdgeCases:
+    @pytest.mark.pruned
     def test_none_condition_method_model_condition_lookup_raises(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -2520,6 +2604,7 @@ class TestCurrentSourceEdgeCases:
         ):
             config._using_model_data_as_condition
 
+    @pytest.mark.pruned
     def test_resolve_condition_with_none_method_raises(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -2533,6 +2618,7 @@ class TestCurrentSourceEdgeCases:
         ):
             config._resolve_condition()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "time",
         [
@@ -2560,6 +2646,7 @@ class TestCurrentSourceEdgeCases:
 
 
 class TestFinalDatasetConfigBranches:
+    @pytest.mark.pruned
     def test_effective_condition_property_returns_internal_value(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -2569,6 +2656,7 @@ class TestFinalDatasetConfigBranches:
 
         assert config.effective_condition is marker
 
+    @pytest.mark.pruned
     def test_build_dataset_concrete_method(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -2576,6 +2664,7 @@ class TestFinalDatasetConfigBranches:
 
         assert config.build_dataset() == "dataset"
 
+    @pytest.mark.pruned
     def test_available_times_property(self):
         expected = pd.DatetimeIndex(
             [
@@ -2590,6 +2679,7 @@ class TestFinalDatasetConfigBranches:
 
         assert config.available_times.equals(expected)
 
+    @pytest.mark.pruned
     def test_dataset_operator_property(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -2597,6 +2687,7 @@ class TestFinalDatasetConfigBranches:
 
         assert config.ds_operator is config._operator
 
+    @pytest.mark.pruned
     def test_effective_input_prefers_override(self):
         model = make_data_config(name="model")
         override = make_data_config(name="override")
@@ -2608,6 +2699,7 @@ class TestFinalDatasetConfigBranches:
 
         assert config.effective_input is override
 
+    @pytest.mark.pruned
     def test_effective_input_prefers_model_without_override(self):
         model = make_data_config(name="model")
         condition = make_data_config(name="condition")
@@ -2619,6 +2711,7 @@ class TestFinalDatasetConfigBranches:
 
         assert config.effective_input is model
 
+    @pytest.mark.pruned
     def test_effective_input_uses_condition_without_model(self):
         condition = make_data_config(name="condition")
 
@@ -2629,6 +2722,7 @@ class TestFinalDatasetConfigBranches:
 
         assert config.effective_input is condition
 
+    @pytest.mark.pruned
     def test_resolve_condition_returns_self_for_explicit_condition(self):
         condition = make_data_config(name="condition")
         config = ConcreteDatasetConfig(
@@ -2642,6 +2736,7 @@ class TestFinalDatasetConfigBranches:
         assert result is config
         assert config.effective_condition is condition
 
+    @pytest.mark.pruned
     def test_resolve_condition_returns_self_for_model_condition(self):
         model = make_data_config()
         converted = make_data_config(
@@ -2673,6 +2768,7 @@ class TestFinalDatasetConfigBranches:
         assert config.effective_condition is converted
         builder.assert_called_once_with()
 
+    @pytest.mark.pruned
     def test_resolve_condition_sets_none_when_not_conditioning(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -2694,6 +2790,7 @@ class TestFinalDatasetConfigBranches:
 
 
 class TestFinalUsingModelAsConditionBranches:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         [
@@ -2711,6 +2808,7 @@ class TestFinalUsingModelAsConditionBranches:
 
         assert config._using_model_data_as_condition
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         [
@@ -2727,6 +2825,7 @@ class TestFinalUsingModelAsConditionBranches:
 
         assert not config._using_model_data_as_condition
 
+    @pytest.mark.pruned
     def test_explicit_condition_same_paths_but_different_names(self):
         model = make_data_config(
             paths=["same.nc"],
@@ -2747,6 +2846,7 @@ class TestFinalUsingModelAsConditionBranches:
 
         assert not config._using_model_data_as_condition
 
+    @pytest.mark.pruned
     def test_explicit_condition_same_names_but_different_members(self):
         model = make_data_config(
             paths=["same.nc"],
@@ -2767,6 +2867,7 @@ class TestFinalUsingModelAsConditionBranches:
 
         assert not config._using_model_data_as_condition
 
+    @pytest.mark.pruned
     def test_explicit_condition_same_names_but_different_paths(self):
         model = make_data_config(
             paths=["model.nc"],
@@ -2789,6 +2890,7 @@ class TestFinalUsingModelAsConditionBranches:
 
 
 class TestFinalConditionValidationBranches:
+    @pytest.mark.pruned
     def test_no_effective_condition_nonstatic_returns_self(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -2799,6 +2901,7 @@ class TestFinalConditionValidationBranches:
 
         assert config._check_condition() is config
 
+    @pytest.mark.pruned
     def test_no_model_check_returns_self(self):
         config = ConcreteDatasetConfig(
             model=None,
@@ -2808,6 +2911,7 @@ class TestFinalConditionValidationBranches:
 
         assert config._check_model() is config
 
+    @pytest.mark.pruned
     def test_non_same_member_model_returns_self(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(
@@ -2818,6 +2922,7 @@ class TestFinalConditionValidationBranches:
 
         assert config._check_model() is config
 
+    @pytest.mark.pruned
     def test_same_member_nonmean_model_returns_self(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(
@@ -2829,6 +2934,7 @@ class TestFinalConditionValidationBranches:
 
         assert config._check_model() is config
 
+    @pytest.mark.pruned
     def test_condition_method_case_insensitive(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -2837,6 +2943,7 @@ class TestFinalConditionValidationBranches:
 
         assert config._check_condition_method() is config
 
+    @pytest.mark.pruned
     def test_invalid_condition_method_message_contains_valid_values(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -2855,6 +2962,7 @@ class TestFinalConditionValidationBranches:
 
 
 class TestFinalTimeFeatureBranches:
+    @pytest.mark.pruned
     def test_empty_feature_tuple_length(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -2864,6 +2972,7 @@ class TestFinalTimeFeatureBranches:
         assert features.time_features == ()
         assert len(features) == 0
 
+    @pytest.mark.pruned
     def test_feature_indices_are_stable(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -2879,6 +2988,7 @@ class TestFinalTimeFeatureBranches:
             "day_cos": 5,
         }
 
+    @pytest.mark.pruned
     def test_unsupported_feature_message_contains_supported_features(self):
         with pytest.raises(ValueError) as error:
             AddedTimeFeatures(
@@ -2891,6 +3001,7 @@ class TestFinalTimeFeatureBranches:
         assert "month_sin" in message
         assert "day_cos" in message
 
+    @pytest.mark.pruned
     def test_build_requires_both_dimensions_at_once(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -2904,6 +3015,7 @@ class TestFinalTimeFeatureBranches:
         assert INIT_TIME_DIM in message
         assert LEAD_TIME_DIM in message
 
+    @pytest.mark.pruned
     def test_build_replaces_previous_array(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(
@@ -2934,6 +3046,7 @@ class TestFinalTimeFeatureBranches:
             [0.5, 1.0],
         )
 
+    @pytest.mark.pruned
     def test_call_first_sample(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -2954,6 +3067,7 @@ class TestFinalTimeFeatureBranches:
 
         np.testing.assert_allclose(result, [0.25])
 
+    @pytest.mark.pruned
     def test_call_last_sample(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -2974,6 +3088,7 @@ class TestFinalTimeFeatureBranches:
 
         np.testing.assert_allclose(result, [0.50])
 
+    @pytest.mark.pruned
     def test_equality_rejects_different_reference_types(self):
         class OtherReference(TimeFeatureReference):
             pass
@@ -2989,6 +3104,7 @@ class TestFinalTimeFeatureBranches:
 
         assert first != second
 
+    @pytest.mark.pruned
     def test_equality_rejects_different_common_times(self):
         first = AddedTimeFeatures(
             TimeFeatureReference(
@@ -3011,6 +3127,7 @@ class TestFinalTimeFeatureBranches:
 
         assert first != second
 
+    @pytest.mark.pruned
     def test_equality_accepts_identical_references(self):
         first = AddedTimeFeatures(
             TimeFeatureReference(
@@ -3083,6 +3200,7 @@ class TestFinalMaskAndSamplingBranches:
 
         assert result is dataset
 
+    @pytest.mark.pruned
     def test_prepare_sampling_mask_selects_requested_lead(self):
         dataset = self.make_dataset()
         dataset.mask = xr.DataArray(
@@ -3110,6 +3228,7 @@ class TestFinalMaskAndSamplingBranches:
         assert dataset.mask.sizes[LEAD_TIME_DIM] == 1
         assert dataset.mask[LEAD_TIME_DIM].item() == 2
 
+    @pytest.mark.pruned
     def test_get_sampling_coords_keeps_dimension_order(self):
         dataset = self.make_dataset()
         dataset.mask = xr.DataArray(
@@ -3144,6 +3263,7 @@ class TestFinalMaskAndSamplingBranches:
 
 
 class TestFinalIndexBranches:
+    @pytest.mark.pruned
     def test_condition_indexes_empty_when_no_sample_dims_match(self):
         condition_data = xr.Dataset(
             {
@@ -3183,6 +3303,7 @@ class TestFinalIndexBranches:
 
         assert result == {}
 
+    @pytest.mark.pruned
     def test_model_indexes_empty_sample_mapping(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -3194,6 +3315,7 @@ class TestFinalIndexBranches:
 
         assert dataset.get_model_indexes({}) == {}
 
+    @pytest.mark.pruned
     def test_same_member_index_zero(self):
         condition = make_data_config(
             name="condition",
@@ -3224,6 +3346,7 @@ class TestFinalIndexBranches:
             [0],
         )
 
+    @pytest.mark.pruned
     def test_model_index_dataset_uses_second_sample(self):
         model_data = xr.Dataset(
             {
@@ -3270,6 +3393,7 @@ class TestFinalIndexBranches:
         )
         assert result.item() == pytest.approx(20.0)
 
+    @pytest.mark.pruned
     def test_condition_index_dataset_uses_second_sample(self):
         condition_data = xr.Dataset(
             {
@@ -3323,6 +3447,7 @@ class TestFinalIndexBranches:
 
 
 class TestFinalDatasetUtilityBranches:
+    @pytest.mark.pruned
     def test_added_features_dimension_zero(self):
         dataset = ConcreteDataset(
             config=ConcreteDatasetConfig(
@@ -3336,6 +3461,7 @@ class TestFinalDatasetUtilityBranches:
 
         assert dataset.get_added_features_dim() == 0
 
+    @pytest.mark.pruned
     def test_added_features_dimension_six(self):
         dataset = ConcreteDataset(
             config=ConcreteDatasetConfig(
@@ -3356,6 +3482,7 @@ class TestFinalDatasetUtilityBranches:
 
         assert dataset.get_added_features_dim() == 6
 
+    @pytest.mark.pruned
     def test_compute_numpy_arrays(self):
         first = np.asarray([1, 2])
         second = np.asarray([3, 4])
@@ -3374,6 +3501,7 @@ class TestFinalDatasetUtilityBranches:
             second,
         )
 
+    @pytest.mark.pruned
     def test_len_single_sample(self):
         dataset = ConcreteDataset(
             config=ConcreteDatasetConfig(
@@ -3392,27 +3520,32 @@ class TestFinalDatasetUtilityBranches:
 
 
 class TestDatasetConfigABCStructure:
+    @pytest.mark.pruned
     def test_abstract_class_cannot_be_instantiated(self):
         with pytest.raises(TypeError):
             DatasetConfigABC()
 
+    @pytest.mark.pruned
     def test_abstract_properties_are_registered(self):
         assert DatasetConfigABC.available_times.__isabstractmethod__
         assert DatasetConfigABC.ds_operator.__isabstractmethod__
         assert DatasetConfigABC.effective_input.__isabstractmethod__
         assert DatasetConfigABC.build_dataset.__isabstractmethod__
 
+    @pytest.mark.pruned
     def test_class_dimensions_match_module_dimensions(self):
         assert DatasetConfigABC.init_time_dim == INIT_TIME_DIM
         assert DatasetConfigABC.lead_time_dim == LEAD_TIME_DIM
         assert DatasetConfigABC.realization_dim == REALIZATION_DIM
 
+    @pytest.mark.pruned
     def test_valid_condition_methods_are_immutable(self):
         assert isinstance(
             DatasetConfigABC._VALID_CONDITION_METHODS,
             frozenset,
         )
 
+    @pytest.mark.pruned
     def test_valid_condition_method_values(self):
         assert DatasetConfigABC._VALID_CONDITION_METHODS == frozenset(
             {
@@ -3423,6 +3556,7 @@ class TestDatasetConfigABCStructure:
             }
         )
 
+    @pytest.mark.pruned
     def test_supported_nn_dimensions_are_tuple(self):
         assert isinstance(
             DatasetConfigABC.supported_NN_dimensions,
@@ -3431,15 +3565,18 @@ class TestDatasetConfigABCStructure:
 
 
 class TestDatasetABCStructure:
+    @pytest.mark.pruned
     def test_abstract_dataset_cannot_be_instantiated(self):
         with pytest.raises(TypeError):
             DatasetABC()
 
+    @pytest.mark.pruned
     def test_required_abstract_properties(self):
         assert DatasetABC._load_model.__isabstractmethod__
         assert DatasetABC._write_condition_to_input.__isabstractmethod__
         assert DatasetABC._concat_condition_to_input.__isabstractmethod__
 
+    @pytest.mark.pruned
     def test_concrete_dataset_is_torch_dataset(self):
         dataset = ConcreteDataset(
             config=ConcreteDatasetConfig(
@@ -3453,6 +3590,7 @@ class TestDatasetABCStructure:
 
 
 class TestLeadTimeConfigAdditionalCoverage:
+    @pytest.mark.pruned
     def test_default_start_is_one(self):
         config = lead_time_config(end=3)
 
@@ -3462,6 +3600,7 @@ class TestLeadTimeConfigAdditionalCoverage:
             [1, 2, 3],
         )
 
+    @pytest.mark.pruned
     def test_tuple_list_is_returned_without_conversion(self):
         configured = (1, 3, 5)
         config = lead_time_config(
@@ -3470,6 +3609,7 @@ class TestLeadTimeConfigAdditionalCoverage:
 
         assert config.build_lead_times() is configured
 
+    @pytest.mark.pruned
     def test_numpy_array_uses_truth_value_behavior(self):
         config = lead_time_config(
             list_lead_times=np.asarray([1]),
@@ -3479,6 +3619,7 @@ class TestLeadTimeConfigAdditionalCoverage:
 
         np.testing.assert_array_equal(result, [1])
 
+    @pytest.mark.pruned
     def test_descending_range_is_empty(self):
         config = lead_time_config(
             start=5,
@@ -3490,6 +3631,7 @@ class TestLeadTimeConfigAdditionalCoverage:
             np.asarray([], dtype=int),
         )
 
+    @pytest.mark.pruned
     def test_zero_end_is_valid_when_explicit(self):
         config = lead_time_config(
             start=0,
@@ -3501,6 +3643,7 @@ class TestLeadTimeConfigAdditionalCoverage:
             [0],
         )
 
+    @pytest.mark.pruned
     def test_none_list_and_none_end_rejected(self):
         with pytest.raises(
             ValueError,
@@ -3513,6 +3656,7 @@ class TestLeadTimeConfigAdditionalCoverage:
 
 
 class TestDatasetConfigSourceValidationMassive:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "model,condition",
         [
@@ -3538,6 +3682,7 @@ class TestDatasetConfigSourceValidationMassive:
 
         assert result is config
 
+    @pytest.mark.pruned
     def test_missing_sources_message(self):
         config = ConcreteDatasetConfig(
             model=None,
@@ -3552,6 +3697,7 @@ class TestDatasetConfigSourceValidationMassive:
         assert "model" in message
         assert "condition" in message
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         [
@@ -3574,6 +3720,7 @@ class TestDatasetConfigSourceValidationMassive:
 
         assert config._check_condition_method() is config
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         [
@@ -3599,6 +3746,7 @@ class TestDatasetConfigSourceValidationMassive:
 
 
 class TestUsingModelAsConditionMassive:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method,expected",
         [
@@ -3626,6 +3774,7 @@ class TestUsingModelAsConditionMassive:
 
         assert config._using_model_data_as_condition is expected
 
+    @pytest.mark.pruned
     def test_none_method_currently_raises_attribute_error(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -3639,6 +3788,7 @@ class TestUsingModelAsConditionMassive:
         ):
             config._using_model_data_as_condition
 
+    @pytest.mark.pruned
     def test_condition_without_model_is_not_model_condition(self):
         config = ConcreteDatasetConfig(
             model=None,
@@ -3648,6 +3798,7 @@ class TestUsingModelAsConditionMassive:
 
         assert not config._using_model_data_as_condition
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "model_paths,condition_paths,"
         "model_names,condition_names,"
@@ -3731,6 +3882,7 @@ class TestUsingModelAsConditionMassive:
 
 
 class TestResolveConditionMassive:
+    @pytest.mark.pruned
     def test_explicit_condition_has_precedence(self):
         condition = make_data_config(name="condition")
         config = ConcreteDatasetConfig(
@@ -3751,6 +3903,7 @@ class TestResolveConditionMassive:
         assert config.effective_condition is condition
         builder.assert_not_called()
 
+    @pytest.mark.pruned
     def test_model_condition_is_built_once(self):
         model = make_data_config()
         converted = make_data_config(name="converted")
@@ -3779,6 +3932,7 @@ class TestResolveConditionMassive:
         assert config.effective_condition is converted
         builder.assert_called_once_with()
 
+    @pytest.mark.pruned
     def test_no_condition_sets_internal_value_to_none(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -3798,6 +3952,7 @@ class TestResolveConditionMassive:
         assert result is config
         assert config.effective_condition is None
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method,ensemble_mean",
         [
@@ -3864,6 +4019,7 @@ class TestModelConditionCompatibilityMassive:
         config._effective_condition = condition
         return config
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "model,condition",
         [
@@ -3881,6 +4037,7 @@ class TestModelConditionCompatibilityMassive:
 
         assert config._check_model_vs_condition() is None
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dimension",
         [
@@ -3905,6 +4062,7 @@ class TestModelConditionCompatibilityMassive:
         ):
             config._check_model_vs_condition()
 
+    @pytest.mark.pruned
     def test_condition_time_superset_is_accepted(self):
         model = make_data_config(
             times=np.asarray(
@@ -3934,6 +4092,7 @@ class TestModelConditionCompatibilityMassive:
 
         assert config._check_model_vs_condition() is None
 
+    @pytest.mark.pruned
     def test_condition_lead_time_superset_is_accepted(self):
         model = make_data_config(
             lead_times=[1, 2],
@@ -3949,6 +4108,7 @@ class TestModelConditionCompatibilityMassive:
 
         assert config._check_model_vs_condition() is None
 
+    @pytest.mark.pruned
     def test_missing_model_time_is_reported(self):
         model = make_data_config(
             times=np.asarray(
@@ -3979,6 +4139,7 @@ class TestModelConditionCompatibilityMassive:
         ):
             config._check_model_vs_condition()
 
+    @pytest.mark.pruned
     def test_missing_model_lead_time_is_reported(self):
         model = make_data_config(
             lead_times=[1, 2, 3],
@@ -3998,6 +4159,7 @@ class TestModelConditionCompatibilityMassive:
         ):
             config._check_model_vs_condition()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "model_type,condition_type",
         [
@@ -4028,6 +4190,7 @@ class TestModelConditionCompatibilityMassive:
         ):
             config._check_model_vs_condition()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "model_members,condition_members",
         [
@@ -4064,6 +4227,7 @@ class TestModelConditionCompatibilityMassive:
         ):
             config._check_model_vs_condition()
 
+    @pytest.mark.pruned
     def test_same_member_coordinate_order_must_match(self):
         model = make_data_config(
             realizations=[0, 1],
@@ -4088,6 +4252,7 @@ class TestModelConditionCompatibilityMassive:
         ):
             config._check_model_vs_condition()
 
+    @pytest.mark.pruned
     def test_static_skips_time_type_mismatch(self):
         model = make_data_config(
             time_coords_type="datetime",
@@ -4110,6 +4275,7 @@ class TestModelConditionCompatibilityMassive:
 
 
 class TestModelValidationMassive:
+    @pytest.mark.pruned
     def test_none_model_returns_self(self):
         config = ConcreteDatasetConfig(
             model=None,
@@ -4119,6 +4285,7 @@ class TestModelValidationMassive:
 
         assert config._check_model() is config
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         [
@@ -4145,6 +4312,7 @@ class TestModelValidationMassive:
         else:
             assert config._check_model() is config
 
+    @pytest.mark.pruned
     def test_same_member_rejects_mean_model(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(
@@ -4159,6 +4327,7 @@ class TestModelValidationMassive:
         ):
             config._check_model()
 
+    @pytest.mark.pruned
     def test_same_member_accepts_nonmean_model(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(
@@ -4181,6 +4350,7 @@ class TestConditionValidationMassive:
         config._effective_condition = condition
         return config
 
+    @pytest.mark.pruned
     def test_condition_requires_method(self):
         condition = make_data_config(name="condition")
         config = self.make_config(condition, None)
@@ -4191,6 +4361,7 @@ class TestConditionValidationMassive:
         ):
             config._check_condition()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         [
@@ -4217,6 +4388,7 @@ class TestConditionValidationMassive:
         ):
             config._check_condition()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         [
@@ -4241,6 +4413,7 @@ class TestConditionValidationMassive:
         ):
             config._check_condition()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         [
@@ -4261,6 +4434,7 @@ class TestConditionValidationMassive:
 
         assert config._check_condition() is config
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "ensemble_mean",
         [
@@ -4288,6 +4462,7 @@ class TestConditionValidationMassive:
         ):
             config._check_condition()
 
+    @pytest.mark.pruned
     def test_ensemble_mean_method_accepts_true(self):
         condition = make_data_config(
             name="condition",
@@ -4300,6 +4475,7 @@ class TestConditionValidationMassive:
 
         assert config._check_condition() is config
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "sampling_dimension",
         [
@@ -4332,6 +4508,7 @@ class TestConditionValidationMassive:
         ):
             config._check_condition()
 
+    @pytest.mark.pruned
     def test_static_rejects_multiple_sampling_dimensions(self):
         condition = make_data_config(name="condition")
         condition.realization_list = None
@@ -4360,6 +4537,7 @@ class TestConditionValidationMassive:
         ):
             config._check_condition()
 
+    @pytest.mark.pruned
     def test_static_accepts_empty_coordinate_mapping(self):
         condition = make_data_config(name="condition")
         condition.realization_list = None
@@ -4372,6 +4550,7 @@ class TestConditionValidationMassive:
 
         assert config._check_condition() is config
 
+    @pytest.mark.pruned
     def test_static_accepts_spatial_coordinates(self):
         condition = make_data_config(name="condition")
         condition.realization_list = None
@@ -4387,6 +4566,7 @@ class TestConditionValidationMassive:
 
         assert config._check_condition() is config
 
+    @pytest.mark.pruned
     def test_static_without_condition_rejected(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -4401,6 +4581,7 @@ class TestConditionValidationMassive:
         ):
             config._check_condition()
 
+    @pytest.mark.pruned
     def test_nonstatic_without_effective_condition_returns_self(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -4413,6 +4594,7 @@ class TestConditionValidationMassive:
 
 
 class TestAddedTimeFeaturesInitializationMassive:
+    @pytest.mark.pruned
     def test_initial_state(self):
         reference = TimeFeatureReference()
         features = AddedTimeFeatures(
@@ -4427,6 +4609,7 @@ class TestAddedTimeFeaturesInitializationMassive:
         assert features.init_time_dim == INIT_TIME_DIM
         assert features.lead_time_dim == LEAD_TIME_DIM
 
+    @pytest.mark.pruned
     def test_reference_min_max_and_span(self):
         reference = TimeFeatureReference(
             common_times=[
@@ -4443,6 +4626,7 @@ class TestAddedTimeFeaturesInitializationMassive:
         assert features.max_time_ref == pd.Timestamp("2001-01-01")
         assert features.time_span_ref == pd.Timedelta(days=366)
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "selected,expected",
         [
@@ -4484,6 +4668,7 @@ class TestAddedTimeFeaturesInitializationMassive:
 
         assert features.time_features == expected
 
+    @pytest.mark.pruned
     def test_requested_order_is_replaced_by_canonical_order(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -4506,6 +4691,7 @@ class TestAddedTimeFeaturesInitializationMassive:
             "day_cos",
         )
 
+    @pytest.mark.pruned
     def test_duplicate_features_are_collapsed(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -4522,6 +4708,7 @@ class TestAddedTimeFeaturesInitializationMassive:
             "month_cos",
         )
 
+    @pytest.mark.pruned
     def test_multiple_unsupported_features_are_reported(self):
         with pytest.raises(ValueError) as error:
             AddedTimeFeatures(
@@ -4634,6 +4821,7 @@ class TestBuildTimeFeaturesMassive:
             LEAD_TIME_DIM: np.asarray(lead_times),
         }
 
+    @pytest.mark.pruned
     def test_missing_both_dimensions(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -4647,6 +4835,7 @@ class TestBuildTimeFeaturesMassive:
         assert INIT_TIME_DIM in message
         assert LEAD_TIME_DIM in message
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "missing_dimension",
         [
@@ -4669,6 +4858,7 @@ class TestBuildTimeFeaturesMassive:
         ):
             features.build_time_features(coordinates)
 
+    @pytest.mark.pruned
     def test_no_features_returns_self(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -4680,6 +4870,7 @@ class TestBuildTimeFeaturesMassive:
         assert result is features
         assert features.time_features_array is None
 
+    @pytest.mark.pruned
     def test_no_features_does_not_call_add_lead_times(
         self,
         monkeypatch,
@@ -4731,6 +4922,7 @@ class TestBuildTimeFeaturesMassive:
             lead_time_resolution=(features.lead_time_resolution),
         )
 
+    @pytest.mark.pruned
     def test_normalized_lead_times_use_reference_maximum(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(
@@ -4750,6 +4942,7 @@ class TestBuildTimeFeaturesMassive:
             [0.1, 0.5, 1.0],
         )
 
+    @pytest.mark.pruned
     def test_normalized_time_uses_target_time(self):
         reference = TimeFeatureReference(
             common_times=[
@@ -4778,6 +4971,7 @@ class TestBuildTimeFeaturesMassive:
         assert features.time_features_array[0, 0] == pytest.approx(0.0)
         assert features.time_features_array[1, 0] == pytest.approx(1.0)
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "month,expected_sin,expected_cos",
         [
@@ -4846,6 +5040,7 @@ class TestBuildTimeFeaturesMassive:
         )
         assert features.time_features_array.dtype == np.float32
 
+    @pytest.mark.pruned
     def test_second_build_replaces_first_array(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(
@@ -4940,6 +5135,7 @@ class TestAddedTimeFeaturesCallMassive:
                 xr.DataArray([1.0]),
             )
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "index,expected",
         [
@@ -4984,6 +5180,7 @@ class TestAddedTimeFeaturesCallMassive:
 
         assert result.shape == expected_shape
 
+    @pytest.mark.pruned
     def test_broadcast_values(self):
         features = self.make_features()
         data = xr.DataArray(
@@ -5002,6 +5199,7 @@ class TestAddedTimeFeaturesCallMassive:
             1.0,
         )
 
+    @pytest.mark.pruned
     def test_broadcast_result_is_writable_copy(self):
         features = self.make_features()
         data = xr.DataArray(
@@ -5013,6 +5211,7 @@ class TestAddedTimeFeaturesCallMassive:
 
         assert features.time_features_array[0, 0] == pytest.approx(0.25)
 
+    @pytest.mark.pruned
     def test_len_matches_selected_features(self):
         features = self.make_features()
 
@@ -5023,6 +5222,7 @@ class TestAddedTimeFeaturesCallMassive:
 
         assert features.__eq__(object()) is NotImplemented
 
+    @pytest.mark.pruned
     def test_equal_objects(self):
         first = AddedTimeFeatures(
             TimeFeatureReference(
@@ -5047,6 +5247,7 @@ class TestAddedTimeFeaturesCallMassive:
 
         assert first == second
 
+    @pytest.mark.pruned
     def test_unequal_feature_selection(self):
         first = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -5059,6 +5260,7 @@ class TestAddedTimeFeaturesCallMassive:
 
         assert first != second
 
+    @pytest.mark.pruned
     def test_unequal_lead_times(self):
         first = AddedTimeFeatures(
             TimeFeatureReference(
@@ -5075,6 +5277,7 @@ class TestAddedTimeFeaturesCallMassive:
 
         assert first != second
 
+    @pytest.mark.pruned
     def test_unequal_common_times(self):
         first = AddedTimeFeatures(
             TimeFeatureReference(
@@ -5097,6 +5300,7 @@ class TestAddedTimeFeaturesCallMassive:
 
         assert first != second
 
+    @pytest.mark.pruned
     def test_unequal_reference_types(self):
         class OtherReference(TimeFeatureReference):
             pass
@@ -5157,6 +5361,7 @@ class TestDatasetCheckInitMassive:
 
         validator.assert_called_once_with(dataset.requested_times)
 
+    @pytest.mark.pruned
     def test_time_validation_failure_is_propagated(
         self,
         monkeypatch,
@@ -5174,6 +5379,7 @@ class TestDatasetCheckInitMassive:
         ):
             dataset._check_init()
 
+    @pytest.mark.pruned
     def test_unfitted_preprocessors_rejected(self):
         dataset = self.make_dataset(fitted=False)
 
@@ -5183,6 +5389,7 @@ class TestDatasetCheckInitMassive:
         ):
             dataset._check_init()
 
+    @pytest.mark.pruned
     def test_single_missing_time(self):
         dataset = self.make_dataset(
             requested=np.asarray(
@@ -5197,6 +5404,7 @@ class TestDatasetCheckInitMassive:
         ):
             dataset._check_init()
 
+    @pytest.mark.pruned
     def test_multiple_missing_times_reported(self):
         dataset = self.make_dataset(
             requested=np.asarray(
@@ -5215,6 +5423,7 @@ class TestDatasetCheckInitMassive:
         assert "1990" in message
         assert "1991" in message
 
+    @pytest.mark.pruned
     def test_all_available_times_accepted(self):
         dataset = self.make_dataset(
             requested=np.asarray(
@@ -5274,6 +5483,7 @@ class TestDatasetResolveMaskMassive:
             },
         )
 
+    @pytest.mark.pruned
     def test_none_mask_calls_create_train_mask(
         self,
         monkeypatch,
@@ -5295,6 +5505,7 @@ class TestDatasetResolveMaskMassive:
             lead_time_resolution=module.lead_time_resolution,
         )
 
+    @pytest.mark.pruned
     def test_default_mask_is_all_false(
         self,
         monkeypatch,
@@ -5311,6 +5522,7 @@ class TestDatasetResolveMaskMassive:
         assert dataset.mask.dtype == bool
         assert not bool(dataset.mask.any())
 
+    @pytest.mark.pruned
     def test_existing_mask_skips_creation(
         self,
         monkeypatch,
@@ -5329,6 +5541,7 @@ class TestDatasetResolveMaskMassive:
         creator.assert_not_called()
         assert dataset.mask is existing
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dims",
         [
@@ -5353,6 +5566,7 @@ class TestDatasetResolveMaskMassive:
         ):
             dataset._resolve_mask()
 
+    @pytest.mark.pruned
     def test_extra_mask_dimensions_are_allowed(self):
         mask = xr.DataArray(
             np.zeros((1, 1, 2), dtype=bool),
@@ -5375,6 +5589,7 @@ class TestDatasetResolveMaskMassive:
 
 
 class TestSamplingSelectorsMassive:
+    @pytest.mark.pruned
     def test_selectors_use_config_method(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -5441,6 +5656,7 @@ class TestPrepareSamplingMaskMassive:
             mask=mask,
         )
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "selectors",
         [
@@ -5460,6 +5676,7 @@ class TestPrepareSamplingMaskMassive:
         ):
             dataset._prepare_sampling_mask(selectors)
 
+    @pytest.mark.pruned
     def test_returns_self(self):
         dataset = self.make_dataset()
 
@@ -5472,6 +5689,7 @@ class TestPrepareSamplingMaskMassive:
 
         assert result is dataset
 
+    @pytest.mark.pruned
     def test_selects_time_subset(self):
         dataset = self.make_dataset()
 
@@ -5487,6 +5705,7 @@ class TestPrepareSamplingMaskMassive:
             "2001-01-01", "ns"
         )
 
+    @pytest.mark.pruned
     def test_selects_lead_subset(self):
         dataset = self.make_dataset()
 
@@ -5500,6 +5719,7 @@ class TestPrepareSamplingMaskMassive:
         assert dataset.mask.sizes[LEAD_TIME_DIM] == 1
         assert dataset.mask[LEAD_TIME_DIM].item() == 2
 
+    @pytest.mark.pruned
     def test_true_mask_values_become_nan(self):
         dataset = self.make_dataset()
 
@@ -5519,6 +5739,7 @@ class TestPrepareSamplingMaskMassive:
             ).item()
         )
 
+    @pytest.mark.pruned
     def test_ensemble_mean_skips_realization_expansion(self):
         dataset = self.make_dataset(
             ensemble_mean=True,
@@ -5534,6 +5755,7 @@ class TestPrepareSamplingMaskMassive:
 
         assert REALIZATION_DIM not in dataset.mask.dims
 
+    @pytest.mark.pruned
     def test_nonmean_without_realization_coordinate_skips_expansion(
         self,
     ):
@@ -5551,6 +5773,7 @@ class TestPrepareSamplingMaskMassive:
 
         assert REALIZATION_DIM not in dataset.mask.dims
 
+    @pytest.mark.pruned
     def test_nonmean_with_realizations_expands_first_axis(self):
         dataset = self.make_dataset(
             ensemble_mean=False,
@@ -5581,6 +5804,7 @@ class TestGetSamplingCoordsMassive:
             mask=mask,
         )
 
+    @pytest.mark.pruned
     def test_all_locations_valid(self):
         mask = xr.DataArray(
             np.zeros((2, 2), dtype=float),
@@ -5606,6 +5830,7 @@ class TestGetSamplingCoordsMassive:
         assert len(result[INIT_TIME_DIM]) == 4
         assert len(result[LEAD_TIME_DIM]) == 4
 
+    @pytest.mark.pruned
     def test_nan_location_is_removed(self):
         mask = xr.DataArray(
             [
@@ -5634,6 +5859,7 @@ class TestGetSamplingCoordsMassive:
         assert len(result[INIT_TIME_DIM]) == 3
         assert len(result[LEAD_TIME_DIM]) == 3
 
+    @pytest.mark.pruned
     def test_all_nan_returns_empty_coordinate_arrays(self):
         mask = xr.DataArray(
             np.full((2, 2), np.nan),
@@ -5659,6 +5885,7 @@ class TestGetSamplingCoordsMassive:
         assert result[INIT_TIME_DIM].size == 0
         assert result[LEAD_TIME_DIM].size == 0
 
+    @pytest.mark.pruned
     def test_realization_dimension_is_returned(self):
         mask = xr.DataArray(
             np.zeros((2, 1, 1)),
@@ -5716,16 +5943,19 @@ class TestGetModelIndexesMassive:
             load_model=load_model,
         )
 
+    @pytest.mark.pruned
     def test_disabled_model_returns_none(self):
         dataset = self.make_dataset(load_model=False)
 
         assert dataset.get_model_indexes({}) is None
 
+    @pytest.mark.pruned
     def test_empty_coordinate_mapping_returns_empty_indexes(self):
         dataset = self.make_dataset()
 
         assert dataset.get_model_indexes({}) == {}
 
+    @pytest.mark.pruned
     def test_time_indexes(self):
         dataset = self.make_dataset()
 
@@ -5746,6 +5976,7 @@ class TestGetModelIndexesMassive:
             [1, 0],
         )
 
+    @pytest.mark.pruned
     def test_lead_indexes(self):
         dataset = self.make_dataset()
 
@@ -5756,6 +5987,7 @@ class TestGetModelIndexesMassive:
             [1, 0],
         )
 
+    @pytest.mark.pruned
     def test_realization_indexes(self):
         dataset = self.make_dataset(
             realizations=[0, 1, 2],
@@ -5768,6 +6000,7 @@ class TestGetModelIndexesMassive:
             [2, 0],
         )
 
+    @pytest.mark.pruned
     def test_all_index_dimensions(self):
         dataset = self.make_dataset(
             realizations=[0, 1],
@@ -5791,6 +6024,7 @@ class TestGetModelIndexesMassive:
         }
         assert all(value.item() == 1 for value in result.values())
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dimension,bad_value",
         [
@@ -5817,6 +6051,7 @@ class TestGetModelIndexesMassive:
         ):
             dataset.get_model_indexes({dimension: np.asarray([bad_value])})
 
+    @pytest.mark.pruned
     def test_multiple_missing_dimensions_are_reported(self):
         dataset = self.make_dataset(
             realizations=[0, 1],
@@ -5856,6 +6091,7 @@ class TestGetConditionIndexesMassive:
 
         return ConcreteDataset(config=config)
 
+    @pytest.mark.pruned
     def test_none_condition_returns_none(self):
         dataset = self.make_dataset(
             method="ensemble_mean",
@@ -5864,6 +6100,7 @@ class TestGetConditionIndexesMassive:
 
         assert dataset.get_cond_indexes({}) is None
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         [
@@ -5879,6 +6116,7 @@ class TestGetConditionIndexesMassive:
 
         assert dataset.get_cond_indexes({}) is None
 
+    @pytest.mark.pruned
     def test_empty_sample_coordinates_returns_empty_indexes(self):
         condition = make_data_config(
             name="condition",
@@ -5891,6 +6129,7 @@ class TestGetConditionIndexesMassive:
 
         assert dataset.get_cond_indexes({}) == {}
 
+    @pytest.mark.pruned
     def test_unknown_dimensions_are_ignored(self):
         condition = make_data_config(
             name="condition",
@@ -5909,6 +6148,7 @@ class TestGetConditionIndexesMassive:
 
         assert result == {}
 
+    @pytest.mark.pruned
     def test_regular_condition_indexes_time_and_lead(self):
         condition = make_data_config(
             name="condition",
@@ -5938,6 +6178,7 @@ class TestGetConditionIndexesMassive:
             [1],
         )
 
+    @pytest.mark.pruned
     def test_cross_ensemble_excludes_realization(self):
         condition = make_data_config(
             name="condition",
@@ -5962,6 +6203,7 @@ class TestGetConditionIndexesMassive:
 
         assert REALIZATION_DIM not in result
 
+    @pytest.mark.pruned
     def test_same_member_requires_realization(self):
         condition = make_data_config(
             name="condition",
@@ -5987,6 +6229,7 @@ class TestGetConditionIndexesMassive:
                 }
             )
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "member,expected_index",
         [
@@ -6020,6 +6263,7 @@ class TestGetConditionIndexesMassive:
             [expected_index],
         )
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dimension,bad_value",
         [
@@ -6064,6 +6308,7 @@ class TestGetConditionIndexesMassive:
 
 
 class TestIndexModelDatasetMassive:
+    @pytest.mark.pruned
     def test_disabled_model_returns_none(self):
         dataset = ConcreteDataset(
             config=ConcreteDatasetConfig(
@@ -6074,6 +6319,7 @@ class TestIndexModelDatasetMassive:
 
         assert dataset._index_model_dataset(0) is None
 
+    @pytest.mark.pruned
     def test_empty_index_mapping_calls_isel_without_arguments(self):
         model = make_data_config()
         model.isel = Mock(side_effect=model.data.isel)
@@ -6093,6 +6339,7 @@ class TestIndexModelDatasetMassive:
 
         model.isel.assert_called_once_with()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "sample_index,expected_position",
         [
@@ -6150,6 +6397,7 @@ class TestIndexModelDatasetMassive:
         )
         assert result.item() == pytest.approx(10.0 if expected_position == 0 else 20.0)
 
+    @pytest.mark.pruned
     def test_all_selection_dimensions(self):
         model = make_data_config(
             realizations=[0, 1],
@@ -6183,9 +6431,11 @@ class TestIndexModelDatasetMassive:
 
 
 class TestDatasetComputeAndLengthMassive:
+    @pytest.mark.pruned
     def test_compute_no_arrays(self):
         assert ConcreteDataset._compute() == ()
 
+    @pytest.mark.pruned
     def test_compute_one_numpy_array(self):
         array = np.asarray([1, 2, 3])
 
@@ -6197,6 +6447,7 @@ class TestDatasetComputeAndLengthMassive:
             array,
         )
 
+    @pytest.mark.pruned
     def test_compute_multiple_xarray_objects(self):
         first = xr.DataArray([1.0])
         second = xr.Dataset(
@@ -6222,6 +6473,7 @@ class TestDatasetComputeAndLengthMassive:
             second,
         )
 
+    @pytest.mark.pruned
     def test_compute_preserves_argument_order(self):
         arrays = (
             np.asarray([1]),
@@ -6241,6 +6493,7 @@ class TestDatasetComputeAndLengthMassive:
                 expected,
             )
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "length",
         [
@@ -6266,6 +6519,7 @@ class TestDatasetComputeAndLengthMassive:
 
         assert len(dataset) == length
 
+    @pytest.mark.pruned
     def test_len_ignores_later_coordinate_lengths(self):
         dataset = ConcreteDataset(
             config=ConcreteDatasetConfig(
@@ -6279,6 +6533,7 @@ class TestDatasetComputeAndLengthMassive:
 
         assert len(dataset) == 3
 
+    @pytest.mark.pruned
     def test_len_empty_mapping_raises_stop_iteration(self):
         dataset = ConcreteDataset(
             config=ConcreteDatasetConfig(
@@ -6333,6 +6588,7 @@ class TestDatasetABCInitializationMassive:
             LEAD_TIME_DIM: np.asarray([1]),
         }
 
+    @pytest.mark.pruned
     def test_model_loading_enabled(self):
         model = make_data_config()
         config = self.make_config(model=model)
@@ -6377,6 +6633,7 @@ class TestDatasetABCInitializationMassive:
             add_time_auxiliary_coords=True,
         )
 
+    @pytest.mark.pruned
     def test_model_loading_disabled(self):
         model = make_data_config()
         config = self.make_config(model=model)
@@ -6418,6 +6675,7 @@ class TestDatasetABCInitializationMassive:
 
         model.open_xarray_data.assert_not_called()
 
+    @pytest.mark.pruned
     def test_condition_loading_enabled(self):
         condition = make_data_config(
             name="condition",
@@ -6468,6 +6726,7 @@ class TestDatasetABCInitializationMassive:
             add_time_auxiliary_coords=True,
         )
 
+    @pytest.mark.pruned
     def test_no_condition_skips_condition_loading(self):
         config = self.make_config(
             condition=None,
@@ -6548,6 +6807,7 @@ class TestDatasetABCInitializationMassive:
         assert dataset.time_features is not original
         assert dataset.time_features == original
 
+    @pytest.mark.pruned
     def test_sampling_coordinates_are_stored(self):
         config = self.make_config()
         expected = self.sample_coordinates()
@@ -6584,6 +6844,7 @@ class TestDatasetABCInitializationMassive:
 
         assert dataset.sample_coords is expected
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "failing_method",
         [
@@ -6656,6 +6917,7 @@ class TestDatasetABCInitializationMassive:
 
 
 class TestDatasetABCMiscellaneousMassive:
+    @pytest.mark.pruned
     def test_effective_condition_returns_exact_object(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -6665,6 +6927,7 @@ class TestDatasetABCMiscellaneousMassive:
 
         assert config.effective_condition is value
 
+    @pytest.mark.pruned
     def test_build_dataset_concrete_result(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -6672,6 +6935,7 @@ class TestDatasetABCMiscellaneousMassive:
 
         assert config.build_dataset() == "dataset"
 
+    @pytest.mark.pruned
     def test_dataset_operator_identity(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -6679,6 +6943,7 @@ class TestDatasetABCMiscellaneousMassive:
 
         assert config.ds_operator is config._operator
 
+    @pytest.mark.pruned
     def test_get_added_features_dim_calls_len(self):
         feature_object = Mock()
         feature_object.__len__ = Mock(return_value=4)
@@ -6692,6 +6957,7 @@ class TestDatasetABCMiscellaneousMassive:
         assert dataset.get_added_features_dim() == 4
         feature_object.__len__.assert_called_once_with()
 
+    @pytest.mark.pruned
     def test_concrete_dataset_getitem(self):
         dataset = ConcreteDataset(
             config=ConcreteDatasetConfig(
@@ -6703,6 +6969,7 @@ class TestDatasetABCMiscellaneousMassive:
 
 
 class TestAdditionalLeadTimeConfigBranches:
+    @pytest.mark.pruned
     def test_range_with_equal_start_and_end(self):
         config = lead_time_config(
             start=4,
@@ -6714,6 +6981,7 @@ class TestAdditionalLeadTimeConfigBranches:
             np.asarray([4]),
         )
 
+    @pytest.mark.pruned
     def test_range_with_start_after_end_is_empty(self):
         config = lead_time_config(
             start=5,
@@ -6731,6 +6999,7 @@ class TestAdditionalLeadTimeConfigBranches:
 
 
 class TestAdditionalConditionMethodBranches:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         [
@@ -6751,6 +7020,7 @@ class TestAdditionalConditionMethodBranches:
 
         assert config.effective_condition_method == method.lower()
 
+    @pytest.mark.pruned
     def test_effective_condition_method_preserves_none(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -6773,6 +7043,7 @@ class TestAdditionalConditionMethodBranches:
 
 
 class TestAdditionalConditionResolutionBranches:
+    @pytest.mark.pruned
     def test_explicit_condition_becomes_effective_condition(self):
         condition = make_data_config(
             name="condition",
@@ -6788,6 +7059,7 @@ class TestAdditionalConditionResolutionBranches:
         assert result is config
         assert config.effective_condition is condition
 
+    @pytest.mark.pruned
     def test_no_conditioning_resolves_to_none(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -6801,6 +7073,7 @@ class TestAdditionalConditionResolutionBranches:
         assert result is config
         assert config.effective_condition is None
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         [
@@ -6831,6 +7104,7 @@ class TestAdditionalConditionResolutionBranches:
         model_as_condition.assert_called_once_with()
         assert config.effective_condition == "MODEL_CONDITION"
 
+    @pytest.mark.pruned
     def test_static_method_without_condition_does_not_use_model(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -6842,6 +7116,7 @@ class TestAdditionalConditionResolutionBranches:
 
 
 class TestAdditionalUsingModelAsConditionBranches:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         [
@@ -6862,6 +7137,7 @@ class TestAdditionalUsingModelAsConditionBranches:
 
         assert config._using_model_data_as_condition is True
 
+    @pytest.mark.pruned
     def test_matching_condition_configuration_uses_model_data(self):
         model = make_data_config(
             paths=["shared.nc"],
@@ -6883,6 +7159,7 @@ class TestAdditionalUsingModelAsConditionBranches:
 
         assert config._using_model_data_as_condition is True
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "different_field",
         [
@@ -6922,6 +7199,7 @@ class TestAdditionalUsingModelAsConditionBranches:
 
         assert config._using_model_data_as_condition is False
 
+    @pytest.mark.pruned
     def test_condition_without_model_never_uses_model_data(self):
         config = ConcreteDatasetConfig(
             model=None,
@@ -6935,6 +7213,7 @@ class TestAdditionalUsingModelAsConditionBranches:
 
 
 class TestAdditionalModelAsConditionBranches:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         (
             "method",
@@ -7000,6 +7279,7 @@ class TestAdditionalModelAsConditionBranches:
 
 
 class TestAdditionalLeadTimeResolutionBranches:
+    @pytest.mark.pruned
     def test_resolve_lead_time_config(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -7017,6 +7297,7 @@ class TestAdditionalLeadTimeResolutionBranches:
             np.asarray([2, 3, 4]),
         )
 
+    @pytest.mark.pruned
     def test_resolve_explicit_array_does_not_modify_value(self):
         lead_times = np.asarray(
             [
@@ -7033,6 +7314,7 @@ class TestAdditionalLeadTimeResolutionBranches:
 
         assert config.lead_times is lead_times
 
+    @pytest.mark.pruned
     def test_input_lead_times_uses_effective_input(self):
         effective_input = make_data_config(
             lead_times=[
@@ -7085,6 +7367,7 @@ class TestAdditionalModelChecks:
 
         assert config._check_model() is config
 
+    @pytest.mark.pruned
     def test_model_check_accepts_missing_model(self):
         config = ConcreteDatasetConfig(
             model=None,
@@ -7144,6 +7427,7 @@ class TestAdditionalConditionChecks:
         ):
             config._check_condition()
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "method",
         [
@@ -7240,6 +7524,7 @@ class TestAdditionalConditionChecks:
         ):
             config._check_condition()
 
+    @pytest.mark.pruned
     def test_valid_static_condition_is_accepted(self):
         condition = make_data_config(
             name="condition",
@@ -7257,6 +7542,7 @@ class TestAdditionalConditionChecks:
 
 
 class TestAdditionalModelConditionCompatibility:
+    @pytest.mark.pruned
     def test_nonstatic_condition_requires_model_time_dimension(self):
         model = make_data_config()
         condition = make_data_config(
@@ -7279,6 +7565,7 @@ class TestAdditionalModelConditionCompatibility:
         ):
             config._check_model_vs_condition()
 
+    @pytest.mark.pruned
     def test_nonstatic_condition_requires_all_model_lead_times(self):
         model = make_data_config(
             lead_times=[
@@ -7384,6 +7671,7 @@ class TestAdditionalModelConditionCompatibility:
         ):
             config._check_model_vs_condition()
 
+    @pytest.mark.pruned
     def test_observation_branch_requires_condition_spatial_dimension(self):
         model = make_data_config(
             spatial_coords={
@@ -7448,6 +7736,7 @@ class TestAdditionalModelConditionCompatibility:
 
 
 class TestAdditionalGetInputTimes:
+    @pytest.mark.pruned
     def test_sequence_is_converted_to_dataarray(self):
         model = make_data_config()
         config = ConcreteDatasetConfig(
@@ -7470,6 +7759,7 @@ class TestAdditionalGetInputTimes:
         )
         assert result.dims == (INIT_TIME_DIM,)
 
+    @pytest.mark.pruned
     def test_dataarray_is_preserved(self):
         model = make_data_config()
         config = ConcreteDatasetConfig(
@@ -7518,6 +7808,7 @@ class TestAdditionalGetInputTimes:
                 ]
             )
 
+    @pytest.mark.pruned
     def test_times_missing_from_effective_input_are_removed(self):
         model = make_data_config(
             times=np.asarray(
@@ -7557,6 +7848,7 @@ class TestAdditionalGetInputTimes:
 
 
 class TestAdditionalAddedTimeFeaturesInitialization:
+    @pytest.mark.pruned
     def test_no_requested_features_becomes_empty_tuple(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -7567,6 +7859,7 @@ class TestAdditionalAddedTimeFeaturesInitialization:
         assert features.time_features_array is None
         assert len(features) == 0
 
+    @pytest.mark.pruned
     def test_requested_features_follow_canonical_order(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -7585,6 +7878,7 @@ class TestAdditionalAddedTimeFeaturesInitialization:
             "day_cos",
         )
 
+    @pytest.mark.pruned
     def test_duplicate_requested_features_are_removed(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -7596,6 +7890,7 @@ class TestAdditionalAddedTimeFeaturesInitialization:
 
         assert features.time_features == ("month_sin",)
 
+    @pytest.mark.pruned
     def test_unsupported_features_raise(self):
         with pytest.raises(
             ValueError,
@@ -7610,6 +7905,7 @@ class TestAdditionalAddedTimeFeaturesInitialization:
 
 
 class TestAdditionalDaysInYear:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         (
             "time",
@@ -7694,6 +7990,7 @@ class TestAdditionalBuildTimeFeatures:
                 }
             )
 
+    @pytest.mark.pruned
     def test_missing_lead_time_raises(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -7747,6 +8044,7 @@ class TestAdditionalBuildTimeFeatures:
         add_times.assert_not_called()
         assert features.time_features_array is None
 
+    @pytest.mark.pruned
     def test_lead_time_feature_is_normalized(self):
         reference = TimeFeatureReference(
             lead_times=[
@@ -7795,6 +8093,7 @@ class TestAdditionalBuildTimeFeatures:
         )
         assert features.time_features_array.dtype == np.float32
 
+    @pytest.mark.pruned
     def test_month_features_have_expected_values(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -7860,6 +8159,7 @@ class TestAdditionalBuildTimeFeatures:
             atol=1e-6,
         )
 
+    @pytest.mark.pruned
     def test_all_features_are_stacked_in_canonical_order(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -7937,6 +8237,7 @@ class TestAdditionalTimeFeatureIndexing:
 
         assert result is None
 
+    @pytest.mark.pruned
     def test_call_before_building_raises(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -7961,6 +8262,7 @@ class TestAdditionalTimeFeatureIndexing:
                 ),
             )
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "index",
         [
@@ -8003,6 +8305,7 @@ class TestAdditionalTimeFeatureIndexing:
                 ),
             )
 
+    @pytest.mark.pruned
     def test_two_dimensional_input_returns_feature_vector(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -8044,6 +8347,7 @@ class TestAdditionalTimeFeatureIndexing:
             ),
         )
 
+    @pytest.mark.pruned
     def test_spatial_input_broadcasts_features(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -8099,6 +8403,7 @@ class TestAdditionalTimeFeatureIndexing:
 
 
 class TestAdditionalTimeFeatureEquality:
+    @pytest.mark.pruned
     def test_equal_instances_compare_equal(self):
         first = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -8115,6 +8420,7 @@ class TestAdditionalTimeFeatureEquality:
 
         assert first == second
 
+    @pytest.mark.pruned
     def test_different_features_compare_not_equal(self):
         first = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -8131,6 +8437,7 @@ class TestAdditionalTimeFeatureEquality:
 
         assert first != second
 
+    @pytest.mark.pruned
     def test_non_time_feature_object_returns_not_implemented(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -8141,6 +8448,7 @@ class TestAdditionalTimeFeatureEquality:
 
         assert features.__eq__(object()) is NotImplemented
 
+    @pytest.mark.pruned
     def test_different_lead_times_compare_not_equal(self):
         first = AddedTimeFeatures(
             TimeFeatureReference(
@@ -8167,6 +8475,7 @@ class TestAdditionalTimeFeatureEquality:
 
         assert first != second
 
+    @pytest.mark.pruned
     def test_different_common_times_compare_not_equal(self):
         first = AddedTimeFeatures(
             TimeFeatureReference(
@@ -8235,6 +8544,7 @@ class TestAdditionalDatasetInitializationChecks:
         ):
             dataset._check_init()
 
+    @pytest.mark.pruned
     def test_valid_initialization_returns_none(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -8334,6 +8644,7 @@ class TestAdditionalDatasetMasks:
         ):
             dataset._resolve_mask()
 
+    @pytest.mark.pruned
     def test_mask_missing_lead_time_dimension_raises(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -8364,6 +8675,7 @@ class TestAdditionalDatasetMasks:
         ):
             dataset._resolve_mask()
 
+    @pytest.mark.pruned
     def test_sampling_selectors_use_requested_times_and_leads(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -8439,6 +8751,7 @@ class TestAdditionalDatasetMasks:
 
 
 class TestAdditionalSamplingCoordinates:
+    @pytest.mark.pruned
     def test_get_sampling_coords_drops_masked_samples(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -8484,6 +8797,7 @@ class TestAdditionalSamplingCoordinates:
         assert len(coords[INIT_TIME_DIM]) == 3
         assert len(coords[LEAD_TIME_DIM]) == 3
 
+    @pytest.mark.pruned
     def test_dataset_length_uses_first_sample_coordinate(self):
         dataset = ConcreteDataset()
         dataset.sample_coords = {
@@ -8601,6 +8915,7 @@ class TestAdditionalDatasetIndexes:
                 }
             )
 
+    @pytest.mark.pruned
     def test_condition_indexes_none_without_condition(self):
         config = ConcreteDatasetConfig(
             model=make_data_config(),
@@ -8628,6 +8943,7 @@ class TestAdditionalDatasetIndexes:
 
         assert dataset.get_cond_indexes({}) is None
 
+    @pytest.mark.pruned
     def test_same_member_condition_indexes_require_realizations(self):
         condition = make_data_config(
             name="condition",
@@ -8741,6 +9057,7 @@ class TestAdditionalDatasetIndexes:
 
 
 class TestAdditionalInputShapeBranches:
+    @pytest.mark.pruned
     def test_shape_without_spatial_dimensions_contains_channels_only(self):
         model = make_data_config(
             names=[
@@ -8761,6 +9078,7 @@ class TestAdditionalInputShapeBranches:
 
         assert dataset.get_input_shape() == (2,)
 
+    @pytest.mark.pruned
     def test_shape_uses_supported_spatial_dimensions(self):
         model = make_data_config(
             names=[
@@ -8857,6 +9175,7 @@ class TestAdditionalInputShapeBranches:
         )
         pipeline.get_flattener.assert_called_once_with()
 
+    @pytest.mark.pruned
     def test_added_features_dimension_uses_time_feature_count(self):
         features = AddedTimeFeatures(
             TimeFeatureReference(),
@@ -9028,6 +9347,7 @@ class TestAdditionalDatasetIndexing:
         assert result == "MODEL"
 
 
+@pytest.mark.pruned
 def test_compute_uses_synchronous_scheduler_and_returns_tuple():
     first = object()
     second = object()
