@@ -135,7 +135,6 @@ class RecordingOutput(nn.Module):
 
 
 class TestCVAEUNetConfig:
-    @pytest.mark.pruned
     def test_basic_initialization(self):
         config = make_config()
 
@@ -146,7 +145,6 @@ class TestCVAEUNetConfig:
         assert config.NUM_INPUT_DIMS == 3
         assert config.NUM_OUTPUT_DIMS == 3
 
-    @pytest.mark.pruned
     def test_transpose_kernel_integer_is_expanded(self):
         config = make_config(
             channels=[
@@ -167,7 +165,6 @@ class TestCVAEUNetConfig:
             5,
         ]
 
-    @pytest.mark.pruned
     def test_transpose_kernel_list_is_preserved(self):
         config = make_config(
             channels=[
@@ -191,7 +188,6 @@ class TestCVAEUNetConfig:
             5,
         ]
 
-    @pytest.mark.pruned
     def test_condition_channels_default_to_model_channels(self):
         config = make_config(
             channels=[
@@ -216,7 +212,6 @@ class TestCVAEUNetConfig:
 
         assert config.condition_embedding_size == 7
 
-    @pytest.mark.pruned
     def test_without_deterministic_guess_disables_shared_output(self):
         config = make_config(
             deterministic_guess_config=None,
@@ -224,7 +219,6 @@ class TestCVAEUNetConfig:
 
         assert config.share_output_block is False
 
-    @pytest.mark.pruned
     def test_expects_mask_with_regular_convolution(self):
         config = make_config(
             block_config=ConvBlockConfig(name="conv"),
@@ -232,7 +226,6 @@ class TestCVAEUNetConfig:
 
         assert config.EXPECTS_MASK is False
 
-    @pytest.mark.pruned
     def test_expects_mask_with_partial_convolution(self):
         config = make_config(
             block_config=PartialConvBlockConfig(name="conv"),
@@ -240,7 +233,6 @@ class TestCVAEUNetConfig:
 
         assert config.EXPECTS_MASK is True
 
-    @pytest.mark.pruned
     def test_expects_mask_with_partial_conv_attribute(self):
         block_config = SimpleNamespace(
             use_partial_conv=True,
@@ -251,7 +243,6 @@ class TestCVAEUNetConfig:
 
         assert config.EXPECTS_MASK is True
 
-    @pytest.mark.pruned
     def test_build_returns_model(self):
         config = make_config()
 
@@ -279,7 +270,6 @@ class TestCVAEUNetConfig:
         )
         assert model.added_features_dim == 2
 
-    @pytest.mark.pruned
     def test_deterministic_guess_channel_mismatch_is_rejected(self):
         resolved = Mock(
             spec=UNetConfig,
@@ -334,7 +324,6 @@ class TestCVAEUNetConfig:
                 deterministic_guess_config=selector,
             )
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "activation,hidden_channels",
         [
@@ -379,7 +368,6 @@ class TestCVAEUNetConfig:
                 deterministic_guess_config=selector,
             )
 
-    @pytest.mark.pruned
     def test_valid_shared_output_configuration(self):
         resolved = Mock(
             spec=UNetConfig,
@@ -408,7 +396,6 @@ class TestCVAEUNetConfig:
 
 
 class TestCVAEUNetInitialization:
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "input_shape",
         [
@@ -463,7 +450,6 @@ class TestCVAEUNetInitialization:
                 output_shape=output_shape,
             )
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "input_shape",
         [
@@ -501,7 +487,6 @@ class TestCVAEUNetInitialization:
                 ),
             )
 
-    @pytest.mark.pruned
     def test_rejects_depth_larger_than_input(self):
         with pytest.raises(
             ValueError,
@@ -537,7 +522,6 @@ class TestCVAEUNetInitialization:
                 ],
             )
 
-    @pytest.mark.pruned
     def test_defaults_output_shape_to_input(self):
         model = cVAEUNet(
             config=make_config(),
@@ -554,7 +538,6 @@ class TestCVAEUNetInitialization:
             8,
         )
 
-    @pytest.mark.pruned
     def test_preserves_explicit_output_shape(self):
         model = make_model(
             output_shape=(
@@ -570,7 +553,6 @@ class TestCVAEUNetInitialization:
             8,
         )
 
-    @pytest.mark.pruned
     def test_defaults_added_features_to_zero(self):
         model = make_model(
             added_features_dim=None,
@@ -578,7 +560,6 @@ class TestCVAEUNetInitialization:
 
         assert model.added_features_dim == 0
 
-    @pytest.mark.pruned
     def test_preserves_added_features_dimension(self):
         model = make_model(
             added_features_dim=3,
@@ -586,7 +567,6 @@ class TestCVAEUNetInitialization:
 
         assert model.added_features_dim == 3
 
-    @pytest.mark.pruned
     def test_recognition_input_channels(self):
         model = make_model(
             input_shape=(
@@ -604,7 +584,6 @@ class TestCVAEUNetInitialization:
 
         assert model.recognition.initial_mapping is not None
 
-    @pytest.mark.pruned
     def test_condition_requests_log_variance_for_dependent_latent(self):
         with patch(
             "cccma_ppp.architectures.unet.cvae.Recognition",
@@ -657,7 +636,6 @@ class TestCVAEUNetInitialization:
         condition_call = recognition.call_args_list[1]
         assert condition_call.kwargs["get_log_var"] is True
 
-    @pytest.mark.pruned
     def test_condition_skips_log_variance_for_independent_latent(self):
         with patch(
             "cccma_ppp.architectures.unet.cvae.Recognition",
@@ -710,7 +688,6 @@ class TestCVAEUNetInitialization:
         condition_call = recognition.call_args_list[1]
         assert condition_call.kwargs["get_log_var"] is False
 
-    @pytest.mark.pruned
     def test_condition_flow_skips_log_variance(self):
         config = make_config(
             condition_dependant_latent=True,
@@ -766,7 +743,6 @@ class TestCVAEUNetInitialization:
         condition_call = recognition.call_args_list[1]
         assert condition_call.kwargs["get_log_var"] is False
 
-    @pytest.mark.pruned
     def test_initializes_weights_without_checkpoint(self):
         config = make_config()
         config.checkpoint_config = None
@@ -794,7 +770,6 @@ class TestCVAEUNetInitialization:
             exclude=(model.deterministic_guess,),
         )
 
-    @pytest.mark.pruned
     def test_validates_checkpoint_compatibility(self):
         with patch.object(
             cVAEUNet,
@@ -829,7 +804,6 @@ class TestCVAEUNetInitialization:
 
 
 class TestPrepareInput:
-    @pytest.mark.pruned
     def test_returns_tensor_mask(self):
         model = make_model()
         x = torch.randn(
@@ -905,7 +879,6 @@ class TestPrepareInput:
 
         assert torch.all(result.mask == 1)
 
-    @pytest.mark.pruned
     def test_resizes_and_concatenates_added_features(self):
         model = make_model()
 
@@ -973,7 +946,6 @@ class TestPrepareInput:
 
 
 class TestRecognitionAndCondition:
-    @pytest.mark.pruned
     def test_recognition_returns_mu_and_log_var(self):
         model = make_model()
 
@@ -1013,7 +985,6 @@ class TestRecognitionAndCondition:
             TensorMask,
         )
 
-    @pytest.mark.pruned
     def test_condition_returns_embedding_statistics(self):
         model = make_model()
 
@@ -1044,7 +1015,6 @@ class TestRecognitionAndCondition:
 
 
 class TestGenerate:
-    @pytest.mark.pruned
     def test_condition_embedding_is_concatenated(self):
         model = make_model(
             condemb_to_decoder=True,
@@ -1088,7 +1058,6 @@ class TestGenerate:
             8,
         )
 
-    @pytest.mark.pruned
     def test_condition_embedding_is_ignored_when_disabled(self):
         model = make_model(
             condition_dependant_latent=True,
@@ -1139,7 +1108,6 @@ class TestDeterministicGuess:
 
         assert result is None
 
-    @pytest.mark.pruned
     def test_calls_deterministic_decoder(self):
         model = make_model()
 
@@ -1186,7 +1154,6 @@ class TestDeterministicGuess:
 
 
 class TestOutputBlock:
-    @pytest.mark.pruned
     def test_flattens_and_restores_sample_dimensions(self):
         model = make_model()
         output = RecordingOutput()
@@ -1312,7 +1279,6 @@ class TestForward:
         values.update(overrides)
         return SimpleNamespace(**values)
 
-    @pytest.mark.pruned
     def test_forward_returns_cvae_output(self):
         model = self.make_stubbed_model()
 
@@ -1415,7 +1381,6 @@ class TestForward:
             ),
         )
 
-    @pytest.mark.pruned
     def test_forward_adds_deterministic_guess(self):
         model = self.make_stubbed_model()
 
@@ -1515,11 +1480,10 @@ class TestPredict:
             "latent_samples": None,
         }
         values.update(overrides)
-        return SimpleNamespace(**values)
+        return SimpleNamespace(chunk_size=None, **values)
 
 
 class TestRecognitionModule:
-    @pytest.mark.pruned
     def test_spatial_shapes_include_each_downsampling_level(self):
         recognition = Recognition(
             input_channels=2,
@@ -1675,7 +1639,6 @@ class TestGenerationModule:
             config=config,
         )
 
-    @pytest.mark.pruned
     def test_initializes_bottleneck_metadata(self):
         generation = self.make_generation()
 
@@ -1691,13 +1654,11 @@ class TestGenerationModule:
             )
         ]
 
-    @pytest.mark.pruned
     def test_builds_one_up_block_per_resize_shape(self):
         generation = self.make_generation()
 
         assert len(generation.up_blocks) == 1
 
-    @pytest.mark.pruned
     def test_forward_without_generator(self):
         generation = self.make_generation()
 
@@ -1734,7 +1695,6 @@ class TestGenerationModule:
 
 
 class TestAdditionalCVAEUNetConfig:
-    @pytest.mark.pruned
     def test_build_forwards_all_arguments(self, monkeypatch):
         config = make_config()
         built = object()
@@ -1762,16 +1722,14 @@ class TestAdditionalCVAEUNetConfig:
             added_features_dim=3,
         )
 
-    @pytest.mark.pruned
     def test_false_partial_conv_attribute_does_not_expect_mask(self):
         config = object.__new__(cVAEUNetConfig)
-        config.block_config = SimpleNamespace(
+        config.block_config = SimpleNamespace(chunk_size=None, 
             use_partial_conv=False,
         )
 
         assert config.EXPECTS_MASK is False
 
-    @pytest.mark.pruned
     def test_unshared_guess_allows_different_output_settings(self):
         resolved = Mock(
             spec=UNetConfig,
@@ -1780,8 +1738,8 @@ class TestAdditionalCVAEUNetConfig:
             output_activation="tanh",
             output_block_hidden_channels=7,
         )
-        selector = SimpleNamespace(
-            checkpoint_config=SimpleNamespace(freeze_weights=False),
+        selector = SimpleNamespace(chunk_size=None, 
+            checkpoint_config=SimpleNamespace(chunk_size=None, freeze_weights=False),
             share_output_block=False,
             get_model_config=Mock(
                 return_value=resolved,
@@ -1797,7 +1755,6 @@ class TestAdditionalCVAEUNetConfig:
 
 
 class TestAdditionalCVAEUNetInitialization:
-    @pytest.mark.pruned
     def test_condition_embedding_increases_generation_latent_size(self):
         with (
             patch.object(
@@ -1822,7 +1779,7 @@ class TestAdditionalCVAEUNetInitialization:
             ),
         ):
             recognition.side_effect = [
-                SimpleNamespace(
+                SimpleNamespace(chunk_size=None, 
                     spatial_shapes=[
                         (8, 8),
                         (4, 4),
@@ -1843,7 +1800,6 @@ class TestAdditionalCVAEUNetInitialization:
 
         assert generation.call_args.kwargs["latent_size"] == 8
 
-    @pytest.mark.pruned
     def test_recognition_and_condition_channel_counts(self):
         with (
             patch.object(
@@ -1868,7 +1824,7 @@ class TestAdditionalCVAEUNetInitialization:
             ),
         ):
             recognition.side_effect = [
-                SimpleNamespace(
+                SimpleNamespace(chunk_size=None, 
                     spatial_shapes=[
                         (8, 8),
                         (4, 4),
@@ -1887,7 +1843,6 @@ class TestAdditionalCVAEUNetInitialization:
         assert recognition.call_args_list[0].kwargs["input_channels"] == 9
         assert recognition.call_args_list[1].kwargs["input_channels"] == 6
 
-    @pytest.mark.pruned
     def test_depth_equal_to_spatial_limit_is_allowed(self):
         model = make_model(
             input_shape=(2, 4, 4),
@@ -1905,7 +1860,6 @@ class TestAdditionalCVAEUNetInitialization:
 
 
 class TestAdditionalPrepareInput:
-    @pytest.mark.pruned
     def test_condition_mask_is_ignored_without_input_mask(self):
         model = make_model()
 
@@ -1974,7 +1928,6 @@ class TestAdditionalPrepareInput:
             8,
         )
 
-    @pytest.mark.pruned
     def test_condition_then_features_channel_order(self):
         model = make_model()
 
@@ -2000,7 +1953,6 @@ class TestAdditionalPrepareInput:
 
 
 class TestAdditionalGenerate:
-    @pytest.mark.pruned
     def test_generate_without_condition_embedding(self):
         model = make_model(
             condemb_to_decoder=True,
@@ -2034,11 +1986,10 @@ class TestAdditionalGenerate:
 
 
 class TestAdditionalForwardPredict:
-    @pytest.mark.pruned
     def test_forward_eval_keeps_requested_output_samples(self):
         helper = TestForward()
         model = helper.make_stubbed_model()
-        model.config.GENERATOR = SimpleNamespace(
+        model.config.GENERATOR = SimpleNamespace(chunk_size=None, 
             num_training_noise_samples=7,
         )
         model.eval()
@@ -2074,7 +2025,6 @@ class TestAdditionalForwardPredict:
 
 
 class TestAdditionalOutputBlock:
-    @pytest.mark.pruned
     def test_output_block_can_change_channels(self):
         model = make_model()
 
@@ -2105,7 +2055,6 @@ class TestAdditionalOutputBlock:
 
 
 class TestAdditionalRecognition:
-    @pytest.mark.pruned
     def test_get_spatial_shapes_calls_each_block(self):
         recognition = object.__new__(Recognition)
         nn.Module.__init__(recognition)
@@ -2162,8 +2111,8 @@ def make_deterministic_selector(
     share_output_block=False,
     freeze_weights=False,
 ):
-    return SimpleNamespace(
-        checkpoint_config=SimpleNamespace(
+    return SimpleNamespace(chunk_size=None, 
+        checkpoint_config=SimpleNamespace(chunk_size=None, 
             freeze_weights=freeze_weights,
         ),
         share_output_block=share_output_block,
@@ -2174,14 +2123,12 @@ def make_deterministic_selector(
 
 
 class TestAdditionalDeterministicGuessConfiguration:
-    @pytest.mark.pruned
     def test_selector_defaults(self):
         selector = cvae_module.UNetSelector(config={})
 
         assert selector.type == "unet"
         assert selector.share_output_block is True
 
-    @pytest.mark.pruned
     def test_no_deterministic_guess_disables_freezing(self):
         config = make_config(
             deterministic_guess_config=None,
@@ -2190,7 +2137,6 @@ class TestAdditionalDeterministicGuessConfiguration:
         assert config.share_output_block is False
         assert config.freeze_deterministic is False
 
-    @pytest.mark.pruned
     def test_resolved_deterministic_configuration_is_stored(self):
         resolved = make_real_unet_config()
 
@@ -2210,7 +2156,7 @@ class TestAdditionalDeterministicGuessConfiguration:
 
     def test_resolved_configuration_must_be_unet_config(self):
         selector = make_deterministic_selector(
-            SimpleNamespace(
+            SimpleNamespace(chunk_size=None, 
                 channels=[4, 8],
             )
         )
@@ -2223,7 +2169,6 @@ class TestAdditionalDeterministicGuessConfiguration:
                 deterministic_guess_config=selector,
             )
 
-    @pytest.mark.pruned
     def test_shared_output_rejects_clip_output_mismatch(self):
         resolved = make_real_unet_config()
         resolved.clip_output = True
@@ -2257,7 +2202,6 @@ class TestAdditionalDeterministicGuessConfiguration:
         assert config.share_output_block is True
         assert config.deterministic_guess_config is resolved
 
-    @pytest.mark.pruned
     def test_unshared_output_ignores_clip_output_difference(self):
         resolved = make_real_unet_config(
             output_activation="tanh",
@@ -2279,7 +2223,6 @@ class TestAdditionalDeterministicGuessConfiguration:
 
 
 class TestAdditionalConfigProperties:
-    @pytest.mark.pruned
     def test_expects_mask_for_convnext_partial_convolution(self):
         block_config = Mock(
             spec=ConvNeXtBlockConfig,
@@ -2291,7 +2234,6 @@ class TestAdditionalConfigProperties:
 
         assert config.EXPECTS_MASK is True
 
-    @pytest.mark.pruned
     def test_expects_no_mask_for_convnext_standard_convolution(self):
         block_config = Mock(
             spec=ConvNeXtBlockConfig,
@@ -2303,7 +2245,6 @@ class TestAdditionalConfigProperties:
 
         assert config.EXPECTS_MASK is False
 
-    @pytest.mark.pruned
     def test_single_channel_level_expands_to_no_kernels(self):
         config = make_config(
             channels=[4],
@@ -2326,7 +2267,6 @@ class TestAdditionalConfigProperties:
 
 
 class TestAdditionalInitializationBranches:
-    @pytest.mark.pruned
     def test_condition_embedding_not_added_to_generation_when_disabled(self):
         with (
             patch.object(
@@ -2351,7 +2291,7 @@ class TestAdditionalInitializationBranches:
             ),
         ):
             recognition.side_effect = [
-                SimpleNamespace(
+                SimpleNamespace(chunk_size=None, 
                     spatial_shapes=[
                         (8, 8),
                         (4, 4),
@@ -2399,7 +2339,6 @@ class TestAdditionalInitializationBranches:
         load_state.assert_called_once_with(checkpoint_config)
         initialize.assert_not_called()
 
-    @pytest.mark.pruned
     def test_deterministic_guess_is_built(self):
         deterministic_config = Mock(
             spec=UNetConfig,
@@ -2430,7 +2369,7 @@ class TestAdditionalInitializationBranches:
         self,
     ):
         shared_output = nn.Identity()
-        deterministic_model = SimpleNamespace(
+        deterministic_model = SimpleNamespace(chunk_size=None, 
             output_block=shared_output,
         )
         deterministic_config = Mock(
@@ -2463,7 +2402,7 @@ class TestAdditionalInitializationBranches:
         for parameter in output.parameters():
             parameter.requires_grad = False
 
-        deterministic_model = SimpleNamespace(
+        deterministic_model = SimpleNamespace(chunk_size=None, 
             output_block=output,
         )
         deterministic_config = Mock(
@@ -2485,11 +2424,10 @@ class TestAdditionalInitializationBranches:
         assert model.output is output
         assert all(parameter.requires_grad for parameter in output.parameters())
 
-    @pytest.mark.pruned
     def test_unfrozen_unshared_branch_builds_new_output(
         self,
     ):
-        deterministic_model = SimpleNamespace(
+        deterministic_model = SimpleNamespace(chunk_size=None, 
             output_block=nn.Identity(),
         )
         deterministic_config = Mock(
@@ -2521,7 +2459,6 @@ class TestAdditionalInitializationBranches:
 
 
 class TestAdditionalPrepareInputBranches:
-    @pytest.mark.pruned
     def test_condition_mask_is_broadcast(self):
         model = make_model()
 
@@ -2624,7 +2561,6 @@ class TestAdditionalPrepareInputBranches:
         )
         assert broadcast.call_args_list[1].args[1] is resized_condition
 
-    @pytest.mark.pruned
     def test_feature_mask_is_not_created_without_input_mask(
         self,
     ):
@@ -2739,7 +2675,6 @@ class TestAdditionalGenerateBranches:
 
 
 class TestAdditionalForwardBranches:
-    @pytest.mark.pruned
     def test_forward_output_samples_use_three_sample_dimensions(
         self,
     ):
@@ -2778,7 +2713,6 @@ class TestAdditionalForwardBranches:
             ),
         )
 
-    @pytest.mark.pruned
     def test_forward_passes_all_inputs_to_condition_and_recognition(
         self,
     ):
@@ -2834,7 +2768,6 @@ class TestAdditionalForwardBranches:
             added_features=features,
         )
 
-    @pytest.mark.pruned
     def test_forward_passes_requested_latent_sample_size(
         self,
     ):
@@ -2866,7 +2799,7 @@ class TestAdditionalDeterministicGuessRequest:
                 8,
             )
         )
-        model.deterministic_guess = SimpleNamespace(
+        model.deterministic_guess = SimpleNamespace(chunk_size=None, 
             forward_decoder=decoder,
         )
 
@@ -2907,7 +2840,6 @@ class TestAdditionalDeterministicGuessRequest:
 
 
 class TestAdditionalRecognitionBranches:
-    @pytest.mark.pruned
     def test_recognition_single_channel_has_no_down_blocks(
         self,
     ):
@@ -2933,7 +2865,6 @@ class TestAdditionalRecognitionBranches:
             )
         ]
 
-    @pytest.mark.pruned
     def test_bottleneck_receives_final_spatial_shape(
         self,
         monkeypatch,
@@ -2980,7 +2911,6 @@ class TestAdditionalRecognitionBranches:
 
 
 class TestAdditionalGenerationConfiguration:
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         (
             "noise_level",
@@ -3011,7 +2941,7 @@ class TestAdditionalGenerationConfiguration:
         expected_noise,
         expected_block_noise,
     ):
-        generator = SimpleNamespace(
+        generator = SimpleNamespace(chunk_size=None, 
             noise_level=noise_level,
             num_training_noise_samples=2,
         )
@@ -3039,11 +2969,10 @@ class TestAdditionalGenerationConfiguration:
         assert block.inject_noise is expected_noise
         assert block.inject_noise_in_block is expected_block_noise
 
-    @pytest.mark.pruned
     def test_medium_noise_only_injects_upsampling_noise_in_final_block(
         self,
     ):
-        generator = SimpleNamespace(
+        generator = SimpleNamespace(chunk_size=None, 
             noise_level="medium",
             num_training_noise_samples=2,
         )
@@ -3091,11 +3020,10 @@ class TestAdditionalGenerationConfiguration:
         assert generation.up_blocks[0].inject_noise is False
         assert generation.up_blocks[1].inject_noise is True
 
-    @pytest.mark.pruned
     def test_low_noise_disables_internal_block_noise(
         self,
     ):
-        generator = SimpleNamespace(
+        generator = SimpleNamespace(chunk_size=None, 
             noise_level="low",
             num_training_noise_samples=2,
         )
@@ -3144,11 +3072,10 @@ class TestAdditionalGenerationConfiguration:
             block.inject_noise_in_block is False for block in generation.up_blocks
         )
 
-    @pytest.mark.pruned
     def test_full_noise_enables_noise_in_all_blocks(
         self,
     ):
-        generator = SimpleNamespace(
+        generator = SimpleNamespace(chunk_size=None, 
             noise_level="full",
             num_training_noise_samples=2,
         )
@@ -3198,12 +3125,11 @@ class TestAdditionalGenerationConfiguration:
 
 
 class TestAdditionalGenerationForward:
-    @pytest.mark.pruned
     def test_generator_repeats_tensor_mask(
         self,
         monkeypatch,
     ):
-        generator = SimpleNamespace(
+        generator = SimpleNamespace(chunk_size=None, 
             noise_level="full",
             num_training_noise_samples=3,
         )
@@ -3292,12 +3218,11 @@ class TestAdditionalGenerationForward:
             8,
         )
 
-    @pytest.mark.pruned
     def test_generator_does_not_repeat_for_zero_samples(
         self,
         monkeypatch,
     ):
-        generator = SimpleNamespace(
+        generator = SimpleNamespace(chunk_size=None, 
             noise_level="full",
             num_training_noise_samples=3,
         )
@@ -3385,7 +3310,7 @@ class TestAdditionalGenerationForward:
                 8,
             ),
         ]
-        generation.config = SimpleNamespace(
+        generation.config = SimpleNamespace(chunk_size=None, 
             GENERATOR=None,
         )
         generation.combine_latent = nn.Linear(
@@ -3476,13 +3401,11 @@ class TestSICConfiguration:
 
         return config
 
-    @pytest.mark.pruned
     def test_default_clip_output_is_false(self):
         config = self.make_sic_config()
 
         assert config.clip_output is False
 
-    @pytest.mark.pruned
     def test_clip_output_is_preserved(self):
         config = self.make_sic_config(
             clip_output=True,
@@ -3490,7 +3413,6 @@ class TestSICConfiguration:
 
         assert config.clip_output is True
 
-    @pytest.mark.pruned
     def test_build_returns_sic_model(self):
         config = self.make_sic_config(
             clip_output=True,
@@ -3524,7 +3446,6 @@ class TestSICConfiguration:
         )
         assert model.added_features_dim == 2
 
-    @pytest.mark.pruned
     def test_build_forwards_all_arguments(
         self,
         monkeypatch,
@@ -3583,7 +3504,6 @@ class TestSICModel:
             output_shape=(1, 8, 8),
         )
 
-    @pytest.mark.pruned
     def test_build_output_uses_sic_output_class(self):
         model = self.make_sic_model(
             clip_output=True,
@@ -3595,7 +3515,6 @@ class TestSICModel:
         )
         assert model.output.clip_output is True
 
-    @pytest.mark.pruned
     def test_sic_output_receives_configuration(
         self,
         monkeypatch,
@@ -3652,7 +3571,6 @@ class TestSICModel:
         assert torch.all(result >= 0)
         assert torch.all(result <= 1)
 
-    @pytest.mark.pruned
     def test_sic_model_without_clipping_can_exceed_one(
         self,
     ):
@@ -3728,7 +3646,6 @@ class ChunkRecordingGeneration(nn.Module):
 
 
 class TestPredictBehavior:
-    @pytest.mark.pruned
     def test_predict_returns_cvae_output(self):
         helper = TestPredict()
         model = helper.make_stubbed_model()
@@ -3745,7 +3662,6 @@ class TestPredictBehavior:
         assert result.cond_log_var is model._sample_prior.return_value[2]
         assert result.deterministic_guess is False
 
-    @pytest.mark.pruned
     def test_predict_passes_request_to_sample_prior(self):
         helper = TestPredict()
         model = helper.make_stubbed_model()
@@ -3770,9 +3686,9 @@ class TestPredictBehavior:
             latent_samples,
             condition_embedding=cond_mu,
             num_output_samples=3,
+            chunk_size=None,
         )
 
-    @pytest.mark.pruned
     def test_predict_without_output_samples_uses_latent_and_batch_dimensions(
         self,
     ):
@@ -3793,7 +3709,6 @@ class TestPredictBehavior:
             ),
         )
 
-    @pytest.mark.pruned
     def test_predict_with_output_samples_uses_all_sample_dimensions(
         self,
     ):
@@ -3832,7 +3747,6 @@ class TestPredictBehavior:
             ),
         )
 
-    @pytest.mark.pruned
     def test_predict_passes_inputs_to_deterministic_guess(self):
         helper = TestPredict()
         model = helper.make_stubbed_model()
@@ -3907,7 +3821,6 @@ class TestPredictBehavior:
             ),
         )
 
-    @pytest.mark.pruned
     def test_predict_marks_model_as_called(self):
         helper = TestPredict()
         model = helper.make_stubbed_model()
@@ -3945,7 +3858,6 @@ class TestDeterministicGuessOnlyPrediction:
 
         return model, request, deterministic
 
-    @pytest.mark.pruned
     def test_deterministic_guess_only_replaces_generated_output(self):
         model, request, deterministic = self.make_model_and_request()
 
@@ -3959,7 +3871,6 @@ class TestDeterministicGuessOnlyPrediction:
             deterministic.unsqueeze(0),
         )
 
-    @pytest.mark.pruned
     def test_deterministic_guess_only_sets_output_flag(self):
         model, request, _ = self.make_model_and_request()
 
@@ -3970,7 +3881,6 @@ class TestDeterministicGuessOnlyPrediction:
 
         assert result.deterministic_guess is True
 
-    @pytest.mark.pruned
     def test_deterministic_guess_only_warns_on_first_prediction(self):
         model, request, _ = self.make_model_and_request()
 
@@ -4008,7 +3918,6 @@ class TestDeterministicGuessOnlyPrediction:
 
 
 class TestBuildOutput:
-    @pytest.mark.pruned
     def test_build_output_returns_unet_output(self):
         model = make_model()
 
@@ -4022,7 +3931,6 @@ class TestBuildOutput:
             cvae_module.UNetOutput,
         )
 
-    @pytest.mark.pruned
     def test_build_output_forwards_configuration(
         self,
         monkeypatch,
@@ -4056,7 +3964,6 @@ class TestBuildOutput:
 
 
 class TestGenerationConstruction:
-    @pytest.mark.pruned
     def test_up_blocks_receive_each_transpose_kernel_size(
         self,
         monkeypatch,
@@ -4122,12 +4029,11 @@ class TestGenerationConstruction:
             ),
         )
 
-        assert [block.kwargs["transpose_kernel_size"] for block in created_blocks] == [
+        assert [block.kwargs["upsampling_kernel_size"] for block in created_blocks] == [
             5,
             7,
         ]
 
-    @pytest.mark.pruned
     def test_up_blocks_receive_channel_progression(
         self,
         monkeypatch,
@@ -4210,7 +4116,6 @@ class TestGenerationConstruction:
             ),
         ]
 
-    @pytest.mark.pruned
     def test_up_blocks_are_constructed_without_skip_channels(
         self,
         monkeypatch,
@@ -4262,7 +4167,6 @@ class TestGenerationConstruction:
 
 
 class TestAdditionalGenerationEdgeCases:
-    @pytest.mark.pruned
     def test_generation_without_up_blocks_returns_bottleneck_tensor(
         self,
     ):
@@ -4340,17 +4244,14 @@ class TestAdditionalGenerationEdgeCases:
             num_output_samples=1,
         )
 
-        repeat.assert_called_once()
-        assert repeat.call_args.kwargs["repeats"] == 1
+        repeat.assert_not_called()
         assert result.shape == (
-            1,
             2,
             8,
             4,
             4,
         )
 
-    @pytest.mark.pruned
     def test_non_generator_ignores_requested_output_sample_count(
         self,
         monkeypatch,
@@ -4399,7 +4300,6 @@ class TestAdditionalGenerationEdgeCases:
 
 
 class TestSICAdditionalBranches:
-    @pytest.mark.pruned
     def test_sic_build_output_forwards_false_clip_value(
         self,
         monkeypatch,
