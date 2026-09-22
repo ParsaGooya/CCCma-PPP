@@ -33,7 +33,7 @@ train_loader:
     condition_method: ensemble_mean
     lead_times:
       start: 1
-      end: 12
+      end: 120
 
   batch_size: 10
   time_features:
@@ -55,10 +55,10 @@ module:
     ModelConfig:
       type: MLP
       config:
-        encoder_hidden_dims: [3000, 3000, 3000]
+        encoder_hidden_dims: [8, 8, 8]
         latent_size: 10
-        decoder_hidden_dims: [3000, 3000, 3000]
-        condition_embedding_dims: [3000, 3000, 3000]
+        decoder_hidden_dims: [8, 8, 8]
+        condition_embedding_dims: [8, 8, 8]
         condition_embedding_size: 10
         condition_dependant_latent: False
         condemb_to_decoder: True

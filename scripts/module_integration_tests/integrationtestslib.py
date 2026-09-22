@@ -504,10 +504,6 @@ class OutputFetcher:
         with output_path.open("w", encoding="utf-8") as file:
             json.dump(export, file, indent=2, sort_keys=True, default=str)
 
-    # ========================================================================
-    # DATA MODULES SPECIFIC: Mask Export Functions
-    # ========================================================================
-
     def save_batch_masks(
         self,
         batch: Any,
@@ -903,10 +899,6 @@ class OutputFetcher:
             results["comparison"]["error"] = f"{type(e).__name__}: {str(e)}"
 
         return results
-
-    # ========================================================================
-    # Generic Plotting Functions (FIXED)
-    # ========================================================================
 
     def plot_tensor_channels(
         self,

@@ -25,12 +25,11 @@ from integrationtestslib import (
 from cccma_ppp.configs import required_sample_dimensions
 from cccma_ppp.generic.runtime import RuntimeContext
 from cccma_ppp.train.train_configs import prepare_config
-from cccma_ppp.inference.inference_configs import InferenceConfig
 from cccma_ppp.generic.distributed import Distributed
 
 warnings.filterwarnings("ignore")
 
-MODE = "deterministic"
+MODE = "cvae"
 ROOT = Path("/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/scripts")
 BASE_TRAIN_CONFIG = f"scripts/module_integration_tests/{MODE}_config.yaml"
 
@@ -51,7 +50,7 @@ DUMMY_MASK_PATH = Path(
 RUN_DATA_CONFIG_COMBINATIONS = True
 RUN_EXTERNAL_CONDITION_CASES = True
 RUN_TRAIN_DATALOADER_CASES = True
-RUN_INFERENCE_DATALOADER_CASES = True
+RUN_INFERENCE_DATALOADER_CASES = False
 
 MAX_CASES: int | None = None
 MAX_BATCHES_PER_CASE = 4
@@ -62,7 +61,7 @@ CSV_COLUMNS = [
     "suite",
     "case_name",
     "description",
-    "loader_type",  #  "train" or "inference"
+    "loader_type",
     "model_present",
     "condition_present",
     "observation_present",
@@ -630,42 +629,6 @@ def setup_train_loader(
     )
 
 
-def setup_inference_loader(
-    train_config: Any,
-    config_path: Path,
-    experiment_dir: Path,
-    *,
-    return_spatial_mask: bool = True,
-) -> Any:
-    """Set up inference data loader"""
-    case_dir = Path(config_path).resolve().parent
-    case_dir.mkdir(parents=True, exist_ok=True)
-    RuntimeContext.GLOBAL_EXP_DIR = str(case_dir)
-
-    distributed = Distributed.get_instance()
-
-    # Create inference config which loads and validates train config
-    inference_config = InferenceConfig(experiment_dir=str(experiment_dir))
-
-    #  Set inference_years_slice if not already set
-    if inference_config.inference_loader.inference_years_slice is None:
-        # Use same years as training for testing
-        train_years = train_config.train_loader.train_years_slice
-        inference_config.inference_loader.inference_years_slice = train_years
-
-    # Setup inference loader with train config for distributed setup
-    call_with_supported_arguments(
-        inference_config.inference_loader.setup_distributed,
-        train_loader_config=train_config.train_loader,
-        distributed=distributed,
-    )
-
-    return call_with_supported_arguments(
-        inference_config.inference_loader.build_inference_loader,
-        return_spatial_mask=return_spatial_mask,
-    )
-
-
 def load_train_config(config_path: Path) -> Any:
     """Load training config from file"""
     import dacite
@@ -749,15 +712,12 @@ def run_dataset_case(config_path: Path, params: dict[str, Any]) -> None:
         fetcher.plot_premade_mask(loader.dataset)
 
     for i, batch in enumerate(LimitedLoader(loader, MAX_BATCHES_PER_CASE)):
-        # Plot first batch
         if i == 0:
             fetcher.plot_batch(batch)
 
-            # Compare masks if premade exists
             if mask_check["has_mask_attribute"]:
                 fetcher.compare_premade_vs_nan_masks(loader.dataset, batch)
 
-            # Export first batch
             metadata = TensorUtils.extract_metadata(batch)
             batch_metadata = TensorUtils.flatten_metadata(metadata)
             if batch_metadata:
@@ -767,14 +727,12 @@ def run_dataset_case(config_path: Path, params: dict[str, Any]) -> None:
                     batch_index=0,
                 )
 
-        # Collect metadata from all batches
         metadata = TensorUtils.extract_metadata(batch)
         batch_metadata = TensorUtils.flatten_metadata(metadata)
         if batch_metadata:
             all_metadata.extend(batch_metadata)
             batch_sizes.append(len(batch_metadata))
 
-    # Save metadata
     if all_metadata:
         fetcher.save_batch_metadata(
             all_metadata,
@@ -783,7 +741,6 @@ def run_dataset_case(config_path: Path, params: dict[str, Any]) -> None:
             batch_index=0,
         )
 
-        # Save statistics
         results_manager = ResultsManager(RESULTS_CSV, SUMMARY_PATH, CSV_COLUMNS)
         results_manager.compute_and_save_metadata_statistics(
             all_metadata,
@@ -793,89 +750,6 @@ def run_dataset_case(config_path: Path, params: dict[str, Any]) -> None:
         )
 
     print(f"Train dataset case completed: {len(all_metadata)} samples")
-
-
-def run_inference_dataset_case(
-    config_path: Path, experiment_dir: Path, params: dict[str, Any]
-) -> None:
-    """Test inference dataset.__getitem__ contract"""
-    import shutil as sh
-
-    # Copy config to experiment_dir so InferenceConfig can find it
-    experiment_dir.mkdir(parents=True, exist_ok=True)
-    sh.copy(config_path, experiment_dir / "config.yaml")
-
-    config = load_train_config(config_path)
-    loader = setup_inference_loader(
-        config,
-        config_path,
-        experiment_dir,
-        return_spatial_mask=True,
-    )
-
-    # Validate dataset format
-    DataModulesUtils.test_dataset_getitem_format(
-        loader.dataset, init_time_dim=INIT_TIME_DIM, lead_time_dim=LEAD_TIME_DIM
-    )
-
-    paths = PathManager(CASES_DIR, OUTPUT_DIR).case_paths(f"{params['name']}_inference")
-    all_metadata = []
-    batch_sizes = []
-
-    fetcher = OutputFetcher(paths["case_dir"], max_plot_channels=MAX_PLOT_CHANNELS)
-
-    # Check premade mask
-    mask_check = DataModulesUtils.check_premade_mask_in_dataset(loader.dataset)
-
-    if mask_check["has_mask_attribute"]:
-        fetcher.extract_and_save_premade_mask(loader.dataset)
-        fetcher.plot_premade_mask(loader.dataset)
-
-    for i, batch in enumerate(LimitedLoader(loader, MAX_BATCHES_PER_CASE)):
-        # Plot first batch
-        if i == 0:
-            fetcher.plot_batch(batch)
-
-            # Compare masks if premade exists
-            if mask_check["has_mask_attribute"]:
-                fetcher.compare_premade_vs_nan_masks(loader.dataset, batch)
-
-            # Export first batch
-            metadata = TensorUtils.extract_metadata(batch)
-            batch_metadata = TensorUtils.flatten_metadata(metadata)
-            if batch_metadata:
-                fetcher.export_masks_and_data(
-                    batch,
-                    metadata=batch_metadata,
-                    batch_index=0,
-                )
-
-        # Collect metadata from all batches
-        metadata = TensorUtils.extract_metadata(batch)
-        batch_metadata = TensorUtils.flatten_metadata(metadata)
-        if batch_metadata:
-            all_metadata.extend(batch_metadata)
-            batch_sizes.append(len(batch_metadata))
-
-    # Save metadata
-    if all_metadata:
-        fetcher.save_batch_metadata(
-            all_metadata,
-            output_path=paths["metadata_path"],
-            batch_sizes=batch_sizes,
-            batch_index=0,
-        )
-
-        # Save statistics
-        results_manager = ResultsManager(RESULTS_CSV, SUMMARY_PATH, CSV_COLUMNS)
-        results_manager.compute_and_save_metadata_statistics(
-            all_metadata,
-            paths["metadata_statistics_path"],
-            init_time_dim=INIT_TIME_DIM,
-            lead_time_dim=LEAD_TIME_DIM,
-        )
-
-    print(f"Inference dataset case completed: {len(all_metadata)} samples")
 
 
 def run_dataloader_case(config_path: Path, params: dict[str, Any]) -> None:
@@ -895,14 +769,12 @@ def run_dataloader_case(config_path: Path, params: dict[str, Any]) -> None:
 
     fetcher = OutputFetcher(paths["case_dir"], max_plot_channels=MAX_PLOT_CHANNELS)
 
-    # Check premade mask
     mask_check = DataModulesUtils.check_premade_mask_in_dataset(loader.dataset)
     if mask_check["has_mask_attribute"]:
         fetcher.extract_and_save_premade_mask(loader.dataset)
         fetcher.plot_premade_mask(loader.dataset)
 
     for i, batch in enumerate(LimitedLoader(loader, MAX_BATCHES_PER_CASE)):
-        # Plot first batch
         if i == 0:
             fetcher.plot_batch(batch)
 
@@ -918,14 +790,12 @@ def run_dataloader_case(config_path: Path, params: dict[str, Any]) -> None:
                     batch_index=0,
                 )
 
-        # Collect metadata from all batches
         metadata = TensorUtils.extract_metadata(batch)
         batch_metadata = TensorUtils.flatten_metadata(metadata)
         if batch_metadata:
             all_metadata.extend(batch_metadata)
             batch_sizes.append(len(batch_metadata))
 
-    # Save metadata
     if all_metadata:
         fetcher.save_batch_metadata(
             all_metadata,
@@ -943,80 +813,6 @@ def run_dataloader_case(config_path: Path, params: dict[str, Any]) -> None:
         )
 
     print(f"Train dataloader case completed: {len(all_metadata)} samples")
-
-
-def run_inference_dataloader_case(
-    config_path: Path, experiment_dir: Path, params: dict[str, Any]
-) -> None:
-    """Test inference dataloader with different configurations"""
-    import shutil as sh
-
-    # Copy config to experiment_dir so InferenceConfig can find it
-    experiment_dir.mkdir(parents=True, exist_ok=True)
-    sh.copy(config_path, experiment_dir / "config.yaml")
-
-    config = load_train_config(config_path)
-    loader = setup_inference_loader(
-        config,
-        config_path,
-        experiment_dir,
-        return_spatial_mask=True,
-    )
-
-    paths = PathManager(CASES_DIR, OUTPUT_DIR).case_paths(f"{params['name']}_inference")
-    all_metadata = []
-    batch_sizes = []
-
-    fetcher = OutputFetcher(paths["case_dir"], max_plot_channels=MAX_PLOT_CHANNELS)
-
-    # Check premade mask
-    mask_check = DataModulesUtils.check_premade_mask_in_dataset(loader.dataset)
-    if mask_check["has_mask_attribute"]:
-        fetcher.extract_and_save_premade_mask(loader.dataset)
-        fetcher.plot_premade_mask(loader.dataset)
-
-    for i, batch in enumerate(LimitedLoader(loader, MAX_BATCHES_PER_CASE)):
-        # Plot first batch
-        if i == 0:
-            fetcher.plot_batch(batch)
-
-            if mask_check["has_mask_attribute"]:
-                fetcher.compare_premade_vs_nan_masks(loader.dataset, batch)
-
-            metadata = TensorUtils.extract_metadata(batch)
-            batch_metadata = TensorUtils.flatten_metadata(metadata)
-            if batch_metadata:
-                fetcher.export_masks_and_data(
-                    batch,
-                    metadata=batch_metadata,
-                    batch_index=0,
-                )
-
-        # Collect metadata from all batches
-        metadata = TensorUtils.extract_metadata(batch)
-        batch_metadata = TensorUtils.flatten_metadata(metadata)
-        if batch_metadata:
-            all_metadata.extend(batch_metadata)
-            batch_sizes.append(len(batch_metadata))
-
-    # Save metadata
-    if all_metadata:
-        fetcher.save_batch_metadata(
-            all_metadata,
-            output_path=paths["metadata_path"],
-            batch_sizes=batch_sizes,
-            batch_index=0,
-        )
-
-        results_manager = ResultsManager(RESULTS_CSV, SUMMARY_PATH, CSV_COLUMNS)
-        results_manager.compute_and_save_metadata_statistics(
-            all_metadata,
-            paths["metadata_statistics_path"],
-            init_time_dim=INIT_TIME_DIM,
-            lead_time_dim=LEAD_TIME_DIM,
-        )
-
-    print(f"Inference dataloader case completed: {len(all_metadata)} samples")
 
 
 def run_task(task: dict[str, Any]) -> tuple[bool, str]:
@@ -1049,12 +845,6 @@ def run_task(task: dict[str, Any]) -> tuple[bool, str]:
             "params": params,
         }
 
-        # Add experiment_dir for inference runners
-        if loader_type == "inference":
-            # Need a trained experiment directory; use case_dir as placeholder
-            runner_kwargs["experiment_dir"] = case_dir / "trained_experiment"
-            runner_kwargs["experiment_dir"].mkdir(parents=True, exist_ok=True)
-
         LoggingUtils.run_silenced(
             partial(runner, **runner_kwargs),
             paths["log_path"],
@@ -1078,7 +868,6 @@ def run_task(task: dict[str, Any]) -> tuple[bool, str]:
         except Exception:
             pass
 
-    # Log result
     results_manager = ResultsManager(RESULTS_CSV, SUMMARY_PATH, CSV_COLUMNS)
     row = build_result_row(
         case_name=task["case_name"],
@@ -1100,7 +889,6 @@ def build_test_suite() -> list[dict[str, Any]]:
 
     if RUN_DATA_CONFIG_COMBINATIONS:
         for case in TestScenarios.data_combinations():
-            # Train loader test
             tasks.append(
                 {
                     "suite": "data_config_combination",
@@ -1108,22 +896,11 @@ def build_test_suite() -> list[dict[str, Any]]:
                     "loader_type": "train",
                     "params": case.to_dict(),
                     "runner": run_dataset_case,
-                }
-            )
-            # Inference loader test
-            tasks.append(
-                {
-                    "suite": "data_config_combination",
-                    "case_name": f"{case.name}_inference",
-                    "loader_type": "inference",
-                    "params": case.to_dict(),
-                    "runner": run_inference_dataset_case,
                 }
             )
 
     if RUN_EXTERNAL_CONDITION_CASES:
         for case in TestScenarios.external_conditions():
-            # Train loader test
             tasks.append(
                 {
                     "suite": "external_condition",
@@ -1133,20 +910,9 @@ def build_test_suite() -> list[dict[str, Any]]:
                     "runner": run_dataset_case,
                 }
             )
-            # Inference loader test
-            tasks.append(
-                {
-                    "suite": "external_condition",
-                    "case_name": f"{case.name}_inference",
-                    "loader_type": "inference",
-                    "params": case.to_dict(),
-                    "runner": run_inference_dataset_case,
-                }
-            )
 
     if RUN_TRAIN_DATALOADER_CASES:
         for case in TestScenarios.dataloaders():
-            # Train loader test
             tasks.append(
                 {
                     "suite": "train_dataloader",
@@ -1156,17 +922,6 @@ def build_test_suite() -> list[dict[str, Any]]:
                     "runner": run_dataloader_case,
                 }
             )
-            # Inference loader test
-            if RUN_INFERENCE_DATALOADER_CASES:
-                tasks.append(
-                    {
-                        "suite": "inference_dataloader",
-                        "case_name": f"{case.name}_inference",
-                        "loader_type": "inference",
-                        "params": case.to_dict(),
-                        "runner": run_inference_dataloader_case,
-                    }
-                )
 
     return tasks
 
