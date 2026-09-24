@@ -1438,8 +1438,6 @@ class LegacyToDataset:
         )
 
 
-
-
 def make_fitted_pipeline():
     first = AddPreprocessor(
         value=1.0,

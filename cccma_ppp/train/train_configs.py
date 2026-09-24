@@ -23,7 +23,6 @@ from cccma_ppp.core.optimization import OptimizerConfig
 from cccma_ppp.core.core_abc import GenerativeContext
 
 
-
 def set_seed(seed):
     """
     Document this function.
