@@ -18,6 +18,7 @@ from cccma_ppp.configs import (
 )
 
 from cccma_ppp.data_modules.utils import (
+    TEMPORAL_ORDER,
     _load_xarray_data,
     _create_train_mask,
     _validate_time_sequence,
@@ -25,6 +26,7 @@ from cccma_ppp.data_modules.utils import (
     get_time_representation,
     TimeTypes,
     TimeFrequency,
+    TEMPORAL_ORDER,
 )
 from cccma_ppp.generic.runtime import RuntimeContext
 
@@ -255,6 +257,12 @@ class DataConfigABC(abc.ABC):
         Any
             Description not yet provided.
         """
+        time_frequency_to_resolve =  min(
+            self.info.init_time_freq, 
+            self.info.lead_time_resolution,
+            key=TEMPORAL_ORDER.get,
+        )
+        
         self.data = _load_xarray_data(
             self.list_paths,
             names=self.names,
@@ -264,6 +272,7 @@ class DataConfigABC(abc.ABC):
             else None,
             concat_dim=self.concat_dim,
             rename_dict=self.rename_dict,
+            resolved_init_time_frequency=time_frequency_to_resolve,
             add_time_auxiliary_coords=add_time_auxiliary_coords,
             load=load,
         )

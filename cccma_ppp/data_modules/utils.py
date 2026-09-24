@@ -22,7 +22,7 @@ from cccma_ppp.configs import (
 TimeTypes = Literal["datetime", "cftime"]
 TimeFrequency = Literal["day", "month", "year"]
 spatialmethod = Literal["uniform", "cosine_lat"]
-
+TEMPORAL_ORDER = {"day": 0,"month": 1,"year": 2,}
 init_time_dim, lead_time_dim = required_sample_dimensions
 
 
@@ -60,6 +60,7 @@ def _load_xarray_data(
     load: bool = False,
     add_time_auxiliary_coords: bool = False,
     init_time_dim: str = init_time_dim,
+    resolved_init_time_frequency: TemporalFrequency | None = None,
     realization_dim: str = realization_dim,
     supported_NN_dimensions_sorted: tuple = supported_NN_dimensions_sorted,
 ):
@@ -87,6 +88,8 @@ def _load_xarray_data(
     add_time_auxiliary_coords : bool
         Description not yet provided.
     init_time_dim : str
+        Description not yet provided.
+    resolved_init_time_frequency : TemporalFrequency | None
         Description not yet provided.
     realization_dim : str
         Description not yet provided.
@@ -116,6 +119,13 @@ def _load_xarray_data(
         ds = ds.rename(rename_dict)
 
     ds = ds.sel(selection) if selection is not None else ds
+
+    if resolved_init_time_frequency is not None:
+        ds = _standardize_time(
+            ds,
+            frequency=resolved_init_time_frequency,
+            time_dim=init_time_dim,
+        )
 
     if realization_dim in ds.coords and ensemble_mean:
         ds = ds.mean(realization_dim)
@@ -161,6 +171,107 @@ def _load_xarray_data(
         ds.close()
 
     return ds
+
+
+
+
+def _standardize_time(
+    ds: xr.Dataset | xr.DataArray,
+    frequency: TimeFrequency,
+    time_dim: str = init_time_dim,
+) -> xr.Dataset | xr.DataArray:
+    """
+    Standardize temporal coordinates to a representative timestamp.
+
+    Changes only the time coordinate, without resampling or
+    modifying the underlying data. Supports both NumPy datetime64
+    and cftime calendars.
+
+    Parameters
+    ----------
+    ds : xr.Dataset | xr.DataArray
+        Input data containing a one-dimensional time coordinate.
+    frequency : {"hour", "day", "month", "year"}
+        Temporal frequency used to standardize timestamps:
+
+        - day: midnight of each day.
+        - month: 15th day of each month at midnight.
+        - year: January 1 of each year at midnight.
+
+    time_dim : str, default "init_time"
+        Name of the temporal coordinate to standardize.
+
+    Returns
+    -------
+    xr.Dataset | xr.DataArray
+        Data with standardized temporal coordinates.
+
+    Raises
+    ------
+    ValueError
+        If the frequency is unsupported, the time coordinate
+        is invalid, or standardization produces duplicate dates.
+    TypeError
+        If the coordinate does not contain supported datetimes.
+    """
+    if frequency not in (
+        "day", "month", "year"
+    ):
+        raise ValueError(
+            f"Unsupported temporal frequency: {frequency}"
+        )
+
+    if time_dim not in ds.coords:
+        raise ValueError(
+            f"Coordinate {time_dim!r} not found."
+        )
+
+    times = ds[time_dim]
+
+    if times.ndim != 1 or times.dims != (time_dim,):
+        raise ValueError(
+            f"{time_dim!r} must be a one-dimensional "
+            "dimension coordinate."
+        )
+
+    index = ds.indexes[time_dim]
+
+    def standardize(t):
+        year, month, day = t.year, t.month, t.day
+        hour = t.hour
+
+        if frequency == "year":
+            return type(t)(year, 1, 1)
+
+        if frequency == "month":
+            return type(t)(year, month, 15)
+
+        if frequency == "day":
+            return type(t)(year, month, day)
+
+        return type(t)(year, month, day, hour)
+
+    if isinstance(index, pd.DatetimeIndex):
+        standardized = pd.DatetimeIndex(
+            [standardize(t) for t in index]
+        )
+    elif isinstance(index, xr.CFTimeIndex):
+        standardized = xr.CFTimeIndex(
+            [standardize(t) for t in index]
+        )
+    else:
+        raise TypeError(
+            f"Unsupported time index type: {type(index)}"
+        )
+
+    if standardized.has_duplicates:
+        raise ValueError(
+            "Time standardization produced duplicate "
+            "timestamps. Check the input frequency."
+        )
+
+    return ds.assign_coords({time_dim: standardized})
+
 
 
 def _create_train_mask(
