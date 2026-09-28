@@ -333,7 +333,7 @@ class TestScenarios:
         condition_present=False,
         observation_present=False,
         condition_method="ensemble_mean",
-        model_ensemble_mean=True,
+        model_ensemble_mean=False,
     )
 
     AUTOENCODE_MODEL_ONLY_CROSS_ENSEMBLE = CaseParams(
@@ -359,9 +359,12 @@ class TestScenarios:
         model_present=True,
         condition_present=True,
         observation_present=False,
+        condition_kind="tas_stdr",
+        condition_path=str(TAS_STDR_PATH),
         condition_method="ensemble_mean",
         model_ensemble_mean=True,
-        condition_ensemble_mean=True,
+        condition_ensemble_mean=None,
+        condition_has_ensemble=False,
     )
 
     AUTOENCODE_WITH_CONDITION_CROSS_ENSEMBLE = CaseParams(
@@ -369,9 +372,12 @@ class TestScenarios:
         model_present=True,
         condition_present=True,
         observation_present=False,
+        condition_kind="tas_stdr",
+        condition_path=str(TAS_STDR_PATH),
         condition_method="cross_ensemble",
         model_ensemble_mean=False,
-        condition_ensemble_mean=False,
+        condition_ensemble_mean=None,
+        condition_has_ensemble=False,
     )
 
     AUTOENCODE_WITH_CONDITION_SAME_MEMBER = CaseParams(
@@ -379,9 +385,12 @@ class TestScenarios:
         model_present=True,
         condition_present=True,
         observation_present=False,
+        condition_kind="tas_stdr",
+        condition_path=str(TAS_STDR_PATH),
         condition_method="same_member",
         model_ensemble_mean=False,
-        condition_ensemble_mean=False,
+        condition_ensemble_mean=None,
+        condition_has_ensemble=False,
     )
 
     BIAS_CORRECT_MODEL_CONDITION_ENSEMBLE_MEAN = CaseParams(
@@ -419,9 +428,12 @@ class TestScenarios:
         model_present=True,
         condition_present=True,
         observation_present=True,
+        condition_kind="static",
+        condition_path=str(DUMMY_MASK_PATH),
         condition_method="static",
         model_ensemble_mean=False,
         condition_ensemble_mean=None,
+        condition_has_ensemble=False,
     )
 
     BIAS_CORRECT_MODEL_WITH_METHOD = CaseParams(

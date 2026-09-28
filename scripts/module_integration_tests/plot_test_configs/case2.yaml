@@ -4,112 +4,87 @@ train_loader:
   dataset_config:
     model:
       paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/forecast_data/datetime
-      names: [tas]
+      names:
+      - tas
       preprocessing_pipeline:
         preprocessors_list:
-          - name: anomalies
-            args:
-              dims: [time]
-          # - name: flattener
-
-      ensemble_mean: True
+        - name: anomalies
+          args:
+            dims:
+            - time
+        - name: flattener
+      ensemble_mean: true
       concat_dim: time
       rename_dict:
         year: time
-
     observation:
       paths: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/data/tas/observations/ERA5/datetime
-      names: [tas]
+      names:
+      - tas
       preprocessing_pipeline:
         preprocessors_list:
-          - name: anomalies
-            args:
-              dims: [time]
-              frequency: month
-          # - name: flattener
-
+        - name: anomalies
+          args:
+            dims:
+            - time
+            frequency: month
+        - name: flattener
       concat_dim: time
-
     condition_method: ensemble_mean
     lead_times:
-      start: 1
-      end: 12
-
+      start: 7
+      end: 84
   batch_size: 10
   time_features:
-    - time
-    - lead_time
-    - month_sin
-    - month_cos
-
-  train_years_slice: [1980, 2010]
+  - time
+  - lead_time
+  - month_sin
+  - month_cos
+  train_years_slice:
+  - 1980
+  - 2010
   num_validation_years: 0
-  prefetch_factor: 4
+  prefetch_factor: 1
   num_data_workers: 0
-  reduce_spatial_mask: True
-  load: True
-
+  reduce_spatial_mask: true
+  load: true
 module:
   type: deterministic
   config:
-    # ModelConfig :
-    #         type : MLP
-    #         config :
-    #               encoder_hidden_dims : [3000,3000,3000]
-    #               latent_size : 10
-    #               decoder_hidden_dims: [3000,3000,3000]
-    #               condition_embedding_dims :  [3000,3000,3000]
-    #               condition_embedding_size : 10
-    #               condition_dependant_latent: False
-    #               condemb_to_decoder:  True
-    #               batch_normalization : True
-    #               dropout_rate: 0.5
-    #               init_method :  xavier
-
     ModelConfig:
-      type: UNet
+      type: MLP
       config:
-        channels: [16, 32, 64, 128, 256]
-        block_config:
-          name: convnext
-          num_blocks: 2
-        output_block_hidden_channels: 32
-        # latent_size: 500
-        # deterministic_guess_config:
-        #     load_dir: /space/hall7/sitestore/eccc/crd/cccma/users/rpg002/output/cccma_PPP_tests/test_3/checkpoints/best.pt
-        #     freeze_weights: True
-        #     share_output_block: True
-        # GENERATOR:
-        #         noise_level:  full
-        #         num_training_noise_samples: 10
-
+        encoder_hidden_dims:
+        - 8
+        - 8
+        - 8
+        decoder_hidden_dims:
+        - 8
+        - 8
+        - 8
+        batch_normalization: true
+        dropout_rate: 0.5
+        init_method: xavier
 losspipeline:
   loss_pipeline:
-    - name: mse
-
+  - name: mse
   reduction: mean
-
 trainer:
   beta_finder:
     beta: 10
     num_epoch_to_warmup: 10
-  #     gradient_accumulation_steps: 2
   earlystoppingbuffer: 10
-
-  mixed_precision: True
-
+  mixed_precision: true
 optimization:
   lr: 0.0001
   optimizer_type: adam
   lr_scheduler_config:
-    min_lr: 0.00001
+    min_lr: 1.0e-05
     warmup_epochs: 1
     total_epochs: 10
-    hold_min_lr: True
-
+    hold_min_lr: true
 weights:
   spatial_method: uniform
-
 log_every_n_epochs: 2
-save_checkpoint: True
+save_checkpoint: true
 seed: 10

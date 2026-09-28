@@ -753,8 +753,18 @@ class OutputFetcher:
             results["error"] = f"{type(e).__name__}: {str(e)}"
             return results
 
-    def plot_premade_mask(self, dataset: Any) -> bool:
-        """Plot the premade mask if available"""
+    def plot_premade_mask(
+        self, dataset: Any, lead_times: Optional[list[int]] = None
+    ) -> bool:
+        """Plot the premade mask if available, using lead_times for x-axis labels
+
+        Parameters
+        ----------
+        dataset : Any
+            Dataset with premade mask
+        lead_times : list[int], optional
+            Lead times to use for x-axis. If None, tries to extract from dataset config.
+        """
         masks_dir = self.raw_data_dir / "masks"
         masks_dir.mkdir(parents=True, exist_ok=True)
 
@@ -777,13 +787,90 @@ class OutputFetcher:
             if mask_np.ndim != 2:
                 return False
 
+            # Try to extract lead_times if not provided
+            if lead_times is None:
+                # Try from dataset config
+                if hasattr(dataset, "config") and isinstance(dataset.config, dict):
+                    lead_times_cfg = dataset.config.get("lead_times")
+                    if isinstance(lead_times_cfg, np.ndarray):
+                        # It's a numpy array
+                        lead_times = lead_times_cfg.tolist()
+                    elif isinstance(lead_times_cfg, (list, tuple)):
+                        # It's a list or tuple
+                        lead_times = list(lead_times_cfg)
+                    elif isinstance(lead_times_cfg, dict):
+                        if "list_lead_times" in lead_times_cfg:
+                            lt = lead_times_cfg["list_lead_times"]
+                            if isinstance(lt, np.ndarray):
+                                lead_times = lt.tolist()
+                            else:
+                                lead_times = list(lt)
+                        elif "start" in lead_times_cfg and "end" in lead_times_cfg:
+                            lead_times = list(
+                                range(
+                                    lead_times_cfg["start"], lead_times_cfg["end"] + 1
+                                )
+                            )
+
+                # Try from dataset attribute
+                if lead_times is None and hasattr(dataset, "lead_times"):
+                    lt = dataset.lead_times
+                    if isinstance(lt, np.ndarray):
+                        lead_times = lt.tolist()
+                    elif isinstance(lt, (list, tuple)):
+                        lead_times = list(lt)
+                    elif hasattr(lt, "__iter__"):
+                        try:
+                            lead_times = list(lt)
+                        except (TypeError, ValueError):
+                            pass
+
             # Create plot
             figure, axes = plt.subplots(1, 1, figsize=(10, 8))
             im = axes.imshow(mask_np, cmap="binary", origin="lower", aspect="auto")
 
             axes.set_title("Premade Mask from Dataset\n(white=valid, black=masked)")
-            axes.set_xlabel("X")
-            axes.set_ylabel("Y")
+            axes.set_ylabel("Y (spatial)")
+
+            # Set x-axis to lead times if available
+            if lead_times is not None:
+                axes.set_xlabel("Lead Time")
+                mask_width = mask_np.shape[1]
+
+                if len(lead_times) == mask_width:
+                    # Perfect match - show lead times directly
+                    step = max(1, len(lead_times) // 10)
+                    tick_indices = range(0, len(lead_times), step)
+                    axes.set_xticks(tick_indices)
+                    axes.set_xticklabels([str(lead_times[i]) for i in tick_indices])
+                else:
+                    # Shape mismatch - scale lead times to mask width
+                    step = max(1, mask_width // 10)
+                    tick_indices = range(0, mask_width, step)
+
+                    # Map mask indices to lead times proportionally
+                    scaled_labels = []
+                    for idx in tick_indices:
+                        # Scale index from [0, mask_width) to [0, len(lead_times))
+                        lead_idx = int(idx * len(lead_times) / mask_width)
+                        lead_idx = min(lead_idx, len(lead_times) - 1)
+                        scaled_labels.append(str(lead_times[lead_idx]))
+
+                    axes.set_xticks(tick_indices)
+                    axes.set_xticklabels(scaled_labels)
+
+                    # Add info text
+                    axes.text(
+                        0.5,
+                        -0.15,
+                        f"Lead times ({len(lead_times)}) scaled to mask width ({mask_width})",
+                        transform=axes.transAxes,
+                        fontsize=8,
+                        ha="center",
+                        style="italic",
+                    )
+            else:
+                axes.set_xlabel("X (lead time index)")
 
             cbar = figure.colorbar(im, ax=axes, shrink=0.8)
             cbar.set_label("Valid (1) / Masked (0)")
@@ -812,7 +899,8 @@ class OutputFetcher:
 
             return True
 
-        except Exception:
+        except Exception as e:
+            print(f"Error plotting premade mask: {e}")
             return False
 
     def compare_premade_vs_nan_masks(self, dataset: Any, batch: Any) -> dict[str, Any]:
@@ -925,6 +1013,9 @@ class OutputFetcher:
                     value = value[0, ch_idx]  # (B, C, H, W) → (H, W)
                 elif value.ndim == 3:
                     value = value[ch_idx]  # (C, H, W) → (H, W)
+                elif value.ndim == 2:
+                    # NEW: Handle 2D tensors (B, features) → reshape to (B, features) as image
+                    value = value[:, ch_idx : ch_idx + 1]  # Extract column as 2D image
                 else:
                     continue
 
@@ -953,13 +1044,162 @@ class OutputFetcher:
             except (IndexError, ValueError, RuntimeError):
                 continue
 
+    def plot_tensor_channels_unflattened(
+        self,
+        tensor: torch.Tensor,
+        *,
+        name: str,
+        spatial_shape: tuple[int, int] = (60, 120),
+    ) -> None:
+        """
+        Plot tensor channels from flattened data by reshaping to 2D spatial grid.
+
+        Handles shapes:
+        - (B, C, flattened) where flattened = H*W
+        """
+        print(
+            f"DEBUG plot_tensor_channels_unflattened START: name={name}, tensor.shape={tensor.shape}, spatial_shape={spatial_shape}"
+        )
+
+        if tensor is None or not isinstance(tensor, torch.Tensor) or tensor.ndim < 2:
+            print("DEBUG: Early return - invalid tensor")
+            return
+
+        num_channels = tensor.shape[1] if tensor.ndim >= 2 else 0
+        print(f"DEBUG: num_channels={num_channels}")
+
+        if num_channels == 0:
+            print("DEBUG: Early return - num_channels is 0")
+            return
+
+        channels_to_plot = min(num_channels, self.max_plot_channels)
+        print(f"DEBUG: channels_to_plot={channels_to_plot}")
+
+        # Reshape from (B, C, flattened) to (B, C, H, W) if needed
+        tensor_to_plot = tensor
+        if tensor.ndim == 3:
+            batch_size, num_ch, flattened = tensor.shape
+            expected_flattened = spatial_shape[0] * spatial_shape[1]
+
+            print(f"DEBUG: Before reshape: tensor.shape={tensor.shape}")
+            print(
+                f"DEBUG: batch_size={batch_size}, num_ch={num_ch}, flattened={flattened}"
+            )
+            print(f"DEBUG: expected_flattened={expected_flattened}")
+
+            if flattened == expected_flattened:
+                tensor_to_plot = tensor.reshape(
+                    batch_size, num_ch, spatial_shape[0], spatial_shape[1]
+                )
+                print(
+                    f"DEBUG: After reshape: tensor_to_plot.shape={tensor_to_plot.shape}"
+                )
+            else:
+                print(
+                    f"DEBUG: Flattened size mismatch! {flattened} != {expected_flattened}"
+                )
+
+        print(f"DEBUG: About to loop over {channels_to_plot} channels")
+
+        for ch_idx in range(channels_to_plot):
+            print(f"DEBUG: Processing channel {ch_idx}")
+
+            try:
+                value = tensor_to_plot.detach().float().cpu()
+                print(f"DEBUG: value.shape={value.shape}, value.ndim={value.ndim}")
+
+                # Extract batch 0, channel ch_idx
+                if value.ndim >= 4:
+                    print(f"DEBUG: Extracting from 4D tensor: value[0, {ch_idx}]")
+                    value = value[0, ch_idx]  # (B, C, H, W) → (H, W)
+                elif value.ndim == 3:
+                    print(f"DEBUG: Extracting from 3D tensor: value[{ch_idx}]")
+                    value = value[ch_idx]  # (C, H, W) → (H, W)
+                else:
+                    print(f"DEBUG: Skipping - value.ndim={value.ndim}")
+                    continue
+
+                print(
+                    f"DEBUG: After extraction: value.shape={value.shape}, value.ndim={value.ndim}"
+                )
+
+                # Squeeze remaining extra dimensions
+                while value.ndim > 2:
+                    print(f"DEBUG: Squeezing - value.shape={value.shape}")
+                    value = value[0]
+
+                print(
+                    f"DEBUG: After squeeze: value.shape={value.shape}, value.ndim={value.ndim}"
+                )
+
+                if value.ndim != 2:
+                    print(f"DEBUG: Skipping - final ndim={value.ndim} != 2")
+                    continue
+
+                image = value.numpy()
+                print(
+                    f"DEBUG: image.shape={image.shape}, min={np.nanmin(image):.4f}, max={np.nanmax(image):.4f}"
+                )
+
+                figure, axes = plt.subplots(1, 1, figsize=(10, 8))
+                im = axes.imshow(image, origin="lower", aspect="auto", cmap="viridis")
+                axes.set_title(f"{name}, channel {ch_idx}")
+
+                # Set proper spatial axis labels
+                height, width = image.shape
+                axes.set_xlabel("X (longitude)")
+                axes.set_ylabel("Y (latitude)")
+
+                # Set ticks to match spatial dimensions
+                axes.set_xticks([0, width // 4, width // 2, 3 * width // 4, width - 1])
+                axes.set_xticklabels(
+                    [0, width // 4, width // 2, 3 * width // 4, width - 1]
+                )
+                axes.set_yticks(
+                    [0, height // 4, height // 2, 3 * height // 4, height - 1]
+                )
+                axes.set_yticklabels(
+                    [0, height // 4, height // 2, 3 * height // 4, height - 1]
+                )
+
+                cbar = figure.colorbar(im, ax=axes, shrink=0.8)
+                cbar.set_label("Value")
+
+                figure.tight_layout()
+
+                output_file = (
+                    self.plot_dir
+                    / f"{StringUtils.clean_name(name)}_channel_{ch_idx:03d}.png"
+                )
+                print(f"DEBUG: Saving to {output_file}")
+                figure.savefig(output_file, dpi=150, bbox_inches="tight")
+                plt.close(figure)
+
+            except (IndexError, ValueError, RuntimeError) as e:
+                print(f"DEBUG: Error in channel {ch_idx}: {e}")
+                continue
+
+        print(f"DEBUG plot_tensor_channels_unflattened END: name={name}")
+
     def plot_mask(
         self,
         mask: torch.Tensor,
         *,
         name: str,
+        lead_times: Optional[list[int]] = None,
     ) -> None:
-        """Plot binary mask"""
+        """
+        Plot binary mask with optional lead times on x-axis.
+
+        Parameters
+        ----------
+        mask : torch.Tensor
+            Mask tensor, typically shape (1, flattened) or (H, W)
+        name : str
+            Name of the mask for plot title
+        lead_times : list[int], optional
+            Lead times to use as x-axis labels
+        """
         if mask is None or not isinstance(mask, torch.Tensor):
             return
 
@@ -971,10 +1211,35 @@ class OutputFetcher:
         if mask_np.ndim != 2:
             return
 
-        figure, axes = plt.subplots(1, 1, figsize=(8, 6))
+        figure, axes = plt.subplots(1, 1, figsize=(12, 6))
         im = axes.imshow(mask_np, cmap="binary", origin="lower", aspect="auto")
 
         axes.set_title(f"{name} - Mask")
+        axes.set_ylabel("Y")
+
+        # Set x-axis to lead times if provided
+        if lead_times is not None and len(lead_times) == mask_np.shape[1]:
+            axes.set_xlabel("Lead Time")
+            axes.set_xticks(range(0, len(lead_times), max(1, len(lead_times) // 10)))
+            axes.set_xticklabels(
+                [
+                    str(lead_times[i])
+                    for i in range(0, len(lead_times), max(1, len(lead_times) // 10))
+                ]
+            )
+        else:
+            axes.set_xlabel("X")
+            if lead_times is not None:
+                axes.text(
+                    0.5,
+                    -0.15,
+                    f"Lead times available but shape mismatch: {len(lead_times)} times vs {mask_np.shape[1]} width",
+                    transform=axes.transAxes,
+                    fontsize=8,
+                    ha="center",
+                    style="italic",
+                )
+
         cbar = figure.colorbar(im, ax=axes, shrink=0.8)
         cbar.set_label("Valid (1) / Masked (0)")
 
@@ -984,8 +1249,124 @@ class OutputFetcher:
         figure.savefig(output_file, dpi=150, bbox_inches="tight")
         plt.close(figure)
 
+    def plot_added_features(
+        self,
+        tensor: torch.Tensor,
+        *,
+        name: str,
+    ) -> None:
+        """
+        Plot added features with proper sample index labeling.
+        """
+        if tensor is None or not isinstance(tensor, torch.Tensor) or tensor.ndim != 2:
+            return
+
+        batch_size, num_features = tensor.shape
+        if num_features == 0:
+            return
+
+        value = tensor.detach().float().cpu().numpy()
+        features_to_plot = min(num_features, self.max_plot_channels)
+
+        for feat_idx in range(features_to_plot):
+            try:
+                feature_values = value[:, feat_idx]
+
+                figure, axes = plt.subplots(1, 1, figsize=(10, 6))
+
+                # Create bar plot with sample indices on x-axis
+                sample_indices = np.arange(len(feature_values))
+                axes.bar(
+                    sample_indices,
+                    feature_values,
+                    color="steelblue",
+                    alpha=0.7,
+                    edgecolor="navy",
+                    width=0.6,  # Slightly narrower bars for better appearance
+                )
+
+                axes.set_title(f"{name}, channel {feat_idx:03d}")
+                axes.set_xlabel("Sample Index")
+                axes.set_ylabel("Value")
+
+                # Set x-axis ticks to show only sample indices (not all intermediate values)
+                if batch_size <= 10:
+                    axes.set_xticks(sample_indices)
+                    axes.set_xticklabels([str(i) for i in sample_indices])
+                else:
+                    # For larger batches, show fewer ticks
+                    num_ticks = min(11, batch_size + 1)
+                    tick_positions = np.linspace(
+                        0, batch_size - 1, num_ticks, dtype=int
+                    )
+                    axes.set_xticks(tick_positions)
+                    axes.set_xticklabels([str(i) for i in tick_positions])
+
+                # Calculate statistics
+                vmin = float(np.nanmin(feature_values))
+                vmax = float(np.nanmax(feature_values))
+                vmean = float(np.nanmean(feature_values))
+                vstd = float(np.nanstd(feature_values))
+
+                stats_text = f"Min: {vmin:.3f}\nMax: {vmax:.3f}\nMean: {vmean:.3f}\nStd: {vstd:.3f}"
+                axes.text(
+                    0.98,
+                    0.97,
+                    stats_text,
+                    transform=axes.transAxes,
+                    fontsize=9,
+                    verticalalignment="top",
+                    horizontalalignment="right",
+                    bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.9),
+                )
+
+                axes.grid(True, alpha=0.3, axis="y", linestyle="--")
+                figure.tight_layout()
+
+                output_file = (
+                    self.plot_dir
+                    / f"{StringUtils.clean_name(name)}_channel_{feat_idx:03d}.png"
+                )
+                figure.savefig(output_file, dpi=150, bbox_inches="tight")
+                plt.close(figure)
+
+            except (IndexError, ValueError, RuntimeError):
+                continue
+
+    @staticmethod
+    def _detect_spatial_shape(flattened_size: int) -> tuple[int, int] | None:
+        """Auto-detect spatial shape (H, W) from flattened size.
+
+        Returns the most reasonable (H, W) pair where H*W = flattened_size,
+        preferring square-ish grids close to common climate grid sizes.
+        """
+        # Known common sizes first
+        known_sizes = {
+            7200: (60, 120),  # Common climate grid
+            8256: (86, 96),  # Observation grids
+        }
+        if flattened_size in known_sizes:
+            return known_sizes[flattened_size]
+
+        # Auto-detect: find all divisors
+        divisors = []
+        for h in range(1, int(flattened_size**0.5) + 1):
+            if flattened_size % h == 0:
+                w = flattened_size // h
+                # Prefer roughly square-ish grids
+                aspect_ratio = max(h, w) / min(h, w)
+                divisors.append((aspect_ratio, h, w))
+
+        if not divisors:
+            return None
+
+        # Sort by aspect ratio (closest to 1 = most square-ish)
+        divisors.sort()
+        _, h, w = divisors[0]
+        return (h, w)
+
     def plot_batch(self, batch: Any) -> None:
-        """Plot all data and masks from batch - FIXED to include all masks"""
+        """Plot all data and masks from batch - handles both flattened and spatial data"""
         if isinstance(batch, dict):
             input_tensor = batch.get("input")
             target_tensor = batch.get("target")
@@ -994,6 +1375,7 @@ class OutputFetcher:
             spatial_mask = batch.get("spatial_mask")
             input_mask = batch.get("input_mask")
             target_mask = batch.get("target_mask")
+            metadata = batch.get("metadata")
         else:
             input_tensor = getattr(batch, "input", None)
             target_tensor = getattr(batch, "target", None)
@@ -1002,29 +1384,76 @@ class OutputFetcher:
             spatial_mask = getattr(batch, "spatial_mask", None)
             input_mask = getattr(batch, "input_mask", None)
             target_mask = getattr(batch, "target_mask", None)
+            metadata = getattr(batch, "metadata", None)
 
-        # Plot data tensors
+        # Extract lead times from metadata if available
+        lead_times = None
+        if isinstance(metadata, dict) and "lead_time" in metadata:
+            if isinstance(metadata.get("lead_time"), (list, tuple)):
+                lead_times = list(metadata["lead_time"])
+            elif isinstance(metadata.get("lead_time"), (int, float)):
+                lead_times = [metadata["lead_time"]]
+
+        # Plot data tensors with auto-detected spatial shapes
         if isinstance(input_tensor, torch.Tensor):
-            self.plot_tensor_channels(input_tensor, name="input")
+            print(f"DEBUG input: shape={input_tensor.shape}, ndim={input_tensor.ndim}")
+            if input_tensor.ndim == 3:
+                spatial_shape = self._detect_spatial_shape(input_tensor.shape[2])
+                print(f"DEBUG input: detected spatial_shape={spatial_shape}")
+                if spatial_shape:
+                    print(
+                        f"DEBUG input: calling plot_tensor_channels_unflattened with spatial_shape={spatial_shape}"
+                    )
+                    self.plot_tensor_channels_unflattened(
+                        input_tensor, name="input", spatial_shape=spatial_shape
+                    )
+                else:
+                    print("DEBUG input: calling plot_tensor_channels (fallback)")
+                    self.plot_tensor_channels(input_tensor, name="input")
+            else:
+                print("DEBUG input: calling plot_tensor_channels (ndim != 3)")
+                self.plot_tensor_channels(input_tensor, name="input")
 
         if isinstance(target_tensor, torch.Tensor):
-            self.plot_tensor_channels(target_tensor, name="target")
+            print(
+                f"DEBUG target: shape={target_tensor.shape}, ndim={target_tensor.ndim}"
+            )
+            if target_tensor.ndim == 3:
+                spatial_shape = self._detect_spatial_shape(target_tensor.shape[2])
+                print(f"DEBUG target: detected spatial_shape={spatial_shape}")
+                if spatial_shape:
+                    print(
+                        f"DEBUG target: calling plot_tensor_channels_unflattened with spatial_shape={spatial_shape}"
+                    )
+                    self.plot_tensor_channels_unflattened(
+                        target_tensor, name="target", spatial_shape=spatial_shape
+                    )
+                else:
+                    print("DEBUG target: calling plot_tensor_channels (fallback)")
+                    self.plot_tensor_channels(target_tensor, name="target")
+            else:
+                print("DEBUG target: calling plot_tensor_channels (ndim != 3)")
+                self.plot_tensor_channels(target_tensor, name="target")
 
         if isinstance(added_features, torch.Tensor):
             self.plot_tensor_channels(added_features, name="added_features")
 
-        # Plot all masks
+        # Plot all masks with lead times
         if isinstance(input_mask, torch.Tensor):
-            self.plot_mask(input_mask, name="input_mask")
+            print(f"DEBUG input_mask: shape={input_mask.shape}")
+            self.plot_mask(input_mask, name="input_mask", lead_times=lead_times)
 
         if isinstance(target_mask, torch.Tensor):
-            self.plot_mask(target_mask, name="target_mask")
+            print(f"DEBUG target_mask: shape={target_mask.shape}")
+            self.plot_mask(target_mask, name="target_mask", lead_times=lead_times)
 
         if isinstance(temporal_mask, torch.Tensor):
-            self.plot_mask(temporal_mask, name="temporal_mask")
+            print(f"DEBUG temporal_mask: shape={temporal_mask.shape}")
+            self.plot_mask(temporal_mask, name="temporal_mask", lead_times=lead_times)
 
         if isinstance(spatial_mask, torch.Tensor):
-            self.plot_mask(spatial_mask, name="spatial_mask")
+            print(f"DEBUG spatial_mask: shape={spatial_mask.shape}")
+            self.plot_mask(spatial_mask, name="spatial_mask", lead_times=lead_times)
 
 
 class ConfigManager:

@@ -42,9 +42,9 @@ train_loader:
     - month_sin
     - month_cos
 
-  train_years_slice: [1980, 1981]
+  train_years_slice: [1980, 2010]
   num_validation_years: 0
-  prefetch_factor: null
+  prefetch_factor: 1
   num_data_workers: 0
   reduce_spatial_mask: True
   load: True

@@ -28,11 +28,13 @@ from cccma_ppp.train.train_configs import prepare_config
 
 warnings.filterwarnings("ignore")
 
-MODE = "deterministic"
+MODE = "cvae"
 ROOT = Path("/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/scripts")
-BASE_TRAIN_CONFIG = f"scripts/{MODE}_config.yaml"
+BASE_TRAIN_CONFIG = f"scripts/module_integration_tests/{MODE}_config.yaml"
 
-OUTPUT_DIR = ROOT / "../../output" / f"data_modules_integration_test_results_{MODE}"
+OUTPUT_DIR = (
+    ROOT / "../../output" / f"data_modules_integration_test_results_{MODE}_test"
+)
 CASES_DIR = OUTPUT_DIR / "cases"
 RESULTS_CSV = OUTPUT_DIR / "integration_results.csv"
 SUMMARY_PATH = OUTPUT_DIR / "summary.txt"

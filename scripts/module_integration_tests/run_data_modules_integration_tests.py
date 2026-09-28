@@ -56,13 +56,11 @@ logging.raiseExceptions = False
 # Find the project root (documentation to audit)
 ROOT = Path("/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/scripts")
 # These are the "template" configs we use as starting points for each test
-BASE_TRAIN_CONFIG = "scripts/module_integration_tests/deterministic_config.yaml"
+BASE_TRAIN_CONFIG = "scripts/module_integration_tests/cvae_config.yaml"
 BASE_INFERENCE_CONFIG = ROOT / "scripts" / "integration_suite_inference_config.yaml"
 # All results go here - one subdirectory per test case
 OUTPUT_DIR = (
-    ROOT
-    / "../../output"
-    / "data_modules_integration_test_results_original_deterministic"
+    ROOT / "../../output" / "data_modules_integration_test_results_original_cvae"
 )
 
 # Make subdirectories for organizing test results

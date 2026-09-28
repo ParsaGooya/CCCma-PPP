@@ -103,7 +103,6 @@ def main():
     standardizers = create_standardizers_per_month()
     mapper = InverseTransformationMapper(standardizers)
 
-    # ===== FORWARD NORMALIZATION =====
     print("\n[Forward Normalization - using Standardizer.transform()]")
     original_sample = np.random.randn(3, 64, 64).astype(np.float32)
     original_sample_xr = xr.DataArray(original_sample, dims=["var", "height", "width"])
@@ -124,7 +123,6 @@ def main():
         f"  Normalized mean: {normalized_sample.mean():.4f}, std: {normalized_sample.std():.4f}"
     )
 
-    # ===== INVERSE TRANSFORMATION (using mapper) =====
     print("\n[Inverse Transformation - using InverseTransformationMapper]")
     denormalized_sample = mapper.apply_inverse_transformation(
         normalized_sample, init_month=month
@@ -137,7 +135,6 @@ def main():
     error_mapper = np.abs(original_sample - denormalized_sample.numpy()).max()
     print(f"  Reconstruction error (mapper): {error_mapper:.2e}")
 
-    # ===== ROUNDTRIP VERIFICATION =====
     print("\n[Roundtrip Verification - Standardizer.transform() → inverse_transform()]")
     test_month = 7
     original_data = np.random.randn(3, 64, 64).astype(np.float32)
@@ -158,7 +155,6 @@ def main():
     print(f"  Recovered mean: {recovered_np.mean():.4f}")
     print(f"  Reconstruction error (Standardizer): {error_standardizer:.2e}")
 
-    # ===== BATCH PROCESSING WITH MIXED MONTHS =====
     print("\n[Batch Processing - Mixed Initialization Months]")
     batch_size = 12
     init_months = torch.tensor(list(range(12)))  # One sample per month
@@ -172,7 +168,6 @@ def main():
     print(f"  Denormalized batch shape: {batch_denormalized.shape}")
     print("  Each sample denormalized with its respective month's Standardizer")
 
-    # ===== CCCMA_PPP DETERMINISTIC REQUEST INTEGRATION =====
     print("\n[DeterministicRequest Integration]")
 
     class MockDeterministicModel(torch.nn.Module):

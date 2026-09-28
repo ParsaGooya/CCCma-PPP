@@ -5,8 +5,11 @@ import warnings
 from functools import partial
 from pathlib import Path
 from typing import Any
+import copy
 
+import numpy as np
 import torch
+import yaml
 from tqdm import tqdm
 
 from integrationtestslib import (
@@ -23,6 +26,7 @@ from cccma_ppp.generic.distributed import Distributed
 warnings.filterwarnings("ignore")
 
 ROOT = Path("/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/scripts")
+BASE_CONFIG_FILE = ROOT / "module_integration_tests/deterministic_config.yaml"
 CONFIG_DIR = ROOT / "module_integration_tests/plot_test_configs"
 OUTPUT_DIR = ROOT / "../../output" / "plot_mask_test_results"
 CASES_DIR = OUTPUT_DIR / "cases"
@@ -43,6 +47,57 @@ CSV_COLUMNS = [
     "result",
     "error",
 ]
+
+
+def load_base_config(config_file: Path) -> dict:
+    """Load base configuration from YAML file"""
+    with open(config_file, "r") as f:
+        return yaml.safe_load(f)
+
+
+def create_lead_times_list(values: list[int]) -> dict:
+    """Create lead_times configuration with list_lead_times"""
+    return {"lead_times": {"list_lead_times": values}}
+
+
+def create_lead_times_range(start: int, end: int) -> dict:
+    """Create lead_times configuration with start and end"""
+    return {"lead_times": {"start": start, "end": end}}
+
+
+def generate_configs(
+    base_config: dict,
+    lead_time_configs: list[dict],
+    output_dir: Path,
+) -> list[Path]:
+    """
+    Generate YAML configuration files from lead time configurations.
+
+    Returns:
+        List of paths to generated config files
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+    generated_files = []
+
+    for config in lead_time_configs:
+        config_name = config["name"]
+        lead_times = config["lead_times"]
+
+        # Deep copy base config to avoid modifying original
+        full_config = copy.deepcopy(base_config)
+
+        # Insert lead_times into dataset_config
+        full_config["train_loader"]["dataset_config"]["lead_times"] = lead_times
+
+        # Write to file
+        config_path = output_dir / f"{config_name}.yaml"
+        with open(config_path, "w") as f:
+            yaml.dump(full_config, f, default_flow_style=False, sort_keys=False)
+
+        generated_files.append(config_path)
+        print(f"Generated: {config_path}")
+
+    return generated_files
 
 
 def reset_runtime_context() -> None:
@@ -109,6 +164,49 @@ def run_plot_mask_case(config_file: Path, case_dir: Path) -> None:
     config = load_train_config(config_path)
     loader = setup_train_loader(config, config_path)
 
+    # Extract lead_times from config for plotting
+    lead_times = None
+    lead_times_cfg = config.train_loader.dataset_config.lead_times
+
+    print(f"DEBUG: lead_times_cfg type = {type(lead_times_cfg)}")
+    print(f"DEBUG: lead_times_cfg = {lead_times_cfg}")
+
+    # Handle different types of lead_times_cfg
+    if isinstance(lead_times_cfg, np.ndarray):
+        # It's a numpy array (from list_lead_times)
+        lead_times = lead_times_cfg.tolist()
+        print(f"DEBUG: Extracted from numpy.ndarray: {lead_times}")
+    elif isinstance(lead_times_cfg, (list, tuple)):
+        # It's already a list or tuple (from list_lead_times)
+        lead_times = list(lead_times_cfg)
+        print(f"DEBUG: Extracted from list/tuple: {lead_times}")
+    elif isinstance(lead_times_cfg, dict):
+        # It's a dict with start/end
+        if "list_lead_times" in lead_times_cfg:
+            lt = lead_times_cfg["list_lead_times"]
+            if isinstance(lt, np.ndarray):
+                lead_times = lt.tolist()
+            else:
+                lead_times = list(lt)
+            print(f"DEBUG: Extracted from dict['list_lead_times']: {lead_times}")
+        elif "start" in lead_times_cfg and "end" in lead_times_cfg:
+            lead_times = list(range(lead_times_cfg["start"], lead_times_cfg["end"] + 1))
+            print(f"DEBUG: Extracted from dict start/end: {lead_times}")
+    else:
+        # It's an object with attributes
+        if hasattr(lead_times_cfg, "list_lead_times"):
+            lt = lead_times_cfg.list_lead_times
+            if isinstance(lt, np.ndarray):
+                lead_times = lt.tolist()
+            else:
+                lead_times = list(lt) if hasattr(lt, "__iter__") else lt
+            print(f"DEBUG: Extracted from .list_lead_times: {lead_times}")
+        elif hasattr(lead_times_cfg, "start") and hasattr(lead_times_cfg, "end"):
+            lead_times = list(range(lead_times_cfg.start, lead_times_cfg.end + 1))
+            print(f"DEBUG: Extracted from .start/.end: {lead_times}")
+
+    print(f"DEBUG: Final lead_times = {lead_times}")
+
     # Validate dataset format
     DataModulesUtils.test_dataset_getitem_format(
         loader.dataset, init_time_dim=INIT_TIME_DIM, lead_time_dim=LEAD_TIME_DIM
@@ -118,8 +216,9 @@ def run_plot_mask_case(config_file: Path, case_dir: Path) -> None:
     mask_check = DataModulesUtils.check_premade_mask_in_dataset(loader.dataset)
     if mask_check["has_mask_attribute"]:
         fetcher = OutputFetcher(case_dir, max_plot_channels=MAX_PLOT_CHANNELS)
-        fetcher.plot_premade_mask(loader.dataset)
-        print(f"  Mask plotted: {case_dir / 'premade_mask.png'}")
+        print(f"DEBUG: Calling plot_premade_mask with lead_times={lead_times}")
+        fetcher.plot_premade_mask(loader.dataset, lead_times=lead_times)
+        print(f"  Mask plotted: {case_dir / 'raw_data' / 'masks' / 'premade_mask.png'}")
     else:
         print("  No premade mask in dataset")
 
@@ -186,13 +285,32 @@ def run_task(config_file: Path) -> tuple[bool, str]:
 
 def main() -> None:
     """Main entry point"""
-    if not CONFIG_DIR.exists():
-        raise ValueError(f"Config directory does not exist: {CONFIG_DIR}")
+    # Load base configuration
+    if not BASE_CONFIG_FILE.exists():
+        raise ValueError(f"Base config file not found: {BASE_CONFIG_FILE}")
 
-    # Find all YAML configs in the directory
-    config_files = sorted(CONFIG_DIR.glob("*.yaml"))
+    print(f"Loading base config from: {BASE_CONFIG_FILE}")
+    base_config = load_base_config(BASE_CONFIG_FILE)
+
+    # Define lead time configurations as a grid
+    lead_time_configs = [
+        {"name": "case1", "lead_times": {"list_lead_times": [3, 15, 45, 90]}},
+        {"name": "case2", "lead_times": {"start": 7, "end": 84}},
+        {"name": "case3", "lead_times": {"list_lead_times": [2, 21, 60, 120]}},
+        {"name": "case4", "lead_times": {"start": 1, "end": 30}},
+        {"name": "case5", "lead_times": {"list_lead_times": [5, 10, 20, 75, 150]}},
+        {"name": "case6", "lead_times": {"start": 14, "end": 180}},
+        {"name": "case7", "lead_times": {"list_lead_times": [1, 14, 45]}},
+        {"name": "case8", "lead_times": {"start": 1, "end": 365}},
+        {"name": "case9", "lead_times": {"list_lead_times": [6, 12, 30, 60, 90, 180]}},
+    ]
+
+    # Generate configs
+    print("Generating configurations...")
+    config_files = generate_configs(base_config, lead_time_configs, CONFIG_DIR)
+
     if not config_files:
-        raise ValueError(f"No YAML configs found in {CONFIG_DIR}")
+        raise ValueError("No configs were generated")
 
     CASES_DIR.mkdir(parents=True, exist_ok=True)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
