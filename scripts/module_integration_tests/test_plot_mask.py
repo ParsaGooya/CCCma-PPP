@@ -27,8 +27,8 @@ warnings.filterwarnings("ignore")
 
 ROOT = Path("/fs/site7/eccc/crd/cccma/users/rna002/CCCma-PPP/scripts")
 BASE_CONFIG_FILE = ROOT / "module_integration_tests/deterministic_config.yaml"
-CONFIG_DIR = ROOT / "module_integration_tests/plot_test_configs"
 OUTPUT_DIR = ROOT / "../../output" / "plot_mask_test_results"
+CONFIG_DIR = OUTPUT_DIR / "plot_test_configs"
 CASES_DIR = OUTPUT_DIR / "cases"
 RESULTS_CSV = OUTPUT_DIR / "integration_results.csv"
 SUMMARY_PATH = OUTPUT_DIR / "summary.txt"

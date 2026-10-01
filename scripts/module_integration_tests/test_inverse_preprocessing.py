@@ -47,7 +47,7 @@ class InverseTransformationMapper:
             output_np = output[i].cpu().numpy()
             output_xr = xr.DataArray(output_np, dims=["var", "height", "width"])
 
-            # Use Standardizer.inverse_transform() (line 10550 in src)
+            # Use Standardizer.inverse_transform()
             denormalized_xr = self.standardizers[int(month)].inverse_transform(
                 output_xr
             )
@@ -77,7 +77,7 @@ class InverseTransformationMapper:
 
 
 def create_standardizers_per_month():
-    # Create 12 Standardizer instances, one per month (lines 10407-10456 in src)
+    # Create 12 Standardizer instances, one per month
     standardizers = {}
 
     for month in range(12):
@@ -91,7 +91,7 @@ def create_standardizers_per_month():
             coords={"time": np.arange(100)},
         )
 
-        # Fit: computes mean/std (lines 10478-10490 in src)
+        # Fit: computes mean/std
         standardizer.fit(monthly_data_xr)
         standardizers[month] = standardizer
 
@@ -110,7 +110,7 @@ def main():
     month = 5
     standardizer = standardizers[month]
 
-    # Use Standardizer.transform() (line 10521 in src: (data - mean) / std)
+    # Use Standardizer.transform()
     normalized_sample_xr = standardizer.transform(original_sample_xr)
     normalized_sample_np = np.array(normalized_sample_xr.data)
     normalized_sample = torch.from_numpy(normalized_sample_np).float()
@@ -142,12 +142,12 @@ def main():
 
     standardizer = standardizers[test_month]
 
-    # Forward: Standardizer.transform() (line 10521 in src)
+    # Forward: Standardizer.transform()
     normalized_xr = standardizer.transform(original_data_xr)
     print(f"  Original mean: {float(original_data_xr.mean()):.4f}")
     print(f"  Normalized mean: {float(normalized_xr.mean()):.4f}")
 
-    # Inverse: Standardizer.inverse_transform() (line 10550 in src)
+    # Inverse: Standardizer.inverse_transform()
     recovered_xr = standardizer.inverse_transform(normalized_xr)
     recovered_np = np.array(recovered_xr.data)
 

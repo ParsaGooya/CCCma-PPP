@@ -793,10 +793,8 @@ class OutputFetcher:
                 if hasattr(dataset, "config") and isinstance(dataset.config, dict):
                     lead_times_cfg = dataset.config.get("lead_times")
                     if isinstance(lead_times_cfg, np.ndarray):
-                        # It's a numpy array
                         lead_times = lead_times_cfg.tolist()
                     elif isinstance(lead_times_cfg, (list, tuple)):
-                        # It's a list or tuple
                         lead_times = list(lead_times_cfg)
                     elif isinstance(lead_times_cfg, dict):
                         if "list_lead_times" in lead_times_cfg:
@@ -826,54 +824,98 @@ class OutputFetcher:
                             pass
 
             # Create plot
-            figure, axes = plt.subplots(1, 1, figsize=(10, 8))
-            im = axes.imshow(mask_np, cmap="binary", origin="lower", aspect="auto")
+            figure, axes = plt.subplots(1, 1, figsize=(16, 8))
+            im = axes.imshow(
+                mask_np,
+                cmap="binary",
+                origin="lower",
+                aspect="auto",
+                interpolation="nearest",
+            )
 
-            axes.set_title("Premade Mask from Dataset\n(white=valid, black=masked)")
-            axes.set_ylabel("Y (spatial)")
+            axes.set_title(
+                "Premade Mask from Dataset\n(white=valid, black=masked)",
+                fontsize=14,
+                fontweight="bold",
+            )
+            axes.set_ylabel("Y (spatial)", fontsize=11)
 
-            # Set x-axis to lead times if available
+            # Get mask dimensions
+            mask_height, mask_width = mask_np.shape
+
+            # Set grid ticks between pixels (not on pixels)
+            axes.set_xticks(np.arange(-0.5, mask_width, 1), minor=False)
+            axes.set_yticks(np.arange(-0.5, mask_height, 1), minor=False)
+
+            # Set x-axis labels to lead times if available
             if lead_times is not None:
-                axes.set_xlabel("Lead Time")
-                mask_width = mask_np.shape[1]
+                axes.set_xlabel("Lead Time", fontsize=11)
 
                 if len(lead_times) == mask_width:
-                    # Perfect match - show lead times directly
-                    step = max(1, len(lead_times) // 10)
-                    tick_indices = range(0, len(lead_times), step)
-                    axes.set_xticks(tick_indices)
-                    axes.set_xticklabels([str(lead_times[i]) for i in tick_indices])
-                else:
-                    # Shape mismatch - scale lead times to mask width
-                    step = max(1, mask_width // 10)
-                    tick_indices = range(0, mask_width, step)
+                    # Show every Nth label to avoid jambling
+                    step = max(1, mask_width // 15)  # Show ~15 labels max
+                    tick_positions = np.arange(0, mask_width, step)
+                    axes.set_xticks(tick_positions, minor=False)
 
-                    # Map mask indices to lead times proportionally
+                    labels = [str(lead_times[i]) for i in tick_positions]
+                    axes.set_xticklabels(labels, fontsize=9, rotation=45, ha="right")
+                else:
+                    # Scale lead times to mask width
+                    step = max(1, mask_width // 15)  # Show ~15 labels max
+                    tick_positions = np.arange(0, mask_width, step)
+                    axes.set_xticks(tick_positions, minor=False)
+
                     scaled_labels = []
-                    for idx in tick_indices:
-                        # Scale index from [0, mask_width) to [0, len(lead_times))
+                    for idx in tick_positions:
                         lead_idx = int(idx * len(lead_times) / mask_width)
                         lead_idx = min(lead_idx, len(lead_times) - 1)
                         scaled_labels.append(str(lead_times[lead_idx]))
 
-                    axes.set_xticks(tick_indices)
-                    axes.set_xticklabels(scaled_labels)
+                    axes.set_xticklabels(
+                        scaled_labels, fontsize=9, rotation=45, ha="right"
+                    )
 
                     # Add info text
                     axes.text(
                         0.5,
-                        -0.15,
+                        -0.12,
                         f"Lead times ({len(lead_times)}) scaled to mask width ({mask_width})",
                         transform=axes.transAxes,
-                        fontsize=8,
+                        fontsize=9,
                         ha="center",
                         style="italic",
                     )
             else:
-                axes.set_xlabel("X (lead time index)")
+                axes.set_xlabel("X (lead time index)", fontsize=11)
+                step = max(1, mask_width // 15)
+                tick_positions = np.arange(0, mask_width, step)
+                axes.set_xticks(tick_positions, minor=False)
+                axes.set_xticklabels(
+                    [str(int(i)) for i in tick_positions],
+                    fontsize=9,
+                    rotation=45,
+                    ha="right",
+                )
+
+            # Set y-axis labels at pixel centers
+            y_step = max(1, mask_height // 15)  # Show ~15 labels max
+            y_positions = np.arange(0, mask_height, y_step)
+            axes.set_yticks(y_positions, minor=False)
+            axes.set_yticklabels([str(int(i)) for i in y_positions], fontsize=9)
+
+            # Add grid - fully visible, overlaid on top (at pixel edges)
+            axes.grid(
+                True,
+                which="major",
+                color="black",
+                linestyle="-",
+                linewidth=0.8,
+                alpha=0.7,
+            )
+            axes.set_axisbelow(False)  # Grid on top of image
 
             cbar = figure.colorbar(im, ax=axes, shrink=0.8)
-            cbar.set_label("Valid (1) / Masked (0)")
+            cbar.set_label("Valid (1) / Masked (0)", fontsize=10)
 
             # Add statistics
             is_binary = bool(np.all(np.isin(mask_np, [0, 1])))
@@ -889,7 +931,13 @@ class OutputFetcher:
                 transform=axes.transAxes,
                 fontsize=10,
                 verticalalignment="top",
-                bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+                bbox=dict(
+                    boxstyle="round",
+                    facecolor="wheat",
+                    alpha=0.8,
+                    edgecolor="black",
+                    linewidth=1.5,
+                ),
             )
 
             figure.tight_layout()
@@ -1012,6 +1060,7 @@ class OutputFetcher:
                 if value.ndim >= 4:
                     value = value[0, ch_idx]  # (B, C, H, W) → (H, W)
                 elif value.ndim == 3:
+                    # Might be B, C, L
                     value = value[ch_idx]  # (C, H, W) → (H, W)
                 elif value.ndim == 2:
                     # NEW: Handle 2D tensors (B, features) → reshape to (B, features) as image
@@ -1141,26 +1190,30 @@ class OutputFetcher:
                     f"DEBUG: image.shape={image.shape}, min={np.nanmin(image):.4f}, max={np.nanmax(image):.4f}"
                 )
 
-                figure, axes = plt.subplots(1, 1, figsize=(10, 8))
+                height, width = image.shape
+                aspect_ratio = height / width
+
+                # Scale figure to match image aspect ratio
+                fig_width = 12
+                fig_height = fig_width * aspect_ratio
+
+                figure, axes = plt.subplots(1, 1, figsize=(fig_width, fig_height))
                 im = axes.imshow(image, origin="lower", aspect="auto", cmap="viridis")
                 axes.set_title(f"{name}, channel {ch_idx}")
 
-                # Set proper spatial axis labels
+                # Get ACTUAL image dimensions (not hardcoded)
                 height, width = image.shape
                 axes.set_xlabel("X (longitude)")
                 axes.set_ylabel("Y (latitude)")
 
-                # Set ticks to match spatial dimensions
-                axes.set_xticks([0, width // 4, width // 2, 3 * width // 4, width - 1])
-                axes.set_xticklabels(
-                    [0, width // 4, width // 2, 3 * width // 4, width - 1]
-                )
-                axes.set_yticks(
-                    [0, height // 4, height // 2, 3 * height // 4, height - 1]
-                )
-                axes.set_yticklabels(
-                    [0, height // 4, height // 2, 3 * height // 4, height - 1]
-                )
+                # Create dynamic ticks based on actual dimensions
+                x_ticks = np.linspace(0, width - 1, min(6, width), dtype=int)
+                y_ticks = np.linspace(0, height - 1, min(6, height), dtype=int)
+
+                axes.set_xticks(x_ticks)
+                axes.set_xticklabels([str(int(x)) for x in x_ticks])
+                axes.set_yticks(y_ticks)
+                axes.set_yticklabels([str(int(y)) for y in y_ticks])
 
                 cbar = figure.colorbar(im, ax=axes, shrink=0.8)
                 cbar.set_label("Value")
@@ -1343,7 +1396,7 @@ class OutputFetcher:
         # Known common sizes first
         known_sizes = {
             7200: (60, 120),  # Common climate grid
-            8256: (86, 96),  # Observation grids
+            8256: (64, 129),  # Observation grids
         }
         if flattened_size in known_sizes:
             return known_sizes[flattened_size]
