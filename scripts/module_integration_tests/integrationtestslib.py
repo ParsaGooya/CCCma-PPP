@@ -1418,7 +1418,7 @@ class OutputFetcher:
         _, h, w = divisors[0]
         return (h, w)
 
-    def plot_batch(self, batch: Any) -> None:
+    def plot_batch(self, batch: Any, loader: Any = None) -> None:
         """Plot all data and masks from batch - handles both flattened and spatial data"""
         if isinstance(batch, dict):
             input_tensor = batch.get("input")
@@ -1439,6 +1439,25 @@ class OutputFetcher:
             target_mask = getattr(batch, "target_mask", None)
             metadata = getattr(batch, "metadata", None)
 
+        # Extract spatial shapes from loader if available
+        spatial_shape_input = None
+        spatial_shape_target = None
+
+        if loader is not None:
+            if hasattr(loader, "input_shape") and loader.input_shape:
+                try:
+                    c, h, w = loader.input_shape
+                    spatial_shape_input = (h, w)
+                except (ValueError, TypeError):
+                    pass
+
+            if hasattr(loader, "target_shape") and loader.target_shape:
+                try:
+                    c, h, w = loader.target_shape
+                    spatial_shape_target = (h, w)
+                except (ValueError, TypeError):
+                    pass
+
         # Extract lead times from metadata if available
         lead_times = None
         if isinstance(metadata, dict) and "lead_time" in metadata:
@@ -1447,18 +1466,23 @@ class OutputFetcher:
             elif isinstance(metadata.get("lead_time"), (int, float)):
                 lead_times = [metadata["lead_time"]]
 
-        # Plot data tensors with auto-detected spatial shapes
+        # Plot data tensors with spatial shapes from loader or auto-detected
         if isinstance(input_tensor, torch.Tensor):
             print(f"DEBUG input: shape={input_tensor.shape}, ndim={input_tensor.ndim}")
             if input_tensor.ndim == 3:
-                spatial_shape = self._detect_spatial_shape(input_tensor.shape[2])
-                print(f"DEBUG input: detected spatial_shape={spatial_shape}")
-                if spatial_shape:
+                if spatial_shape_input is None:
+                    spatial_shape_input = self._detect_spatial_shape(
+                        input_tensor.shape[2]
+                    )
+                print(
+                    f"DEBUG input: spatial_shape={spatial_shape_input} (from loader: {loader is not None and hasattr(loader, 'input_shape')})"
+                )
+                if spatial_shape_input:
                     print(
-                        f"DEBUG input: calling plot_tensor_channels_unflattened with spatial_shape={spatial_shape}"
+                        f"DEBUG input: calling plot_tensor_channels_unflattened with spatial_shape={spatial_shape_input}"
                     )
                     self.plot_tensor_channels_unflattened(
-                        input_tensor, name="input", spatial_shape=spatial_shape
+                        input_tensor, name="input", spatial_shape=spatial_shape_input
                     )
                 else:
                     print("DEBUG input: calling plot_tensor_channels (fallback)")
@@ -1472,14 +1496,19 @@ class OutputFetcher:
                 f"DEBUG target: shape={target_tensor.shape}, ndim={target_tensor.ndim}"
             )
             if target_tensor.ndim == 3:
-                spatial_shape = self._detect_spatial_shape(target_tensor.shape[2])
-                print(f"DEBUG target: detected spatial_shape={spatial_shape}")
-                if spatial_shape:
+                if spatial_shape_target is None:
+                    spatial_shape_target = self._detect_spatial_shape(
+                        target_tensor.shape[2]
+                    )
+                print(
+                    f"DEBUG target: spatial_shape={spatial_shape_target} (from loader: {loader is not None and hasattr(loader, 'target_shape')})"
+                )
+                if spatial_shape_target:
                     print(
-                        f"DEBUG target: calling plot_tensor_channels_unflattened with spatial_shape={spatial_shape}"
+                        f"DEBUG target: calling plot_tensor_channels_unflattened with spatial_shape={spatial_shape_target}"
                     )
                     self.plot_tensor_channels_unflattened(
-                        target_tensor, name="target", spatial_shape=spatial_shape
+                        target_tensor, name="target", spatial_shape=spatial_shape_target
                     )
                 else:
                     print("DEBUG target: calling plot_tensor_channels (fallback)")

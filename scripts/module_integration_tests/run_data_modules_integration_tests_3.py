@@ -725,7 +725,7 @@ def run_dataset_case(config_path: Path, params: dict[str, Any]) -> None:
 
     for i, batch in enumerate(LimitedLoader(loader, MAX_BATCHES_PER_CASE)):
         if i == 0:
-            fetcher.plot_batch(batch)
+            fetcher.plot_batch(batch, loader=loader)
 
             if mask_check["has_mask_attribute"]:
                 fetcher.compare_premade_vs_nan_masks(loader.dataset, batch)
@@ -788,7 +788,7 @@ def run_dataloader_case(config_path: Path, params: dict[str, Any]) -> None:
 
     for i, batch in enumerate(LimitedLoader(loader, MAX_BATCHES_PER_CASE)):
         if i == 0:
-            fetcher.plot_batch(batch)
+            fetcher.plot_batch(batch, loader=loader)
 
             if mask_check["has_mask_attribute"]:
                 fetcher.compare_premade_vs_nan_masks(loader.dataset, batch)
