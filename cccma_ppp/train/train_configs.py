@@ -22,7 +22,7 @@ from cccma_ppp.core.trainer import TrainerConfig
 from cccma_ppp.core.optimization import OptimizerConfig
 from cccma_ppp.core.core_abc import GenerativeContext
 
-from cccma_ppp.generic import registry_imports
+
 
 def set_seed(seed):
     """
@@ -121,7 +121,7 @@ class TrainConfig:
         UserWarning
             Description not yet provided.
         """
-        
+
         if self.module.GENERATOR is not None:
             if "crps" not in self.losspipeline.loss_types:
                 raise RuntimeError(

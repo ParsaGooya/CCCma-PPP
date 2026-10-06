@@ -1,12 +1,10 @@
 import numpy as np
 import dataclasses
-from typing import ClassVar
 import joblib
 from pathlib import Path
 import os
 import xarray as xr
 import uuid
-from datetime import datetime
 
 
 from cccma_ppp.generic.runtime import RuntimeContext
@@ -53,7 +51,6 @@ class PreprocessingPipeline:
         """
 
         if self.load_dir is None:
-
             self.fitted = False
             self.mask = None
             self.fitted_based_time = None
@@ -65,7 +62,7 @@ class PreprocessingPipeline:
 
             self.name = f"pipeline_{uuid.uuid4().hex[:8]}"
             self.rename_dict = None
-            
+
             for step in self.preprocessors_list:
                 self.pipeline.append((step.name.lower(), step.get_preprocessor()))
 
@@ -119,7 +116,6 @@ class PreprocessingPipeline:
             data_processed = base_data
             self.mask = mask
             self.fitted_based_time = base_data[self.init_time_time].values
-
 
             for step_name, preprocessor in self.pipeline:
                 preprocessor.fit(data=data_processed, mask=mask)
@@ -222,8 +218,7 @@ class PreprocessingPipeline:
     def has_flattener(self) -> bool:
         """Check if pipeline includes Flattennanremove step."""
         return any(
-            isinstance(item, Flattennanremove)
-            for item in self.fitted_preprocessors
+            isinstance(item, Flattennanremove) for item in self.fitted_preprocessors
         )
 
     def get_flattener(self) -> Flattennanremove:
@@ -240,7 +235,6 @@ class PreprocessingPipeline:
                 "Cannot reconstruct spatial coordinates."
             )
         return flattener
-
 
     def to_dataset(self, data: xr.DataArray) -> xr.Dataset:
         """
@@ -265,7 +259,7 @@ class PreprocessingPipeline:
         if not self.fitted:
             raise RuntimeError("Pipeline must be fitted before calling to_dataset().")
 
-        if 'channels' not in data.dims:
+        if "channels" not in data.dims:
             raise ValueError(
                 f"Input data must have 'channels' dimension. "
                 f"Got dimensions: {list(data.dims)}"
@@ -422,7 +416,6 @@ class PreprocessingPipeline:
                 "No data variables found in base_data. "
                 "Cannot create reference variables."
             )
-
 
     def load_from_memory(self, load_dir: str | Path):
         """
