@@ -371,6 +371,7 @@ class TestDataloaderConfigABC:
                 )
             )
 
+    @pytest.mark.pruned
     def test_select_requested_times_rejects_empty_selection(self):
         available = xr.DataArray(
             np.array(
@@ -730,6 +731,7 @@ class TestDataloader:
         assert loader.sampler.epoch == 4
         assert result is loader
 
+    @pytest.mark.pruned
     def test_set_epoch_without_sampler(self):
         config = ConcreteDataloaderConfig()
         dataset = DummyDataset()
@@ -944,7 +946,6 @@ def test_nonzero_workers_allow_none_prefetch_factor():
     assert config.prefetch_factor is None
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "prefetch_factor",
     [
@@ -1533,7 +1534,6 @@ def test_set_epoch_local_loader_does_not_fail_for_none_epoch():
     assert loader.set_epoch(None) is loader
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "start_batch",
     [

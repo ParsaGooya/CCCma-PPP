@@ -931,6 +931,7 @@ class TestCheckFitted:
                 )
             )
 
+    @pytest.mark.pruned
     def test_inverse_transform_checks_fitted_state(self):
         preprocessor = ConcretePreprocessor(
             fitted=False,
@@ -1582,6 +1583,7 @@ class TestInverseTargetTime:
 
         assert result.identical(data[PreprocessModuleABC.init_time_dim])
 
+    @pytest.mark.pruned
     def test_builds_target_time_grid(self):
         preprocessor = ConcretePreprocessor()
         data = xr.DataArray(
@@ -1632,7 +1634,6 @@ class TestInverseTargetTime:
             data[PreprocessModuleABC.lead_time_dim].values,
         )
 
-    @pytest.mark.pruned
     def test_flattens_init_and_lead_time_grids_before_calling_helper(
         self,
     ):
@@ -1922,6 +1923,7 @@ class TestCheckZeros:
 
         assert preprocessor._check_zeros(data) is None
 
+    @pytest.mark.pruned
     def test_named_dataarray_with_zero_raises(self):
         preprocessor = ConcretePreprocessor()
         data = xr.DataArray(
@@ -2009,7 +2011,6 @@ class TestCheckZeros:
         ):
             preprocessor._check_zeros(data)
 
-    @pytest.mark.pruned
     def test_dataset_reports_all_zero_variables(self):
         preprocessor = ConcretePreprocessor()
         data = xr.Dataset(

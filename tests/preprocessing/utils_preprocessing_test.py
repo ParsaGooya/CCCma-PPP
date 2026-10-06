@@ -775,7 +775,6 @@ class TestAnomaliesScaler:
             lead_time_resolution=scaler.lead_time_resolution,
         )
 
-    @pytest.mark.pruned
     def test_transform_requires_fitted_scaler(self):
         with pytest.raises(
             RuntimeError,
@@ -1538,7 +1537,6 @@ class TestAlignStatistic:
                 stat,
             )
 
-    @pytest.mark.pruned
     def test_temporary_coordinates_are_removed(self):
         data = make_forecast_data(
             times=("2000-01-01",),
@@ -2746,7 +2744,6 @@ class TestTrendTimeToNumeric:
                 origin=origin,
             )
 
-    @pytest.mark.pruned
     def test_rejects_empty_time_coordinate(self):
         times = xr.DataArray(
             np.asarray(
@@ -2949,7 +2946,6 @@ class TestTrendRemoverFit:
         assert remover.slope["tas"].item() == pytest.approx(2.0)
         assert remover.intercept["tas"].item() == pytest.approx(5.0)
 
-    @pytest.mark.pruned
     def test_fit_monthly_groups(self):
         times = np.asarray(
             [
@@ -2990,6 +2986,7 @@ class TestTrendRemoverFit:
             atol=1e-10,
         )
 
+    @pytest.mark.pruned
     def test_fit_daily_groups(self):
         times = np.asarray(
             [
@@ -3377,6 +3374,7 @@ class TestFlattennanremoveAdditionalBranches:
             },
         )
 
+    @pytest.mark.pruned
     def test_fit_uses_target_as_reference(self):
         data = self.make_data()
         target = data.copy()
@@ -3647,6 +3645,7 @@ class TestAlignStatisticAdditionalBranches:
             [1.0, 32.0],
         )
 
+    @pytest.mark.pruned
     def test_align_all_temporal_stat_dimensions(self):
         data = make_forecast_data(
             times=("2000-01-01",),

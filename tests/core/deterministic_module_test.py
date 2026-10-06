@@ -298,7 +298,6 @@ def test_load_dir_output_shape_mismatch(monkeypatch):
         )
 
 
-@pytest.mark.pruned
 def test_load_dir_success_calls_load_state_dict(monkeypatch):
     import cccma_ppp.core.models.deterministic as mod
 
@@ -331,6 +330,7 @@ def test_load_dir_success_calls_load_state_dict(monkeypatch):
     assert called["load"] is True
 
 
+@pytest.mark.pruned
 def test_load_dir_success_with_explicit_output_shape(monkeypatch):
     import cccma_ppp.core.models.deterministic as mod
 

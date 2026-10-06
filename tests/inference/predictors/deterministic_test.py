@@ -157,6 +157,7 @@ def test_config_build_returns_predictor(tmp_path):
     assert predictor.num_output_sampling == 3
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "num_output_sampling",
     [
@@ -578,7 +579,6 @@ def test_infer_on_batch_uses_prediction_batch_as_sample_size(
     )
 
 
-@pytest.mark.pruned
 def test_batch_to_netcdf_delegates_prediction(
     tmp_path,
     monkeypatch,

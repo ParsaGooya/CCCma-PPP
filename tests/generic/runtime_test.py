@@ -10,6 +10,7 @@ from cccma_ppp.generic.runtime import RuntimeContext
 
 class TestRuntimeContextDefaults:
     # Remove test due to no coverage
+
     @pytest.mark.pruned
     def test_is_dataclass(self):
         assert dataclasses.is_dataclass(RuntimeContext)
@@ -132,7 +133,6 @@ class TestRuntimeContextCustomDirectories:
 
         assert context.GLOBAL_CHECKPOINT_DIR is custom
 
-    @pytest.mark.pruned
     def test_preserves_custom_figures_directory(
         self,
         tmp_path,
@@ -160,6 +160,7 @@ class TestRuntimeContextCustomDirectories:
 
         assert context.GLOBAL_LOG_DIR is custom
 
+    @pytest.mark.pruned
     def test_preserves_custom_monitoring_directory(
         self,
         tmp_path,
@@ -422,6 +423,7 @@ class TestRuntimeContextStringExperimentDirectory:
 
 class TestRuntimeContextDataclassBehavior:
     # Remove test due to no coverage
+
     @pytest.mark.pruned
     def test_declared_field_order(self):
         field_names = [field.name for field in dataclasses.fields(RuntimeContext)]

@@ -808,7 +808,6 @@ def test_scheduler_holds_minimum_lr_after_final_step():
         assert param_group["lr"] == pytest.approx(0.002)
 
 
-@pytest.mark.pruned
 def test_scheduler_does_not_increment_after_final_step_when_holding_minimum():
     module = make_module()
     optimizer = make_optimizer(module)
@@ -862,6 +861,7 @@ def test_scheduler_continues_stepping_when_minimum_is_not_held(
     assert scheduler.num_steps == config.total_steps + 1
 
 
+@pytest.mark.pruned
 def test_scheduler_hold_minimum_updates_every_parameter_group():
     first = nn.Parameter(torch.tensor([1.0]))
     second = nn.Parameter(torch.tensor([2.0]))
@@ -903,7 +903,6 @@ def test_scheduler_hold_minimum_updates_every_parameter_group():
     )
 
 
-@pytest.mark.pruned
 def test_optimizer_scheduler_step_delegates_to_scheduler(
     monkeypatch,
 ):
@@ -982,6 +981,7 @@ def test_optimizer_state_dict_without_scheduler_uses_none():
     assert state["lr_scheduler"] is None
 
 
+@pytest.mark.pruned
 def test_optimizer_load_state_dict_does_not_load_absent_scheduler_state(
     monkeypatch,
 ):

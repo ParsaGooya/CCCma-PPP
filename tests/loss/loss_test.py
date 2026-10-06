@@ -77,6 +77,7 @@ def test_config_invalid_weight_length():
         )
 
 
+@pytest.mark.pruned
 def test_config_invalid_weight_sum():
     with pytest.raises((AssertionError, ValueError, RuntimeError)):
         LosspipelineConfig(
@@ -291,7 +292,6 @@ def test_config_auto_weights_three_steps():
     )
 
 
-@pytest.mark.pruned
 def test_config_accepts_single_explicit_weight():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -705,7 +705,6 @@ def test_loads_mask_from_netcdf(
     )
 
 
-@pytest.mark.pruned
 def test_build_with_saved_mask_requires_output_shape():
     config = LosspipelineConfig(
         loss_pipeline=[
@@ -832,6 +831,7 @@ def test_resolve_output_mask_rejects_spatial_mismatch():
         )
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "mask_channels",
     [
@@ -1340,6 +1340,7 @@ def test_output_mask_is_multiplied_with_target_mask(
     )
 
 
+@pytest.mark.pruned
 def test_masked_loss_disabled_clears_target_mask(
     monkeypatch,
 ):
@@ -1659,7 +1660,6 @@ def test_generative_context_requires_extra_target_dimension():
     assert "a" in individual
 
 
-@pytest.mark.pruned
 def test_generative_context_rejects_nongenerative_target_shape():
     context = GenerativeContext()
     context.generative_modeling = True

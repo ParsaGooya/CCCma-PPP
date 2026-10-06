@@ -156,7 +156,6 @@ class TestCVaEMLPConfig:
 
         assert config.condition_embedding_size == 7
 
-    @pytest.mark.pruned
     def test_independent_latent_requires_condition_in_decoder(self):
         with pytest.raises(
             ValueError,
@@ -176,7 +175,6 @@ class TestCVaEMLPConfig:
 
         assert config.condemb_to_decoder is False
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "dropout_rate",
         [
@@ -471,7 +469,6 @@ class TestRecognition:
             condition,
         )
 
-    @pytest.mark.pruned
     def test_concatenates_added_features(self):
         model = self.make_stubbed_model()
 
@@ -501,6 +498,7 @@ class TestRecognition:
             features,
         )
 
+    @pytest.mark.pruned
     def test_condition_precedes_added_features(self):
         model = self.make_stubbed_model()
 
@@ -868,6 +866,7 @@ class TestForward:
 
         assert result.output.shape == (4, 2, 1, 3)
 
+    @pytest.mark.pruned
     def test_forward_clamps_posterior_variance(self):
         model = self.make_forward_model()
 

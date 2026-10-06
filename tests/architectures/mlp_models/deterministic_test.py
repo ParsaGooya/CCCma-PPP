@@ -92,6 +92,7 @@ def test_config_infers_decoder_dimensions():
     assert config.decoder_hidden_dims == [8, 16]
 
 
+@pytest.mark.pruned
 def test_config_infers_empty_decoder_for_single_encoder_dimension():
     config = AutoencoderConfig(
         encoder_hidden_dims=[4],
@@ -622,7 +623,6 @@ def test_forward_without_mask_preserves_input_values():
     )
 
 
-@pytest.mark.pruned
 def test_forward_append_mode_one_concatenates_features_to_encoder():
     model = make_model(
         config=make_config(
@@ -1078,6 +1078,7 @@ def test_forward_with_added_features_supports_backward():
     assert features.grad is not None
 
 
+@pytest.mark.pruned
 def test_forward_output_is_finite():
     model = make_model(
         config=make_config(

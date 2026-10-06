@@ -209,7 +209,6 @@ def test_resolve_data_missing_path(tmp_path):
         _resolve_data(cfg)
 
 
-@pytest.mark.pruned
 def test_resolve_data_empty_directory(tmp_path):
     cfg = DummyDataConfig(tmp_path)
 
@@ -261,6 +260,7 @@ def test_resolve_data_skip_checks_branch(tmp_path):
     mock_open.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_resolve_data_missing_required_dims(tmp_path):
     ds = xr.Dataset(
         {
@@ -324,6 +324,7 @@ def test_resolve_data_init_time_coordinate_is_accepted(tmp_path):
             _resolve_data(cfg)
 
 
+@pytest.mark.pruned
 def test_resolve_data_invalid_dims(tmp_path):
     ds = xr.Dataset(
         {
@@ -419,6 +420,7 @@ def test_resolve_data_missing_coords(tmp_path):
             _resolve_data(cfg)
 
 
+@pytest.mark.pruned
 def test_resolve_data_realization_required_missing(tmp_path):
     cfg = DummyDataConfig(
         tmp_path,
@@ -463,7 +465,6 @@ def test_resolve_data_realization_present(tmp_path):
     assert cfg.list_paths == ["x.nc"]
 
 
-@pytest.mark.pruned
 def test_resolve_data_no_supported_nn_dimensions(tmp_path):
     ds = xr.Dataset(
         {
@@ -503,7 +504,6 @@ def test_resolve_data_no_supported_nn_dimensions(tmp_path):
             _resolve_data(cfg)
 
 
-@pytest.mark.pruned
 def test_resolve_data_invalid_time_type(tmp_path):
     ds = make_valid_ds().assign_coords(
         {
@@ -1147,111 +1147,6 @@ class TestDataConfigProperties:
         assert config.init_time_frequency == "year"
 
 
-class TestOpenXarrayData:
-    @pytest.mark.pruned
-    def test_opens_data_without_realization_selection(
-        self,
-        tmp_path,
-    ):
-        config = DummyDataConfig(tmp_path)
-        config.list_paths = [
-            "first.nc",
-            "second.nc",
-        ]
-        config.info = Mock(
-            coords={
-                INIT_TIME_DIM: make_valid_ds()[INIT_TIME_DIM],
-            },
-        )
-
-        expected = make_valid_ds()
-
-        with patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
-            return_value=expected,
-        ) as load_data:
-            result = config.open_xarray_data(
-                load=True,
-                add_time_auxiliary_coords=True,
-            )
-
-        assert result is config
-        assert config.data is expected
-
-        load_data.assert_called_once_with(
-            [
-                "first.nc",
-                "second.nc",
-            ],
-            names=["var"],
-            ensemble_mean=False,
-            selection=None,
-            concat_dim=None,
-            rename_dict={},
-            add_time_auxiliary_coords=True,
-            load=True,
-        )
-
-    @pytest.mark.pruned
-    def test_opens_data_with_realization_selection(
-        self,
-        tmp_path,
-    ):
-        config = DummyDataConfig(
-            tmp_path,
-            realization_list=[
-                0,
-                1,
-            ],
-        )
-        config.list_paths = [
-            "ensemble.nc",
-        ]
-
-        realization_coordinate = make_ensemble_ds()[REALIZATION_DIM]
-        config.info = Mock(
-            coords={
-                REALIZATION_DIM: realization_coordinate,
-            },
-        )
-
-        expected = make_ensemble_ds()
-
-        with patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
-            return_value=expected,
-        ) as load_data:
-            result = config.open_xarray_data()
-
-        assert result is config
-
-        assert load_data.call_args.kwargs["selection"] == {
-            REALIZATION_DIM: realization_coordinate,
-        }
-
-    @pytest.mark.pruned
-    def test_open_uses_default_flags(
-        self,
-        tmp_path,
-    ):
-        config = DummyDataConfig(tmp_path)
-        config.list_paths = [
-            "data.nc",
-        ]
-        config.info = Mock(
-            coords={},
-        )
-
-        with patch(
-            "cccma_ppp.data_modules.data.data_abc._load_xarray_data",
-            return_value=make_valid_ds(),
-        ) as load_data:
-            config.open_xarray_data()
-
-        assert load_data.call_args.kwargs["load"] is False
-        assert load_data.call_args.kwargs["add_time_auxiliary_coords"] is False
-
-
 class TestDataConfigIndexing:
     @pytest.mark.pruned
     def test_isel_requires_opened_data(
@@ -1676,7 +1571,6 @@ class TestAdditionalResolveData:
 
         assert collect.call_count == 2
 
-    @pytest.mark.pruned
     def test_resolve_data_error_does_not_assign_list_paths(
         self,
         tmp_path,

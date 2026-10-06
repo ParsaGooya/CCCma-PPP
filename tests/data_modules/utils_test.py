@@ -15,6 +15,7 @@ from cccma_ppp.data_modules.utils import (
     _create_train_mask,
     _days_in_cftime_month,
     _load_xarray_data,
+    _standardize_time,
     _unwrap_data_variables,
     _validate_time_sequence,
     add_lead_times,
@@ -272,6 +273,7 @@ class TestLoadXarrayData:
         )
         assert result is not None
 
+    @pytest.mark.pruned
     def test_applies_rename_dict(self):
         dataset = make_dataset().rename(
             {
@@ -341,6 +343,7 @@ class TestLoadXarrayData:
 
         assert REALIZATION_DIM not in result.dims
 
+    @pytest.mark.pruned
     def test_selects_names(self):
         dataset = make_dataset()
 
@@ -389,6 +392,7 @@ class TestLoadXarrayData:
 
         assert mock_open.call_args.kwargs["chunks"] == chunks
 
+    @pytest.mark.pruned
     def test_adds_time_auxiliary_coordinates(self):
         dataset = make_dataset()
 
@@ -468,6 +472,7 @@ class TestLoadXarrayData:
                     init_time_dim=INIT_TIME_DIM,
                 )
 
+    @pytest.mark.pruned
     def test_auxiliary_coordinate_rejects_integer_times(self):
         dataset = make_dataset().assign_coords(
             {
@@ -547,6 +552,7 @@ class TestValidateTimeSequence:
     def test_accepts_datetime_data_array(self):
         _validate_time_sequence(make_datetime_coord())
 
+    @pytest.mark.pruned
     def test_accepts_python_datetime_values(self):
         _validate_time_sequence(
             [
@@ -563,6 +569,7 @@ class TestValidateTimeSequence:
             ]
         )
 
+    @pytest.mark.pruned
     def test_accepts_cftime_values(self):
         _validate_time_sequence(
             [
@@ -660,6 +667,7 @@ class TestValidateTimeSequence:
                 ]
             )
 
+    @pytest.mark.pruned
     def test_rejects_mixed_python_datetime_values(self):
         values = np.array(
             [
@@ -679,6 +687,7 @@ class TestValidateTimeSequence:
         ):
             _validate_time_sequence(values)
 
+    @pytest.mark.pruned
     def test_rejects_mixed_numpy_datetime_object_array(self):
         values = np.array(
             [
@@ -778,6 +787,7 @@ class TestCalculateTargetTimes:
             expected,
         )
 
+    @pytest.mark.pruned
     def test_daily_cftime(self):
         init_times = xr.DataArray(
             [
@@ -848,6 +858,7 @@ class TestCalculateTargetTimes:
             1,
         )
 
+    @pytest.mark.pruned
     def test_rejects_invalid_resolution(self):
         with pytest.raises(
             ValueError,
@@ -861,7 +872,6 @@ class TestCalculateTargetTimes:
 
 
 class TestCreateTrainMask:
-    @pytest.mark.pruned
     def test_integer_lead_times(self):
         init_times = np.array(
             [
@@ -895,6 +905,7 @@ class TestCreateTrainMask:
             )
         )
 
+    @pytest.mark.pruned
     def test_explicit_lead_times(self):
         result = _create_train_mask(
             init_times=np.array(
@@ -966,6 +977,7 @@ class TestCreateTrainMask:
             is False
         )
 
+    @pytest.mark.pruned
     def test_monthly_initializations_use_exact_cutoff(self):
         result = _create_train_mask(
             init_times=np.array(
@@ -1006,6 +1018,7 @@ class TestCreateTrainMask:
             is True
         )
 
+    @pytest.mark.pruned
     def test_rejects_zero_integer_lead_times(self):
         with pytest.raises(
             ValueError,
@@ -1047,6 +1060,7 @@ class TestCreateTrainMask:
                 init_time_dim=INIT_TIME_DIM,
             )
 
+    @pytest.mark.pruned
     def test_rejects_zero_based_lead_times(self):
         with pytest.raises(
             ValueError,
@@ -1357,6 +1371,7 @@ class TestAddLeadTimes:
                 ),
             )
 
+    @pytest.mark.pruned
     def test_rejects_invalid_numpy_resolution(self):
         with pytest.raises(
             ValueError,
@@ -1373,7 +1388,6 @@ class TestAddLeadTimes:
                 lead_time_resolution="year",
             )
 
-    @pytest.mark.pruned
     def test_rejects_invalid_cftime_resolution(self):
         with pytest.raises(
             ValueError,
@@ -1495,6 +1509,7 @@ class TestAddCftimeOffset:
             123456,
         )
 
+    @pytest.mark.pruned
     def test_rejects_invalid_resolution(self):
         with pytest.raises(
             ValueError,
@@ -1555,6 +1570,7 @@ class TestDaysInCftimeMonth:
             == 29
         )
 
+    @pytest.mark.pruned
     def test_366_day_calendar(self):
         assert (
             _days_in_cftime_month(
@@ -1565,6 +1581,7 @@ class TestDaysInCftimeMonth:
             == 29
         )
 
+    @pytest.mark.pruned
     def test_standard_leap_year(self):
         assert (
             _days_in_cftime_month(
@@ -1588,6 +1605,7 @@ class TestDaysInCftimeMonth:
 
 
 class TestAssignDatetimeInitTime:
+    @pytest.mark.pruned
     def test_assigns_numpy_datetime_values(self):
         dataset = xr.Dataset(
             {
@@ -1627,6 +1645,7 @@ class TestAssignDatetimeInitTime:
             ),
         )
 
+    @pytest.mark.pruned
     def test_assigns_cftime_values(self):
         dataset = xr.Dataset(
             {
@@ -1802,7 +1821,6 @@ class TestGetTimeRepresentation:
 
         assert get_time_representation(data) == "cftime"
 
-    @pytest.mark.pruned
     def test_datetime_index(self):
         index = pd.DatetimeIndex(
             [
@@ -1831,6 +1849,7 @@ class TestGetTimeRepresentation:
 
         assert get_time_representation(index) == "cftime"
 
+    @pytest.mark.pruned
     def test_rejects_integer_data_array(self):
         with pytest.raises(
             TypeError,
@@ -1846,6 +1865,7 @@ class TestGetTimeRepresentation:
                 )
             )
 
+    @pytest.mark.pruned
     def test_rejects_unsupported_type(self):
         with pytest.raises(
             TypeError,
@@ -1919,6 +1939,7 @@ class TestInferTimeResolution:
 
         assert infer_time_resolution(times) == "month"
 
+    @pytest.mark.pruned
     def test_daily_cftime_index(self):
         times = xr.CFTimeIndex(
             [
@@ -1975,6 +1996,7 @@ class TestInferTimeResolution:
 
         assert infer_time_resolution(times) == "year"
 
+    @pytest.mark.pruned
     def test_requires_two_timestamps(self):
         with pytest.raises(
             ValueError,
@@ -2042,3 +2064,1704 @@ class TestSuppressStderr:
 
         assert "hidden-before-failure" not in captured.err
         assert "visible-after-failure" in captured.err
+
+
+class TestAdditionalLoadXarrayData:
+    def test_rejects_invalid_rename_keys(self):
+        dataset = make_dataset()
+
+        with patch(
+            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            return_value=dataset,
+        ):
+            with pytest.raises(
+                ValueError,
+                match=r"Invalid keys in rename_dict: \['missing'\]",
+            ):
+                _load_xarray_data(
+                    paths=["a.nc"],
+                    rename_dict={
+                        "missing": "replacement",
+                    },
+                )
+
+    def test_empty_rename_dictionary_is_accepted(self):
+        dataset = make_dataset()
+
+        with patch(
+            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            return_value=dataset,
+        ):
+            result = _load_xarray_data(
+                paths=["a.nc"],
+                rename_dict={},
+            )
+
+        assert set(result.data_vars) == {
+            "tas",
+            "pr",
+        }
+
+    def test_resolved_frequency_standardizes_time(self):
+        dataset = make_dataset().assign_coords(
+            {
+                INIT_TIME_DIM: np.array(
+                    [
+                        "2000-01-20T12:30:00",
+                        "2000-02-20T12:30:00",
+                        "2000-03-20T12:30:00",
+                    ],
+                    dtype="datetime64[ns]",
+                )
+            }
+        )
+
+        with patch(
+            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            return_value=dataset,
+        ):
+            result = _load_xarray_data(
+                paths=["a.nc"],
+                resolved_init_time_frequency="month",
+                init_time_dim=INIT_TIME_DIM,
+            )
+
+        np.testing.assert_array_equal(
+            result[INIT_TIME_DIM].values,
+            np.array(
+                [
+                    "2000-01-15",
+                    "2000-02-15",
+                    "2000-03-15",
+                ],
+                dtype="datetime64[ns]",
+            ),
+        )
+
+    @pytest.mark.pruned
+    def test_standardization_is_skipped_without_resolved_frequency(
+        self,
+    ):
+        dataset = make_dataset()
+
+        with (
+            patch(
+                "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+                return_value=dataset,
+            ),
+            patch(
+                "cccma_ppp.data_modules.utils._standardize_time",
+            ) as standardize,
+        ):
+            _load_xarray_data(
+                paths=["a.nc"],
+                resolved_init_time_frequency=None,
+            )
+
+        standardize.assert_not_called()
+
+    @pytest.mark.pruned
+    def test_standardization_receives_configured_time_dimension(
+        self,
+    ):
+        dataset = make_dataset()
+        standardized = dataset.copy()
+
+        with (
+            patch(
+                "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+                return_value=dataset,
+            ),
+            patch(
+                "cccma_ppp.data_modules.utils._standardize_time",
+                return_value=standardized,
+            ) as standardize,
+        ):
+            result = _load_xarray_data(
+                paths=["a.nc"],
+                resolved_init_time_frequency="day",
+                init_time_dim=INIT_TIME_DIM,
+            )
+
+        standardize.assert_called_once_with(
+            dataset,
+            frequency="day",
+            time_dim=INIT_TIME_DIM,
+        )
+        xr.testing.assert_identical(
+            result,
+            standardized.transpose(
+                ...,
+                "latitude",
+                "longitude",
+            ),
+        )
+
+    @pytest.mark.pruned
+    def test_auxiliary_coordinate_validation_is_called(self):
+        dataset = make_dataset()
+
+        with (
+            patch(
+                "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+                return_value=dataset,
+            ),
+            patch(
+                "cccma_ppp.data_modules.utils._validate_time_sequence",
+            ) as validate,
+        ):
+            _load_xarray_data(
+                paths=["a.nc"],
+                add_time_auxiliary_coords=True,
+                init_time_dim=INIT_TIME_DIM,
+            )
+
+        validate.assert_called_once()
+
+        xr.testing.assert_identical(
+            validate.call_args.args[0],
+            dataset.coords[INIT_TIME_DIM],
+        )
+
+    @pytest.mark.pruned
+    def test_auxiliary_datetime_accessor_failure_is_converted(
+        self,
+    ):
+        dataset = make_dataset().assign_coords(
+            {
+                INIT_TIME_DIM: [
+                    2000,
+                    2001,
+                    2002,
+                ]
+            }
+        )
+
+        with (
+            patch(
+                "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+                return_value=dataset,
+            ),
+            patch(
+                "cccma_ppp.data_modules.utils._validate_time_sequence",
+            ),
+        ):
+            with pytest.raises(
+                TypeError,
+                match="must contain datetime64 or cftime",
+            ):
+                _load_xarray_data(
+                    paths=["a.nc"],
+                    add_time_auxiliary_coords=True,
+                    init_time_dim=INIT_TIME_DIM,
+                )
+
+    @pytest.mark.pruned
+    def test_names_none_preserves_all_variables(self):
+        dataset = make_dataset()
+
+        with patch(
+            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            return_value=dataset,
+        ):
+            result = _load_xarray_data(
+                paths=["a.nc"],
+                names=None,
+            )
+
+        assert list(result.data_vars) == [
+            "tas",
+            "pr",
+        ]
+
+    @pytest.mark.pruned
+    def test_no_supported_nn_dimensions_preserves_existing_order(
+        self,
+    ):
+        dataset = make_dataset().transpose(
+            REALIZATION_DIM,
+            INIT_TIME_DIM,
+            LEAD_TIME_DIM,
+            "longitude",
+            "latitude",
+        )
+
+        with patch(
+            "cccma_ppp.data_modules.utils.xr.open_mfdataset",
+            return_value=dataset,
+        ):
+            result = _load_xarray_data(
+                paths=["a.nc"],
+                supported_NN_dimensions_sorted=(),
+            )
+
+        assert result["tas"].dims == dataset["tas"].dims
+
+
+class TestStandardizeTime:
+    def test_rejects_unsupported_frequency(self):
+        dataset = make_dataset()
+
+        with pytest.raises(
+            ValueError,
+            match="Unsupported temporal frequency",
+        ):
+            _standardize_time(
+                dataset,
+                frequency="hour",
+                time_dim=INIT_TIME_DIM,
+            )
+
+    def test_requires_time_coordinate(self):
+        dataset = xr.Dataset(
+            {
+                "tas": (
+                    "sample",
+                    [
+                        1.0,
+                        2.0,
+                    ],
+                )
+            }
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="Coordinate 'time' not found",
+        ):
+            _standardize_time(
+                dataset,
+                frequency="day",
+                time_dim=INIT_TIME_DIM,
+            )
+
+    @pytest.mark.pruned
+    def test_requires_one_dimensional_dimension_coordinate(self):
+        dataset = xr.Dataset(
+            {
+                "tas": (
+                    (
+                        "sample",
+                        "member",
+                    ),
+                    np.ones(
+                        (
+                            2,
+                            2,
+                        )
+                    ),
+                )
+            },
+            coords={
+                INIT_TIME_DIM: (
+                    (
+                        "sample",
+                        "member",
+                    ),
+                    np.array(
+                        [
+                            [
+                                "2000-01-01",
+                                "2000-01-02",
+                            ],
+                            [
+                                "2000-02-01",
+                                "2000-02-02",
+                            ],
+                        ],
+                        dtype="datetime64[ns]",
+                    ),
+                )
+            },
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="must be a one-dimensional dimension coordinate",
+        ):
+            _standardize_time(
+                dataset,
+                frequency="day",
+                time_dim=INIT_TIME_DIM,
+            )
+
+    def test_rejects_time_coordinate_over_different_dimension(self):
+        dataset = xr.Dataset(
+            {
+                "tas": (
+                    "sample",
+                    [
+                        1.0,
+                        2.0,
+                    ],
+                )
+            },
+            coords={
+                INIT_TIME_DIM: (
+                    "sample",
+                    np.array(
+                        [
+                            "2000-01-01",
+                            "2000-02-01",
+                        ],
+                        dtype="datetime64[ns]",
+                    ),
+                )
+            },
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="must be a one-dimensional dimension coordinate",
+        ):
+            _standardize_time(
+                dataset,
+                frequency="month",
+                time_dim=INIT_TIME_DIM,
+            )
+
+    @pytest.mark.pruned
+    def test_standardizes_datetime_year(self):
+        dataset = xr.Dataset(
+            {
+                "tas": (
+                    INIT_TIME_DIM,
+                    [
+                        1.0,
+                        2.0,
+                    ],
+                )
+            },
+            coords={
+                INIT_TIME_DIM: np.array(
+                    [
+                        "2000-03-20T12:30:00",
+                        "2001-08-12T05:45:00",
+                    ],
+                    dtype="datetime64[ns]",
+                )
+            },
+        )
+
+        result = _standardize_time(
+            dataset,
+            frequency="year",
+            time_dim=INIT_TIME_DIM,
+        )
+
+        np.testing.assert_array_equal(
+            result[INIT_TIME_DIM].values,
+            np.array(
+                [
+                    "2000-01-01",
+                    "2001-01-01",
+                ],
+                dtype="datetime64[ns]",
+            ),
+        )
+
+    @pytest.mark.pruned
+    def test_standardizes_datetime_month(self):
+        dataset = xr.Dataset(
+            {
+                "tas": (
+                    INIT_TIME_DIM,
+                    [
+                        1.0,
+                        2.0,
+                    ],
+                )
+            },
+            coords={
+                INIT_TIME_DIM: np.array(
+                    [
+                        "2000-01-02T12:00:00",
+                        "2000-02-28T23:59:00",
+                    ],
+                    dtype="datetime64[ns]",
+                )
+            },
+        )
+
+        result = _standardize_time(
+            dataset,
+            frequency="month",
+            time_dim=INIT_TIME_DIM,
+        )
+
+        np.testing.assert_array_equal(
+            result[INIT_TIME_DIM].values,
+            np.array(
+                [
+                    "2000-01-15",
+                    "2000-02-15",
+                ],
+                dtype="datetime64[ns]",
+            ),
+        )
+
+    @pytest.mark.pruned
+    def test_standardizes_datetime_day(self):
+        dataset = xr.Dataset(
+            {
+                "tas": (
+                    INIT_TIME_DIM,
+                    [
+                        1.0,
+                        2.0,
+                    ],
+                )
+            },
+            coords={
+                INIT_TIME_DIM: np.array(
+                    [
+                        "2000-01-02T12:34:56",
+                        "2000-02-03T23:59:59",
+                    ],
+                    dtype="datetime64[ns]",
+                )
+            },
+        )
+
+        result = _standardize_time(
+            dataset,
+            frequency="day",
+            time_dim=INIT_TIME_DIM,
+        )
+
+        np.testing.assert_array_equal(
+            result[INIT_TIME_DIM].values,
+            np.array(
+                [
+                    "2000-01-02",
+                    "2000-02-03",
+                ],
+                dtype="datetime64[ns]",
+            ),
+        )
+
+    @pytest.mark.pruned
+    def test_standardizes_cftime_year(self):
+        dataset = xr.Dataset(
+            {
+                "tas": (
+                    INIT_TIME_DIM,
+                    [
+                        1.0,
+                        2.0,
+                    ],
+                )
+            },
+            coords={
+                INIT_TIME_DIM: [
+                    cftime.DatetimeNoLeap(
+                        2000,
+                        3,
+                        20,
+                        12,
+                    ),
+                    cftime.DatetimeNoLeap(
+                        2001,
+                        8,
+                        12,
+                        5,
+                    ),
+                ]
+            },
+        )
+
+        result = _standardize_time(
+            dataset,
+            frequency="year",
+            time_dim=INIT_TIME_DIM,
+        )
+
+        assert result[INIT_TIME_DIM].values.tolist() == [
+            cftime.DatetimeNoLeap(
+                2000,
+                1,
+                1,
+            ),
+            cftime.DatetimeNoLeap(
+                2001,
+                1,
+                1,
+            ),
+        ]
+
+    @pytest.mark.pruned
+    def test_standardizes_cftime_month(self):
+        dataset = xr.Dataset(
+            {
+                "tas": (
+                    INIT_TIME_DIM,
+                    [
+                        1.0,
+                        2.0,
+                    ],
+                )
+            },
+            coords={
+                INIT_TIME_DIM: [
+                    cftime.Datetime360Day(
+                        2000,
+                        1,
+                        30,
+                        12,
+                    ),
+                    cftime.Datetime360Day(
+                        2000,
+                        2,
+                        1,
+                        5,
+                    ),
+                ]
+            },
+        )
+
+        result = _standardize_time(
+            dataset,
+            frequency="month",
+            time_dim=INIT_TIME_DIM,
+        )
+
+        assert result[INIT_TIME_DIM].values.tolist() == [
+            cftime.Datetime360Day(
+                2000,
+                1,
+                15,
+            ),
+            cftime.Datetime360Day(
+                2000,
+                2,
+                15,
+            ),
+        ]
+
+    def test_standardizes_cftime_day(self):
+        dataset = xr.Dataset(
+            {
+                "tas": (
+                    INIT_TIME_DIM,
+                    [
+                        1.0,
+                        2.0,
+                    ],
+                )
+            },
+            coords={
+                INIT_TIME_DIM: [
+                    cftime.DatetimeNoLeap(
+                        2000,
+                        1,
+                        2,
+                        12,
+                    ),
+                    cftime.DatetimeNoLeap(
+                        2000,
+                        2,
+                        3,
+                        23,
+                    ),
+                ]
+            },
+        )
+
+        result = _standardize_time(
+            dataset,
+            frequency="day",
+            time_dim=INIT_TIME_DIM,
+        )
+
+        assert result[INIT_TIME_DIM].values.tolist() == [
+            cftime.DatetimeNoLeap(
+                2000,
+                1,
+                2,
+            ),
+            cftime.DatetimeNoLeap(
+                2000,
+                2,
+                3,
+            ),
+        ]
+
+    def test_rejects_unsupported_time_index(self):
+        dataset = xr.Dataset(
+            {
+                "tas": (
+                    INIT_TIME_DIM,
+                    [
+                        1.0,
+                        2.0,
+                    ],
+                )
+            },
+            coords={
+                INIT_TIME_DIM: [
+                    2000,
+                    2001,
+                ]
+            },
+        )
+
+        with pytest.raises(
+            TypeError,
+            match="Unsupported time index type",
+        ):
+            _standardize_time(
+                dataset,
+                frequency="year",
+                time_dim=INIT_TIME_DIM,
+            )
+
+    def test_rejects_duplicates_created_by_year_standardization(
+        self,
+    ):
+        dataset = xr.Dataset(
+            {
+                "tas": (
+                    INIT_TIME_DIM,
+                    [
+                        1.0,
+                        2.0,
+                    ],
+                )
+            },
+            coords={
+                INIT_TIME_DIM: np.array(
+                    [
+                        "2000-01-01",
+                        "2000-07-01",
+                    ],
+                    dtype="datetime64[ns]",
+                )
+            },
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="produced duplicate timestamps",
+        ):
+            _standardize_time(
+                dataset,
+                frequency="year",
+                time_dim=INIT_TIME_DIM,
+            )
+
+    @pytest.mark.pruned
+    def test_rejects_duplicates_created_by_month_standardization(
+        self,
+    ):
+        dataset = xr.Dataset(
+            {
+                "tas": (
+                    INIT_TIME_DIM,
+                    [
+                        1.0,
+                        2.0,
+                    ],
+                )
+            },
+            coords={
+                INIT_TIME_DIM: np.array(
+                    [
+                        "2000-01-01",
+                        "2000-01-20",
+                    ],
+                    dtype="datetime64[ns]",
+                )
+            },
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="produced duplicate timestamps",
+        ):
+            _standardize_time(
+                dataset,
+                frequency="month",
+                time_dim=INIT_TIME_DIM,
+            )
+
+    @pytest.mark.pruned
+    def test_supports_data_array(self):
+        data = xr.DataArray(
+            [
+                1.0,
+                2.0,
+            ],
+            dims=(INIT_TIME_DIM,),
+            coords={
+                INIT_TIME_DIM: np.array(
+                    [
+                        "2000-01-20",
+                        "2000-02-20",
+                    ],
+                    dtype="datetime64[ns]",
+                )
+            },
+        )
+
+        result = _standardize_time(
+            data,
+            frequency="month",
+            time_dim=INIT_TIME_DIM,
+        )
+
+        assert isinstance(
+            result,
+            xr.DataArray,
+        )
+        np.testing.assert_array_equal(
+            result[INIT_TIME_DIM].values,
+            np.array(
+                [
+                    "2000-01-15",
+                    "2000-02-15",
+                ],
+                dtype="datetime64[ns]",
+            ),
+        )
+
+    @pytest.mark.pruned
+    def test_does_not_modify_data_values(self):
+        dataset = xr.Dataset(
+            {
+                "tas": (
+                    INIT_TIME_DIM,
+                    [
+                        4.0,
+                        8.0,
+                    ],
+                )
+            },
+            coords={
+                INIT_TIME_DIM: np.array(
+                    [
+                        "2000-01-20",
+                        "2000-02-20",
+                    ],
+                    dtype="datetime64[ns]",
+                )
+            },
+        )
+
+        result = _standardize_time(
+            dataset,
+            frequency="month",
+            time_dim=INIT_TIME_DIM,
+        )
+
+        np.testing.assert_array_equal(
+            result["tas"].values,
+            dataset["tas"].values,
+        )
+
+
+class TestAdditionalCreateTrainMask:
+    def test_monthly_initializations_with_daily_leads_use_month_cutoff(
+        self,
+    ):
+        result = _create_train_mask(
+            init_times=np.array(
+                [
+                    "2000-01-01",
+                    "2000-02-01",
+                    "2000-03-01",
+                ],
+                dtype="datetime64[ns]",
+            ),
+            lead_times=np.array(
+                [
+                    1,
+                    30,
+                    32,
+                ]
+            ),
+            lead_time_resolution="day",
+            init_time_dim=INIT_TIME_DIM,
+            lead_time_dim=LEAD_TIME_DIM,
+        )
+
+        assert (
+            bool(
+                result.sel(
+                    {
+                        INIT_TIME_DIM: np.datetime64("2000-03-01"),
+                        LEAD_TIME_DIM: 30,
+                    }
+                ).item()
+            )
+            is False
+        )
+        assert (
+            bool(
+                result.sel(
+                    {
+                        INIT_TIME_DIM: np.datetime64("2000-03-01"),
+                        LEAD_TIME_DIM: 32,
+                    }
+                ).item()
+            )
+            is True
+        )
+
+    @pytest.mark.pruned
+    def test_daily_initializations_use_exact_time_cutoff(self):
+        result = _create_train_mask(
+            init_times=np.array(
+                [
+                    "2000-01-01",
+                    "2000-01-02",
+                    "2000-01-03",
+                ],
+                dtype="datetime64[ns]",
+            ),
+            lead_times=np.array(
+                [
+                    1,
+                    2,
+                ]
+            ),
+            lead_time_resolution="day",
+            init_time_dim=INIT_TIME_DIM,
+            lead_time_dim=LEAD_TIME_DIM,
+        )
+
+        assert (
+            bool(
+                result.sel(
+                    {
+                        INIT_TIME_DIM: np.datetime64("2000-01-03"),
+                        LEAD_TIME_DIM: 1,
+                    }
+                ).item()
+            )
+            is False
+        )
+        assert (
+            bool(
+                result.sel(
+                    {
+                        INIT_TIME_DIM: np.datetime64("2000-01-03"),
+                        LEAD_TIME_DIM: 2,
+                    }
+                ).item()
+            )
+            is True
+        )
+
+    def test_maximum_allowed_time_is_combined_with_mask(self):
+        result = _create_train_mask(
+            init_times=np.array(
+                [
+                    "2000-01-01",
+                    "2000-01-02",
+                    "2000-01-03",
+                ],
+                dtype="datetime64[ns]",
+            ),
+            lead_times=np.array(
+                [
+                    1,
+                    2,
+                ]
+            ),
+            max_allowed_time=np.datetime64("2000-01-02"),
+            lead_time_resolution="day",
+            init_time_dim=INIT_TIME_DIM,
+            lead_time_dim=LEAD_TIME_DIM,
+        )
+
+        assert (
+            bool(
+                result.sel(
+                    {
+                        INIT_TIME_DIM: np.datetime64("2000-01-02"),
+                        LEAD_TIME_DIM: 1,
+                    }
+                ).item()
+            )
+            is False
+        )
+        assert (
+            bool(
+                result.sel(
+                    {
+                        INIT_TIME_DIM: np.datetime64("2000-01-02"),
+                        LEAD_TIME_DIM: 2,
+                    }
+                ).item()
+            )
+            is True
+        )
+
+    @pytest.mark.pruned
+    def test_maximum_allowed_time_none_does_not_change_mask(self):
+        kwargs = {
+            "init_times": np.array(
+                [
+                    "2000-01-01",
+                    "2000-01-02",
+                    "2000-01-03",
+                ],
+                dtype="datetime64[ns]",
+            ),
+            "lead_times": np.array(
+                [
+                    1,
+                    2,
+                ]
+            ),
+            "lead_time_resolution": "day",
+            "init_time_dim": INIT_TIME_DIM,
+            "lead_time_dim": LEAD_TIME_DIM,
+        }
+
+        without_argument = _create_train_mask(**kwargs)
+        with_none = _create_train_mask(
+            **kwargs,
+            max_allowed_time=None,
+        )
+
+        xr.testing.assert_identical(
+            without_argument,
+            with_none,
+        )
+
+    @pytest.mark.pruned
+    def test_negative_integer_lead_count_raises(self):
+        with pytest.raises(
+            ValueError,
+            match="at least 1",
+        ):
+            _create_train_mask(
+                init_times=make_datetime_values(),
+                lead_times=-2,
+                init_time_dim=INIT_TIME_DIM,
+            )
+
+    def test_negative_explicit_lead_time_raises(self):
+        with pytest.raises(
+            ValueError,
+            match="one-based",
+        ):
+            _create_train_mask(
+                init_times=make_datetime_values(),
+                lead_times=np.array(
+                    [
+                        -1,
+                        1,
+                    ]
+                ),
+                init_time_dim=INIT_TIME_DIM,
+            )
+
+    @pytest.mark.pruned
+    def test_passes_arguments_to_target_time_calculation(self):
+        init_times = make_datetime_values()
+        lead_times = np.array(
+            [
+                1,
+                2,
+            ]
+        )
+        target_times = np.array(
+            [
+                [
+                    "2000-01-01",
+                    "2000-01-02",
+                ],
+                [
+                    "2000-02-01",
+                    "2000-02-02",
+                ],
+                [
+                    "2000-03-01",
+                    "2000-03-02",
+                ],
+            ],
+            dtype="datetime64[ns]",
+        )
+
+        with patch(
+            "cccma_ppp.data_modules.utils._calculate_target_times",
+            return_value=target_times,
+        ) as calculate:
+            _create_train_mask(
+                init_times=init_times,
+                lead_times=lead_times,
+                lead_time_resolution="day",
+                init_time_dim=INIT_TIME_DIM,
+                lead_time_dim=LEAD_TIME_DIM,
+            )
+
+        calculate.assert_called_once()
+
+        call = calculate.call_args
+
+        assert isinstance(
+            call.kwargs["init_times"],
+            xr.DataArray,
+        )
+        np.testing.assert_array_equal(
+            call.kwargs["lead_times"],
+            lead_times,
+        )
+        assert call.kwargs["lead_time_resolution"] == "day"
+
+
+class TestAdditionalCalculateTargetTimes:
+    @pytest.mark.pruned
+    def test_rejects_zero_lead_time(self):
+        with pytest.raises(
+            ValueError,
+            match="minimum value 1",
+        ):
+            _calculate_target_times(
+                init_times=make_datetime_coord(),
+                lead_times=np.array(
+                    [
+                        0,
+                    ]
+                ),
+                lead_time_resolution="day",
+            )
+
+    def test_rejects_negative_lead_time(self):
+        with pytest.raises(
+            ValueError,
+            match="minimum value 1",
+        ):
+            _calculate_target_times(
+                init_times=make_datetime_coord(),
+                lead_times=np.array(
+                    [
+                        -1,
+                    ]
+                ),
+                lead_time_resolution="month",
+            )
+
+    @pytest.mark.pruned
+    def test_daily_first_lead_time_equals_initialization(self):
+        init_times = make_datetime_coord(
+            [
+                "2000-01-05",
+            ]
+        )
+
+        result = _calculate_target_times(
+            init_times=init_times,
+            lead_times=np.array(
+                [
+                    1,
+                ]
+            ),
+            lead_time_resolution="day",
+        )
+
+        assert result[0, 0] == np.datetime64("2000-01-05")
+
+    @pytest.mark.pruned
+    def test_monthly_first_lead_time_equals_initialization_month(
+        self,
+    ):
+        init_times = make_datetime_coord(
+            [
+                "2000-04-01",
+            ]
+        )
+
+        result = _calculate_target_times(
+            init_times=init_times,
+            lead_times=np.array(
+                [
+                    1,
+                ]
+            ),
+            lead_time_resolution="month",
+        )
+
+        assert result[0, 0] == np.datetime64("2000-04-01")
+
+
+class TestAdditionalValidateTimeSequence:
+    @pytest.mark.pruned
+    def test_accepts_utc_aware_python_datetimes(self):
+        _validate_time_sequence(
+            [
+                datetime.datetime(
+                    2000,
+                    1,
+                    1,
+                    tzinfo=datetime.timezone.utc,
+                ),
+                datetime.datetime(
+                    2000,
+                    1,
+                    2,
+                    tzinfo=datetime.timezone.utc,
+                ),
+            ]
+        )
+
+    def test_accepts_mixed_naive_and_utc_python_datetimes(self):
+        _validate_time_sequence(
+            [
+                datetime.datetime(
+                    2000,
+                    1,
+                    1,
+                ),
+                datetime.datetime(
+                    2000,
+                    1,
+                    2,
+                    tzinfo=datetime.timezone.utc,
+                ),
+            ]
+        )
+
+    @pytest.mark.pruned
+    def test_rejects_non_utc_python_datetime(self):
+        timezone = datetime.timezone(
+            datetime.timedelta(
+                hours=2,
+            )
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="non-UTC datetime values",
+        ):
+            _validate_time_sequence(
+                [
+                    datetime.datetime(
+                        2000,
+                        1,
+                        1,
+                        tzinfo=timezone,
+                    ),
+                    datetime.datetime(
+                        2000,
+                        1,
+                        2,
+                        tzinfo=timezone,
+                    ),
+                ]
+            )
+
+    def test_rejects_mixed_utc_and_non_utc_datetimes(self):
+        non_utc = datetime.timezone(
+            datetime.timedelta(
+                hours=-7,
+            )
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="non-UTC datetime values",
+        ):
+            _validate_time_sequence(
+                [
+                    datetime.datetime(
+                        2000,
+                        1,
+                        1,
+                        tzinfo=datetime.timezone.utc,
+                    ),
+                    datetime.datetime(
+                        2000,
+                        1,
+                        2,
+                        tzinfo=non_utc,
+                    ),
+                ]
+            )
+
+    @pytest.mark.pruned
+    def test_accepts_single_numpy_datetime(self):
+        _validate_time_sequence(
+            np.array(
+                [
+                    "2000-01-01",
+                ],
+                dtype="datetime64[ns]",
+            )
+        )
+
+    def test_accepts_single_cftime_datetime(self):
+        _validate_time_sequence(
+            [
+                cftime.Datetime360Day(
+                    2000,
+                    1,
+                    1,
+                )
+            ]
+        )
+
+    @pytest.mark.pruned
+    def test_accepts_single_python_datetime(self):
+        _validate_time_sequence(
+            [
+                datetime.datetime(
+                    2000,
+                    1,
+                    1,
+                )
+            ]
+        )
+
+
+class TestAdditionalAddLeadTimes:
+    @pytest.mark.pruned
+    def test_accepts_xarray_inputs(self):
+        init_times = xr.DataArray(
+            np.array(
+                [
+                    "2000-01-01",
+                    "2000-02-01",
+                ],
+                dtype="datetime64[ns]",
+            ),
+            dims=("sample",),
+        )
+        lead_times = xr.DataArray(
+            [
+                1,
+                2,
+            ],
+            dims=("sample",),
+        )
+
+        result = add_lead_times(
+            init_times=init_times,
+            lead_times=lead_times,
+            lead_time_resolution="month",
+        )
+
+        np.testing.assert_array_equal(
+            result,
+            np.array(
+                [
+                    "2000-01",
+                    "2000-03",
+                ],
+                dtype="datetime64[M]",
+            ),
+        )
+
+    @pytest.mark.pruned
+    def test_rejects_multidimensional_lead_times(self):
+        with pytest.raises(
+            ValueError,
+            match="must be one-dimensional",
+        ):
+            add_lead_times(
+                init_times=np.array(
+                    [
+                        "2000-01-01",
+                        "2000-02-01",
+                    ],
+                    dtype="datetime64[ns]",
+                ),
+                lead_times=np.array(
+                    [
+                        [
+                            1,
+                            2,
+                        ]
+                    ]
+                ),
+            )
+
+    @pytest.mark.pruned
+    def test_rejects_negative_lead_times(self):
+        with pytest.raises(
+            ValueError,
+            match="one-based",
+        ):
+            add_lead_times(
+                init_times=np.array(
+                    [
+                        "2000-01-01",
+                        "2000-02-01",
+                    ],
+                    dtype="datetime64[ns]",
+                ),
+                lead_times=np.array(
+                    [
+                        -1,
+                        1,
+                    ]
+                ),
+            )
+
+    @pytest.mark.pruned
+    def test_cftime_zero_offset_preserves_original_value(self):
+        value = cftime.DatetimeNoLeap(
+            2000,
+            5,
+            20,
+            12,
+            30,
+        )
+
+        result = add_lead_times(
+            init_times=np.array(
+                [
+                    value,
+                ],
+                dtype=object,
+            ),
+            lead_times=np.array(
+                [
+                    1,
+                ]
+            ),
+            lead_time_resolution="month",
+        )
+
+        assert result[0] == value
+
+
+class TestAdditionalAddCftimeOffset:
+    @pytest.mark.pruned
+    def test_zero_month_offset_preserves_datetime(self):
+        value = cftime.DatetimeNoLeap(
+            2000,
+            4,
+            20,
+            12,
+            30,
+            15,
+            123456,
+        )
+
+        result = _add_cftime_offset(
+            init_time=value,
+            offset=0,
+            resolution="month",
+        )
+
+        assert result == value
+
+    @pytest.mark.pruned
+    def test_360_day_calendar_clamps_to_thirty(self):
+        result = _add_cftime_offset(
+            init_time=cftime.Datetime360Day(
+                2000,
+                1,
+                30,
+            ),
+            offset=1,
+            resolution="month",
+        )
+
+        assert result == cftime.Datetime360Day(
+            2000,
+            2,
+            30,
+        )
+
+    def test_all_leap_calendar_keeps_february_twenty_ninth(
+        self,
+    ):
+        result = _add_cftime_offset(
+            init_time=cftime.DatetimeAllLeap(
+                2001,
+                1,
+                31,
+            ),
+            offset=1,
+            resolution="month",
+        )
+
+        assert result == cftime.DatetimeAllLeap(
+            2001,
+            2,
+            29,
+        )
+
+
+class TestAdditionalDaysInCftimeMonth:
+    @pytest.mark.pruned
+    @pytest.mark.parametrize(
+        (
+            "calendar_name",
+            "expected",
+        ),
+        [
+            (
+                "noleap",
+                28,
+            ),
+            (
+                "365_day",
+                28,
+            ),
+            (
+                "all_leap",
+                29,
+            ),
+            (
+                "366_day",
+                29,
+            ),
+        ],
+    )
+    def test_february_calendar_aliases(
+        self,
+        calendar_name,
+        expected,
+    ):
+        assert (
+            _days_in_cftime_month(
+                year=2000,
+                month=2,
+                calendar_name=calendar_name,
+            )
+            == expected
+        )
+
+    @pytest.mark.pruned
+    def test_noleap_thirty_day_month(self):
+        assert (
+            _days_in_cftime_month(
+                year=2000,
+                month=4,
+                calendar_name="noleap",
+            )
+            == 30
+        )
+
+    @pytest.mark.pruned
+    def test_all_leap_thirty_one_day_month(self):
+        assert (
+            _days_in_cftime_month(
+                year=2000,
+                month=7,
+                calendar_name="all_leap",
+            )
+            == 31
+        )
+
+    def test_proleptic_gregorian_uses_calendar_module(self):
+        assert (
+            _days_in_cftime_month(
+                year=2000,
+                month=2,
+                calendar_name="proleptic_gregorian",
+            )
+            == 29
+        )
+
+
+class TestAdditionalAssignDatetimeInitTime:
+    def test_does_not_modify_data_values(self):
+        dataset = xr.Dataset(
+            {
+                "tas": (
+                    INIT_TIME_DIM,
+                    [
+                        3.0,
+                        7.0,
+                    ],
+                )
+            },
+            coords={
+                INIT_TIME_DIM: [
+                    2000,
+                    2001,
+                ],
+            },
+        )
+
+        result = assign_datetime_init_time(
+            dataset,
+            init_time_dim=INIT_TIME_DIM,
+        )
+
+        np.testing.assert_array_equal(
+            result["tas"].values,
+            dataset["tas"].values,
+        )
+
+    @pytest.mark.pruned
+    def test_preserves_dimension_name(self):
+        dimension = "initialization_year"
+        dataset = xr.Dataset(
+            {
+                "tas": (
+                    dimension,
+                    [
+                        1.0,
+                        2.0,
+                    ],
+                )
+            },
+            coords={
+                dimension: [
+                    1999,
+                    2000,
+                ],
+            },
+        )
+
+        result = assign_datetime_init_time(
+            dataset,
+            init_time_dim=dimension,
+        )
+
+        assert result[dimension].dims == (dimension,)
+
+    def test_cftime_calendar_argument_is_forwarded(self):
+        dataset = xr.Dataset(
+            {
+                "tas": (
+                    INIT_TIME_DIM,
+                    [
+                        1.0,
+                        2.0,
+                    ],
+                )
+            },
+            coords={
+                INIT_TIME_DIM: [
+                    2000,
+                    2001,
+                ],
+            },
+        )
+
+        expected = xr.CFTimeIndex(
+            [
+                cftime.Datetime360Day(
+                    2000,
+                    1,
+                    1,
+                ),
+                cftime.Datetime360Day(
+                    2001,
+                    1,
+                    1,
+                ),
+            ]
+        )
+
+        with patch(
+            "cccma_ppp.data_modules.utils.xr.date_range",
+            return_value=expected,
+        ) as date_range:
+            result = assign_datetime_init_time(
+                dataset,
+                init_time_dim=INIT_TIME_DIM,
+                calendar="360_day",
+            )
+
+        date_range.assert_called_once_with(
+            start="2000-01-01",
+            periods=2,
+            freq="YS",
+            calendar="360_day",
+            use_cftime=True,
+        )
+        assert isinstance(
+            result[INIT_TIME_DIM].values[0],
+            cftime.Datetime360Day,
+        )
+
+
+class TestAdditionalGetTimeRepresentation:
+    @pytest.mark.pruned
+    def test_datetime_dataarray_with_day_precision(self):
+        data = xr.DataArray(
+            np.array(
+                [
+                    "2000-01-01",
+                    "2000-01-02",
+                ],
+                dtype="datetime64[D]",
+            ),
+            dims=(INIT_TIME_DIM,),
+        )
+
+        assert get_time_representation(data) == "datetime"
+
+    def test_rejects_string_data_array(self):
+        data = xr.DataArray(
+            [
+                "2000-01-01",
+                "2001-01-01",
+            ],
+            dims=(INIT_TIME_DIM,),
+        )
+
+        with pytest.raises(
+            TypeError,
+            match="must use either datetime or cftime",
+        ):
+            get_time_representation(data)
+
+    def test_rejects_numpy_array_input(self):
+        with pytest.raises(
+            TypeError,
+            match="must use either datetime or cftime",
+        ):
+            get_time_representation(make_datetime_values())
+
+
+class TestAdditionalInferTimeResolution:
+    @pytest.mark.pruned
+    def test_twenty_seven_days_is_daily(self):
+        times = pd.DatetimeIndex(
+            [
+                "2000-01-01",
+                "2000-01-28",
+            ]
+        )
+
+        assert infer_time_resolution(times) == "day"
+
+    @pytest.mark.pruned
+    def test_twenty_eight_days_is_monthly(self):
+        times = pd.DatetimeIndex(
+            [
+                "2000-01-01",
+                "2000-01-29",
+            ]
+        )
+
+        assert infer_time_resolution(times) == "month"
+
+    @pytest.mark.pruned
+    def test_364_days_is_monthly(self):
+        times = pd.DatetimeIndex(
+            [
+                "2000-01-01",
+                "2000-12-30",
+            ]
+        )
+
+        assert infer_time_resolution(times) == "month"
+
+    @pytest.mark.pruned
+    def test_365_days_is_yearly(self):
+        times = pd.DatetimeIndex(
+            [
+                "2001-01-01",
+                "2002-01-01",
+            ]
+        )
+
+        assert infer_time_resolution(times) == "year"
+
+    def test_empty_index_raises(self):
+        with pytest.raises(
+            ValueError,
+            match="At least two timestamps",
+        ):
+            infer_time_resolution(pd.DatetimeIndex([]))

@@ -183,7 +183,6 @@ def test_build_mlp_invalid_activation_not_checked_without_activated_layers():
     assert isinstance(model[0], nn.Linear)
 
 
-@pytest.mark.pruned
 def test_build_mlp_invalid_activation_checked_when_final_is_activated():
     with pytest.raises(
         ValueError,

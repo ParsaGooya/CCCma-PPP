@@ -2001,7 +2001,6 @@ def test_down_block_does_not_create_skip_processor_by_default():
     assert block.skip_processor is None
 
 
-@pytest.mark.pruned
 def test_down_block_processes_skip_after_main_block():
     block = DownBlock(
         in_channels=3,
@@ -2539,7 +2538,6 @@ def test_unet_output_sic_hidden_structure():
     )
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "hidden_channels",

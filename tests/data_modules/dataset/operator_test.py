@@ -828,7 +828,6 @@ class TestGetWeights:
             is flattener
         )
 
-    @pytest.mark.pruned
     def test_matching_channel_weights(self):
         model = make_data_config(
             names=[
@@ -882,6 +881,7 @@ class TestGetWeights:
             "pr",
         ]
 
+    @pytest.mark.pruned
     def test_inconsistent_channel_weights_raise(self):
         model = make_data_config(
             names=[
@@ -1469,6 +1469,7 @@ class TestAdditionalFitPreprocessors:
 
         assert REALIZATION_DIM not in selection
 
+    @pytest.mark.pruned
     def test_dynamic_condition_fit_includes_realization(self):
         condition = make_data_config(
             realizations=[
@@ -1488,7 +1489,6 @@ class TestAdditionalFitPreprocessors:
 
         assert selection[REALIZATION_DIM] is condition.coords[REALIZATION_DIM]
 
-    @pytest.mark.pruned
     def test_static_condition_does_not_call_get_input_times(self):
         condition = make_data_config()
         config = DummyDatasetConfig(
@@ -1985,7 +1985,6 @@ class TestAdditionalGetWeights:
 
 
 class TestAdditionalInputMetadata:
-    @pytest.mark.pruned
     def test_condition_only_with_model_as_condition(self):
         condition = make_data_config(
             names=[
@@ -2018,6 +2017,7 @@ class TestAdditionalInputMetadata:
             "latitude",
         ]
 
+    @pytest.mark.pruned
     def test_condition_dimensions_determine_input_dimensions(self):
         model = make_data_config(
             spatial_coords={

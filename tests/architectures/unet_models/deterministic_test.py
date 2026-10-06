@@ -502,6 +502,7 @@ def test_model_rejects_different_spatial_shapes_without_hidden_output():
         )
 
 
+@pytest.mark.pruned
 def test_model_accepts_different_spatial_shapes_with_hidden_output():
     config = make_config(
         output_block_hidden_channels=4,
@@ -553,7 +554,6 @@ def test_model_rejects_depth_too_large_for_input():
         )
 
 
-@pytest.mark.pruned
 def test_depth_error_reports_allowed_levels():
     config = make_config(
         channels=[4, 8, 16, 32, 64],
@@ -690,6 +690,7 @@ def test_down_blocks_without_skip_processing():
     assert all(block.skip_processor is None for block in model.down_blocks)
 
 
+@pytest.mark.pruned
 def test_up_blocks_use_kernel_sizes_in_decoder_order():
     config = make_config(
         channels=[4, 8, 16],
@@ -880,7 +881,6 @@ def test_forward_without_generator_ignores_output_sample_size():
     assert result.output.shape == (2, 1, 16, 16)
 
 
-@pytest.mark.pruned
 def test_forward_with_added_features():
     model = make_model(
         added_features_dim=2,
@@ -2376,6 +2376,7 @@ def test_forward_generator_reshapes_batch_before_transpose():
     )
 
 
+@pytest.mark.pruned
 def test_checkpoint_configuration_calls_load_state_dict():
     config = make_config()
     checkpoint = SimpleNamespace(
@@ -2683,6 +2684,7 @@ def test_sic_unclipped_output_can_exceed_unit_interval():
     assert torch.any(result > 1)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "activation",
@@ -2807,6 +2809,7 @@ def test_no_skip_model_forward():
     )
 
 
+@pytest.mark.pruned
 def test_processed_skip_model_forward():
     model = make_model(
         config=make_config(
@@ -3098,7 +3101,6 @@ def test_chunked_decoder_resizes_every_generated_sample():
     )
 
 
-@pytest.mark.pruned
 def test_chunked_decoder_without_skips_uses_recorded_resize_shapes():
     model = make_model(
         config=make_config(

@@ -401,6 +401,7 @@ class TestVariableWeights:
             "psl",
         ]
 
+    @pytest.mark.pruned
     def test_combines_variable_and_cosine_weights(self):
         config = WeightsConfig(
             spatial_method="cosine_lat",
@@ -477,7 +478,6 @@ class TestLoadWeights:
         mock_open.assert_called_once_with(weights_path)
         assert result is loaded
 
-    @pytest.mark.pruned
     def test_loaded_dataset_is_unwrapped(
         self,
         tmp_path,
@@ -537,6 +537,7 @@ class TestLoadWeights:
         mock_unwrap.assert_called_once_with(loaded_dataset)
         assert result is unwrapped
 
+    @pytest.mark.pruned
     def test_loaded_weights_require_target_coordinate(
         self,
         tmp_path,
@@ -996,7 +997,6 @@ class TestAdditionalCosineLatitudeBranches:
                 save=False,
             )
 
-    @pytest.mark.pruned
     def test_cosine_latitude_at_poles_is_near_zero(self):
         target_coords = {
             "lat": xr.DataArray(
@@ -1400,7 +1400,6 @@ class TestAdditionalLoadedWeights:
 
         assert result is loaded
 
-    @pytest.mark.pruned
     def test_loaded_negative_weights_raise(
         self,
         tmp_path,
@@ -1427,6 +1426,7 @@ class TestAdditionalLoadedWeights:
                     target_coords=make_target_coords(),
                 )
 
+    @pytest.mark.pruned
     def test_loaded_nan_weights_raise(
         self,
         tmp_path,
@@ -1453,7 +1453,6 @@ class TestAdditionalLoadedWeights:
                     target_coords=make_target_coords(),
                 )
 
-    @pytest.mark.pruned
     def test_loaded_infinite_weights_raise(
         self,
         tmp_path,
@@ -1500,7 +1499,6 @@ class TestAdditionalValidationOrder:
                 save=False,
             )
 
-    @pytest.mark.pruned
     def test_nan_values_are_checked_before_infinite_values(self):
         config = WeightsConfig(
             variable_weights={
@@ -1520,6 +1518,7 @@ class TestAdditionalValidationOrder:
 
 
 class TestAdditionalSavingBranches:
+    @pytest.mark.pruned
     def test_string_save_path_is_converted_to_path(
         self,
         tmp_path,
@@ -1565,6 +1564,7 @@ class TestAdditionalSavingBranches:
 
         assert not save_path.exists()
 
+    @pytest.mark.pruned
     def test_validation_failure_prevents_save(
         self,
         tmp_path,

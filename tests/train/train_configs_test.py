@@ -225,6 +225,7 @@ def test_generator_requires_crps(tmp_path):
         TrainConfig(tmp_path, 1, loader, module, loss, DummyTrainer())
 
 
+@pytest.mark.pruned
 def test_set_random_seed(tmp_path):
     cfg = make_valid_config_with(tmp_path)
     cfg.seed = 42
@@ -1137,7 +1138,6 @@ def test_prepare_runtime_sets_target_metadata(tmp_path):
     assert RuntimeContext.TARGET_VAR_METADATA == cfg.train_loader.target_var_metadata
 
 
-@pytest.mark.pruned
 def test_checkpoint_dir_exists_after_prepare(tmp_path):
     cfg = make_valid_config_with(tmp_path)
 
@@ -2918,6 +2918,7 @@ def test_prepare_directory_barrier_called(tmp_path):
     assert calls["n"] == 2
 
 
+@pytest.mark.pruned
 def test_prepare_directory_barrier_called_with_yaml(tmp_path):
     calls = {"n": 0}
 
@@ -3350,7 +3351,6 @@ def test_build_trainer_passes_optimizer_arguments(
     assert received["gradient_accumulation_steps"] == 1
 
 
-@pytest.mark.pruned
 def test_check_io_2d_accepts_two_dimensions():
     _check_IO(
         {

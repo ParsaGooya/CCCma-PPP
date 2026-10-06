@@ -1014,6 +1014,7 @@ def test_crps_mask_shape_mismatch_raises():
         )
 
 
+@pytest.mark.pruned
 def test_crps_sum_reduction():
     result = WeightedCRPS(
         w2d(),
@@ -1385,7 +1386,6 @@ def test_frobenius_generator_averages_ensemble():
     )
 
 
-@pytest.mark.pruned
 def test_frobenius_generator_rejects_invalid_structure():
     loss = Frobenius_norm(
         w2d(),

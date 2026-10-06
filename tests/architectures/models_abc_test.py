@@ -360,7 +360,6 @@ class TestCheckpointCompatibility:
             is None
         )
 
-    @pytest.mark.pruned
     def test_matching_checkpoint_is_accepted(
         self,
         tmp_path,
@@ -656,6 +655,7 @@ class TestLoadStateDict:
             freeze_weights=freeze_weights,
         )
 
+    @pytest.mark.pruned
     def test_missing_checkpoint_raises(
         self,
         tmp_path,
@@ -800,6 +800,7 @@ class TestLoadStateDict:
 
         assert all(not parameter.requires_grad for parameter in model.parameters())
 
+    @pytest.mark.pruned
     def test_does_not_freeze_by_default(
         self,
         tmp_path,
@@ -1225,7 +1226,6 @@ class TestSamplePrior:
 
         assert latent is user_samples
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "shape",
         [

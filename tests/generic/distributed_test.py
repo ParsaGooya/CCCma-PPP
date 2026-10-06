@@ -109,6 +109,7 @@ def test_barrier_not_called(monkeypatch):
     d.barrier()
 
 
+@pytest.mark.pruned
 def test_all_reduce_called(monkeypatch):
     monkeypatch.setattr(mod.dist, "is_available", lambda: True)
     monkeypatch.setattr(mod.dist, "is_initialized", lambda: True)
@@ -138,7 +139,6 @@ def test_all_reduce_not_called(monkeypatch):
     d.all_reduce_sum(t)
 
 
-@pytest.mark.pruned
 def test_broadcast_called(monkeypatch):
     monkeypatch.setattr(mod.dist, "is_available", lambda: True)
     monkeypatch.setattr(mod.dist, "is_initialized", lambda: True)

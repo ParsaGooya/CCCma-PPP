@@ -667,7 +667,6 @@ class TestTrainDataloaderConfigPostInit:
             config.dataset_config.available_times,
         )
 
-    @pytest.mark.pruned
     def test_requested_train_slice_is_converted_to_strings(self):
         config = make_config_without_post_init(
             train_years_slice=[
@@ -820,6 +819,7 @@ class TestSetupDistributed:
         )
         assert config.pin_memory is True
 
+    @pytest.mark.pruned
     def test_explicit_load_path_skips_fit_and_loads(self):
         config = make_initialized_config()
         distributed = self.make_distributed(

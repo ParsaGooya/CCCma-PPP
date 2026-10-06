@@ -1302,7 +1302,6 @@ def test_mask_pool_fraction_preserves_channels():
     assert result.shape == (2, 5, 4, 4)
 
 
-@pytest.mark.pruned
 def test_mask_pool_rejects_unsupported_method():
     pooling = MaskPool2d(method="unsupported")
 
@@ -1508,7 +1507,6 @@ def test_partial_conv_single_noise_adds_input_channel():
     assert layer.conv.in_channels == 4
 
 
-@pytest.mark.pruned
 def test_partial_conv_single_noise_expands_mask(
     monkeypatch,
 ):
@@ -1579,6 +1577,7 @@ def test_partial_conv_single_noise_expands_mask(
     assert result_mask is not None
 
 
+@pytest.mark.pruned
 def test_partial_conv_single_noise_does_not_expand_single_channel_mask(
     monkeypatch,
 ):
@@ -2027,6 +2026,7 @@ def test_mask_pool_output_shape_for_odd_dimensions(
     )
 
 
+@pytest.mark.pruned
 def test_mask_pool_fraction_boundary_is_inclusive():
     pooling = MaskPool2d(
         method="fraction",

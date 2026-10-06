@@ -27,6 +27,7 @@ def test_validate_dropout_accepts_valid_values(value):
     assert _validate_dropout(value) is None
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "value",
     [

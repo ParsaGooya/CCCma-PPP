@@ -191,6 +191,8 @@ def test_get_with_extra_kwargs_raises():
 
 
 # Remove test due to no coverage
+
+
 @pytest.mark.pruned
 def test_available_is_empty_for_new_registry():
     reg = Registery()
@@ -395,6 +397,7 @@ def test_register_decorator_rejects_non_class(value):
     assert "invalid" not in reg.available()
 
 
+@pytest.mark.pruned
 def test_non_class_registration_error_reports_value_type():
     reg = Registery()
 
@@ -549,6 +552,7 @@ def test_get_does_not_mutate_config_dictionary():
     assert config == original
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "config",
     [

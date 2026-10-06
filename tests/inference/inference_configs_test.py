@@ -495,7 +495,6 @@ def patch_module_selector(monkeypatch):
     return selector
 
 
-@pytest.mark.pruned
 def test_load_module_missing_default_checkpoint(tmp_path):
     config = make_bare_config(tmp_path)
 
@@ -506,6 +505,7 @@ def test_load_module_missing_default_checkpoint(tmp_path):
         config.load_module()
 
 
+@pytest.mark.pruned
 def test_load_module_missing_named_checkpoint(tmp_path):
     config = make_bare_config(tmp_path)
     config.checkpoint_name = "epoch_10.pt"

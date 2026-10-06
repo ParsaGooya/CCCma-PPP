@@ -1822,7 +1822,6 @@ class TestAdditionalTransform:
                 )
             )
 
-    @pytest.mark.pruned
     def test_empty_pipeline_returns_original_input(self):
         pipeline = PreprocessingPipeline()
         pipeline.fitted = True
@@ -1868,6 +1867,7 @@ class TestAdditionalTransform:
             data + 1.0,
         )
 
+    @pytest.mark.pruned
     def test_none_step_arguments_becomes_empty_mapping(self):
         pipeline, first, second = make_fitted_pipeline()
         data = xr.DataArray(
@@ -2117,7 +2117,6 @@ class TestAdditionalToDataset:
         ):
             pipeline.to_dataset(data)
 
-    @pytest.mark.pruned
     def test_requires_channel_dimension(self):
         pipeline = self.make_pipeline()
 
@@ -2140,6 +2139,7 @@ class TestAdditionalToDataset:
         ):
             pipeline.to_dataset(data)
 
+    @pytest.mark.pruned
     def test_channel_count_must_match_reference_variables(self):
         pipeline = self.make_pipeline()
 

@@ -241,7 +241,6 @@ def test_setup_distributed_logger_none(tmp_path):
     assert writer._setup
 
 
-@pytest.mark.pruned
 def test_setup_distributed_device_mismatch(tmp_path):
     predictor = DummyPredictor()
 
@@ -460,6 +459,7 @@ def test_save_train_stats_file_exists_skips_loader(
     assert not called["loader"]
 
 
+@pytest.mark.pruned
 def test_save_train_stats_barrier(tmp_path):
     writer = object.__new__(Writer)
     writer.config = SimpleNamespace(num_output_sampling=1, aggregate_only=False)
@@ -1190,7 +1190,6 @@ def test_setup_distributed_creates_temp_directory_on_root(
     assert writer.temp_save_dir.is_dir()
 
 
-@pytest.mark.pruned
 def test_setup_distributed_non_root_does_not_create_temp_directory(
     tmp_path,
 ):
@@ -1215,6 +1214,7 @@ def test_setup_distributed_non_root_does_not_create_temp_directory(
     assert not writer.temp_save_dir.exists()
 
 
+@pytest.mark.pruned
 def test_setup_distributed_records_distributed_properties(
     tmp_path,
 ):
@@ -1727,7 +1727,6 @@ def test_aggregate_train_stats_does_not_finalize_inactive_stat(
     )
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_postprocessor_call_order(
     tmp_path,
 ):
@@ -2403,6 +2402,7 @@ class TestAggregatePredictionPostprocessing:
             ),
         ]
 
+    @pytest.mark.pruned
     def test_inverse_rename_can_change_output_variables(
         self,
         tmp_path,
@@ -3813,6 +3813,7 @@ def test_setup_aggregate_only_requires_existing_temp_files(
     assert writer._setup is False
 
 
+@pytest.mark.pruned
 def test_setup_aggregate_only_accepts_existing_netcdf_file(
     tmp_path,
 ):
@@ -3840,6 +3841,7 @@ def test_setup_aggregate_only_accepts_existing_netcdf_file(
     assert not hasattr(writer, "predictor")
 
 
+@pytest.mark.pruned
 def test_setup_aggregate_only_ignores_non_netcdf_files(
     tmp_path,
 ):
@@ -4087,7 +4089,6 @@ def test_aggregate_predictions_output_ensemble_suffix(
     assert (tmp_path / "prediction_2000_output_ensemble.nc").exists()
 
 
-@pytest.mark.pruned
 def test_aggregate_predictions_combines_nstds_and_ensemble_suffixes(
     tmp_path,
 ):
@@ -4335,7 +4336,6 @@ def test_build_train_loader_converts_global_experiment_dir_to_path(
     assert config.setup_called is True
 
 
-@pytest.mark.pruned
 def test_setup_aggregate_only_distributed_barrier(
     tmp_path,
 ):

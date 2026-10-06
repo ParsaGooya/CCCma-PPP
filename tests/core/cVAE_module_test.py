@@ -240,7 +240,6 @@ class ConditionalSelector:
         return ConditionalModel()
 
 
-@pytest.mark.pruned
 def test_conditional_flow_branch():
     cfg = cVAEConfig(ModelConfig=ConditionalSelector(), prior_flow_config=DummyFlow())
 
@@ -289,7 +288,6 @@ def test_init_loss_with_flow_requires_sum():
         m.init_loss_function(DummyLoss())
 
 
-@pytest.mark.pruned
 def test_flow_loss_valid_sum():
     cfg = cVAEConfig(ModelConfig=DummySelector(), prior_flow_config=DummyFlow())
     m = make_module(cfg)
@@ -403,7 +401,6 @@ def test_load_checkpoint_missing():
         cfg._load_from_checkpoint("missing.pt")
 
 
-@pytest.mark.pruned
 def test_config_load_dir_branch_success(monkeypatch):
     def fake_load_from_checkpoint(self, load_path):
         self.ModelConfig = DummySelector()
@@ -427,6 +424,7 @@ def test_config_load_dir_branch_success(monkeypatch):
     assert cfg.model_config is not None
 
 
+@pytest.mark.pruned
 def test_config_load_dir_branch_with_none_combined_sets_default(monkeypatch):
     def fake_load_from_checkpoint(self, load_path):
         self.ModelConfig = DummySelector()
@@ -574,6 +572,7 @@ def test_build_load_dir_success_path(monkeypatch):
     assert called["loaded"] is True
 
 
+@pytest.mark.pruned
 def test_build_load_dir_output_shape_mismatch(monkeypatch):
     cfg = cVAEConfig(ModelConfig=DummySelector())
     cfg.load_dir = "fake_checkpoint.pt"
@@ -879,7 +878,6 @@ def test_predict_training_uses_training_noise_sample_count():
     assert request.output_sample_size == 7
 
 
-@pytest.mark.pruned
 def test_predict_eval_preserves_explicit_output_sample_size():
     selector = GeneratorSelector()
     module = make_module(
@@ -946,6 +944,7 @@ def test_compute_loss_accepts_none_target_mask():
     assert criterion.calls[0]["target_mask"] is None
 
 
+@pytest.mark.pruned
 def test_compute_loss_passes_prior_flow_to_kld():
     cfg = cVAEConfig(
         ModelConfig=DummySelector(),
@@ -1085,6 +1084,7 @@ def test_init_loss_function_moves_losses_to_module_device():
     assert module.KLD.reduction == criterion.reduction
 
 
+@pytest.mark.pruned
 def test_build_load_dir_rejects_input_metadata_mismatch(
     monkeypatch,
 ):

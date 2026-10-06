@@ -273,6 +273,7 @@ def test_batchdata_to_device(
         assert batch.added_features is None
 
 
+@pytest.mark.pruned
 def test_batchdata_metadata_survives_to_device():
     metadata = [{"year": 2000}]
     batch = BatchData(

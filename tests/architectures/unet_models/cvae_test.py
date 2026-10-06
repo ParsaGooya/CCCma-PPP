@@ -280,6 +280,7 @@ class TestCVAEUNetConfig:
         )
         assert model.added_features_dim == 2
 
+    @pytest.mark.pruned
     def test_deterministic_guess_channel_mismatch_is_rejected(self):
         resolved = Mock(
             spec=UNetConfig,
@@ -878,6 +879,7 @@ class TestPrepareInput:
             8,
         )
 
+    @pytest.mark.pruned
     def test_creates_condition_mask_when_missing(self):
         model = make_model()
 
@@ -1122,7 +1124,6 @@ class TestGenerate:
 
 
 class TestDeterministicGuess:
-    @pytest.mark.pruned
     def test_returns_none_without_deterministic_model(self):
         model = make_model()
         model.deterministic_guess = None
@@ -1771,7 +1772,6 @@ class TestAdditionalCVAEUNetConfig:
 
         assert config.EXPECTS_MASK is False
 
-    @pytest.mark.pruned
     def test_unshared_guess_allows_different_output_settings(self):
         resolved = Mock(
             spec=UNetConfig,
@@ -2196,6 +2196,7 @@ class TestAdditionalDeterministicGuessConfiguration:
         assert config.share_output_block is False
         assert config.freeze_deterministic is False
 
+    @pytest.mark.pruned
     def test_resolved_deterministic_configuration_is_stored(self):
         resolved = make_real_unet_config()
 
@@ -2213,6 +2214,7 @@ class TestAdditionalDeterministicGuessConfiguration:
         assert config.share_output_block is False
         assert config.freeze_deterministic is True
 
+    @pytest.mark.pruned
     def test_resolved_configuration_must_be_unet_config(self):
         selector = make_deterministic_selector(
             SimpleNamespace(
@@ -2246,7 +2248,6 @@ class TestAdditionalDeterministicGuessConfiguration:
                 deterministic_guess_config=selector,
             )
 
-    @pytest.mark.pruned
     def test_shared_output_accepts_matching_clip_output(self):
         resolved = make_real_unet_config()
         resolved.clip_output = None
@@ -2381,7 +2382,6 @@ class TestAdditionalInitializationBranches:
 
         assert generation.call_args.kwargs["latent_size"] == 5
 
-    @pytest.mark.pruned
     def test_checkpoint_configuration_loads_state(self):
         config = make_config()
         checkpoint_config = object()
@@ -3309,7 +3309,6 @@ class TestAdditionalGenerationForward:
             8,
         )
 
-    @pytest.mark.pruned
     def test_generator_does_not_repeat_for_zero_samples(
         self,
         monkeypatch,
@@ -3382,6 +3381,7 @@ class TestAdditionalGenerationForward:
             8,
         )
 
+    @pytest.mark.pruned
     def test_generation_passes_resize_shapes_in_order(
         self,
     ):

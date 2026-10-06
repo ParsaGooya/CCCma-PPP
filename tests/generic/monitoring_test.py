@@ -257,7 +257,6 @@ def test_invalid_interval(interval):
         Monitor(interval=interval)
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "indices",
     [
@@ -273,7 +272,6 @@ def test_negative_gpu_index(indices):
         Monitor(gpus=indices)
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "indices",
     [
@@ -444,6 +442,7 @@ def test_failed_gpu_initialization(monkeypatch):
     assert instance.ram_enabled is True
 
 
+@pytest.mark.pruned
 def test_gpu_query_failure(fake_pynvml):
     fake_pynvml.nvmlDeviceGetUtilizationRates.side_effect = RuntimeError(
         "GPU query failed"
@@ -537,6 +536,7 @@ def test_span_ends_after_exception(basic_monitor):
     assert basic_monitor.current_stage() == "root"
 
 
+@pytest.mark.pruned
 def test_empty_span_name(basic_monitor):
     with pytest.raises(
         ValueError,
@@ -546,6 +546,7 @@ def test_empty_span_name(basic_monitor):
             pass
 
 
+@pytest.mark.pruned
 def test_invalid_span_name_type(basic_monitor):
     with pytest.raises(
         TypeError,
@@ -586,7 +587,6 @@ def test_empty_checkpoint_name(basic_monitor):
         basic_monitor.checkpoint("  ")
 
 
-@pytest.mark.pruned
 def test_invalid_checkpoint_name_type(basic_monitor):
     with pytest.raises(
         TypeError,
@@ -595,6 +595,7 @@ def test_invalid_checkpoint_name_type(basic_monitor):
         basic_monitor.checkpoint(123)
 
 
+@pytest.mark.pruned
 def test_observe_decorator(basic_monitor):
     @basic_monitor.observe
     def add(left, right):
@@ -685,6 +686,7 @@ def test_stop_before_start(basic_monitor):
     assert basic_monitor.running is False
 
 
+@pytest.mark.pruned
 def test_negative_stop_timeout(basic_monitor):
     with pytest.raises(
         ValueError,
@@ -749,6 +751,7 @@ def test_dataframe_returns_copy(basic_monitor):
     assert second.loc[0, "stage"] == "main.ready"
 
 
+@pytest.mark.pruned
 def test_metric_names_with_all_resources(fake_pynvml):
     instance = Monitor(
         cpu=True,
@@ -783,7 +786,6 @@ def test_kalman_filter_preserves_length():
     assert np.isfinite(result).all()
 
 
-@pytest.mark.pruned
 def test_kalman_filter_handles_nan():
     values = np.array([np.nan, 2.0, np.nan, 4.0])
 
@@ -851,6 +853,7 @@ def test_ema_smoothing():
     assert result.iloc[0] == pytest.approx(1.0)
 
 
+@pytest.mark.pruned
 def test_invalid_ema_alpha():
     series = pd.Series([1.0, 2.0, 3.0])
 
@@ -908,7 +911,6 @@ def test_kalman_smoothing():
     assert len(result) == 4
 
 
-@pytest.mark.pruned
 def test_unknown_smoothing_method():
     series = pd.Series([1.0, 2.0, 3.0])
 
@@ -938,7 +940,6 @@ def test_metric_labels(metric, expected):
     assert Monitor._metric_label(metric) == expected
 
 
-@pytest.mark.pruned
 def test_available_metrics(sample_dataframe):
     instance = Monitor(
         cpu=True,
@@ -1271,6 +1272,7 @@ def test_plot_missing_stage_column():
         )
 
 
+@pytest.mark.pruned
 def test_plot_rejects_string_metrics(
     sample_dataframe,
 ):
@@ -1562,7 +1564,6 @@ def test_monitor_rejects_invalid_distributed_value_types(
         Monitor(**arguments)
 
 
-@pytest.mark.pruned
 def test_monitor_rejects_negative_rank():
     with pytest.raises(
         ValueError,
@@ -1574,7 +1575,6 @@ def test_monitor_rejects_negative_rank():
         )
 
 
-@pytest.mark.pruned
 def test_monitor_rejects_negative_local_rank():
     with pytest.raises(
         ValueError,
@@ -1585,7 +1585,6 @@ def test_monitor_rejects_negative_local_rank():
         )
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "world_size",
     [
@@ -1849,7 +1848,6 @@ def test_span_removes_itself_from_modified_stack(
     assert basic_monitor.current_stage() == "root"
 
 
-@pytest.mark.pruned
 def test_current_sample_stage_combines_unique_active_stages(
     basic_monitor,
 ):
@@ -2235,6 +2233,7 @@ def test_plot_filters_selected_metric_with_only_nan_values(
     plt.close(figure)
 
 
+@pytest.mark.pruned
 def test_plot_save_path_without_directory(
     sample_dataframe,
     monkeypatch,
@@ -2518,6 +2517,7 @@ def test_combine_rank_results_rejects_nonpositive_world_size(
         )
 
 
+@pytest.mark.pruned
 def test_combine_rank_results_returns_none_without_files(
     tmp_path,
 ):
