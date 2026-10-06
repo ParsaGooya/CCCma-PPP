@@ -268,8 +268,7 @@ def main() -> None:
     print("\n" + "=" * 80)
     print("Summary:")
     for mode, result in results.items():
-        symbol = "✓" if result == "PASS" else "✗"
-        print(f"  {symbol} {mode}: {result}")
+        print(f"  {mode}: {result}")
     print(f"\nAll results in: {output_dir}")
     print("=" * 80 + "\n")
 
