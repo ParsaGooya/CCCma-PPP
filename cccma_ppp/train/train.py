@@ -16,12 +16,13 @@ from cccma_ppp.train.train_configs import (
 
 def get_parser() -> argparse.ArgumentParser:
     """
-    Document this function.
+    Build the command-line argument parser for model training.
 
     Returns
     -------
     argparse.ArgumentParser
-        Description not yet provided.
+        Parser configured to accept the path to a training YAML configuration
+        file.
     """
     parser = argparse.ArgumentParser(description="Train model from config file")
 
@@ -36,12 +37,18 @@ def get_parser() -> argparse.ArgumentParser:
 
 def main(yaml_config: str) -> None:
     """
-    Document this function.
+    Run the model training workflow from a YAML configuration file.
+
+    Initializes the distributed runtime, loads and constructs the training
+    configuration, sets a rank-specific random seed, configures logging and
+    runtime directories, and builds the trainer. Resource monitoring records
+    trainer construction, distributed setup, and training execution. Distributed
+    resources are cleaned up when execution completes or an exception is raised.
 
     Parameters
     ----------
     yaml_config : str
-        Description not yet provided.
+        Path to the YAML file containing the training configuration.
     """
     distributed = Distributed.get_instance()
 

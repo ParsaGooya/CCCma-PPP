@@ -21,12 +21,12 @@ from cccma_ppp.generic.runtime import RuntimeContext
 @dataclasses.dataclass
 class deterministicOutput(OutputABC):
     """
-    Document this class.
+    Container for the output of a deterministic model.
 
     Parameters
     ----------
     output : torch.Tensor
-        Description not yet provided.
+        Tensor produced by the deterministic model.
     """
 
     output: torch.Tensor
@@ -37,14 +37,15 @@ class deterministicOutput(OutputABC):
 @dataclasses.dataclass
 class deterministicConfig(moduleConfigABC):
     """
-    Document this class.
+    Configuration for a deterministic modeling module.
 
     Parameters
     ----------
     ModelConfig : deterministicModelSelector | None
-        Description not yet provided.
+        Selector defining the underlying deterministic model architecture.
+        Required when a checkpoint directory is not provided.
     load_dir : str | None
-        Description not yet provided.
+        Path to a saved module from which the model configuration is restored.
     """
 
     ModelConfig: deterministicModelSelector | None = None
@@ -52,18 +53,23 @@ class deterministicConfig(moduleConfigABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Resolve and validate the deterministic module configuration.
+
+        When ``load_dir`` is provided, the saved model configuration is restored from
+        the checkpoint and replaces the provided model configuration.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If neither a model configuration nor a checkpoint directory is provided.
 
         Warns
         -----
         UserWarning
-            Description not yet provided.
+            If the module configuration is restored from ``load_dir`` and overwrites
+            the provided configuration.
         """
+
         if self.load_dir is None:
             if self.ModelConfig is None:
                 raise ValueError("provide loading dir or model configurations")
@@ -82,21 +88,22 @@ class deterministicConfig(moduleConfigABC):
         added_features_dim: int = None,
     ):
         """
-        Document this function.
+        Build a deterministic modeling module.
 
         Parameters
         ----------
         input_shape : np.ndarray | tuple
-            Description not yet provided.
+            Shape of the model input excluding the batch dimension.
         output_shape : np.ndarray | tuple | None
-            Description not yet provided.
-        added_features_dim : int
-            Description not yet provided.
+            Shape of the model output excluding the batch dimension. If ``None``,
+            ``input_shape`` is used.
+        added_features_dim : int | None
+            Number of additional features supplied to the model.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        deterministic
+            Constructed deterministic modeling module.
         """
         return deterministic(
             config=self,
@@ -107,17 +114,17 @@ class deterministicConfig(moduleConfigABC):
 
     def _load_from_checkpoint(self, load_path: Path | str):
         """
-        Document this function.
+        Restore the model configuration from a saved checkpoint.
 
         Parameters
         ----------
         load_path : Path | str
-            Description not yet provided.
+            Path to the saved checkpoint.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        deterministicConfig
+            This configuration instance populated with the saved model settings.
         """
         checkpoint_module, checkpoint_config = _load_config_from_checkpoint(
             Path(load_path)
@@ -136,18 +143,22 @@ class deterministicConfig(moduleConfigABC):
 
 class deterministic(moduleABC):
     """
-    Document this class.
+    Training and inference module for deterministic models.
+
+    The module builds the selected deterministic architecture, manages checkpoint
+    loading, and provides reconstruction-loss computation for training.
 
     Parameters
     ----------
     config : deterministicConfig
-        Description not yet provided.
+        Configuration defining the deterministic model and optional checkpoint.
     input_shape : np.ndarray
-        Description not yet provided.
+        Shape of the model input excluding the batch dimension.
     output_shape : np.ndarray | None
-        Description not yet provided.
-    added_features_dim : int
-        Description not yet provided.
+        Shape of the model output excluding the batch dimension. If ``None``,
+        ``input_shape`` is used.
+    added_features_dim : int | None
+        Number of additional features supplied to the model.
     """
 
     def __init__(
@@ -158,23 +169,26 @@ class deterministic(moduleABC):
         added_features_dim: int = None,
     ):
         """
-        Document this function.
+        Initialize a deterministic modeling module.
 
         Parameters
         ----------
         config : deterministicConfig
-            Description not yet provided.
+            Configuration defining the model architecture and optional checkpoint.
         input_shape : np.ndarray
-            Description not yet provided.
+            Shape of the model input excluding the batch dimension.
         output_shape : np.ndarray | None
-            Description not yet provided.
-        added_features_dim : int
-            Description not yet provided.
+            Shape of the model output excluding the batch dimension. If ``None``,
+            ``input_shape`` is used.
+        added_features_dim : int | None
+            Number of additional features supplied to the model.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If checkpoint input or output metadata is incompatible with the current
+            runtime configuration, or if the requested input or output shape differs
+            from that associated with the checkpoint.
         """
         super().__init__()
         self.config = config
@@ -225,33 +239,36 @@ class deterministic(moduleABC):
 
     def init_loss_function(self, reconstruction_loss: Losspipeline):
         """
-        Document this function.
+        Initialize the reconstruction loss used for training.
 
         Parameters
         ----------
         reconstruction_loss : Losspipeline
-            Description not yet provided.
+            Reconstruction loss pipeline used to compare model outputs with targets.
         """
         self.criterion = reconstruction_loss.to(self._get_device())
 
     def _compute_loss(self, data: BatchData):
         """
-        Document this function.
+        Compute the reconstruction loss for a batch.
 
         Parameters
         ----------
         data : BatchData
-            Description not yet provided.
+            Batch containing model inputs, targets, masks, and optional additional
+            features.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        tuple[torch.Tensor, dict]
+            Total differentiable loss and a dictionary containing scalar loss
+            components for reporting.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If the reconstruction loss has not been initialized before computing the
+            training objective.
         """
         if self.criterion is None:
             raise RuntimeError(
@@ -276,17 +293,20 @@ class deterministic(moduleABC):
 
     def forward(self, data: BatchData) -> deterministicOutput:
         """
-        Document this function.
+        Perform a forward pass through the deterministic model.
+
+        During evaluation, generator-enabled models use the configured number of
+        validation noise samples.
 
         Parameters
         ----------
         data : BatchData
-            Description not yet provided.
+            Batch containing model inputs, masks, and optional additional features.
 
         Returns
         -------
         deterministicOutput
-            Description not yet provided.
+            Output produced by the deterministic model.
         """
         generator = self.model_config.GENERATOR
         output_sample_size = 1
@@ -309,19 +329,23 @@ class deterministic(moduleABC):
         chunk_output_samples: bool = False,
     ) -> deterministicOutput:
         """
-        Document this function.
+        Generate deterministic or generator-enabled predictions for a batch.
 
         Parameters
         ----------
         data : BatchData
-            Description not yet provided.
+            Batch containing model inputs, masks, and optional additional features.
         output_sample_size : int
-            Description not yet provided.
+            Number of stochastic outputs requested when generator behavior is
+            enabled.
+        chunk_output_samples : bool
+            Whether stochastic output samples are generated separately rather than
+            by repeating the decoder input in a single pass.
 
         Returns
         -------
         deterministicOutput
-            Description not yet provided.
+            Model predictions for the requested batch and sampling configuration.
         """
         return self.forward(
             DeterministicRequest(

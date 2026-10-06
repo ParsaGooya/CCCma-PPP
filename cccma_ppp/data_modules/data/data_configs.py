@@ -25,26 +25,27 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 @dataclasses.dataclass
 class ModelDataConfig(DataConfigABC):
     """
-    Document this class.
+    Configuration for model forecast data.
 
     Parameters
     ----------
     paths : str
-        Description not yet provided.
+        Directory containing the model data files.
     names : list[str]
-        Description not yet provided.
+        Names of data variables to load.
     preprocessing_pipeline : PreprocessingPipeline
-        Description not yet provided.
+        Pipeline used to preprocess the model data.
     realization_list : list | None
-        Description not yet provided.
+        Realizations to select from ensemble data. If ``None``, no explicit
+        realization subset is selected.
     ensemble_mean : bool | None
-        Description not yet provided.
+        Whether ensemble data are reduced to their ensemble mean.
     concat_dim : str
-        Description not yet provided.
+        Dimension along which data from multiple files are concatenated.
     file_type : str
-        Description not yet provided.
-    rename_dict : dict
-        Description not yet provided.
+        File pattern used to discover model data files.
+    rename_dict : dict[str, str] | None
+        Mapping used to rename dataset variables, dimensions, or coordinates.
     """
 
     paths: str
@@ -60,7 +61,10 @@ class ModelDataConfig(DataConfigABC):
 
     def __post_init__(self) -> None:
         """
-        Document this function.
+        Initialize the model data configuration.
+
+        After resolving and validating the configured data, constructs the continuous
+        temporal range covered by the initialization times and available lead times.
         """
         super().__init__()
 
@@ -74,25 +78,26 @@ class ModelDataConfig(DataConfigABC):
     @final
     def TYPE(self) -> str:
         """
-        Document this function.
+        Return the model data type identifier.
 
         Returns
         -------
         str
-            Description not yet provided.
+            ``"model"``.
         """
+
         return "model"
 
     @final
     @classmethod
     def _allowed_dims(cls) -> frozenset[str]:
         """
-        Document this function.
+        Return the dimensions permitted for model data.
 
         Returns
         -------
         frozenset[str]
-            Description not yet provided.
+            Names of all dimensions allowed in model datasets.
         """
         return model_data_allowed_dimensions
 
@@ -100,39 +105,41 @@ class ModelDataConfig(DataConfigABC):
     @classmethod
     def _required_dims(cls) -> frozenset[str]:
         """
-        Document this function.
+        Return the dimensions required for model data.
 
         Returns
         -------
         frozenset[str]
-            Description not yet provided.
+            Names of dimensions that must be present in model datasets.
         """
+
         return model_data_required_dimensions
 
 
 @dataclasses.dataclass
 class ObsDataConfig(DataConfigABC):
     """
-    Document this class.
+    Configuration for observation data.
 
     Parameters
     ----------
     paths : str
-        Description not yet provided.
+        Directory containing the observation data files.
     names : list[str]
-        Description not yet provided.
+        Names of data variables to load.
     preprocessing_pipeline : PreprocessingPipeline
-        Description not yet provided.
+        Pipeline used to preprocess the observation data.
     realization_list : list | None
-        Description not yet provided.
+        Realizations to select from ensemble data. If ``None``, no explicit
+        realization subset is selected.
     ensemble_mean : bool | None
-        Description not yet provided.
+        Whether ensemble data are reduced to their ensemble mean.
     concat_dim : str
-        Description not yet provided.
+        Dimension along which data from multiple files are concatenated.
     file_type : str
-        Description not yet provided.
-    rename_dict : dict
-        Description not yet provided.
+        File pattern used to discover observation data files.
+    rename_dict : dict[str, str] | None
+        Mapping used to rename dataset variables, dimensions, or coordinates.
     """
 
     paths: str
@@ -148,12 +155,17 @@ class ObsDataConfig(DataConfigABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize and validate the observation data configuration.
+
+        Observation frequency is required to match the configured lead-time
+        resolution. A continuous temporal range is then constructed from the
+        observation initialization times.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If the observation initialization-time frequency does not match the
+            configured lead-time resolution.
         """
         super().__init__()
 
@@ -172,12 +184,12 @@ class ObsDataConfig(DataConfigABC):
     @property
     def TYPE(self) -> str:
         """
-        Document this function.
+        Return the observation data type identifier.
 
         Returns
         -------
         str
-            Description not yet provided.
+            ``"observation"``.
         """
         return "observation"
 
@@ -185,12 +197,12 @@ class ObsDataConfig(DataConfigABC):
     @classmethod
     def _allowed_dims(cls) -> frozenset[str]:
         """
-        Document this function.
+        Return the dimensions permitted for observation data.
 
         Returns
         -------
         frozenset[str]
-            Description not yet provided.
+            Names of all dimensions allowed in observation datasets.
         """
         return observation_data_allowed_dimensions
 
@@ -198,12 +210,12 @@ class ObsDataConfig(DataConfigABC):
     @classmethod
     def _required_dims(cls) -> frozenset[str]:
         """
-        Document this function.
+        Return the dimensions required for observation data.
 
         Returns
         -------
         frozenset[str]
-            Description not yet provided.
+            Names of dimensions that must be present in observation datasets.
         """
         return observation_data_required_dimensions
 
@@ -211,26 +223,27 @@ class ObsDataConfig(DataConfigABC):
 @dataclasses.dataclass
 class ConditionDataConfig(DataConfigABC):
     """
-    Document this class.
+    Configuration for conditioning data.
 
     Parameters
     ----------
     paths : str
-        Description not yet provided.
+        Directory containing the conditioning data files.
     names : list[str]
-        Description not yet provided.
+        Names of data variables to load.
     preprocessing_pipeline : PreprocessingPipeline
-        Description not yet provided.
+        Pipeline used to preprocess the conditioning data.
     realization_list : list | None
-        Description not yet provided.
+        Realizations to select from ensemble data. If ``None``, no explicit
+        realization subset is selected.
     ensemble_mean : bool | None
-        Description not yet provided.
+        Whether ensemble data are reduced to their ensemble mean.
     concat_dim : str
-        Description not yet provided.
+        Dimension along which data from multiple files are concatenated.
     file_type : str
-        Description not yet provided.
-    rename_dict : dict
-        Description not yet provided.
+        File pattern used to discover conditioning data files.
+    rename_dict : dict[str, str] | None
+        Mapping used to rename dataset variables, dimensions, or coordinates.
     """
 
     paths: str
@@ -246,7 +259,11 @@ class ConditionDataConfig(DataConfigABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize the conditioning data configuration.
+
+        When temporal coverage is available, constructs the continuous temporal range
+        covered by the initialization times and available lead times. Otherwise,
+        ``time_range`` is set to ``None``.
         """
         super().__init__()
 
@@ -263,12 +280,12 @@ class ConditionDataConfig(DataConfigABC):
     @property
     def TYPE(self) -> str:
         """
-        Document this function.
+        Return the conditioning data type identifier.
 
         Returns
         -------
         str
-            Description not yet provided.
+            ``"condition"``.
         """
         return "condition"
 
@@ -276,12 +293,12 @@ class ConditionDataConfig(DataConfigABC):
     @classmethod
     def _allowed_dims(cls) -> frozenset[str]:
         """
-        Document this function.
+        Return the dimensions permitted for conditioning data.
 
         Returns
         -------
         frozenset[str]
-            Description not yet provided.
+            Names of all dimensions allowed in conditioning datasets.
         """
         return condition_data_allowed_dimensions
 
@@ -289,12 +306,12 @@ class ConditionDataConfig(DataConfigABC):
     @classmethod
     def _required_dims(cls) -> frozenset[str]:
         """
-        Document this function.
+        Return the dimensions required for conditioning data.
 
         Returns
         -------
         frozenset[str]
-            Description not yet provided.
+            Names of dimensions that must be present in conditioning datasets.
         """
         return condition_data_required_dimensions
 
@@ -305,36 +322,38 @@ def build_time_range(
     lead_time_resolution: lead_time_unit = "month",
 ) -> xr.CFTimeIndex | np.ndarray:
     """
-    Build a continuous temporal extent from init times and lead times.
+    Build the continuous temporal extent covered by initialization and lead times.
 
-    Returns the inclusive continuous range [min(init_time),
-    max(init_time) + max_lead_time]. This is NOT a list of valid times
-    in the data, only the temporal extent covered.
-
-    Use for temporal validation (e.g., checking if all samples
-    fall within expected range), not for exact time matching.
-
+    The returned range extends from the earliest initialization time through the
+    latest initialization time plus the available lead-time extent. It represents
+    the continuous temporal coverage rather than the exact valid times present in
+    the source data.
 
     Parameters
     ----------
     init_time : xr.DataArray
-        Description not yet provided.
+        One-dimensional array of initialization times represented by either
+        ``numpy.datetime64`` or ``cftime.datetime`` values.
     n_lead_times : int
-        Description not yet provided.
+        Number of lead-time positions included in the temporal extent.
     lead_time_resolution : lead_time_unit
-        Description not yet provided.
+        Temporal resolution used to advance lead times. Supported values are
+        ``"month"`` and ``"day"``.
 
     Returns
     -------
     xr.CFTimeIndex | np.ndarray
-        Description not yet provided.
+        Continuous date range spanning the full temporal extent at the requested
+        lead-time resolution.
 
     Raises
     ------
     TypeError
-        Description not yet provided.
+        If ``init_time`` does not contain ``numpy.datetime64`` or
+        ``cftime.datetime`` values.
     ValueError
-        Description not yet provided.
+        If ``init_time`` is empty or not one-dimensional, if ``n_lead_times`` is
+        less than one, or if ``lead_time_resolution`` is unsupported.
     """
     if init_time.size == 0:
         raise ValueError("'init_time' cannot be empty.")

@@ -12,25 +12,31 @@ def build_mlp(
     activate_final: bool = False,
 ) -> nn.Sequential:
     """
-    Document this function.
+    Build a multilayer perceptron from a sequence of layer dimensions.
+
+    Each pair of consecutive dimensions defines a linear layer. Activation,
+    dropout, and batch normalization are applied after each non-final linear
+    layer and optionally after the final layer.
 
     Parameters
     ----------
     dims : list[int]
-        Description not yet provided.
+        Dimensions of the input, hidden, and output layers.
     activation : ActivationName
-        Description not yet provided.
+        Activation function applied after eligible linear layers.
     dropout_rate : float | None
-        Description not yet provided.
+        Dropout probability applied after each activation. If ``None``, dropout
+        is disabled.
     batch_normalization : bool
-        Description not yet provided.
+        Whether to apply batch normalization after activation and dropout.
     activate_final : bool
-        Description not yet provided.
+        Whether to apply activation, dropout, and batch normalization after the
+        final linear layer.
 
     Returns
     -------
     nn.Sequential
-        Description not yet provided.
+        Sequential module containing the constructed multilayer perceptron.
     """
     layers = []
 

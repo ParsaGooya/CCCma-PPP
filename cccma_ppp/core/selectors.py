@@ -20,14 +20,14 @@ from cccma_ppp.architectures.models_abc import (
 @dataclasses.dataclass
 class ModuleSelector:
     """
-    Document this class.
+    Select and configure a registered module type.
 
     Parameters
     ----------
     type : str
-        Description not yet provided.
+        Name of the registered module type.
     config : Mapping[str, Any]
-        Description not yet provided.
+        Configuration values used to construct the selected module configuration.
     """
 
     type: str
@@ -36,108 +36,108 @@ class ModuleSelector:
 
     def __post_init__(self):
         """
-        Document this function.
+        Resolve the registered module configuration.
         """
         self._module_config = self.registery.get(self.type.lower(), self.config)
 
     @classmethod
     def register(cls, name: str) -> Callable[..., moduleABC]:
         """
-        Document this function.
+        Create a decorator that registers a module configuration.
 
         Parameters
         ----------
         name : str
-            Description not yet provided.
+            Name under which the module configuration is registered.
 
         Returns
         -------
         Callable[..., moduleABC]
-            Description not yet provided.
+            Decorator used to register the module configuration class.
         """
         return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
         """
-        Document this function.
+        Return the names of registered module types.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        list
+            Names of all module types available through this selector.
         """
         return cls.registery.available()
 
     @property
     def NUM_INPUT_DIMS(self) -> int:
         """
-        Document this function.
+        Return the number of dimensions expected by the selected model.
 
         Returns
         -------
         int
-            Description not yet provided.
+            Required number of input dimensions excluding the batch dimension.
         """
         return self.model_config.NUM_INPUT_DIMS
 
     @property
     def NUM_OUTPUT_DIMS(self) -> int:
         """
-        Document this function.
+        Return the number of dimensions produced by the selected model.
 
         Returns
         -------
         int
-            Description not yet provided.
+            Required number of output dimensions excluding the batch dimension.
         """
         return self.model_config.NUM_OUTPUT_DIMS
 
     @property
     def GENERATOR(self) -> bool:
         """
-        Document this function.
+        Return the generator configuration of the selected model.
 
         Returns
         -------
-        bool
-            Description not yet provided.
+        GENERATORConfig | None
+            Generator configuration, or ``None`` when generator behavior is disabled.
         """
         return self.model_config.GENERATOR
 
     @property
     def EXPECTS_MASK(self) -> bool:
         """
-        Document this function.
+        Indicate whether the selected model uses validity masks.
 
         Returns
         -------
         bool
-            Description not yet provided.
+            Whether the selected model expects validity-mask information.
         """
         return self.model_config.EXPECTS_MASK
 
     @property
     def model_type(self) -> str:
         """
-        Document this function.
+        Return the type of the selected model architecture.
 
         Returns
         -------
-        bool
-            Description not yet provided.
+        str
+            Registered model type.
         """
         return self._module_config.ModelConfig.type
 
     @property
     def model_config(self) -> modelConfigABC:
         """
-        Document this function.
+        Return the resolved model configuration.
 
         Returns
         -------
-        bool
-            Description not yet provided.
+        modelConfigABC
+            Configuration of the selected model
         """
         return self._module_config.model_config
 
@@ -148,21 +148,22 @@ class ModuleSelector:
         added_features_dim: int = None,
     ):
         """
-        Document this function.
+        Build the selected module from its resolved configuration.
 
         Parameters
         ----------
         input_shape : np.ndarray
-            Description not yet provided.
+            Shape of the module input excluding the batch dimension.
         output_shape : np.ndarray | None
-            Description not yet provided.
-        added_features_dim : int
-            Description not yet provided.
+            Shape of the module output excluding the batch dimension. If ``None``,
+            the selected module determines its default output shape.
+        added_features_dim : int | None
+            Number of additional features supplied to the module.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        moduleABC
+            Module constructed from the resolved module configuration.
         """
         return self._module_config.build(
             input_shape=input_shape,
@@ -174,18 +175,23 @@ class ModuleSelector:
 @dataclasses.dataclass
 class ModelSelector:
     """
-    Document this class.
+    Select and configure a registered model architecture.
+
+    The model can be configured directly or restored from a checkpoint. When a
+    checkpoint is provided, the saved model configuration replaces the explicitly
+    provided configuration.
 
     Parameters
     ----------
     type : str
-        Description not yet provided.
+        Name of the registered model type.
     config : Mapping[str, Any] | None
-        Description not yet provided.
+        Configuration values used to construct the selected model configuration.
     load_dir : Path | str | None
-        Description not yet provided.
+        Path to a checkpoint from which the model configuration and weights are
+        restored.
     freeze_weights : bool | None
-        Description not yet provided.
+        Whether model weights loaded from the checkpoint should be frozen.
     """
 
     type: str
@@ -197,21 +203,26 @@ class ModelSelector:
 
     def __post_init__(self):
         """
-        Document this function.
+        Validate the selector and resolve optional checkpoint configuration.
+
+        When ``load_dir`` is provided, the saved model configuration is loaded from
+        the checkpoint and replaces ``config``. Checkpoint metadata is retained for
+        subsequent model construction.
 
         Raises
         ------
         AssertionError
-            Description not yet provided.
+            If the model type stored in the checkpoint does not match ``type``.
         RuntimeError
-            Description not yet provided.
+            If neither ``config`` nor ``load_dir`` is provided.
         ValueError
-            Description not yet provided.
+            If ``freeze_weights`` is enabled without providing ``load_dir``.
 
         Warns
         -----
         UserWarning
-            Description not yet provided.
+            If the provided model configuration is replaced by checkpoint settings,
+            or if checkpoint-loaded model weights are configured to be frozen.
         """
         self.checkpoint_config = None
 
@@ -245,40 +256,45 @@ class ModelSelector:
     @classmethod
     def register(cls, name: str) -> Callable[..., modelABC]:
         """
-        Document this function.
+        Create a decorator that registers a model configuration.
 
         Parameters
         ----------
         name : str
-            Description not yet provided.
+            Name under which the model configuration is registered.
 
         Returns
         -------
         Callable[..., modelABC]
-            Description not yet provided.
+            Decorator used to register the model configuration class.
         """
         return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
         """
-        Document this function.
+        Return the names of all registered model types.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        list
+            Names of the models available through this selector.
         """
         return cls.registery.available()
 
     def get_model_config(self):
         """
-        Document this function.
+        Construct the selected model configuration.
+
+        The registered configuration class is instantiated from ``config``. When
+        checkpoint metadata is available, it is attached to the resulting model
+        configuration for subsequent checkpoint loading.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        modelConfigABC
+            Resolved model configuration, including checkpoint information when
+            applicable.
         """
         model_config = self.registery.get(self.type.lower(), self.config)
         if self.checkpoint_config is not None:
@@ -289,7 +305,10 @@ class ModelSelector:
 
 class cVAEModelSelector(ModelSelector):
     """
-    Document this class.
+    Selector for registered conditional variational autoencoder architectures.
+
+    Maintains an independent registry of model configurations available to cVAE
+    modules.
     """
 
     registery: ClassVar[Registery] = Registery()
@@ -297,7 +316,10 @@ class cVAEModelSelector(ModelSelector):
 
 class deterministicModelSelector(ModelSelector):
     """
-    Document this class.
+    Selector for registered deterministic model architectures.
+
+    Maintains an independent registry of model configurations available to
+    deterministic modules.
     """
 
     registery: ClassVar[Registery] = Registery()
@@ -306,14 +328,14 @@ class deterministicModelSelector(ModelSelector):
 @dataclasses.dataclass
 class FlowSelector:
     """
-    Document this class.
+    Select and configure a registered normalizing flow transformation.
 
     Parameters
     ----------
     type : str
-        Description not yet provided.
+        Name of the registered flow type.
     args : dict[str, object]
-        Description not yet provided.
+        Arguments used to construct the selected flow.
     """
 
     type: str
@@ -322,47 +344,50 @@ class FlowSelector:
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize the flow selector after dataclass construction.
         """
         pass
 
     @classmethod
     def register(cls, name: str) -> Callable[..., flowABC]:
         """
-        Document this function.
+        Create a decorator that registers a flow implementation.
 
         Parameters
         ----------
         name : str
-            Description not yet provided.
+            Name under which the flow implementation is registered.
 
         Returns
         -------
         Callable[..., flowABC]
-            Description not yet provided.
+            Decorator used to register the flow class.
         """
         return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
         """
-        Document this function.
+        Return the names of all registered flow types.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        list
+            Names of the flows available through this selector.
         """
         return cls.registery.available()
 
     def get_model(self):
         """
-        Document this function.
+        Construct the selected flow implementation.
+
+        The registered flow class is instantiated using the arguments stored in
+        ``args``.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        flowABC
+            Constructed flow instance.
         """
         return self.registery.get(self.type.lower(), self.args)
 
@@ -371,26 +396,33 @@ def _load_config_from_checkpoint(
     load_path: Path | str, freeze_weights: bool = False, strict: bool = True
 ):
     """
-    Document this function.
+    Load module configuration and compatibility metadata from a checkpoint.
+
+    The saved module configuration is extracted together with the input and
+    output shapes and variable metadata required to validate subsequent model
+    construction.
 
     Parameters
     ----------
     load_path : Path | str
-        Description not yet provided.
+        Path to the checkpoint file.
     freeze_weights : bool
-        Description not yet provided.
+        Whether model weights loaded from the checkpoint should be frozen.
     strict : bool
-        Description not yet provided.
+        Whether checkpoint parameters must exactly match the model state
+        dictionary when they are loaded.
 
     Returns
     -------
-    Any
-        Description not yet provided.
+    tuple[dict, CheckpointConfig]
+        Saved module configuration and a checkpoint configuration containing the
+        checkpoint path, expected input and output shapes, variable metadata,
+        strict-loading setting, and weight-freezing setting.
 
     Raises
     ------
     FileNotFoundError
-        Description not yet provided.
+        If ``load_path`` does not exist.
     """
     if not Path(load_path).exists():
         raise FileNotFoundError(f"Checkpoint not found: {load_path}")

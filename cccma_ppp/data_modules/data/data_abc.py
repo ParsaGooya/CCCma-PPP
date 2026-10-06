@@ -36,24 +36,26 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 @dataclasses.dataclass
 class infoclass:
     """
-    Document this class.
+    Container for metadata describing a configured dataset.
 
     Parameters
     ----------
     sizes : dict | None
-        Description not yet provided.
+        Sizes of tracked dataset dimensions, or ``None`` when none are present.
     start_time : xr.DataArray | np.ndarray | str | int | None
-        Description not yet provided.
+        Earliest initialization time in the dataset, or ``None`` when the
+        initialization time is not a dimension.
     final_time : xr.DataArray | np.ndarray | str | int | None
-        Description not yet provided.
+        Latest initialization time in the dataset, or ``None`` when the
+        initialization time is not a dimension.
     coords : dict
-        Description not yet provided.
+        Mapping of coordinate names to their coordinate values.
     dims : tuple[str, ...]
-        Description not yet provided.
+        Dimensions present in the dataset.
     time_coords_type : TimeTypes
-        Description not yet provided.
+        Representation used by the initialization-time coordinate.
     init_time_freq : TimeFrequency
-        Description not yet provided.
+        Temporal resolution inferred from the initialization-time coordinate.
     """
 
     sizes: dict | None
@@ -67,26 +69,30 @@ class infoclass:
 
 class DataConfigABC(abc.ABC):
     """
-    Document this class.
+    Abstract base class for dataset configurations.
+
+    Defines common data discovery, validation, preprocessing, loading, selection,
+    and metadata operations for configured datasets.
 
     Attributes
     ----------
     paths : str
-        Description not yet provided.
+        Directory containing the dataset files.
     names : list[str]
-        Description not yet provided.
+        Names of data variables to load.
     preprocessing_pipeline : PreprocessingPipeline
-        Description not yet provided.
+        Pipeline used to preprocess loaded data.
     realization_list : list | None
-        Description not yet provided.
+        Realizations to select from ensemble data. If ``None``, no explicit
+        realization subset is selected.
     ensemble_mean : bool | None
-        Description not yet provided.
+        Whether ensemble data are reduced to their ensemble mean.
     concat_dim : str
-        Description not yet provided.
+        Dimension along which data from multiple files are concatenated.
     file_type : str
-        Description not yet provided.
+        File pattern used to discover data files within ``paths``.
     rename_dict : dict
-        Description not yet provided.
+        Mapping used to rename dataset variables, dimensions, or coordinates.
     """
 
     paths: str
@@ -106,12 +112,17 @@ class DataConfigABC(abc.ABC):
 
     def __init__(self):
         """
-        Document this function.
+        Initialize a data configuration.
+
+        Validates that a preprocessing pipeline is defined, configures ensemble
+        handling, associates the preprocessing pipeline with the data type and
+        renaming rules, resolves and validates the configured data files, and
+        extracts dataset metadata.
 
         Raises
         ------
         AttributeError
-            Description not yet provided.
+            If ``preprocessing_pipeline`` is not defined by the configuration.
         """
         if not hasattr(self, "preprocessing_pipeline"):
             raise AttributeError(
@@ -133,7 +144,12 @@ class DataConfigABC(abc.ABC):
     @abc.abstractmethod
     def TYPE(self) -> str:
         """
-        Document this function.
+        Return the configured data type.
+
+        Returns
+        -------
+        str
+            Identifier describing the type of data represented by the configuration.
         """
         pass
 
@@ -141,7 +157,12 @@ class DataConfigABC(abc.ABC):
     @abc.abstractmethod
     def _allowed_dims(cls) -> frozenset[str]:
         """
-        Document this function.
+        Return the dimensions permitted for this data type.
+
+        Returns
+        -------
+        frozenset[str]
+            Names of all dimensions allowed in configured datasets.
         """
         pass
 
@@ -149,7 +170,12 @@ class DataConfigABC(abc.ABC):
     @abc.abstractmethod
     def _required_dims(cls) -> frozenset[str]:
         """
-        Document this function.
+        Return the dimensions required for this data type.
+
+        Returns
+        -------
+        frozenset[str]
+            Names of dimensions that must be present in configured datasets.
         """
         pass
 
@@ -163,20 +189,25 @@ class DataConfigABC(abc.ABC):
         save_name: str | None = None,
     ):
         """
-        Document this function.
+        Fit the preprocessing pipeline using a selected subset of the dataset.
+
+        The configured variables are loaded according to ``selection`` and an
+        optional training mask is constructed before fitting the preprocessing
+        pipeline.
 
         Parameters
         ----------
         selection : dict
-            Description not yet provided.
+            Coordinate selections applied when loading data for fitting.
         mask : bool
-            Description not yet provided.
+            Whether to construct and provide a training mask to the preprocessing
+            pipeline.
         save : bool
-            Description not yet provided.
+            Whether to save the fitted preprocessing pipeline.
         save_path : Path | str | None
-            Description not yet provided.
+            Directory in which to save the fitted preprocessing pipeline.
         save_name : str | None
-            Description not yet provided.
+            Name used when saving the fitted preprocessing pipeline.
         """
         _base = _load_xarray_data(
             self.list_paths,
@@ -208,17 +239,21 @@ class DataConfigABC(abc.ABC):
     @final
     def load_preprocessor_pipeline(self, load_dir: Path | str | None = None):
         """
-        Document this function.
+        Load a fitted preprocessing pipeline from disk.
+
+        When ``load_dir`` is not provided, the preprocessing pipeline is loaded from
+        the current experiment's preprocessing directory.
 
         Parameters
         ----------
         load_dir : Path | str | None
-            Description not yet provided.
+            Directory containing the saved preprocessing pipeline. If ``None``, the
+            current experiment preprocessing directory is used.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If the loaded preprocessing pipeline is not fitted.
         """
         if load_dir is None:
             load_dir = Path(RuntimeContext.GLOBAL_EXP_DIR) / "preprocessing_pipeline"
@@ -242,19 +277,23 @@ class DataConfigABC(abc.ABC):
         self, load: bool = False, add_time_auxiliary_coords: bool = False
     ):
         """
-        Document this function.
+        Open the configured dataset.
+
+        Data variables, ensemble selections, renaming rules, and temporal resolution
+        information are applied when loading the dataset.
 
         Parameters
         ----------
         load : bool
-            Description not yet provided.
+            Whether to load the opened data into memory.
         add_time_auxiliary_coords : bool
-            Description not yet provided.
+            Whether to add auxiliary temporal coordinates while loading the data.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        DataConfigABC
+            This configuration instance with the opened dataset assigned to
+            ``data``.
         """
         time_frequency_to_resolve = min(
             self.info.init_time_freq,
@@ -285,19 +324,20 @@ class DataConfigABC(abc.ABC):
         **indexers_kwargs: Any,
     ):
         """
-        Document this function.
+        Select data by integer position and apply preprocessing.
 
         Parameters
         ----------
         indexers : dict[str, Any] | None
-            Description not yet provided.
+            Mapping from dimension names to positional indexers.
         **indexers_kwargs : Any
-            Description not yet provided.
+            Additional dimension indexers passed to the underlying xarray
+            ``isel`` operation.
 
         Returns
         -------
         Any
-            Description not yet provided.
+            Selected data after applying the configured preprocessing pipeline.
         """
         self._check_opened()
 
@@ -309,12 +349,12 @@ class DataConfigABC(abc.ABC):
     @property
     def coords(self) -> Mapping[str, int]:
         """
-        Document this function.
+        Return the dataset coordinates recorded during configuration.
 
         Returns
         -------
         Mapping[str, int]
-            Description not yet provided.
+            Mapping containing the available dataset coordinates.
         """
         return self.info.coords
 
@@ -322,12 +362,13 @@ class DataConfigABC(abc.ABC):
     @property
     def sizes(self) -> Mapping[str, int]:
         """
-        Document this function.
+        Return the tracked dataset dimension sizes.
 
         Returns
         -------
-        Mapping[str, int]
-            Description not yet provided.
+        Mapping[str, int] | None
+            Mapping from tracked dimension names to their sizes, or ``None`` when no
+            tracked dimensions are present.
         """
         return self.info.sizes
 
@@ -335,12 +376,12 @@ class DataConfigABC(abc.ABC):
     @property
     def dims(self) -> tuple[str, ...] | Mapping[str, int]:
         """
-        Document this function.
+        Return the dimensions present in the configured dataset.
 
         Returns
         -------
         tuple[str, ...] | Mapping[str, int]
-            Description not yet provided.
+            Dataset dimension information recorded during configuration.
         """
         return self.info.dims
 
@@ -348,12 +389,12 @@ class DataConfigABC(abc.ABC):
     @property
     def init_time_frequency(self) -> str:
         """
-        Document this function.
+        Return the temporal resolution of the initialization-time coordinate.
 
         Returns
         -------
-        str
-            Description not yet provided.
+        TimeFrequency
+            Temporal resolution inferred from the initialization times.
         """
         return self.info.init_time_freq
 
@@ -361,12 +402,12 @@ class DataConfigABC(abc.ABC):
     @property
     def indexes(self) -> Mapping[str, pd.Index]:
         """
-        Document this function.
+        Return indexes from the currently opened dataset.
 
         Returns
         -------
         Mapping[str, pd.Index]
-            Description not yet provided.
+            Mapping from indexed dimension names to their pandas indexes.
         """
         self._check_opened()
         return self.data.indexes
@@ -374,12 +415,12 @@ class DataConfigABC(abc.ABC):
     @final
     def _check_opened(self):
         """
-        Document this function.
+        Verify that dataset data have been opened.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If no dataset is currently assigned to ``data``.
         """
         if self.data is None:
             raise ValueError(
@@ -389,7 +430,11 @@ class DataConfigABC(abc.ABC):
 
     @final
     def close_data(self):
-        """Close the xarray dataset and release OS file handles."""
+        """
+        Close the currently opened dataset and release its file handles.
+
+        If no dataset is open, this method has no effect.
+        """
         if self.data is not None:
             self.data.close()
             self.data = None
@@ -400,21 +445,30 @@ class DataConfigABC(abc.ABC):
 
 def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
     """
-    Document this function.
+    Discover and optionally validate files for a data configuration.
+
+    Matching files are located using the configured path and file pattern. When
+    validation is enabled, each dataset is checked for required and allowed
+    dimensions, coordinates, requested variables, ensemble dimensions, supported
+    neural-network dimensions, and a valid initialization-time sequence.
 
     Parameters
     ----------
     dataconfig : DataConfigABC
-        Description not yet provided.
+        Data configuration whose files are discovered and validated.
     _do_checks : bool
-        Description not yet provided.
+        Whether to validate the structure and contents of each discovered file.
 
     Raises
     ------
     FileNotFoundError
-        Description not yet provided.
+        If the configured data path does not exist or no files match the
+        configured file pattern.
     ValueError
-        Description not yet provided.
+        If a dataset is missing required dimensions, coordinates, requested
+        variables, or ensemble dimensions; contains unsupported dimensions; has
+        no supported neural-network dimension; or contains an invalid
+        initialization-time sequence.
     """
     if not Path(dataconfig.paths).exists():
         raise FileNotFoundError(
@@ -489,17 +543,23 @@ def _resolve_data(dataconfig: DataConfigABC, _do_checks: bool = True) -> None:
 
 def _get_ds_info(dataconfig: DataConfigABC) -> infoclass:
     """
-    Document this function.
+    Extract metadata from a configured dataset.
+
+    The configured files are opened together and inspected to determine temporal
+    coverage, tracked dimension sizes, coordinates, dimensions, time
+    representation, and initialization-time resolution.
 
     Parameters
     ----------
     dataconfig : DataConfigABC
-        Description not yet provided.
+        Data configuration describing the files and selections to inspect.
 
     Returns
     -------
     infoclass
-        Description not yet provided.
+        Dataset metadata containing temporal coverage, dimension sizes,
+        coordinates, dimensions, time representation, and initialization-time
+        frequency.
     """
     init_time_dim = dataconfig.init_time_dim
     lead_time_dim = dataconfig.lead_time_dim

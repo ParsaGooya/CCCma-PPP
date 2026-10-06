@@ -58,14 +58,14 @@ from cccma_ppp.architectures.unet.deterministic import UNetConfig
 @dataclasses.dataclass
 class UNetSelector(deterministicModelSelector):
     """
-    Document this class.
+    Selector configuration for a deterministic U-Net used as a cVAE baseline.
 
     Parameters
     ----------
     type : str
-        Description not yet provided.
+        Model type used to resolve the deterministic U-Net configuration.
     share_output_block : bool
-        Description not yet provided.
+        Whether the cVAE and deterministic model share the same output block.
     """
 
     type: str = "unet"
@@ -76,48 +76,56 @@ class UNetSelector(deterministicModelSelector):
 @dataclasses.dataclass
 class cVAEUNetConfig(cVAEmodelConfigABC):
     """
-    Document this class.
+    Configuration for a convolutional U-Net conditional variational autoencoder.
 
     Parameters
     ----------
     channels : list[int]
-        Description not yet provided.
+        Number of feature channels at each level of the recognition U-Net.
     latent_size : int
-        Description not yet provided.
+        Size of the latent representation.
     condition_embedding_channels : list | None
-        Description not yet provided.
+        Feature channels used by the condition encoder. If ``None``, ``channels``
+        is used.
     condition_embedding_size : int | None
-        Description not yet provided.
+        Size of the encoded conditioning representation. If ``None``,
+        ``latent_size`` is used.
     latent_normalization : NormalizationMethod | None
-        Description not yet provided.
+        Normalization applied before projecting bottleneck features into latent
+        space. If ``None``, latent normalization is disabled.
     condition_dependant_latent : bool
-        Description not yet provided.
+        Whether the latent prior depends on the conditioning input.
     condemb_to_decoder : bool
-        Description not yet provided.
+        Whether to concatenate the condition embedding with latent samples before
+        generation.
     deterministic_guess_config : UNetSelector | None
-        Description not yet provided.
+        Configuration for an optional deterministic U-Net whose output is added
+        to the generated cVAE output.
     block_config : ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig
-        Description not yet provided.
+        Configuration defining the convolutional blocks used throughout the U-Net.
     upsampling_method : UpsamplingMethod
-        Description not yet provided.
+        Method used to increase spatial resolution in the generation network.
     upsampling_alignment_method : AlignmentMethod
-        Description not yet provided.
+        Method used to align generated feature maps with target spatial shapes.
     transpose_kernel_sizes : list[int | tuple[int, int]] | int
-        Description not yet provided.
+        Kernel sizes used by successive upsampling blocks. A single integer is
+        repeated for all upsampling levels.
     add_skip_latent : bool
-        Description not yet provided.
+        Whether latent skip information is enabled in the U-Net configuration.
     mask_pooling : MaskPoolingMethod
-        Description not yet provided.
+        Method configured for validity-mask downsampling.
     mask_fraction_threshold : float
-        Description not yet provided.
+        Minimum valid fraction used when fractional mask pooling is selected.
     output_activation : OutputActivation
-        Description not yet provided.
+        Activation applied by the final output block.
     output_block_hidden_channels : int | None
-        Description not yet provided.
+        Number of hidden channels in the output block. If ``None``, no hidden
+        output stage is used.
     init_method : InitMethod
-        Description not yet provided.
+        Weight initialization method used when no checkpoint is loaded.
     GENERATOR : GENERATORConfig | None
-        Description not yet provided.
+        Optional configuration controlling generator noise injection and output
+        sampling.
     """
 
     channels: list[int]
@@ -154,7 +162,12 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
 
     def __post_init__(self) -> None:
         """
-        Document this function.
+        Validate and complete the cVAE U-Net configuration.
+
+        A scalar upsampling kernel size is expanded across all upsampling blocks,
+        missing condition-encoder settings are inferred from the main U-Net
+        configuration, and the optional deterministic guess configuration is
+        resolved.
         """
         _unet_config_checks(self)
         n_up_blocks = len(self.channels) - 1
@@ -172,15 +185,23 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
 
     def _resolve_deterministic_guess(self):
         """
-        Document this function.
+        Resolve and validate the optional deterministic guess configuration.
+
+        The deterministic model configuration is resolved to a U-Net configuration
+        and checked for compatibility with the cVAE, including channel counts,
+        generator settings, and shared output-block settings.
 
         Raises
         ------
         TypeError
-            Description not yet provided.
+            If the deterministic guess configuration does not resolve to a
+            ``UNetConfig`` or one of its subclasses.
         ValueError
-            Description not yet provided.
+            If the deterministic and cVAE U-Nets have incompatible channel counts,
+            if the deterministic model enables generator behavior, or if a shared
+            output block is requested with incompatible output settings.
         """
+
         if self.deterministic_guess_config is not None:
             self.share_output_block = self.deterministic_guess_config.share_output_block
             self.freeze_deterministic = (
@@ -243,12 +264,13 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
     @property
     def EXPECTS_MASK(self) -> bool:
         """
-        Document this function.
+        Indicate whether the configured U-Net uses validity masks.
 
         Returns
         -------
         bool
-            Description not yet provided.
+            ``True`` when partial convolution is enabled by the block configuration,
+            otherwise ``False``.
         """
         return isinstance(self.block_config, PartialConvBlockConfig) or getattr(
             self.block_config, "use_partial_conv", False
@@ -261,21 +283,22 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
         added_features_dim: int | None = None,
     ):
         """
-        Document this function.
+        Build a cVAE U-Net from this configuration.
 
         Parameters
         ----------
         input_shape : np.ndarray
-            Description not yet provided.
+            Shape ``(C, H, W)`` of the conditioning input.
         output_shape : np.ndarray | None
-            Description not yet provided.
+            Shape ``(C, H, W)`` of the model output. If ``None``, ``input_shape`` is
+            used.
         added_features_dim : int | None
-            Description not yet provided.
+            Number of additional feature channels supplied to the model.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        cVAEUNet
+            Constructed conditional variational U-Net.
         """
         return cVAEUNet(
             config=self,
@@ -287,18 +310,25 @@ class cVAEUNetConfig(cVAEmodelConfigABC):
 
 class cVAEUNet(cVAEmodelsABC):
     """
-    Document this class.
+    Conditional variational autoencoder with convolutional U-Net components.
+
+    Separate recognition networks encode the posterior and conditioning inputs
+    into latent representations. Latent samples are decoded through an
+    upsampling network and may optionally be combined with a deterministic U-Net
+    prediction.
 
     Parameters
     ----------
     config : cVAEUNetConfig
-        Description not yet provided.
+        Configuration defining the U-Net, latent representation, generation
+        network, and optional deterministic guess.
     input_shape : np.ndarray | tuple
-        Description not yet provided.
+        Shape ``(C, H, W)`` of the conditioning input.
     output_shape : np.ndarray | tuple | None
-        Description not yet provided.
+        Shape ``(C, H, W)`` of the model output. If ``None``, ``input_shape`` is
+        used.
     added_features_dim : int | None
-        Description not yet provided.
+        Number of additional feature channels supplied to the model.
     """
 
     def __init__(
@@ -309,25 +339,28 @@ class cVAEUNet(cVAEmodelsABC):
         added_features_dim: int | None = None,
     ):
         """
-        Document this function.
+        Initialize a conditional variational U-Net.
 
         Parameters
         ----------
         config : cVAEUNetConfig
-            Description not yet provided.
+            Configuration defining the recognition, conditioning, generation, output,
+            and optional deterministic components.
         input_shape : np.ndarray | tuple
-            Description not yet provided.
+            Shape ``(C, H, W)`` of the conditioning input.
         output_shape : np.ndarray | tuple | None
-            Description not yet provided.
+            Shape ``(C, H, W)`` of the model output. If ``None``, ``input_shape`` is
+            used.
         added_features_dim : int | None
-            Description not yet provided.
+            Number of additional feature channels supplied to the model.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If the input or output shape does not have the required three dimensions.
         ValueError
-            Description not yet provided.
+            If a spatial input dimension is nonpositive or the configured U-Net depth
+            exceeds that supported by the input spatial dimensions.
         """
         super().__init__(config)
 
@@ -469,19 +502,20 @@ class cVAEUNet(cVAEmodelsABC):
         out_channels: int,
     ) -> nn.Module:
         """
-        Document this function.
+        Build the final U-Net output projection.
 
         Parameters
         ----------
         in_channels : int
-            Description not yet provided.
+            Number of channels in the generated feature tensor.
         out_channels : int
-            Description not yet provided.
+            Number of channels required in the model output.
 
         Returns
         -------
         nn.Module
-            Description not yet provided.
+            Output projection configured with the requested hidden channels and
+            activation.
         """
         return UNetOutput(
             in_channels=in_channels,
@@ -499,25 +533,29 @@ class cVAEUNet(cVAEmodelsABC):
         added_features: torch.Tensor | None = None,
     ) -> TensorMask:
         """
-        Document this function.
+        Prepare tensors and masks for a recognition network.
+
+        The primary tensor can be combined with a spatially resized conditioning
+        tensor and additional feature channels. Associated masks are broadcast,
+        resized, and extended with fully valid channels as needed.
 
         Parameters
         ----------
         x : torch.Tensor
-            Description not yet provided.
+            Primary input tensor.
         x_mask : torch.Tensor | None
-            Description not yet provided.
+            Validity mask associated with the primary input.
         condition : torch.Tensor | None
-            Description not yet provided.
+            Optional conditioning tensor to resize and concatenate with the input.
         condition_mask : torch.Tensor | None
-            Description not yet provided.
+            Optional validity mask associated with the conditioning tensor.
         added_features : torch.Tensor | None
-            Description not yet provided.
+            Optional feature tensor to resize and concatenate with the input.
 
         Returns
         -------
         TensorMask
-            Description not yet provided.
+            Combined input tensor and its corresponding validity mask.
         """
         x_mask = _broadcast_mask(x_mask, x)
         if condition is not None:
@@ -562,17 +600,23 @@ class cVAEUNet(cVAEmodelsABC):
 
     def forward(self, request: cVAEForwardRequest) -> cVAEOutput:
         """
-        Document this function.
+        Perform a training forward pass through the conditional variational U-Net.
+
+        The conditioning and target inputs are encoded, posterior latent samples are
+        drawn, and the samples are decoded into output features. An optional
+        deterministic prediction is added before the final output projection.
 
         Parameters
         ----------
         request : cVAEForwardRequest
-            Description not yet provided.
+            Forward-pass request containing targets, conditioning inputs, masks,
+            optional additional features, and sampling parameters.
 
         Returns
         -------
         cVAEOutput
-            Description not yet provided.
+            Generated output together with posterior latent parameters, latent
+            samples, and condition-distribution parameters.
         """
         x = request.target
         x_mask = request.target_mask
@@ -649,24 +693,31 @@ class cVAEUNet(cVAEmodelsABC):
         deterministic_guess_only: bool = save_deterministic_guess_only,
     ) -> cVAEOutput:
         """
-        Document this function.
+        Generate predictions from samples drawn from the conditional prior.
+
+        Generation can be performed in chunks and may produce multiple stochastic
+        outputs for each latent sample. When configured, a deterministic U-Net
+        prediction is either added to the stochastic output or returned by itself.
 
         Parameters
         ----------
         request : cVAEPredictRequest
-            Description not yet provided.
+            Prediction request containing conditioning data, masks, optional
+            additional features, and sampling parameters.
         deterministic_guess_only : bool
-            Description not yet provided.
+            Whether to return only the deterministic guess when a deterministic
+            branch is configured.
 
         Returns
         -------
         cVAEOutput
-            Description not yet provided.
+            Generated predictions and condition-distribution parameters.
 
         Warns
         -----
         UserWarning
-            Description not yet provided.
+            If deterministic-only output is requested and the deterministic branch
+            is used, on the first prediction call.
         """
         num_output_samples = request.output_sample_size
         latent_sample_size = request.latent_sample_size
@@ -731,25 +782,28 @@ class cVAEUNet(cVAEmodelsABC):
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
         """
-        Document this function.
+        Infer posterior latent parameters from target and conditioning data.
+
+        The target, conditioning input, masks, and optional additional features are
+        prepared and passed through the posterior recognition network.
 
         Parameters
         ----------
         x : torch.Tensor
-            Description not yet provided.
+            Target tensor used to infer the posterior distribution.
         x_mask : torch.Tensor | None
-            Description not yet provided.
-        condition : torch.Tensor
-            Description not yet provided.
-        condition_mask : torch.Tensor
-            Description not yet provided.
-        added_features : torch.Tensor
-            Description not yet provided.
+            Validity mask associated with the target tensor.
+        condition : torch.Tensor | None
+            Conditioning tensor concatenated with the target before encoding.
+        condition_mask : torch.Tensor | None
+            Validity mask associated with the conditioning tensor.
+        added_features : torch.Tensor | None
+            Additional feature channels concatenated with the recognition input.
 
         Returns
         -------
-        tuple[torch.Tensor]
-            Description not yet provided.
+        tuple[torch.Tensor, torch.Tensor | None]
+            Posterior mean and log-variance tensors.
         """
         input = self._prepare_input(
             x=x,
@@ -770,21 +824,21 @@ class cVAEUNet(cVAEmodelsABC):
         added_features: torch.Tensor = None,
     ) -> tuple[torch.Tensor]:
         """
-        Document this function.
+        Encode conditioning data into a latent conditioning representation.
 
         Parameters
         ----------
         condition : torch.Tensor
-            Description not yet provided.
-        condition_mask : torch.Tensor
-            Description not yet provided.
-        added_features : torch.Tensor
-            Description not yet provided.
+            Conditioning tensor to encode.
+        condition_mask : torch.Tensor | None
+            Validity mask associated with the conditioning tensor.
+        added_features : torch.Tensor | None
+            Additional feature channels concatenated with the conditioning input.
 
         Returns
         -------
-        tuple[torch.Tensor]
-            Description not yet provided.
+        tuple[torch.Tensor, torch.Tensor | None]
+            Condition mean and, when configured, condition log-variance tensors.
         """
         input = self._prepare_input(
             x=condition,
@@ -807,21 +861,32 @@ class cVAEUNet(cVAEmodelsABC):
         chunk_size: int | None = None,
     ) -> torch.Tensor:
         """
-        Document this function.
+        Decode latent samples into spatial feature maps.
+
+        When configured, the condition embedding is concatenated with each latent
+        sample before generation. Latent samples may be processed in chunks to limit
+        the size of individual generation operations.
 
         Parameters
         ----------
         latent_samples : torch.Tensor
-            Description not yet provided.
+            Latent samples with leading dimensions corresponding to latent sample and
+            batch.
         condition_embedding : torch.Tensor | None
-            Description not yet provided.
+            Encoded conditioning representation to concatenate with latent samples
+            when enabled.
         num_output_samples : int
-            Description not yet provided.
+            Number of stochastic generation outputs to produce for each latent sample.
+        chunk_size : int | None
+            Maximum number of latent samples processed in each generation chunk. If
+            ``None``, all latent samples are processed together.
 
         Returns
         -------
         torch.Tensor
-            Description not yet provided.
+            Generated feature maps organized by latent sample and batch, with an
+            additional leading output-sample dimension when ``num_output_samples`` is
+            greater than one.
         """
 
         latent_sample_size, batch_size = latent_samples.shape[:-1]
@@ -885,21 +950,22 @@ class cVAEUNet(cVAEmodelsABC):
         added_features: torch.Tensor | None = None,
     ) -> torch.Tensor | None:
         """
-        Document this function.
+        Generate the optional deterministic U-Net prediction.
 
         Parameters
         ----------
         input : torch.Tensor
-            Description not yet provided.
+            Input tensor supplied to the deterministic model.
         input_mask : torch.Tensor | None
-            Description not yet provided.
+            Validity mask associated with the input tensor.
         added_features : torch.Tensor | None
-            Description not yet provided.
+            Additional features supplied to the deterministic model.
 
         Returns
         -------
         torch.Tensor | None
-            Description not yet provided.
+            Deterministic decoder output, or ``None`` if no deterministic guess model
+            is configured.
         """
         if self.deterministic_guess is None:
             return
@@ -918,19 +984,22 @@ class cVAEUNet(cVAEmodelsABC):
         sample_sizes: tuple[int, ...],
     ) -> torch.Tensor:
         """
-        Document this function.
+        Apply the output block while preserving sampling dimensions.
+
+        Leading sample dimensions are temporarily merged into the batch dimension
+        before applying the output projection and restored afterward.
 
         Parameters
         ----------
         input : torch.Tensor
-            Description not yet provided.
+            Generated feature tensor.
         sample_sizes : tuple[int, ...]
-            Description not yet provided.
+            Sizes of the leading sample and batch dimensions to preserve.
 
         Returns
         -------
         torch.Tensor
-            Description not yet provided.
+            Projected output with the leading sampling dimensions restored.
         """
         input = input.reshape(
             math.prod(sample_sizes),
@@ -947,22 +1016,27 @@ class cVAEUNet(cVAEmodelsABC):
 
 class Recognition(nn.Module):
     """
-    Document this class.
+    Encode spatial features into a latent representation.
+
+    The recognition network maps the input to the first feature level, repeatedly
+    downsamples it through convolutional blocks, and projects the bottleneck
+    features into latent parameters.
 
     Parameters
     ----------
     input_channels : int
-        Description not yet provided.
+        Number of channels in the recognition input.
     input_spatial_shape : tuple[int, int]
-        Description not yet provided.
+        Spatial shape ``(H, W)`` of the recognition input.
     channels : list[int]
-        Description not yet provided.
+        Number of feature channels at successive resolution levels.
     latent_size : int
-        Description not yet provided.
+        Size of the resulting latent representation.
     config : cVAEUNetConfig
-        Description not yet provided.
+        Configuration defining convolutional blocks, mask handling, and latent
+        normalization.
     get_log_var : bool
-        Description not yet provided.
+        Whether to produce latent log-variance values in addition to means.
     """
 
     def __init__(
@@ -976,22 +1050,24 @@ class Recognition(nn.Module):
         get_log_var: bool = True,
     ):
         """
-        Document this function.
+        Initialize a U-Net recognition network.
 
         Parameters
         ----------
         input_channels : int
-            Description not yet provided.
+            Number of channels in the recognition input.
         input_spatial_shape : tuple[int, int]
-            Description not yet provided.
+            Spatial shape ``(H, W)`` of the recognition input.
         channels : list[int]
-            Description not yet provided.
+            Number of feature channels at successive resolution levels.
         latent_size : int
-            Description not yet provided.
+            Size of the resulting latent representation.
         config : cVAEUNetConfig
-            Description not yet provided.
+            Configuration used to construct convolutional, downsampling, and latent
+            projection blocks.
         get_log_var : bool
-            Description not yet provided.
+            Whether the bottleneck produces latent log-variance values in addition
+            to means.
         """
         super().__init__()
 
@@ -1038,17 +1114,18 @@ class Recognition(nn.Module):
         input_shape: tuple[int, int],
     ) -> list[tuple[int, int]]:
         """
-        Document this function.
+        Compute the spatial shape at each recognition-network level.
 
         Parameters
         ----------
         input_shape : tuple[int, int]
-            Description not yet provided.
+            Initial spatial shape ``(H, W)``.
 
         Returns
         -------
         list[tuple[int, int]]
-            Description not yet provided.
+            Spatial shapes from the input resolution through each successive
+            downsampling level.
         """
         shape = tuple(input_shape)
         shapes = [shape]
@@ -1064,17 +1141,17 @@ class Recognition(nn.Module):
         input: TensorMask,
     ) -> LatentVector:
         """
-        Document this function.
+        Encode an input tensor and mask into latent parameters.
 
         Parameters
         ----------
         input : TensorMask
-            Description not yet provided.
+            Input tensor and its associated validity mask.
 
         Returns
         -------
         LatentVector
-            Description not yet provided.
+            Latent mean and, when enabled, log-variance tensors.
         """
         input = self.initial_mapping(input)
 
@@ -1086,18 +1163,24 @@ class Recognition(nn.Module):
 
 class Generation(nn.Module):
     """
-    Document this class.
+    Decode latent representations into spatial feature maps.
+
+    Latent vectors are projected to bottleneck feature maps and progressively
+    upsampled to the requested spatial resolutions. Optional generator settings
+    control noise injection and repeated stochastic outputs.
 
     Parameters
     ----------
     latent_size : int
-        Description not yet provided.
+        Number of features in each latent representation.
     channels : list[int]
-        Description not yet provided.
+        Number of feature channels from the bottleneck through successive
+        upsampling levels.
     resize_shapes : list[tuple]
-        Description not yet provided.
+        Spatial shapes used at the bottleneck and successive upsampling levels.
     config : cVAEUNetConfig
-        Description not yet provided.
+        Configuration defining upsampling, convolutional processing, and optional
+        generator noise injection.
     """
 
     def __init__(
@@ -1108,18 +1191,21 @@ class Generation(nn.Module):
         config: cVAEUNetConfig,
     ):
         """
-        Document this function.
+        Initialize a latent-to-spatial generation network.
 
         Parameters
         ----------
         latent_size : int
-            Description not yet provided.
+            Number of features in each latent representation.
         channels : list[int]
-            Description not yet provided.
+            Number of feature channels from the bottleneck through successive
+            upsampling levels.
         resize_shapes : list[tuple]
-            Description not yet provided.
+            Spatial shapes used for the bottleneck and successive generated feature
+            maps.
         config : cVAEUNetConfig
-            Description not yet provided.
+            Configuration defining upsampling behavior, convolutional blocks, and
+            optional generator noise injection.
         """
         super().__init__()
         self.bottleneck_dim = channels[0]
@@ -1167,19 +1253,24 @@ class Generation(nn.Module):
         num_output_samples: int = 1,
     ) -> torch.Tensor:
         """
-        Document this function.
+        Generate spatial feature maps from latent representations.
+
+        Latent vectors are projected to the bottleneck resolution and passed through
+        successive upsampling blocks. When generator sampling is enabled, bottleneck
+        features can be repeated to produce multiple stochastic outputs.
 
         Parameters
         ----------
         latent_samples : torch.Tensor
-            Description not yet provided.
+            Latent representations with shape ``(N, latent_size)``.
         num_output_samples : int
-            Description not yet provided.
+            Number of stochastic outputs to generate for each latent representation.
 
         Returns
         -------
         torch.Tensor
-            Description not yet provided.
+            Generated spatial feature maps. When multiple generator outputs are
+            requested, the first dimension indexes output samples.
         """
         batch_size = latent_samples.shape[0]
         x = self.combine_latent(latent_samples)
@@ -1215,12 +1306,15 @@ class Generation(nn.Module):
 @dataclasses.dataclass
 class cVAEUNetSICEConfig(cVAEUNetConfig):
     """
-    Document this class.
+    Configuration for the sea ice concentration cVAE U-Net.
+
+    Extends the standard cVAE U-Net configuration with optional clipping of the
+    final output.
 
     Parameters
     ----------
     clip_output : bool
-        Description not yet provided.
+        Whether to clamp final output values to the interval [0, 1].
     """
 
     clip_output: bool = False
@@ -1232,21 +1326,22 @@ class cVAEUNetSICEConfig(cVAEUNetConfig):
         added_features_dim: int | None = None,
     ):
         """
-        Document this function.
+        Build a sea ice concentration cVAE U-Net from this configuration.
 
         Parameters
         ----------
         input_shape : np.ndarray
-            Description not yet provided.
+            Shape ``(C, H, W)`` of the conditioning input.
         output_shape : np.ndarray | None
-            Description not yet provided.
+            Shape ``(C, H, W)`` of the model output. If ``None``, ``input_shape`` is
+            used.
         added_features_dim : int | None
-            Description not yet provided.
+            Number of additional feature channels supplied to the model.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        cVAEUNetSIC
+            Constructed sea ice concentration conditional variational U-Net.
         """
         return cVAEUNetSIC(
             config=self,
@@ -1258,7 +1353,10 @@ class cVAEUNetSICEConfig(cVAEUNetConfig):
 
 class cVAEUNetSIC(cVAEUNet):
     """
-    Document this class.
+    Conditional variational U-Net specialized for sea ice concentration output.
+
+    Uses the standard cVAE U-Net architecture with a sea ice concentration output
+    block that supports optional clipping to the interval [0, 1].
     """
 
     def _build_output(
@@ -1267,19 +1365,20 @@ class cVAEUNetSIC(cVAEUNet):
         out_channels: int,
     ) -> nn.Module:
         """
-        Document this function.
+        Build the sea ice concentration output projection.
 
         Parameters
         ----------
         in_channels : int
-            Description not yet provided.
+            Number of channels in the generated feature tensor.
         out_channels : int
-            Description not yet provided.
+            Number of channels required in the model output.
 
         Returns
         -------
         nn.Module
-            Description not yet provided.
+            Sea ice concentration output block configured with the requested hidden
+            channels, activation, and clipping behavior.
         """
         return UNetOutputSIC(
             in_channels=in_channels,

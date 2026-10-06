@@ -14,16 +14,21 @@ from cccma_ppp.generic.aggregator import RunningCovariance
 
 class PredictorABC(abc.ABC):
     """
-    Document this class.
+    Abstract base class for inference predictors.
+
+    Provides shared functionality for saving predictions, collecting
+    training-derived statistics, sampling output noise, and accessing the
+    underlying model module.
 
     Attributes
     ----------
     output_dir : str | Path
-        Description not yet provided.
+        Directory in which prediction outputs and training statistics are stored.
     output_sampler : Callable[..., torch.Tensor] | None
-        Description not yet provided.
+        Sampler used to generate decoder noise from training residual statistics.
     num_output_covariance_sampling : int | None
-        Description not yet provided.
+        Number of output samples generated from the empirical residual
+        distribution.
     """
 
     output_dir: str | Path
@@ -33,12 +38,12 @@ class PredictorABC(abc.ABC):
     @property
     def temp_save_dir(self):
         """
-        Document this function.
+        Return the directory used for temporary prediction files.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        Path
+            Temporary output directory located under ``output_dir``.
         """
         return Path(self.output_dir) / "_temp"
 
@@ -46,19 +51,25 @@ class PredictorABC(abc.ABC):
     @abc.abstractmethod
     def extract_training_vars(self) -> bool:
         """
-        Document this function.
+        Indicate whether training-derived statistics must be extracted.
+
+        Returns
+        -------
+        bool
+            Whether the predictor requires statistics calculated from training data.
         """
         pass
 
     @property
     def stats(self) -> dict[str, RunningCovariance]:
         """
-        Document this function.
+        Return the training-statistic accumulators.
 
         Returns
         -------
-        dict[str, RunningCovariance]
-            Description not yet provided.
+        dict[str, RunningCovariance] | None
+            Mapping from statistic names to running covariance accumulators when
+            training statistics are required, otherwise ``None``.
         """
         if self.extract_training_vars:
             return self._stats
@@ -66,42 +77,53 @@ class PredictorABC(abc.ABC):
     @abc.abstractmethod
     def _infer_on_batch(self, batch: BatchDataABC, _getting_train_stats: bool = False):
         """
-        Document this function.
+        Perform inference or training-statistic extraction for a batch.
 
         Parameters
         ----------
         batch : BatchDataABC
-            Description not yet provided.
+            Batch containing model inputs, optional targets, and metadata.
         _getting_train_stats : bool
-            Description not yet provided.
+            Whether to collect training-derived statistics instead of performing
+            standard inference.
+
+        Returns
+        -------
+        Any
+            Predictor-specific inference output or training statistics.
         """
         pass
 
     @abc.abstractmethod
     def _batch_to_netcdf(self, output: OutputABC, metadata: list[dict]):
         """
-        Document this function.
+        Save a batch of predictor outputs to a temporary NetCDF file.
 
         Parameters
         ----------
         output : OutputABC
-            Description not yet provided.
+            Model output to save.
         metadata : list[dict]
-            Description not yet provided.
+            Per-sample metadata used to construct output coordinates.
         """
         pass
 
     @abc.abstractmethod
     def _update_train_stats(self, output: OutputABC, batch: BatchDataABC):
         """
-        Document this function.
+        Update training-derived statistics from a model output.
 
         Parameters
         ----------
         output : OutputABC
-            Description not yet provided.
+            Model output used to calculate the required statistics.
         batch : BatchDataABC
-            Description not yet provided.
+            Batch containing the corresponding model inputs and targets.
+
+        Returns
+        -------
+        dict[str, RunningCovariance]
+            Updated running covariance accumulators.
         """
         pass
 
@@ -109,12 +131,13 @@ class PredictorABC(abc.ABC):
     @property
     def raw_module(self):
         """
-        Document this function.
+        Return the underlying unwrapped model module.
 
         Returns
         -------
         Any
-            Description not yet provided.
+            Module wrapped by distributed data parallel execution when applicable,
+            or the original module otherwise.
         """
         if isinstance(self.module, torch.nn.parallel.DistributedDataParallel):
             return self.module.module
@@ -129,23 +152,26 @@ class PredictorABC(abc.ABC):
         reshape_size: tuple,
     ) -> OutputABC:
         """
-        Document this function.
+        Add covariance-based noise to model predictions.
+
+        Noise is sampled from the empirical residual distribution estimated from
+        training data and added as an additional output-sample dimension.
 
         Parameters
         ----------
         output : OutputABC
-            Description not yet provided.
+            Model output whose predictions receive sampled decoder noise.
         num_output_samples : int
-            Description not yet provided.
+            Number of noisy output samples to generate.
         sample_size : tuple
-            Description not yet provided.
+            Leading sample dimensions used when drawing residual noise.
         reshape_size : tuple
-            Description not yet provided.
+            Shape of each predicted sample used to reshape the sampled noise.
 
         Returns
         -------
         OutputABC
-            Description not yet provided.
+            Model output with covariance-based decoder noise added to its predictions.
         """
         if self.output_sampler is None:
             self.output_sampler = self.build_output_sampler()
@@ -165,17 +191,20 @@ class PredictorABC(abc.ABC):
     @final
     def build_output_sampler(self) -> Callable[..., torch.Tensor]:
         """
-        Document this function.
+        Build a decoder-noise sampler from training residual statistics.
+
+        The residual covariance is loaded from saved training statistics and combined
+        with a zero-mean vector to define the sampling distribution.
 
         Returns
         -------
         Callable[..., torch.Tensor]
-            Description not yet provided.
+            Callable that generates samples from the empirical residual distribution.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If the training-statistics file does not exist.
         """
         stats_path = self.output_dir / "training_variable_stats.pt"
 
@@ -189,17 +218,17 @@ class PredictorABC(abc.ABC):
 
         def _sampler(sample_size: int | tuple[int, ...]):
             """
-            Document this function.
+            Draw decoder-noise samples from the training residual distribution.
 
             Parameters
             ----------
             sample_size : int | tuple[int, ...]
-                Description not yet provided.
+                Number and shape of residual samples to draw.
 
             Returns
             -------
-            Any
-                Description not yet provided.
+            torch.Tensor
+                Samples drawn from the zero-mean residual distribution.
             """
             return self._sample(
                 torch.zeros_like(stats["residual_mean"]),
@@ -217,28 +246,32 @@ class PredictorABC(abc.ABC):
         std: float = 1.0,
     ) -> torch.distributions.MultivariateNormal:
         """
-        Document this function.
+        Construct a multivariate normal distribution.
+
+        The covariance matrix is scaled by ``std`` and progressively increasing
+        diagonal jitter is added when necessary to obtain a valid covariance matrix.
 
         Parameters
         ----------
         mu : torch.Tensor
-            Description not yet provided.
+            Mean vector of the multivariate normal distribution.
         cov : torch.Tensor
-            Description not yet provided.
+            Covariance matrix of the multivariate normal distribution.
         std : float
-            Description not yet provided.
+            Standard-deviation multiplier applied to the covariance.
 
         Returns
         -------
         torch.distributions.MultivariateNormal
-            Description not yet provided.
+            Multivariate normal distribution on the predictor device.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If a valid multivariate normal distribution cannot be constructed after
+            repeated increases in diagonal jitter.
         ValueError
-            Description not yet provided.
+            If ``std`` is not positive.
         """
         mu = mu.detach().to(self.device).float()
         cov = cov.detach().to(self.device).float()
@@ -275,23 +308,23 @@ class PredictorABC(abc.ABC):
         std: float = 1.0,
     ) -> torch.Tensor:
         """
-        Document this function.
+        Draw samples from a multivariate normal distribution.
 
         Parameters
         ----------
         mu : torch.Tensor
-            Description not yet provided.
+            Mean vector of the distribution.
         cov : torch.Tensor
-            Description not yet provided.
+            Covariance matrix of the distribution.
         sample_size : int | tuple[int, ...]
-            Description not yet provided.
+            Number and shape of samples to draw.
         std : float
-            Description not yet provided.
+            Standard-deviation multiplier applied to the distribution.
 
         Returns
         -------
         torch.Tensor
-            Description not yet provided.
+            Sampled values on the predictor device.
         """
         dist = self._get_multinormal(mu=mu, cov=cov, std=std)
 
@@ -313,31 +346,37 @@ def save_batch_to_netcdf(
     attrs: dict = None,
 ):
     """
-    Document this function.
+    Save a batch of model predictions to a NetCDF file.
+
+    Predictions are converted to an xarray DataArray with optional leading sample
+    dimensions. Per-sample metadata are represented as a multi-index, which is
+    unstacked into separate output dimensions before saving.
 
     Parameters
     ----------
     prediction : torch.Tensor
-        Description not yet provided.
+        Prediction tensor to save.
     metadata : list[dict]
-        Description not yet provided.
+        Per-sample metadata used to construct batch coordinates.
     num_output_dims : int
-        Description not yet provided.
+        Number of dimensions in each model output, including the channel
+        dimension.
     save_name : str
-        Description not yet provided.
+        Name of the NetCDF file.
     save_dir : str | Path
-        Description not yet provided.
+        Directory in which the NetCDF file is saved.
     extra_dims_sorted : list[str] | None
-        Description not yet provided.
-    assign_coords : dict
-        Description not yet provided.
-    attrs : dict
-        Description not yet provided.
+        Names of additional leading sample dimensions in ``prediction``.
+    assign_coords : dict | None
+        Additional coordinates to assign to the resulting DataArray.
+    attrs : dict | None
+        Attributes assigned to the resulting DataArray.
 
     Raises
     ------
     ValueError
-        Description not yet provided.
+        If the prediction does not have the expected number of dimensions or the
+        number of metadata entries does not match the prediction batch size.
     """
     prediction = prediction.detach().float().cpu()
 

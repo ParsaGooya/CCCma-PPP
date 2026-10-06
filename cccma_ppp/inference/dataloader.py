@@ -18,22 +18,27 @@ from cccma_ppp.generic.runtime import RuntimeContext
 @dataclasses.dataclass
 class BatchData(BatchDataABC):
     """
-    Document this class.
+    Container for a batch of inference data.
+
+    Input NaN values are replaced with zeros after an optional validity mask is
+    constructed from their locations.
 
     Parameters
     ----------
     input : torch.Tensor
-        Description not yet provided.
-    added_features : torch.Tensor
-        Description not yet provided.
+        Batched model input tensor.
+    added_features : torch.Tensor | None
+        Optional additional features associated with the input batch.
     metadata : list[dict] | None
-        Description not yet provided.
+        Per-sample metadata associated with the batch.
     return_spatial_mask : bool
-        Description not yet provided.
+        Whether to construct a validity mask from non-NaN input values.
     reduce_spatial_mask : bool
-        Description not yet provided.
+        Whether to reduce the validity mask across the batch dimension and reuse
+        it as a shared mask.
     input_mask : torch.Tensor | None
-        Description not yet provided.
+        Validity mask derived from the input tensor when spatial masks are
+        requested.
     """
 
     input: torch.Tensor
@@ -48,8 +53,13 @@ class BatchData(BatchDataABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize spatial masking and replace missing input values.
+
+        When spatial masking is enabled, a validity mask is constructed from the
+        non-NaN input values. The mask can optionally be reduced across the batch and
+        shared between instances. Input NaN values are then replaced with zeros.
         """
+
         if self.return_spatial_mask:
             if self.reduce_spatial_mask:
                 if type(self)._shared_input_mask is None:
@@ -66,17 +76,19 @@ class BatchData(BatchDataABC):
 
     def to_device(self, device: torch.device | str) -> "BatchData":
         """
-        Document this function.
+        Move batch tensors to a device.
 
         Parameters
         ----------
         device : torch.device | str
-            Description not yet provided.
+            Device to which the input, validity mask, and additional features are
+            moved.
 
         Returns
         -------
-        'BatchData'
-            Description not yet provided.
+        BatchData
+            This batch instance with its applicable tensors moved to the requested
+            device.
         """
         self.input = self.input.to(device)
 
@@ -92,28 +104,30 @@ class BatchData(BatchDataABC):
 @dataclasses.dataclass
 class InferenceDataloaderConfig(DataloaderConfigABC):
     """
-    Document this class.
+    Configuration for an inference data loader.
 
     Parameters
     ----------
     dataset_config : InferenceDatasetConfig | None
-        Description not yet provided.
+        Configuration used to construct the inference dataset. If ``None``, the
+        configuration must be derived from a training data-loader configuration.
     batch_size : int
-        Description not yet provided.
-    inference_years_slice : tuple | list
-        Description not yet provided.
+        Number of samples in each inference batch.
+    inference_years_slice : tuple | list | None
+        Optional start and stop years used to restrict the initialization times
+        included in inference.
     num_data_workers : int
-        Description not yet provided.
+        Number of worker processes used for data loading.
     prefetch_factor : int | None
-        Description not yet provided.
+        Number of batches prefetched by each data-loading worker.
     drop_last : bool
-        Description not yet provided.
+        Whether to discard the final incomplete batch.
     load : bool
-        Description not yet provided.
+        Whether dataset contents are loaded into memory when opened.
     reduce_spatial_mask : bool
-        Description not yet provided.
+        Whether spatial validity masks are reduced across the batch dimension.
     time_features : AddedTimeFeatures | None
-        Description not yet provided.
+        Temporal feature configuration inherited from the training data loader.
     """
 
     dataset_config: InferenceDatasetConfig | None = None
@@ -132,7 +146,11 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize the inference data-loader configuration.
+
+        Initializes common data-loader settings, validates inference times when a
+        dataset configuration is already available, and converts configured
+        inference-year bounds to a slice.
         """
         super().__init__()
         self.train_dataset_config = None
@@ -148,12 +166,13 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
     def _check_config(self):
         """
-        Document this function.
+        Verify that the required inference configuration has been resolved.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If the inference dataset configuration or temporal feature configuration
+            is unavailable.
         """
         if self.dataset_config is None:
             raise RuntimeError(
@@ -169,12 +188,17 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
     def read_configs_from_train(self, train_dataloader_config: TrainDataloaderConfig):
         """
-        Document this function.
+        Populate inference settings from a training data-loader configuration.
+
+        Temporal feature settings are copied from the training configuration when
+        not already available, and an inference dataset configuration is derived
+        from the training dataset configuration when necessary.
 
         Parameters
         ----------
         train_dataloader_config : TrainDataloaderConfig
-            Description not yet provided.
+            Training data-loader configuration from which dataset and temporal
+            feature settings are inherited.
         """
         if self.time_features is None:
             self.time_features = copy.deepcopy(train_dataloader_config.time_features)
@@ -188,12 +212,13 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     @property
     def _inference_times(self):
         """
-        Document this function.
+        Return initialization times selected for inference.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        xr.DataArray
+            Available initialization times, optionally restricted to the configured
+            inference-year range.
         """
         if self.inference_years_slice is None:
             return self.available_times
@@ -205,29 +230,34 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     @property
     def available_times(self):
         """
-        Document this function.
+        Return initialization times available from the inference dataset.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        xr.DataArray
+            Initialization times available for inference.
         """
         self._check_config()
         return self.dataset_config.available_times
 
     def _input_preprocessor_exists(self, load_dir: Path | str = None):
         """
-        Document this function.
+        Check whether the required input preprocessing pipelines have been saved.
+
+        Model and conditioning preprocessing pipelines are checked when their
+        corresponding data configurations are present.
 
         Parameters
         ----------
-        load_dir : Path | str
-            Description not yet provided.
+        load_dir : Path | str | None
+            Directory containing saved preprocessing pipelines. If ``None``, the
+            preprocessing directory of the current experiment is used.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        bool
+            ``True`` if all required preprocessing pipeline files exist, otherwise
+            ``False``.
         """
         self._check_config()
         preprocessor_to_check = []
@@ -264,16 +294,22 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
         load_path: Path | str | None = None,
     ):
         """
-        Document this function.
+        Configure inference data loading for distributed execution.
+
+        If required preprocessing pipelines are missing, the root process fits and
+        saves them using the training data-loader configuration. Processes are then
+        synchronized before the fitted pipelines are loaded for inference.
 
         Parameters
         ----------
         train_loader_config : TrainDataloaderConfig
-            Description not yet provided.
+            Training data-loader configuration used to fit missing preprocessing
+            pipelines.
         distributed : Distributed
-            Description not yet provided.
+            Distributed runtime containing device, rank, and world-size information.
         load_path : Path | str | None
-            Description not yet provided.
+            Directory from which fitted preprocessing pipelines are loaded and, when
+            necessary, saved.
         """
         self._check_config()
         self.distributed = distributed
@@ -299,22 +335,26 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
 
     def build_inference_loader(self, return_spatial_mask: bool = False):
         """
-        Document this function.
+        Build the configured inference data loader.
+
+        The inference dataset is constructed for the selected initialization times
+        with temporal features and sample metadata enabled.
 
         Parameters
         ----------
         return_spatial_mask : bool
-            Description not yet provided.
+            Whether inference batches include validity masks derived from missing
+            spatial input values.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        Dataloader
+            Configured inference data loader.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If distributed data-loader setup has not been completed.
         """
         if not self._setup:
             raise RuntimeError(
@@ -341,12 +381,13 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     @property
     def input_var_metadata(self):
         """
-        Document this function.
+        Return metadata describing inference input variables.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        dict
+            Input-variable metadata including variable names, preprocessing
+            operations, and neural-network dimensions.
         """
         self._check_config()
         return self.dataset_config.ds_operator.get_input_var_metadata()
@@ -354,17 +395,19 @@ class InferenceDataloaderConfig(DataloaderConfigABC):
     @property
     def target_var_metadata(self):
         """
-        Document this function.
+        Return target-variable metadata from the training dataset configuration.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        dict
+            Target-variable metadata including variable names, preprocessing
+            operations, and neural-network dimensions.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If a training dataset configuration has not been supplied through
+            ``read_configs_from_train``.
         """
         if self.train_dataset_config is None:
             raise RuntimeError(
@@ -380,21 +423,25 @@ def collate_batch(
     reduce_spatial_mask: bool = False,
 ):
     """
-    Document this function.
+    Collate inference samples into a batch.
+
+    Input tensors and optional additional features are stacked along the batch
+    dimension. Per-sample metadata are retained when provided by the dataset.
 
     Parameters
     ----------
     batch : Any
-        Description not yet provided.
+        Sequence of inference samples, optionally paired with per-sample metadata.
     return_spatial_mask : bool
-        Description not yet provided.
+        Whether to construct an input validity mask from missing values.
     reduce_spatial_mask : bool
-        Description not yet provided.
+        Whether to reduce the validity mask across the batch dimension.
 
     Returns
     -------
-    Any
-        Description not yet provided.
+    BatchData
+        Collated inference batch containing inputs, optional additional features,
+        metadata, and optional spatial validity information.
     """
     metadata = None
 

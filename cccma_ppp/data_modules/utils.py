@@ -33,17 +33,20 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 
 def _unwrap_data_variables(dataset: xr.Dataset) -> xr.DataArray:
     """
-    Document this function.
+    Combine dataset variables into a channel dimension.
+
+    Each data variable is squeezed, assigned a singleton ``channels`` dimension,
+    and concatenated with the remaining variables along that dimension.
 
     Parameters
     ----------
     dataset : xr.Dataset
-        Description not yet provided.
+        Dataset containing variables to combine.
 
     Returns
     -------
     xr.DataArray
-        Description not yet provided.
+        Data variables combined along a leading ``channels`` dimension.
     """
     return xr.concat(
         [
@@ -70,49 +73,61 @@ def _load_xarray_data(
     supported_NN_dimensions_sorted: tuple = supported_NN_dimensions_sorted,
 ):
     """
-    Document this function.
+    Open and prepare data from multiple xarray-compatible files.
+
+    Files are combined along the configured concatenation dimension and can be
+    renamed, subset, temporally standardized, ensemble averaged, restricted to
+    selected variables, and loaded into memory. Neural-network dimensions are
+    placed at the end of the resulting dimension order.
 
     Parameters
     ----------
     paths : list[str]
-        Description not yet provided.
+        Paths to the data files to open.
     selection : dict | None
-        Description not yet provided.
+        Coordinate selections applied after opening and renaming the data.
     names : list | None
-        Description not yet provided.
+        Names of data variables to retain. If ``None``, all variables are kept.
     ensemble_mean : bool
-        Description not yet provided.
+        Whether to average over the realization dimension when it is present.
     concat_dim : str
-        Description not yet provided.
+        Dimension along which the input files are concatenated.
     rename_dict : dict | None
-        Description not yet provided.
+        Mapping from existing dimension names to replacement names.
     chunks : dict | None
-        Description not yet provided.
+        Dask chunk sizes used when opening the files.
     load : bool
-        Description not yet provided.
+        Whether to load the resulting dataset into memory.
     add_time_auxiliary_coords : bool
-        Description not yet provided.
+        Whether to derive year, month, and day-of-year coordinates from the
+        initialization-time coordinate.
     init_time_dim : str
-        Description not yet provided.
-    resolved_init_time_frequency : TemporalFrequency | None
-        Description not yet provided.
+        Name of the initialization-time coordinate.
+    resolved_init_time_frequency : TimeFrequency | None
+        Temporal frequency to which initialization timestamps are standardized.
+        If ``None``, timestamps are left unchanged.
     realization_dim : str
-        Description not yet provided.
+        Name of the ensemble realization dimension.
     supported_NN_dimensions_sorted : tuple
-        Description not yet provided.
+        Ordered neural-network dimensions placed at the end of the dataset
+        dimension order when present.
 
     Returns
     -------
-    Any
-        Description not yet provided.
+    xr.Dataset
+        Opened and prepared dataset.
 
     Raises
     ------
     TypeError
-        Description not yet provided.
+        If temporal auxiliary coordinates are requested but the initialization
+        coordinate does not contain supported datetime values.
     ValueError
-        Description not yet provided.
+        If ``rename_dict`` contains dimensions absent from the dataset, temporal
+        auxiliary coordinates are requested without a valid one-dimensional
+        initialization-time coordinate, or the time sequence is invalid.
     """
+
     ds = xr.open_mfdataset(
         paths, combine="nested", concat_dim=concat_dim, chunks=chunks
     )
@@ -184,24 +199,20 @@ def _standardize_time(
     time_dim: str = init_time_dim,
 ) -> xr.Dataset | xr.DataArray:
     """
-    Standardize temporal coordinates to a representative timestamp.
+    Standardize temporal coordinates to representative timestamps.
 
-    Changes only the time coordinate, without resampling or
-    modifying the underlying data. Supports both NumPy datetime64
-    and cftime calendars.
+    Only the time coordinate is modified; the underlying data are neither
+    resampled nor aggregated. Daily timestamps are moved to midnight, monthly
+    timestamps to the 15th day of each month, and yearly timestamps to January 1.
 
     Parameters
     ----------
     ds : xr.Dataset | xr.DataArray
-        Input data containing a one-dimensional time coordinate.
-    frequency : {"hour", "day", "month", "year"}
-        Temporal frequency used to standardize timestamps:
-
-        - day: midnight of each day.
-        - month: 15th day of each month at midnight.
-        - year: January 1 of each year at midnight.
-
-    time_dim : str, default "init_time"
+        Data containing the temporal coordinate to standardize.
+    frequency : TimeFrequency
+        Temporal frequency used to standardize timestamps. Supported values are
+        ``"day"``, ``"month"``, and ``"year"``.
+    time_dim : str
         Name of the temporal coordinate to standardize.
 
     Returns
@@ -212,10 +223,11 @@ def _standardize_time(
     Raises
     ------
     ValueError
-        If the frequency is unsupported, the time coordinate
-        is invalid, or standardization produces duplicate dates.
+        If ``frequency`` is unsupported, the temporal coordinate is missing or
+        is not a one-dimensional dimension coordinate, or standardization
+        produces duplicate timestamps.
     TypeError
-        If the coordinate does not contain supported datetimes.
+        If the temporal coordinate does not use a supported datetime index type.
     """
     if frequency not in ("day", "month", "year"):
         raise ValueError(f"Unsupported temporal frequency: {frequency}")
@@ -233,6 +245,19 @@ def _standardize_time(
     index = ds.indexes[time_dim]
 
     def standardize(t):
+        """
+        Convert a timestamp to the representative time for the configured frequency.
+
+        Parameters
+        ----------
+        t : Any
+            Timestamp to standardize.
+
+        Returns
+        -------
+        Any
+            Timestamp of the same type with its temporal components standardized.
+        """
         year, month, day = t.year, t.month, t.day
         hour = t.hour
 
@@ -276,30 +301,41 @@ def _create_train_mask(
     lead_time_dim: str = lead_time_dim,
 ) -> xr.DataArray:
     """
-    Document this function.
+    Create a mask identifying sample times beyond the available temporal range.
+
+    Valid times are calculated from every initialization-time and lead-time
+    combination. Samples extending beyond the temporal coverage of the
+    initialization data are masked, with comparison behavior adjusted for yearly
+    and monthly initialization frequencies.
 
     Parameters
     ----------
     init_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
-        Description not yet provided.
+        Initialization times defining the available temporal coverage.
     lead_times : Sequence | xr.DataArray | np.ndarray | int
-        Description not yet provided.
+        One-based lead times. An integer creates all lead times from one through
+        the specified value.
+    max_allowed_time : np.datetime64 | datetime.datetime | cftime.datetime | None
+        Optional additional upper bound on valid target times.
     lead_time_resolution : lead_time_unit
-        Description not yet provided.
+        Temporal unit used to interpret lead-time offsets.
     init_time_dim : str
-        Description not yet provided.
+        Name of the initialization-time dimension.
     lead_time_dim : str
-        Description not yet provided.
+        Name of the lead-time dimension.
 
     Returns
     -------
     xr.DataArray
-        Description not yet provided.
+        Boolean mask indexed by initialization time and lead time, where ``True``
+        identifies target times outside the allowed temporal range.
 
     Raises
     ------
     ValueError
-        Description not yet provided.
+        If the initialization-time sequence is invalid, lead times are empty or
+        not one-dimensional, an integer lead-time count is less than one, or any
+        lead time is less than one.
     """
     _validate_time_sequence(init_times)
 
@@ -370,21 +406,30 @@ def _calculate_target_times(
     lead_time_resolution: lead_time_unit,
 ) -> np.ndarray:
     """
-    Calculate valid times from init times and lead times.
+    Calculate target times from initialization times and lead times.
+
+    Lead times are one-based, such that a lead time of one corresponds to the
+    initialization time itself.
 
     Parameters
     ----------
     init_times : xr.DataArray
-        Initialization times.
+        Initialization times from which target times are calculated.
     lead_times : np.ndarray
-        One-based lead time offsets (1 means init_time, 2 means init_time + 1 period).
+        One-based lead-time values.
     lead_time_resolution : lead_time_unit
-        Time unit for lead time offsets.
+        Temporal unit used to interpret lead-time offsets.
 
     Returns
     -------
     np.ndarray
-        Valid times with shape (len(init_times), len(lead_times)).
+        Target times with shape ``(len(init_times), len(lead_times))``.
+
+    Raises
+    ------
+    ValueError
+        If any lead time is less than one or ``lead_time_resolution`` is not
+        supported.
     """
 
     if np.any(lead_times < 1):
@@ -434,19 +479,19 @@ def _add_months(
     n_months: int,
 ) -> np.datetime64 | cftime.datetime:
     """
-    Document this function.
+    Advance a datetime by a specified number of months.
 
     Parameters
     ----------
     time : np.datetime64 | cftime.datetime
-        Description not yet provided.
+        Starting datetime.
     n_months : int
-        Description not yet provided.
+        Number of months to advance.
 
     Returns
     -------
     np.datetime64 | cftime.datetime
-        Description not yet provided.
+        Datetime obtained after advancing by ``n_months`` months.
     """
     is_cftime = isinstance(time, cftime.datetime)
 
@@ -465,19 +510,26 @@ def _validate_time_sequence(
     times_sequence: Sequence | np.ndarray | xr.DataArray,
 ) -> None:
     """
-    Document this function.
+    Validate a sequence of datetime values.
+
+    The sequence must be non-empty, one-dimensional, and contain a consistent
+    datetime representation. CF datetime sequences must use a single calendar,
+    while Python datetime values must be naive or UTC.
 
     Parameters
     ----------
     times_sequence : Sequence | np.ndarray | xr.DataArray
-        Description not yet provided.
+        Sequence of datetime values to validate.
 
     Raises
     ------
     TypeError
-        Description not yet provided.
+        If values are not supported datetime objects or different datetime
+        representations are mixed within the sequence.
     ValueError
-        Description not yet provided.
+        If the sequence is empty or not one-dimensional, CF datetime values use
+        multiple calendars, or Python datetime values contain non-UTC timezone
+        offsets.
     """
     values = (
         times_sequence.values
@@ -539,12 +591,15 @@ def _validate_time_sequence(
 @contextlib.contextmanager
 def suppress_stderr() -> Iterator[None]:
     """
-    Document this function.
+    Temporarily suppress output written to standard error.
+
+    Standard error is redirected to the operating system null device for the
+    duration of the context and restored afterward.
 
     Yields
     ------
     None
-        Description not yet provided.
+        Control to the code executed while standard error is suppressed.
     """
     stderr_fd = 2
     saved_stderr_fd = os.dup(stderr_fd)
@@ -564,28 +619,37 @@ def add_lead_times(
     lead_time_resolution: lead_time_unit = "month",
 ) -> np.ndarray:
     """
-    Document this function.
+    Calculate paired target times from initialization times and lead times.
+
+    Each initialization time is paired with the lead time at the same array
+    position. Lead times are one-based, so a lead time of one corresponds to the
+    initialization time itself.
 
     Parameters
     ----------
     init_times : np.ndarray | xr.DataArray
-        Description not yet provided.
+        One-dimensional array of initialization times.
     lead_times : np.ndarray | xr.DataArray
-        Description not yet provided.
+        One-dimensional array of one-based lead times corresponding element-wise
+        to ``init_times``.
     lead_time_resolution : lead_time_unit
-        Description not yet provided.
+        Temporal unit used to interpret lead-time offsets.
 
     Returns
     -------
     np.ndarray
-        Description not yet provided.
+        Target times obtained by applying each lead-time offset to its
+        corresponding initialization time.
 
     Raises
     ------
     TypeError
-        Description not yet provided.
+        If initialization times are neither ``numpy.datetime64`` nor
+        ``cftime.datetime`` values.
     ValueError
-        Description not yet provided.
+        If the input arrays are not one-dimensional or do not have matching
+        shapes, lead times are not integer-valued or contain values less than one,
+        or the lead-time resolution is unsupported.
     """
     init_times = np.asarray(init_times)
     lead_times = np.asarray(lead_times)
@@ -642,26 +706,29 @@ def _add_cftime_offset(
     resolution: lead_time_unit,
 ) -> cftime.datetime:
     """
-    Document this function.
+    Add a temporal offset to a CF datetime.
+
+    Daily offsets are applied directly. Monthly offsets preserve the original
+    day when possible and otherwise use the final valid day of the target month.
 
     Parameters
     ----------
     init_time : cftime.datetime
-        Description not yet provided.
+        Starting CF datetime.
     offset : int
-        Description not yet provided.
+        Number of temporal units to add.
     resolution : lead_time_unit
-        Description not yet provided.
+        Temporal unit of the offset.
 
     Returns
     -------
     cftime.datetime
-        Description not yet provided.
+        Shifted datetime using the same CF datetime type as ``init_time``.
 
     Raises
     ------
     ValueError
-        Description not yet provided.
+        If ``resolution`` is not supported.
     """
     if resolution == "day":
         return init_time + datetime.timedelta(days=offset)
@@ -700,21 +767,21 @@ def _days_in_cftime_month(
     calendar_name: str,
 ) -> int:
     """
-    Document this function.
+    Return the number of days in a month for a CF calendar.
 
     Parameters
     ----------
     year : int
-        Description not yet provided.
+        Calendar year.
     month : int
-        Description not yet provided.
+        Calendar month from 1 through 12.
     calendar_name : str
-        Description not yet provided.
+        Name of the CF calendar.
 
     Returns
     -------
     int
-        Description not yet provided.
+        Number of days in the requested month.
     """
     if calendar_name == "360_day":
         return 30
@@ -762,28 +829,33 @@ def assign_datetime_init_time(
     calendar: str | None = None,
 ) -> xr.Dataset | xr.DataArray:
     """
-    Document this function.
+    Convert integer initialization years to datetime coordinates.
+
+    Integer year coordinates are replaced with January 1 timestamps. NumPy
+    datetimes are used when no calendar is specified; otherwise CF datetime
+    values are generated using the requested calendar.
 
     Parameters
     ----------
     ds : xr.Dataset | xr.DataArray
-        Description not yet provided.
+        Data containing an integer initialization-year coordinate.
     init_time_dim : str
-        Description not yet provided.
+        Name of the initialization-time coordinate.
     calendar : str | None
-        Description not yet provided.
+        CF calendar used to construct timestamps. If ``None``, NumPy datetime
+        values are created.
 
     Returns
     -------
     xr.Dataset | xr.DataArray
-        Description not yet provided.
+        Data with the initialization coordinate replaced by datetime values.
 
     Raises
     ------
     TypeError
-        Description not yet provided.
+        If the initialization-time coordinate does not contain integer years.
     ValueError
-        Description not yet provided.
+        If ``init_time_dim`` is not a coordinate of the input data.
     """
     if init_time_dim not in ds.coords:
         raise ValueError(f"{init_time_dim!r} is not a coordinate.")
@@ -813,22 +885,23 @@ def get_time_representation(
     time: xr.DataArray | pd.DatetimeIndex | xr.CFTimeIndex,
 ) -> TimeTypes:
     """
-    Document this function.
+    Determine the datetime representation used by a temporal coordinate.
 
     Parameters
     ----------
     time : xr.DataArray | pd.DatetimeIndex | xr.CFTimeIndex
-        Description not yet provided.
+        Temporal coordinate or index to inspect.
 
     Returns
     -------
     TimeTypes
-        Description not yet provided.
+        ``"datetime"`` for NumPy, Python, or pandas datetime values, or
+        ``"cftime"`` for CF datetime values.
 
     Raises
     ------
     TypeError
-        Description not yet provided.
+        If the input does not use a supported datetime representation.
     """
     if isinstance(time, xr.DataArray):
         values = time.values
@@ -854,22 +927,26 @@ def infer_time_resolution(
     times: pd.DatetimeIndex | xr.CFTimeIndex,
 ) -> TimeFrequency:
     """
-    Document this function.
+    Infer the temporal resolution of a datetime index.
+
+    Resolution is determined from the smallest interval between consecutive
+    timestamps. Intervals shorter than 28 days are classified as daily, intervals
+    shorter than 365 days as monthly, and longer intervals as yearly.
 
     Parameters
     ----------
     times : pd.DatetimeIndex | xr.CFTimeIndex
-        Description not yet provided.
+        Ordered datetime index from which to infer temporal resolution.
 
     Returns
     -------
     TimeFrequency
-        Description not yet provided.
+        Inferred temporal resolution: ``"day"``, ``"month"``, or ``"year"``.
 
     Raises
     ------
     ValueError
-        Description not yet provided.
+        If fewer than two timestamps are provided.
     """
     if len(times) < 2:
         raise ValueError(

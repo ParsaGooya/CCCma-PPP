@@ -3,17 +3,26 @@ from cccma_ppp.architectures.layers.conv import TensorMask
 
 def _unet_config_checks(config):
     """
-    Document this function.
+    Validate configuration values shared by U-Net architectures.
+
+    Checks upsampling kernel sizes, channel dimensions, latent dimensions, mask
+    pooling settings, output-block dimensions, conditional latent settings, and
+    generator sampling configuration when applicable.
 
     Parameters
     ----------
     config : Any
-        Description not yet provided.
+        U-Net configuration object containing the architecture settings to
+        validate.
 
     Raises
     ------
     ValueError
-        Description not yet provided.
+        If an upsampling kernel size is invalid or does not match the number of
+        upsampling stages, a channel or latent dimension is nonpositive, the
+        conditional latent configuration is inconsistent, the mask fraction
+        threshold is outside the interval [0, 1], the output-block hidden size is
+        nonpositive, or the generator training sample count is nonpositive.
     """
     channels = config.channels
     transpose_kernel_sizes = config.transpose_kernel_sizes
@@ -115,19 +124,20 @@ def _repeat_tensor_mask(
     repeats: int,
 ) -> TensorMask:
     """
-    Document this function.
+    Repeat a tensor and its associated mask along the batch dimension.
 
     Parameters
     ----------
     tensor_mask : TensorMask
-        Description not yet provided.
+        Tensor and optional validity mask to repeat.
     repeats : int
-        Description not yet provided.
+        Number of consecutive repetitions of each batch element.
 
     Returns
     -------
     TensorMask
-        Description not yet provided.
+        Tensor and mask with each batch element repeated ``repeats`` times. If
+        the input mask is ``None``, the returned mask is also ``None``.
     """
     return TensorMask(
         tensor=tensor_mask.tensor.repeat_interleave(repeats, dim=0),

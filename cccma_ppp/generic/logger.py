@@ -11,23 +11,29 @@ def setup_logger(
     level: int = logging.INFO,
 ) -> logging.Logger:
     """
-    Document this function.
+    Configure and return a logger for the current process.
+
+    Logging handlers are created only for the root process. The root logger writes
+    formatted messages to standard output and to a log file. If the logger
+    already has handlers, the existing logger is returned unchanged.
 
     Parameters
     ----------
     name : str
-        Description not yet provided.
+        Name of the logger and the corresponding log file.
     log_dir : str | Path | None
-        Description not yet provided.
+        Directory in which the log file is stored. If ``None``, the directory is
+        obtained from the ``GLOBAL_LOG_DIR`` environment variable.
     rank : int
-        Description not yet provided.
+        Rank of the current process. Console and file handlers are configured
+        only when ``rank`` is zero.
     level : int
-        Description not yet provided.
+        Logging level applied to the logger and its handlers.
 
     Returns
     -------
     logging.Logger
-        Description not yet provided.
+        Configured logger instance.
     """
     logger = logging.getLogger(name)
     logger.setLevel(level)

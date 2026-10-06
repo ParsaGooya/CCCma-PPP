@@ -11,18 +11,19 @@ from cccma_ppp.architectures.normalized_flows import NormalizedFlowModel
 @dataclasses.dataclass
 class BetaAnnealing:
     """
-    Document this class.
+    Configure annealing of the Kullback-Leibler divergence weight.
 
     Parameters
     ----------
     beta : float
-        Description not yet provided.
+        Target beta value reached after warmup.
     beta_min : float
-        Description not yet provided.
+        Initial beta value used at the beginning of each warmup period.
     num_epoch_to_warmup : int
-        Description not yet provided.
+        Number of epochs over which beta increases from ``beta_min`` to ``beta``.
     num_epochs_to_hold : int
-        Description not yet provided.
+        Number of epochs for which beta remains at its target value before a new
+        annealing cycle begins.
     """
 
     beta: float = 1
@@ -32,12 +33,14 @@ class BetaAnnealing:
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize and validate the beta annealing configuration.
+
+        When no warmup is configured, the hold period is disabled.
 
         Raises
         ------
         AssertionError
-            Description not yet provided.
+            If ``beta_min`` is negative.
         """
         self.built = False
         assert self.beta_min >= 0
@@ -46,12 +49,14 @@ class BetaAnnealing:
 
     def build(self, num_batches):
         """
-        Document this function.
+        Initialize the beta schedule for a training data loader.
+
+        Epoch-based warmup and hold durations are converted to batch-step durations.
 
         Parameters
         ----------
-        num_batches : Any
-            Description not yet provided.
+        num_batches : int
+            Number of training batches in each epoch.
         """
         self.num_batches = num_batches
         if self.num_epochs_to_hold == 0:
@@ -68,22 +73,26 @@ class BetaAnnealing:
 
     def __call__(self, step: int):
         """
-        Document this function.
+        Return the beta value for a training step.
+
+        Without a hold period, beta increases linearly from ``beta_min`` to ``beta``
+        and remains at ``beta``. With a hold period, the schedule repeats cyclically,
+        with linear warmup followed by a period at the target beta value.
 
         Parameters
         ----------
         step : int
-            Description not yet provided.
+            Current training step.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        float
+            Beta value associated with the training step.
 
         Raises
         ------
         AssertionError
-            Description not yet provided.
+            If the annealing schedule has not been built before use.
         """
         assert self.built, "make sure beta finder has been built."
 
@@ -100,12 +109,15 @@ class BetaAnnealing:
 
 class KLD(lossABC):
     """
-    Document this class.
+    Compute Kullback-Leibler divergence for latent distributions.
+
+    Supports divergence against a standard normal prior, a condition-dependent
+    normal prior, or a prior represented by a normalizing flow.
 
     Parameters
     ----------
     reduction : Reduction
-        Description not yet provided.
+        Method used to aggregate latent Kullback-Leibler divergence values.
     """
 
     def __init__(
@@ -113,12 +125,12 @@ class KLD(lossABC):
         reduction: Reduction = "mean",
     ):
         """
-        Document this function.
+        Initialize the Kullback-Leibler divergence loss.
 
         Parameters
         ----------
         reduction : Reduction
-            Description not yet provided.
+            Method used to aggregate latent divergence values.
         """
         super().__init__()
         self.reduction = reduction
@@ -134,32 +146,38 @@ class KLD(lossABC):
         print_loss=False,
     ) -> torch.Tensor:
         """
-        Document this function.
+        Compute the Kullback-Leibler divergence for a latent distribution.
+
+        When conditional distribution parameters are provided, the posterior is
+        compared with the conditional Gaussian prior. Without conditional parameters,
+        a standard normal prior is used. When a normalizing flow is provided, the
+        divergence is estimated from posterior samples and the flow Jacobian.
 
         Parameters
         ----------
         mu : torch.Tensor
-            Description not yet provided.
+            Mean of the posterior Gaussian distribution.
         log_var : torch.Tensor
-            Description not yet provided.
+            Log-variance of the posterior Gaussian distribution.
         cond_mu : torch.Tensor | None
-            Description not yet provided.
+            Mean of the conditional Gaussian prior.
         cond_log_var : torch.Tensor | None
-            Description not yet provided.
-        prior_flow : NormalizedFlowModel
-            Description not yet provided.
-        print_loss : Any
-            Description not yet provided.
+            Log-variance of the conditional Gaussian prior.
+        prior_flow : NormalizedFlowModel | None
+            Optional normalizing flow defining the latent prior.
+        print_loss : bool
+            Whether to print the aggregated Kullback-Leibler divergence.
 
         Returns
         -------
         torch.Tensor
-            Description not yet provided.
+            Aggregated Kullback-Leibler divergence.
 
         Raises
         ------
         AssertionError
-            Description not yet provided.
+            If ``mu`` and ``log_var`` have different shapes, or if both conditional
+            distribution parameters are provided with incompatible shapes.
         """
         if prior_flow is not None:
             self._has_prior_flow = True
@@ -231,17 +249,21 @@ class KLD(lossABC):
 
     def _aggregate(self, loss):
         """
-        Document this function.
+        Aggregate Kullback-Leibler divergence values.
+
+        For analytic Gaussian divergence, values are reduced according to the
+        configured reduction method. Flow-based estimates are clamped to be
+        non-negative.
 
         Parameters
         ----------
-        loss : Any
-            Description not yet provided.
+        loss : torch.Tensor
+            Unaggregated or flow-estimated Kullback-Leibler divergence.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        torch.Tensor
+            Aggregated Kullback-Leibler divergence.
         """
         if not self._has_prior_flow:
             if self.reduction == "mean":
@@ -255,34 +277,34 @@ class KLD(lossABC):
 
     def _print_loss(self, loss):
         """
-        Document this function.
+        Print the Kullback-Leibler divergence.
 
         Parameters
         ----------
-        loss : Any
-            Description not yet provided.
+        loss : torch.Tensor
+            Scalar Kullback-Leibler divergence to print.
         """
         print(f"KLD : {loss.item():.5f}")
 
     def sample(self, mu, log_var, sample_size=1, std=1):
         """
-        Document this function.
+        Draw samples from a Gaussian distribution.
 
         Parameters
         ----------
-        mu : Any
-            Description not yet provided.
-        log_var : Any
-            Description not yet provided.
-        sample_size : Any
-            Description not yet provided.
-        std : Any
-            Description not yet provided.
+        mu : torch.Tensor
+            Mean of the Gaussian distribution.
+        log_var : torch.Tensor
+            Log-variance parameter used to construct the sampling distribution.
+        sample_size : int
+            Number of samples to draw.
+        std : float
+            Standard deviation of the normal noise used for sampling.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        torch.Tensor
+            Samples drawn from the Gaussian distribution.
         """
         var = torch.exp(log_var) + 1e-4
         out = mu + torch.sqrt(var) * self._get_normal(var, std).sample((sample_size,))
@@ -291,19 +313,20 @@ class KLD(lossABC):
 
     def _get_normal(self, ref_tensor, std=1):
         """
-        Document this function.
+        Construct a zero-mean normal distribution matching a reference tensor.
 
         Parameters
         ----------
-        ref_tensor : Any
-            Description not yet provided.
-        std : Any
-            Description not yet provided.
+        ref_tensor : torch.Tensor
+            Reference tensor defining the shape, data type, and device of the
+            distribution parameters.
+        std : float
+            Standard deviation of the normal distribution.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        torch.distributions.Normal
+            Zero-mean normal distribution with the requested standard deviation.
         """
         return torch.distributions.Normal(
             torch.zeros_like(ref_tensor), torch.ones_like(ref_tensor) * std

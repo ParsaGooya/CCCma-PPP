@@ -4,38 +4,46 @@ import dataclasses
 
 class Registery:
     """
-    Document this class.
+    Registry for named classes.
+
+    Registered classes can later be retrieved and instantiated from configuration
+    data using their associated names.
     """
 
     def __init__(self):
         """
-        Document this function.
+        Initialize an empty class registry.
         """
         self._modules = {}
 
     def register(self, name):
         """
-        Document this function.
+        Create a decorator that registers a class under a name.
 
         Parameters
         ----------
-        name : Any
-            Description not yet provided.
+        name : str
+            Name used to identify the registered class.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        Callable
+            Decorator that registers a class and returns it unchanged.
         """
 
         def decorator(cls):
             """
-            Document this function.
+            Register a class under the configured name.
+
+            Parameters
+            ----------
+            cls : type
+                Class to register.
 
             Returns
             -------
-            Any
-                Description not yet provided.
+            type
+                Registered class.
             """
             self._modules[name] = cls
             return cls
@@ -44,24 +52,27 @@ class Registery:
 
     def get(self, name, config=None):
         """
-        Document this function.
+        Retrieve and instantiate a registered class.
+
+        Dictionary configurations are unpacked into the registered class. Dataclass
+        types are constructed using strict field matching.
 
         Parameters
         ----------
-        name : Any
-            Description not yet provided.
+        name : str
+            Name identifying the registered class.
         config : Any
-            Description not yet provided.
+            Configuration used to construct the registered class.
 
         Returns
         -------
         Any
-            Description not yet provided.
+            Instance of the registered class.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``name`` is not registered.
         """
         if name not in self._modules:
             raise ValueError(f"{name} not registered. should be in {self.available()}")
@@ -82,11 +93,11 @@ class Registery:
 
     def available(self):
         """
-        Document this function.
+        Return the names of all registered classes.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        list
+            Names currently available in the registry.
         """
         return list(self._modules.keys())

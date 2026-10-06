@@ -30,14 +30,15 @@ from cccma_ppp.architectures.layers.utils import _noise_injection, _expand_mask
 @dataclasses.dataclass
 class TensorMask:
     """
-    Document this class.
+    Container for a tensor and its associated validity mask.
 
     Parameters
     ----------
     tensor : torch.Tensor
-        Description not yet provided.
+        Data tensor.
     mask : torch.Tensor | None
-        Description not yet provided.
+        Validity mask associated with ``tensor``, where nonzero values indicate
+        valid elements. If ``None``, no mask is applied.
     """
 
     tensor: torch.Tensor
@@ -47,14 +48,15 @@ class TensorMask:
 @dataclasses.dataclass
 class LatentVector:
     """
-    Document this class.
+    Container for the parameters of a latent representation.
 
     Parameters
     ----------
     mu : torch.Tensor
-        Description not yet provided.
+        Mean values of the latent representation.
     log_var : torch.Tensor | None
-        Description not yet provided.
+        Log-variance values of the latent representation. If ``None``, no
+        log-variance is provided.
     """
 
     mu: torch.Tensor
@@ -63,12 +65,15 @@ class LatentVector:
 
 class ConvBlockConfigABC(abc.ABC):
     """
-    Document this class.
+    Base configuration for convolutional blocks.
+
+    Provides configuration shared by convolutional block variants, including
+    optional noise injection.
     """
 
     def __init__(self):
         """
-        Document this function.
+        Initialize the convolutional block configuration.
         """
         self.inject_noise: bool = False
 
@@ -78,17 +83,18 @@ class ConvBlockConfigABC(abc.ABC):
         inject_noise: bool = False,
     ):
         """
-        Document this function.
+        Configure generator-specific behavior.
 
         Parameters
         ----------
         inject_noise : bool
-            Description not yet provided.
+            Whether to inject an additional noise channel during convolutional
+            processing.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        ConvBlockConfigABC
+            This configuration instance with the generator settings applied.
         """
         self.inject_noise = inject_noise
 
@@ -98,28 +104,28 @@ class ConvBlockConfigABC(abc.ABC):
 @dataclasses.dataclass
 class ConvBlockConfig(ConvBlockConfigABC):
     """
-    Document this class.
+    Configuration for a standard convolutional block.
 
     Parameters
     ----------
-    name : Literal['standard_conv']
-        Description not yet provided.
+    name : Literal["standard_conv"]
+        Identifier for the standard convolutional block type.
     num_convolutions : int
-        Description not yet provided.
+        Number of convolutional stages in the block.
     kernel_size : int
-        Description not yet provided.
+        Kernel size used by each convolution.
     normalization : NormalizationMethod
-        Description not yet provided.
+        Normalization method applied after each convolution.
     padding_method : PaddingMethod
-        Description not yet provided.
+        Padding mode used by each convolution.
     activation : ActivationName
-        Description not yet provided.
+        Activation function applied after normalization.
     dropout_rate : float | None
-        Description not yet provided.
+        Spatial dropout probability. If ``None`` or zero, dropout is disabled.
     bias : bool
-        Description not yet provided.
+        Whether convolutional layers use a learnable bias.
     group_norm_groups : int
-        Description not yet provided.
+        Number of groups to use when group normalization is selected.
     """
 
     name: Literal["standard_conv"]
@@ -134,12 +140,13 @@ class ConvBlockConfig(ConvBlockConfigABC):
 
     def __post_init__(self) -> None:
         """
-        Document this function.
+        Validate the standard convolutional block configuration.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``num_convolutions`` is less than one, ``kernel_size`` is invalid
+            for same padding, or ``dropout_rate`` is invalid.
         """
         super().__init__()
 
@@ -152,32 +159,32 @@ class ConvBlockConfig(ConvBlockConfigABC):
 @dataclasses.dataclass
 class PartialConvBlockConfig(ConvBlockConfigABC):
     """
-    Document this class.
+    Configuration for a partial convolutional block.
 
     Parameters
     ----------
-    name : Literal['partial_conv']
-        Description not yet provided.
+    name : Literal["partial_conv"]
+        Identifier for the partial convolutional block type.
     num_convolutions : int
-        Description not yet provided.
+        Number of partial convolutional stages in the block.
     kernel_size : int
-        Description not yet provided.
+        Kernel size used by each partial convolution.
     normalization : NormalizationMethod
-        Description not yet provided.
+        Normalization method applied after each convolution.
     padding_method : PaddingMethod
-        Description not yet provided.
+        Padding mode used by each partial convolution.
     activation : ActivationName
-        Description not yet provided.
+        Activation function applied after normalization.
     dropout_rate : float | None
-        Description not yet provided.
+        Spatial dropout probability. If ``None`` or zero, dropout is disabled.
     bias : bool
-        Description not yet provided.
+        Whether partial convolutional layers use a learnable bias.
     group_norm_groups : int
-        Description not yet provided.
+        Number of groups to use when group normalization is selected.
     multi_channel : bool
-        Description not yet provided.
+        Whether masks are maintained independently for each input channel.
     return_mask : bool
-        Description not yet provided.
+        Whether partial convolutional layers return the updated mask.
     """
 
     name: Literal["partial_conv"]
@@ -195,12 +202,13 @@ class PartialConvBlockConfig(ConvBlockConfigABC):
 
     def __post_init__(self) -> None:
         """
-        Document this function.
+        Validate the partial convolutional block configuration.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``num_convolutions`` is less than one, ``kernel_size`` is invalid
+            for same padding, or ``dropout_rate`` is invalid.
         """
         super().__init__()
 
@@ -213,32 +221,33 @@ class PartialConvBlockConfig(ConvBlockConfigABC):
 @dataclasses.dataclass
 class ConvNeXtBlockConfig(ConvBlockConfigABC):
     """
-    Document this class.
+    Configuration for a ConvNeXt-style convolutional block.
 
     Parameters
     ----------
-    name : Literal['convnext']
-        Description not yet provided.
+    name : Literal["convnext"]
+        Identifier for the ConvNeXt block type.
     num_blocks : int
-        Description not yet provided.
+        Number of residual ConvNeXt units in the block.
     kernel_size : int
-        Description not yet provided.
+        Kernel size used by the depthwise convolution.
     expansion_ratio : int
-        Description not yet provided.
+        Channel expansion factor used by the pointwise transformation.
     padding_method : PaddingMethod
-        Description not yet provided.
+        Padding mode used by convolutional layers.
     layer_scale_init : float
-        Description not yet provided.
+        Initial value for the learnable residual layer-scale parameters.
     dropout_rate : float
-        Description not yet provided.
+        Spatial dropout probability within each ConvNeXt unit.
     drop_path_rate : float
-        Description not yet provided.
+        Maximum stochastic depth probability across the block.
     use_partial_conv : bool
-        Description not yet provided.
+        Whether to use partial convolution for the depthwise operation.
     multi_channel : bool
-        Description not yet provided.
+        Whether partial-convolution masks are maintained independently for each
+        channel.
     return_mask : bool
-        Description not yet provided.
+        Whether partial convolutions return an updated mask.
     """
 
     name: Literal["convnext"]
@@ -256,12 +265,14 @@ class ConvNeXtBlockConfig(ConvBlockConfigABC):
 
     def __post_init__(self) -> None:
         """
-        Document this function.
+        Validate the ConvNeXt block configuration.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``num_blocks`` or ``expansion_ratio`` is less than one,
+            ``kernel_size`` is invalid for same padding, or either dropout rate is
+            invalid.
         """
         super().__init__()
 
@@ -276,16 +287,16 @@ class ConvNeXtBlockConfig(ConvBlockConfigABC):
 
 class ConvSingle(nn.Module):
     """
-    Document this class.
+    Apply a convolution followed by normalization, activation, and dropout.
 
     Parameters
     ----------
     in_channels : int
-        Description not yet provided.
+        Number of input channels.
     out_channels : int
-        Description not yet provided.
+        Number of output channels.
     config : ConvBlockConfig
-        Description not yet provided.
+        Configuration controlling the convolution and subsequent operations.
     """
 
     def __init__(
@@ -295,16 +306,17 @@ class ConvSingle(nn.Module):
         config: ConvBlockConfig,
     ):
         """
-        Document this function.
+        Initialize a single standard convolutional stage.
 
         Parameters
         ----------
         in_channels : int
-            Description not yet provided.
+            Number of input channels.
         out_channels : int
-            Description not yet provided.
+            Number of output channels.
         config : ConvBlockConfig
-            Description not yet provided.
+            Configuration controlling convolution, normalization, activation,
+            dropout, and optional noise injection.
         """
         super().__init__()
 
@@ -336,17 +348,17 @@ class ConvSingle(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Document this function.
+        Apply the convolutional stage.
 
         Parameters
         ----------
         x : torch.Tensor
-            Description not yet provided.
+            Input tensor with shape ``(N, C, H, W)``.
 
         Returns
         -------
         torch.Tensor
-            Description not yet provided.
+            Transformed tensor with ``out_channels`` channels.
         """
         if self.inject_noise:
             x = _noise_injection(x)
@@ -359,16 +371,17 @@ class ConvSingle(nn.Module):
 
 class PartialConvSingle(nn.Module):
     """
-    Document this class.
+    Apply partial convolution followed by normalization, activation, and dropout.
 
     Parameters
     ----------
     in_channels : int
-        Description not yet provided.
+        Number of input channels.
     out_channels : int
-        Description not yet provided.
+        Number of output channels.
     config : PartialConvBlockConfig
-        Description not yet provided.
+        Configuration controlling the partial convolution and subsequent
+        operations.
     """
 
     def __init__(
@@ -378,16 +391,17 @@ class PartialConvSingle(nn.Module):
         config: PartialConvBlockConfig,
     ):
         """
-        Document this function.
+        Initialize a single partial convolutional stage.
 
         Parameters
         ----------
         in_channels : int
-            Description not yet provided.
+            Number of input channels.
         out_channels : int
-            Description not yet provided.
+            Number of output channels.
         config : PartialConvBlockConfig
-            Description not yet provided.
+            Configuration controlling partial convolution, normalization,
+            activation, dropout, and optional noise injection.
         """
         super().__init__()
         self.multi_channel = config.multi_channel
@@ -426,19 +440,20 @@ class PartialConvSingle(nn.Module):
         mask: torch.Tensor | None,
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         """
-        Document this function.
+        Apply partial convolution to an input tensor and mask.
 
         Parameters
         ----------
         x : torch.Tensor
-            Description not yet provided.
+            Input tensor with shape ``(N, C, H, W)``.
         mask : torch.Tensor | None
-            Description not yet provided.
+            Validity mask for the input tensor, or ``None`` if no mask is provided.
 
         Returns
         -------
         tuple[torch.Tensor, torch.Tensor | None]
-            Description not yet provided.
+            Transformed tensor and the updated validity mask. The mask is ``None``
+            when mask propagation is disabled.
         """
         if self.inject_noise:
             x = _noise_injection(x)
@@ -459,16 +474,16 @@ class PartialConvSingle(nn.Module):
 
 class ConvNeXtSingle(nn.Module):
     """
-    Document this class.
+    Apply a single residual ConvNeXt unit.
 
     Parameters
     ----------
     channels : int
-        Description not yet provided.
+        Number of input and output channels.
     config : ConvNeXtBlockConfig
-        Description not yet provided.
+        Configuration controlling the ConvNeXt operations.
     drop_path_rate : float
-        Description not yet provided.
+        Stochastic depth probability applied to the residual branch.
     """
 
     def __init__(
@@ -478,16 +493,17 @@ class ConvNeXtSingle(nn.Module):
         drop_path_rate: float,
     ):
         """
-        Document this function.
+        Initialize a residual ConvNeXt unit.
 
         Parameters
         ----------
         channels : int
-            Description not yet provided.
+            Number of input and output channels.
         config : ConvNeXtBlockConfig
-            Description not yet provided.
+            Configuration controlling depthwise convolution, channel expansion,
+            dropout, layer scaling, and optional partial convolution.
         drop_path_rate : float
-            Description not yet provided.
+            Stochastic depth probability applied to the residual branch.
         """
         super().__init__()
         hidden_channels = channels * config.expansion_ratio
@@ -551,19 +567,20 @@ class ConvNeXtSingle(nn.Module):
         mask: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         """
-        Document this function.
+        Apply the residual ConvNeXt unit.
 
         Parameters
         ----------
         x : torch.Tensor
-            Description not yet provided.
+            Input tensor with shape ``(N, C, H, W)``.
         mask : torch.Tensor | None
-            Description not yet provided.
+            Validity mask associated with the input tensor, or ``None`` if no mask
+            is provided.
 
         Returns
         -------
         tuple[torch.Tensor, torch.Tensor | None]
-            Description not yet provided.
+            Residual output tensor and the propagated validity mask.
         """
         residual = x
 
@@ -596,16 +613,16 @@ class ConvNeXtSingle(nn.Module):
 
 class ConvBlock(nn.Module):
     """
-    Document this class.
+    Apply a sequence of standard convolutional stages.
 
     Parameters
     ----------
     in_channels : int
-        Description not yet provided.
+        Number of channels in the input tensor.
     out_channels : int
-        Description not yet provided.
+        Number of channels produced by the block.
     config : ConvBlockConfig
-        Description not yet provided.
+        Configuration shared by the convolutional stages.
     """
 
     def __init__(
@@ -615,16 +632,16 @@ class ConvBlock(nn.Module):
         config: ConvBlockConfig,
     ):
         """
-        Document this function.
+        Initialize a standard convolutional block.
 
         Parameters
         ----------
         in_channels : int
-            Description not yet provided.
+            Number of channels in the input tensor.
         out_channels : int
-            Description not yet provided.
+            Number of channels produced by the block.
         config : ConvBlockConfig
-            Description not yet provided.
+            Configuration defining the number and behavior of convolutional stages.
         """
         super().__init__()
         self.config = config
@@ -647,17 +664,17 @@ class ConvBlock(nn.Module):
 
     def forward(self, input: TensorMask) -> TensorMask:
         """
-        Document this function.
+        Apply the convolutional block while preserving the input mask.
 
         Parameters
         ----------
         input : TensorMask
-            Description not yet provided.
+            Input tensor and its associated validity mask.
 
         Returns
         -------
         TensorMask
-            Description not yet provided.
+            Transformed tensor together with the unchanged input mask.
         """
         x = input.tensor
 
@@ -672,16 +689,16 @@ class ConvBlock(nn.Module):
 
 class PartialConvBlock(nn.Module):
     """
-    Document this class.
+    Apply a sequence of mask-aware partial convolutional stages.
 
     Parameters
     ----------
     in_channels : int
-        Description not yet provided.
+        Number of channels in the input tensor.
     out_channels : int
-        Description not yet provided.
+        Number of channels produced by the block.
     config : PartialConvBlockConfig
-        Description not yet provided.
+        Configuration shared by the partial convolutional stages.
     """
 
     def __init__(
@@ -691,16 +708,17 @@ class PartialConvBlock(nn.Module):
         config: PartialConvBlockConfig,
     ):
         """
-        Document this function.
+        Initialize a partial convolutional block.
 
         Parameters
         ----------
         in_channels : int
-            Description not yet provided.
+            Number of channels in the input tensor.
         out_channels : int
-            Description not yet provided.
+            Number of channels produced by the block.
         config : PartialConvBlockConfig
-            Description not yet provided.
+            Configuration defining the number and behavior of partial convolutional
+            stages.
         """
         super().__init__()
         self.config = config
@@ -723,17 +741,18 @@ class PartialConvBlock(nn.Module):
 
     def forward(self, input: TensorMask) -> TensorMask:
         """
-        Document this function.
+        Apply the partial convolutional block and propagate the validity mask.
 
         Parameters
         ----------
         input : TensorMask
-            Description not yet provided.
+            Input tensor and its associated validity mask.
 
         Returns
         -------
         TensorMask
-            Description not yet provided.
+            Transformed tensor and the validity mask produced by the final partial
+            convolutional stage.
         """
         mask = _broadcast_mask(input.mask, input.tensor)
 
@@ -746,16 +765,19 @@ class PartialConvBlock(nn.Module):
 
 class ConvNeXtBlock(nn.Module):
     """
-    Document this class.
+    Apply a sequence of residual ConvNeXt units.
+
+    The input is projected to the requested number of channels when necessary.
 
     Parameters
     ----------
     in_channels : int
-        Description not yet provided.
+        Number of channels in the input tensor.
     out_channels : int
-        Description not yet provided.
+        Number of channels produced by the block.
     config : ConvNeXtBlockConfig
-        Description not yet provided.
+        Configuration defining the ConvNeXt units and optional partial
+        convolutions.
     """
 
     def __init__(
@@ -765,16 +787,17 @@ class ConvNeXtBlock(nn.Module):
         config: ConvNeXtBlockConfig,
     ):
         """
-        Document this function.
+        Initialize a ConvNeXt block.
 
         Parameters
         ----------
         in_channels : int
-            Description not yet provided.
+            Number of channels in the input tensor.
         out_channels : int
-            Description not yet provided.
+            Number of channels produced by the block.
         config : ConvNeXtBlockConfig
-            Description not yet provided.
+            Configuration defining projection, residual units, partial convolution,
+            and stochastic depth.
         """
         super().__init__()
 
@@ -828,17 +851,17 @@ class ConvNeXtBlock(nn.Module):
 
     def forward(self, input: TensorMask) -> TensorMask:
         """
-        Document this function.
+        Apply the ConvNeXt block and propagate the validity mask.
 
         Parameters
         ----------
         input : TensorMask
-            Description not yet provided.
+            Input tensor and its associated validity mask.
 
         Returns
         -------
         TensorMask
-            Description not yet provided.
+            Transformed tensor and propagated validity mask.
         """
         x = input.tensor
         mask = input.mask
@@ -866,20 +889,21 @@ class ConvNeXtBlock(nn.Module):
 
 class LatentBlock(nn.Module):
     """
-    Document this class.
+    Apply a convolutional feature block and map its output to a latent space.
 
     Parameters
     ----------
     conv_block : ConvNeXtBlock | PartialConvBlock | ConvBlock
-        Description not yet provided.
+        Convolutional block used to extract features.
     input_shape : tuple[int, int, int]
-        Description not yet provided.
+        Shape ``(C, H, W)`` of the feature tensor produced by ``conv_block``.
     latent_size : int
-        Description not yet provided.
+        Number of features in the latent representation.
     get_log_var : bool
-        Description not yet provided.
+        Whether to produce log-variance values in addition to latent means.
     latent_normalization : NormalizationMethod | None
-        Description not yet provided.
+        Normalization applied to the feature tensor before flattening. If
+        ``None``, normalization and its accompanying activation are disabled.
     """
 
     def __init__(
@@ -892,20 +916,21 @@ class LatentBlock(nn.Module):
         latent_normalization: NormalizationMethod | None = "layer",
     ):
         """
-        Document this function.
+        Initialize a convolutional latent block.
 
         Parameters
         ----------
         conv_block : ConvNeXtBlock | PartialConvBlock | ConvBlock
-            Description not yet provided.
+            Convolutional block used to extract features.
         input_shape : tuple[int, int, int]
-            Description not yet provided.
+            Shape ``(C, H, W)`` of the feature tensor produced by ``conv_block``.
         latent_size : int
-            Description not yet provided.
+            Number of features in the latent representation.
         get_log_var : bool
-            Description not yet provided.
+            Whether to create a head for predicting latent log-variance values.
         latent_normalization : NormalizationMethod | None
-            Description not yet provided.
+            Normalization applied before projecting features into latent space. If
+            ``None``, normalization is disabled.
         """
         super().__init__()
 
@@ -921,17 +946,17 @@ class LatentBlock(nn.Module):
 
     def forward(self, input: TensorMask) -> LatentVector:
         """
-        Document this function.
+        Extract convolutional features and map them to a latent representation.
 
         Parameters
         ----------
         input : TensorMask
-            Description not yet provided.
+            Input tensor and its associated validity mask.
 
         Returns
         -------
         LatentVector
-            Description not yet provided.
+            Latent mean and, when enabled, log-variance tensors.
         """
         features = self.conv_block(input)
         return self.latent_head(features.tensor)
@@ -939,14 +964,15 @@ class LatentBlock(nn.Module):
 
 class MaskPool2d(nn.Module):
     """
-    Document this class.
+    Downsample a two-dimensional validity mask.
 
     Parameters
     ----------
     method : MaskPoolingMethod
-        Description not yet provided.
+        Rule used to determine validity in each pooled region.
     fraction_threshold : float
-        Description not yet provided.
+        Minimum fraction of valid elements required when ``method`` is
+        ``"fraction"``.
     """
 
     def __init__(
@@ -955,19 +981,20 @@ class MaskPool2d(nn.Module):
         fraction_threshold: float = 0.5,
     ):
         """
-        Document this function.
+        Initialize a two-dimensional mask pooling layer.
 
         Parameters
         ----------
         method : MaskPoolingMethod
-            Description not yet provided.
+            Rule used to determine validity in each pooled region.
         fraction_threshold : float
-            Description not yet provided.
+            Minimum fraction of valid elements required when ``method`` is
+            ``"fraction"``.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If ``fraction_threshold`` is outside the interval [0, 1].
         """
         super().__init__()
         self.method = method
@@ -978,22 +1005,22 @@ class MaskPool2d(nn.Module):
 
     def forward(self, mask: torch.Tensor) -> torch.Tensor:
         """
-        Document this function.
+        Downsample a validity mask according to the configured pooling rule.
 
         Parameters
         ----------
         mask : torch.Tensor
-            Description not yet provided.
+            Validity mask to downsample.
 
         Returns
         -------
         torch.Tensor
-            Description not yet provided.
+            Downsampled validity mask.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If the configured pooling method is unsupported.
         """
         if self.method == "any":
             return F.max_pool2d(mask, kernel_size=3, stride=2, padding=1)
@@ -1031,20 +1058,21 @@ class MaskPool2d(nn.Module):
 
 class LatentLayer(nn.Module):
     """
-    Document this class.
+    Project a feature tensor into a latent representation.
 
     Parameters
     ----------
     input_shape : tuple[int, int, int]
-        Description not yet provided.
+        Shape ``(C, H, W)`` of each input feature tensor.
     latent_size : int
-        Description not yet provided.
+        Number of features in the latent representation.
     latent_normalization : NormalizationMethod | None
-        Description not yet provided.
+        Normalization applied before flattening the input. If ``None``,
+        normalization and its accompanying activation are disabled.
     get_log_var : bool
-        Description not yet provided.
+        Whether to produce log-variance values in addition to latent means.
     group_norm_groups : int
-        Description not yet provided.
+        Number of groups to use when group normalization is selected.
     """
 
     def __init__(
@@ -1057,20 +1085,21 @@ class LatentLayer(nn.Module):
         group_norm_groups: int = 8,
     ):
         """
-        Document this function.
+        Initialize the latent projection layer.
 
         Parameters
         ----------
         input_shape : tuple[int, int, int]
-            Description not yet provided.
+            Shape ``(C, H, W)`` of each input feature tensor.
         latent_size : int
-            Description not yet provided.
+            Number of features in the latent representation.
         latent_normalization : NormalizationMethod | None
-            Description not yet provided.
+            Normalization applied before flattening the input. If ``None``,
+            normalization is disabled.
         get_log_var : bool
-            Description not yet provided.
+            Whether to create a projection for latent log-variance values.
         group_norm_groups : int
-            Description not yet provided.
+            Number of groups to use when group normalization is selected.
         """
         super().__init__()
 
@@ -1095,17 +1124,17 @@ class LatentLayer(nn.Module):
 
     def forward(self, x: torch.Tensor) -> LatentVector:
         """
-        Document this function.
+        Project a feature tensor into latent distribution parameters.
 
         Parameters
         ----------
         x : torch.Tensor
-            Description not yet provided.
+            Input feature tensor with shape ``(N, C, H, W)``.
 
         Returns
         -------
         LatentVector
-            Description not yet provided.
+            Latent mean and, when enabled, log-variance tensors.
         """
         x = self.normalization(x)
 

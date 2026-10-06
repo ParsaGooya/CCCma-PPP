@@ -53,36 +53,42 @@ from cccma_ppp.architectures.unet.utils import _unet_config_checks, _repeat_tens
 @dataclasses.dataclass
 class UNetConfig(modelConfigABC):
     """
-    Document this class.
+    Configuration for a deterministic convolutional U-Net.
 
     Parameters
     ----------
     channels : list[int]
-        Description not yet provided.
+        Number of feature channels at each resolution level of the U-Net.
     block_config : ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig
-        Description not yet provided.
+        Configuration defining the convolutional blocks used throughout the U-Net.
     upsampling_method : UpsamplingMethod
-        Description not yet provided.
+        Method used to increase spatial resolution in the decoder.
     skip_alignment_method : AlignmentMethod
-        Description not yet provided.
+        Method used to spatially align decoder features with skip connections or
+        target feature-map sizes.
     transpose_kernel_sizes : list[int | tuple[int, int]] | int
-        Description not yet provided.
+        Kernel sizes used by successive upsampling blocks. A single integer is
+        repeated for all upsampling levels.
     add_skip_connections : bool
-        Description not yet provided.
+        Whether encoder features are passed to corresponding decoder levels as
+        skip connections.
     process_skip_connections : bool
-        Description not yet provided.
+        Whether skip connections are processed by an additional convolutional
+        block before being passed to the decoder.
     mask_pooling : MaskPoolingMethod
-        Description not yet provided.
+        Mask pooling method associated with downsampling.
     mask_fraction_threshold : float
-        Description not yet provided.
+        Minimum valid fraction associated with fractional mask pooling.
     output_activation : OutputActivation
-        Description not yet provided.
+        Activation applied by the final output block.
     output_block_hidden_channels : int | None
-        Description not yet provided.
+        Number of hidden channels in the output block. If ``None``, the final
+        feature map is projected directly to the output channels.
     init_method : InitMethod
-        Description not yet provided.
+        Weight initialization method used when no checkpoint is loaded.
     GENERATOR : GENERATORConfig | None
-        Description not yet provided.
+        Optional configuration controlling noise injection and stochastic output
+        sampling.
     """
 
     channels: list[int]
@@ -111,7 +117,10 @@ class UNetConfig(modelConfigABC):
 
     def __post_init__(self) -> None:
         """
-        Document this function.
+        Validate and complete the U-Net configuration.
+
+        A scalar upsampling kernel size is expanded to provide one kernel size for
+        each upsampling block.
         """
         _unet_config_checks(self)
 
@@ -123,12 +132,13 @@ class UNetConfig(modelConfigABC):
     @property
     def EXPECTS_MASK(self) -> bool:
         """
-        Document this function.
+        Indicate whether the configured U-Net uses validity masks.
 
         Returns
         -------
         bool
-            Description not yet provided.
+            ``True`` when partial convolution is enabled by the block configuration,
+            otherwise ``False``.
         """
         return isinstance(self.block_config, PartialConvBlockConfig) or getattr(
             self.block_config, "use_partial_conv", False
@@ -141,21 +151,22 @@ class UNetConfig(modelConfigABC):
         added_features_dim: int | None = None,
     ):
         """
-        Document this function.
+        Build a deterministic U-Net from this configuration.
 
         Parameters
         ----------
         input_shape : np.ndarray
-            Description not yet provided.
+            Shape ``(C, H, W)`` of the model input.
         output_shape : np.ndarray | None
-            Description not yet provided.
+            Shape ``(C, H, W)`` of the model output. If ``None``, ``input_shape`` is
+            used.
         added_features_dim : int | None
-            Description not yet provided.
+            Number of additional feature channels supplied to the model.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        UNet
+            Constructed deterministic U-Net.
         """
         return UNet(
             config=self,
@@ -167,18 +178,25 @@ class UNetConfig(modelConfigABC):
 
 class UNet(deterministicmodelsABC):
     """
-    Document this class.
+    Deterministic convolutional U-Net.
+
+    The model progressively downsamples an input into bottleneck features and
+    then reconstructs spatial features through a sequence of upsampling blocks.
+    Encoder features can optionally be passed to the decoder through skip
+    connections.
 
     Parameters
     ----------
     config : UNetConfig
-        Description not yet provided.
+        Configuration defining convolutional blocks, downsampling, upsampling,
+        skip connections, output processing, and optional generator behavior.
     input_shape : np.ndarray | tuple
-        Description not yet provided.
+        Shape ``(C, H, W)`` of the model input.
     output_shape : np.ndarray | tuple | None
-        Description not yet provided.
+        Shape ``(C, H, W)`` of the model output. If ``None``, ``input_shape`` is
+        used.
     added_features_dim : int | None
-        Description not yet provided.
+        Number of additional feature channels supplied to the model.
     """
 
     def __init__(
@@ -189,25 +207,30 @@ class UNet(deterministicmodelsABC):
         added_features_dim: int | None = None,
     ):
         """
-        Document this function.
+        Initialize a deterministic convolutional U-Net.
 
         Parameters
         ----------
         config : UNetConfig
-            Description not yet provided.
+            Configuration defining the encoder, bottleneck, decoder, output block,
+            and optional generator behavior.
         input_shape : np.ndarray | tuple
-            Description not yet provided.
+            Shape ``(C, H, W)`` of the model input.
         output_shape : np.ndarray | tuple | None
-            Description not yet provided.
+            Shape ``(C, H, W)`` of the model output. If ``None``, ``input_shape`` is
+            used.
         added_features_dim : int | None
-            Description not yet provided.
+            Number of additional feature channels concatenated with the model input.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If the input or output shape does not have the required three dimensions,
+            or if the input and output spatial dimensions differ without a hidden
+            output block configured for post-interpolation processing.
         ValueError
-            Description not yet provided.
+            If a spatial input dimension is nonpositive or the configured U-Net depth
+            exceeds that supported by the input spatial dimensions.
         """
         super().__init__(config)
 
@@ -359,19 +382,20 @@ class UNet(deterministicmodelsABC):
         out_channels: int,
     ) -> nn.Module:
         """
-        Document this function.
+        Build the final U-Net output projection.
 
         Parameters
         ----------
         in_channels : int
-            Description not yet provided.
+            Number of channels in the decoder feature tensor.
         out_channels : int
-            Description not yet provided.
+            Number of channels required in the model output.
 
         Returns
         -------
         nn.Module
-            Description not yet provided.
+            Output projection configured with the requested hidden channels and
+            activation.
         """
         return UNetOutput(
             in_channels=in_channels,
@@ -387,21 +411,25 @@ class UNet(deterministicmodelsABC):
         added_features: torch.Tensor | None,
     ) -> TensorMask:
         """
-        Document this function.
+        Prepare the model input and its validity mask.
+
+        The input mask is broadcast to match the input tensor. Additional feature
+        channels are concatenated to the input and treated as fully valid when a mask
+        is present.
 
         Parameters
         ----------
         x : torch.Tensor
-            Description not yet provided.
+            Primary model input tensor.
         x_mask : torch.Tensor | None
-            Description not yet provided.
+            Validity mask associated with the input tensor.
         added_features : torch.Tensor | None
-            Description not yet provided.
+            Additional feature channels to concatenate with the input.
 
         Returns
         -------
         TensorMask
-            Description not yet provided.
+            Combined input tensor and its corresponding validity mask.
         """
         x_mask = _broadcast_mask(x_mask, x)
 
@@ -422,17 +450,22 @@ class UNet(deterministicmodelsABC):
 
     def forward(self, request: DeterministicRequest) -> deterministicOutput:
         """
-        Document this function.
+        Perform a forward pass through the deterministic U-Net.
+
+        The decoder features are generated first and then passed through the final
+        output block. When generator sampling is enabled, multiple stochastic outputs
+        are restored to separate sample and batch dimensions.
 
         Parameters
         ----------
         request : DeterministicRequest
-            Description not yet provided.
+            Request containing the model input, optional mask, additional features,
+            and output-sampling parameters.
 
         Returns
         -------
         deterministicOutput
-            Description not yet provided.
+            Model output containing the final projected prediction.
         """
         num_output_samples = request.output_sample_size
         batch_size = request.input.shape[0]
@@ -454,17 +487,25 @@ class UNet(deterministicmodelsABC):
 
     def forward_decoder(self, request: DeterministicRequest) -> torch.Tensor:
         """
-        Document this function.
+        Encode an input and reconstruct decoder feature maps.
+
+        The input is passed through the encoder and bottleneck before being
+        progressively upsampled. Encoder features are merged into the decoder when
+        skip connections are enabled. Generator configurations can produce multiple
+        stochastic decoder outputs either together or one at a time.
 
         Parameters
         ----------
         request : DeterministicRequest
-            Description not yet provided.
+            Request containing the model input, optional mask, additional features,
+            output sample size, and output-sample chunking preference.
 
         Returns
         -------
         torch.Tensor
-            Description not yet provided.
+            Decoder feature tensor resized to the configured output spatial shape.
+            When multiple generator samples are requested, samples are concatenated
+            along the leading batch dimension.
         """
         x = request.input
         x_mask = request.input_mask
@@ -572,12 +613,12 @@ class UNet(deterministicmodelsABC):
     @property
     def output_block(self) -> UNetOutput:
         """
-        Document this function.
+        Return the final output projection module.
 
         Returns
         -------
         UNetOutput
-            Description not yet provided.
+            Output block used to map decoder features to model predictions.
         """
         return self.output
 
@@ -586,12 +627,15 @@ class UNet(deterministicmodelsABC):
 @dataclasses.dataclass
 class UNetSICConfig(UNetConfig):
     """
-    Document this class.
+    Configuration for a deterministic sea ice concentration U-Net.
+
+    Extends the standard U-Net configuration with optional clipping of the final
+    output.
 
     Parameters
     ----------
     clip_output : bool
-        Description not yet provided.
+        Whether to clamp final output values to the interval [0, 1].
     """
 
     clip_output: bool = False
@@ -603,21 +647,22 @@ class UNetSICConfig(UNetConfig):
         added_features_dim: int | None = None,
     ):
         """
-        Document this function.
+        Build a sea ice concentration U-Net from this configuration.
 
         Parameters
         ----------
         input_shape : np.ndarray
-            Description not yet provided.
+            Shape ``(C, H, W)`` of the model input.
         output_shape : np.ndarray | None
-            Description not yet provided.
+            Shape ``(C, H, W)`` of the model output. If ``None``, ``input_shape`` is
+            used.
         added_features_dim : int | None
-            Description not yet provided.
+            Number of additional feature channels supplied to the model.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        UNetSIC
+            Constructed deterministic sea ice concentration U-Net.
         """
         return UNetSIC(
             config=self,
@@ -629,7 +674,11 @@ class UNetSICConfig(UNetConfig):
 
 class UNetSIC(UNet):
     """
-    Document this class.
+    Deterministic U-Net specialized for sea ice concentration output.
+
+    Uses the standard deterministic U-Net architecture with a sea ice
+    concentration output block that supports optional clipping to the interval
+    [0, 1].
     """
 
     def _build_output(
@@ -638,19 +687,20 @@ class UNetSIC(UNet):
         out_channels: int,
     ) -> nn.Module:
         """
-        Document this function.
+        Build the sea ice concentration output projection.
 
         Parameters
         ----------
         in_channels : int
-            Description not yet provided.
+            Number of channels in the decoder feature tensor.
         out_channels : int
-            Description not yet provided.
+            Number of channels required in the model output.
 
         Returns
         -------
         nn.Module
-            Description not yet provided.
+            Sea ice concentration output block configured with the requested hidden
+            channels, activation, and clipping behavior.
         """
         return UNetOutputSIC(
             in_channels=in_channels,

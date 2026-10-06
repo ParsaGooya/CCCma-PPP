@@ -15,14 +15,14 @@ from cccma_ppp.data_modules.utils import _unwrap_data_variables
 @dataclasses.dataclass
 class LossStepConfig:
     """
-    Document this class.
+    Configuration for an individual loss term.
 
     Parameters
     ----------
     name : str
-        Description not yet provided.
+        Name of the registered loss function to include in the pipeline.
     args : dict[str, object]
-        Description not yet provided.
+        Additional arguments used to construct the loss function.
     """
 
     name: str
@@ -32,31 +32,24 @@ class LossStepConfig:
 @dataclasses.dataclass
 class LosspipelineConfig:
     """
-    Document this class.
+    Configuration for a weighted pipeline of loss functions.
 
     Parameters
     ----------
-    loss_pipeline : list of LossStepConfig
-        Sequence of loss steps.
-
-    loss_weights : list of float or None, optional
-        Weights applied to each loss term.
-
-    reduction : {"mean", "sum"}, optional
-        Reduction method applied to individual losses.
-
-    saved_output_mask_dir: str or None
-
-        Location of a saved fixed output maks for loss
-        calculation. The mask could have any of the
-        following shapes:
-
-        1- C, D1, D2, ..
-        2- 1, D1, D2, ...
-        3- D1, D2, ...
-
-        where C is channel size and D1, D2, ... are output sizes.
-        The sizes must match that of the model and target data.
+    loss_pipeline : list[LossStepConfig]
+        Ordered sequence of loss terms included in the pipeline.
+    loss_weights : list[float] | None
+        Weight assigned to each loss term. If ``None``, all loss terms receive
+        equal weight. Explicit weights must sum to one.
+    reduction : Reduction
+        Reduction method applied by individual loss functions.
+    masked_loss_calculation : bool
+        Whether target and fixed output masks are applied during loss
+        calculation.
+    saved_output_mask_dir : str | None
+        Path to a fixed output mask stored as a NetCDF or PyTorch file. The mask
+        may include the channel dimension or omit it, and its spatial dimensions
+        must match the model output.
     """
 
     loss_pipeline: list[LossStepConfig]
@@ -67,12 +60,17 @@ class LosspipelineConfig:
 
     def __post_init__(self):
         """
-        Document this function.
+        Initialize and validate the loss pipeline configuration.
+
+        Loads an optional fixed output mask, validates individual loss arguments, and
+        assigns equal loss weights when explicit weights are not provided.
 
         Raises
         ------
         ValueError
-            Description not yet provided.
+            If no loss terms are configured, an individual loss specifies an
+            argument controlled by the pipeline, the number of loss weights does not
+            match the number of loss terms, or the loss weights do not sum to one.
         """
         self.output_mask = self._load_output_mask()
 
@@ -120,23 +118,26 @@ class LosspipelineConfig:
         output_shape: tuple[int, ...] | None = None,
     ):
         """
-        Document this function.
+        Build the configured loss pipeline.
 
         Parameters
         ----------
         weights : xr.DataArray
-            Description not yet provided.
+            Spatial and variable weights applied by the configured loss functions.
         num_output_dimensions : int
-            Description not yet provided.
+            Number of dimensions in each model output, including the channel
+            dimension.
         generative_context : GenerativeContext | None
-            Description not yet provided.
+            Context describing the model's generative behavior. If ``None``, a
+            default non-generative context is used.
         output_shape : tuple[int, ...] | None
-            Description not yet provided.
+            Model output shape excluding the batch dimension. Required when a saved
+            output mask is configured.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        Losspipeline
+            Constructed weighted loss pipeline.
         """
         self._resove_output_mask(output_shape)
 
@@ -149,17 +150,24 @@ class LosspipelineConfig:
 
     def _resove_output_mask(self, output_shape: tuple[int, ...]):
         """
-        Document this function.
+        Validate and resolve the saved output mask against the model output shape.
+
+        A mask without a channel dimension is expanded to include one. The resulting
+        mask must have either one shared channel or one channel per model output
+        variable.
 
         Parameters
         ----------
-        output_shape : tuple[int, ...]
-            Description not yet provided.
+        output_shape : tuple[int, ...] | None
+            Model output shape excluding the batch dimension.
 
         Raises
         ------
         RuntimeError
-            Description not yet provided.
+            If a saved mask is configured without an output shape, the mask has an
+            incompatible number of dimensions, its non-channel dimensions do not
+            match the model output, or its channel dimension is incompatible with the
+            number of output channels.
         """
         if self.output_mask is not None:
             if output_shape is None:
@@ -204,19 +212,23 @@ class LosspipelineConfig:
 
     def _load_output_mask(self) -> torch.Tensor | None:
         """
-        Document this function.
+        Load a fixed output mask from disk.
+
+        PyTorch files must contain a tensor. NetCDF files are converted to a single
+        DataArray with variables represented along the channel dimension.
 
         Returns
         -------
         torch.Tensor | None
-            Description not yet provided.
+            Loaded floating-point output mask, or ``None`` if no mask path is
+            configured.
 
         Raises
         ------
         FileNotFoundError
-            Description not yet provided.
+            If the configured mask file does not exist.
         TypeError
-            Description not yet provided.
+            If a PyTorch mask file does not contain a tensor or the mask file
         """
         if self.saved_output_mask_dir is None:
             return None
@@ -254,18 +266,26 @@ class LosspipelineConfig:
 
 class Losspipeline(nn.Module):
     """
-    Document this class.
+    Combine multiple weighted loss functions into a single objective.
+
+    Each configured loss is constructed from the loss registry with shared
+    weights, reduction, output dimensionality, and generative context. Optional
+    target masks and a fixed output mask can restrict the regions contributing
+    to the loss.
 
     Parameters
     ----------
     config : LosspipelineConfig
-        Description not yet provided.
+        Configuration defining the loss terms, weights, reduction, and masking
+        behavior.
     weights : xr.DataArray
-        Description not yet provided.
+        Spatial and variable weights supplied to each loss term.
     num_output_dimensions : int
-        Description not yet provided.
+        Number of dimensions in each model output, including the channel
+        dimension.
     generative_context : GenerativeContext | None
-        Description not yet provided.
+        Context describing whether generative modeling or generator-based
+        sampling is enabled.
     """
 
     registery: ClassVar[Registery] = Registery()
@@ -278,18 +298,21 @@ class Losspipeline(nn.Module):
         generative_context: GenerativeContext | None = None,
     ):
         """
-        Document this function.
+        Initialize a weighted loss pipeline.
 
         Parameters
         ----------
         config : LosspipelineConfig
-            Description not yet provided.
+            Configuration defining the loss terms, weights, reduction, and masking
+            behavior.
         weights : xr.DataArray
-            Description not yet provided.
+            Spatial and variable weights supplied to each loss term.
         num_output_dimensions : int
-            Description not yet provided.
+            Number of dimensions in each model output, including the channel
+            dimension.
         generative_context : GenerativeContext | None
-            Description not yet provided.
+            Context describing the model's generative behavior. If ``None``, a
+            default context is used.
         """
         super().__init__()
         self._checked_dimensionality = False
@@ -334,17 +357,17 @@ class Losspipeline(nn.Module):
     @classmethod
     def register(cls, name: str):
         """
-        Document this function.
+        Create a decorator that registers a loss function.
 
         Parameters
         ----------
         name : str
-            Description not yet provided.
+            Name under which the loss function is registered.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        Callable
+            Decorator used to register the loss class.
         """
         return cls.registery.register(name.lower())
 
@@ -357,30 +380,37 @@ class Losspipeline(nn.Module):
         step_arguments: dict = None,
     ):
         """
-        Document this function.
+        Compute the weighted combination of configured loss terms.
+
+        The fixed output mask and target mask are combined when masked loss
+        calculation is enabled. Each loss term is evaluated with shared and
+        step-specific arguments, and the resulting losses are combined according to
+        their configured weights.
 
         Parameters
         ----------
-        data : Any
-            Description not yet provided.
-        target : Any
-            Description not yet provided.
-        target_mask : Any
-            Description not yet provided.
-        print_loss : Any
-            Description not yet provided.
-        step_arguments : dict
-            Description not yet provided.
+        data : torch.Tensor
+            Model output supplied to each loss function.
+        target : torch.Tensor
+            Target tensor against which losses are calculated.
+        target_mask : torch.Tensor | None
+            Optional validity mask restricting loss calculation.
+        print_loss : bool
+            Whether individual loss functions print their computed values.
+        step_arguments : dict | None
+            Additional arguments passed to each loss function during evaluation.
 
         Returns
         -------
-        Any
-            Description not yet provided.
+        tuple[torch.Tensor, dict[str, torch.Tensor]]
+            Weighted total loss and detached individual loss values keyed by loss
+            step name.
 
         Raises
         ------
         AssertionError
-            Description not yet provided.
+            If the target dimensionality does not match the configured output
+            dimensionality and generative context.
         """
         if self.output_mask is not None:
             target_mask = (
