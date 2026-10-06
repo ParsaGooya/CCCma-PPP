@@ -469,7 +469,7 @@ class cVAE(moduleABC):
         nstds: int = 1,
         latent_samples: torch.Tensor = None,
         output_sample_size: int = 1,
-        chunk_size: int | None = None,
+        chunk_size: int | None = None
     ) -> cVAEOutput:
         """
         Document this function.

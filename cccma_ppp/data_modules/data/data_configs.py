@@ -163,10 +163,8 @@ class ObsDataConfig(DataConfigABC):
                 f"lead time. Got {self.init_time_frequency} vs {self.lead_time_resolution}"
             )
 
-        self.time_range = build_time_range(
-            init_time=self.coords[init_time_dim],
-            lead_time_resolution=self.init_time_frequency,
-        )
+        self.time_range = build_time_range(init_time=self.coords[init_time_dim], 
+                                           lead_time_resolution=self.init_time_frequency)
 
     @final
     @property
@@ -313,7 +311,7 @@ def build_time_range(
 
     Use for temporal validation (e.g., checking if all samples
     fall within expected range), not for exact time matching.
-
+ 
 
     Parameters
     ----------

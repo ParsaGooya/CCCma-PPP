@@ -444,6 +444,7 @@ class UNet(deterministicmodelsABC):
         output = self.output_block(unet_output_tensor)
 
         if self.config.GENERATOR is not None and num_output_samples > 1:
+
             output = output.reshape(
                 batch_size,
                 num_output_samples,

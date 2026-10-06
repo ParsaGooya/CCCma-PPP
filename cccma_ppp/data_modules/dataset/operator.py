@@ -81,7 +81,9 @@ class DatasetOperator:
 
         _validate_time_sequence(train_times)
 
-        missing = [t for t in train_times_array if t not in self.config.available_times]
+        missing = [
+            t for t in train_times_array if t not in self.config.available_times
+        ]
 
         if missing:
             raise ValueError(f"The following train_times are unavailable: {missing}")
@@ -195,7 +197,7 @@ class DatasetOperator:
                 f"preprocessor must be an instance of PreprocessModuleABC, "
                 f"got {type(preprocessor)}"
             )
-
+        
         if not preprocessor.fitted:
             raise ValueError("The preprocessor must be fitted before adding.")
 
@@ -420,11 +422,10 @@ class DatasetOperator:
         if self.config_observation is not None:
             pipelines.append(self.config_observation.preprocessing_pipeline.fitted)
         if self.config.effective_condition is not None:
-            pipelines.append(
-                self.config.effective_condition.preprocessing_pipeline.fitted
-            )
+            pipelines.append(self.config.effective_condition.preprocessing_pipeline.fitted)
 
         return all(pipelines) if pipelines else False
+
 
 
 def _build_chunks(config: DataConfigABC | None = None):

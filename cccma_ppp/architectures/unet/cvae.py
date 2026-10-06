@@ -679,7 +679,7 @@ class cVAEUNet(cVAEmodelsABC):
             latent_samples,
             condition_embedding=cond_mu,
             num_output_samples=num_output_samples,
-            chunk_size=chunk_size,
+            chunk_size = chunk_size,
         )
 
         if deterministic_guess_only:
@@ -823,7 +823,7 @@ class cVAEUNet(cVAEmodelsABC):
         torch.Tensor
             Description not yet provided.
         """
-
+        
         latent_sample_size, batch_size = latent_samples.shape[:-1]
 
         if all([condition_embedding is not None, self.condemb_to_decoder]):

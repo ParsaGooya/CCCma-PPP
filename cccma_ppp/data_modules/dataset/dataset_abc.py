@@ -129,12 +129,12 @@ class DatasetConfigABC(abc.ABC):
 
         self._check_required_input_source()
         self._check_condition_method()
-
+       
         self._resolve_condition()
         self._check_model_vs_condition()
 
         self._resolve_lead_times()
-
+        
         self._check_model()
         self._check_condition()
 
@@ -292,6 +292,7 @@ class DatasetConfigABC(abc.ABC):
             Description not yet provided.
         """
         if self.model is not None:
+            
             if self.effective_condition_method == "same_member":
                 if self.model.ensemble_mean:
                     raise ValueError(
@@ -424,6 +425,7 @@ class DatasetConfigABC(abc.ABC):
             Description not yet provided.
         """
         if self.condition is None:
+            
             return self.effective_condition_method in {
                 "ensemble_mean",
                 "cross_ensemble",
@@ -455,7 +457,9 @@ class DatasetConfigABC(abc.ABC):
     @final
     @property
     def effective_condition_method(self) -> str:
-        return None if self.condition_method is None else self.condition_method.lower()
+        return (None 
+                if self.condition_method is None 
+                else self.condition_method.lower())
 
     @final
     def _model_as_condition(self) -> ModelDataConfig:
@@ -512,7 +516,7 @@ class DatasetConfigABC(abc.ABC):
                 dims=(self.init_time_dim,),
                 coords={self.init_time_dim: requested_times},
             )
-
+            
         missing = [t for t in requested_times.values if t not in self.available_times]
 
         if missing:
@@ -702,6 +706,7 @@ class AddedTimeFeatures:
             )
 
         if self.init_time_dim in requested:
+
             if self.time_span_ref == 0:
                 raise ValueError(
                     "Cannot normalize time with zero-length reference span. "
@@ -726,7 +731,7 @@ class AddedTimeFeatures:
                     "Cannot normalize lead time when maximum is zero. "
                     "Ensure at least one lead time > 0."
                 )
-
+            
             normalized_lead_times = lead_times.astype(np.float32) / max_lead_time
 
             calculated_features[self.lead_time_dim] = normalized_lead_times
@@ -1216,10 +1221,10 @@ class DatasetABC(Dataset, abc.ABC):
             len_names += len(self.config.effective_condition.names)
 
         if self.config.effective_input.preprocessing_pipeline.has_flattener:
-            flattener = (
-                self.config.effective_input.preprocessing_pipeline.get_flattener()
+            flattener = self.config.effective_input.preprocessing_pipeline.get_flattener()
+            in_shape = (
+                flattener.final_locations.shape
             )
-            in_shape = flattener.final_locations.shape
 
         else:
             in_shape = tuple(

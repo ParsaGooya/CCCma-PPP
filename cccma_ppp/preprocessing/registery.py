@@ -1,7 +1,5 @@
 import inspect
 from typing import Any
-
-
 class Registery:
     """
     Document this class.
@@ -35,7 +33,8 @@ class Registery:
 
         if name in self._modules:
             raise ValueError(
-                f"Name {name!r} already registered. Available: {self.available()}"
+                f"Name {name!r} already registered. "
+                f"Available: {self.available()}"
             )
 
         def decorator(cls):
@@ -49,7 +48,8 @@ class Registery:
             """
             if not inspect.isclass(cls):
                 raise TypeError(
-                    f"Can only register classesGot {type(cls).__name__} for {name!r}."
+                    f"Can only register classes"
+                    f"Got {type(cls).__name__} for {name!r}."
                 )
 
             self._modules[name] = cls
