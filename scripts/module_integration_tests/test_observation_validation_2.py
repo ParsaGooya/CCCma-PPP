@@ -10,7 +10,7 @@ from typing import Literal, Any, Optional
 from datetime import datetime
 from dataclasses import dataclass
 
-# Import actual TrainDatasetConfig from cccma_ppp (for production use)
+# Import actual TrainDatasetConfig from cccma_ppp
 try:
     from cccma_ppp.train.dataset import TrainDatasetConfig
     from cccma_ppp.data_modules.utils import add_lead_times
