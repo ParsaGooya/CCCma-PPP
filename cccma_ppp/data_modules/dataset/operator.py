@@ -311,7 +311,9 @@ class DatasetOperator:
                 NN_dims.append(dim)
 
         else:
+            
             if not self.config._using_model_data_as_condition:
+                
                 metadata = self._update_metadata_with_dataconfig_metadata(
                     metadata, self.config.model
                 )

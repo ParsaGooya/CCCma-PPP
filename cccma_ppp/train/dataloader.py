@@ -170,7 +170,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             self.train_times = self.select_requested_times(
                 requested_slice=self.train_years_slice,
             )
-
+        
         if self.num_validation_years > 0:
             last_train_year = self.train_times[-1].dt.year
 

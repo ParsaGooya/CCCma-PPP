@@ -56,11 +56,12 @@ def _load_xarray_data(
     ensemble_mean: bool = False,
     concat_dim: str = "year",
     rename_dict: dict | None = None,
+    drop_vars_list: list | None = None,
     chunks: dict | None = None,
     load: bool = False,
     add_time_auxiliary_coords: bool = False,
     init_time_dim: str = init_time_dim,
-    resolved_init_time_frequency: TemporalFrequency | None = None,
+    resolution_to_standardize_time: TimeFrequency | None = None,
     realization_dim: str = realization_dim,
     supported_NN_dimensions_sorted: tuple = supported_NN_dimensions_sorted,
 ):
@@ -89,7 +90,7 @@ def _load_xarray_data(
         Description not yet provided.
     init_time_dim : str
         Description not yet provided.
-    resolved_init_time_frequency : TemporalFrequency | None
+    resolved_init_time_frequency : TimeFrequency | None
         Description not yet provided.
     realization_dim : str
         Description not yet provided.
@@ -118,14 +119,25 @@ def _load_xarray_data(
             raise ValueError(f"Invalid keys in rename_dict: {sorted(invalid_keys)}")
         ds = ds.rename(rename_dict)
 
-    ds = ds.sel(selection) if selection is not None else ds
+    if drop_vars_list is not None:
+        ds = ds.drop_vars(drop_vars_list, errors="ignore")
 
-    if resolved_init_time_frequency is not None:
+    if (resolution_to_standardize_time is not None 
+        and init_time_dim in ds.coords):
+
+        time_freq = infer_time_resolution(ds.coords[init_time_dim].to_index())
+        time_frequency_to_resolve =  min(
+            time_freq, 
+            resolution_to_standardize_time,
+            key=TEMPORAL_ORDER.get,
+        ) 
         ds = _standardize_time(
             ds,
-            frequency=resolved_init_time_frequency,
+            frequency=time_frequency_to_resolve,
             time_dim=init_time_dim,
         )
+
+    ds = ds.sel(selection) if selection is not None else ds
 
     if realization_dim in ds.coords and ensemble_mean:
         ds = ds.mean(realization_dim)
@@ -244,7 +256,7 @@ def _standardize_time(
             return type(t)(year, 1, 1)
 
         if frequency == "month":
-            return type(t)(year, month, 15)
+            return type(t)(year, month, 1)
 
         if frequency == "day":
             return type(t)(year, month, day)
@@ -269,7 +281,7 @@ def _standardize_time(
             "Time standardization produced duplicate "
             "timestamps. Check the input frequency."
         )
-
+    
     return ds.assign_coords({time_dim: standardized})
 
 
@@ -503,8 +515,12 @@ def _validate_time_sequence(
         else np.asarray(times_sequence)
     )
 
-    if values.ndim != 1:
-        raise ValueError("'times_sequence' must be one-dimensional.")
+    if values.ndim > 1:
+        raise ValueError(
+            "'times_sequence' must be scalar or one-dimensional."
+        )
+
+    values = np.atleast_1d(values)
 
     if values.size == 0:
         raise ValueError("'times_sequence' cannot be empty.")
@@ -517,34 +533,40 @@ def _validate_time_sequence(
 
     if not (is_cftime or is_numpy_datetime or is_python_datetime):
         raise TypeError(
-            "'time_sequence' must contain cftime.datetime, "
+            "'times_sequence' must contain cftime.datetime, "
             "numpy.datetime64, or datetime.datetime objects."
         )
 
     if is_cftime:
         if not all(isinstance(value, cftime.datetime) for value in values):
             raise TypeError(
-                "'time_sequence' cannot mix cftime objects with other datetime types."
+                "'times_sequence' cannot mix cftime objects "
+                "with other datetime types."
             )
 
         calendars = {value.calendar for value in values}
 
         if len(calendars) > 1:
             raise ValueError(
-                f"'time_sequence' contains multiple CF calendars: {calendars}."
+                f"'times_sequence' contains multiple CF calendars: {calendars}."
             )
 
     elif is_numpy_datetime:
         if not np.issubdtype(values.dtype, np.datetime64):
             raise TypeError(
-                "'time_sequence' cannot mix numpy.datetime64 values "
+                "'times_sequence' cannot mix numpy.datetime64 values "
                 "with other datetime types."
+            )
+
+        if np.isnat(values).any():
+            raise ValueError(
+                "'times_sequence' cannot contain NaT values."
             )
 
     else:
         if not all(isinstance(value, datetime.datetime) for value in values):
             raise TypeError(
-                "'time_sequence' cannot mix datetime.datetime values "
+                "'times_sequence' cannot mix datetime.datetime values "
                 "with other datetime types."
             )
 
@@ -552,7 +574,7 @@ def _validate_time_sequence(
 
         if any(offset not in {None, datetime.timedelta(0)} for offset in offsets):
             raise ValueError(
-                "'time_sequence' contains non-UTC datetime values."
+                "'times_sequence' contains non-UTC datetime values."
             )
         
 @contextlib.contextmanager

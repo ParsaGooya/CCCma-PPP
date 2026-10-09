@@ -503,8 +503,9 @@ def _check_IO(metadata: dict, model_dims: int, which: str = "input"):
         raise ValueError("only checks IO in data vs module.")
 
     if model_dims == 2:
+        
         if len(metadata.get("NN_dims")) != 2:
-            if not any(
+            if not all(
                 ["flattener" in pipeline for pipeline in metadata.get("preprocessors")]
             ):
                 raise RuntimeError(
