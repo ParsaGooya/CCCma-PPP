@@ -115,10 +115,15 @@ class PreprocessingPipeline:
         Any
             Description not yet provided.
         """
+        if self.fitted:
+            self._reset_fit()
+
         if self.load_dir is None:
             data_processed = base_data
             self.mask = mask
-            self.fitted_based_time = base_data[self.init_time_time].values
+            self.fitted_based_time = (base_data[self.init_time_time].values
+                                      if self.init_time_time in base_data.dims
+                                      else None)
 
 
             for step_name, preprocessor in self.pipeline:
@@ -475,3 +480,11 @@ class PreprocessingPipeline:
                 "Pipeline must be fitted before calling transform() "
                 "or inverse_transform(). Call fit() first."
             )
+        
+    def _reset_fit(self):
+        """Reset fitted state before fitting the pipeline again."""
+        self.fitted = False
+        self.steps = []
+        self.fitted_preprocessors = []
+        self.mask = None
+        self.fitted_based_time = None
