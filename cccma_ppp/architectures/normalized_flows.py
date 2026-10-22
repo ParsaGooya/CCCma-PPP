@@ -12,14 +12,14 @@ from cccma_ppp.core.selectors import FlowSelector
 @dataclasses.dataclass
 class flowOutput:
     """
-    Container for the output of a normalizing flow transformation.
+    Document this class.
 
     Parameters
     ----------
     e_samples : torch.Tensor
-        Samples produced by the flow transformation.
+        Description not yet provided.
     log_det : torch.Tensor
-        Log absolute determinant of the transformation Jacobian for each sample.
+        Description not yet provided.
     """
 
     e_samples: torch.Tensor
@@ -29,14 +29,14 @@ class flowOutput:
 @dataclasses.dataclass
 class NormalizedFlowConfig:
     """
-    Configuration for a sequence of normalizing flow transformations.
+    Document this class.
 
     Parameters
     ----------
     list_flows : list[FlowSelector]
-        Ordered flow configurations composing the normalizing flow model.
+        Description not yet provided.
     flow_sample_size : int
-        Number of samples associated with flow-based sampling operations.
+        Description not yet provided.
     """
 
     list_flows: list[FlowSelector]
@@ -44,19 +44,19 @@ class NormalizedFlowConfig:
 
     def build(self, latent_size: int, condition_size: int = None):
         """
-        Build a normalizing flow model from this configuration.
+        Document this function.
 
         Parameters
         ----------
         latent_size : int
-            Dimensionality of the latent representation transformed by the flow.
-        condition_size : int | None
-            Dimensionality of the optional conditioning representation.
+            Description not yet provided.
+        condition_size : int
+            Description not yet provided.
 
         Returns
         -------
-        NormalizedFlowModel
-            Constructed sequence of normalizing flow transformations.
+        Any
+            Description not yet provided.
         """
         return NormalizedFlowModel(
             config=self, latent_size=latent_size, condition_size=condition_size
@@ -65,38 +65,33 @@ class NormalizedFlowConfig:
 
 class NormalizedFlowModel(flowABC):
     """
-    Compose multiple normalizing flow transformations.
-
-    Individual flows are applied sequentially in the forward direction and in
-    reverse order during inversion. Log-determinant contributions are accumulated
-    across transformations.
+    Document this class.
 
     Parameters
     ----------
     config : NormalizedFlowConfig
-        Configuration defining the ordered flow transformations.
-    latent_size : int
-        Dimensionality of the latent representation transformed by the flow.
-    condition_size : int | None
-        Dimensionality of the optional conditioning representation.
+        Description not yet provided.
+    latent_size : Any
+        Description not yet provided.
+    condition_size : int
+        Description not yet provided.
     """
 
     def __init__(
         self, config: NormalizedFlowConfig, latent_size, condition_size: int = None
     ):
         """
-        Initialize a sequence of normalizing flow transformations.
+        Document this function.
 
         Parameters
         ----------
         config : NormalizedFlowConfig
-            Configuration defining the ordered flow transformations.
-        latent_size : int
-            Dimensionality of the latent representation transformed by each flow.
-        condition_size : int | None
-            Dimensionality of the optional conditioning representation.
+            Description not yet provided.
+        latent_size : Any
+            Description not yet provided.
+        condition_size : int
+            Description not yet provided.
         """
-
         super().__init__()
 
         self.list_flows = config.list_flows
@@ -117,20 +112,19 @@ class NormalizedFlowModel(flowABC):
 
     def forward(self, x, condition=None):
         """
-        Apply the sequence of flow transformations.
+        Document this function.
 
         Parameters
         ----------
-        x : torch.Tensor
-            Input samples with shape ``(N, D)``.
-        condition : torch.Tensor | None
-            Optional conditioning representation supplied to each flow.
+        x : Any
+            Description not yet provided.
+        condition : Any
+            Description not yet provided.
 
         Returns
         -------
-        flowOutput
-            Transformed samples and the accumulated log absolute determinant of the
-            forward transformations.
+        Any
+            Description not yet provided.
         """
         bsz, _ = x.shape
         log_det = torch.zeros(bsz, device=x.device)
@@ -142,20 +136,19 @@ class NormalizedFlowModel(flowABC):
 
     def inverse(self, z, condition=None):
         """
-        Apply the inverse flow transformations in reverse order.
+        Document this function.
 
         Parameters
         ----------
-        z : torch.Tensor
-            Latent samples with shape ``(N, D)``.
-        condition : torch.Tensor | None
-            Optional conditioning representation supplied to each inverse flow.
+        z : Any
+            Description not yet provided.
+        condition : Any
+            Description not yet provided.
 
         Returns
         -------
-        flowOutput
-            Inverse-transformed samples and the accumulated log absolute determinant
-            of the inverse transformations.
+        Any
+            Description not yet provided.
         """
         bsz, _ = z.shape
         log_det = torch.zeros(bsz, device=z.device)
@@ -169,32 +162,31 @@ class NormalizedFlowModel(flowABC):
 
 class FCNN(nn.Module):
     """
-    Fully connected neural network used to parameterize flow transformations.
+    Document this class.
 
     Parameters
     ----------
-    in_dim : int
-        Number of input features.
-    out_dim : int
-        Number of output features.
-    hidden_dim : int
-        Number of features in each hidden layer.
+    in_dim : Any
+        Description not yet provided.
+    out_dim : Any
+        Description not yet provided.
+    hidden_dim : Any
+        Description not yet provided.
     """
 
     def __init__(self, in_dim, out_dim, hidden_dim):
         """
-        Initialize a fully connected flow network.
+        Document this function.
 
         Parameters
         ----------
-        in_dim : int
-            Number of input features.
-        out_dim : int
-            Number of output features.
-        hidden_dim : int
-            Number of features in each hidden layer.
+        in_dim : Any
+            Description not yet provided.
+        out_dim : Any
+            Description not yet provided.
+        hidden_dim : Any
+            Description not yet provided.
         """
-
         super().__init__()
         self.network = nn.Sequential(
             nn.Linear(in_dim, hidden_dim),
@@ -206,17 +198,17 @@ class FCNN(nn.Module):
 
     def forward(self, x):
         """
-        Apply the fully connected network.
+        Document this function.
 
         Parameters
         ----------
-        x : torch.Tensor
-            Input feature tensor.
+        x : Any
+            Description not yet provided.
 
         Returns
         -------
-        torch.Tensor
-            Output produced by the network.
+        Any
+            Description not yet provided.
         """
         return self.network(x)
 
@@ -224,17 +216,14 @@ class FCNN(nn.Module):
 @FlowSelector.register("maf")
 class MAF(flowABC):
     """
-    Masked autoregressive flow transformation.
-
-    Each feature is transformed using affine parameters derived from preceding
-    features and, when configured, an additional conditioning representation.
+    Document this class.
 
     Parameters
     ----------
-    hidden_dim : int
-        Number of hidden features in each parameter network.
-    base_network : type[nn.Module]
-        Network class used to predict the affine transformation parameters.
+    hidden_dim : Any
+        Description not yet provided.
+    base_network : Any
+        Description not yet provided.
     """
 
     def __init__(
@@ -243,14 +232,14 @@ class MAF(flowABC):
         base_network=FCNN,
     ):
         """
-        Initialize a masked autoregressive flow.
+        Document this function.
 
         Parameters
         ----------
-        hidden_dim : int
-            Number of hidden features in each parameter network.
-        base_network : type[nn.Module]
-            Network class used to construct the affine parameter networks.
+        hidden_dim : Any
+            Description not yet provided.
+        base_network : Any
+            Description not yet provided.
         """
         super().__init__()
         self.hidden_dim = hidden_dim
@@ -259,23 +248,19 @@ class MAF(flowABC):
 
     def build(self, dim, condition_size=None):
         """
-        Build the autoregressive transformation for a specified dimension.
-
-        A separate parameter network is constructed for each feature after the first.
-        When conditioning is enabled, the conditioning representation is included in
-        the input to each parameter network.
+        Document this function.
 
         Parameters
         ----------
-        dim : int
-            Dimensionality of the representation transformed by the flow.
-        condition_size : int | None
-            Dimensionality of the optional conditioning representation.
+        dim : Any
+            Description not yet provided.
+        condition_size : Any
+            Description not yet provided.
 
         Returns
         -------
-        MAF
-            This flow instance with its transformation networks constructed.
+        Any
+            Description not yet provided.
         """
         self.dim = dim
 
@@ -300,36 +285,30 @@ class MAF(flowABC):
 
     def reset_parameters(self):
         """
-        Initialize the unconditional affine parameters for the first feature.
+        Document this function.
         """
         init.uniform_(self.initial_param, -math.sqrt(0.5), math.sqrt(0.5))
 
     def forward(self, x, condition=None):
         """
-        Apply the autoregressive forward transformation.
-
-        Each feature is standardized using affine parameters determined by preceding
-        input features. The transformed feature order is reversed before returning.
+        Document this function.
 
         Parameters
         ----------
-        x : torch.Tensor
-            Input samples with shape ``(N, D)``.
-        condition : torch.Tensor | None
-            Conditioning representation required when the flow was built as
-            conditional.
+        x : Any
+            Description not yet provided.
+        condition : Any
+            Description not yet provided.
 
         Returns
         -------
-        tuple[torch.Tensor, torch.Tensor]
-            Transformed samples and the log absolute determinant of the forward
-            transformation for each sample.
+        Any
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If the flow was built as conditional but no conditioning representation
-            is provided.
+            Description not yet provided.
         """
         if self._conditional:
             if condition is None:
@@ -361,31 +340,24 @@ class MAF(flowABC):
 
     def inverse(self, z, condition=None):
         """
-        Apply the inverse autoregressive transformation.
-
-        The latent feature order is first restored, after which input features are
-        reconstructed sequentially from the affine parameters determined by
-        previously reconstructed features.
+        Document this function.
 
         Parameters
         ----------
-        z : torch.Tensor
-            Latent samples with shape ``(N, D)``.
-        condition : torch.Tensor | None
-            Conditioning representation required when the flow was built as
-            conditional.
+        z : Any
+            Description not yet provided.
+        condition : Any
+            Description not yet provided.
 
         Returns
         -------
-        tuple[torch.Tensor, torch.Tensor]
-            Reconstructed samples and the log absolute determinant of the inverse
-            transformation for each sample.
+        Any
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If the flow was built as conditional but no conditioning representation
-            is provided.
+            Description not yet provided.
         """
         if self._conditional:
             if condition is None:
@@ -420,30 +392,26 @@ class MAF(flowABC):
 @FlowSelector.register("realnvp")
 class RealNVP(flowABC):
     """
-    Real-valued non-volume preserving flow transformation.
-
-    The input representation is divided into two parts that are transformed
-    through successive affine coupling operations, optionally conditioned on an
-    additional representation.
+    Document this class.
 
     Parameters
     ----------
-    hidden_dim : int
-        Number of hidden features in each coupling-network parameterization.
-    base_network : type[nn.Module]
-        Network class used to predict translation and scale parameters.
+    hidden_dim : Any
+        Description not yet provided.
+    base_network : Any
+        Description not yet provided.
     """
 
     def __init__(self, hidden_dim=16, base_network=FCNN):
         """
-        Initialize a RealNVP affine coupling transformation.
+        Document this function.
 
         Parameters
         ----------
-        hidden_dim : int
-            Number of hidden features in each coupling-network parameterization.
-        base_network : type[nn.Module]
-            Network class used to construct translation and scale networks.
+        hidden_dim : Any
+            Description not yet provided.
+        base_network : Any
+            Description not yet provided.
         """
         super().__init__()
         self.hidden_dim = hidden_dim
@@ -452,19 +420,19 @@ class RealNVP(flowABC):
 
     def build(self, dim, condition_size=None):
         """
-        Build the affine coupling networks for a specified dimension.
+        Document this function.
 
         Parameters
         ----------
-        dim : int
-            Dimensionality of the representation transformed by the flow.
-        condition_size : int | None
-            Dimensionality of the optional conditioning representation.
+        dim : Any
+            Description not yet provided.
+        condition_size : Any
+            Description not yet provided.
 
         Returns
         -------
-        RealNVP
-            This flow instance with its coupling networks constructed.
+        Any
+            Description not yet provided.
         """
         self.dim = dim
         added_features = condition_size if condition_size is not None else 0
@@ -488,31 +456,24 @@ class RealNVP(flowABC):
 
     def forward(self, x, condition=None):
         """
-        Apply the forward affine coupling transformation.
-
-        The input is divided into two feature groups. Each group is transformed using
-        translation and scale parameters computed from the other group and, when
-        configured, the conditioning representation.
+        Document this function.
 
         Parameters
         ----------
-        x : torch.Tensor
-            Input samples with shape ``(N, D)``.
-        condition : torch.Tensor | None
-            Conditioning representation required when the flow was built as
-            conditional.
+        x : Any
+            Description not yet provided.
+        condition : Any
+            Description not yet provided.
 
         Returns
         -------
-        tuple[torch.Tensor, torch.Tensor]
-            Transformed samples and the log absolute determinant of the forward
-            transformation for each sample.
+        Any
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If the flow was built as conditional but no conditioning representation
-            is provided.
+            Description not yet provided.
         """
         if self._conditional:
             if condition is None:
@@ -543,30 +504,24 @@ class RealNVP(flowABC):
 
     def inverse(self, z, condition=None):
         """
-        Apply the inverse affine coupling transformation.
-
-        The two transformed feature groups are reconstructed in reverse coupling
-        order using the corresponding translation and scale networks.
+        Document this function.
 
         Parameters
         ----------
-        z : torch.Tensor
-            Latent samples with shape ``(N, D)``.
-        condition : torch.Tensor | None
-            Conditioning representation required when the flow was built as
-            conditional.
+        z : Any
+            Description not yet provided.
+        condition : Any
+            Description not yet provided.
 
         Returns
         -------
-        tuple[torch.Tensor, torch.Tensor]
-            Reconstructed samples and the log absolute determinant of the inverse
-            transformation for each sample.
+        Any
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If the flow was built as conditional but no conditioning representation
-            is provided.
+            Description not yet provided.
         """
         if self._conditional:
             if condition is None:

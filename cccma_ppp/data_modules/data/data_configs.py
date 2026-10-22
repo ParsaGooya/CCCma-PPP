@@ -24,29 +24,24 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 
 @dataclasses.dataclass
 class ModelDataConfig(DataConfigABC):
-    """
-    Configuration for model forecast data.
 
-    Parameters
-    ----------
-    paths : str
-        Directory containing the model data files.
-    names : list[str]
-        Names of data variables to load.
-    preprocessing_pipeline : PreprocessingPipeline
-        Pipeline used to preprocess the model data.
-    realization_list : list | None
-        Realizations to select from ensemble data. If ``None``, no explicit
-        realization subset is selected.
-    ensemble_mean : bool | None
-        Whether ensemble data are reduced to their ensemble mean.
-    concat_dim : str
-        Dimension along which data from multiple files are concatenated.
-    file_type : str
-        File pattern used to discover model data files.
-    rename_dict : dict[str, str] | None
-        Mapping used to rename dataset variables, dimensions, or coordinates.
     """
+    Configuration for model prediction data.
+
+    Extends `DataConfigABC` with model-specific dimension requirements
+    and forecast temporal coverage. The forecast time range is constructed
+    from the initialization times, maximum lead time, and configured
+    lead-time resolution.
+
+    All configuration parameters and data management methods are inherited
+    from `DataConfigABC`.
+
+    See Also
+    --------
+    DataConfigABC : Base class defining shared dataset configuration,
+        validation, loading, and preprocessing functionality.
+    """
+
 
     paths: str
     names: list[str]
@@ -55,16 +50,18 @@ class ModelDataConfig(DataConfigABC):
     )
     realization_list: list | None = None
     ensemble_mean: bool | None = True
-    concat_dim: str = init_time_dim
+    concat_dim: str | None = None
     file_type: str = "*.nc"
     rename_dict: dict[str, str] = None
+    drop_vars_list: list[str] = None
 
     def __post_init__(self) -> None:
-        """
-        Initialize the model data configuration.
 
-        After resolving and validating the configured data, constructs the continuous
-        temporal range covered by the initialization times and available lead times.
+        """
+        Initialize the model configuration and construct its forecast time range.
+
+        Performs base-class initialization and constructs `time_range` from
+        the initialization-time coordinates and maximum available lead time.
         """
         super().__init__()
 
@@ -78,14 +75,8 @@ class ModelDataConfig(DataConfigABC):
     @final
     def TYPE(self) -> str:
         """
-        Return the model data type identifier.
-
-        Returns
-        -------
-        str
-            ``"model"``.
+        Define the type of data condifured with this class.
         """
-
         return "model"
 
     @final
@@ -93,11 +84,6 @@ class ModelDataConfig(DataConfigABC):
     def _allowed_dims(cls) -> frozenset[str]:
         """
         Return the dimensions permitted for model data.
-
-        Returns
-        -------
-        frozenset[str]
-            Names of all dimensions allowed in model datasets.
         """
         return model_data_allowed_dimensions
 
@@ -107,39 +93,36 @@ class ModelDataConfig(DataConfigABC):
         """
         Return the dimensions required for model data.
 
-        Returns
-        -------
-        frozenset[str]
-            Names of dimensions that must be present in model datasets.
+        Notes
+        ----
+        Model data must have initialization time and lead time dimensions
+        and spatial dimensions but may also include additional dimensions such 
+        and ensemble member. The allowed and required dimensions are defined in pipelne configs.
         """
-
         return model_data_required_dimensions
 
 
 @dataclasses.dataclass
 class ObsDataConfig(DataConfigABC):
-    """
-    Configuration for observation data.
 
-    Parameters
-    ----------
-    paths : str
-        Directory containing the observation data files.
-    names : list[str]
-        Names of data variables to load.
-    preprocessing_pipeline : PreprocessingPipeline
-        Pipeline used to preprocess the observation data.
-    realization_list : list | None
-        Realizations to select from ensemble data. If ``None``, no explicit
-        realization subset is selected.
-    ensemble_mean : bool | None
-        Whether ensemble data are reduced to their ensemble mean.
-    concat_dim : str
-        Dimension along which data from multiple files are concatenated.
-    file_type : str
-        File pattern used to discover observation data files.
-    rename_dict : dict[str, str] | None
-        Mapping used to rename dataset variables, dimensions, or coordinates.
+    """
+    Configuration for observational data.
+
+    Extends `DataConfigABC` with observation-specific dimension
+    requirements and temporal validation. Observational data must
+    have the same temporal frequency as the configured forecast
+    lead-time resolution.
+
+    The observation time range is constructed from the available
+    observation times.
+
+    All configuration parameters and data management methods are inherited
+    from `DataConfigABC`.
+
+    See Also
+    --------
+    DataConfigABC : Base class defining shared dataset configuration,
+        validation, loading, and preprocessing functionality.
     """
 
     paths: str
@@ -149,24 +132,27 @@ class ObsDataConfig(DataConfigABC):
     )
     realization_list: list | None = None
     ensemble_mean: bool | None = True
-    concat_dim: str = init_time_dim
+    concat_dim: str | None = None
     file_type: str = "*.nc"
     rename_dict: dict[str, str] = None
+    drop_vars_list: list[str] = None
 
     def __post_init__(self):
-        """
-        Initialize and validate the observation data configuration.
 
-        Observation frequency is required to match the configured lead-time
-        resolution. A continuous temporal range is then constructed from the
-        observation initialization times.
+        """
+        Initialize the observation configuration and validate temporal resolution.
+
+        Performs base-class initialization and verifies that the inferred
+        observation frequency matches the configured lead-time resolution.
+        Constructs `time_range` from the observation time coordinates.
 
         Raises
         ------
         RuntimeError
-            If the observation initialization-time frequency does not match the
-            configured lead-time resolution.
+            If the observation frequency differs from the configured
+            lead-time resolution.
         """
+
         super().__init__()
 
         if self.init_time_frequency != self.lead_time_resolution:
@@ -175,21 +161,14 @@ class ObsDataConfig(DataConfigABC):
                 f"lead time. Got {self.init_time_frequency} vs {self.lead_time_resolution}"
             )
 
-        self.time_range = build_time_range(
-            init_time=self.coords[init_time_dim],
-            lead_time_resolution=self.init_time_frequency,
-        )
+        self.time_range = build_time_range(init_time=self.coords[init_time_dim], 
+                                           lead_time_resolution=self.init_time_frequency)
 
     @final
     @property
     def TYPE(self) -> str:
         """
-        Return the observation data type identifier.
-
-        Returns
-        -------
-        str
-            ``"observation"``.
+        Define the type of data condifured with this class.
         """
         return "observation"
 
@@ -198,11 +177,6 @@ class ObsDataConfig(DataConfigABC):
     def _allowed_dims(cls) -> frozenset[str]:
         """
         Return the dimensions permitted for observation data.
-
-        Returns
-        -------
-        frozenset[str]
-            Names of all dimensions allowed in observation datasets.
         """
         return observation_data_allowed_dimensions
 
@@ -212,39 +186,37 @@ class ObsDataConfig(DataConfigABC):
         """
         Return the dimensions required for observation data.
 
-        Returns
-        -------
-        frozenset[str]
-            Names of dimensions that must be present in observation datasets.
+        Notes
+        ----
+        Observation data must have initialization time dimension and spatial dimensions,
+        The allowed and requied dimensions are defined in pipelne configs.
         """
         return observation_data_required_dimensions
 
 
 @dataclasses.dataclass
 class ConditionDataConfig(DataConfigABC):
-    """
-    Configuration for conditioning data.
 
-    Parameters
-    ----------
-    paths : str
-        Directory containing the conditioning data files.
-    names : list[str]
-        Names of data variables to load.
-    preprocessing_pipeline : PreprocessingPipeline
-        Pipeline used to preprocess the conditioning data.
-    realization_list : list | None
-        Realizations to select from ensemble data. If ``None``, no explicit
-        realization subset is selected.
-    ensemble_mean : bool | None
-        Whether ensemble data are reduced to their ensemble mean.
-    concat_dim : str
-        Dimension along which data from multiple files are concatenated.
-    file_type : str
-        File pattern used to discover conditioning data files.
-    rename_dict : dict[str, str] | None
-        Mapping used to rename dataset variables, dimensions, or coordinates.
     """
+    Configuration for auxiliary conditioning datasets.
+
+    Extends `DataConfigABC` with dimension requirements for conditioning
+    variables used by the pipeline.
+
+    Conditioning data may have a defined temporal range or be independent
+    of initialization time. When temporal coverage is available, the
+    time range is constructed from the initialization times and maximum
+    lead time. Otherwise, `time_range` is set to None.
+
+    All configuration parameters and data management methods are inherited
+    from `DataConfigABC`.
+
+    See Also
+    --------
+    DataConfigABC : Base class defining shared dataset configuration,
+        validation, loading, and preprocessing functionality.
+    """
+
 
     paths: str
     names: list[str]
@@ -253,17 +225,14 @@ class ConditionDataConfig(DataConfigABC):
     )
     realization_list: list | None = None
     ensemble_mean: bool | None = True
-    concat_dim: str = init_time_dim
+    concat_dim: str | None = None
     file_type: str = "*.nc"
     rename_dict: dict[str, str] = None
+    drop_vars_list: list[str] = None
 
     def __post_init__(self):
         """
-        Initialize the conditioning data configuration.
-
-        When temporal coverage is available, constructs the continuous temporal range
-        covered by the initialization times and available lead times. Otherwise,
-        ``time_range`` is set to ``None``.
+        Document this function.
         """
         super().__init__()
 
@@ -280,12 +249,7 @@ class ConditionDataConfig(DataConfigABC):
     @property
     def TYPE(self) -> str:
         """
-        Return the conditioning data type identifier.
-
-        Returns
-        -------
-        str
-            ``"condition"``.
+        Define the type of data condifured with this class.
         """
         return "condition"
 
@@ -293,12 +257,7 @@ class ConditionDataConfig(DataConfigABC):
     @classmethod
     def _allowed_dims(cls) -> frozenset[str]:
         """
-        Return the dimensions permitted for conditioning data.
-
-        Returns
-        -------
-        frozenset[str]
-            Names of all dimensions allowed in conditioning datasets.
+        Return the dimensions permitted for condition data.
         """
         return condition_data_allowed_dimensions
 
@@ -306,12 +265,13 @@ class ConditionDataConfig(DataConfigABC):
     @classmethod
     def _required_dims(cls) -> frozenset[str]:
         """
-        Return the dimensions required for conditioning data.
+        Return the dimensions required for condition data.
 
-        Returns
-        -------
-        frozenset[str]
-            Names of dimensions that must be present in conditioning datasets.
+        Notes
+        ----
+        Conditioning data could have initialization time and lead time dimensions
+        but only need spatial dimensions as static conditioning. May also include additional dimensions such 
+        and ensemble member. The allowed and required dimensions are defined in pipelne configs.
         """
         return condition_data_required_dimensions
 
@@ -322,39 +282,38 @@ def build_time_range(
     lead_time_resolution: lead_time_unit = "month",
 ) -> xr.CFTimeIndex | np.ndarray:
     """
-    Build the continuous temporal extent covered by initialization and lead times.
+    Build a continuous temporal extent from init times and lead times.
 
-    The returned range extends from the earliest initialization time through the
-    latest initialization time plus the available lead-time extent. It represents
-    the continuous temporal coverage rather than the exact valid times present in
-    the source data.
+    Returns the inclusive continuous range [min(init_time),
+    max(init_time) + max_lead_time]. This is NOT a list of valid times
+    in the data, only the temporal extent covered.
+
+    Use for temporal validation (e.g., checking if all samples
+    fall within expected range), not for exact time matching.
+ 
 
     Parameters
     ----------
     init_time : xr.DataArray
-        One-dimensional array of initialization times represented by either
-        ``numpy.datetime64`` or ``cftime.datetime`` values.
+        Description not yet provided.
     n_lead_times : int
-        Number of lead-time positions included in the temporal extent.
+        Description not yet provided.
     lead_time_resolution : lead_time_unit
-        Temporal resolution used to advance lead times. Supported values are
-        ``"month"`` and ``"day"``.
+        Description not yet provided.
 
     Returns
     -------
     xr.CFTimeIndex | np.ndarray
-        Continuous date range spanning the full temporal extent at the requested
-        lead-time resolution.
+        Description not yet provided.
 
     Raises
     ------
     TypeError
-        If ``init_time`` does not contain ``numpy.datetime64`` or
-        ``cftime.datetime`` values.
+        Description not yet provided.
     ValueError
-        If ``init_time`` is empty or not one-dimensional, if ``n_lead_times`` is
-        less than one, or if ``lead_time_resolution`` is unsupported.
+        Description not yet provided.
     """
+    
     if init_time.size == 0:
         raise ValueError("'init_time' cannot be empty.")
 

@@ -17,22 +17,16 @@ Spatialmethod = Literal["uniform", "cosine_lat"]
 @dataclasses.dataclass
 class WeightsConfig:
     """
-    Configuration for spatial and variable weighting.
-
-    Weights can be generated from the target coordinates or loaded from an
-    existing file. Spatial weighting may be uniform or based on the cosine of
-    latitude, with optional per-variable weights.
+    Document this class.
 
     Parameters
     ----------
     spatial_method : Spatialmethod
-        Method used to construct spatial weights.
+        Description not yet provided.
     variable_weights : dict[str, float] | None
-        Mapping from target channel names to their corresponding weights. If
-        ``None``, no additional variable weighting is applied.
+        Description not yet provided.
     load_dir : Path | str | None
-        Path to an existing weights file. If provided, weights are loaded rather
-        than generated.
+        Description not yet provided.
     """
 
     spatial_method: Spatialmethod = "uniform"
@@ -41,19 +35,17 @@ class WeightsConfig:
 
     def __post_init__(self):
         """
-        Validate the weights configuration.
+        Document this function.
 
         Raises
         ------
         FileNotFoundError
-            If ``load_dir`` is provided but does not exist.
-        ValueError
-            If ``spatial_method`` is not a supported weighting method.
+            Description not yet provided.
         """
         if self.load_dir is not None:
             if not Path(self.load_dir).exists():
                 raise FileNotFoundError(f"weights file not found at {self.load_dir}")
-
+            
         valid_methods = {"uniform", "cosine_lat"}
         if self.spatial_method not in valid_methods:
             raise ValueError(
@@ -70,43 +62,30 @@ class WeightsConfig:
         save_name: str | None = None,
     ):
         """
-        Build or load weights for the target data.
-
-        When weights are generated, spatial weighting and optional variable-specific
-        weighting are applied to the target coordinates. Loaded weights are validated
-        against the target coordinates. The resulting weights can optionally be
-        transformed using a fitted flattening preprocessor and saved to disk.
+        Document this function.
 
         Parameters
         ----------
         target_coords : dict
-            Mapping from target dimension names to their coordinate values.
+            Description not yet provided.
         Flattennanremover : Flattennanremove | None
-            Optional fitted flattener used to transform the generated or loaded
-            weights into the flattened target representation.
-        save : bool
-            Whether generated weights are saved to disk. This has no effect when
-            weights are loaded from ``load_dir``.
+            Description not yet provided.
+        save : Any
+            Description not yet provided.
         save_path : Path | str | None
-            Directory in which generated weights are saved. If ``None``, the current
-            experiment directory is used.
+            Description not yet provided.
         save_name : str | None
-            Filename used when saving generated weights. If ``None``,
-            ``"spatial_weights.nc"`` is used.
+            Description not yet provided.
 
         Returns
         -------
-        xr.DataArray
-            Validated weights aligned with the target coordinates and optionally
-            transformed into the flattened target representation.
+        Any
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If loaded coordinates do not match the target coordinates, cosine
-            latitude weighting is requested without a latitude coordinate, variable
-            weights do not exactly match the target channels, or the resulting
-            weights contain negative, NaN, or infinite values.
+            Description not yet provided.
         """
         if self.load_dir is not None:
             weights = xr.open_dataset(Path(self.load_dir))
@@ -148,6 +127,7 @@ class WeightsConfig:
                 weights = weights * latitude_weights
 
             if self.variable_weights is not None:
+
                 if "channels" in target_coords:
                     expected_channels = set(target_coords["channels"].values)
                     provided_channels = set(self.variable_weights.keys())
@@ -161,8 +141,8 @@ class WeightsConfig:
                         if unexpected:
                             msg_parts.append(f"Unexpected weights for: {unexpected}")
                         raise ValueError(
-                            "Variable weights must match target channels exactly. "
-                            + "; ".join(msg_parts)
+                            "Variable weights must match target channels exactly. " +
+                            "; ".join(msg_parts)
                         )
 
                 variable_weights = xr.DataArray(
@@ -175,9 +155,7 @@ class WeightsConfig:
                 weights = variable_weights * weights
 
         if np.any(weights < 0):
-            raise ValueError(
-                f"Weights must be non-negative, found minimum {weights.min()}"
-            )
+            raise ValueError(f"Weights must be non-negative, found minimum {weights.min()}")
         if np.any(np.isnan(weights)):
             raise ValueError("Weights contain NaN values")
         if np.any(np.isinf(weights)):

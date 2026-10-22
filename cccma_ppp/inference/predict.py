@@ -11,15 +11,13 @@ import dacite
 
 def get_parser() -> argparse.ArgumentParser:
     """
-    Build the command-line argument parser for inference.
+    Document this function.
 
     Returns
     -------
     argparse.ArgumentParser
-        Parser configured to accept the path to an inference YAML configuration
-        file.
+        Description not yet provided.
     """
-
     parser = argparse.ArgumentParser(
         description="Run inference from a configuration file"
     )
@@ -35,18 +33,12 @@ def get_parser() -> argparse.ArgumentParser:
 
 def main(yaml_config: str):
     """
-    Run inference from a YAML configuration file.
-
-    Initializes the distributed runtime, loads and constructs the inference
-    configuration, sets a rank-specific random seed, configures logging and
-    runtime directories, builds and initializes the inference writer, and runs
-    prediction. Distributed resources are cleaned up when execution completes or
-    an exception is raised.
+    Document this function.
 
     Parameters
     ----------
     yaml_config : str
-        Path to the YAML file containing the inference configuration.
+        Description not yet provided.
     """
     distributed = Distributed.get_instance()
 

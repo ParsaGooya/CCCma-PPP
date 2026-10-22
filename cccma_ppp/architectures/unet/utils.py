@@ -3,26 +3,17 @@ from cccma_ppp.architectures.layers.conv import TensorMask
 
 def _unet_config_checks(config):
     """
-    Validate configuration values shared by U-Net architectures.
-
-    Checks upsampling kernel sizes, channel dimensions, latent dimensions, mask
-    pooling settings, output-block dimensions, conditional latent settings, and
-    generator sampling configuration when applicable.
+    Document this function.
 
     Parameters
     ----------
     config : Any
-        U-Net configuration object containing the architecture settings to
-        validate.
+        Description not yet provided.
 
     Raises
     ------
     ValueError
-        If an upsampling kernel size is invalid or does not match the number of
-        upsampling stages, a channel or latent dimension is nonpositive, the
-        conditional latent configuration is inconsistent, the mask fraction
-        threshold is outside the interval [0, 1], the output-block hidden size is
-        nonpositive, or the generator training sample count is nonpositive.
+        Description not yet provided.
     """
     channels = config.channels
     transpose_kernel_sizes = config.transpose_kernel_sizes
@@ -37,12 +28,11 @@ def _unet_config_checks(config):
 
         for kernel in config.transpose_kernel_sizes:
             if isinstance(kernel, int):
-                check = kernel > 0 and kernel % 2 != 0
+                check = (kernel > 0 and kernel % 2 != 0)
 
             else:
                 check = len(kernel) == 2 and all(
-                    isinstance(value, int) and value > 0 and value % 2 != 0
-                    for value in kernel
+                    isinstance(value, int) and value > 0 and value % 2 != 0 for value in kernel
                 )
 
             if not check:
@@ -124,20 +114,19 @@ def _repeat_tensor_mask(
     repeats: int,
 ) -> TensorMask:
     """
-    Repeat a tensor and its associated mask along the batch dimension.
+    Document this function.
 
     Parameters
     ----------
     tensor_mask : TensorMask
-        Tensor and optional validity mask to repeat.
+        Description not yet provided.
     repeats : int
-        Number of consecutive repetitions of each batch element.
+        Description not yet provided.
 
     Returns
     -------
     TensorMask
-        Tensor and mask with each batch element repeated ``repeats`` times. If
-        the input mask is ``None``, the returned mask is also ``None``.
+        Description not yet provided.
     """
     return TensorMask(
         tensor=tensor_mask.tensor.repeat_interleave(repeats, dim=0),

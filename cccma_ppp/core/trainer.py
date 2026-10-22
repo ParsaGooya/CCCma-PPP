@@ -22,26 +22,22 @@ from cccma_ppp.loss.kld import BetaAnnealing
 @dataclasses.dataclass
 class TrainerConfig:
     """
-    Configuration for model training.
+    Document this class.
 
     Parameters
     ----------
     beta_finder : BetaAnnealing | None
-        Beta annealing configuration used for cVAE training.
+        Description not yet provided.
     earlystoppingbuffer : float
-        Number of consecutive validation epochs without sufficient improvement
-        allowed before early stopping.
+        Description not yet provided.
     minimum_validation_improvement_percentage : float
-        Minimum fractional improvement in validation loss required for an epoch
-        to be considered improved.
+        Description not yet provided.
     gradient_accumulation_steps : int
-        Number of batches over which gradients are accumulated before an
-        optimizer step.
+        Description not yet provided.
     mixed_precision : bool
-        Whether to enable automatic mixed-precision training.
+        Description not yet provided.
     grad_clip : float | None
-        Maximum gradient norm applied before optimizer updates. If ``None``,
-        gradient clipping is disabled.
+        Description not yet provided.
     """
 
     beta_finder: BetaAnnealing | None = None
@@ -53,12 +49,12 @@ class TrainerConfig:
 
     def __post_init__(self):
         """
-        Validate the trainer configuration.
+        Document this function.
 
         Raises
         ------
         AssertionError
-            If ``grad_clip`` is specified and is not positive.
+            Description not yet provided.
         """
         if self.grad_clip is not None:
             assert self.grad_clip > 0
@@ -72,35 +68,31 @@ class TrainerConfig:
         max_epochs: int,
     ):
         """
-        Build a trainer from this configuration.
-
-        The number of training and validation batches is recorded and beta annealing
-        is initialized when training a cVAE module.
+        Document this function.
 
         Parameters
         ----------
         train_data_loader : Dataloader
-            Data loader used for training.
-        validation_data_loader : Dataloader | None
-            Data loader used for validation. If ``None``, validation is disabled.
+            Description not yet provided.
+        validation_data_loader : Dataloader
+            Description not yet provided.
         optimization : OptimizerWrapper
-            Configured optimizer and optional learning-rate scheduler.
+            Description not yet provided.
         module : moduleABC
-            Module to train.
+            Description not yet provided.
         max_epochs : int
-            Maximum number of training epochs.
+            Description not yet provided.
 
         Returns
         -------
-        Trainer
-            Configured trainer instance.
+        Any
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If a cVAE module is provided without a beta annealing configuration.
+            Description not yet provided.
         """
-
         self.num_train_batches = len(train_data_loader)
         if validation_data_loader is not None:
             self.num_validation_batches = len(validation_data_loader)
@@ -124,26 +116,22 @@ class TrainerConfig:
 
 class Trainer:
     """
-    Manage model training, validation, checkpointing, and early stopping.
-
-    Supports distributed training, mixed precision, gradient accumulation,
-    gradient clipping, metric aggregation, checkpoint resumption, and optional
-    validation-based early stopping.
+    Document this class.
 
     Parameters
     ----------
     config : TrainerConfig
-        Configuration controlling training behavior.
+        Description not yet provided.
     train_data_loader : Dataloader
-        Data loader used for training.
+        Description not yet provided.
     module : moduleABC
-        Module to train.
+        Description not yet provided.
     optimizer : OptimizerWrapper
-        Optimizer and optional learning-rate scheduler used for training.
+        Description not yet provided.
     max_epochs : int
-        Maximum number of training epochs.
+        Description not yet provided.
     validation_data_loader : Dataloader | None
-        Data loader used for validation. If ``None``, validation is disabled.
+        Description not yet provided.
     """
 
     def __init__(
@@ -156,22 +144,22 @@ class Trainer:
         validation_data_loader: Dataloader | None = None,
     ):
         """
-        Initialize a trainer.
+        Document this function.
 
         Parameters
         ----------
         config : TrainerConfig
-            Configuration controlling training behavior.
+            Description not yet provided.
         train_data_loader : Dataloader
-            Data loader used for training.
+            Description not yet provided.
         module : moduleABC
-            Module to train.
+            Description not yet provided.
         optimizer : OptimizerWrapper
-            Optimizer and optional learning-rate scheduler used for training.
+            Description not yet provided.
         max_epochs : int
-            Maximum number of training epochs.
+            Description not yet provided.
         validation_data_loader : Dataloader | None
-            Data loader used for validation. If ``None``, validation is disabled.
+            Description not yet provided.
         """
         self.config = config
         self.optimizer = optimizer
@@ -207,28 +195,23 @@ class Trainer:
         save_checkpoint: bool = True,
     ):
         """
-        Configure the trainer for distributed execution and checkpoint management.
-
-        The module is optionally wrapped for distributed data parallel execution,
-        mixed-precision scaling and metric aggregators are initialized, and an
-        existing best checkpoint is restored when available.
+        Document this function.
 
         Parameters
         ----------
         distributed : Distributed
-            Distributed runtime configuration containing device, rank, and process
-            information.
+            Description not yet provided.
         logger : logging.Logger
-            Logger used for root-process training messages.
+            Description not yet provided.
         log_every_n_epochs : int
-            Number of epochs between metric logging and plot updates.
+            Description not yet provided.
         save_checkpoint : bool
-            Whether checkpoints should be saved during training.
+            Description not yet provided.
 
         Raises
         ------
         RuntimeError
-            If the module is not located on the device assigned to the trainer.
+            Description not yet provided.
         """
         self.save_checkpoint = save_checkpoint
         self.log_every_n_epochs = log_every_n_epochs
@@ -312,17 +295,12 @@ class Trainer:
 
     def train(self):
         """
-        Run the training and validation loop.
-
-        Training proceeds until ``max_epochs`` is reached or early stopping is
-        triggered. Metrics are aggregated across processes, improved checkpoints are
-        saved, and any remaining accumulated gradients are handled after the epoch
-        loop.
+        Document this function.
 
         Raises
         ------
         RuntimeError
-            If distributed trainer setup has not been completed before training.
+            Description not yet provided.
         """
         if not self._setup:
             raise RuntimeError("Call setup_distributed() before predict().")
@@ -443,15 +421,12 @@ class Trainer:
 
     def _train_on_epoch(self):
         """
-        Train the model for one epoch.
-
-        The training data loader is advanced to the current epoch and each batch is
-        processed with the appropriate gradient accumulation size.
+        Document this function.
 
         Returns
         -------
-        float
-            Elapsed training time for the epoch in seconds.
+        Any
+            Description not yet provided.
         """
         self.TrainLoader.set_epoch(self._epochs_trained)
         self.module.train()
@@ -486,25 +461,19 @@ class Trainer:
 
     def _train_on_batch(self, batch, accumulation_size: int):
         """
-        Train the model on a single batch.
-
-        The batch is moved to the trainer device, the loss is computed under optional
-        mixed precision, gradients are accumulated, and an optimizer step is
-        performed when the configured accumulation interval is reached.
+        Document this function.
 
         Parameters
         ----------
         batch : Any
-            Training batch to process.
+            Description not yet provided.
         accumulation_size : int
-            Number of batches represented by the current gradient accumulation
-            interval.
+            Description not yet provided.
 
         Returns
         -------
-        tuple[dict, dict]
-            Dictionary of reported loss values and additional training metrics such
-            as the current beta value.
+        Any
+            Description not yet provided.
         """
         batch.to_device(self.device)
         kwargs = {}
@@ -531,15 +500,12 @@ class Trainer:
     @torch.no_grad()
     def _validate_on_epoch(self):
         """
-        Evaluate the model over the validation data loader.
-
-        Validation losses are computed without gradients and recorded by the
-        validation metric aggregator.
+        Document this function.
 
         Raises
         ------
         RuntimeError
-            If validation is requested without a validation data loader.
+            Description not yet provided.
         """
         if self.ValidationLoader is None:
             raise RuntimeError(
@@ -560,17 +526,17 @@ class Trainer:
     @torch.no_grad()
     def _validate_on_batch(self, batch):
         """
-        Evaluate the model on a single validation batch.
+        Document this function.
 
         Parameters
         ----------
         batch : Any
-            Validation batch to process.
+            Description not yet provided.
 
         Returns
         -------
-        dict
-            Dictionary containing the reported validation loss components.
+        Any
+            Description not yet provided.
         """
         batch.to_device(self.device)
         kwargs = {}
@@ -588,12 +554,7 @@ class Trainer:
 
     def _optimizer_step(self):
         """
-        Perform a mixed-precision-aware optimizer update.
-
-        Gradients are optionally unscaled and clipped before the optimizer step. The
-        learning-rate scheduler and global step are advanced only when the optimizer
-        step is not skipped because of mixed-precision gradient overflow. Gradients
-        are reset after the update attempt.
+        Document this function.
         """
         if self.config.grad_clip is not None:
             self.scaler.unscale_(self.optimizer.optimizer)
@@ -615,21 +576,17 @@ class Trainer:
 
     def _is_improved(self, validation_loss: float | torch.Tensor) -> bool:
         """
-        Determine whether a validation loss sufficiently improves the best loss.
-
-        The required absolute improvement is computed as a configured fraction of
-        the magnitude of the current best validation loss.
+        Document this function.
 
         Parameters
         ----------
         validation_loss : float | torch.Tensor
-            Validation loss to compare with the best recorded value.
+            Description not yet provided.
 
         Returns
         -------
         bool
-            ``True`` if the validation loss improves by at least the configured
-            threshold, otherwise ``False``.
+            Description not yet provided.
         """
         if isinstance(validation_loss, torch.Tensor):
             validation_loss = validation_loss.item()
@@ -646,14 +603,12 @@ class Trainer:
 
     def _should_stop_early(self) -> bool:
         """
-        Determine whether early stopping should be triggered.
+        Document this function.
 
         Returns
         -------
         bool
-            ``True`` when validation is enabled and the number of consecutive epochs
-            without sufficient improvement has reached the configured early-stopping
-            buffer. Otherwise, ``False``.
+            Description not yet provided.
         """
         if self.ValidationLoader is None:
             return False
@@ -668,15 +623,14 @@ class Trainer:
 
     def _log_epoch(self, train_logs, validation_logs=None):
         """
-        Log training progress for the current epoch.
+        Document this function.
 
         Parameters
         ----------
-        train_logs : dict
-            Aggregated training metrics for the epoch.
-        validation_logs : dict | None
-            Aggregated validation metrics for the epoch, or ``None`` when validation
-            is disabled.
+        train_logs : Any
+            Description not yet provided.
+        validation_logs : Any
+            Description not yet provided.
         """
         elapsed_time = time.time() - self.start_time_train
         msg = (
@@ -699,21 +653,16 @@ class Trainer:
         self, name: str, train_logs: dict, validation_logs: dict | None = None
     ):
         """
-        Save the current training state to a checkpoint.
-
-        The checkpoint includes model and optimizer states, mixed-precision scaler
-        state, model configuration, data metadata, training progress, and metric
-        history.
+        Document this function.
 
         Parameters
         ----------
         name : str
-            Name used for the checkpoint file.
+            Description not yet provided.
         train_logs : dict
-            Aggregated training metrics associated with the checkpoint.
+            Description not yet provided.
         validation_logs : dict | None
-            Aggregated validation metrics associated with the checkpoint, or ``None``
-            when validation is disabled.
+            Description not yet provided.
         """
         checkpoint = {
             "epoch": self._epochs_trained,
@@ -743,29 +692,24 @@ class Trainer:
 
     def _load_checkpoint(self, path: str | Path | None = None, strict: bool = True):
         """
-        Restore training state from a checkpoint.
-
-        Model, optimizer, mixed-precision scaler, training counters, best validation
-        loss, early-stopping state, and metric histories are restored when available.
+        Document this function.
 
         Parameters
         ----------
         path : str | Path | None
-            Path to the checkpoint file. If ``None``, the ``best.pt`` checkpoint in
-            the configured checkpoint directory is used.
+            Description not yet provided.
         strict : bool
-            Whether the checkpoint model state must exactly match the current module
-            state.
+            Description not yet provided.
 
         Returns
         -------
-        dict
-            Loaded checkpoint containing the restored training state.
+        Any
+            Description not yet provided.
 
         Raises
         ------
         FileNotFoundError
-            If the requested checkpoint does not exist.
+            Description not yet provided.
         """
         if path is None:
             path = Path(self.checkpoint_dir) / "best.pt"
@@ -820,13 +764,12 @@ class Trainer:
     @property
     def raw_module(self):
         """
-        Return the underlying unwrapped training module.
+        Document this function.
 
         Returns
         -------
-        moduleABC
-            Module wrapped by distributed data parallel execution when applicable,
-            or the original module otherwise.
+        Any
+            Description not yet provided.
         """
         if isinstance(self.module, torch.nn.parallel.DistributedDataParallel):
             return self.module.module
@@ -834,18 +777,16 @@ class Trainer:
 
     def log_root(self, level: int, msg: str, *args):
         """
-        Log a message only from the root process.
-
-        If no logger is configured, the message is printed instead.
+        Document this function.
 
         Parameters
         ----------
         level : int
-            Logging level associated with the message.
+            Description not yet provided.
         msg : str
-            Message to log.
+            Description not yet provided.
         *args : Any
-            Additional positional arguments passed to the configured logger.
+            Description not yet provided.
         """
         if self.is_on_root:
             if self.logger is not None:
@@ -856,10 +797,7 @@ class Trainer:
 
 def clear_memory():
     """
-    Release unused Python and CUDA memory.
-
-    Runs garbage collection and, when CUDA is available, clears the CUDA memory
-    cache and interprocess communication cache.
+    Document this function.
     """
     gc.collect()
 

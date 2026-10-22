@@ -32,26 +32,20 @@ from cccma_ppp.configs import lead_time_resolution
 @dataclasses.dataclass
 class TrainDatasetConfig(DatasetConfigABC):
     """
-    Configuration for a training dataset.
-
-    Defines the model input data, optional observation targets, optional
-    conditioning data, conditioning strategy, and lead times used to construct
-    training and validation samples.
+    Document this class.
 
     Parameters
     ----------
     model : ModelDataConfig
-        Model data configuration used to construct model inputs.
+        Description not yet provided.
     observation : ObsDataConfig | None
-        Observation data configuration used as the prediction target. If ``None``,
-        model data are used as the target.
+        Description not yet provided.
     condition : ConditionDataConfig | None
-        Optional conditioning data configuration.
-    condition_method : str | None
-        Method used to construct conditioning samples.
+        Description not yet provided.
+    condition_method : str
+        Description not yet provided.
     lead_times : lead_time_config | None
-        Lead times included in dataset samples. If ``None``, all available input
-        lead times are used.
+        Description not yet provided.
     """
 
     model: ModelDataConfig
@@ -62,40 +56,30 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     def __post_init__(self):
         """
-        Initialize and validate the training dataset configuration.
-
-        Resolves the common dataset configuration and then validates compatibility
-        between model and observation data.
+        Document this function.
         """
-
         super().__init__()
 
         self._check_observation()
 
     def _check_observation(self):
         """
-        Validate observation data against the model configuration.
-
-        Checks temporal representation compatibility and reports differences between
-        model and observation neural-network coordinates. When no observation target
-        is configured, a conditioning method is required.
+        Document this function.
 
         Returns
         -------
-        TrainDatasetConfig
-            This configuration instance after validation.
+        Any
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If model and observation data use different datetime representations, or
-            if no observation target and no conditioning method are configured.
+            Description not yet provided.
 
         Warns
         -----
         UserWarning
-            If model and observation data have inconsistent neural-network dimensions
-            or coordinates.
+            Description not yet provided.
         """
         if self.observation is not None:
             for dim in [
@@ -138,40 +122,36 @@ class TrainDatasetConfig(DatasetConfigABC):
     @property
     def effective_input(self):
         """
-        Return the data configuration used as the primary training input.
+        Document this function.
 
         Returns
         -------
-        ModelDataConfig
-            Model data configuration.
+        Any
+            Description not yet provided.
         """
         return self.model
 
     @property
     def ds_operator(self):
         """
-        Return an operator for this dataset configuration.
+        Document this function.
 
         Returns
         -------
-        DatasetOperator
-            Dataset operator providing preprocessing, weighting, and metadata operations
+        Any
+            Description not yet provided.
         """
         return DatasetOperator(self)
 
     @property
     def get_common_time(self):
         """
-        Return the temporal range common to model and target data.
-
-        When observations are unavailable, the complete model temporal range is
-        returned. Otherwise, the intersection of model and observation temporal
-        ranges is used.
+        Document this function.
 
         Returns
         -------
         Any
-            Temporal range available to both model inputs and training targets.
+            Description not yet provided.
         """
         if self.observation is None:
             return self.model.time_range
@@ -182,19 +162,13 @@ class TrainDatasetConfig(DatasetConfigABC):
     @property
     def available_times(self):
         """
-        Return initialization times available for training samples.
-
-        Available times are restricted to the temporal coverage shared by model and
-        target data. The comparison accounts for the initialization-time frequency
-        and lead-time resolution.
+        Document this function.
 
         Returns
         -------
         Any
-            Initialization times that can be used to construct valid training
-            samples.
+            Description not yet provided.
         """
-
         model_times = self.model.coords[self.init_time_dim].to_index()
         common_times = self.get_common_time
         time_freq = self.model.init_time_frequency
@@ -204,9 +178,10 @@ class TrainDatasetConfig(DatasetConfigABC):
             max_year = model_times.year.max()
 
             return common_times[
-                (common_times.year >= min_year) & (common_times.year <= max_year)
+                (common_times.year >= min_year)
+                & (common_times.year <= max_year)
             ]
-
+        
         elif time_freq == "month" and self.lead_time_resolution == "day":
             min_time = model_times.min()
             max_time = model_times.max()
@@ -214,14 +189,19 @@ class TrainDatasetConfig(DatasetConfigABC):
             min_month = min_time.year * 12 + min_time.month
             max_month = max_time.year * 12 + max_time.month
 
-            common_months = common_times.year * 12 + common_times.month
+            common_months = (
+                common_times.year * 12
+                + common_times.month
+            )
 
             return common_times[
-                (common_months >= min_month) & (common_months <= max_month)
+                (common_months >= min_month)
+                & (common_months <= max_month)
             ]
 
         return common_times[
-            (common_times >= model_times.min()) & (common_times <= model_times.max())
+            (common_times >= model_times.min())
+            & (common_times <= model_times.max())
         ]
 
     def fit_preprocessors(
@@ -237,18 +217,18 @@ class TrainDatasetConfig(DatasetConfigABC):
         save_name: str | None = None,
     ):
         """
-        Fit preprocessing pipelines using the selected training times.
+        Document this function.
 
         Parameters
         ----------
         train_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray | slice
-            Initialization times used to fit the preprocessing pipelines.
+            Description not yet provided.
         save : bool
-            Whether to save the fitted preprocessing pipelines.
+            Description not yet provided.
         save_path : str | Path | None
-            Directory in which fitted preprocessing pipelines are saved.
+            Description not yet provided.
         save_name : str | None
-            Name used when saving fitted preprocessing pipelines.
+            Description not yet provided.
         """
         self.ds_operator.fit_preprocessors(
             train_times=train_times,
@@ -259,26 +239,25 @@ class TrainDatasetConfig(DatasetConfigABC):
 
     def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         """
-        Load fitted preprocessing pipelines for the training data sources.
+        Document this function.
 
         Parameters
         ----------
         load_dir : Path | str | None
-            Directory containing the saved preprocessing pipelines. If ``None``, the
-            default preprocessing directory is used.
+            Description not yet provided.
         """
         self.ds_operator.load_fitted_preprocessors(load_dir)
 
     def add_fitted_preprocessor(self, preprocessor, index=0):
         """
-        Add a fitted preprocessing module to the active data pipelines.
+        Document this function.
 
         Parameters
         ----------
         preprocessor : Any
-            Fitted preprocessing module to add.
-        index : int
-            Position at which the preprocessing module is inserted.
+            Description not yet provided.
+        index : Any
+            Description not yet provided.
         """
         self.ds_operator.add_fitted_preprocessor(preprocessor, index)
 
@@ -295,25 +274,25 @@ class TrainDatasetConfig(DatasetConfigABC):
         load: bool = False,
     ):
         """
-        Build a training dataset from this configuration.
+        Document this function.
 
         Parameters
         ----------
         times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
-            Initialization times included in the dataset.
+            Description not yet provided.
         time_features : AddedTimeFeatures
-            Temporal feature generator applied to dataset samples.
+            Description not yet provided.
         mask : xr.DataArray | None
-            Optional mask identifying unavailable or excluded sample combinations.
+            Description not yet provided.
         return_metadata : bool
-            Whether each sample is returned with its sampling-coordinate metadata.
+            Description not yet provided.
         load : bool
-            Whether underlying xarray data are loaded into memory when opened.
+            Description not yet provided.
 
         Returns
         -------
-        TrainDataset
-            Constructed training dataset.
+        Any
+            Description not yet provided.
         """
         return TrainDataset(
             config=self,
@@ -328,26 +307,22 @@ class TrainDatasetConfig(DatasetConfigABC):
 @dataclasses.dataclass
 class TrainDataset(DatasetABC):
     """
-    Dataset for constructing training samples and targets.
-
-    Samples are assembled from model, observation, and conditioning data according
-    to the configured conditioning strategy. Temporal features and optional
-    sampling metadata can also be returned.
+    Document this class.
 
     Parameters
     ----------
     config : TrainDatasetConfig
-        Configuration defining training data sources and sampling behavior.
+        Description not yet provided.
     requested_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
-        Initialization times requested for dataset sampling.
+        Description not yet provided.
     time_features : AddedTimeFeatures
-        Temporal feature generator applied to samples.
+        Description not yet provided.
     mask : xr.DataArray | None
-        Optional mask identifying unavailable or excluded sample combinations.
+        Description not yet provided.
     return_metadata : bool
-        Whether each sample is returned with its sampling-coordinate metadata.
+        Description not yet provided.
     load : bool
-        Whether underlying xarray data are loaded into memory when opened.
+        Description not yet provided.
     """
 
     config: TrainDatasetConfig
@@ -363,10 +338,7 @@ class TrainDataset(DatasetABC):
 
     def __post_init__(self):
         """
-        Initialize the training dataset.
-
-        Initializes the common sampling state, opens observation data when configured,
-        and maps sample coordinates to positional indexes in the observation dataset.
+        Document this function.
         """
         super().__init__()
 
@@ -380,25 +352,24 @@ class TrainDataset(DatasetABC):
     @property
     def _autoencoding_model_data(self):
         """
-        Indicate whether model data are used as the training target.
+        Document this function.
 
         Returns
         -------
-        bool
-            ``True`` when no observation dataset is configured, otherwise ``False``.
+        Any
+            Description not yet provided.
         """
         return self.config.observation is None
 
     @property
     def _load_model(self):
         """
-        Indicate whether model data must be loaded separately.
+        Document this function.
 
         Returns
         -------
-        bool
-            ``True`` when model data are needed as an autoencoding target or are not
-            being reused as the conditioning source.
+        Any
+            Description not yet provided.
         """
         return any(
             [
@@ -410,13 +381,12 @@ class TrainDataset(DatasetABC):
     @property
     def _write_condition_to_input(self):
         """
-        Indicate whether conditioning data are used directly as the model input.
+        Document this function.
 
         Returns
         -------
-        bool
-            ``True`` when model data are used as conditioning data or when the
-            dataset is training on model data without observation targets.
+        Any
+            Description not yet provided.
         """
         if self.config._using_model_data_as_condition:
             return True
@@ -429,13 +399,12 @@ class TrainDataset(DatasetABC):
     @property
     def _concat_condition_to_input(self):
         """
-        Indicate whether conditioning data are concatenated with model inputs.
+        Document this function.
 
         Returns
         -------
-        bool
-            ``True`` when model data remain the primary input and a separate effective
-            conditioning dataset is configured.
+        Any
+            Description not yet provided.
         """
         return (
             self._write_condition_to_input is False
@@ -447,27 +416,22 @@ class TrainDataset(DatasetABC):
         sample_coords: dict[str, np.ndarray],
     ) -> dict[str, np.ndarray] | None:
         """
-        Map sample coordinates to positional indexes in the observation dataset.
-
-        Observation times are calculated by applying each sample's lead time to its
-        model initialization time.
+        Document this function.
 
         Parameters
         ----------
         sample_coords : dict[str, np.ndarray]
-            Sampling coordinates containing initialization and lead times.
+            Description not yet provided.
 
         Returns
         -------
         dict[str, np.ndarray] | None
-            Positional indexes into the observation dataset, or ``None`` when no
-            observation data are configured.
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If one or more calculated observation times cannot be found in the
-            observation dataset.
+            Description not yet provided.
         """
         if self.config.observation is None:
             return None
@@ -506,27 +470,22 @@ class TrainDataset(DatasetABC):
 
     def get_target_shape(self):
         """
-        Determine the shape of a training target sample.
-
-        Observation dimensions are used when observation targets are configured. If
-        the observation preprocessing pipeline contains a flattener, its retained
-        locations define the non-channel target size. Otherwise, supported
-        neural-network dimensions determine the target shape. For autoencoding,
-        the input shape is returned.
+        Document this function.
 
         Returns
         -------
-        tuple
-            Target shape excluding the batch dimension.
+        Any
+            Description not yet provided.
         """
         if self.config.observation is not None:
+
             len_names = len(self.config.observation.names)
 
             if self.config.observation.preprocessing_pipeline.has_flattener:
-                flattener = (
-                    self.config.observation.preprocessing_pipeline.get_flattener()
+                flattener = self.config.observation.preprocessing_pipeline.get_flattener()
+                out_shape = (
+                    flattener.final_locations.shape
                 )
-                out_shape = flattener.final_locations.shape
 
             else:
                 out_shape = tuple(
@@ -542,21 +501,17 @@ class TrainDataset(DatasetABC):
 
     def _index_observation_dataset(self, ind: int) -> xr.DataArray | None:
         """
-        Retrieve observation data for a sample.
-
-        When observations retain individual ensemble realizations, one realization is
-        selected randomly for the sample.
+        Document this function.
 
         Parameters
         ----------
         ind : int
-            Sample index to retrieve.
+            Description not yet provided.
 
         Returns
         -------
         xr.DataArray | None
-            Selected and preprocessed observation variables, or ``None`` when no
-            observation data are configured.
+            Description not yet provided.
         """
         if self.config.observation is None:
             return None
@@ -579,23 +534,17 @@ class TrainDataset(DatasetABC):
 
     def __getitem__(self, ind):
         """
-        Return a training sample.
-
-        Model, observation, and conditioning data are indexed for the requested
-        sample. The target and input are then resolved according to autoencoding and
-        conditioning behavior, and configured temporal features are added.
+        Document this function.
 
         Parameters
         ----------
-        ind : int
-            Index of the training sample to retrieve.
+        ind : Any
+            Description not yet provided.
 
         Returns
         -------
-        dict | tuple[dict, dict]
-            Dictionary containing input, target, and optional additional feature
-            tensors. When metadata are enabled, the sample dictionary is returned
-            together with its sampling coordinates.
+        Any
+            Description not yet provided.
         """
         selection = {dim: value[ind] for dim, value in self.sample_coords.items()}
 

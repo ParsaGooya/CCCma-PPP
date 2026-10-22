@@ -8,15 +8,14 @@ from cccma_ppp.preprocessing.registery import Registery
 @dataclasses.dataclass
 class PreprocessingStepSelector:
     """
-    Select and configure a registered preprocessing step.
+    Document this class.
 
     Parameters
     ----------
     name : str
-        Name of the registered preprocessing step.
+        Description not yet provided.
     args : dict[str, object] | None
-        Arguments used to construct the preprocessing module. If ``None``, the
-        module is constructed without arguments.
+        Description not yet provided.
     """
 
     name: str
@@ -24,21 +23,6 @@ class PreprocessingStepSelector:
     registery: ClassVar[Registery] = Registery()
 
     def __post_init__(self):
-        """
-        Validate and normalize the preprocessing step configuration.
-
-        The step name is converted to lowercase and checked against the preprocessing
-        registry.
-
-        Raises
-        ------
-        TypeError
-            If ``name`` is not a string or ``args`` is neither a dictionary nor
-            ``None``.
-        ValueError
-            If ``name`` is empty or does not correspond to a registered preprocessing
-            step.
-        """
         if self.args is not None and not isinstance(self.args, dict):
             raise TypeError(
                 f"Args must be dict or None, got {type(self.args).__name__}. "
@@ -46,7 +30,9 @@ class PreprocessingStepSelector:
             )
 
         if not isinstance(self.name, str):
-            raise TypeError(f"Step name must be string, got {type(self.name)}.")
+            raise TypeError(
+                f"Step name must be string, got {type(self.name)}."
+            )
 
         if not self.name:
             raise ValueError("Step name cannot be empty.")
@@ -60,43 +46,43 @@ class PreprocessingStepSelector:
                 f"Available: {available}"
             )
 
+
     def get_preprocessor(self):
         """
-        Construct the selected preprocessing module.
+        Document this function.
 
         Returns
         -------
-        PreprocessModuleABC
-            Preprocessing module constructed from the registered class and configured
-            arguments.
+        Any
+            Description not yet provided.
         """
         return self.registery.get(self.name, self.args)
 
     @classmethod
     def register(cls, name: str) -> Callable[..., PreprocessModuleABC]:
         """
-        Create a decorator that registers a preprocessing module.
+        Document this function.
 
         Parameters
         ----------
         name : str
-            Name under which the preprocessing module is registered.
+            Description not yet provided.
 
         Returns
         -------
         Callable[..., PreprocessModuleABC]
-            Decorator used to register the preprocessing module class.
+            Description not yet provided.
         """
         return cls.registery.register(name.lower())
 
     @classmethod
     def available(cls):
         """
-        Return the names of all registered preprocessing steps.
+        Document this function.
 
         Returns
         -------
-        list[str]
-            Names of preprocessing steps available through the selector.
+        Any
+            Description not yet provided.
         """
         return cls.registery.available()

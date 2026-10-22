@@ -23,24 +23,24 @@ from cccma_ppp.generic.runtime import RuntimeContext
 @dataclasses.dataclass
 class cVAEOutput(OutputABC):
     """
-    Container for outputs produced by a conditional variational autoencoder.
+    Document this class.
 
     Parameters
     ----------
     output : torch.Tensor
-        Generated or reconstructed model output.
+        Description not yet provided.
     mu : torch.Tensor | None
-        Mean of the posterior latent distribution.
+        Description not yet provided.
     log_var : torch.Tensor | None
-        Log-variance of the posterior latent distribution.
+        Description not yet provided.
     samples : torch.Tensor | None
-        Latent samples used to generate the output.
+        Description not yet provided.
     cond_mu : torch.Tensor | None
-        Mean or embedding of the conditional latent representation.
+        Description not yet provided.
     cond_log_var : torch.Tensor | None
-        Log-variance of the conditional latent distribution when applicable.
+        Description not yet provided.
     deterministic_guess : bool
-        Whether the output represents only the deterministic guess branch.
+        Description not yet provided.
     """
 
     output: torch.Tensor
@@ -56,25 +56,20 @@ class cVAEOutput(OutputABC):
 @dataclasses.dataclass
 class cVAEConfig(moduleConfigABC):
     """
-    Configuration for a conditional variational autoencoder module.
+    Document this class.
 
     Parameters
     ----------
     ModelConfig : cVAEModelSelector | None
-        Selector defining the underlying cVAE architecture. Required when a
-        checkpoint directory is not provided.
+        Description not yet provided.
     posterior_variance_limits : list[float | None, float | None] | tuple[float | None, float | None] | None
-        Optional lower and upper bounds for posterior variance. Each bound may be
-        ``None`` to leave that side unbounded.
+        Description not yet provided.
     prior_flow_config : NormalizedFlowConfig | None
-        Optional normalizing flow configuration used to transform the latent
-        prior.
-    combined_CGCN_weight : float | None
-        Weight assigned to the prediction reconstruction loss when combining it
-        with the standard cVAE training objective.
+        Description not yet provided.
+    combined_CGCN_weight : float
+        Description not yet provided.
     load_dir : str | None
-        Path to a saved module from which model and prior-flow configurations are
-        restored.
+        Description not yet provided.
     """
 
     ModelConfig: cVAEModelSelector | None = None
@@ -87,24 +82,19 @@ class cVAEConfig(moduleConfigABC):
 
     def __post_init__(self):
         """
-        Resolve and validate the cVAE module configuration.
-
-        When ``load_dir`` is provided, saved model and prior-flow configurations are
-        restored from the checkpoint. Flow settings are then propagated to the model
-        configuration.
+        Document this function.
 
         Raises
         ------
         AssertionError
-            If ``combined_CGCN_weight`` is outside the interval [0, 1].
+            Description not yet provided.
         ValueError
-            If neither a model configuration nor a checkpoint directory is provided.
+            Description not yet provided.
 
         Warns
         -----
         UserWarning
-            If model and prior-flow configurations are restored from ``load_dir`` and
-            overwrite the provided configuration.
+            Description not yet provided.
         """
         self.condition_dependant_flow = False
 
@@ -141,22 +131,21 @@ class cVAEConfig(moduleConfigABC):
         added_features_dim: int = None,
     ):
         """
-        Build a conditional variational autoencoder module.
+        Document this function.
 
         Parameters
         ----------
         input_shape : np.ndarray | tuple
-            Shape of the conditioning input excluding the batch dimension.
+            Description not yet provided.
         output_shape : np.ndarray | tuple | None
-            Shape of the model output excluding the batch dimension. If ``None``,
-            ``input_shape`` is used.
-        added_features_dim : int | None
-            Number of additional features supplied to the model.
+            Description not yet provided.
+        added_features_dim : int
+            Description not yet provided.
 
         Returns
         -------
-        cVAE
-            Constructed conditional variational autoencoder module.
+        Any
+            Description not yet provided.
         """
         return cVAE(
             config=self,
@@ -167,21 +156,17 @@ class cVAEConfig(moduleConfigABC):
 
     def _load_from_checkpoint(self, load_path: Path | str):
         """
-        Restore module configuration from a saved checkpoint.
-
-        The model selector and prior-flow configuration are reconstructed from the
-        saved module configuration. Posterior variance limits and the combined loss
-        weight are restored when they have not been explicitly configured.
+        Document this function.
 
         Parameters
         ----------
         load_path : Path | str
-            Path to the saved checkpoint.
+            Description not yet provided.
 
         Returns
         -------
-        cVAEConfig
-            This configuration instance populated with the saved settings.
+        Any
+            Description not yet provided.
         """
         checkpoint_module, checkpoint_config = _load_config_from_checkpoint(
             Path(load_path)
@@ -214,24 +199,18 @@ class cVAEConfig(moduleConfigABC):
 
 class cVAE(moduleABC):
     """
-    Conditional variational autoencoder training and inference module.
-
-    The module builds the selected cVAE architecture, optionally constructs a
-    normalizing flow for the latent prior, and manages reconstruction and
-    Kullback-Leibler divergence losses.
+    Document this class.
 
     Parameters
     ----------
     config : cVAEConfig
-        Configuration defining the cVAE architecture, latent prior, checkpoint,
-        and training objective.
+        Description not yet provided.
     input_shape : np.ndarray
-        Shape of the conditioning input excluding the batch dimension.
+        Description not yet provided.
     output_shape : np.ndarray | None
-        Shape of the model output excluding the batch dimension. If ``None``,
-        ``input_shape`` is used.
-    added_features_dim : int | None
-        Number of additional features supplied to the model.
+        Description not yet provided.
+    added_features_dim : int
+        Description not yet provided.
     """
 
     def __init__(
@@ -242,29 +221,25 @@ class cVAE(moduleABC):
         added_features_dim: int = None,
     ):
         """
-        Initialize a conditional variational autoencoder module.
+        Document this function.
 
         Parameters
         ----------
         config : cVAEConfig
-            Configuration defining the model architecture, latent prior, checkpoint,
-            and training settings.
+            Description not yet provided.
         input_shape : np.ndarray
-            Shape of the conditioning input excluding the batch dimension.
+            Description not yet provided.
         output_shape : np.ndarray | None
-            Shape of the model output excluding the batch dimension. If ``None``,
-            ``input_shape`` is used.
-        added_features_dim : int | None
-            Number of additional features supplied to the model.
+            Description not yet provided.
+        added_features_dim : int
+            Description not yet provided.
 
         Raises
         ------
         AssertionError
-            If a configured posterior variance limit is nonpositive.
+            Description not yet provided.
         RuntimeError
-            If checkpoint input or output metadata is incompatible with the current
-            runtime configuration, or if the requested input or output shape differs
-            from that associated with the checkpoint.
+            Description not yet provided.
         """
         super().__init__()
         self.config = config
@@ -353,19 +328,17 @@ class cVAE(moduleABC):
 
     def init_loss_function(self, reconstruction_loss: Losspipeline):
         """
-        Initialize the reconstruction and Kullback-Leibler divergence losses.
+        Document this function.
 
         Parameters
         ----------
         reconstruction_loss : Losspipeline
-            Reconstruction loss pipeline used to compare generated outputs with
-            targets.
+            Description not yet provided.
 
         Raises
         ------
         RuntimeError
-            If a normalizing flow is configured and the reconstruction loss does not
-            use sum reduction.
+            Description not yet provided.
         """
         if self.prior_flow_config is not None:
             if reconstruction_loss.reduction.lower() != "sum":
@@ -378,31 +351,24 @@ class cVAE(moduleABC):
 
     def _compute_loss(self, beta: float, data: BatchData):
         """
-        Compute the cVAE training objective for a batch.
-
-        The objective combines reconstruction loss with a beta-weighted
-        Kullback-Leibler divergence. When configured, it is additionally combined
-        with a reconstruction loss obtained from prediction.
+        Document this function.
 
         Parameters
         ----------
         beta : float
-            Weight applied to the Kullback-Leibler divergence term.
+            Description not yet provided.
         data : BatchData
-            Batch containing targets, conditioning inputs, masks, and optional
-            additional features.
+            Description not yet provided.
 
         Returns
         -------
-        tuple[torch.Tensor, dict]
-            Total differentiable loss and a dictionary containing scalar loss
-            components for reporting.
+        Any
+            Description not yet provided.
 
         Raises
         ------
         RuntimeError
-            If the reconstruction loss has not been initialized before computing the
-            training objective.
+            Description not yet provided.
         """
         if self.criterion is None:
             raise RuntimeError(
@@ -464,25 +430,19 @@ class cVAE(moduleABC):
 
     def forward(self, data: BatchData, latent_sample_size=1) -> cVAEOutput:
         """
-        Perform a cVAE forward pass for a batch.
-
-        During evaluation, generator-enabled models use the configured number of
-        validation noise samples. During training, the underlying model controls its
-        configured generator sampling behavior.
+        Document this function.
 
         Parameters
         ----------
         data : BatchData
-            Batch containing targets, conditioning inputs, masks, and optional
-            additional features.
-        latent_sample_size : int
-            Number of posterior latent samples to draw for each batch element.
+            Description not yet provided.
+        latent_sample_size : Any
+            Description not yet provided.
 
         Returns
         -------
         cVAEOutput
-            Generated outputs together with posterior latent parameters, latent
-            samples, and conditional latent information.
+            Description not yet provided.
         """
         generator = self.model_config.GENERATOR
         output_sample_size = 1
@@ -509,37 +469,28 @@ class cVAE(moduleABC):
         nstds: int = 1,
         latent_samples: torch.Tensor = None,
         output_sample_size: int = 1,
-        chunk_size: int | None = None,
+        chunk_size: int | None = None
     ) -> cVAEOutput:
         """
-        Generate predictions by sampling from the cVAE prior.
-
-        User-provided latent samples may be supplied instead of sampling from the
-        prior. Generator-enabled models can produce multiple stochastic outputs for
-        each latent sample.
+        Document this function.
 
         Parameters
         ----------
         data : BatchData
-            Batch containing conditioning inputs, masks, and optional additional
-            features.
+            Description not yet provided.
         latent_sample_size : int
-            Number of latent samples used for each conditioning input.
+            Description not yet provided.
         nstds : int
-            Scale factor applied to the standard deviation of prior sampling.
-        latent_samples : torch.Tensor | None
-            Optional user-provided latent samples. If ``None``, latent values are
-            sampled from the configured prior.
+            Description not yet provided.
+        latent_samples : torch.Tensor
+            Description not yet provided.
         output_sample_size : int
-            Number of stochastic outputs requested for each latent sample.
-        chunk_size : int | None
-            Maximum number of latent samples processed together during chunked
-            generation.
+            Description not yet provided.
 
         Returns
         -------
         cVAEOutput
-            Generated predictions and associated conditional latent information.
+            Description not yet provided.
         """
         generator = self.model_config.GENERATOR
         if self.training and generator is not None:

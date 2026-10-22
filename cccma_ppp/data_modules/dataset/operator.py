@@ -14,39 +14,34 @@ from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 
 class DatasetOperator:
     """
-    Provide shared operations for a configured dataset.
-
-    The operator manages preprocessing pipelines, variable metadata, and spatial
-    weights for the data sources associated with a dataset configuration.
+    Document this class.
 
     Parameters
     ----------
     config : DatasetConfigABC
-        Dataset configuration containing the model, conditioning, and optional
-        observation data sources.
+        Description not yet provided.
     """
 
     def __init__(self, config: DatasetConfigABC):
         """
-        Initialize a dataset operator.
+        Document this function.
 
         Parameters
         ----------
         config : DatasetConfigABC
-            Dataset configuration on which operations are performed.
+            Description not yet provided.
         """
         self.config = config
 
     @property
     def config_observation(self):
         """
-        Return the configured observation data when available.
+        Document this function.
 
         Returns
         -------
-        DataConfigABC | None
-            Observation data configuration, or ``None`` when the dataset
-            configuration does not define observation data.
+        Any
+            Description not yet provided.
         """
         if hasattr(self.config, "observation"):
             return self.config.observation
@@ -63,35 +58,32 @@ class DatasetOperator:
         save_name: str | None = None,
     ):
         """
-        Fit preprocessing pipelines using the requested training times.
-
-        Model, observation, and effective conditioning preprocessors are fitted when
-        their corresponding data sources are available. Temporal, lead-time, and
-        realization selections are constructed as required by each data source.
+        Document this function.
 
         Parameters
         ----------
         train_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
-            Initialization times used to fit the preprocessing pipelines.
-        save : bool
-            Whether to save fitted preprocessing pipelines.
+            Description not yet provided.
+        save : Any
+            Description not yet provided.
         save_path : Path | str | None
-            Directory in which fitted preprocessing pipelines are saved.
+            Description not yet provided.
         save_name : str | None
-            Name used when saving fitted preprocessing pipelines.
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If the training-time sequence is invalid or contains times unavailable
-            from the dataset configuration.
+            Description not yet provided.
         """
 
         train_times_array = np.asarray(train_times)
 
         _validate_time_sequence(train_times)
 
-        missing = [t for t in train_times_array if t not in self.config.available_times]
+        missing = [
+            t for t in train_times_array if t not in self.config.available_times
+        ]
 
         if missing:
             raise ValueError(f"The following train_times are unavailable: {missing}")
@@ -164,13 +156,12 @@ class DatasetOperator:
 
     def load_fitted_preprocessors(self, load_dir: Path | str | None = None):
         """
-        Load fitted preprocessing pipelines for all active data sources.
+        Document this function.
 
         Parameters
         ----------
         load_dir : Path | str | None
-            Directory containing saved preprocessing pipelines. If ``None``, each
-            data configuration uses its default preprocessing-pipeline location.
+            Description not yet provided.
         """
         if self.config.model is not None:
             self.config.model.load_preprocessor_pipeline(load_dir)
@@ -185,29 +176,28 @@ class DatasetOperator:
 
     def add_fitted_preprocessor(self, preprocessor: PreprocessModuleABC, index=0):
         """
-        Add a fitted preprocessing module to all active preprocessing pipelines.
+        Document this function.
 
         Parameters
         ----------
         preprocessor : PreprocessModuleABC
-            Fitted preprocessing module to add.
-        index : int
-            Position at which the preprocessing module is inserted into each
-            pipeline.
+            Description not yet provided.
+        index : Any
+            Description not yet provided.
 
         Raises
         ------
+        AssertionError
+            Description not yet provided.
         TypeError
-            If ``preprocessor`` is not an instance of ``PreprocessModuleABC``.
-        ValueError
-            If ``preprocessor`` has not been fitted.
+            Description not yet provided.
         """
         if not isinstance(preprocessor, PreprocessModuleABC):
             raise TypeError(
                 f"preprocessor must be an instance of PreprocessModuleABC, "
                 f"got {type(preprocessor)}"
             )
-
+        
         if not preprocessor.fitted:
             raise ValueError("The preprocessor must be fitted before adding.")
 
@@ -232,37 +222,30 @@ class DatasetOperator:
         save_name: str | None = None,
     ) -> xr.DataArray:
         """
-        Build spatial or variable weights for the dataset target.
-
-        Observation data are used as the reference when available; otherwise model
-        data are used. If the reference preprocessing pipeline contains a flattener,
-        it is supplied when constructing the weights.
+        Document this function.
 
         Parameters
         ----------
         config : WeightsConfig | None
-            Configuration used to construct the weights. If ``None``, a default
-            configuration is created.
+            Description not yet provided.
         save : bool
-            Whether to save the generated weights.
+            Description not yet provided.
         save_path : Path | str | None
-            Directory in which generated weights are saved.
+            Description not yet provided.
         save_name : str | None
-            Name used when saving generated weights.
+            Description not yet provided.
 
         Returns
         -------
         xr.DataArray
-            Generated weights aligned with the target dimensions and variables.
+            Description not yet provided.
 
         Raises
         ------
         RuntimeError
-            If channel-specific weights do not correspond to the target variable
-            names.
+            Description not yet provided.
         ValueError
-            If neither model nor observation data are available as a weighting
-            reference.
+            Description not yet provided.
         """
         if config is None:
             config = WeightsConfig()
@@ -305,17 +288,12 @@ class DatasetOperator:
 
     def get_input_var_metadata(self) -> dict:
         """
-        Build metadata describing model input variables and preprocessing.
-
-        Metadata are collected from the data sources contributing to the effective
-        model input and include variable names, preprocessing operations, and
-        neural-network dimensions.
+        Document this function.
 
         Returns
         -------
         dict
-            Input metadata containing variable names, preprocessing operations, and
-            neural-network dimension names.
+            Description not yet provided.
         """
         metadata = dict(variables=list(), preprocessors=list())
         NN_dims = []
@@ -333,7 +311,9 @@ class DatasetOperator:
                 NN_dims.append(dim)
 
         else:
+            
             if not self.config._using_model_data_as_condition:
+                
                 metadata = self._update_metadata_with_dataconfig_metadata(
                     metadata, self.config.model
                 )
@@ -358,22 +338,17 @@ class DatasetOperator:
 
     def get_target_var_metadata(self):
         """
-        Build metadata describing target variables and preprocessing.
-
-        Observation data are used when available; otherwise model data are used as
-        the target reference.
+        Document this function.
 
         Returns
         -------
-        dict
-            Target metadata containing variable names, preprocessing operations, and
-            neural-network dimension names.
+        Any
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If neither observation nor model data are available for constructing
-            target metadata.
+            Description not yet provided.
         """
         metadata = dict(variables=list(), preprocessors=list())
         NN_dims = []
@@ -416,22 +391,19 @@ class DatasetOperator:
         self, metadata: dict, dataconfig: DataConfigABC
     ):
         """
-        Append metadata from a data configuration.
-
-        Each configured variable is added together with the names of the preprocessing
-        operations applied by its preprocessing pipeline.
+        Document this function.
 
         Parameters
         ----------
         metadata : dict
-            Metadata dictionary to update.
+            Description not yet provided.
         dataconfig : DataConfigABC
-            Data configuration whose variable and preprocessing metadata are added.
+            Description not yet provided.
 
         Returns
         -------
-        dict
-            Updated metadata dictionary.
+        Any
+            Description not yet provided.
         """
         preprocessor_names = [
             processor[0].lower()
@@ -445,47 +417,32 @@ class DatasetOperator:
 
     @property
     def _fitted_preprocessors(self) -> bool:
-        """
-        Check whether all active preprocessing pipelines are fitted.
-
-        Returns
-        -------
-        bool
-            ``True`` if every active model, observation, and conditioning
-            preprocessing pipeline is fitted. Returns ``False`` when no pipelines are
-            active or at least one active pipeline is not fitted.
-        """
+        """Check if all active pipelines are fitted."""
         pipelines = []
         if self.config.model is not None:
             pipelines.append(self.config.model.preprocessing_pipeline.fitted)
         if self.config_observation is not None:
             pipelines.append(self.config_observation.preprocessing_pipeline.fitted)
         if self.config.effective_condition is not None:
-            pipelines.append(
-                self.config.effective_condition.preprocessing_pipeline.fitted
-            )
+            pipelines.append(self.config.effective_condition.preprocessing_pipeline.fitted)
 
         return all(pipelines) if pipelines else False
 
 
+
 def _build_chunks(config: DataConfigABC | None = None):
     """
-    Build chunk sizes for dataset sampling dimensions.
-
-    Initialization time, lead time, and realization dimensions present in the
-    configured data are assigned a chunk size of one.
+    Document this function.
 
     Parameters
     ----------
     config : DataConfigABC | None
-        Data configuration whose sampling dimensions are used to construct chunk
-        sizes.
+        Description not yet provided.
 
     Returns
     -------
-    dict[str, int] | None
-        Mapping from available sampling dimensions to a chunk size of one, or
-        ``None`` if no data configuration is provided.
+    Any
+        Description not yet provided.
     """
     if config is None:
         return

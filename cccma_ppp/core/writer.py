@@ -30,44 +30,36 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 @dataclasses.dataclass
 class WriterConfig:
     """
-    Configuration for inference prediction and output writing.
+    Document this class.
 
     Parameters
     ----------
-    predictor : DeterministicPredictorConfig | cVAEPredictorConfig | None
-        Predictor configuration used to generate batch predictions. If ``None``,
-        a deterministic predictor is used by default when prediction is enabled.
+    predictor : DeterministicPredictorConfig | cVAEPredictorConfig
+        Description not yet provided.
     num_output_sampling : int
-        Number of output samples generated for each model input.
+        Description not yet provided.
     get_trained_model_stats_from_validation : bool
-        Whether training-variable statistics are extracted from the validation
-        data instead of the training data.
-    aggregate_only : bool
-        Whether to skip prediction and aggregate previously saved temporary
-        prediction files only.
-    predict_only : bool
-        Whether to generate temporary batch predictions without aggregating them
-        into final NetCDF files.
+        Description not yet provided.
     """
 
     predictor: DeterministicPredictorConfig | cVAEPredictorConfig | None = None
     num_output_sampling: int = 1
     get_trained_model_stats_from_validation: bool = False
     aggregate_only: bool = False
-    predict_only: bool = False
+    predict_only: bool  = False
 
     def __post_init__(self):
         """
-        Validate the writer configuration.
+        Document this function.
 
         Raises
         ------
         ValueError
-            If ``num_output_sampling`` is not positive.
+            Description not yet provided.
         """
-
         if self.num_output_sampling <= 0:
             raise ValueError("num_output_sampling cannot be zero or negative.")
+
 
     def build(
         self,
@@ -78,43 +70,36 @@ class WriterConfig:
         output_dir: Path | str,
     ):
         """
-        Build a prediction writer from this configuration.
-
-        A default deterministic predictor is created when prediction is enabled and
-        no predictor is explicitly configured. The predictor type is validated
-        against the configured module type.
+        Document this function.
 
         Parameters
         ----------
         inference_data_loader : Dataloader
-            Data loader providing samples for inference.
+            Description not yet provided.
         train_dataloader_config : TrainDataloaderConfig
-            Training data-loader configuration used when training statistics or
-            metadata are required.
+            Description not yet provided.
         module : moduleABC
-            Trained module used to generate predictions.
+            Description not yet provided.
         post_processor : PreprocessingPipeline
-            Preprocessing pipeline used to transform predictions back to their output
-            representation.
+            Description not yet provided.
         output_dir : Path | str
-            Directory in which temporary and aggregated predictions are stored.
+            Description not yet provided.
 
         Returns
         -------
-        Writer
-            Configured inference writer.
+        Any
+            Description not yet provided.
 
         Raises
         ------
         RuntimeError
-            If both ``aggregate_only`` and ``predict_only`` are enabled, or if the
-            configured predictor type does not match the module type.
+            Description not yet provided.
         """
         if self.aggregate_only and self.predict_only:
             raise RuntimeError(
-                "You can run the writer in aggregate_only OR predict_only mode OR neither. "
-                "In case of the former, temporary batch predictions must have been saved "
-                "on the disc previously. In case of the later, batch predictions will be saved temporarily "
+                "You can run the writer in aggregate_only OR predict_only mode OR neither. " \
+                "In case of the former, temporary batch predictions must have been saved " \
+                "on the disc previously. In case of the later, batch predictions will be saved temporarily " \
                 "but will not be aggregated year by year."
             )
         if not self.aggregate_only:
@@ -126,6 +111,7 @@ class WriterConfig:
                     f"The provided selector config matches {self.predictor._type}"
                     f" selector but the module is {module.config._type.lower()}"
                 )
+
 
         return Writer(
             config=self,
@@ -139,28 +125,22 @@ class WriterConfig:
 
 class Writer:
     """
-    Manage model inference and aggregation of prediction outputs.
-
-    The writer generates temporary batch predictions, optionally extracts
-    training-variable statistics, and aggregates temporary predictions into
-    yearly NetCDF files.
+    Document this class.
 
     Parameters
     ----------
     config : WriterConfig
-        Configuration controlling prediction, aggregation, and statistic
-        extraction behavior.
+        Description not yet provided.
     inference_data_loader : Dataloader
-        Data loader providing samples for inference.
+        Description not yet provided.
     train_dataloader_config : TrainDataloaderConfig
-        Training data-loader configuration used when training statistics or
-        metadata are required.
+        Description not yet provided.
     module : moduleABC
-        Trained module used to generate predictions.
+        Description not yet provided.
     post_processor : PreprocessingPipeline
-        Pipeline used to convert predictions back to their output representation.
+        Description not yet provided.
     output_dir : Path | str
-        Directory in which prediction outputs are stored.
+        Description not yet provided.
     """
 
     def __init__(
@@ -173,23 +153,22 @@ class Writer:
         output_dir: Path | str,
     ):
         """
-        Initialize an inference writer.
+        Document this function.
 
         Parameters
         ----------
         config : WriterConfig
-            Configuration controlling prediction and aggregation behavior.
+            Description not yet provided.
         inference_data_loader : Dataloader
-            Data loader providing samples for inference.
+            Description not yet provided.
         train_dataloader_config : TrainDataloaderConfig
-            Training data-loader configuration used when additional training data are
-            required.
+            Description not yet provided.
         module : moduleABC
-            Trained module used to generate predictions.
+            Description not yet provided.
         post_processor : PreprocessingPipeline
-            Pipeline used to convert predictions back to their output representation.
+            Description not yet provided.
         output_dir : Path | str
-            Directory in which prediction outputs are stored.
+            Description not yet provided.
         """
         self.config = config
         self.module = module
@@ -206,26 +185,19 @@ class Writer:
         logger: logging.Logger,
     ):
         """
-        Configure the writer for distributed inference and output management.
-
-        Distributed runtime information is recorded, temporary output storage is
-        prepared, the predictor is constructed when required, and requested
-        training-variable statistics are extracted.
+        Document this function.
 
         Parameters
         ----------
         distributed : Distributed
-            Distributed runtime configuration containing device, rank, and process
-            information.
+            Description not yet provided.
         logger : logging.Logger
-            Logger used for root-process inference messages.
+            Description not yet provided.
 
         Raises
         ------
         RuntimeError
-            If the module is not located on the writer device, or if
-            ``aggregate_only`` mode is requested without previously saved temporary
-            NetCDF prediction files.
+            Description not yet provided.
         """
         self.logger = logger
         if self.logger is None:
@@ -254,11 +226,9 @@ class Writer:
         self.temp_save_dir = Path(self.output_dir) / "_temp"
 
         if self.config.aggregate_only:
-            if not (
-                self.temp_save_dir.is_dir() and any(self.temp_save_dir.glob("*.nc"))
-            ):
+            if not (self.temp_save_dir.is_dir() and any(self.temp_save_dir.glob("*.nc"))):
                 raise RuntimeError(
-                    "With aggregate_only writer mode, a _temp folder with at least "
+                    "With aggregate_only writer mode, a _temp folder with at least " \
                     "one ''.nc'' file must exist!"
                 )
 
@@ -269,6 +239,7 @@ class Writer:
             self.distributed.barrier()
 
         if not self.config.aggregate_only:
+
             self.predictor = self.config.predictor.build(
                 self.module,
                 self.distributed,
@@ -290,26 +261,23 @@ class Writer:
     @property
     def train_stats_save_dir(self):
         """
-        Return the path used to store training-variable statistics.
+        Document this function.
 
         Returns
         -------
-        Path
-            Path to the serialized training-variable statistics file.
+        Any
+            Description not yet provided.
         """
         return Path(self.output_dir) / "training_variable_stats.pt"
 
     def predict(self):
         """
-        Run prediction and output aggregation.
-
-        Depending on the writer configuration, this performs inference, aggregation,
-        or both.
+        Document this function.
 
         Raises
         ------
         RuntimeError
-            If distributed writer setup has not been completed before prediction.
+            Description not yet provided.
         """
         if not self._setup:
             raise RuntimeError("Call setup_distributed() before predict().")
@@ -328,20 +296,15 @@ class Writer:
 
     def _predict(self):
         """
-        Execute the configured inference and aggregation workflow.
-
-        Prediction batches are processed when prediction is enabled. When latent
-        outputs are requested, a training loader with metadata is used instead of the
-        standard inference loader. Temporary predictions are subsequently aggregated
-        unless ``predict_only`` is enabled.
+        Document this function.
         """
         self.module.eval()
         loader = self.InferenceLoader
         do_post_process = True
 
-        if not self.config.aggregate_only and getattr(
-            self.predictor, "save_latent", False
-        ):
+        if (not self.config.aggregate_only and 
+        getattr(self.predictor, "save_latent", False)):
+
             loader = self.build_train_loader(return_metadata=True, shuffle=False)
             do_post_process = False
 
@@ -363,11 +326,7 @@ class Writer:
 
     def _save_train_stats(self):
         """
-        Compute and save training-variable statistics when they are not cached.
-
-        Statistics are collected from either the training or validation data loader,
-        combined across distributed processes, and saved for subsequent inference
-        use.
+        Document this function.
         """
         if not self.train_stats_save_dir.exists():
             loader = self.build_train_loader(
@@ -401,25 +360,21 @@ class Writer:
         shuffle: bool | None = None,
     ):
         """
-        Build a training or validation data loader for inference support operations.
-
-        The training data-loader configuration is first initialized for the current
-        distributed runtime using the saved preprocessing pipeline.
+        Document this function.
 
         Parameters
         ----------
         from_validation : bool
-            Whether to build the validation loader instead of the training loader.
+            Description not yet provided.
         return_metadata : bool
-            Whether samples returned by the loader include associated metadata.
+            Description not yet provided.
         shuffle : bool | None
-            Whether samples are shuffled. If ``None``, the data-loader configuration
-            determines the behavior.
+            Description not yet provided.
 
         Returns
         -------
-        Dataloader
-            Configured training or validation data loader.
+        Any
+            Description not yet provided.
         """
         self.TrainLoaderConfig.setup_distributed(
             self.distributed,
@@ -437,16 +392,12 @@ class Writer:
 
     def aggregate_train_stats(self, stats: dict[str, RunningCovariance]):
         """
-        Aggregate and save training-variable statistics.
-
-        Running covariance accumulators are reduced across distributed processes.
-        On the root process, finalized means and covariance matrices are written to
-        the training statistics file.
+        Document this function.
 
         Parameters
         ----------
         stats : dict[str, RunningCovariance]
-            Mapping from statistic names to running covariance accumulators.
+            Description not yet provided.
         """
         for stat in stats.values():
             if stat.sum_x is not None:
@@ -473,18 +424,16 @@ class Writer:
 
     def log_root(self, level: int, msg: str, *args):
         """
-        Log a message only from the root process.
-
-        If no logger is configured, the message is printed instead.
+        Document this function.
 
         Parameters
         ----------
         level : int
-            Logging level associated with the message.
+            Description not yet provided.
         msg : str
-            Message to log.
+            Description not yet provided.
         *args : Any
-            Additional positional arguments passed to the configured logger.
+            Description not yet provided.
         """
         if self.is_on_root:
             if self.logger is not None:
@@ -495,13 +444,12 @@ class Writer:
     @property
     def raw_module(self):
         """
-        Return the underlying unwrapped model module.
+        Document this function.
 
         Returns
         -------
-        moduleABC
-            Module wrapped by distributed data parallel execution when applicable,
-            or the original module otherwise.
+        Any
+            Description not yet provided.
         """
         if isinstance(self.module, torch.nn.parallel.DistributedDataParallel):
             return self.module.module
@@ -509,17 +457,12 @@ class Writer:
 
     def aggregate_predictions_to_netcdf(self, do_post_process: bool = True):
         """
-        Aggregate temporary prediction files into yearly NetCDF outputs.
-
-        Aggregation is performed only on the root process. Post-processing can be
-        disabled when the temporary predictions are already in their desired output
-        representation.
+        Document this function.
 
         Parameters
         ----------
         do_post_process : bool
-            Whether to apply the configured inverse preprocessing pipeline during
-            aggregation.
+            Description not yet provided.
         """
         if self.is_distributed:
             self.distributed.barrier()
@@ -551,50 +494,36 @@ def aggregate_predictions(
     optional_sample_dimensions: tuple[str, ...] = (realization_dim,),
 ):
     """
-    Aggregate temporary batch predictions into yearly NetCDF files.
-
-    Temporary prediction files are combined by initialization time and lead time,
-    sorted along sample coordinates, optionally inverse transformed, and written
-    as one NetCDF file per initialization year. Duplicate lead times are removed
-    before each initialization time is added to the yearly dataset.
+    Document this function.
 
     Parameters
     ----------
     post_processor : PreprocessingPipeline | None
-        Pipeline used to convert predictions back to their output representation.
-        If ``None``, prediction channels are converted directly into dataset
-        variables without inverse preprocessing.
+        Description not yet provided.
     output_dir : Path
-        Directory containing the temporary prediction folder and receiving the
-        aggregated NetCDF files.
+        Description not yet provided.
     output_ensemble : bool
-        Whether output filenames indicate that predictions contain an output
-        ensemble.
-    logger_function : callable | None
-        Optional logging function used to report aggregation progress and saved
-        files.
+        Description not yet provided.
+    logger_function : callable
+        Description not yet provided.
     cleanup_temp : bool
-        Whether temporary prediction files and their directory are removed after
-        successful aggregation.
+        Description not yet provided.
     init_time_dim : str
-        Name of the initialization-time coordinate.
+        Description not yet provided.
     lead_time_dim : str
-        Name of the lead-time coordinate.
+        Description not yet provided.
     optional_sample_dimensions : tuple[str, ...]
-        Additional sample dimensions to sort when present in the prediction data.
+        Description not yet provided.
 
     Raises
     ------
     RuntimeError
-        If no temporary prediction files are found, a temporary file lacks the
-        initialization-time coordinate, no initialization times are available,
-        or initialization or lead-time coordinates remain non-monotonic after
-        aggregation.
+        Description not yet provided.
     """
     output_dir = Path(output_dir)
     temp_save_dir = output_dir / "_temp"
 
-    temp_files = sorted(temp_save_dir.glob("rank*_*.nc"))
+    temp_files = sorted(temp_save_dir.glob(f"rank*_*.nc"))
 
     if not temp_files:
         raise RuntimeError(f"No temporary prediction files found in {temp_save_dir}")
@@ -616,7 +545,7 @@ def aggregate_predictions(
 
             if source is None:
                 source = data.attrs["source"]
-
+                
             if nstds == "NA":
                 nstds = data.attrs.get("nstds", None)
 
@@ -653,17 +582,17 @@ def aggregate_predictions(
         data: xr.DataArray | xr.Dataset,
     ) -> xr.DataArray | xr.Dataset:
         """
-        Sort data along all available sample coordinates.
+        Document this function.
 
         Parameters
         ----------
         data : xr.DataArray | xr.Dataset
-            Data whose sample coordinates are to be sorted.
+            Description not yet provided.
 
         Returns
         -------
         xr.DataArray | xr.Dataset
-            Data sorted along each configured sample coordinate that is present.
+            Description not yet provided.
         """
         for coord in sample_coords:
             if coord in data.coords:
@@ -771,7 +700,7 @@ def aggregate_predictions(
         if nstds is not None:
             save_name_ += f"_nstds{nstds}"
         if output_ensemble:
-            save_name_ += "_output_ensemble"
+            save_name_ += f"_output_ensemble"
 
         save_name = save_name_ + ".nc"
 

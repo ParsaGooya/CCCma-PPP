@@ -22,21 +22,18 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 
 class BatchDataABC(abc.ABC):
     """
-    Abstract base class for batched dataset samples.
-
-    Defines the common tensors and metadata returned by data loaders, including
-    optional targets, additional features, and shared spatial masks.
+    Document this class.
 
     Attributes
     ----------
     input : torch.Tensor
-        Batched model input tensor.
+        Description not yet provided.
     target : torch.Tensor | None
-        Batched target tensor, or ``None`` when targets are unavailable.
+        Description not yet provided.
     added_features : torch.Tensor | None
-        Additional batched features supplied alongside the model input.
+        Description not yet provided.
     metadata : list[dict] | None
-        Per-sample metadata associated with the batch.
+        Description not yet provided.
     """
 
     input: torch.Tensor
@@ -50,40 +47,34 @@ class BatchDataABC(abc.ABC):
     @abc.abstractmethod
     def to_device(self, device: torch.device | str):
         """
-        Move batch data to a device.
+        Document this function.
 
         Parameters
         ----------
         device : torch.device | str
-            Device to which the batch tensors are moved.
-
-        Returns
-        -------
-        BatchDataABC
-            Batch with its applicable tensors moved to the requested device.
+            Description not yet provided.
         """
-
         pass
 
 
 class DataloaderConfigABC(abc.ABC):
     """
-    Abstract base configuration for dataset data loaders.
+    Document this class.
 
     Attributes
     ----------
     dataset_config : DatasetConfigABC
-        Configuration used to construct the underlying dataset.
+        Description not yet provided.
     pin_memory : bool
-        Whether loaded tensors are placed in pinned memory.
+        Description not yet provided.
     time_features : AddedTimeFeatures | list[str] | None
-        Additional temporal features included with dataset samples.
+        Description not yet provided.
     prefetch_factor : int | None
-        Number of batches prefetched by each data-loading worker.
+        Description not yet provided.
     return_spatial_mask : bool
-        Whether batches include spatial validity masks.
+        Description not yet provided.
     reduce_spatial_mask : bool
-        Whether spatial masks are reduced during collation.
+        Description not yet provided.
     """
 
     dataset_config: DatasetConfigABC
@@ -98,16 +89,7 @@ class DataloaderConfigABC(abc.ABC):
 
     def __init__(self):
         """
-        Initialize the data-loader configuration.
-
-        Disables prefetching when no worker processes are used and validates the
-        prefetch factor when multiprocessing is enabled.
-
-        Raises
-        ------
-        ValueError
-            If ``prefetch_factor`` is specified as less than one while one or more
-            data-loading workers are configured.
+        Document this function.
         """
         self._setup = False
         self.pin_memory = False
@@ -124,7 +106,7 @@ class DataloaderConfigABC(abc.ABC):
     @abc.abstractmethod
     def setup_distributed(self):
         """
-        Configure the data loader for distributed execution.
+        Document this function.
         """
         pass
 
@@ -132,12 +114,7 @@ class DataloaderConfigABC(abc.ABC):
     @abc.abstractmethod
     def available_times(self):
         """
-        Return initialization times available for data loading.
-
-        Returns
-        -------
-        Any
-            Initialization times available from the configured dataset.
+        Document this function.
         """
         pass
 
@@ -147,28 +124,22 @@ class DataloaderConfigABC(abc.ABC):
         requested_slice: slice,
     ) -> xr.DataArray:
         """
-        Select available initialization times within a requested year range.
-
-        The available times are sorted and restricted to the inclusive year bounds
-        specified by ``requested_slice``.
+        Document this function.
 
         Parameters
         ----------
         requested_slice : slice
-            Slice whose ``start`` and ``stop`` values specify the requested starting
-            and ending years.
+            Description not yet provided.
 
         Returns
         -------
         xr.DataArray
-            Available initialization times falling within the requested year range.
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If the requested start year precedes the available range, the requested
-            stop year exceeds the available range, or no available times fall within
-            the requested range.
+            Description not yet provided.
         """
         if isinstance(self.available_times, xr.DataArray):
             times = self.available_times
@@ -187,21 +158,25 @@ class DataloaderConfigABC(abc.ABC):
         requested_start = self._parse_year_bound(requested_slice.start)
         requested_stop = self._parse_year_bound(requested_slice.stop)
 
-        if requested_start is not None and requested_start < available_start:
+        if (
+            requested_start is not None
+            and requested_start < available_start
+        ):
             raise ValueError(
                 f"Requested start time {requested_start} is before "
                 f"the first available time {available_start}."
             )
 
-        if requested_stop is not None and requested_stop > available_stop:
+        if (
+            requested_stop is not None
+            and requested_stop > available_stop
+        ):
             raise ValueError(
                 f"Requested stop time {requested_stop} is after "
                 f"the final available time {available_stop}."
             )
 
-        selected = times.sel(
-            {self.init_time_dim: slice(f"{requested_start}", f"{requested_stop}")}
-        )
+        selected = times.sel({self.init_time_dim: slice(f'{requested_start}', f'{requested_stop}')})
 
         if selected.size == 0:
             raise ValueError(
@@ -212,27 +187,7 @@ class DataloaderConfigABC(abc.ABC):
         return selected
 
     def _parse_year_bound(self, bound):
-        """
-        Parse and validate a year bound.
-
-        Parameters
-        ----------
-        bound : int | str | None
-            Year bound to parse. String values must contain an integer representation
-            of a year.
-
-        Returns
-        -------
-        int | None
-            Parsed year, or ``None`` when no bound is provided.
-
-        Raises
-        ------
-        TypeError
-            If ``bound`` is neither an integer, string, nor ``None``.
-        ValueError
-            If a string bound cannot be converted to an integer.
-        """
+        """Parse and validate a year bound."""
         if bound is None:
             return None
         if isinstance(bound, int):
@@ -241,37 +196,31 @@ class DataloaderConfigABC(abc.ABC):
             try:
                 return int(bound)
             except ValueError:
-                raise ValueError(
-                    f"Invalid year bound: {bound}. Must be integer or string of integer."
-                )
+                raise ValueError(f"Invalid year bound: {bound}. Must be integer or string of integer.")
         raise TypeError(f"Year bound must be int or str, got {type(bound)}")
 
 
 @dataclasses.dataclass
 class Dataloader:
     """
-    Wrapper around a PyTorch data loader.
-
-    Configures batching, collation, multiprocessing, shuffling, and optional
-    distributed sampling for a dataset.
+    Document this class.
 
     Parameters
     ----------
     config : DataloaderConfigABC
-        Configuration controlling batching and data-loading behavior.
+        Description not yet provided.
     dataset : Dataset
-        Dataset from which samples are loaded.
+        Description not yet provided.
     collate_fn : Callable
-        Function used to combine individual samples into batches.
+        Description not yet provided.
     rank : int
-        Rank of the current process for distributed sampling.
+        Description not yet provided.
     world_size : int
-        Number of processes participating in distributed sampling.
+        Description not yet provided.
     shuffle : bool | None
-        Whether samples are shuffled. If ``None``, shuffle behavior is selected
-        automatically according to the distributed configuration.
+        Description not yet provided.
     return_spatial_mask : bool
-        Whether the collation function returns spatial validity masks.
+        Description not yet provided.
     """
 
     config: DataloaderConfigABC
@@ -284,12 +233,7 @@ class Dataloader:
 
     def __post_init__(self):
         """
-        Initialize the underlying PyTorch data loader.
-
-        A distributed sampler is created when multiple processes are used. Otherwise,
-        shuffle behavior is determined from the configured value and execution mode.
-        The configured collation, worker, prefetching, pinned-memory, and persistence
-        settings are then applied.
+        Document this function.
         """
         self.sampler = self._get_dataloader_sampler()
         if self.sampler is not None:
@@ -318,76 +262,68 @@ class Dataloader:
     @property
     def input_shape(self) -> tuple:
         """
-        Return the shape of an input sample.
+        Document this function.
 
         Returns
         -------
         tuple
-            Model input shape excluding the batch dimension.
+            Description not yet provided.
         """
         return self.dataset.get_input_shape()
 
     @property
     def target_shape(self):
         """
-        Return the shape of a target sample.
+        Document this function.
 
         Returns
         -------
-        tuple
-            Model target shape excluding the batch dimension.
+        Any
+            Description not yet provided.
         """
         return self.dataset.get_target_shape()
 
     @property
     def added_features_dim(self):
         """
-        Return the number of additional features provided by each sample.
+        Document this function.
 
         Returns
         -------
-        int
-            Number of additional features supplied alongside the model input.
+        Any
+            Description not yet provided.
         """
         return self.dataset.get_added_features_dim()
 
     @final
     def __iter__(self) -> Iterator[BatchDataABC]:
         """
-        Return an iterator over batches.
+        Document this function.
 
         Returns
         -------
         Iterator[BatchDataABC]
-            Iterator over batches produced by the underlying data loader.
+            Description not yet provided.
         """
         return iter(self._torch_loader)
 
     @final
     def _get_dataloader_sampler(self, **kwargs) -> torch.utils.data.Sampler | None:
         """
-        Build a sampler for distributed data loading.
-
-        A distributed sampler is created when ``world_size`` is greater than one.
-        Single-process loading does not use an explicit sampler.
+        Document this function.
 
         Parameters
         ----------
         **kwargs : Any
-            Additional keyword arguments passed to ``DistributedSampler``.
+            Description not yet provided.
 
         Returns
         -------
         torch.utils.data.Sampler | None
-            Distributed sampler, or ``None`` for single-process loading.
-
-        Raises
-        ------
-        ValueError
-            If ``rank`` is outside the valid range for the configured
-            ``world_size``.
+            Description not yet provided.
         """
         if self.world_size > 1:
+
             if not 0 <= self.rank < self.world_size:
                 raise ValueError(
                     f"'rank' must satisfy 0 <= rank < world_size, "
@@ -409,32 +345,29 @@ class Dataloader:
     @final
     def __len__(self) -> int:
         """
-        Return the number of batches in the data loader.
+        Document this function.
 
         Returns
         -------
         int
-            Number of batches produced by the underlying data loader.
+            Description not yet provided.
         """
         return len(self._torch_loader)
 
     @final
     def set_epoch(self, epoch):
         """
-        Set the epoch used by the distributed sampler.
-
-        This updates distributed shuffling when a sampler is present and has no
-        effect on sampling in single-process mode.
+        Document this function.
 
         Parameters
         ----------
-        epoch : int
-            Epoch number supplied to the distributed sampler.
+        epoch : Any
+            Description not yet provided.
 
         Returns
         -------
-        Dataloader
-            This data-loader instance.
+        Any
+            Description not yet provided.
         """
         if self.sampler is not None:
             self.sampler.set_epoch(epoch)
@@ -442,25 +375,17 @@ class Dataloader:
 
     @final
     def subset_loader(self, start_batch: int = 0) -> Iterator[BatchDataABC]:
-        """
-        Return an iterator starting from a selected batch.
+        """Get an iterator starting from a specific batch.
 
         Parameters
         ----------
-        start_batch : int
-            Zero-based batch index at which iteration begins.
+        start_batch : int, optional
+            Batch index to start from (must be >= 0). Default: 0
 
         Returns
         -------
         Iterator[BatchDataABC]
-            Iterator over batches beginning at ``start_batch``.
-
-        Raises
-        ------
-        TypeError
-            If ``start_batch`` is not an integer.
-        ValueError
-            If ``start_batch`` is negative.
+            Iterator over batches starting from start_batch
         """
         if not isinstance(start_batch, int):
             raise TypeError(f"start_batch must be int, got {type(start_batch)}.")

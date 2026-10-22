@@ -32,28 +32,24 @@ AppendMode = Literal[1, 2, 3]
 @dataclasses.dataclass
 class AutoencoderConfig(modelConfigABC):
     """
-    Configuration for a deterministic multilayer perceptron autoencoder.
+    Document this class.
 
     Parameters
     ----------
     encoder_hidden_dims : list
-        Sizes of the hidden layers in the encoder. The final dimension defines
-        the size of the latent representation.
-    decoder_hidden_dims : list | None
-        Sizes of the hidden layers in the decoder. If ``None``, they are derived
-        from ``encoder_hidden_dims`` in reverse order.
+        Description not yet provided.
+    decoder_hidden_dims : list
+        Description not yet provided.
     batch_normalization : bool
-        Whether to apply batch normalization in the encoder and decoder.
-    dropout_rate : float | None
-        Dropout probability used in the encoder and decoder. If ``None``,
-        dropout is disabled.
+        Description not yet provided.
+    dropout_rate : float
+        Description not yet provided.
     append_mode : AppendMode
-        Controls where additional features are concatenated: ``1`` for the
-        encoder input, ``2`` for the decoder input, or ``3`` for both.
+        Description not yet provided.
     init_method : InitMethod
-        Weight initialization method used when no checkpoint is loaded.
+        Description not yet provided.
     activation : ActivationName
-        Activation function used in the encoder and decoder.
+        Description not yet provided.
     """
 
     encoder_hidden_dims: list
@@ -71,15 +67,7 @@ class AutoencoderConfig(modelConfigABC):
 
     def __post_init__(self):
         """
-        Validate and complete the autoencoder configuration.
-
-        If decoder hidden dimensions are not provided, they are derived from the
-        encoder hidden dimensions in reverse order.
-
-        Raises
-        ------
-        ValueError
-            If ``dropout_rate`` is not ``None`` and is outside the interval [0, 1].
+        Document this function.
         """
         _validate_dropout(self.dropout_rate)
 
@@ -92,12 +80,12 @@ class AutoencoderConfig(modelConfigABC):
     @property
     def EXPECTS_MASK(self) -> bool:
         """
-        Indicate whether the model requires mask inputs.
+        Document this function.
 
         Returns
         -------
         bool
-            ``False``, since masks are optional for the MLP autoencoder.
+            Description not yet provided.
         """
         return False
 
@@ -108,23 +96,21 @@ class AutoencoderConfig(modelConfigABC):
         added_features_dim: int = None,
     ):
         """
-        Build an autoencoder from this configuration.
+        Document this function.
 
         Parameters
         ----------
         input_shape : np.ndarray
-            Shape of the model input excluding the batch dimension.
+            Description not yet provided.
         output_shape : np.ndarray | None
-            Shape of the model output excluding the batch dimension. If ``None``,
-            ``input_shape`` is used.
-        added_features_dim : int | None
-            Number of additional features that may be concatenated with the encoder
-            input, decoder input, or both according to ``append_mode``.
+            Description not yet provided.
+        added_features_dim : int
+            Description not yet provided.
 
         Returns
         -------
-        Autoencoder
-            Constructed deterministic MLP autoencoder.
+        Any
+            Description not yet provided.
         """
         return Autoencoder(
             config=self,
@@ -136,24 +122,18 @@ class AutoencoderConfig(modelConfigABC):
 
 class Autoencoder(deterministicmodelsABC):
     """
-    Deterministic multilayer perceptron autoencoder.
-
-    The model flattens its input, encodes it into a latent representation, and
-    decodes the representation into the requested output shape. Additional
-    features can be provided to the encoder, decoder, or both.
+    Document this class.
 
     Parameters
     ----------
     config : AutoencoderConfig
-        Configuration defining the encoder, decoder, feature concatenation, and
-        weight initialization.
+        Description not yet provided.
     input_shape : np.ndarray | tuple
-        Shape of the model input excluding the batch dimension.
+        Description not yet provided.
     output_shape : np.ndarray | tuple | None
-        Shape of the model output excluding the batch dimension. If ``None``,
-        ``input_shape`` is used.
-    added_features_dim : int | None
-        Number of additional features supplied to the model.
+        Description not yet provided.
+    added_features_dim : int
+        Description not yet provided.
     """
 
     def __init__(
@@ -164,26 +144,23 @@ class Autoencoder(deterministicmodelsABC):
         added_features_dim: int = None,
     ):
         """
-        Initialize a deterministic MLP autoencoder.
+        Document this function.
 
         Parameters
         ----------
         config : AutoencoderConfig
-            Configuration defining the encoder, decoder, feature concatenation, and
-            weight initialization.
+            Description not yet provided.
         input_shape : np.ndarray | tuple
-            Shape of the model input excluding the batch dimension.
+            Description not yet provided.
         output_shape : np.ndarray | tuple | None
-            Shape of the model output excluding the batch dimension. If ``None``,
-            ``input_shape`` is used.
-        added_features_dim : int | None
-            Number of additional features supplied to the model.
+            Description not yet provided.
+        added_features_dim : int
+            Description not yet provided.
 
         Raises
         ------
         RuntimeError
-            If ``output_shape`` does not have the number of dimensions required by
-            the MLP model.
+            Description not yet provided.
         """
         super().__init__(config)
 
@@ -259,23 +236,17 @@ class Autoencoder(deterministicmodelsABC):
 
     def forward(self, request: DeterministicRequest) -> deterministicOutput:
         """
-        Encode an input and reconstruct it through the decoder.
-
-        The input is optionally masked before being flattened. Additional features
-        are concatenated with the encoder input, decoder input, or both according to
-        ``append_mode``.
+        Document this function.
 
         Parameters
         ----------
         request : DeterministicRequest
-            Request containing the model input, optional input mask, and optional
-            additional features.
+            Description not yet provided.
 
         Returns
         -------
         deterministicOutput
-            Model output containing the decoded tensor reshaped to preserve the
-            input batch and channel dimensions.
+            Description not yet provided.
         """
         x = request.input
         x_mask = request.input_mask

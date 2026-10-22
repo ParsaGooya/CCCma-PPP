@@ -5,22 +5,14 @@ import os
 
 class Distributed:
     """
-    Manage distributed and single-process execution settings.
-
-    Detects distributed execution from environment variables and configures the
-    process rank, local CUDA device, world size, communication backend, and
-    runtime device accordingly.
+    Document this class.
     """
 
     _instance = None
 
     def __init__(self):
         """
-        Initialize the distributed execution environment.
-
-        When distributed environment variables are present, configures the local CUDA
-        device and initializes an NCCL process group if necessary. Otherwise, uses a
-        single process on CUDA when available or CPU as a fallback.
+        Document this function.
         """
         self.distributed = "RANK" in os.environ and "WORLD_SIZE" in os.environ
 
@@ -45,12 +37,12 @@ class Distributed:
     @classmethod
     def get_instance(cls):
         """
-        Return the shared distributed runtime instance.
+        Document this function.
 
         Returns
         -------
-        Distributed
-            Singleton distributed runtime instance.
+        Any
+            Description not yet provided.
         """
         if cls._instance is None:
             cls._instance = cls()
@@ -58,62 +50,51 @@ class Distributed:
 
     def cleanup(self):
         """
-        Destroy the active distributed process group.
-
-        If distributed communication is unavailable or has not been initialized,
-        this method has no effect.
+        Document this function.
         """
         if dist.is_available() and dist.is_initialized():
             dist.destroy_process_group()
 
     def is_root(self) -> bool:
         """
-        Indicate whether the current process is the root process.
+        Document this function.
 
         Returns
         -------
         bool
-            ``True`` if the current process has rank zero, otherwise ``False``.
+            Description not yet provided.
         """
         return self.rank == 0
 
     def barrier(self):
         """
-        Synchronize all distributed processes.
-
-        If distributed execution is disabled, this method has no effect.
+        Document this function.
         """
         if self.distributed:
             dist.barrier()
 
     def all_reduce_sum(self, local: torch.Tensor):
         """
-        Sum a tensor across all distributed processes.
-
-        The reduction is performed in place. If distributed communication has not
-        been initialized, the tensor is left unchanged.
+        Document this function.
 
         Parameters
         ----------
         local : torch.Tensor
-            Tensor containing the local value to sum across processes.
+            Description not yet provided.
         """
         if dist.is_available() and dist.is_initialized():
             dist.all_reduce(local, op=dist.ReduceOp.SUM)
 
     def broadcast(self, local: torch.Tensor, src=0):
         """
-        Broadcast a tensor from a source process to all distributed processes.
-
-        The tensor is modified in place. If distributed communication has not been
-        initialized, the tensor is left unchanged.
+        Document this function.
 
         Parameters
         ----------
         local : torch.Tensor
-            Tensor to broadcast or receive.
-        src : int
-            Rank of the source process.
+            Description not yet provided.
+        src : Any
+            Description not yet provided.
         """
         if dist.is_available() and dist.is_initialized():
             dist.broadcast(local, src=src)

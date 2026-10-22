@@ -1,41 +1,29 @@
 import inspect
 from typing import Any
-
-
 class Registery:
     """
-    Registry for named classes.
-
-    Classes can be registered under unique string identifiers and later
-    instantiated from optional configuration dictionaries.
+    Document this class.
     """
 
     def __init__(self):
         """
-        Initialize an empty class registry.
+        Document this function.
         """
         self._modules = {}
 
     def register(self, name: str):
         """
-        Create a decorator that registers a class under a unique name.
+        Document this function.
 
         Parameters
         ----------
-        name : str
-            Name used to identify the registered class.
+        name : Any
+            Description not yet provided.
 
         Returns
         -------
-        Callable
-            Decorator that registers a class and returns it unchanged.
-
-        Raises
-        ------
-        TypeError
-            If ``name`` is not a string.
-        ValueError
-            If ``name`` is empty or has already been registered.
+        Any
+            Description not yet provided.
         """
         if not isinstance(name, str):
             raise TypeError(f"Name must be string, got {type(name)}.")
@@ -45,31 +33,23 @@ class Registery:
 
         if name in self._modules:
             raise ValueError(
-                f"Name {name!r} already registered. Available: {self.available()}"
+                f"Name {name!r} already registered. "
+                f"Available: {self.available()}"
             )
 
         def decorator(cls):
             """
-            Register a class under the configured name.
-
-            Parameters
-            ----------
-            cls : type
-                Class to register.
+            Document this function.
 
             Returns
             -------
-            type
-                Registered class.
-
-            Raises
-            ------
-            TypeError
-                If ``cls`` is not a class.
+            Any
+                Description not yet provided.
             """
             if not inspect.isclass(cls):
                 raise TypeError(
-                    f"Can only register classesGot {type(cls).__name__} for {name!r}."
+                    f"Can only register classes"
+                    f"Got {type(cls).__name__} for {name!r}."
                 )
 
             self._modules[name] = cls
@@ -79,30 +59,24 @@ class Registery:
 
     def get(self, name: str, config: dict | None = None) -> Any:
         """
-        Instantiate a class registered under a name.
-
-        When ``config`` is provided, its entries are passed as keyword arguments to
-        the registered class. Without a configuration, the class is constructed
-        without arguments.
+        Document this function.
 
         Parameters
         ----------
-        name : str
-            Name identifying the registered class.
-        config : dict | None
-            Keyword arguments used to construct the registered class.
+        name : Any
+            Description not yet provided.
+        config : Any
+            Description not yet provided.
 
         Returns
         -------
         Any
-            Instance of the registered class.
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If ``name`` is not registered.
-        TypeError
-            If ``config`` is neither a dictionary nor ``None``.
+            Description not yet provided.
         """
         if name not in self._modules:
             raise ValueError(f"{name} not registered. should be in {self.available()}")
@@ -122,11 +96,11 @@ class Registery:
 
     def available(self):
         """
-        Return the names of all registered classes.
+        Document this function.
 
         Returns
         -------
-        list[str]
-            Names currently available in the registry.
+        Any
+            Description not yet provided.
         """
         return list(self._modules.keys())

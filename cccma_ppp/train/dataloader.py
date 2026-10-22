@@ -20,32 +20,26 @@ from cccma_ppp.generic.distributed import Distributed
 @dataclasses.dataclass
 class BatchData(BatchDataABC):
     """
-    Container for a batch of training data.
-
-    Input and target NaN values are replaced with zeros after optional validity
-    masks are constructed from their locations.
+    Document this class.
 
     Parameters
     ----------
     input : torch.Tensor
-        Batched model input tensor.
+        Description not yet provided.
     target : torch.Tensor
-        Batched target tensor.
-    added_features : torch.Tensor | None
-        Optional additional features associated with the batch.
+        Description not yet provided.
+    added_features : torch.Tensor
+        Description not yet provided.
     metadata : list[dict] | None
-        Per-sample metadata associated with the batch.
+        Description not yet provided.
     return_spatial_mask : bool
-        Whether to construct validity masks from non-NaN input and target values.
+        Description not yet provided.
     reduce_spatial_mask : bool
-        Whether to reduce validity masks across the batch dimension and reuse
-        them as shared masks.
+        Description not yet provided.
     input_mask : torch.Tensor | None
-        Validity mask derived from the input tensor when spatial masks are
-        requested.
+        Description not yet provided.
     target_mask : torch.Tensor | None
-        Validity mask derived from the target tensor when spatial masks are
-        requested.
+        Description not yet provided.
     """
 
     input: torch.Tensor
@@ -65,14 +59,8 @@ class BatchData(BatchDataABC):
 
     def __post_init__(self):
         """
-        Initialize spatial masks and replace missing values.
-
-        When spatial masking is enabled, validity masks are constructed from non-NaN
-        input and target values. The masks can optionally be reduced across the batch
-        dimension and shared between instances. Input and target NaN values are then
-        replaced with zeros.
+        Document this function.
         """
-
         if self.return_spatial_mask:
             if self.reduce_spatial_mask:
                 if type(self)._shared_input_mask is None:
@@ -97,19 +85,17 @@ class BatchData(BatchDataABC):
 
     def to_device(self, device: torch.device | str):
         """
-        Move batch tensors to a device.
+        Document this function.
 
         Parameters
         ----------
         device : torch.device | str
-            Device to which the input, target, masks, and additional features are
-            moved.
+            Description not yet provided.
 
         Returns
         -------
-        BatchData
-            This batch instance with its applicable tensors moved to the requested
-            device.
+        Any
+            Description not yet provided.
         """
         self.input = self.input.to(device)
         self.target = self.target.to(device)
@@ -129,32 +115,30 @@ class BatchData(BatchDataABC):
 @dataclasses.dataclass
 class TrainDataloaderConfig(DataloaderConfigABC):
     """
-    Configuration for training and validation data loaders.
+    Document this class.
 
     Parameters
     ----------
     dataset_config : TrainDatasetConfig
-        Configuration used to construct training and validation datasets.
+        Description not yet provided.
     batch_size : int
-        Number of samples in each batch.
+        Description not yet provided.
     time_features : list | None
-        Temporal features added to dataset samples.
-    train_years_slice : tuple | list | None
-        Optional start and stop years restricting the data available for training
-        and validation.
+        Description not yet provided.
+    train_years_slice : tuple | list
+        Description not yet provided.
     num_validation_years : int
-        Number of final years from the selected training period reserved for
-        validation.
+        Description not yet provided.
     num_data_workers : int
-        Number of worker processes used for data loading.
-    prefetch_factor : int | None
-        Number of batches prefetched by each data-loading worker.
+        Description not yet provided.
+    prefetch_factor : int
+        Description not yet provided.
     drop_last : bool
-        Whether to discard the final incomplete batch.
+        Description not yet provided.
     load : bool
-        Whether dataset contents are loaded into memory when opened.
+        Description not yet provided.
     reduce_spatial_mask : bool
-        Whether spatial validity masks are reduced across the batch dimension.
+        Description not yet provided.
     """
 
     dataset_config: TrainDatasetConfig
@@ -170,11 +154,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
     def __post_init__(self):
         """
-        Initialize training and validation data-loader settings.
-
-        Constructs the temporal feature configuration, selects the requested training
-        period, and reserves the final configured number of years for validation when
-        validation is enabled.
+        Document this function.
         """
         super().__init__()
 
@@ -190,7 +170,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             self.train_times = self.select_requested_times(
                 requested_slice=self.train_years_slice,
             )
-
+        
         if self.num_validation_years > 0:
             last_train_year = self.train_times[-1].dt.year
 
@@ -207,12 +187,12 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     @property
     def available_times(self):
         """
-        Return initialization times available from the training dataset.
+        Document this function.
 
         Returns
         -------
         Any
-            Initialization times available for training and validation.
+            Description not yet provided.
         """
         return self.dataset_config.available_times
 
@@ -220,19 +200,14 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         self, distributed: Distributed, load_path: Path | str | None = None
     ):
         """
-        Configure training data loading for distributed execution.
-
-        The root process fits and saves preprocessing pipelines when no existing
-        preprocessing path is provided. Processes are synchronized before saved
-        preprocessors are loaded where required.
+        Document this function.
 
         Parameters
         ----------
         distributed : Distributed
-            Distributed runtime containing process rank and world-size information.
+            Description not yet provided.
         load_path : Path | str | None
-            Directory containing fitted preprocessing pipelines. If ``None``, the
-            root process fits the configured preprocessors.
+            Description not yet provided.
         """
         self.distributed = distributed
         self.rank = distributed.rank
@@ -259,31 +234,26 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         shuffle: bool | None = None,
     ):
         """
-        Build the training data loader.
-
-        A sampling mask is created from the selected training times, available lead
-        times, and maximum common target time before the training dataset is built.
+        Document this function.
 
         Parameters
         ----------
         return_metadata : bool
-            Whether training samples include their sampling-coordinate metadata.
+            Description not yet provided.
         return_spatial_mask : bool
-            Whether batches include validity masks derived from missing spatial
-            values.
+            Description not yet provided.
         shuffle : bool | None
-            Whether samples are shuffled. If ``None``, shuffle behavior is determined
-            by the data-loader configuration.
+            Description not yet provided.
 
         Returns
         -------
-        Dataloader
-            Configured training data loader.
+        Any
+            Description not yet provided.
 
         Raises
         ------
         RuntimeError
-            If distributed data-loader setup has not been completed.
+            Description not yet provided.
         """
         if not self._setup:
             raise RuntimeError(
@@ -293,7 +263,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         train_mask = _create_train_mask(
             init_times=self.dataset_config.get_input_times(self.train_times),
             lead_times=self.dataset_config.input_lead_times,
-            max_allowed_time=self.dataset_config.get_common_time.max(),
+            max_allowed_time=self.dataset_config.get_common_time.max()
         )
 
         train_dataset = self.dataset_config.build_dataset(
@@ -322,42 +292,33 @@ class TrainDataloaderConfig(DataloaderConfigABC):
         supress_error: bool = True,
     ):
         """
-        Build the validation data loader.
-
-        When validation years are configured, a sampling mask is constructed from the
-        validation times, available lead times, and maximum common target time before
-        the validation dataset is built.
+        Document this function.
 
         Parameters
         ----------
         return_metadata : bool
-            Whether validation samples include their sampling-coordinate metadata.
+            Description not yet provided.
         return_spatial_mask : bool
-            Whether batches include validity masks derived from missing spatial
-            values.
+            Description not yet provided.
         shuffle : bool | None
-            Whether samples are shuffled. If ``None``, shuffle behavior is determined
-            by the data-loader configuration.
+            Description not yet provided.
         supress_error : bool
-            Whether to emit a warning and return ``None`` instead of raising an error
-            when no validation years are configured.
+            Description not yet provided.
 
         Returns
         -------
-        Dataloader | None
-            Configured validation data loader, or ``None`` when validation is
-            unavailable and ``supress_error`` is enabled.
+        Any
+            Description not yet provided.
 
         Raises
         ------
         RuntimeError
-            If distributed data-loader setup has not been completed, or validation is
-            unavailable and ``supress_error`` is disabled.
+            Description not yet provided.
 
         Warns
         -----
         UserWarning
-            If no validation years are configured and ``supress_error`` is enabled.
+            Description not yet provided.
         """
         if not self._setup:
             raise RuntimeError(
@@ -368,7 +329,7 @@ class TrainDataloaderConfig(DataloaderConfigABC):
             validation_mask = _create_train_mask(
                 init_times=self.dataset_config.get_input_times(self.validation_times),
                 lead_times=self.dataset_config.input_lead_times,
-                max_allowed_time=self.dataset_config.get_common_time.max(),
+                max_allowed_time=self.dataset_config.get_common_time.max()
             )
             validation_dataset = self.dataset_config.build_dataset(
                 times=self.validation_times,
@@ -399,21 +360,17 @@ class TrainDataloaderConfig(DataloaderConfigABC):
 
     def get_weights(self, config: WeightsConfig | None = None):
         """
-        Build weights for training loss calculations.
-
-        Weights are saved only by the root process, after which all distributed
-        processes are synchronized.
+        Document this function.
 
         Parameters
         ----------
         config : WeightsConfig | None
-            Configuration used to construct the weights. If ``None``, default weight
-            settings are used.
+            Description not yet provided.
 
         Returns
         -------
-        xr.DataArray
-            Weights aligned with the configured target data.
+        Any
+            Description not yet provided.
         """
         save = self.distributed.is_root()
         weights = self.dataset_config.ds_operator.get_weights(config, save=save)
@@ -423,26 +380,24 @@ class TrainDataloaderConfig(DataloaderConfigABC):
     @property
     def input_var_metadata(self):
         """
-        Return metadata describing training input variables.
+        Document this function.
 
         Returns
         -------
-        dict
-            Input-variable metadata including variable names, preprocessing
-            operations, and neural-network dimensions.
+        Any
+            Description not yet provided.
         """
         return self.dataset_config.ds_operator.get_input_var_metadata()
 
     @property
     def target_var_metadata(self):
         """
-        Return metadata describing training target variables.
+        Document this function.
 
         Returns
         -------
-        dict
-            Target-variable metadata including variable names, preprocessing
-            operations, and neural-network dimensions.
+        Any
+            Description not yet provided.
         """
         return self.dataset_config.ds_operator.get_target_var_metadata()
 
@@ -453,26 +408,21 @@ def collate_batch(
     reduce_spatial_mask: bool = False,
 ):
     """
-    Collate training samples into a batch.
-
-    Input and target tensors are stacked along the batch dimension together with
-    optional additional features. Per-sample metadata are retained when provided
-    by the dataset.
+    Document this function.
 
     Parameters
     ----------
     batch : Any
-        Sequence of training samples, optionally paired with per-sample metadata.
+        Description not yet provided.
     return_spatial_mask : bool
-        Whether to construct input and target validity masks from missing values.
+        Description not yet provided.
     reduce_spatial_mask : bool
-        Whether validity masks are reduced across the batch dimension.
+        Description not yet provided.
 
     Returns
     -------
-    BatchData
-        Collated training batch containing inputs, targets, optional additional
-        features, metadata, and optional spatial validity masks.
+    Any
+        Description not yet provided.
     """
     metadata = None
 

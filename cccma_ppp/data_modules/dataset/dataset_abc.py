@@ -34,21 +34,24 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 
 @dataclasses.dataclass
 class lead_time_config:
-    """
-    Configuration for selecting lead times.
 
-    Lead times can be specified explicitly or generated as an inclusive sequence
-    from ``start`` through ``end``.
+    """
+    Configuration for selecting forecast lead times.
+
+    Supports either an explicit list of lead times or an inclusive range
+    defined by starting and ending lead times. Lead times are one-based.
 
     Parameters
     ----------
-    list_lead_times : list | None
-        Explicit lead times to select. If ``None``, lead times are generated from
-        ``start`` and ``end``.
-    start : int
-        First lead time in the generated sequence.
-    end : int | None
-        Final lead time in the generated sequence.
+    list_lead_times : list | None, default None
+        Explicit list of lead times to select. If provided, `start` and
+        `end` are ignored.
+    start : int, default 1
+        First lead time in the selected range. Used only when
+        `list_lead_times` is None.
+    end : int | None, default None
+        Last lead time in the selected range, inclusive. Required when
+        `list_lead_times` is None.
     """
 
     list_lead_times: list | None = None
@@ -56,15 +59,19 @@ class lead_time_config:
     end: int = None
 
     def __post_init__(self):
+
         """
         Validate the lead-time selection configuration.
+
+        Ensures that either an explicit list of lead times or an ending
+        lead time for range-based selection is provided.
 
         Raises
         ------
         ValueError
-            If neither an explicit list of lead times nor an ending lead time is
-            provided.
+            If neither `list_lead_times` nor `end` is specified.
         """
+
         if self.list_lead_times is None:
             if self.end is None:
                 raise ValueError(
@@ -73,41 +80,63 @@ class lead_time_config:
                 )
 
     def build_lead_times(self):
+
         """
-        Build the configured lead-time selection.
+        Construct the selected forecast lead times.
+
+        Returns the explicitly specified lead times, if available.
+        Otherwise, generates an inclusive sequence from `start` to `end`.
 
         Returns
         -------
         list | np.ndarray
-            Explicitly configured lead times, or an inclusive sequence from
-            ``start`` through ``end``.
+            Selected lead times. Returns the original list when
+            `list_lead_times` is provided.
         """
+
         if self.list_lead_times is not None:
             return self.list_lead_times
         return np.arange(self.start, self.end + 1)
 
 
 class DatasetConfigABC(abc.ABC):
-    """
-    Abstract base configuration for PPP datasets.
 
-    Provides common validation and resolution of model and conditioning data,
-    conditioning strategies, lead-time selection, and available sampling times.
+    """
+    Abstract base class for configuring pipeline datasets.
+
+    Defines the shared interface for selecting model and conditioning data,
+    resolving conditioning methods, validating compatibility between data
+    sources, and selecting forecast lead times. Train and Inference datasets 
+    inherit from this class to implement specific data-loading.
+
+    Supports ensemble-mean, cross-ensemble, same-member, and static
+    conditioning. Model data can also serve as the conditioning source
+    when a separate conditioning dataset is not provided.
+
+    Subclasses must implement `available_times`, `ds_operator`,
+    `effective_input`, and `build_dataset`. The following attributes
+    must be defined in subclasses including both Train and Inference pipelines:
 
     Attributes
     ----------
     model : ModelDataConfig | None
-        Model data configuration available to the dataset.
+        Configuration for the model prediction data. Could only be 
+        None for Inference pipeline where the
+        conditioning dataset must provide the required input.
     condition : ConditionDataConfig | None
-        Explicit conditioning data configuration.
+        Optional configuration for auxiliary conditioning data.
+        If None, model data may be reused as conditioning data,
+        depending on the selected conditioning method.
     condition_method : str | None
-        Method used to construct conditioning samples.
-    lead_times : lead_time_config | None
-        Lead-time selection used to construct dataset samples.
-    _effective_condition : ConditionDataConfig | ModelDataConfig | None
-        Resolved conditioning data configuration after accounting for cases where
-        model data are reused as conditioning data.
+        Method used to associate conditioning data with model inputs.
+        Supported methods are "ensemble_mean", "cross_ensemble",
+        "same_member", and "static".
+    lead_times : lead_time_config | list | np.ndarray | None
+        Requested forecast lead times. Accepts a lead-time configuration
+        or an explicit sequence. If None, all available input lead times
+        are selected.
     """
+
 
     _VALID_CONDITION_METHODS: ClassVar[frozenset[str]] = frozenset(
         {"ensemble_mean", "cross_ensemble", "same_member", "static"}
@@ -117,7 +146,6 @@ class DatasetConfigABC(abc.ABC):
     condition: ConditionDataConfig | None
     condition_method: str | None
     lead_times: lead_time_config | None
-    _effective_condition: ConditionDataConfig | ModelDataConfig | None
 
     init_time_dim: ClassVar[str] = init_time_dim
     lead_time_dim: ClassVar[str] = lead_time_dim
@@ -126,31 +154,41 @@ class DatasetConfigABC(abc.ABC):
     supported_NN_dimensions: ClassVar[tuple] = supported_NN_dimensions_sorted
 
     def __init__(self):
-        """
-        Initialize and validate a dataset configuration.
 
-        Resolves the effective conditioning source and lead times, validates model and
-        conditioning compatibility, and ensures all requested lead times are
-        available from the effective input.
+        """
+        Initialize the dataset configuration and validate its input sources.
+
+        Verifies that at least one input source is available, validates the
+        conditioning method, and resolves the effective conditioning dataset.
+        At least one of the model or conditioning datasets must be provided. 
+        If both are provided, the conditioning method must be compatible.
+
+        Checks compatibility between model and conditioning data, including
+        temporal coordinates, ensemble realizations, and spatial dimensions
+        where applicable.
+
+        Resolves the requested lead times and verifies that they are available
+        in the effective input dataset.
 
         Raises
         ------
         ValueError
-            If no input source is available, the conditioning configuration is
-            invalid or incompatible with the model data, or a requested lead time is
-            unavailable.
+            If no input source is provided, the conditioning configuration
+            is invalid, model and conditioning data are incompatible, or
+            the requested lead times are unavailable.
         """
+
         self._fitted_preprocessors: bool = False
         self._effective_condition: ConditionDataConfig | ModelDataConfig | None = None
 
         self._check_required_input_source()
         self._check_condition_method()
-
+       
         self._resolve_condition()
         self._check_model_vs_condition()
 
         self._resolve_lead_times()
-
+        
         self._check_model()
         self._check_condition()
 
@@ -163,19 +201,21 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _check_required_input_source(self):
+
         """
-        Validate that an input data source is configured.
+        Verify that at least one input data source is configured.
 
         Returns
         -------
         DatasetConfigABC
-            This configuration instance after validation.
+            The current dataset configuration instance.
 
         Raises
         ------
         ValueError
-            If neither model nor conditioning data are provided.
+            If both `model` and `condition` are None.
         """
+
         if self.model is None and self.condition is None:
             raise ValueError(
                 "For a PPP dataset to create an input, either model or "
@@ -185,19 +225,32 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _check_model_vs_condition(self):
-        """
-        Validate compatibility between model and conditioning data.
 
-        For temporally varying conditioning data, required model sampling coordinates
-        must be available in the conditioning data and use a compatible time
-        representation. Additional realization and neural-network dimension checks
-        are performed when required by the conditioning method and dataset type.
+        """
+        Validate compatibility between model and conditioning datasets.
+
+        When separate model and conditioning datasets are provided,
+        verifies that non-static conditioning data contain all required
+        model initialization-time and lead-time dimensions and coordinates and 
+        use the same datetime or cftime representation.
+
+        For non ensemble-mean conditioning, ensures that the effective conditioning 
+        dataset contains realization dimension and coordinates.
+
+        For same-member conditioning, verifies that both datasets have
+        identical ensemble realization coordinates.
+
+        When observational targets is available, also requires matching
+        neural-network dimensions and coordinates between model and
+        conditioning datasets to be able to concatenate them for bias correction.
 
         Raises
         ------
         ValueError
-            If model and conditioning data have incompatible sampling coordinates,
-            time representations, ensemble members, or neural-network dimensions.
+            If required temporal coordinates are missing or incompatible,
+            same-member conditioning uses different ensemble realizations,
+            or spatial coordinates differ when observational targets
+            are provided.
         """
 
         if all(
@@ -272,26 +325,32 @@ class DatasetConfigABC(abc.ABC):
                     if not self.condition.coords.get(dim).equals(
                         self.model.coords.get(dim)
                     ):
+
                         raise ValueError(
                             f"model and condition data do not have the same {dim} cooridnates. "
-                            f"when bias correcting to observations"
+                            f"when bias correcting to observations. Got {self.condition.coords.get(dim)} "
+                            f"vs {self.model.coords.get(dim)}"
                         )
 
     @final
     def _check_condition_method(self):
+
         """
-        Validate the configured conditioning method.
+        Validate the selected conditioning method.
 
         Returns
         -------
         DatasetConfigABC
-            This configuration instance after validation.
+            The current dataset configuration instance.
 
         Raises
         ------
         ValueError
-            If the conditioning method is not one of the supported methods.
+            If the effective conditioning method is not None and is not
+            one of "ensemble_mean", "cross_ensemble", "same_member",
+            or "static".
         """
+
         if self.effective_condition_method is not None:
             if self.effective_condition_method not in self._VALID_CONDITION_METHODS:
                 raise ValueError(
@@ -301,21 +360,24 @@ class DatasetConfigABC(abc.ABC):
         return self
 
     def _check_model(self):
+
         """
-        Validate model data against the selected conditioning method.
+        Validate model configuration requirements for the conditioning method.
 
         Returns
         -------
         DatasetConfigABC
-            This configuration instance after validation.
+            The current dataset configuration instance.
 
         Raises
         ------
         ValueError
-            If same-member conditioning is requested while the model data are reduced
-            to an ensemble mean.
+            If same-member conditioning is requested while the model
+            configuration specifies ensemble averaging.
         """
+
         if self.model is not None:
+            
             if self.effective_condition_method == "same_member":
                 if self.model.ensemble_mean:
                     raise ValueError(
@@ -325,25 +387,32 @@ class DatasetConfigABC(abc.ABC):
         return self
 
     def _check_condition(self):
-        """
-        Validate the effective conditioning data and method.
 
-        Checks ensemble requirements for ensemble-based conditioning and ensures that
-        static conditioning data do not contain sampling dimensions.
+        """
+        Validate the effective conditioning data and its conditioning method.
+
+        Checks that the conditioning dataset is compatible with the selected
+        conditioning method. Cross-ensemble and same-member conditioning
+        require individual ensemble realizations, whereas ensemble-mean
+        conditioning requires ensemble averaging.
+
+        Static conditioning requires an explicitly provided conditioning
+        dataset without initialization-time, lead-time, or realization
+        coordinates.
 
         Returns
         -------
         DatasetConfigABC
-            This configuration instance after validation.
+            The current dataset configuration instance.
 
         Raises
         ------
         ValueError
-            If conditioning data are provided without a conditioning method, ensemble
-            settings are incompatible with the selected method, static conditioning
-            contains sampling dimensions, or static conditioning is otherwise
-            configured inconsistently.
+            If the conditioning method is missing, the ensemble
+            configuration is incompatible with the selected method,
+            or static conditioning violates its data requirements.
         """
+
         if self.effective_condition is not None:
             if self.effective_condition_method is None:
                 raise ValueError(
@@ -398,12 +467,15 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _resolve_lead_times(self):
-        """
-        Resolve a lead-time configuration into explicit lead-time values.
 
-        If ``lead_times`` is a ``lead_time_config`` instance, it is replaced by the
-        lead-time sequence produced by that configuration.
         """
+        Resolve the requested lead-time configuration.
+
+        If `lead_times` is a `lead_time_config` instance, replaces it
+        with the sequence returned by its `build_lead_times` method.
+        Otherwise, leaves the existing lead-time selection unchanged.
+        """
+
         if self.lead_times is not None and isinstance(
             self.lead_times, lead_time_config
         ):
@@ -412,67 +484,97 @@ class DatasetConfigABC(abc.ABC):
     @property
     @abc.abstractmethod
     def available_times(self):
-        """
-        Return the initialization times available for dataset sampling.
 
-        Returns
-        -------
-        Any
-            Initialization times available to the concrete dataset configuration.
+        """
+        Return the time span available for dataset construction.
+        This is different than input time because it should be the 
+        common time range resolved by the forecast and if available,
+        the observation data. Forecasts range is based on initialization 
+        time and lead time, while observation data has one time resolution.
+
+        For instance, for decadal predictions, the initial times are the 
+        start of the years, but the available times are the span of coverage 
+        based on initial_time / lead_time span which has a monthly resolution.
+
+        Subclasses must implement this property to determine which
+        initialization times satisfy their input and target data
+        requirements.
         """
         pass
 
     @property
     @abc.abstractmethod
     def ds_operator(self):
-        """
-        Return the dataset-specific operation used to combine or select data.
 
-        Returns
-        -------
-        Any
-            Dataset operation defined by the concrete dataset configuration.
+        """
+        Return the dataset-specific operator.
+
+        Subclasses must implement this property to provide the operator
+        used for their dataset construction and data access.
+        
+        Recommended implementaion is 
+        from cccma_ppp.data_modules.dataset.operator import DatasetOperator.
         """
         pass
 
     @property
     def input_lead_times(self) -> np.ndarray:
+
         """
-        Return lead times available from the effective input data.
+        Return the forecast lead times available in the effective input.
 
         Returns
         -------
         np.ndarray
-            Lead-time coordinate values available for input sampling.
+            Lead-time coordinate values of the effective input dataset.
         """
+
         return self.effective_input.coords[self.lead_time_dim].values
 
     @property
     @abc.abstractmethod
     def effective_input(self) -> ConditionDataConfig | ModelDataConfig | None:
+
         """
-        Return the data configuration used as the effective model input.
+        Return the input data that effectively goes into the dataset.
+        For Inference and Train this shall differ based on what is 
+        provided in the config.
+
+        Subclasses must implement this property to identify the data
+        source used as the primary input.
 
         Returns
         -------
         ConditionDataConfig | ModelDataConfig | None
-            Data configuration used to construct model inputs.
+            Effective input configuration.
         """
+
         pass
 
     @final
     @property
     def _using_model_data_as_condition(self) -> bool:
+
         """
-        Determine whether model data are used as conditioning data.
+        Determine whether the same model data are used as the conditioning source.
+
+        When no separate conditioning dataset is provided, model data
+        are reused for ensemble-mean, cross-ensemble, or same-member
+        conditioning. 
+
+        When both configurations are provided, compares their paths,
+        variable names, and realization selections. If those point to 
+        the same data, the model data are considered to be used as the conditioning source.
 
         Returns
         -------
         bool
-            ``True`` when the conditioning configuration resolves to the same model
-            data source, otherwise ``False``.
+            True if model data are used as conditioning data;
+            otherwise, False.
         """
+
         if self.condition is None:
+            
             return self.effective_condition_method in {
                 "ensemble_mean",
                 "cross_ensemble",
@@ -491,43 +593,57 @@ class DatasetConfigABC(abc.ABC):
     @final
     @property
     def effective_condition(self) -> ConditionDataConfig | ModelDataConfig | None:
+
         """
-        Return the resolved conditioning data configuration.
+        Return the resolved conditioning data. 
+        Resolved at __init__ time based on the provided 
+        model and condition configs.
 
         Returns
         -------
         ConditionDataConfig | ModelDataConfig | None
-            Effective conditioning data, or ``None`` when conditioning is not used.
+            Explicit or model-derived conditioning configuration,
+            or None if no conditioning dataset is required.
         """
+
         return self._effective_condition
 
     @final
     @property
     def effective_condition_method(self) -> str:
+
         """
         Return the normalized conditioning method.
 
         Returns
         -------
         str | None
-            Lowercase conditioning method, or ``None`` when no method is configured.
+            Lowercase conditioning method, or None if no method
+            is specified.
         """
-        return None if self.condition_method is None else self.condition_method.lower()
+
+        return (None 
+                if self.condition_method is None 
+                else self.condition_method.lower())
 
     @final
     def _model_as_condition(self) -> ModelDataConfig:
-        """
-        Construct conditioning data from the configured model data.
 
-        The resulting configuration shares the model data source and preprocessing
-        pipeline while adjusting ensemble averaging according to the conditioning
-        method.
+        """
+        Create a data object from the model dataset to be used as condition.
+
+        Constructs a new `ModelDataConfig` using the existing model's
+        data sources, variable selection, preprocessing pipeline,
+        ensemble realizations, and file configuration.
+
+        Ensemble averaging is determined from if conditioning is ensemble-mean.
 
         Returns
         -------
         ModelDataConfig
-            Model data configuration adapted for use as conditioning data.
+            Model configuration adapted for use as conditioning data.
         """
+
         ensemble_mean = self.condition_method.lower() == "ensemble_mean"
         return ModelDataConfig(
             paths=self.model.paths,
@@ -549,35 +665,45 @@ class DatasetConfigABC(abc.ABC):
             | xr.DataArray
         ),
     ):
-        """
-        Resolve requested initialization times available from the effective input.
 
-        Requested times are checked against the complete set of available dataset
-        times and then restricted to times present in the effective input data.
+        """
+        Resolve requested initialization times against the effective input.
+
+        Validates that all requested times are available to the dataset,
+        and selects those present in the effective input's
+        initialization-time coordinates to iterate over.
+
+        The intention for this code is the dataset available temporal coverage
+        is based on the model/condition/observation common time span. But, the
+        exact initial times to be iterated over is not necessarily the same as the available times. 
+        See documentation for `available_times` for more details.
 
         Parameters
         ----------
         requested_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
-            Initialization times requested for sampling.
+            Requested initialization times. Non-xarray inputs are converted
+            to a DataArray indexed by the initialization-time dimension.
 
         Returns
         -------
         xr.DataArray
-            Requested initialization times that are present in the effective input
-            data.
+            Requested initialization times that are present in the
+            effective input dataset, preserving their original order.
 
         Raises
         ------
         ValueError
-            If any requested initialization time is unavailable from the dataset.
+            If any requested initialization time is not included in
+            `available_times`.
         """
+
         if not isinstance(requested_times, xr.DataArray):
             requested_times = xr.DataArray(
                 requested_times,
                 dims=(self.init_time_dim,),
                 coords={self.init_time_dim: requested_times},
             )
-
+            
         missing = [t for t in requested_times.values if t not in self.available_times]
 
         if missing:
@@ -592,18 +718,22 @@ class DatasetConfigABC(abc.ABC):
 
     @final
     def _resolve_condition(self):
+
         """
         Resolve the effective conditioning data source.
 
-        Explicit conditioning data are used when provided. Otherwise, model data are
-        adapted for conditioning when required by the conditioning method.
+        Uses the explicitly configured conditioning dataset when available.
+        Otherwise, creates a model-derived conditioning configuration if
+        the selected method requires model data as conditioning input.
+
+        If neither applies, the effective conditioning dataset is None.
 
         Returns
         -------
         DatasetConfigABC
-            This configuration instance with the effective conditioning source
-            resolved.
+            The current dataset configuration instance.
         """
+
         if self.condition is not None:
             self._effective_condition = self.condition
         elif self._using_model_data_as_condition:
@@ -615,13 +745,13 @@ class DatasetConfigABC(abc.ABC):
 
     @abc.abstractmethod
     def build_dataset(self):
-        """
-        Build a dataset from this configuration.
 
-        Returns
-        -------
-        DatasetABC
-            Dataset constructed from the concrete configuration.
+        """
+        Construct the dataset from this validated configuration.
+
+        Subclasses must implement this method to assemble the required
+        model, conditioning, and optional observational data according
+        to their dataset-specific sampling and preprocessing procedures.
         """
         pass
 
@@ -629,19 +759,14 @@ class DatasetConfigABC(abc.ABC):
 @dataclasses.dataclass
 class AddedTimeFeatures:
     """
-    Construct additional temporal features for dataset samples.
-
-    Temporal features can represent normalized valid time, normalized lead time,
-    or cyclical month and day-of-year components.
+    Document this class.
 
     Parameters
     ----------
     reference_config : DatasetConfigABC
-        Dataset configuration providing the temporal range, lead times, and
-        dimension names used to construct and normalize features.
+        Description not yet provided.
     time_features : list[str] | None
-        Temporal features to generate. If ``None`` or empty, no temporal features
-        are added.
+        Description not yet provided.
     """
 
     reference_config: DatasetConfigABC
@@ -649,15 +774,12 @@ class AddedTimeFeatures:
 
     def __post_init__(self):
         """
-        Initialize and validate the requested temporal features.
-
-        Temporal normalization bounds and supported feature names are obtained from
-        the reference dataset configuration.
+        Document this function.
 
         Raises
         ------
         ValueError
-            If one or more requested temporal features are unsupported.
+            Description not yet provided.
         """
         self.time_features_array: np.ndarray | None = None
         self.lead_time_resolution = self.reference_config.lead_time_resolution
@@ -696,20 +818,17 @@ class AddedTimeFeatures:
         time: np.datetime64 | datetime.datetime | cftime.datetime,
     ) -> int:
         """
-        Return the number of days in the year containing a time value.
-
-        The result accounts for standard, leap-year, and supported CF calendar
-        conventions.
+        Document this function.
 
         Parameters
         ----------
         time : np.datetime64 | datetime.datetime | cftime.datetime
-            Time value whose year length is required.
+            Description not yet provided.
 
         Returns
         -------
         int
-            Number of days in the corresponding calendar year.
+            Description not yet provided.
         """
         if isinstance(time, cftime.datetime):
             calendar = time.calendar
@@ -738,28 +857,22 @@ class AddedTimeFeatures:
         sample_coords: dict[str, np.ndarray],
     ) -> "AddedTimeFeatures":
         """
-        Build temporal features for a collection of sample coordinates.
-
-        Valid times are derived from initialization and lead times. Requested
-        features are then normalized or encoded cyclically and stored in sample
-        order.
+        Document this function.
 
         Parameters
         ----------
         sample_coords : dict[str, np.ndarray]
-            Sampling coordinates containing initialization times and lead times.
+            Description not yet provided.
 
         Returns
         -------
-        AddedTimeFeatures
-            This instance with the temporal feature array populated.
+        'AddedTimeFeatures'
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If required sampling coordinates are missing, the reference temporal span
-            is zero when time normalization is requested, or the maximum configured
-            lead time is zero when lead-time normalization is requested.
+            Description not yet provided.
         """
         required_dims = {
             self.init_time_dim,
@@ -793,6 +906,7 @@ class AddedTimeFeatures:
             )
 
         if self.init_time_dim in requested:
+
             if self.time_span_ref == 0:
                 raise ValueError(
                     "Cannot normalize time with zero-length reference span. "
@@ -817,7 +931,7 @@ class AddedTimeFeatures:
                     "Cannot normalize lead time when maximum is zero. "
                     "Ensure at least one lead time > 0."
                 )
-
+            
             normalized_lead_times = lead_times.astype(np.float32) / max_lead_time
 
             calculated_features[self.lead_time_dim] = normalized_lead_times
@@ -875,31 +989,26 @@ class AddedTimeFeatures:
         input: xr.DataArray,
     ) -> np.ndarray | None:
         """
-        Return temporal features for a dataset sample.
-
-        For multidimensional model inputs, temporal features are spatially broadcast
-        to match the non-channel dimensions of the input.
+        Document this function.
 
         Parameters
         ----------
         ind : int
-            Index of the sample whose temporal features are requested.
+            Description not yet provided.
         input : xr.DataArray
-            Model input used to determine whether temporal features require spatial
-            broadcasting.
+            Description not yet provided.
 
         Returns
         -------
         np.ndarray | None
-            Temporal features for the selected sample, or ``None`` when no features
-            are configured.
+            Description not yet provided.
 
         Raises
         ------
         IndexError
-            If ``ind`` is outside the available sample range.
+            Description not yet provided.
         RuntimeError
-            If temporal features have not been built before indexing.
+            Description not yet provided.
         """
         if not self.time_features:
             return
@@ -927,33 +1036,28 @@ class AddedTimeFeatures:
 
     def __len__(self):
         """
-        Return the number of configured temporal features.
+        Document this function.
 
         Returns
         -------
-        int
-            Number of temporal features.
+        Any
+            Description not yet provided.
         """
         return len(self.time_features)
 
     def __eq__(self, other):
         """
-        Compare two temporal feature configurations.
-
-        Configurations are considered equal when they use the same dataset
-        configuration type, lead times, common temporal reference, and requested
-        features.
+        Document this function.
 
         Parameters
         ----------
         other : Any
-            Object to compare with this temporal feature configuration.
+            Description not yet provided.
 
         Returns
         -------
-        bool | NotImplemented
-            ``True`` when the configurations are equivalent, ``False`` when they are
-            not, or ``NotImplemented`` for objects of another type.
+        Any
+            Description not yet provided.
         """
         if not isinstance(other, AddedTimeFeatures):
             return NotImplemented
@@ -971,26 +1075,22 @@ class AddedTimeFeatures:
 
 class DatasetABC(Dataset, abc.ABC):
     """
-    Abstract base class for sampled PPP datasets.
-
-    Handles validation of requested times, sampling-mask construction, opening
-    model and conditioning data, coordinate-to-index conversion, temporal feature
-    generation, and indexed sample access support.
+    Document this class.
 
     Attributes
     ----------
     config : DatasetConfigABC
-        Configuration defining the dataset sources and sampling behavior.
+        Description not yet provided.
     requested_times : Sequence[np.datetime64 | datetime.datetime | cftime.datetime] | np.ndarray | xr.DataArray
-        Initialization times requested for dataset sampling.
+        Description not yet provided.
     mask : xr.DataArray | None
-        Mask identifying unavailable or excluded sample combinations.
+        Description not yet provided.
     time_features : AddedTimeFeatures
-        Temporal feature generator associated with the dataset.
+        Description not yet provided.
     return_metadata : bool
-        Whether dataset samples include their sampling metadata.
+        Description not yet provided.
     load : bool
-        Whether opened xarray data are loaded into memory.
+        Description not yet provided.
     """
 
     config: DatasetConfigABC
@@ -1006,11 +1106,7 @@ class DatasetABC(Dataset, abc.ABC):
 
     def __init__(self, seed: int | None = None):
         """
-        Initialize dataset sampling state.
-
-        Validates initialization settings, prepares the sampling mask, opens required
-        model and conditioning data, resolves sample coordinates and positional
-        indexes, and constructs temporal features for the resulting samples.
+        Document this function.
         """
         self._check_init()
         self._resolve_mask()
@@ -1024,7 +1120,9 @@ class DatasetABC(Dataset, abc.ABC):
 
         if self.config.effective_condition is not None:
             self.config.effective_condition.open_xarray_data(
-                load=self.load, add_time_auxiliary_coords=True
+                load=self.load, add_time_auxiliary_coords= (
+                    self.config.effective_condition_method != 'static'
+                )
             )
 
         self.sample_coords = self.get_sampling_coords()
@@ -1038,15 +1136,14 @@ class DatasetABC(Dataset, abc.ABC):
     @final
     def _check_init(self):
         """
-        Validate dataset initialization requirements.
+        Document this function.
 
         Raises
         ------
         RuntimeError
-            If the configured preprocessing pipelines have not been fitted.
+            Description not yet provided.
         ValueError
-            If the requested initialization-time sequence is invalid or contains
-            times unavailable from the dataset configuration.
+            Description not yet provided.
         """
         _validate_time_sequence(self.requested_times)
 
@@ -1069,16 +1166,12 @@ class DatasetABC(Dataset, abc.ABC):
     @final
     def _resolve_mask(self):
         """
-        Resolve and validate the sampling mask.
-
-        When no mask is supplied, a mask spanning all available initialization and
-        lead times is created and initialized as fully available.
+        Document this function.
 
         Raises
         ------
         ValueError
-            If the mask does not contain both the initialization-time and lead-time
-            dimensions.
+            Description not yet provided.
         """
         if self.mask is None:
             mask = _create_train_mask(
@@ -1100,12 +1193,12 @@ class DatasetABC(Dataset, abc.ABC):
     @property
     def _sampling_times_selectors(self) -> dict:
         """
-        Return coordinate selectors used to construct the sampling mask.
+        Document this function.
 
         Returns
         -------
         dict
-            Initialization-time and lead-time selections used for dataset sampling.
+            Description not yet provided.
         """
         return {
             self.config.init_time_dim: self.config.get_input_times(
@@ -1118,12 +1211,7 @@ class DatasetABC(Dataset, abc.ABC):
     @abc.abstractmethod
     def _load_model(self) -> bool:
         """
-        Indicate whether model data must be opened and indexed.
-
-        Returns
-        -------
-        bool
-            Whether the concrete dataset requires model data.
+        Document this function.
         """
         pass
 
@@ -1131,12 +1219,7 @@ class DatasetABC(Dataset, abc.ABC):
     @abc.abstractmethod
     def _write_condition_to_input(self):
         """
-        Indicate whether conditioning data replace the primary model input.
-
-        Returns
-        -------
-        bool
-            Whether conditioning data are written directly to the model input.
+        Document this function.
         """
         pass
 
@@ -1144,38 +1227,29 @@ class DatasetABC(Dataset, abc.ABC):
     @abc.abstractmethod
     def _concat_condition_to_input(self):
         """
-        Indicate whether conditioning variables are concatenated with model inputs.
-
-        Returns
-        -------
-        bool
-            Whether conditioning variables contribute additional input channels.
+        Document this function.
         """
         pass
 
     @final
     def _prepare_sampling_mask(self, sampling_times_selectors: dict):
         """
-        Restrict the sampling mask to requested times and lead times.
-
-        The mask is selected using the provided temporal coordinates and expanded
-        across model realizations when individual ensemble members are sampled.
-        Invalid entries are represented as missing values for subsequent stacking.
+        Document this function.
 
         Parameters
         ----------
         sampling_times_selectors : dict
-            Coordinate selections for initialization time and lead time.
+            Description not yet provided.
 
         Returns
         -------
-        DatasetABC
-            This dataset instance with its sampling mask prepared.
+        Any
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If selectors for initialization time or lead time are missing.
+            Description not yet provided.
         """
         missing = (
             set((self.config.init_time_dim, self.config.lead_time_dim))
@@ -1207,16 +1281,12 @@ class DatasetABC(Dataset, abc.ABC):
     @final
     def get_sampling_coords(self):
         """
-        Extract coordinates for all valid dataset samples.
-
-        The sampling dimensions are stacked into a single batch dimension and masked
-        sample combinations are removed.
+        Document this function.
 
         Returns
         -------
-        dict[str, np.ndarray]
-            Mapping from each sampling dimension to its coordinate values in sample
-            order.
+        Any
+            Description not yet provided.
         """
         sample_dims = tuple(self.mask.sizes)
 
@@ -1234,27 +1304,26 @@ class DatasetABC(Dataset, abc.ABC):
         sample_coords: dict[str, np.ndarray],
     ) -> dict[str, np.ndarray] | None:
         """
-        Map sampling coordinates to positional indexes in the model dataset.
+        Document this function.
 
         Parameters
         ----------
         sample_coords : dict[str, np.ndarray]
-            Sampling coordinates for which model indexes are required.
+            Description not yet provided.
 
         Returns
         -------
         dict[str, np.ndarray] | None
-            Positional indexes for each sampling dimension, or ``None`` when model
-            data are not loaded by the dataset.
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If one or more sampling coordinates cannot be found in the model dataset.
+            Description not yet provided.
         """
         if not self._load_model:
             return None
-
+        
         indexes = {
             dim: self.config.model.indexes[dim].get_indexer(values)
             for dim, values in sample_coords.items()
@@ -1279,28 +1348,22 @@ class DatasetABC(Dataset, abc.ABC):
         sample_coords: dict[str, np.ndarray],
     ) -> dict[str, np.ndarray] | None:
         """
-        Map sampling coordinates to positional indexes in the conditioning dataset.
-
-        Static conditioning requires no positional indexes. Same-member conditioning
-        also maps realization coordinates so that model and conditioning ensemble
-        members remain aligned.
+        Document this function.
 
         Parameters
         ----------
         sample_coords : dict[str, np.ndarray]
-            Sampling coordinates for which conditioning indexes are required.
+            Description not yet provided.
 
         Returns
         -------
         dict[str, np.ndarray] | None
-            Positional indexes for applicable conditioning dimensions, or ``None``
-            when no indexed conditioning data are required.
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If same-member conditioning lacks realization coordinates or if one or
-            more sampling coordinates cannot be found in the conditioning dataset.
+            Description not yet provided.
         """
         if (
             self.config.effective_condition is None
@@ -1347,16 +1410,12 @@ class DatasetABC(Dataset, abc.ABC):
     @final
     def get_input_shape(self) -> tuple:
         """
-        Determine the shape of a model input sample.
-
-        The first dimension corresponds to input variables, including concatenated
-        conditioning variables when configured. Remaining dimensions are determined
-        from a fitted flattener or supported neural-network dimensions.
+        Document this function.
 
         Returns
         -------
         tuple
-            Input shape excluding the batch dimension.
+            Description not yet provided.
         """
 
         len_names = len(self.config.effective_input.names)
@@ -1364,10 +1423,10 @@ class DatasetABC(Dataset, abc.ABC):
             len_names += len(self.config.effective_condition.names)
 
         if self.config.effective_input.preprocessing_pipeline.has_flattener:
-            flattener = (
-                self.config.effective_input.preprocessing_pipeline.get_flattener()
+            flattener = self.config.effective_input.preprocessing_pipeline.get_flattener()
+            in_shape = (
+                flattener.final_locations.shape
             )
-            in_shape = flattener.final_locations.shape
 
         else:
             in_shape = tuple(
@@ -1381,34 +1440,29 @@ class DatasetABC(Dataset, abc.ABC):
     @final
     def get_added_features_dim(self):
         """
-        Return the number of additional temporal features.
+        Document this function.
 
         Returns
         -------
-        int
-            Number of configured temporal features.
+        Any
+            Description not yet provided.
         """
         return len(self.time_features)
 
     @final
     def _index_condition_dataset(self, ind: int) -> xr.DataArray | None:
         """
-        Retrieve conditioning data for a sample.
-
-        Static conditioning returns the full static field. Other conditioning methods
-        use precomputed positional indexes, while cross-ensemble conditioning samples
-        a realization randomly.
+        Document this function.
 
         Parameters
         ----------
         ind : int
-            Sample index to retrieve.
+            Description not yet provided.
 
         Returns
         -------
         xr.DataArray | None
-            Selected and preprocessed conditioning variables, or ``None`` when no
-            conditioning data are configured.
+            Description not yet provided.
         """
         if self.config.effective_condition is None:
             return None
@@ -1437,18 +1491,17 @@ class DatasetABC(Dataset, abc.ABC):
     @final
     def _index_model_dataset(self, ind: int) -> xr.DataArray | None:
         """
-        Retrieve model data for a sample.
+        Document this function.
 
         Parameters
         ----------
         ind : int
-            Sample index to retrieve.
+            Description not yet provided.
 
         Returns
         -------
         xr.DataArray | None
-            Selected and preprocessed model variables, or ``None`` when model data
-            are not required.
+            Description not yet provided.
         """
         if not self._load_model:
             return None
@@ -1464,20 +1517,17 @@ class DatasetABC(Dataset, abc.ABC):
     @staticmethod
     def _compute(*arrays) -> tuple:
         """
-        Compute one or more lazy arrays synchronously.
-
-        Dask computation is performed with the synchronous scheduler while standard
-        error output is suppressed.
+        Document this function.
 
         Parameters
         ----------
         *arrays : Any
-            Lazy objects to compute.
+            Description not yet provided.
 
         Returns
         -------
         tuple
-            Computed values corresponding to the supplied objects.
+            Description not yet provided.
         """
         with suppress_stderr(), dask.config.set(scheduler="synchronous"):
             return dask.compute(*arrays)
@@ -1485,11 +1535,11 @@ class DatasetABC(Dataset, abc.ABC):
     @final
     def __len__(self):
         """
-        Return the number of valid dataset samples.
+        Document this function.
 
         Returns
         -------
-        int
-            Number of entries represented by the sampling coordinates.
+        Any
+            Description not yet provided.
         """
         return len(next(iter(self.sample_coords.values())))

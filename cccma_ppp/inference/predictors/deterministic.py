@@ -18,16 +18,9 @@ from cccma_ppp.data_modules.dataloader import BatchDataABC
 @dataclasses.dataclass
 class DeterministicPredictorConfig:
     """
-    Configuration for deterministic inference.
-
-    Parameters
-    ----------
-    chunk_output_samples : bool
-        Whether stochastic output samples are generated separately rather than
-        by repeating the decoder input in a single pass.
+    Document this class.
     """
-
-    chunk_output_samples: bool = (False,)
+    chunk_output_samples: bool = False,
     _type: ClassVar[str] = "deterministic"
 
     def build(
@@ -38,23 +31,23 @@ class DeterministicPredictorConfig:
         num_output_sampling: int = 1,
     ):
         """
-        Build a deterministic predictor from this configuration.
+        Document this function.
 
         Parameters
         ----------
         module : moduleABC
-            Trained deterministic module used for inference.
+            Description not yet provided.
         distributed : Distributed
-            Distributed runtime associated with inference.
+            Description not yet provided.
         output_dir : Path | str
-            Directory in which inference outputs and training statistics are stored.
+            Description not yet provided.
         num_output_sampling : int
-            Number of output samples generated for each input.
+            Description not yet provided.
 
         Returns
         -------
-        DetermninisticPredictor
-            Configured deterministic predictor.
+        Any
+            Description not yet provided.
         """
         return DetermninisticPredictor(
             self, module, distributed, output_dir, num_output_sampling
@@ -63,24 +56,20 @@ class DeterministicPredictorConfig:
 
 class DetermninisticPredictor(PredictorABC):
     """
-    Perform inference with a deterministic model.
-
-    The predictor supports multiple output samples, empirical residual covariance
-    sampling for models without generator behavior, extraction of training
-    residual statistics, and saving predictions to temporary NetCDF files.
+    Document this class.
 
     Parameters
     ----------
     config : DeterministicPredictorConfig
-        Configuration controlling deterministic inference behavior.
+        Description not yet provided.
     module : moduleABC
-        Trained deterministic module used for inference.
+        Description not yet provided.
     distributed : Distributed
-        Distributed runtime associated with inference.
+        Description not yet provided.
     output_dir : Path | str
-        Directory in which inference outputs and training statistics are stored.
+        Description not yet provided.
     num_output_sampling : int
-        Number of output samples generated for each input.
+        Description not yet provided.
     """
 
     def __init__(
@@ -92,25 +81,25 @@ class DetermninisticPredictor(PredictorABC):
         num_output_sampling: int = 1,
     ):
         """
-        Initialize a deterministic predictor.
+        Document this function.
 
         Parameters
         ----------
         config : DeterministicPredictorConfig
-            Configuration controlling deterministic inference behavior.
+            Description not yet provided.
         module : moduleABC
-            Trained deterministic module used for inference.
+            Description not yet provided.
         distributed : Distributed
-            Distributed runtime associated with inference.
+            Description not yet provided.
         output_dir : Path | str
-            Directory in which inference outputs and training statistics are stored.
+            Description not yet provided.
         num_output_sampling : int
-            Number of output samples generated for each input.
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If ``num_output_sampling`` is not positive.
+            Description not yet provided.
         """
         self.config = config
         self.module = module
@@ -138,13 +127,12 @@ class DetermninisticPredictor(PredictorABC):
     @property
     def extract_training_vars(self):
         """
-        Indicate whether training residual statistics must be extracted.
+        Document this function.
 
         Returns
         -------
-        bool
-            ``True`` when multiple output samples require empirical residual
-            covariance sampling.
+        Any
+            Description not yet provided.
         """
 
         return self.num_output_covariance_sampling > 1
@@ -156,31 +144,24 @@ class DetermninisticPredictor(PredictorABC):
         _getting_train_stats: bool = False,
     ) -> deterministicOutput | dict[str, RunningCovariance]:
         """
-        Perform deterministic inference or training-statistic extraction for a batch.
-
-        When training statistics are requested, model residuals are accumulated for
-        subsequent covariance-based output sampling. Otherwise, predictions are
-        generated and optional decoder noise is added before the batch is saved.
+        Document this function.
 
         Parameters
         ----------
         batch : BatchDataABC
-            Batch containing model inputs, optional targets, and metadata.
+            Description not yet provided.
         _getting_train_stats : bool
-            Whether to collect training residual statistics instead of generating
-            inference outputs.
+            Description not yet provided.
 
         Returns
         -------
         deterministicOutput | dict[str, RunningCovariance]
-            Deterministic model output, or running training-statistic accumulators
-            when ``_getting_train_stats`` is enabled.
+            Description not yet provided.
 
         Raises
         ------
         RuntimeError
-            If training-statistic extraction is requested but the batch does not
-            contain target data.
+            Description not yet provided.
         """
         clear_memory()
         self.raw_module.eval()
@@ -201,13 +182,13 @@ class DetermninisticPredictor(PredictorABC):
 
             if self.num_output_covariance_sampling > 1:
                 num_output_sampling = 1
-            else:
+            else: 
                 num_output_sampling = self.num_output_sampling
 
             output = self.raw_module.predict(
-                data=batch,
-                output_sample_size=num_output_sampling,
-                chunk_output_samples=self.config.chunk_output_samples,
+                data=batch, 
+                output_sample_size=num_output_sampling, 
+                chunk_output_samples = self.config.chunk_output_samples
             )
 
             if self.num_output_covariance_sampling > 1:
@@ -229,22 +210,19 @@ class DetermninisticPredictor(PredictorABC):
         data: BatchDataABC,
     ) -> dict[str, RunningCovariance]:
         """
-        Update training residual statistics from deterministic predictions.
-
-        Residuals between target and predicted values are flattened for each batch
-        element and accumulated into the running covariance estimator.
+        Document this function.
 
         Parameters
         ----------
         output : deterministicOutput
-            Deterministic model output used to calculate residuals.
+            Description not yet provided.
         data : BatchDataABC
-            Training batch containing the corresponding target values.
+            Description not yet provided.
 
         Returns
         -------
         dict[str, RunningCovariance]
-            Updated running covariance accumulators.
+            Description not yet provided.
         """
         prediction = output.output
         target = data.target
@@ -261,17 +239,14 @@ class DetermninisticPredictor(PredictorABC):
         metadata: list[dict],
     ):
         """
-        Save a batch of deterministic predictions to a temporary NetCDF file.
-
-        The output-sample dimension is added when necessary, and sample metadata are
-        used to construct the corresponding output coordinates.
+        Document this function.
 
         Parameters
         ----------
         output : deterministicOutput
-            Deterministic model output to save.
+            Description not yet provided.
         metadata : list[dict]
-            Per-sample metadata used to construct output coordinates.
+            Description not yet provided.
         """
         prediction = output.output
 
@@ -281,9 +256,11 @@ class DetermninisticPredictor(PredictorABC):
         num_output_dims = self.raw_module.model_config.NUM_OUTPUT_DIMS
         extra_dims_sorted = ["output_samples"]
         assign_coords = None
-        attrs = {"source": "predictions"}
+        attrs = {"source" : "predictions"}
 
-        save_name = f"rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
+        save_name = (
+            f"rank{self.distributed.rank}_{self._batch_counter:08d}.nc"
+        )
 
         save_batch_to_netcdf(
             prediction,
@@ -293,7 +270,7 @@ class DetermninisticPredictor(PredictorABC):
             self.temp_save_dir,
             extra_dims_sorted,
             assign_coords,
-            attrs,
+            attrs
         )
 
         self._batch_counter += 1

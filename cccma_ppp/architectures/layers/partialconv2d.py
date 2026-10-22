@@ -5,35 +5,26 @@ from torch import nn
 
 class PartialConv2d(nn.Conv2d):
     """
-    Apply a two-dimensional partial convolution using a validity mask.
-
-    The convolution rescales its output according to the number of valid
-    elements within each convolution window and optionally returns the updated
-    validity mask.
+    Document this class.
 
     Parameters
     ----------
     *args : Any
-        Positional arguments passed to ``nn.Conv2d``.
+        Description not yet provided.
     **kwargs : Any
-        Keyword arguments passed to ``nn.Conv2d``. The additional
-        ``multi_channel`` argument controls whether masks are maintained per
-        channel, and ``return_mask`` controls whether the updated mask is
-        returned.
+        Description not yet provided.
     """
 
     def __init__(self, *args, **kwargs):
         """
-        Initialize a two-dimensional partial convolution.
+        Document this function.
 
         Parameters
         ----------
         *args : Any
-            Positional arguments passed to ``nn.Conv2d``.
+            Description not yet provided.
         **kwargs : Any
-            Keyword arguments passed to ``nn.Conv2d``. ``multi_channel`` specifies
-            whether masks are maintained independently for each channel, and
-            ``return_mask`` specifies whether the updated mask is returned.
+            Description not yet provided.
         """
         self.multi_channel = kwargs.pop("multi_channel", False)
         self.return_mask = kwargs.pop("return_mask", False)
@@ -70,26 +61,24 @@ class PartialConv2d(nn.Conv2d):
 
     def forward(self, input, mask_in=None):
         """
-        Apply partial convolution to an input tensor.
+        Document this function.
 
         Parameters
         ----------
-        input : torch.Tensor
-            Input tensor with shape ``(N, C, H, W)``.
-        mask_in : torch.Tensor | None
-            Validity mask associated with the input tensor. If ``None``, all input
-            elements are treated as valid.
+        input : Any
+            Description not yet provided.
+        mask_in : Any
+            Description not yet provided.
 
         Returns
         -------
-        torch.Tensor | tuple[torch.Tensor, torch.Tensor]
-            Partial convolution output, or a tuple containing the output and updated
-            validity mask when ``return_mask`` is enabled.
+        Any
+            Description not yet provided.
 
         Raises
         ------
         AssertionError
-            If ``input`` is not a four-dimensional tensor.
+            Description not yet provided.
         """
         assert len(input.shape) == 4
         if mask_in is not None or self.last_size != tuple(input.shape):

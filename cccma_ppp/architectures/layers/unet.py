@@ -13,11 +13,7 @@ from cccma_ppp.architectures.layers.generic import (
 )
 
 
-from cccma_ppp.architectures.layers.utils import (
-    align_to_skip,
-    _noise_injection,
-    _same_padding,
-)
+from cccma_ppp.architectures.layers.utils import align_to_skip, _noise_injection, _same_padding
 
 from cccma_ppp.architectures.layers.conv import (
     ConvBlockConfig,
@@ -45,48 +41,38 @@ def build_conv_block(
     inject_noise: bool = False,
 ) -> nn.Module:
     """
-    Build a convolutional block from a block configuration.
-
-    The configuration is copied before generator-specific options are applied.
-    When ``latent_size`` is provided, the convolutional block is wrapped in a
-    latent projection block.
+    Document this function.
 
     Parameters
     ----------
     in_channels : int
-        Number of channels in the input tensor.
+        Description not yet provided.
     out_channels : int
-        Number of channels produced by the convolutional block.
+        Description not yet provided.
     config : ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig
-        Configuration defining the convolutional block type and its behavior.
-    latent_size : int | None
-        Size of the latent representation. If ``None``, the convolutional block
-        is returned without a latent projection.
+        Description not yet provided.
+    latent_size : int
+        Description not yet provided.
     block_output_shape : tuple[int, int, int] | None
-        Expected ``(C, H, W)`` shape of the convolutional block output. Required
-        when ``latent_size`` is specified.
+        Description not yet provided.
     get_log_var : bool
-        Whether the latent block produces log-variance values in addition to
-        latent means.
+        Description not yet provided.
     latent_normalization : NormalizationMethod | None
-        Normalization applied before projecting convolutional features into the
-        latent representation. If ``None``, normalization is disabled.
+        Description not yet provided.
     inject_noise : bool
-        Whether to enable noise injection within the convolutional block.
+        Description not yet provided.
 
     Returns
     -------
     nn.Module
-        Constructed convolutional block, optionally wrapped in a latent block.
+        Description not yet provided.
 
     Raises
     ------
     TypeError
-        If ``config`` is not a supported convolutional block configuration.
+        Description not yet provided.
     ValueError
-        If ``latent_size`` is specified without ``block_output_shape``, or if
-        the channel dimension of ``block_output_shape`` does not match
-        ``out_channels``.
+        Description not yet provided.
     """
     effective_config = copy.copy(config)
 
@@ -144,28 +130,24 @@ def build_conv_block(
 
 class DownBlock(nn.Module):
     """
-    Apply convolutional processing followed by spatial downsampling.
-
-    The block can optionally return a skip connection and apply additional
-    processing to that skip connection before it is returned.
+    Document this class.
 
     Parameters
     ----------
     in_channels : int
-        Number of channels in the input tensor.
+        Description not yet provided.
     out_channels : int
-        Number of channels in the downsampled tensor.
+        Description not yet provided.
     block_config : ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig
-        Configuration used to construct the convolutional processing blocks.
+        Description not yet provided.
     mask_pooling : MaskPoolingMethod
-        Mask pooling method associated with the downsampling configuration.
+        Description not yet provided.
     mask_fraction_threshold : float
-        Valid-mask fraction threshold associated with fractional mask pooling.
+        Description not yet provided.
     return_skip : bool
-        Whether to return a skip connection alongside the downsampled output.
+        Description not yet provided.
     process_skip_connections : bool
-        Whether to apply an additional convolutional block to the skip
-        connection before returning it.
+        Description not yet provided.
     """
 
     def __init__(
@@ -180,26 +162,24 @@ class DownBlock(nn.Module):
         process_skip_connections: bool = False,
     ):
         """
-        Initialize a convolutional downsampling block.
+        Document this function.
 
         Parameters
         ----------
         in_channels : int
-            Number of channels in the input tensor.
+            Description not yet provided.
         out_channels : int
-            Number of channels in the downsampled tensor.
+            Description not yet provided.
         block_config : ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig
-            Configuration used to construct the convolutional processing blocks and
-            determine the downsampling behavior.
+            Description not yet provided.
         mask_pooling : MaskPoolingMethod
-            Mask pooling method associated with the downsampling configuration.
+            Description not yet provided.
         mask_fraction_threshold : float
-            Valid-mask fraction threshold associated with fractional mask pooling.
+            Description not yet provided.
         return_skip : bool
-            Whether to return a skip connection alongside the downsampled output.
+            Description not yet provided.
         process_skip_connections : bool
-            Whether to process the skip connection with an additional convolutional
-            block before returning it.
+            Description not yet provided.
         """
         super().__init__()
         self.return_skip = return_skip
@@ -249,19 +229,17 @@ class DownBlock(nn.Module):
         input: TensorMask,
     ) -> TensorMask | tuple[TensorMask, TensorMask]:
         """
-        Apply convolutional processing and downsample the resulting features.
+        Document this function.
 
         Parameters
         ----------
         input : TensorMask
-            Input tensor and its associated validity mask.
+            Description not yet provided.
 
         Returns
         -------
         TensorMask | tuple[TensorMask, TensorMask]
-            Downsampled tensor and mask. If skip connections are enabled, also
-            returns the processed or unprocessed feature tensor used as the skip
-            connection.
+            Description not yet provided.
         """
         skip = self._block(input)
 
@@ -290,52 +268,45 @@ class DownBlock(nn.Module):
 
     def output_shape(self, input_shape: np.ndarray | tuple):
         """
-        Compute the spatial output shape after downsampling.
+        Document this function.
 
         Parameters
         ----------
         input_shape : np.ndarray | tuple
-            Input spatial dimensions.
+            Description not yet provided.
 
         Returns
         -------
-        tuple
-            Spatial dimensions after stride-two downsampling.
+        Any
+            Description not yet provided.
         """
         return tuple((shape + 1) // 2 for shape in input_shape)
 
 
 class UpBlock(nn.Module):
     """
-    Upsample feature maps and optionally merge them with a skip connection.
-
-    The block supports transposed convolution, bilinear interpolation, and
-    pixel-shuffle upsampling, followed by convolutional feature processing.
+    Document this class.
 
     Parameters
     ----------
     input_channels : int
-        Number of channels in the input tensor.
+        Description not yet provided.
     skip_channels : int | None
-        Number of channels in the skip connection. If ``None``, no skip
-        connection is expected.
+        Description not yet provided.
     out_channels : int
-        Number of channels produced by the block.
+        Description not yet provided.
     block_config : ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig
-        Configuration used for convolutional processing after upsampling.
+        Description not yet provided.
     upsampling_method : UpsamplingMethod
-        Method used to increase the spatial resolution.
+        Description not yet provided.
     skip_alignment_method : AlignmentMethod
-        Method used to spatially align the upsampled tensor with the skip
-        connection or requested output shape.
+        Description not yet provided.
     upsampling_kernel_size : int
-        Kernel size used by the learnable upsampling or channel-projection
-        convolution.
+        Description not yet provided.
     inject_noise : bool
-        Whether to inject noise during the upsampling path.
+        Description not yet provided.
     inject_noise_in_block : bool
-        Whether noise injection is also enabled within the convolutional block
-        following upsampling.
+        Description not yet provided.
     """
 
     def __init__(
@@ -352,38 +323,33 @@ class UpBlock(nn.Module):
         inject_noise_in_block: bool = False,
     ):
         """
-        Initialize an upsampling block.
+        Document this function.
 
         Parameters
         ----------
         input_channels : int
-            Number of channels in the input tensor.
+            Description not yet provided.
         skip_channels : int | None
-            Number of channels in the skip connection. If ``None``, the block does
-            not expect a skip connection.
+            Description not yet provided.
         out_channels : int
-            Number of channels produced after upsampling and convolutional
-            processing.
+            Description not yet provided.
         block_config : ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig
-            Configuration used to construct the post-upsampling convolutional block.
+            Description not yet provided.
         upsampling_method : UpsamplingMethod
-            Method used to increase the spatial resolution.
+            Description not yet provided.
         skip_alignment_method : AlignmentMethod
-            Method used to align the upsampled tensor to a skip connection or
-            requested output shape.
+            Description not yet provided.
         upsampling_kernel_size : int
-            Kernel size used by the learnable upsampling or channel-projection
-            convolution.
+            Description not yet provided.
         inject_noise : bool
-            Whether to inject an additional noise channel during upsampling.
+            Description not yet provided.
         inject_noise_in_block : bool
-            Whether noise injection is also enabled within the convolutional block
-            following upsampling.
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If ``upsampling_method`` is not supported.
+            Description not yet provided.
         """
         super().__init__()
 
@@ -442,20 +408,20 @@ class UpBlock(nn.Module):
                 block_config, "use_partial_conv", False
             ):
                 self.upsample = PartialConv2d(
-                    input_channels + added_upsampling_channels,
-                    out_channels * 4,
-                    kernel_size=upsampling_kernel_size,
-                    multi_channel=False,
-                    return_mask=False,
-                    padding=_same_padding(upsampling_kernel_size),
-                )
+                        input_channels  + added_upsampling_channels ,
+                        out_channels * 4,
+                        kernel_size=upsampling_kernel_size,
+                        multi_channel=False,
+                        return_mask=False,
+                        padding=_same_padding(upsampling_kernel_size),
+                    ) 
             else:
-                self.upsample = nn.Conv2d(
-                    input_channels + added_upsampling_channels,
-                    out_channels * 4,
-                    kernel_size=upsampling_kernel_size,
-                    padding=_same_padding(upsampling_kernel_size),
-                )
+                self.upsample =  nn.Conv2d(
+                        input_channels  + added_upsampling_channels ,
+                        out_channels * 4,
+                        kernel_size=upsampling_kernel_size,
+                        padding=_same_padding(upsampling_kernel_size),
+                    )                      
 
             self.channel_projection = nn.PixelShuffle(upscale_factor=2)
         else:
@@ -484,33 +450,26 @@ class UpBlock(nn.Module):
         resize_shape: tuple | None = None,
     ) -> TensorMask:
         """
-        Upsample an input tensor and apply convolutional feature processing.
-
-        When a skip connection is configured, the upsampled tensor is spatially
-        aligned with and concatenated to the skip tensor before convolutional
-        processing.
+        Document this function.
 
         Parameters
         ----------
         input : TensorMask
-            Input tensor and its associated validity mask.
+            Description not yet provided.
         skip : TensorMask | None
-            Skip-connection tensor to merge with the upsampled features. Required
-            when ``skip_channels`` is configured.
+            Description not yet provided.
         resize_shape : tuple | None
-            Target spatial shape used to align the upsampled tensor when no skip
-            connection is configured.
+            Description not yet provided.
 
         Returns
         -------
         TensorMask
-            Upsampled and processed tensor. The returned mask is determined by the
-            post-upsampling convolutional block.
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If a skip connection is configured but ``skip`` is not provided.
+            Description not yet provided.
         """
         if self.inject_noise:
             if self.upsampling_method == "transpose_conv":
@@ -565,22 +524,18 @@ class UpBlock(nn.Module):
 
 class UNetOutput(nn.Module):
     """
-    Map U-Net features to the requested output channels.
-
-    An optional hidden partial-convolutional stage can be applied before the
-    final projection, followed by an optional output activation.
+    Document this class.
 
     Parameters
     ----------
     in_channels : int
-        Number of channels in the input feature tensor.
+        Description not yet provided.
     out_channels : int
-        Number of channels in the output tensor.
+        Description not yet provided.
     hidden_channels : int | None
-        Number of channels in the intermediate feature representation. If
-        ``None``, the input is projected directly to ``out_channels``.
+        Description not yet provided.
     activation : OutputActivation
-        Activation function applied to the final output.
+        Description not yet provided.
     """
 
     def __init__(
@@ -592,24 +547,23 @@ class UNetOutput(nn.Module):
         activation: OutputActivation,
     ):
         """
-        Initialize a U-Net output projection.
+        Document this function.
 
         Parameters
         ----------
         in_channels : int
-            Number of channels in the input feature tensor.
+            Description not yet provided.
         out_channels : int
-            Number of channels in the output tensor.
+            Description not yet provided.
         hidden_channels : int | None
-            Number of intermediate channels. If ``None``, a single pointwise
-            convolution is used for the output projection.
+            Description not yet provided.
         activation : OutputActivation
-            Activation function applied after the output projection.
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If ``activation`` is not a supported output activation.
+            Description not yet provided.
         """
         super().__init__()
 
@@ -644,42 +598,37 @@ class UNetOutput(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Project feature maps to the output representation.
+        Document this function.
 
         Parameters
         ----------
         x : torch.Tensor
-            Input feature tensor with shape ``(N, C, H, W)``.
+            Description not yet provided.
 
         Returns
         -------
         torch.Tensor
-            Projected output tensor.
+            Description not yet provided.
         """
         return self.layers(x)
 
 
 class UNetOutputSIC(nn.Module):
     """
-    Map U-Net features to sea ice concentration output features.
-
-    The output projection applies layer normalization and activation before the
-    final convolution, with an optional hidden partial-convolutional stage.
-    Outputs can optionally be clipped to the interval [0, 1].
+    Document this class.
 
     Parameters
     ----------
     in_channels : int
-        Number of channels in the input feature tensor.
+        Description not yet provided.
     out_channels : int
-        Number of channels in the output tensor.
+        Description not yet provided.
     hidden_channels : int | None
-        Number of channels in the intermediate feature representation. If
-        ``None``, no hidden partial-convolutional stage is used.
+        Description not yet provided.
     activation : OutputActivation
-        Activation function applied to the projected output.
+        Description not yet provided.
     clip_output : bool
-        Whether to clamp the final output values to the interval [0, 1].
+        Description not yet provided.
     """
 
     def __init__(
@@ -692,26 +641,25 @@ class UNetOutputSIC(nn.Module):
         clip_output: bool = False,
     ):
         """
-        Initialize a sea ice concentration output projection.
+        Document this function.
 
         Parameters
         ----------
         in_channels : int
-            Number of channels in the input feature tensor.
+            Description not yet provided.
         out_channels : int
-            Number of channels in the output tensor.
+            Description not yet provided.
         hidden_channels : int | None
-            Number of intermediate channels. If ``None``, normalization and
-            activation are followed directly by the output projection.
+            Description not yet provided.
         activation : OutputActivation
-            Activation function applied after the output projection.
+            Description not yet provided.
         clip_output : bool
-            Whether to clamp final output values to the interval [0, 1].
+            Description not yet provided.
 
         Raises
         ------
         ValueError
-            If ``activation`` is not a supported output activation.
+            Description not yet provided.
         """
         super().__init__()
 
@@ -750,17 +698,17 @@ class UNetOutputSIC(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Project feature maps to sea ice concentration output features.
+        Document this function.
 
         Parameters
         ----------
         x : torch.Tensor
-            Input feature tensor with shape ``(N, C, H, W)``.
+            Description not yet provided.
 
         Returns
         -------
         torch.Tensor
-            Projected output tensor, optionally clamped to the interval [0, 1].
+            Description not yet provided.
         """
         out = self.layers(x)
         if self.clip_output:

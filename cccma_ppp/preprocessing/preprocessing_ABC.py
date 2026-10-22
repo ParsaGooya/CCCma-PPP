@@ -17,24 +17,14 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 
 class PreprocessModuleABC(abc.ABC):
     """
-    Abstract base class for preprocessing modules.
-
-    Defines the common interface and utilities for fitting, transforming, and
-    inverse transforming xarray data, including temporal grouping and
-    dimension-reduction behavior.
+    Document this class.
 
     Attributes
     ----------
     large_ensemble : bool
-        Whether the realization dimension is automatically included when
-        calculating preprocessing statistics.
+        Description not yet provided.
     fitted : bool
-        Whether the preprocessing module has been fitted.
-    dims : tuple[str, ...]
-        Dimensions over which preprocessing statistics are calculated.
-    frequency : str | None
-        Temporal frequency used to group preprocessing statistics. Supported
-        values are ``"year"``, ``"month"``, ``"day"``, and ``None``.
+        Description not yet provided.
     """
 
     large_ensemble: bool
@@ -51,50 +41,40 @@ class PreprocessModuleABC(abc.ABC):
     @abc.abstractmethod
     def fit(self, data):
         """
-        Fit the preprocessing module to data.
+        Document this function.
 
         Parameters
         ----------
         data : Any
-            Data used to estimate preprocessing parameters.
+            Description not yet provided.
         """
         pass
 
     @abc.abstractmethod
     def transform(self, data, **kwargs):
         """
-        Apply the fitted preprocessing transformation.
+        Document this function.
 
         Parameters
         ----------
         data : Any
-            Data to transform.
-        kwargs : Any
-            Additional transformation-specific keyword arguments.
-
-        Returns
-        -------
-        Any
-            Transformed data.
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
         """
         pass
 
     @abc.abstractmethod
     def inverse_transform(self, data, **kwargs):
         """
-        Apply the inverse preprocessing transformation.
+        Document this function.
 
         Parameters
         ----------
         data : Any
-            Data to transform back to its original representation.
-        kwargs : Any
-            Additional inverse-transformation-specific keyword arguments.
-
-        Returns
-        -------
-        Any
-            Inverse-transformed data.
+            Description not yet provided.
+        **kwargs : Any
+            Description not yet provided.
         """
         pass
 
@@ -104,28 +84,17 @@ class PreprocessModuleABC(abc.ABC):
         data: xr.Dataset | xr.DataArray,
     ) -> tuple[str, ...] | None:
         """
-        Resolve dimensions used to calculate preprocessing statistics.
-
-        Configured dimensions must exist in the input data. When a realization
-        dimension is present but is not explicitly included in the configured
-        reduction dimensions, it is added automatically and the data are marked as a
-        large ensemble.
+        Document this function.
 
         Parameters
         ----------
         data : xr.Dataset | xr.DataArray
-            Data whose dimensions are used to resolve the reduction dimensions.
+            Description not yet provided.
 
         Returns
         -------
         tuple[str, ...] | None
-            Dimensions over which preprocessing statistics are reduced, or ``None``
-            when no reduction dimensions are configured.
-
-        Raises
-        ------
-        ValueError
-            If a configured reduction dimension is not present in the input data.
+            Description not yet provided.
         """
         reduction_dims = self.dims
         self.large_ensemble = False
@@ -156,26 +125,26 @@ class PreprocessModuleABC(abc.ABC):
         frequency: str | None,
     ) -> xr.DataArray:
         """
-        Extract a temporal coordinate for a specified frequency.
+        Extract temporal coordinate based on frequency.
+
+        Single source of truth for temporal extraction logic.
 
         Parameters
         ----------
         init_time : xr.DataArray
-            Initialization-time coordinate from which temporal values are extracted.
+            Initialization time coordinate to extract from.
         frequency : str | None
-            Temporal frequency to extract. Supported values are ``"year"``,
-            ``"month"``, ``"day"``, and ``None``.
+            Temporal frequency: 'year', 'month', 'day', or None.
 
         Returns
         -------
         xr.DataArray
-            Original initialization times when ``frequency`` is ``None``, or the
-            corresponding year, month, or day-of-year values.
+            Extracted temporal coordinate matching frequency.
 
         Raises
         ------
         ValueError
-            If ``frequency`` is not supported.
+            If frequency is not supported.
         """
         if frequency is None:
             return init_time
@@ -198,22 +167,22 @@ class PreprocessModuleABC(abc.ABC):
         data: xr.Dataset | xr.DataArray,
     ) -> xr.Dataset | xr.DataArray:
         """
-        Add a temporal grouping coordinate to data.
-
-        When a preprocessing frequency is configured, the corresponding year, month,
-        or day-of-year values are derived from initialization time and assigned as an
-        auxiliary coordinate.
+        Document this function.
 
         Parameters
         ----------
         data : xr.Dataset | xr.DataArray
-            Data to which the temporal grouping coordinate is added.
+            Description not yet provided.
 
         Returns
         -------
         xr.Dataset | xr.DataArray
-            Data with the temporal grouping coordinate added, or the original data
-            when no temporal frequency is configured.
+            Description not yet provided.
+
+        Raises
+        ------
+        RuntimeError
+            Description not yet provided.
         """
         if self.frequency is None:
             return data
@@ -230,30 +199,26 @@ class PreprocessModuleABC(abc.ABC):
         stat: xr.DataArray | xr.Dataset,
     ) -> xr.DataArray:
         """
-        Align temporal preprocessing statistics with input data.
-
-        When preprocessing statistics are grouped temporally, the appropriate
-        statistic is selected for each input initialization time using either an
-        existing auxiliary temporal coordinate or one derived from initialization
-        time.
+        Document this function.
 
         Parameters
         ----------
         data : xr.DataArray | xr.Dataset
-            Data to which the preprocessing statistic will be applied.
+            Description not yet provided.
         stat : xr.DataArray | xr.Dataset
-            Preprocessing statistic to align with the input data.
+            Description not yet provided.
 
         Returns
         -------
-        xr.DataArray | xr.Dataset
-            Statistic aligned with the temporal coordinates of ``data``.
+        xr.DataArray
+            Description not yet provided.
 
         Raises
         ------
+        RuntimeError
+            Description not yet provided.
         ValueError
-            If temporal alignment is required but neither the configured auxiliary
-            temporal coordinate nor the initialization-time coordinate is available.
+            Description not yet provided.
         """
         if self.frequency is None or self.init_time_dim not in self.dims:
             return stat
@@ -270,9 +235,7 @@ class PreprocessModuleABC(abc.ABC):
                 )
 
             init_time = data[self.init_time_dim]
-            temporal_indexer = self._extract_temporal_coordinate(
-                init_time, self.frequency
-            )
+            temporal_indexer = self._extract_temporal_coordinate(init_time, self.frequency)
 
         return stat.sel({self.frequency: temporal_indexer})
 
@@ -282,32 +245,20 @@ class PreprocessModuleABC(abc.ABC):
         data: xr.DataArray | xr.Dataset,
     ) -> xr.DataArray:
         """
-        Calculate target times associated with initialization and lead times.
-
-        If the data contain a lead-time dimension, target times are calculated for
-        every initialization-time and lead-time combination. Otherwise, the existing
-        initialization-time coordinate is returned.
+        Document this function.
 
         Parameters
         ----------
         data : xr.DataArray | xr.Dataset
-            Data containing initialization-time and optional lead-time coordinates.
+            Description not yet provided.
 
         Returns
         -------
         xr.DataArray
-            Target-time coordinate indexed by initialization time and lead time, or
-            the initialization-time coordinate when no lead-time dimension exists.
-
-        Raises
-        ------
-        ValueError
-            If target-time calculation produces invalid ``NaT`` values.
-        RuntimeError
-            If the calculated target times do not have the expected shape.
-
+            Description not yet provided.
+        
         Notes
-        -----
+        ------
         Assumes UTC timezones.
         """
         init_times = np.asarray(data[self.init_time_dim].values)
@@ -331,8 +282,8 @@ class PreprocessModuleABC(abc.ABC):
 
         if np.isnat(target_times).any():
             raise ValueError(
-                "add_lead_times produced NaT (Not a Time) values. "
-                "Check that init_times and lead_times are compatible."
+                f"add_lead_times produced NaT (Not a Time) values. "
+                f"Check that init_times and lead_times are compatible."
             )
 
         if target_times.shape != init_grid.reshape(-1).shape:
@@ -358,12 +309,12 @@ class PreprocessModuleABC(abc.ABC):
     @final
     def _check_fitted(self) -> None:
         """
-        Verify that the preprocessing module has been fitted.
+        Document this function.
 
         Raises
         ------
         RuntimeError
-            If the preprocessing module has not been fitted.
+            Description not yet provided.
         """
         if not self.fitted:
             raise RuntimeError(
@@ -373,22 +324,7 @@ class PreprocessModuleABC(abc.ABC):
 
     @final
     def _check_zeros(self, data: xr.Dataset | xr.DataArray):
-        """
-        Check data for zero values that would make a transformation undefined.
 
-        For datasets, each variable is checked independently. For a DataArray, the
-        array itself is checked.
-
-        Parameters
-        ----------
-        data : xr.Dataset | xr.DataArray
-            Data to inspect for zero values.
-
-        Raises
-        ------
-        ValueError
-            If one or more variables contain zero values.
-        """
         zero_range_vars = []
         if isinstance(data, xr.Dataset):
             for var in data.data_vars:
