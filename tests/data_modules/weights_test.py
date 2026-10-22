@@ -73,6 +73,7 @@ def make_loaded_weights():
 
 
 class TestWeightsConfigInitialization:
+    @pytest.mark.pruned
     def test_default_values(self):
         config = WeightsConfig()
 
@@ -80,6 +81,7 @@ class TestWeightsConfigInitialization:
         assert config.variable_weights is None
         assert config.load_dir is None
 
+    @pytest.mark.pruned
     def test_custom_values(self):
         config = WeightsConfig(
             spatial_method="cosine_lat",
@@ -95,6 +97,7 @@ class TestWeightsConfigInitialization:
             "pr": 2.0,
         }
 
+    @pytest.mark.pruned
     def test_existing_load_path_is_accepted(
         self,
         tmp_path,
@@ -121,6 +124,7 @@ class TestWeightsConfigInitialization:
 
 
 class TestBuildUniformWeights:
+    @pytest.mark.pruned
     def test_uniform_weights(self):
         config = WeightsConfig(
             spatial_method="uniform",
@@ -150,6 +154,7 @@ class TestBuildUniformWeights:
             1.0,
         )
 
+    @pytest.mark.pruned
     def test_uniform_weight_coordinates(self):
         target_coords = make_target_coords()
         config = WeightsConfig()
@@ -162,6 +167,7 @@ class TestBuildUniformWeights:
         assert result.coords["lat"].equals(target_coords["lat"])
         assert result.coords["lon"].equals(target_coords["lon"])
 
+    @pytest.mark.pruned
     def test_empty_target_coordinates(self):
         config = WeightsConfig()
 
@@ -178,6 +184,7 @@ class TestBuildUniformWeights:
         assert result.shape == ()
         assert result.item() == pytest.approx(1.0)
 
+    @pytest.mark.pruned
     def test_one_dimensional_weights(self):
         target_coords = {
             "lat": xr.DataArray(
@@ -213,6 +220,7 @@ class TestBuildUniformWeights:
 
 
 class TestCosineLatitudeWeights:
+    @pytest.mark.pruned
     def test_cosine_latitude_weights(self):
         config = WeightsConfig(
             spatial_method="cosine_lat",
@@ -252,6 +260,7 @@ class TestCosineLatitudeWeights:
             expected,
         )
 
+    @pytest.mark.pruned
     def test_cosine_latitude_at_equator(self):
         config = WeightsConfig(
             spatial_method="cosine_lat",
@@ -267,6 +276,7 @@ class TestCosineLatitudeWeights:
             1.0,
         )
 
+    @pytest.mark.pruned
     def test_cosine_latitude_is_symmetric(self):
         config = WeightsConfig(
             spatial_method="cosine_lat",
@@ -282,6 +292,7 @@ class TestCosineLatitudeWeights:
             result.sel(lat=60.0).values,
         )
 
+    @pytest.mark.pruned
     def test_cosine_latitude_without_lat_coordinate_is_uniform(self):
         target_coords = {
             "lat": xr.DataArray(
@@ -317,6 +328,7 @@ class TestCosineLatitudeWeights:
 
 
 class TestVariableWeights:
+    @pytest.mark.pruned
     def test_adds_channel_dimension(self):
         config = WeightsConfig(
             variable_weights={
@@ -345,6 +357,7 @@ class TestVariableWeights:
             "pr",
         ]
 
+    @pytest.mark.pruned
     def test_applies_variable_weight_values(self):
         config = WeightsConfig(
             variable_weights={
@@ -367,6 +380,7 @@ class TestVariableWeights:
             2.0,
         )
 
+    @pytest.mark.pruned
     def test_preserves_variable_order(self):
         config = WeightsConfig(
             variable_weights={
@@ -439,6 +453,7 @@ class TestVariableWeights:
 
 
 class TestLoadWeights:
+    @pytest.mark.pruned
     def test_loads_data_array_weights(
         self,
         tmp_path,
@@ -521,6 +536,7 @@ class TestLoadWeights:
         mock_unwrap.assert_called_once_with(loaded_dataset)
         assert result is unwrapped
 
+    @pytest.mark.pruned
     def test_loaded_weights_require_target_coordinate(
         self,
         tmp_path,
@@ -557,6 +573,7 @@ class TestLoadWeights:
                     target_coords=make_target_coords(),
                 )
 
+    @pytest.mark.pruned
     def test_loaded_weights_require_matching_coordinate_values(
         self,
         tmp_path,
@@ -621,6 +638,7 @@ class TestLoadWeights:
                     target_coords=make_target_coords(),
                 )
 
+    @pytest.mark.pruned
     def test_loaded_weights_are_not_saved_again(
         self,
         tmp_path,
@@ -646,6 +664,7 @@ class TestLoadWeights:
 
 
 class TestSaveWeights:
+    @pytest.mark.pruned
     def test_save_false_does_not_write(self):
         config = WeightsConfig()
 
@@ -660,6 +679,7 @@ class TestSaveWeights:
 
         mock_save.assert_not_called()
 
+    @pytest.mark.pruned
     def test_saves_to_custom_path(
         self,
         tmp_path,
@@ -682,6 +702,7 @@ class TestSaveWeights:
 
         mock_save.assert_called_once_with(save_path / "custom_weights.nc")
 
+    @pytest.mark.pruned
     def test_uses_default_save_name(
         self,
         tmp_path,
@@ -700,6 +721,7 @@ class TestSaveWeights:
 
         mock_save.assert_called_once_with(tmp_path / "spatial_weights.nc")
 
+    @pytest.mark.pruned
     def test_existing_save_directory_is_preserved(
         self,
         tmp_path,
@@ -724,6 +746,7 @@ class TestSaveWeights:
 
         mock_makedirs.assert_not_called()
 
+    @pytest.mark.pruned
     def test_missing_save_directory_is_created(
         self,
         tmp_path,
@@ -754,6 +777,7 @@ class TestSaveWeights:
 
 
 class TestFlattenNaNRemover:
+    @pytest.mark.pruned
     def test_applies_flattennanremover(self):
         config = WeightsConfig()
 
@@ -827,6 +851,7 @@ class TestFlattenNaNRemover:
             "transform",
         ]
 
+    @pytest.mark.pruned
     def test_loaded_weights_can_be_flattened(
         self,
         tmp_path,
@@ -861,6 +886,7 @@ class TestFlattenNaNRemover:
 
 
 class TestAdditionalWeightsConfigInitialization:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "spatial_method",
         [
@@ -892,6 +918,7 @@ class TestAdditionalWeightsConfigInitialization:
                 spatial_method="unsupported",
             )
 
+    @pytest.mark.pruned
     def test_existing_string_load_path_is_accepted(
         self,
         tmp_path,
@@ -907,6 +934,7 @@ class TestAdditionalWeightsConfigInitialization:
 
 
 class TestAdditionalCosineLatitudeBranches:
+    @pytest.mark.pruned
     def test_missing_latitude_coordinate_raises(self):
         target_coords = {
             "lon": xr.DataArray(
@@ -937,6 +965,7 @@ class TestAdditionalCosineLatitudeBranches:
                 save=False,
             )
 
+    @pytest.mark.pruned
     def test_missing_latitude_error_lists_available_coordinates(self):
         target_coords = {
             "latitude": xr.DataArray(
@@ -968,6 +997,7 @@ class TestAdditionalCosineLatitudeBranches:
                 save=False,
             )
 
+    @pytest.mark.pruned
     def test_cosine_latitude_at_poles_is_near_zero(self):
         target_coords = {
             "lat": xr.DataArray(
@@ -1006,6 +1036,7 @@ class TestAdditionalCosineLatitudeBranches:
             atol=1e-7,
         )
 
+    @pytest.mark.pruned
     def test_cosine_latitude_preserves_other_dimensions(self):
         target_coords = {
             "lat": xr.DataArray(
@@ -1129,6 +1160,7 @@ class TestAdditionalVariableWeightValidation:
                 save=False,
             )
 
+    @pytest.mark.pruned
     def test_variable_weights_without_target_channels_add_dimension(self):
         config = WeightsConfig(
             variable_weights={
@@ -1148,6 +1180,7 @@ class TestAdditionalVariableWeightValidation:
             "lon",
         )
 
+    @pytest.mark.pruned
     def test_zero_variable_weight_is_allowed(self):
         config = WeightsConfig(
             variable_weights={
@@ -1171,6 +1204,7 @@ class TestAdditionalVariableWeightValidation:
             ),
         )
 
+    @pytest.mark.pruned
     def test_negative_variable_weight_raises(self):
         config = WeightsConfig(
             variable_weights={
@@ -1188,6 +1222,7 @@ class TestAdditionalVariableWeightValidation:
                 save=False,
             )
 
+    @pytest.mark.pruned
     def test_nan_variable_weight_raises(self):
         config = WeightsConfig(
             variable_weights={
@@ -1205,6 +1240,7 @@ class TestAdditionalVariableWeightValidation:
                 save=False,
             )
 
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "value",
         [
@@ -1240,6 +1276,7 @@ class TestAdditionalVariableWeightValidation:
 
 
 class TestAdditionalLoadedWeights:
+    @pytest.mark.pruned
     def test_loaded_dataarray_is_loaded_and_closed(
         self,
         tmp_path,
@@ -1284,6 +1321,7 @@ class TestAdditionalLoadedWeights:
         loaded.close.assert_called_once_with()
         assert result is loaded
 
+    @pytest.mark.pruned
     def test_loaded_weights_ignore_variable_weight_configuration(
         self,
         tmp_path,
@@ -1313,6 +1351,7 @@ class TestAdditionalLoadedWeights:
         )
         assert "channels" not in result.dims
 
+    @pytest.mark.pruned
     def test_loaded_weights_ignore_spatial_method(
         self,
         tmp_path,
@@ -1339,6 +1378,7 @@ class TestAdditionalLoadedWeights:
             1.0,
         )
 
+    @pytest.mark.pruned
     def test_empty_target_coordinates_accept_loaded_weights(
         self,
         tmp_path,
@@ -1361,6 +1401,7 @@ class TestAdditionalLoadedWeights:
 
         assert result is loaded
 
+    @pytest.mark.pruned
     def test_loaded_negative_weights_raise(
         self,
         tmp_path,
@@ -1441,6 +1482,7 @@ class TestAdditionalLoadedWeights:
 
 
 class TestAdditionalValidationOrder:
+    @pytest.mark.pruned
     def test_negative_values_are_checked_before_nan_values(self):
         config = WeightsConfig(
             variable_weights={
@@ -1458,6 +1500,7 @@ class TestAdditionalValidationOrder:
                 save=False,
             )
 
+    @pytest.mark.pruned
     def test_nan_values_are_checked_before_infinite_values(self):
         config = WeightsConfig(
             variable_weights={
@@ -1496,6 +1539,7 @@ class TestAdditionalSavingBranches:
 
         save.assert_called_once_with(save_path / "spatial_weights.nc")
 
+    @pytest.mark.pruned
     def test_loaded_weights_do_not_create_requested_save_directory(
         self,
         tmp_path,
@@ -1549,6 +1593,7 @@ class TestAdditionalSavingBranches:
 
 
 class TestAdditionalFlatteningBranches:
+    @pytest.mark.pruned
     def test_none_flattener_returns_original_weights(self):
         config = WeightsConfig()
 
@@ -1564,6 +1609,7 @@ class TestAdditionalFlatteningBranches:
             "lon",
         )
 
+    @pytest.mark.pruned
     def test_flattener_receives_validated_weights(self):
         config = WeightsConfig(
             variable_weights={
@@ -1592,6 +1638,7 @@ class TestAdditionalFlatteningBranches:
             2.0,
         )
 
+    @pytest.mark.pruned
     def test_flattener_failure_is_propagated(self):
         config = WeightsConfig()
         flattener = MagicMock()

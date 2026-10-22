@@ -5,6 +5,7 @@ import pytest
 from cccma_ppp.preprocessing.registery import Registery
 
 
+@pytest.mark.pruned
 def test_register_and_get_class_without_config():
     reg = Registery()
 
@@ -18,6 +19,7 @@ def test_register_and_get_class_without_config():
     assert obj.value == 1
 
 
+@pytest.mark.pruned
 def test_register_and_get_with_config():
     reg = Registery()
 
@@ -57,6 +59,7 @@ def legacy_overwrite_registration():
     assert isinstance(cls, C2)
 
 
+@pytest.mark.pruned
 def test_get_with_empty_config_dict():
     reg = Registery()
 
@@ -71,6 +74,7 @@ def test_get_with_empty_config_dict():
     assert obj.ok
 
 
+@pytest.mark.pruned
 def test_get_with_none_config_passes_none():
     reg = Registery()
 
@@ -84,6 +88,7 @@ def test_get_with_none_config_passes_none():
     assert isinstance(cls, E)
 
 
+@pytest.mark.pruned
 def test_multiple_registrations_independent():
     reg = Registery()
 
@@ -99,6 +104,7 @@ def test_multiple_registrations_independent():
     assert isinstance(reg.get("B"), B)
 
 
+@pytest.mark.pruned
 def test_config_passed_as_kwargs_correctly():
     reg = Registery()
 
@@ -114,6 +120,7 @@ def test_config_passed_as_kwargs_correctly():
     assert obj.b == 0
 
 
+@pytest.mark.pruned
 def test_get_dataclass_with_config():
     reg = Registery()
 
@@ -131,6 +138,7 @@ def test_get_dataclass_with_config():
     assert obj.y == 2
 
 
+@pytest.mark.pruned
 def test_get_returns_class_when_config_none():
     reg = Registery()
 
@@ -143,6 +151,7 @@ def test_get_returns_class_when_config_none():
     assert isinstance(cls, A)
 
 
+@pytest.mark.pruned
 def test_get_with_invalid_config_raises_typeerror():
     reg = Registery()
 
@@ -155,6 +164,7 @@ def test_get_with_invalid_config_raises_typeerror():
         reg.get("A", {})
 
 
+@pytest.mark.pruned
 def test_get_with_non_dict_non_none_config():
     reg = Registery()
 
@@ -167,6 +177,7 @@ def test_get_with_non_dict_non_none_config():
         reg.get("A", 123)
 
 
+@pytest.mark.pruned
 def test_get_with_extra_kwargs_raises():
     reg = Registery()
 
@@ -182,12 +193,14 @@ def test_get_with_extra_kwargs_raises():
 # Remove test due to no coverage
 
 
+@pytest.mark.pruned
 def test_available_is_empty_for_new_registry():
     reg = Registery()
 
     assert reg.available() == []
 
 
+@pytest.mark.pruned
 def test_available_returns_registered_names_in_order():
     reg = Registery()
 
@@ -210,6 +223,7 @@ def test_available_returns_registered_names_in_order():
     ]
 
 
+@pytest.mark.pruned
 def test_registered_class_is_returned_by_decorator():
     reg = Registery()
 
@@ -222,6 +236,7 @@ def test_registered_class_is_returned_by_decorator():
     assert reg._modules["example"] is Example
 
 
+@pytest.mark.pruned
 def test_register_decorator_preserves_class_identity():
     reg = Registery()
 
@@ -255,6 +270,7 @@ def test_register_rejects_non_string_name(name):
     assert reg.available() == []
 
 
+@pytest.mark.pruned
 def test_register_type_error_reports_actual_type():
     reg = Registery()
 
@@ -277,6 +293,7 @@ def test_register_rejects_empty_name():
     assert reg.available() == []
 
 
+@pytest.mark.pruned
 def test_register_accepts_whitespace_name():
     reg = Registery()
 
@@ -290,6 +307,7 @@ def test_register_accepts_whitespace_name():
     )
 
 
+@pytest.mark.pruned
 def test_register_accepts_case_distinct_names():
     reg = Registery()
 
@@ -311,6 +329,7 @@ def test_register_accepts_case_distinct_names():
     )
 
 
+@pytest.mark.pruned
 def test_duplicate_registration_raises():
     reg = Registery()
 
@@ -328,6 +347,7 @@ def test_duplicate_registration_raises():
             pass
 
 
+@pytest.mark.pruned
 def test_duplicate_registration_error_lists_available_names():
     reg = Registery()
 
@@ -354,6 +374,7 @@ def test_duplicate_registration_error_lists_available_names():
     assert "Available" in message
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "value",
     [
@@ -386,6 +407,7 @@ def test_non_class_registration_error_reports_value_type():
         reg.register("callable")(lambda: None)
 
 
+@pytest.mark.pruned
 def test_failed_non_class_registration_does_not_reserve_name():
     reg = Registery()
 
@@ -402,6 +424,7 @@ def test_failed_non_class_registration_does_not_reserve_name():
     )
 
 
+@pytest.mark.pruned
 def test_get_unregistered_error_lists_available_names():
     reg = Registery()
 
@@ -420,6 +443,7 @@ def test_get_unregistered_error_lists_available_names():
     assert "available" in message
 
 
+@pytest.mark.pruned
 def test_get_is_case_sensitive():
     reg = Registery()
 
@@ -434,6 +458,7 @@ def test_get_is_case_sensitive():
         reg.get("example")
 
 
+@pytest.mark.pruned
 def test_get_none_config_calls_constructor_without_arguments():
     reg = Registery()
     calls = []
@@ -457,6 +482,7 @@ def test_get_none_config_calls_constructor_without_arguments():
     ]
 
 
+@pytest.mark.pruned
 def test_get_empty_config_calls_constructor_with_no_keyword_arguments():
     reg = Registery()
     calls = []
@@ -480,6 +506,7 @@ def test_get_empty_config_calls_constructor_with_no_keyword_arguments():
     ]
 
 
+@pytest.mark.pruned
 def test_get_passes_config_as_keyword_arguments():
     reg = Registery()
     received = {}
@@ -502,6 +529,7 @@ def test_get_passes_config_as_keyword_arguments():
     assert received == config
 
 
+@pytest.mark.pruned
 def test_get_does_not_mutate_config_dictionary():
     reg = Registery()
 
@@ -523,6 +551,7 @@ def test_get_does_not_mutate_config_dictionary():
     assert config == original
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "config",
     [
@@ -551,6 +580,7 @@ def test_get_rejects_non_dictionary_config(config):
         )
 
 
+@pytest.mark.pruned
 def test_invalid_config_error_reports_config_type_and_class_name():
     reg = Registery()
 
@@ -575,6 +605,7 @@ def test_invalid_config_error_reports_config_type_and_class_name():
     assert "Example" in message
 
 
+@pytest.mark.pruned
 def test_constructor_missing_required_argument_error_propagates():
     reg = Registery()
 
@@ -590,6 +621,7 @@ def test_constructor_missing_required_argument_error_propagates():
         )
 
 
+@pytest.mark.pruned
 def test_constructor_unexpected_argument_error_propagates():
     reg = Registery()
 
@@ -608,6 +640,7 @@ def test_constructor_unexpected_argument_error_propagates():
         )
 
 
+@pytest.mark.pruned
 def test_constructor_exception_propagates():
     reg = Registery()
 
@@ -623,6 +656,7 @@ def test_constructor_exception_propagates():
         reg.get("example")
 
 
+@pytest.mark.pruned
 def test_each_get_returns_new_instance():
     reg = Registery()
 
@@ -644,6 +678,7 @@ def test_each_get_returns_new_instance():
     )
 
 
+@pytest.mark.pruned
 def test_registry_instances_are_independent():
     first_registry = Registery()
     second_registry = Registery()
@@ -661,6 +696,7 @@ def test_registry_instances_are_independent():
         second_registry.get("example")
 
 
+@pytest.mark.pruned
 def test_available_returns_new_list():
     reg = Registery()
 
@@ -676,6 +712,7 @@ def test_available_returns_new_list():
     ]
 
 
+@pytest.mark.pruned
 def test_available_reflects_later_registrations():
     reg = Registery()
 
@@ -699,6 +736,7 @@ def test_available_reflects_later_registrations():
     ]
 
 
+@pytest.mark.pruned
 def test_dataclass_defaults_are_applied():
     reg = Registery()
 
@@ -719,6 +757,7 @@ def test_dataclass_defaults_are_applied():
     assert result.optional == 10
 
 
+@pytest.mark.pruned
 def test_registered_inheritance_is_supported():
     reg = Registery()
 

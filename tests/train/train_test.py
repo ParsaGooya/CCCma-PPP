@@ -8,6 +8,7 @@ import cccma_ppp.train.train as train_mod
 from cccma_ppp.train.train import get_parser, main
 
 
+@pytest.mark.pruned
 def test_main_root_happy_path(monkeypatch, tmp_path):
     yaml_path = tmp_path / "config.yaml"
     yaml_path.write_text("experiment_dir: test\n", encoding="utf-8")
@@ -117,6 +118,7 @@ def test_main_non_root_skips_root_logging(monkeypatch, tmp_path):
     assert "Building objects:" not in logger.messages
 
 
+@pytest.mark.pruned
 def test_main_passes_yaml_data_to_dacite(monkeypatch, tmp_path):
     yaml_path = tmp_path / "config.yaml"
     yaml_path.write_text("experiment_dir: test\n", encoding="utf-8")
@@ -167,6 +169,7 @@ def test_main_passes_yaml_data_to_dacite(monkeypatch, tmp_path):
     assert captured["config"].strict is True
 
 
+@pytest.mark.pruned
 def test_main_setup_logger_called_with_training_name_and_log_dir(monkeypatch, tmp_path):
     yaml_path = tmp_path / "config.yaml"
     yaml_path.write_text("experiment_dir: test\n", encoding="utf-8")
@@ -215,6 +218,7 @@ def test_main_setup_logger_called_with_training_name_and_log_dir(monkeypatch, tm
     assert captured["log_dir"] == config_obj.log_dir
 
 
+@pytest.mark.pruned
 def test_main_build_trainer_receives_config_distributed_logger(monkeypatch, tmp_path):
     yaml_path = tmp_path / "config.yaml"
     yaml_path.write_text("experiment_dir: test\n", encoding="utf-8")
@@ -265,6 +269,7 @@ def test_main_build_trainer_receives_config_distributed_logger(monkeypatch, tmp_
     assert captured["logger"] is logger
 
 
+@pytest.mark.pruned
 def test_main_propagates_train_error_and_cleanup(monkeypatch, tmp_path):
     yaml_path = tmp_path / "config.yaml"
     yaml_path.write_text("experiment_dir: test\n", encoding="utf-8")
@@ -505,6 +510,7 @@ def patch_successful_main_dependencies(
     }
 
 
+@pytest.mark.pruned
 def test_get_parser_returns_argument_parser():
     parser = get_parser()
 
@@ -512,6 +518,7 @@ def test_get_parser_returns_argument_parser():
     assert parser.description == "Train model from config file"
 
 
+@pytest.mark.pruned
 def test_get_parser_parses_config_path():
     parser = get_parser()
 
@@ -524,6 +531,7 @@ def test_get_parser_parses_config_path():
     assert arguments.config == "training.yaml"
 
 
+@pytest.mark.pruned
 def test_get_parser_requires_config_argument():
     parser = get_parser()
 
@@ -533,6 +541,7 @@ def test_get_parser_requires_config_argument():
     assert error.value.code == 2
 
 
+@pytest.mark.pruned
 def test_get_parser_rejects_unknown_arguments():
     parser = get_parser()
 
@@ -547,6 +556,7 @@ def test_get_parser_rejects_unknown_arguments():
     assert error.value.code == 2
 
 
+@pytest.mark.pruned
 def test_main_passes_yaml_path_to_prepare_config(
     monkeypatch,
     tmp_path,
@@ -564,6 +574,7 @@ def test_main_passes_yaml_path_to_prepare_config(
     assert dependencies["distributed"].cleanup_called is True
 
 
+@pytest.mark.pruned
 def test_main_sets_random_seed_with_distributed_rank(
     monkeypatch,
     tmp_path,
@@ -584,6 +595,7 @@ def test_main_sets_random_seed_with_distributed_rank(
     config.set_random_seed.assert_called_once_with(4)
 
 
+@pytest.mark.pruned
 def test_main_uses_strict_dacite_configuration(
     monkeypatch,
     tmp_path,
@@ -610,6 +622,7 @@ def test_main_uses_strict_dacite_configuration(
     assert call.kwargs["config"].strict is True
 
 
+@pytest.mark.pruned
 def test_main_sets_up_logger_after_random_seed(
     monkeypatch,
     tmp_path,
@@ -642,6 +655,7 @@ def test_main_sets_up_logger_after_random_seed(
     assert dependencies["distributed"].cleanup_called is True
 
 
+@pytest.mark.pruned
 def test_main_prepares_directory_before_building_trainer(
     monkeypatch,
     tmp_path,
@@ -674,6 +688,7 @@ def test_main_prepares_directory_before_building_trainer(
     assert dependencies["distributed"].cleanup_called is True
 
 
+@pytest.mark.pruned
 def test_main_passes_exact_directory_preparation_arguments(
     monkeypatch,
     tmp_path,
@@ -695,6 +710,7 @@ def test_main_passes_exact_directory_preparation_arguments(
     )
 
 
+@pytest.mark.pruned
 def test_main_passes_exact_logger_arguments(
     monkeypatch,
     tmp_path,
@@ -714,6 +730,7 @@ def test_main_passes_exact_logger_arguments(
     )
 
 
+@pytest.mark.pruned
 def test_main_passes_exact_build_trainer_arguments(
     monkeypatch,
     tmp_path,
@@ -731,6 +748,7 @@ def test_main_passes_exact_build_trainer_arguments(
     )
 
 
+@pytest.mark.pruned
 def test_main_passes_exact_trainer_setup_arguments(
     monkeypatch,
     tmp_path,
@@ -753,6 +771,7 @@ def test_main_passes_exact_trainer_setup_arguments(
     )
 
 
+@pytest.mark.pruned
 def test_main_calls_train_once(
     monkeypatch,
     tmp_path,
@@ -770,6 +789,7 @@ def test_main_calls_train_once(
     trainer.train.assert_called_once_with()
 
 
+@pytest.mark.pruned
 def test_main_uses_expected_monitoring_directory(
     monkeypatch,
     tmp_path,
@@ -804,6 +824,7 @@ def test_main_uses_expected_monitoring_directory(
     assert captured["output_dir"] == config.monitoring_dir
 
 
+@pytest.mark.pruned
 def test_main_records_expected_monitor_spans(
     monkeypatch,
     tmp_path,
@@ -845,6 +866,7 @@ def test_main_records_expected_monitor_spans(
     ]
 
 
+@pytest.mark.pruned
 def test_main_records_trainer_ready_checkpoint(
     monkeypatch,
     tmp_path,
@@ -863,6 +885,7 @@ def test_main_records_trainer_ready_checkpoint(
     ]
 
 
+@pytest.mark.pruned
 def test_main_checkpoint_occurs_after_setup_and_before_training(
     monkeypatch,
     tmp_path,
@@ -900,6 +923,7 @@ def test_main_checkpoint_occurs_after_setup_and_before_training(
     ]
 
 
+@pytest.mark.pruned
 def test_main_operations_run_inside_expected_spans(
     monkeypatch,
     tmp_path,
@@ -951,6 +975,7 @@ def test_main_operations_run_inside_expected_spans(
     }
 
 
+@pytest.mark.pruned
 def test_main_root_logs_before_directory_preparation(
     monkeypatch,
     tmp_path,
@@ -980,6 +1005,7 @@ def test_main_root_logs_before_directory_preparation(
     ]
 
 
+@pytest.mark.pruned
 def test_main_root_logs_build_message_after_directory_preparation(
     monkeypatch,
     tmp_path,
@@ -1010,6 +1036,7 @@ def test_main_root_logs_build_message_after_directory_preparation(
     ]
 
 
+@pytest.mark.pruned
 def test_main_non_root_never_calls_logger_info(
     monkeypatch,
     tmp_path,
@@ -1032,6 +1059,7 @@ def test_main_non_root_never_calls_logger_info(
     assert distributed.cleanup_called is True
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "attribute",
@@ -1075,6 +1103,7 @@ def test_main_forwards_trainer_setup_configuration(
     assert trainer.setup_distributed.call_args.kwargs[attribute] == value
 
 
+@pytest.mark.pruned
 def test_main_cleanup_occurs_after_successful_training(
     monkeypatch,
     tmp_path,
@@ -1105,6 +1134,7 @@ def test_main_cleanup_occurs_after_successful_training(
     distributed.cleanup.assert_called_once_with()
 
 
+@pytest.mark.pruned
 def test_main_cleanup_runs_when_prepare_config_fails(
     monkeypatch,
 ):
@@ -1134,6 +1164,7 @@ def test_main_cleanup_runs_when_prepare_config_fails(
     assert distributed.cleanup_called is True
 
 
+@pytest.mark.pruned
 def test_main_cleanup_runs_when_dacite_conversion_fails(
     monkeypatch,
 ):
@@ -1172,6 +1203,7 @@ def test_main_cleanup_runs_when_dacite_conversion_fails(
     assert distributed.cleanup_called is True
 
 
+@pytest.mark.pruned
 def test_main_cleanup_runs_when_seed_setup_fails(
     monkeypatch,
 ):
@@ -1197,6 +1229,7 @@ def test_main_cleanup_runs_when_seed_setup_fails(
     train_mod.setup_logger.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_main_cleanup_runs_when_logger_setup_fails(
     monkeypatch,
 ):
@@ -1218,6 +1251,7 @@ def test_main_cleanup_runs_when_logger_setup_fails(
     train_mod.build_trainer.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_main_cleanup_runs_when_directory_preparation_fails(
     monkeypatch,
 ):
@@ -1243,6 +1277,7 @@ def test_main_cleanup_runs_when_directory_preparation_fails(
     train_mod.build_trainer.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_main_cleanup_runs_when_monitoring_context_entry_fails(
     monkeypatch,
 ):
@@ -1277,6 +1312,7 @@ def test_main_cleanup_runs_when_monitoring_context_entry_fails(
     train_mod.build_trainer.assert_not_called()
 
 
+@pytest.mark.pruned
 def test_main_cleanup_runs_when_build_trainer_fails(
     monkeypatch,
 ):
@@ -1310,6 +1346,7 @@ def test_main_cleanup_runs_when_build_trainer_fails(
     assert monitor.checkpoints == []
 
 
+@pytest.mark.pruned
 def test_main_cleanup_runs_when_trainer_setup_fails(
     monkeypatch,
 ):
@@ -1339,6 +1376,7 @@ def test_main_cleanup_runs_when_trainer_setup_fails(
     assert monitor.checkpoints == []
 
 
+@pytest.mark.pruned
 def test_main_cleanup_runs_when_checkpoint_fails(
     monkeypatch,
 ):
@@ -1373,6 +1411,7 @@ def test_main_cleanup_runs_when_checkpoint_fails(
     ]
 
 
+@pytest.mark.pruned
 def test_main_training_error_closes_train_span(
     monkeypatch,
 ):
@@ -1409,6 +1448,7 @@ def test_main_training_error_closes_train_span(
     ]
 
 
+@pytest.mark.pruned
 def test_main_cleanup_error_propagates_after_success(
     monkeypatch,
 ):
@@ -1431,6 +1471,7 @@ def test_main_cleanup_error_propagates_after_success(
     distributed.cleanup.assert_called_once_with()
 
 
+@pytest.mark.pruned
 def test_get_instance_failure_does_not_attempt_cleanup(
     monkeypatch,
 ):
@@ -1452,6 +1493,7 @@ def test_get_instance_failure_does_not_attempt_cleanup(
     get_instance.assert_called_once_with()
 
 
+@pytest.mark.pruned
 def test_get_parser_config_argument_is_string():
     parser = get_parser()
 
@@ -1468,6 +1510,7 @@ def test_get_parser_config_argument_is_string():
     )
 
 
+@pytest.mark.pruned
 def test_get_parser_accepts_relative_config_path():
     parser = get_parser()
 
@@ -1480,6 +1523,7 @@ def test_get_parser_accepts_relative_config_path():
     assert arguments.config == "configs/training.yaml"
 
 
+@pytest.mark.pruned
 def test_get_parser_accepts_absolute_config_path(
     tmp_path,
 ):
@@ -1495,6 +1539,7 @@ def test_get_parser_accepts_absolute_config_path(
     assert arguments.config == str(config_path)
 
 
+@pytest.mark.pruned
 def test_get_parser_help_exits_successfully(
     capsys,
 ):

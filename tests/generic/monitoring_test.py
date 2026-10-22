@@ -257,6 +257,7 @@ def test_invalid_interval(interval):
         Monitor(interval=interval)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "indices",
     [
@@ -579,6 +580,7 @@ def test_checkpoint_inside_span(basic_monitor):
     assert checkpoint["stage"] == "main.work.ready"
 
 
+@pytest.mark.pruned
 def test_empty_checkpoint_name(basic_monitor):
     with pytest.raises(
         ValueError,
@@ -897,6 +899,7 @@ def test_invalid_rolling_window():
         )
 
 
+@pytest.mark.pruned
 def test_kalman_smoothing():
     series = pd.Series([1.0, 2.0, 3.0, 4.0])
 
@@ -940,6 +943,7 @@ def test_metric_labels(metric, expected):
     assert Monitor._metric_label(metric) == expected
 
 
+@pytest.mark.pruned
 def test_available_metrics(sample_dataframe):
     instance = Monitor(
         cpu=True,
@@ -1226,6 +1230,7 @@ def test_plot_without_timeline_events():
     plt.close(figure)
 
 
+@pytest.mark.pruned
 def test_plot_missing_required_columns():
     instance = Monitor()
 
@@ -1289,6 +1294,7 @@ def test_plot_rejects_string_metrics(
         )
 
 
+@pytest.mark.pruned
 def test_plot_rejects_unknown_metric(
     sample_dataframe,
 ):
@@ -1331,6 +1337,7 @@ def test_plot_removes_duplicate_metrics(
     plt.close(figure)
 
 
+@pytest.mark.pruned
 def test_plot_returns_none_for_nan_metric():
     instance = Monitor(
         cpu=True,
@@ -1475,6 +1482,7 @@ def test_resolve_physical_gpu_index_rejects_out_of_range_rank(
         resolve_physical_gpu_index(2)
 
 
+@pytest.mark.pruned
 @pytest.mark.parametrize(
     "visible_devices",
     [
@@ -1564,6 +1572,7 @@ def test_monitor_rejects_invalid_distributed_value_types(
         Monitor(**arguments)
 
 
+@pytest.mark.pruned
 def test_monitor_rejects_negative_rank():
     with pytest.raises(
         ValueError,
@@ -1974,6 +1983,7 @@ def test_sampler_uses_zero_wait_when_collection_exceeds_interval(
     ]
 
 
+@pytest.mark.pruned
 def test_stop_warns_when_thread_remains_alive(
     basic_monitor,
     monkeypatch,
@@ -2344,6 +2354,7 @@ def test_build_distributed_monitor_recovers_from_gpu_resolution_error(
     assert constructor.call_args.kwargs["gpus"] == []
 
 
+@pytest.mark.pruned
 def test_build_distributed_monitor_gpu_disabled_does_not_query_cuda(
     monkeypatch,
 ):
@@ -2669,6 +2680,7 @@ def make_context_monitor():
     return resource_monitor
 
 
+@pytest.mark.pruned
 def test_distributed_monitoring_handles_export_failure(
     tmp_path,
     monkeypatch,
@@ -2876,6 +2888,7 @@ class TestAdditionalGPUResolutionBranches:
         pynvml.nvmlInit.assert_called_once_with()
         pynvml.nvmlShutdown.assert_called_once_with()
 
+    @pytest.mark.pruned
     def test_resolve_gpu_uuid_matches_string_uuid(
         self,
         monkeypatch,
@@ -2939,6 +2952,7 @@ class TestAdditionalGPUResolutionBranches:
 
         pynvml.nvmlShutdown.assert_called_once_with()
 
+    @pytest.mark.pruned
     def test_resolve_gpu_uuid_wraps_nvml_initialization_error(
         self,
         monkeypatch,
@@ -2968,6 +2982,7 @@ class TestAdditionalGPUResolutionBranches:
             RuntimeError,
         )
 
+    @pytest.mark.pruned
     def test_resolve_gpu_uuid_wraps_lookup_error_and_shuts_down(
         self,
         monkeypatch,
@@ -2996,6 +3011,7 @@ class TestAdditionalGPUResolutionBranches:
 
 
 class TestAdditionalGPUCollectionBranches:
+    @pytest.mark.pruned
     def test_gpu_without_nvml_returns_nan(
         self,
     ):
@@ -3010,6 +3026,7 @@ class TestAdditionalGPUCollectionBranches:
         assert np.isnan(gpu)
         assert np.isnan(vram)
 
+    @pytest.mark.pruned
     def test_gpu_without_cached_handle_returns_nan(
         self,
         fake_pynvml,
@@ -3026,6 +3043,7 @@ class TestAdditionalGPUCollectionBranches:
         assert np.isnan(gpu)
         assert np.isnan(vram)
 
+    @pytest.mark.pruned
     def test_collect_sample_calls_each_enabled_metric_once(
         self,
         fake_pynvml,
@@ -3093,6 +3111,7 @@ class TestAdditionalGPUCollectionBranches:
 
 
 class TestAdditionalEventAndStackBranches:
+    @pytest.mark.pruned
     def test_create_event_uses_current_time(
         self,
         basic_monitor,
@@ -3113,6 +3132,7 @@ class TestAdditionalEventAndStackBranches:
 
         assert event["t"] == pytest.approx(123.5)
 
+    @pytest.mark.pruned
     def test_append_event_preserves_object(
         self,
         basic_monitor,
@@ -3128,6 +3148,7 @@ class TestAdditionalEventAndStackBranches:
         ]
         assert basic_monitor._data[0] is event
 
+    @pytest.mark.pruned
     def test_remove_empty_stack_removes_current_thread_entry(
         self,
         basic_monitor,
@@ -3141,6 +3162,7 @@ class TestAdditionalEventAndStackBranches:
 
         assert thread_id not in basic_monitor._thread_stacks
 
+    @pytest.mark.pruned
     def test_span_strips_surrounding_whitespace(
         self,
         basic_monitor,
@@ -3155,6 +3177,7 @@ class TestAdditionalEventAndStackBranches:
             "main.work",
         ]
 
+    @pytest.mark.pruned
     def test_checkpoint_strips_surrounding_whitespace(
         self,
         basic_monitor,
@@ -3165,6 +3188,7 @@ class TestAdditionalEventAndStackBranches:
 
         assert dataframe.iloc[0]["stage"] == "main.ready"
 
+    @pytest.mark.pruned
     def test_observe_forwards_positional_and_keyword_arguments(
         self,
         basic_monitor,
@@ -3191,6 +3215,7 @@ class TestAdditionalEventAndStackBranches:
 
 
 class TestAdditionalSamplerBranches:
+    @pytest.mark.pruned
     def test_sampler_primes_cpu_measurement(
         self,
         basic_monitor,
@@ -3240,6 +3265,7 @@ class TestAdditionalSamplerBranches:
 
         cpu_percent.assert_not_called()
 
+    @pytest.mark.pruned
     def test_sampler_uses_remaining_interval_as_wait_time(
         self,
         basic_monitor,
@@ -3286,6 +3312,7 @@ class TestAdditionalSamplerBranches:
             pytest.approx(0.006),
         ]
 
+    @pytest.mark.pruned
     def test_stop_clears_finished_thread_reference(
         self,
         basic_monitor,
@@ -3303,6 +3330,7 @@ class TestAdditionalSamplerBranches:
         )
         assert basic_monitor._thread is None
 
+    @pytest.mark.pruned
     def test_running_false_for_dead_thread(
         self,
         basic_monitor,
@@ -3313,6 +3341,7 @@ class TestAdditionalSamplerBranches:
 
         assert basic_monitor.running is False
 
+    @pytest.mark.pruned
     def test_running_true_for_live_thread(
         self,
         basic_monitor,
@@ -3325,6 +3354,7 @@ class TestAdditionalSamplerBranches:
 
 
 class TestAdditionalSmoothingBranches:
+    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "alpha",
         [
@@ -3352,6 +3382,7 @@ class TestAdditionalSmoothingBranches:
                 alpha=alpha,
             )
 
+    @pytest.mark.pruned
     def test_ema_accepts_alpha_one(
         self,
     ):
@@ -3374,6 +3405,7 @@ class TestAdditionalSmoothingBranches:
             series,
         )
 
+    @pytest.mark.pruned
     def test_rolling_converts_string_window_to_integer(
         self,
     ):
@@ -3394,6 +3426,7 @@ class TestAdditionalSmoothingBranches:
         assert len(result) == 3
         assert result.notna().all()
 
+    @pytest.mark.pruned
     def test_kalman_preserves_values_before_first_valid_observation_as_nan(
         self,
     ):
@@ -3464,6 +3497,7 @@ class TestAdditionalSmoothingBranches:
 
 
 class TestAdditionalPlotBranches:
+    @pytest.mark.pruned
     def test_plot_metric_with_smoothing_plots_raw_and_smoothed(
         self,
         monkeypatch,
@@ -3538,6 +3572,7 @@ class TestAdditionalPlotBranches:
 
         assert instance._available_metrics(samples) == []
 
+    @pytest.mark.pruned
     def test_span_intervals_supports_multiple_completed_spans(
         self,
     ):
@@ -3583,6 +3618,7 @@ class TestAdditionalPlotBranches:
             ),
         ]
 
+    @pytest.mark.pruned
     def test_plot_preserves_input_dataframe(
         self,
         sample_dataframe,
@@ -3612,6 +3648,7 @@ class TestAdditionalPlotBranches:
 
         plt.close(figure)
 
+    @pytest.mark.pruned
     def test_plot_requested_metric_present_but_all_nan_returns_none(
         self,
         sample_dataframe,
@@ -3635,6 +3672,8 @@ class TestAdditionalPlotBranches:
 
 
 class TestAdditionalFactoryBranches:
+    # Remove test due to no coverage
+    @pytest.mark.pruned
     def test_monitor_factory_forwards_every_argument(
         self,
         monkeypatch,
@@ -3677,6 +3716,7 @@ class TestAdditionalFactoryBranches:
             world_size=4,
         )
 
+    @pytest.mark.pruned
     def test_build_distributed_monitor_resolves_physical_gpu(
         self,
         monkeypatch,
@@ -3761,6 +3801,7 @@ class TestAdditionalFactoryBranches:
 
 
 class TestAdditionalExportAndCombineBranches:
+    @pytest.mark.pruned
     def test_export_results_creates_nested_output_directory(
         self,
         tmp_path,
@@ -3791,6 +3832,7 @@ class TestAdditionalExportAndCombineBranches:
         assert plot_path == (output_dir / "resource_monitoring_rank_0004.png")
         assert csv_path.exists()
 
+    @pytest.mark.pruned
     def test_combine_rank_results_sorts_by_time_then_rank(
         self,
         tmp_path,
@@ -3838,6 +3880,7 @@ class TestAdditionalExportAndCombineBranches:
             "later",
         ]
 
+    @pytest.mark.pruned
     def test_combine_rank_results_sorts_by_rank_when_time_is_absent(
         self,
         tmp_path,
@@ -3879,6 +3922,7 @@ class TestAdditionalExportAndCombineBranches:
 
 
 class TestAdditionalDistributedMonitoringBranches:
+    @pytest.mark.pruned
     def test_successful_context_records_complete_lifecycle(
         self,
         tmp_path,
@@ -3939,6 +3983,7 @@ class TestAdditionalDistributedMonitoringBranches:
             distributed.world_size,
         )
 
+    @pytest.mark.pruned
     def test_interrupted_context_records_interruption_and_reraises(
         self,
         tmp_path,
