@@ -442,13 +442,7 @@ class TestStandardizer:
         assert scaler.fitted is True
         assert scaler.mean.item() == pytest.approx(4.0)
         assert scaler.std.item() == pytest.approx(
-            np.std(
-                [
-                    2.0,
-                    4.0,
-                    6.0,
-                ]
-            )
+            np.std([2.0, 4.0, 6.0], ddof=1)
         )
 
     def test_fit_applies_nan_mask(self):
@@ -479,7 +473,7 @@ class TestStandardizer:
         )
 
         assert scaler.mean.item() == pytest.approx(1.5)
-        assert scaler.std.item() == pytest.approx(0.5)
+        assert scaler.std.item() == pytest.approx(0.7071067811865476)
 
     def test_nonpositive_standard_deviation_becomes_nan(self):
         data = xr.DataArray(
@@ -517,7 +511,7 @@ class TestStandardizer:
         result = scaler.transform(data)
 
         assert result.mean().item() == pytest.approx(0.0)
-        assert result.std().item() == pytest.approx(1.0)
+        assert result.std(ddof=1).item() == pytest.approx(1.0)
 
     def test_transform_requires_fitted_scaler(self):
         with pytest.raises(
@@ -917,7 +911,7 @@ class TestFlattennanremove:
             ValueError,
             match="flattened 'ref' dimension",
         ):
-            Flattennanremove().inverse_transform(self.make_spatial_data())
+            Flattennanremove().fit(self.make_spatial_data()).inverse_transform(self.make_spatial_data())
 
     def test_inverse_restores_spatial_layout(self):
         data = self.make_spatial_data()
@@ -1020,6 +1014,7 @@ class TestFlattennanremove:
     ):
         loaded = SimpleNamespace(
             fitted=True,
+            NN_dims=["lat"],
             reference_shape=xr.Dataset(
                 coords={
                     "lat": [
@@ -1675,9 +1670,9 @@ def test_grouped_fit_with_ensemble_reduces_both_dimensions(
     times = np.asarray(
         [
             "2000-01-01",
-            "2001-01-01",
             "2000-02-01",
-            "2001-02-01",
+                "2001-01-01",
+                "2001-02-01",
         ],
         dtype="datetime64[ns]",
     )
@@ -2031,6 +2026,7 @@ def test_flattener_load_mode_rejects_incompatible_data(
     def fake_load(_):
         flattener = SimpleNamespace(
             fitted=True,
+                NN_dims=["lat", "lon"],
             reference_shape=xr.Dataset(
                 coords={
                     "lat": [
@@ -2881,8 +2877,8 @@ class TestTrendRemoverFit:
         times = np.asarray(
             [
                 "2000-01-01",
-                "2001-01-01",
                 "2000-02-01",
+                "2001-01-01",
                 "2001-02-01",
             ],
             dtype="datetime64[ns]",
@@ -3384,6 +3380,7 @@ class TestFlattennanremoveAdditionalBranches:
         path = tmp_path / "saved.joblib"
         loaded = SimpleNamespace(
             fitted=True,
+            NN_dims=[],
             reference_shape=xr.Dataset(),
             final_locations=xr.DataArray(
                 [0],

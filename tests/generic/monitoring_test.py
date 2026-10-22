@@ -2837,3 +2837,1232 @@ def test_distributed_monitoring_forwards_monitor_options(
         gpu=False,
         interval=2.5,
     )
+
+
+class TestAdditionalGPUResolutionBranches:
+    def test_resolve_gpu_uuid_matches_bytes_uuid(
+        self,
+        monkeypatch,
+    ):
+        monkeypatch.setenv(
+            "CUDA_VISIBLE_DEVICES",
+            "GPU-target",
+        )
+
+        pynvml = Mock()
+        pynvml.nvmlInit = Mock()
+        pynvml.nvmlShutdown = Mock()
+        pynvml.nvmlDeviceGetCount.return_value = 3
+        pynvml.nvmlDeviceGetHandleByIndex.side_effect = [
+            "handle-0",
+            "handle-1",
+            "handle-2",
+        ]
+        pynvml.nvmlDeviceGetUUID.side_effect = [
+            b"GPU-other",
+            b"GPU-target",
+            b"GPU-third",
+        ]
+
+        monkeypatch.setitem(
+            sys.modules,
+            "pynvml",
+            pynvml,
+        )
+
+        result = resolve_physical_gpu_index(0)
+
+        assert result == 1
+        pynvml.nvmlInit.assert_called_once_with()
+        pynvml.nvmlShutdown.assert_called_once_with()
+
+    def test_resolve_gpu_uuid_matches_string_uuid(
+        self,
+        monkeypatch,
+    ):
+        monkeypatch.setenv(
+            "CUDA_VISIBLE_DEVICES",
+            "GPU-target",
+        )
+
+        pynvml = Mock()
+        pynvml.nvmlDeviceGetCount.return_value = 2
+        pynvml.nvmlDeviceGetHandleByIndex.side_effect = [
+            "handle-0",
+            "handle-1",
+        ]
+        pynvml.nvmlDeviceGetUUID.side_effect = [
+            "GPU-other",
+            "GPU-target",
+        ]
+
+        monkeypatch.setitem(
+            sys.modules,
+            "pynvml",
+            pynvml,
+        )
+
+        assert resolve_physical_gpu_index(0) == 1
+        pynvml.nvmlShutdown.assert_called_once_with()
+
+    def test_resolve_gpu_uuid_not_found(
+        self,
+        monkeypatch,
+    ):
+        monkeypatch.setenv(
+            "CUDA_VISIBLE_DEVICES",
+            "GPU-missing",
+        )
+
+        pynvml = Mock()
+        pynvml.nvmlDeviceGetCount.return_value = 2
+        pynvml.nvmlDeviceGetHandleByIndex.side_effect = [
+            "handle-0",
+            "handle-1",
+        ]
+        pynvml.nvmlDeviceGetUUID.side_effect = [
+            "GPU-zero",
+            "GPU-one",
+        ]
+
+        monkeypatch.setitem(
+            sys.modules,
+            "pynvml",
+            pynvml,
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="was not found",
+        ):
+            resolve_physical_gpu_index(0)
+
+        pynvml.nvmlShutdown.assert_called_once_with()
+
+    def test_resolve_gpu_uuid_wraps_nvml_initialization_error(
+        self,
+        monkeypatch,
+    ):
+        monkeypatch.setenv(
+            "CUDA_VISIBLE_DEVICES",
+            "GPU-target",
+        )
+
+        pynvml = Mock()
+        pynvml.nvmlInit.side_effect = RuntimeError("initialization failed")
+
+        monkeypatch.setitem(
+            sys.modules,
+            "pynvml",
+            pynvml,
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="Could not resolve GPU UUID",
+        ) as error:
+            resolve_physical_gpu_index(0)
+
+        assert isinstance(
+            error.value.__cause__,
+            RuntimeError,
+        )
+
+    def test_resolve_gpu_uuid_wraps_lookup_error_and_shuts_down(
+        self,
+        monkeypatch,
+    ):
+        monkeypatch.setenv(
+            "CUDA_VISIBLE_DEVICES",
+            "GPU-target",
+        )
+
+        pynvml = Mock()
+        pynvml.nvmlDeviceGetCount.side_effect = RuntimeError("lookup failed")
+
+        monkeypatch.setitem(
+            sys.modules,
+            "pynvml",
+            pynvml,
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="Could not resolve GPU UUID",
+        ):
+            resolve_physical_gpu_index(0)
+
+        pynvml.nvmlShutdown.assert_called_once_with()
+
+
+class TestAdditionalGPUCollectionBranches:
+    def test_gpu_without_nvml_returns_nan(
+        self,
+    ):
+        instance = Monitor(
+            cpu=False,
+            ram=False,
+        )
+        instance.gpu_indices = (0,)
+
+        gpu, vram = instance._gpu(0)
+
+        assert np.isnan(gpu)
+        assert np.isnan(vram)
+
+    def test_gpu_without_cached_handle_returns_nan(
+        self,
+        fake_pynvml,
+    ):
+        instance = Monitor(
+            cpu=False,
+            ram=False,
+            gpu0=True,
+        )
+        instance._gpu_handles.clear()
+
+        gpu, vram = instance._gpu(0)
+
+        assert np.isnan(gpu)
+        assert np.isnan(vram)
+
+    def test_collect_sample_calls_each_enabled_metric_once(
+        self,
+        fake_pynvml,
+        monkeypatch,
+    ):
+        instance = Monitor(
+            cpu=True,
+            ram=True,
+            gpus=[
+                0,
+                1,
+            ],
+        )
+
+        cpu = Mock(
+            return_value=11.0,
+        )
+        ram = Mock(
+            return_value=2.5,
+        )
+        gpu = Mock(
+            side_effect=[
+                (
+                    30.0,
+                    40.0,
+                ),
+                (
+                    50.0,
+                    60.0,
+                ),
+            ]
+        )
+
+        monkeypatch.setattr(
+            instance,
+            "_cpu",
+            cpu,
+        )
+        monkeypatch.setattr(
+            instance,
+            "_ram_gb",
+            ram,
+        )
+        monkeypatch.setattr(
+            instance,
+            "_gpu",
+            gpu,
+        )
+
+        sample = instance._collect_sample()
+
+        cpu.assert_called_once_with()
+        ram.assert_called_once_with()
+
+        assert gpu.call_args_list == [
+            ((0,),),
+            ((1,),),
+        ]
+        assert sample["cpu"] == pytest.approx(11.0)
+        assert sample["ram"] == pytest.approx(2.5)
+        assert sample["gpu0"] == pytest.approx(30.0)
+        assert sample["vram0"] == pytest.approx(40.0)
+        assert sample["gpu1"] == pytest.approx(50.0)
+        assert sample["vram1"] == pytest.approx(60.0)
+
+
+class TestAdditionalEventAndStackBranches:
+    def test_create_event_uses_current_time(
+        self,
+        basic_monitor,
+        monkeypatch,
+    ):
+        monkeypatch.setattr(
+            module.time,
+            "time",
+            Mock(
+                return_value=123.5,
+            ),
+        )
+
+        event = basic_monitor._create_event(
+            stage="root",
+            event="sample",
+        )
+
+        assert event["t"] == pytest.approx(123.5)
+
+    def test_append_event_preserves_object(
+        self,
+        basic_monitor,
+    ):
+        event = {
+            "event": "sample",
+        }
+
+        basic_monitor._append_event(event)
+
+        assert basic_monitor._data == [
+            event,
+        ]
+        assert basic_monitor._data[0] is event
+
+    def test_remove_empty_stack_removes_current_thread_entry(
+        self,
+        basic_monitor,
+    ):
+        basic_monitor._get_stack()
+
+        thread_id = threading.get_ident()
+        assert thread_id in basic_monitor._thread_stacks
+
+        basic_monitor._remove_empty_stack()
+
+        assert thread_id not in basic_monitor._thread_stacks
+
+    def test_span_strips_surrounding_whitespace(
+        self,
+        basic_monitor,
+    ):
+        with basic_monitor.span("  work  "):
+            assert basic_monitor.current_stage() == "main.work"
+
+        dataframe = basic_monitor.get_dataframe()
+
+        assert dataframe["stage"].tolist() == [
+            "main.work",
+            "main.work",
+        ]
+
+    def test_checkpoint_strips_surrounding_whitespace(
+        self,
+        basic_monitor,
+    ):
+        basic_monitor.checkpoint("  ready  ")
+
+        dataframe = basic_monitor.get_dataframe()
+
+        assert dataframe.iloc[0]["stage"] == "main.ready"
+
+    def test_observe_forwards_positional_and_keyword_arguments(
+        self,
+        basic_monitor,
+    ):
+        function = Mock(
+            return_value="result",
+        )
+        function.__name__ = "operation"
+
+        wrapped = basic_monitor.observe(function)
+
+        result = wrapped(
+            1,
+            2,
+            option=True,
+        )
+
+        assert result == "result"
+        function.assert_called_once_with(
+            1,
+            2,
+            option=True,
+        )
+
+
+class TestAdditionalSamplerBranches:
+    def test_sampler_primes_cpu_measurement(
+        self,
+        basic_monitor,
+        monkeypatch,
+    ):
+        cpu_percent = Mock()
+        monkeypatch.setattr(
+            basic_monitor._process,
+            "cpu_percent",
+            cpu_percent,
+        )
+
+        class StopEvent:
+            def is_set(self):
+                return True
+
+        basic_monitor._stop_event = StopEvent()
+
+        basic_monitor._sampler()
+
+        cpu_percent.assert_called_once_with(
+            interval=None,
+        )
+
+    def test_sampler_does_not_prime_cpu_when_disabled(
+        self,
+        monkeypatch,
+    ):
+        instance = Monitor(
+            cpu=False,
+            ram=False,
+        )
+        cpu_percent = Mock()
+        monkeypatch.setattr(
+            instance._process,
+            "cpu_percent",
+            cpu_percent,
+        )
+
+        class StopEvent:
+            def is_set(self):
+                return True
+
+        instance._stop_event = StopEvent()
+
+        instance._sampler()
+
+        cpu_percent.assert_not_called()
+
+    def test_sampler_uses_remaining_interval_as_wait_time(
+        self,
+        basic_monitor,
+        monkeypatch,
+    ):
+        monotonic_values = iter(
+            [
+                1.0,
+                1.004,
+            ]
+        )
+        monkeypatch.setattr(
+            module.time,
+            "monotonic",
+            lambda: next(monotonic_values),
+        )
+
+        waits = []
+
+        class StopEvent:
+            def __init__(self):
+                self.calls = 0
+
+            def is_set(self):
+                self.calls += 1
+                return self.calls > 1
+
+            def wait(self, value):
+                waits.append(value)
+
+        basic_monitor._stop_event = StopEvent()
+
+        monkeypatch.setattr(
+            basic_monitor,
+            "_collect_sample",
+            lambda: {
+                "event": "sample",
+            },
+        )
+
+        basic_monitor._sampler()
+
+        assert waits == [
+            pytest.approx(0.006),
+        ]
+
+    def test_stop_clears_finished_thread_reference(
+        self,
+        basic_monitor,
+    ):
+        thread = Mock()
+        thread.is_alive.return_value = False
+        basic_monitor._thread = thread
+
+        basic_monitor.stop(
+            timeout=0.5,
+        )
+
+        thread.join.assert_called_once_with(
+            timeout=0.5,
+        )
+        assert basic_monitor._thread is None
+
+    def test_running_false_for_dead_thread(
+        self,
+        basic_monitor,
+    ):
+        thread = Mock()
+        thread.is_alive.return_value = False
+        basic_monitor._thread = thread
+
+        assert basic_monitor.running is False
+
+    def test_running_true_for_live_thread(
+        self,
+        basic_monitor,
+    ):
+        thread = Mock()
+        thread.is_alive.return_value = True
+        basic_monitor._thread = thread
+
+        assert basic_monitor.running is True
+
+
+class TestAdditionalSmoothingBranches:
+    @pytest.mark.parametrize(
+        "alpha",
+        [
+            0.0,
+            -0.1,
+            1.01,
+        ],
+    )
+    def test_ema_rejects_all_invalid_boundaries(
+        self,
+        alpha,
+    ):
+        with pytest.raises(
+            ValueError,
+            match="EMA alpha",
+        ):
+            Monitor._smooth(
+                pd.Series(
+                    [
+                        1.0,
+                        2.0,
+                    ]
+                ),
+                method="ema",
+                alpha=alpha,
+            )
+
+    def test_ema_accepts_alpha_one(
+        self,
+    ):
+        series = pd.Series(
+            [
+                1.0,
+                2.0,
+                3.0,
+            ]
+        )
+
+        result = Monitor._smooth(
+            series,
+            method="ema",
+            alpha=1.0,
+        )
+
+        pd.testing.assert_series_equal(
+            result,
+            series,
+        )
+
+    def test_rolling_converts_string_window_to_integer(
+        self,
+    ):
+        series = pd.Series(
+            [
+                1.0,
+                2.0,
+                3.0,
+            ]
+        )
+
+        result = Monitor._smooth(
+            series,
+            method="rolling",
+            window="2",
+        )
+
+        assert len(result) == 3
+        assert result.notna().all()
+
+    def test_kalman_preserves_values_before_first_valid_observation_as_nan(
+        self,
+    ):
+        result = Monitor._kalman_filter(
+            [
+                np.nan,
+                np.nan,
+                3.0,
+                4.0,
+            ]
+        )
+
+        assert np.isnan(result[0])
+        assert np.isnan(result[1])
+        assert result[2] == pytest.approx(3.0)
+        assert np.isfinite(result[3])
+
+    def test_kalman_smoothing_forwards_variances(
+        self,
+        monkeypatch,
+    ):
+        kalman = Mock(
+            return_value=np.asarray(
+                [
+                    1.0,
+                    2.0,
+                ]
+            )
+        )
+        monkeypatch.setattr(
+            Monitor,
+            "_kalman_filter",
+            kalman,
+        )
+
+        series = pd.Series(
+            [
+                1.0,
+                2.0,
+            ]
+        )
+
+        result = Monitor._smooth(
+            series,
+            method="kalman",
+            process_variance=2.5,
+            measurement_variance=7.5,
+        )
+
+        np.testing.assert_array_equal(
+            result,
+            [
+                1.0,
+                2.0,
+            ],
+        )
+        kalman.assert_called_once()
+
+        call = kalman.call_args
+        np.testing.assert_array_equal(
+            call.args[0],
+            series.to_numpy(),
+        )
+        assert call.kwargs == {
+            "process_variance": 2.5,
+            "measurement_variance": 7.5,
+        }
+
+
+class TestAdditionalPlotBranches:
+    def test_plot_metric_with_smoothing_plots_raw_and_smoothed(
+        self,
+        monkeypatch,
+    ):
+        axis = Mock()
+        values = pd.Series(
+            [
+                1.0,
+                2.0,
+            ]
+        )
+        smoothed = pd.Series(
+            [
+                1.0,
+                1.5,
+            ]
+        )
+
+        smooth = Mock(
+            return_value=smoothed,
+        )
+        monkeypatch.setattr(
+            Monitor,
+            "_smooth",
+            smooth,
+        )
+
+        times = pd.Series(
+            [
+                0.0,
+                1.0,
+            ]
+        )
+
+        Monitor._plot_metric(
+            axis,
+            times,
+            values,
+            label="CPU",
+            color="red",
+            smooth="ema",
+            alpha=0.5,
+        )
+
+        assert axis.plot.call_count == 2
+        smooth.assert_called_once_with(
+            values,
+            method="ema",
+            alpha=0.5,
+        )
+        axis.legend.assert_called_once_with(
+            loc="upper right",
+            fontsize=8,
+        )
+
+    def test_available_metrics_excludes_missing_and_all_nan_columns(
+        self,
+    ):
+        instance = Monitor(
+            cpu=True,
+            ram=True,
+        )
+
+        samples = pd.DataFrame(
+            {
+                "cpu": [
+                    np.nan,
+                    np.nan,
+                ],
+            }
+        )
+
+        assert instance._available_metrics(samples) == []
+
+    def test_span_intervals_supports_multiple_completed_spans(
+        self,
+    ):
+        dataframe = pd.DataFrame(
+            [
+                {
+                    "event": "start",
+                    "elapsed": 0.0,
+                    "stage": "main.first",
+                    "span_id": "first",
+                },
+                {
+                    "event": "end",
+                    "elapsed": 1.0,
+                    "stage": "main.first",
+                    "span_id": "first",
+                },
+                {
+                    "event": "start",
+                    "elapsed": 2.0,
+                    "stage": "main.second",
+                    "span_id": "second",
+                },
+                {
+                    "event": "end",
+                    "elapsed": 4.0,
+                    "stage": "main.second",
+                    "span_id": "second",
+                },
+            ]
+        )
+
+        assert Monitor._span_intervals(dataframe) == [
+            (
+                0.0,
+                1.0,
+                "main.first",
+            ),
+            (
+                2.0,
+                4.0,
+                "main.second",
+            ),
+        ]
+
+    def test_plot_preserves_input_dataframe(
+        self,
+        sample_dataframe,
+    ):
+        instance = Monitor(
+            cpu=True,
+            ram=True,
+        )
+        original = sample_dataframe.copy(
+            deep=True,
+        )
+
+        figure = instance.plot(
+            sample_dataframe,
+            metrics=[
+                "cpu",
+            ],
+            show=False,
+        )
+
+        pd.testing.assert_frame_equal(
+            sample_dataframe,
+            original,
+        )
+
+        import matplotlib.pyplot as plt
+
+        plt.close(figure)
+
+    def test_plot_requested_metric_present_but_all_nan_returns_none(
+        self,
+        sample_dataframe,
+    ):
+        instance = Monitor(
+            cpu=True,
+            ram=True,
+        )
+        dataframe = sample_dataframe.copy()
+        dataframe["cpu"] = np.nan
+
+        result = instance.plot(
+            dataframe,
+            metrics=[
+                "cpu",
+            ],
+            show=False,
+        )
+
+        assert result is None
+
+
+class TestAdditionalFactoryBranches:
+    def test_monitor_factory_forwards_every_argument(
+        self,
+        monkeypatch,
+    ):
+        constructor = Mock(
+            return_value=object(),
+        )
+        monkeypatch.setattr(
+            module,
+            "Monitor",
+            constructor,
+        )
+
+        result = module.monitor(
+            cpu=False,
+            ram=False,
+            gpu0=True,
+            gpu1=True,
+            gpus=[
+                3,
+            ],
+            interval=2.0,
+            rank=1,
+            local_rank=2,
+            world_size=4,
+        )
+
+        assert result is constructor.return_value
+        constructor.assert_called_once_with(
+            cpu=False,
+            ram=False,
+            gpu0=True,
+            gpu1=True,
+            gpus=[
+                3,
+            ],
+            interval=2.0,
+            rank=1,
+            local_rank=2,
+            world_size=4,
+        )
+
+    def test_build_distributed_monitor_resolves_physical_gpu(
+        self,
+        monkeypatch,
+    ):
+        distributed = SimpleNamespace(
+            rank=2,
+            local_rank=1,
+            world_size=4,
+        )
+        resolver = Mock(
+            return_value=7,
+        )
+        constructor = Mock(
+            return_value=object(),
+        )
+
+        monkeypatch.setattr(
+            module,
+            "resolve_physical_gpu_index",
+            resolver,
+        )
+        monkeypatch.setattr(
+            module,
+            "monitor",
+            constructor,
+        )
+
+        result = build_distributed_monitor(
+            distributed,
+            cpu=False,
+            ram=True,
+            gpu=True,
+            interval=0.25,
+        )
+
+        assert result is constructor.return_value
+        resolver.assert_called_once_with(1)
+        constructor.assert_called_once_with(
+            cpu=False,
+            ram=True,
+            gpus=[
+                7,
+            ],
+            interval=0.25,
+            rank=2,
+            local_rank=1,
+            world_size=4,
+        )
+
+    def test_build_distributed_monitor_gpu_disabled_skips_resolver(
+        self,
+        monkeypatch,
+    ):
+        distributed = SimpleNamespace(
+            rank=0,
+            local_rank=0,
+            world_size=1,
+        )
+        resolver = Mock()
+        constructor = Mock(
+            return_value=object(),
+        )
+
+        monkeypatch.setattr(
+            module,
+            "resolve_physical_gpu_index",
+            resolver,
+        )
+        monkeypatch.setattr(
+            module,
+            "monitor",
+            constructor,
+        )
+
+        build_distributed_monitor(
+            distributed,
+            gpu=False,
+        )
+
+        resolver.assert_not_called()
+        assert constructor.call_args.kwargs["gpus"] == []
+
+
+class TestAdditionalExportAndCombineBranches:
+    def test_export_results_creates_nested_output_directory(
+        self,
+        tmp_path,
+    ):
+        output_dir = tmp_path / "nested" / "monitoring"
+
+        resource_monitor = Mock()
+        resource_monitor.rank = 4
+        resource_monitor.get_dataframe.return_value = pd.DataFrame(
+            [
+                {
+                    "t": 1.0,
+                    "event": "sample",
+                    "stage": "root",
+                    "cpu": 10.0,
+                }
+            ]
+        )
+        resource_monitor.plot.return_value = None
+
+        csv_path, plot_path = export_results(
+            resource_monitor,
+            output_dir,
+        )
+
+        assert output_dir.is_dir()
+        assert csv_path == (output_dir / "resource_monitoring_rank_0004.csv")
+        assert plot_path == (output_dir / "resource_monitoring_rank_0004.png")
+        assert csv_path.exists()
+
+    def test_combine_rank_results_sorts_by_time_then_rank(
+        self,
+        tmp_path,
+    ):
+        pd.DataFrame(
+            [
+                {
+                    "t": 2.0,
+                    "rank": 0,
+                    "value": "later",
+                },
+                {
+                    "t": 1.0,
+                    "rank": 1,
+                    "value": "rank-one",
+                },
+            ]
+        ).to_csv(
+            tmp_path / "resource_monitoring_rank_0000.csv",
+            index=False,
+        )
+
+        pd.DataFrame(
+            [
+                {
+                    "t": 1.0,
+                    "rank": 0,
+                    "value": "rank-zero",
+                }
+            ]
+        ).to_csv(
+            tmp_path / "resource_monitoring_rank_0001.csv",
+            index=False,
+        )
+
+        result = combine_rank_results(
+            tmp_path,
+            2,
+        )
+        combined = pd.read_csv(result)
+
+        assert combined["value"].tolist() == [
+            "rank-zero",
+            "rank-one",
+            "later",
+        ]
+
+    def test_combine_rank_results_sorts_by_rank_when_time_is_absent(
+        self,
+        tmp_path,
+    ):
+        pd.DataFrame(
+            [
+                {
+                    "rank": 1,
+                    "value": "second",
+                }
+            ]
+        ).to_csv(
+            tmp_path / "resource_monitoring_rank_0000.csv",
+            index=False,
+        )
+
+        pd.DataFrame(
+            [
+                {
+                    "rank": 0,
+                    "value": "first",
+                }
+            ]
+        ).to_csv(
+            tmp_path / "resource_monitoring_rank_0001.csv",
+            index=False,
+        )
+
+        result = combine_rank_results(
+            tmp_path,
+            2,
+        )
+        combined = pd.read_csv(result)
+
+        assert combined["value"].tolist() == [
+            "first",
+            "second",
+        ]
+
+
+class TestAdditionalDistributedMonitoringBranches:
+    def test_successful_context_records_complete_lifecycle(
+        self,
+        tmp_path,
+        monkeypatch,
+    ):
+        distributed = DummyDistributed()
+        resource_monitor = make_context_monitor()
+
+        builder = Mock(
+            return_value=resource_monitor,
+        )
+        exporter = Mock(
+            return_value=(
+                tmp_path / "rank.csv",
+                tmp_path / "rank.png",
+            )
+        )
+        combiner = Mock()
+
+        monkeypatch.setattr(
+            module,
+            "build_distributed_monitor",
+            builder,
+        )
+        monkeypatch.setattr(
+            module,
+            "export_results",
+            exporter,
+        )
+        monkeypatch.setattr(
+            module,
+            "combine_rank_results",
+            combiner,
+        )
+
+        with distributed_monitoring(
+            distributed,
+            tmp_path,
+        ) as entered:
+            assert entered is resource_monitor
+
+        resource_monitor.start.assert_called_once_with(
+            clear=True,
+        )
+        assert resource_monitor.checkpoint.call_args_list == [
+            (("monitoring_started",),),
+            (("monitoring_complete",),),
+        ]
+        resource_monitor.stop.assert_called_once_with()
+        exporter.assert_called_once_with(
+            resource_monitor,
+            tmp_path,
+        )
+        resource_monitor.close.assert_called_once_with()
+        assert distributed.barrier_calls == 1
+        combiner.assert_called_once_with(
+            tmp_path,
+            distributed.world_size,
+        )
+
+    def test_interrupted_context_records_interruption_and_reraises(
+        self,
+        tmp_path,
+        monkeypatch,
+    ):
+        distributed = DummyDistributed()
+        resource_monitor = make_context_monitor()
+
+        monkeypatch.setattr(
+            module,
+            "build_distributed_monitor",
+            Mock(
+                return_value=resource_monitor,
+            ),
+        )
+        monkeypatch.setattr(
+            module,
+            "export_results",
+            Mock(
+                return_value=(
+                    None,
+                    None,
+                )
+            ),
+        )
+        monkeypatch.setattr(
+            module,
+            "combine_rank_results",
+            Mock(),
+        )
+
+        with pytest.raises(
+            RuntimeError,
+            match="training failed",
+        ):
+            with distributed_monitoring(
+                distributed,
+                tmp_path,
+            ):
+                raise RuntimeError("training failed")
+
+        assert resource_monitor.checkpoint.call_args_list == [
+            (("monitoring_started",),),
+            (("monitoring_interrupted",),),
+        ]
+        resource_monitor.stop.assert_called_once_with()
+        resource_monitor.close.assert_called_once_with()
+        assert distributed.barrier_calls == 0
+        module.combine_rank_results.assert_not_called()
+
+    def test_export_failure_on_interrupted_context_still_closes_monitor(
+        self,
+        tmp_path,
+        monkeypatch,
+    ):
+        distributed = DummyDistributed()
+        resource_monitor = make_context_monitor()
+
+        monkeypatch.setattr(
+            module,
+            "build_distributed_monitor",
+            Mock(
+                return_value=resource_monitor,
+            ),
+        )
+        monkeypatch.setattr(
+            module,
+            "export_results",
+            Mock(side_effect=RuntimeError("export failed")),
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="work failed",
+        ):
+            with distributed_monitoring(
+                distributed,
+                tmp_path,
+            ):
+                raise ValueError("work failed")
+
+        resource_monitor.close.assert_called_once_with()
+        assert distributed.barrier_calls == 0
+
+    def test_completed_export_failure_logs_warning(
+        self,
+        tmp_path,
+        monkeypatch,
+    ):
+        distributed = DummyDistributed()
+        resource_monitor = make_context_monitor()
+
+        warning = Mock()
+
+        monkeypatch.setattr(
+            module,
+            "build_distributed_monitor",
+            Mock(
+                return_value=resource_monitor,
+            ),
+        )
+        monkeypatch.setattr(
+            module,
+            "export_results",
+            Mock(side_effect=RuntimeError("export failed")),
+        )
+        monkeypatch.setattr(
+            module,
+            "combine_rank_results",
+            Mock(),
+        )
+        monkeypatch.setattr(
+            module.logger,
+            "warning",
+            warning,
+        )
+
+        with distributed_monitoring(
+            distributed,
+            tmp_path,
+        ):
+            pass
+
+        assert any(
+            "results were not exported" in str(call.args[0])
+            for call in warning.call_args_list
+        )

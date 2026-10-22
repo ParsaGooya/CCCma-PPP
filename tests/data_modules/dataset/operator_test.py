@@ -180,6 +180,9 @@ class DummyDatasetConfig:
 
 
 class DummyPreprocessor(PreprocessModuleABC):
+    def _reset_fit(self):
+        self.fitted = False
+
     def __init__(
         self,
         fitted=True,
