@@ -51,6 +51,18 @@ class PreprocessModuleABC(abc.ABC):
         pass
 
     @abc.abstractmethod
+    def _reset_fit(self):
+        """
+        Document this function.
+
+        Parameters
+        ----------
+        data : Any
+            Description not yet provided.
+        """
+        pass
+
+    @abc.abstractmethod
     def transform(self, data, **kwargs):
         """
         Document this function.

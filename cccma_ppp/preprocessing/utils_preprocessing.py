@@ -12,7 +12,9 @@ from typing import ClassVar, Literal
 from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.data_modules.utils import add_lead_times
+from cccma_ppp.data_modules.utils import (add_lead_times, 
+                                          TEMPORAL_ORDER, 
+                                          infer_time_resolution)
 from cccma_ppp.configs import (
     supported_NN_dimensions_sorted,
     required_sample_dimensions,
@@ -91,6 +93,8 @@ class Normalizer(PreprocessModuleABC):
         Any
             Description not yet provided.
         """
+        self._reset_fit()
+
         reduction_dims = self._get_reduction_dims(data)
 
         if mask is not None:
@@ -172,7 +176,12 @@ class Normalizer(PreprocessModuleABC):
         )
 
         return data * (maximum - minimum) + minimum
-
+    
+    def _reset_fit(self):
+        """Reset fitted statistics while preserving configuration."""
+        self.min = None
+        self.max = None
+        self.fitted = False
 
 @PreprocessingStepSelector.register("standardizer")
 class Standardizer(PreprocessModuleABC):
@@ -246,6 +255,8 @@ class Standardizer(PreprocessModuleABC):
         Any
             Description not yet provided.
         """
+        self._reset_fit()
+
         reduction_dims = self._get_reduction_dims(data)
 
         if mask is not None:
@@ -253,7 +264,7 @@ class Standardizer(PreprocessModuleABC):
 
         if self.frequency is None or self.init_time_dim not in self.dims:
             self.mean = data.mean(reduction_dims).load()
-            std = data.std(reduction_dims).load()
+            std = data.std(reduction_dims, ddof = 1).load()
 
         else:
             grouped_data = self._add_grouping_coordinate(data)
@@ -327,6 +338,11 @@ class Standardizer(PreprocessModuleABC):
 
         return data * std + mean
 
+    def _reset_fit(self):
+        """Reset fitted statistics while preserving configuration."""
+        self.mean = None
+        self.std = None
+        self.fitted = False
 
 @PreprocessingStepSelector.register("anomalies")
 class AnomaliesScaler(PreprocessModuleABC):
@@ -384,6 +400,8 @@ class AnomaliesScaler(PreprocessModuleABC):
         Any
             Description not yet provided.
         """
+        self._reset_fit()
+
         reduction_dims = self._get_reduction_dims(data)
 
         if mask is not None:
@@ -448,7 +466,11 @@ class AnomaliesScaler(PreprocessModuleABC):
         )
 
         return data + mean
-
+        
+    def _reset_fit(self):
+        """Reset fitted statistics while preserving configuration."""
+        self.mean = None
+        self.fitted = False
 
 @PreprocessingStepSelector.register("trend_remover")
 class TrendRemover(PreprocessModuleABC):
@@ -649,6 +671,8 @@ class TrendRemover(PreprocessModuleABC):
         ValueError
             Description not yet provided.
         """
+        self._reset_fit()
+
         if self.init_time_dim not in data.dims:
             raise ValueError(
                 f"Data must contain the initialization-time dimension "
@@ -659,11 +683,20 @@ class TrendRemover(PreprocessModuleABC):
             data = data.where(~mask)
 
         self.time_origin = data[self.init_time_dim].min()
+        time_freq = infer_time_resolution(data[self.init_time_dim].to_index())
 
         if self.frequency is None:
             self.slope, self.intercept = self._fit_linear_trend(data)
 
         else:
+            if (TEMPORAL_ORDER.get(self.frequency) > 
+            TEMPORAL_ORDER.get(time_freq)):
+                raise ValueError(
+                    f"The requeted frequency of initial time: {self.frequency}"
+                    "to fit the trend must be None or finer than the initial time " 
+                    f"frequency of the base data to fit on: {time_freq}"
+                )
+                    
             grouped_data = self._add_grouping_coordinate(data)
 
             slopes = []
@@ -782,7 +815,13 @@ class TrendRemover(PreprocessModuleABC):
 
         return data + trend
 
-
+    def _reset_fit(self):
+        """Reset fitted trend parameters while preserving configuration."""
+        self.slope = None
+        self.intercept = None
+        self.time_origin = None
+        self.fitted = False
+        
 @PreprocessingStepSelector.register("flattener")
 class Flattennanremove(PreprocessModuleABC):
     """
@@ -851,6 +890,8 @@ class Flattennanremove(PreprocessModuleABC):
         RuntimeError
             Description not yet provided.
         """
+        self._reset_fit()
+
         if self.load_dir is not None:
             self._load_from_memory(self.load_dir)
 
@@ -958,6 +999,8 @@ class Flattennanremove(PreprocessModuleABC):
         xr.Dataset
             Description not yet provided.
         """
+        self._check_fitted()
+
         if "ref" in data.dims:
             return data.sel(ref=self.final_locations)
 
@@ -984,6 +1027,8 @@ class Flattennanremove(PreprocessModuleABC):
         ValueError
             Description not yet provided.
         """
+        self._check_fitted()
+        
         if "ref" not in data.dims:
             raise ValueError("The input must contain the flattened 'ref' dimension.")
 
@@ -1011,8 +1056,16 @@ class Flattennanremove(PreprocessModuleABC):
         self.final_locations = loaded.final_locations
         self.common_to_input_and_target = loaded.common_to_input_and_target
         self.fitted = loaded.fitted
+        self.NN_dims = loaded.NN_dims.copy()
         del loaded
 
+    def _reset_fit(self):
+        """Reset fitted attributes while preserving configuration."""
+        self.fitted = False
+        self.common_to_input_and_target = False
+        self.NN_dims = []
+        self.reference_shape = None
+        self.final_locations = None
 
 def align_stat_data_lead_time_inverse_transform(
     ds: xr.DataArray,
