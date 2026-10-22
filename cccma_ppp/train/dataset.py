@@ -210,7 +210,6 @@ class TrainDatasetConfig(DatasetConfigABC):
             Sequence[np.datetime64 | datetime.datetime | cftime.datetime]
             | np.ndarray
             | xr.DataArray
-            | slice
         ),
         save: bool = False,
         save_path: str | Path | None = None,
