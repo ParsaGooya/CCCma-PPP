@@ -24,7 +24,6 @@ init_time_dim, lead_time_dim = required_sample_dimensions
 
 @dataclasses.dataclass
 class ModelDataConfig(DataConfigABC):
-
     """
     Configuration for model prediction data.
 
@@ -42,7 +41,6 @@ class ModelDataConfig(DataConfigABC):
         validation, loading, and preprocessing functionality.
     """
 
-
     paths: str
     names: list[str]
     preprocessing_pipeline: PreprocessingPipeline = dataclasses.field(
@@ -56,7 +54,6 @@ class ModelDataConfig(DataConfigABC):
     drop_vars_list: list[str] = None
 
     def __post_init__(self) -> None:
-
         """
         Initialize the model configuration and construct its forecast time range.
 
@@ -96,7 +93,7 @@ class ModelDataConfig(DataConfigABC):
         Notes
         ----
         Model data must have initialization time and lead time dimensions
-        and spatial dimensions but may also include additional dimensions such 
+        and spatial dimensions but may also include additional dimensions such
         and ensemble member. The allowed and required dimensions are defined in pipelne configs.
         """
         return model_data_required_dimensions
@@ -104,7 +101,6 @@ class ModelDataConfig(DataConfigABC):
 
 @dataclasses.dataclass
 class ObsDataConfig(DataConfigABC):
-
     """
     Configuration for observational data.
 
@@ -138,7 +134,6 @@ class ObsDataConfig(DataConfigABC):
     drop_vars_list: list[str] = None
 
     def __post_init__(self):
-
         """
         Initialize the observation configuration and validate temporal resolution.
 
@@ -161,8 +156,10 @@ class ObsDataConfig(DataConfigABC):
                 f"lead time. Got {self.init_time_frequency} vs {self.lead_time_resolution}"
             )
 
-        self.time_range = build_time_range(init_time=self.coords[init_time_dim], 
-                                           lead_time_resolution=self.init_time_frequency)
+        self.time_range = build_time_range(
+            init_time=self.coords[init_time_dim],
+            lead_time_resolution=self.init_time_frequency,
+        )
 
     @final
     @property
@@ -196,7 +193,6 @@ class ObsDataConfig(DataConfigABC):
 
 @dataclasses.dataclass
 class ConditionDataConfig(DataConfigABC):
-
     """
     Configuration for auxiliary conditioning datasets.
 
@@ -216,7 +212,6 @@ class ConditionDataConfig(DataConfigABC):
     DataConfigABC : Base class defining shared dataset configuration,
         validation, loading, and preprocessing functionality.
     """
-
 
     paths: str
     names: list[str]
@@ -270,7 +265,7 @@ class ConditionDataConfig(DataConfigABC):
         Notes
         ----
         Conditioning data could have initialization time and lead time dimensions
-        but only need spatial dimensions as static conditioning. May also include additional dimensions such 
+        but only need spatial dimensions as static conditioning. May also include additional dimensions such
         and ensemble member. The allowed and required dimensions are defined in pipelne configs.
         """
         return condition_data_required_dimensions
@@ -290,7 +285,7 @@ def build_time_range(
 
     Use for temporal validation (e.g., checking if all samples
     fall within expected range), not for exact time matching.
- 
+
 
     Parameters
     ----------
@@ -313,7 +308,7 @@ def build_time_range(
     ValueError
         Description not yet provided.
     """
-    
+
     if init_time.size == 0:
         raise ValueError("'init_time' cannot be empty.")
 

@@ -457,9 +457,7 @@ class TestStandardizer:
         assert result is scaler
         assert scaler.fitted is True
         assert scaler.mean.item() == pytest.approx(4.0)
-        assert scaler.std.item() == pytest.approx(
-            np.std([2.0, 4.0, 6.0], ddof=1)
-        )
+        assert scaler.std.item() == pytest.approx(np.std([2.0, 4.0, 6.0], ddof=1))
 
     def test_fit_applies_nan_mask(self):
         data = xr.DataArray(
@@ -946,7 +944,9 @@ class TestFlattennanremove:
             ValueError,
             match="flattened 'ref' dimension",
         ):
-            Flattennanremove().fit(self.make_spatial_data()).inverse_transform(self.make_spatial_data())
+            Flattennanremove().fit(self.make_spatial_data()).inverse_transform(
+                self.make_spatial_data()
+            )
 
     def test_inverse_restores_spatial_layout(self):
         data = self.make_spatial_data()
@@ -1719,8 +1719,8 @@ def test_grouped_fit_with_ensemble_reduces_both_dimensions(
         [
             "2000-01-01",
             "2000-02-01",
-                "2001-01-01",
-                "2001-02-01",
+            "2001-01-01",
+            "2001-02-01",
         ],
         dtype="datetime64[ns]",
     )
@@ -2080,7 +2080,7 @@ def test_flattener_load_mode_rejects_incompatible_data(
     def fake_load(_):
         flattener = SimpleNamespace(
             fitted=True,
-                NN_dims=["lat", "lon"],
+            NN_dims=["lat", "lon"],
             reference_shape=xr.Dataset(
                 coords={
                     "lat": [

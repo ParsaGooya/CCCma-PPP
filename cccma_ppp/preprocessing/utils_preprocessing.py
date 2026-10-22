@@ -1,5 +1,6 @@
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 import numpy as np
 import xarray as xr
@@ -12,9 +13,11 @@ from typing import ClassVar, Literal
 from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
 from cccma_ppp.preprocessing.preprocessing_ABC import PreprocessModuleABC
 from cccma_ppp.generic.runtime import RuntimeContext
-from cccma_ppp.data_modules.utils import (add_lead_times, 
-                                          TEMPORAL_ORDER, 
-                                          infer_time_resolution)
+from cccma_ppp.data_modules.utils import (
+    add_lead_times,
+    TEMPORAL_ORDER,
+    infer_time_resolution,
+)
 from cccma_ppp.configs import (
     supported_NN_dimensions_sorted,
     required_sample_dimensions,
@@ -176,17 +179,18 @@ class Normalizer(PreprocessModuleABC):
         )
 
         return data * (maximum - minimum) + minimum
-    
+
     def _reset_fit(self):
         """Reset fitted statistics while preserving configuration."""
         self.min = None
         self.max = None
         self.fitted = False
 
+
 @PreprocessingStepSelector.register("standardizer")
 class Standardizer(PreprocessModuleABC):
     """
-    Document this class. 
+    Document this class.
 
     Parameters
     ----------
@@ -264,7 +268,7 @@ class Standardizer(PreprocessModuleABC):
 
         if self.frequency is None or self.init_time_dim not in self.dims:
             self.mean = data.mean(reduction_dims).load()
-            std = data.std(reduction_dims, ddof = 1).load()
+            std = data.std(reduction_dims, ddof=1).load()
 
         else:
             grouped_data = self._add_grouping_coordinate(data)
@@ -273,7 +277,11 @@ class Standardizer(PreprocessModuleABC):
                 grouped_data.groupby(self.frequency).mean(dim=reduction_dims).load()
             )
 
-            std = grouped_data.groupby(self.frequency).std(dim=reduction_dims, ddof = 1).load()
+            std = (
+                grouped_data.groupby(self.frequency)
+                .std(dim=reduction_dims, ddof=1)
+                .load()
+            )
 
         self.std = std.where(std > 0)
 
@@ -343,6 +351,7 @@ class Standardizer(PreprocessModuleABC):
         self.mean = None
         self.std = None
         self.fitted = False
+
 
 @PreprocessingStepSelector.register("anomalies")
 class AnomaliesScaler(PreprocessModuleABC):
@@ -466,11 +475,12 @@ class AnomaliesScaler(PreprocessModuleABC):
         )
 
         return data + mean
-        
+
     def _reset_fit(self):
         """Reset fitted statistics while preserving configuration."""
         self.mean = None
         self.fitted = False
+
 
 @PreprocessingStepSelector.register("trend_remover")
 class TrendRemover(PreprocessModuleABC):
@@ -484,7 +494,7 @@ class TrendRemover(PreprocessModuleABC):
     **kwargs : Any
         Description not yet provided.
     """
-    
+
     def __init__(
         self,
         frequency: Literal["month", "day"] | None = None,
@@ -689,14 +699,13 @@ class TrendRemover(PreprocessModuleABC):
             self.slope, self.intercept = self._fit_linear_trend(data)
 
         else:
-            if (TEMPORAL_ORDER.get(self.frequency) > 
-            TEMPORAL_ORDER.get(time_freq)):
+            if TEMPORAL_ORDER.get(self.frequency) > TEMPORAL_ORDER.get(time_freq):
                 raise ValueError(
                     f"The requeted frequency of initial time: {self.frequency}"
-                    "to fit the trend must be None or finer than the initial time " 
+                    "to fit the trend must be None or finer than the initial time "
                     f"frequency of the base data to fit on: {time_freq}"
                 )
-                    
+
             grouped_data = self._add_grouping_coordinate(data)
 
             slopes = []
@@ -821,7 +830,8 @@ class TrendRemover(PreprocessModuleABC):
         self.intercept = None
         self.time_origin = None
         self.fitted = False
-        
+
+
 @PreprocessingStepSelector.register("flattener")
 class Flattennanremove(PreprocessModuleABC):
     """
@@ -1028,7 +1038,7 @@ class Flattennanremove(PreprocessModuleABC):
             Description not yet provided.
         """
         self._check_fitted()
-        
+
         if "ref" not in data.dims:
             raise ValueError("The input must contain the flattened 'ref' dimension.")
 
@@ -1066,6 +1076,7 @@ class Flattennanremove(PreprocessModuleABC):
         self.NN_dims = []
         self.reference_shape = None
         self.final_locations = None
+
 
 def align_stat_data_lead_time_inverse_transform(
     ds: xr.DataArray,
