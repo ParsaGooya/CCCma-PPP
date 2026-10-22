@@ -21,12 +21,13 @@ from cccma_ppp.data_modules.data.data_configs import (
 from cccma_ppp.train.dataset import TrainDatasetConfig
 from cccma_ppp.preprocessing.selector import PreprocessingStepSelector
 from cccma_ppp.preprocessing.preprocessing import PreprocessingPipeline
+from cccma_ppp.data_modules.utils import _create_train_mask
 
 BASE_CONFIG = (
     "scripts/integration_suite_train_config.yaml"  # template YAML for all cases
 )
 BASE_DIR = Path(
-    "/fs/site7/eccc/crd/cccma/users/rna002/output/training_time_validation_2_2"
+    "/fs/site7/eccc/crd/cccma/users/rna002/output/training_time_validation_2_2_annual_init_120"
 )  # where dummy data is written
 OUTPUT_ROOT = BASE_DIR  # where validation outputs are written, one folder per case
 
@@ -37,10 +38,16 @@ N_LAT, N_LON = 4, 4  # small grid to keep files tiny
 # Each case: (name, model_start, model_end, obs_start, obs_end).
 # Model inits are decadal (10YS) between the model dates; obs are monthly (MS).
 CASES = [
-    ("case_obs_pre2000", "2000-01-01", "2010-01-01", "1990-01-01", "1999-12-01"),
-    ("case_obs_2000_2001", "2000-01-01", "2010-01-01", "2000-01-01", "2001-12-01"),
-    ("case_obs_2001_2010", "2000-01-01", "2010-01-01", "2001-01-01", "2010-12-01"),
-    ("case_obs_post2010", "2000-01-01", "2010-01-01", "2011-01-01", "2020-12-01"),
+    ("case_obs_pre1995", "1980-01-01", "2000-01-01", "1980-01-01", "1995-12-01"),
+    ("case_obs_2000jun", "1980-01-01", "2000-01-01", "1980-01-01", "2000-06-01"),
+    (
+        "case_obs_2005mar",
+        "1980-01-01",
+        "2000-01-01",
+        "1980-01-01",
+        "2005-03-01",
+    ),
+    ("case_obs_post2015", "1980-01-01", "2000-01-01", "1980-01-01", "2015-12-01"),
 ]
 
 
@@ -58,7 +65,7 @@ def make_grid():
 
 def make_model(start: str, end: str, lat, lon) -> xr.Dataset:
     """Build dummy decadal model output with dims (time, lead_time, lat, lon)."""
-    init_times = pd.date_range(start, end, freq="10YS")  # one init every 10 years
+    init_times = pd.date_range(start, end, freq="YS")  # one init every 1 year
     lead_times = np.arange(1, 121)  # leads 1-120 months
     data = np.random.default_rng(0).normal(  # seeded so runs are reproducible
         size=(len(init_times), len(lead_times), N_LAT, N_LON)
@@ -217,20 +224,29 @@ def create_training_mask(config, available_times, output_dir: Path) -> np.ndarra
     """Build the boolean training mask and save it as training_mask.npy."""
     logger = logging.getLogger(__name__)
     model_init_times = config.get_common_time.to_series().index.unique()
-    lead_times = config.lead_times
+    lead_times = list(config.lead_times)
 
     logger.info(f"Model init times: {len(model_init_times)}")
     logger.info(f"Lead times: {len(lead_times)}")
     logger.info(f"Total pairs: {len(model_init_times) * len(lead_times)}")
 
-    mask = np.zeros((len(model_init_times), len(lead_times)), dtype=bool)
+    # _create_train_mask returns True where a target is invalid, so invert it.
+    model_valid = ~_create_train_mask(
+        init_times=model_init_times.values,
+        lead_times=lead_times,
+        lead_time_resolution="month",  # check the allowed values of lead_time_unit
+    ).values
+
+    # The function never sees available_times, so keep the obs check separately.
     available = set(
         pd.DatetimeIndex(available_times)
     )  # set gives fast membership tests
+    obs_valid = np.zeros_like(model_valid)
     for i, init_time in enumerate(model_init_times):
         for j, lead in enumerate(lead_times):
-            if init_time + pd.DateOffset(months=int(lead)) in available:
-                mask[i, j] = True
+            obs_valid[i, j] = init_time + pd.DateOffset(months=int(lead)) in available
+
+    mask = model_valid & obs_valid
 
     valid = int(mask.sum())
     logger.info(f"Valid pairs: {valid}")

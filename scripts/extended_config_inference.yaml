@@ -1,0 +1,67 @@
+experiment_dir: # Any string; path to the trained experiment (must contain config.yaml and checkpoints/)
+save_path: # Any path string; if defined, overrides experiment_dir/inference as the output dir
+seed: # Any int; if defined
+checkpoint_name: # Any string (e.g. "best.pt"); if defined, otherwise uses "best.pt"
+
+writer: # If defined, otherwise creates default instance
+  predictor: # If defined, otherwise creates default DeterministicPredictorConfig
+    # --- type "cvae" predictor (cVAEPredictorConfig) ---
+    # Use this block when the trained module is a cVAE.
+    # num_latent_samples: # Int >= 1; required
+    # nstds: # Float > 0; default 1.0
+    # chunk_size: # Int; if defined
+    # infer_latent_samples_from_training: # True / False; default False
+    # save_latent: # True / False; default False
+
+    # --- type "deterministic" predictor (DeterministicPredictorConfig) ---
+    # Use this block when the trained module is deterministic.
+    # chunk_output_samples: # True / False; default False
+  num_output_sampling: # Int >= 1; default 1
+  get_trained_model_stats_from_validation: # True / False; default False
+  aggregate_only: # True / False; default False
+  predict_only: # True / False; default False
+
+inference_loader: # If defined, otherwise creates default instance
+  dataset_config: # If defined; otherwise read from the training config
+    model: # If defined
+      paths: # Any string
+      names:
+        -  # List of strings
+      preprocessing_pipeline: # If defined; same structure as training
+        preprocessors_list:
+          - name: "normalizer" # or "standardizer", "anomalies", "trend_remover", "flattener"
+            args: # If defined
+              # normalizer / standardizer / anomalies:
+              dims: # If defined
+                -  # List of strings
+              frequency: # Any of "year", "month", "day"; if defined
+              # trend_remover (instead of the above):
+              # frequency: # Either "month" or "day"; if defined
+              # flattener (instead of the above):
+              # load_dir: # Any path object or string; if defined
+        load_dir: # Any path object or string; if defined
+        init_time_time: # Any string; default "time"
+        lead_time_time: # Any string; default "lead_time"
+        supported_NN_dimensions: # ("A", "B"); default ("sequence", "lev", "lat", "lon")
+      realization_list: # If defined
+        -  # List
+      ensemble_mean: # True / False; if defined
+      concat_dim: # Any string; default "time"; if defined
+      file_type: # Any string; default "*.nc"
+      rename_dict: # If defined
+        a: B # (a = new variable name, B = original variable name)
+    condition: # If defined; same structure as model
+    condition_method: # "ensemble_mean" | "cross_ensemble" | "same_member" | "static"; if defined
+    lead_times: # If defined
+      list_lead_times: # If defined
+        -  # List of ints
+      start: # Any int; default 1
+      end: # Any int; required if list_lead_times is not set
+  inference_years_slice: # [A, B]; integers; if defined
+  batch_size: # Any int >= 1; default 1
+  num_data_workers: # Any int >= 0; default 0
+  prefetch_factor: # Any int >= 1; if defined (only used when num_data_workers > 0)
+  drop_last: # True / False; default False
+  load: # True / False; default False
+  reduce_spatial_mask: # True / False; default False
+  time_features: # Read from training config; set here only if overriding

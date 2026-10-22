@@ -1,0 +1,280 @@
+experiment_dir: # Any string
+max_epochs: # Any non-zero int
+
+train_loader: # If defined
+  dataset_config:
+    model:
+      paths: # Any string
+      names:
+        -  # List of strings
+      preprocessing_pipeline: # If defined, otherwise creates default instance
+        preprocessors_list:
+          - name: "normalizer" # or "standardizer", "anomalies"
+            args: # If defined
+              dims: # If defined
+                -  # List of strings
+              frequency: # Any of "year", "month", "day"; if defined
+
+          - name: "trend_remover"
+            args: # If defined
+              frequency: # Either "month" or "day"; if defined
+
+          - name: "flattener"
+            args: # If defined
+              load_dir: # Any path object or string; if defined
+        load_dir: # Any path object or string; if defined
+        init_time_time: # Any string; default "time"
+        lead_time_time: # Any string; default "lead_time"
+        supported_NN_dimensions: # ("A", "B"); default ("sequence", "lev", "lat", "lon")
+      realization_list: # If defined
+        -  # List
+      ensemble_mean: # True / False; if defined
+      concat_dim: # Any string; default "time"; if defined
+      file_type: # Any string; default "*.nc"
+      rename_dict: # If defined
+        a: B # (a = new variable name, B = original variable name)
+
+    observation: # If defined
+      paths: # Any string
+      names:
+        -  # List of strings
+      preprocessing_pipeline: # If defined, otherwise creates default instance
+        preprocessors_list:
+          - name: "normalizer" # or "standardizer", "anomalies"
+            args: # If defined
+              dims: # If defined
+                -  # List of strings
+              frequency: # Any of "year", "month", "day"; if defined
+
+          - name: "trend_remover"
+            args: # If defined
+              frequency: # Either "month" or "day"; if defined
+
+          - name: "flattener"
+            args: # If defined
+              load_dir: # Any path object or string; if defined
+        load_dir: # Any path object or string; if defined
+        init_time_time: # Any string; default "time"
+        lead_time_time: # Any string; default "lead_time"
+        supported_NN_dimensions: # ("A", "B"); default ("sequence", "lev", "lat", "lon")
+      realization_list: # If defined
+        -  # List
+      ensemble_mean: # True / False; if defined
+      concat_dim: # Any string; default "time"; if defined
+      file_type: # Any string; default "*.nc"
+      rename_dict: # If defined
+        a: B
+
+    condition: # If defined
+      paths: # Any string
+      names:
+        -  # List of strings
+      preprocessing_pipeline: # If defined, otherwise creates default instance
+        preprocessors_list:
+          - name: "normalizer" # or "standardizer", "anomalies"
+            args: # If defined
+              dims: # If defined
+                -  # List of strings
+              frequency: # Any of "year", "month", "day"; if defined
+
+          - name: "trend_remover"
+            args: # If defined
+              frequency: # Either "month" or "day"; if defined
+
+          - name: "flattener"
+            args: # If defined
+              load_dir: # Any path object or string; if defined
+        load_dir: # Any path object or string; if defined
+        init_time_time: # Any string; default "time"
+        lead_time_time: # Any string; default "lead_time"
+        supported_NN_dimensions: # ("A", "B"); default ("sequence", "lev", "lat", "lon")
+      realization_list: # If defined
+        -  # List
+      ensemble_mean: # True / False; if defined
+      concat_dim: # Any string; default "time"; if defined
+      file_type: # Any string; default "*.nc"
+      rename_dict: # If defined
+        a: B
+
+    condition_method: # One of "ensemble_mean", "cross_ensemble", "same_member", "static"
+    lead_times: # If defined
+      list_lead_times: # If defined
+        -  # List of ints
+      start: # Any int; default 1
+      end: # Any int; required if list_lead_times is not set
+
+  batch_size: # Any non-zero int
+  time_features: # If defined
+    -  # Any of "time", "lead_time", "month_sin", "month_cos", "day_sin", "day_cos"
+  train_years_slice: # [A, B]; integers; if defined
+  num_validation_years: # Any int; default 0
+  num_data_workers: # Any int; default 0
+  prefetch_factor: # Any int; default 2
+  drop_last: # True / False; default False
+  load: # True / False; default False
+  reduce_spatial_mask: # True / False; default False
+
+module: # If defined
+  type: # One of "cvae" or "deterministic" (inferred)
+  config:
+    # Model-specific keys. Use one of the following blocks.
+
+    # --- type "deterministic" with model_type "unet" (UNetConfig) ---
+    # channels: # List of ints
+    # block_config: # ConvBlockConfig | PartialConvBlockConfig | ConvNeXtBlockConfig
+    #   name: # "standard_conv" | "partial_conv" | "convnext"
+    #   (remaining keys depend on name; see below)
+    # upsampling_method: # "transpose_conv" | "bilinear" | "pixelshuffle"; default "bilinear"
+    # skip_alignment_method: # "interpolation" | "padd" | "strict"; default "padd"
+    # transpose_kernel_sizes: # Int or list of odd ints/tuples; default 3
+    # add_skip_connections: # True / False; default True
+    # process_skip_connections: # True / False; default False
+    # mask_pooling: # "any" | "all" | "fraction"; default "any"
+    # mask_fraction_threshold: # Float in [0, 1]; default 0.5
+    # output_activation: # "identity" | "sigmoid" | "tanh"; default "identity"
+    # output_block_hidden_channels: # Int > 0; default None
+    # init_method: # "default" | "kaiming" | "xavier" | "trunc_normal"; default "default"
+    # GENERATOR: # GENERATORConfig; if defined
+    #   noise_level: # "full" | "medium" | "low"; default "full"
+    #   num_training_noise_samples: # Int; default 10
+    #   num_validation_noise_samples: # Int > 1; default same as training
+
+    # --- type "deterministic" with model_type "unetsic" (UNetSICConfig) ---
+    # same keys as UNet above, plus:
+    # clip_output: # True / False; default False
+
+    # --- type "deterministic" with model_type "mlp" (AutoencoderConfig) ---
+    # encoder_hidden_dims: # List of ints (last value is latent size)
+    # decoder_hidden_dims: # List of ints; default reversed encoder minus last
+    # batch_normalization: # True / False; default False
+    # dropout_rate: # Float in [0, 1]; default None
+    # append_mode: # 1 | 2 | 3; default 1
+    # init_method: # "default" | "kaiming" | "xavier" | "trunc_normal"; default "default"
+    # activation: # "relu" | "gelu" | "silu"; default "relu"
+
+    # --- type "cvae" with model_type "unet" (cVAEUNetConfig) ---
+    # channels: # List of ints
+    # latent_size: # Int > 0
+    # condition_embedding_channels: # List of ints; default same as channels
+    # condition_embedding_size: # Int > 0; default latent_size
+    # latent_normalization: # "batch" | "group" | "layer" | "none" | null; default "layer"
+    # condition_dependant_latent: # True / False; default False
+    # condemb_to_decoder: # True / False; default True
+    # deterministic_guess_config: # If defined
+    #   name: "unet" # or "unetsic"
+    #   share_output_block: # True / False; default True
+    #   (remaining keys are the UNet config above)
+    #   checkpoint_config: # Required by UNetSelector
+    #     load_path: # Any path or string
+    #     freeze_weights: # True / False; default False
+    # block_config: # Same options as UNet block_config
+    # upsampling_method: # Same as UNet
+    # upsampling_alignment_method: # "interpolation" | "padd" | "strict"; default "padd"
+    # transpose_kernel_sizes: # Same as UNet
+    # add_skip_latent: # True / False; default False
+    # mask_pooling: # Same as UNet
+    # mask_fraction_threshold: # Same as UNet
+    # output_activation: # Same as UNet
+    # output_block_hidden_channels: # Same as UNet
+    # init_method: # Same as UNet
+    # GENERATOR: # Same as UNet
+
+    # --- type "cvae" with model_type "unetsic" (cVAEUNetSICEConfig) ---
+    # same keys as cVAE UNet above, plus:
+    # clip_output: # True / False; default False
+
+    # --- type "cvae" with model_type "mlp" (cVAE_MLPConfig) ---
+    # encoder_hidden_dims: # List of ints
+    # latent_size: # Int > 0
+    # condition_embedding_dims: # List of ints; default same as encoder_hidden_dims
+    # condition_embedding_size: # Int > 0; default latent_size
+    # decoder_hidden_dims: # List of ints; default reversed encoder minus first
+    # condition_dependant_latent: # True / False; default False
+    # condemb_to_decoder: # True / False; default True
+    # batch_normalization: # True / False; default False
+    # dropout_rate: # Float in [0, 1]; default None
+    # init_method: # "default" | "kaiming" | "xavier" | "trunc_normal"; default "default"
+    # activation: # "relu" | "gelu" | "silu"; default "relu"
+
+    # --- block_config options (UNet / cVAE UNet) ---
+    # standard_conv (ConvBlockConfig):
+    #   name: "standard_conv"
+    #   num_convolutions: # Int >= 1; default 2
+    #   kernel_size: # Positive odd int; default 3
+    #   normalization: # "batch" | "group" | "layer" | "none"; default "batch"
+    #   padding_method: # "zeros" | "reflect" | "replicate" | "circular"; default "zeros"
+    #   activation: # "relu" | "gelu" | "silu"; default "relu"
+    #   dropout_rate: # Float in [0, 1] or null; default None
+    #   bias: # True / False; default False
+    #   group_norm_groups: # Int; default 8
+    # partial_conv (PartialConvBlockConfig):
+    #   name: "partial_conv"
+    #   (same keys as standard_conv, except multi_channel and return_mask are fixed)
+    # convnext (ConvNeXtBlockConfig):
+    #   name: "convnext"
+    #   num_blocks: # Int >= 1; default 2
+    #   kernel_size: # Positive odd int; default 7
+    #   expansion_ratio: # Int >= 1; default 4
+    #   padding_method: # "zeros" | "reflect" | "replicate" | "circular"; default "zeros"
+    #   layer_scale_init: # Float; default 1e-6
+    #   dropout_rate: # Float in [0, 1]; default 0.0
+    #   drop_path_rate: # Float in [0, 1]; default 0.0
+    #   use_partial_conv: # True / False; default True
+
+losspipeline: # If defined
+  loss_pipeline:
+    - name: "mse" # or "crps", "frobenius_norm"
+      args: # If defined
+        reduction: # "mean" | "sum"; if defined (otherwise pipeline-level value is used)
+        low_ress_kernel_size: # Odd int; if defined (mse, crps only)
+        hyperparam: # Float; default 1.0 (mse only)
+        min_threshold: # Float; default 0 (mse only)
+        max_threshold: # Float; default 0 (mse only)
+
+    - name: "crps"
+      args: # If defined
+        reduction: # "mean" | "sum"; if defined
+        low_ress_kernel_size: # Odd int; if defined
+
+    - name: "frobenius_norm"
+      args: # If defined
+        reduction: # "mean" | "sum"; if defined
+        covariance_dim: # "spatial" | "channel"; default "spatial"
+  loss_weights: # If defined; list of floats summing to 1
+    -  # Float
+  reduction: # "mean" | "sum"; default "mean"
+  masked_loss_calculation: # True / False; default True
+  saved_output_mask_dir: # Any string (.nc or .pt file); if defined
+
+trainer: # If defined
+  beta_finder: # Required for cvae; if defined
+    beta: # Float; default 1
+    beta_min: # Float >= 0; default 0
+    num_epoch_to_warmup: # Int; default 0
+    num_epochs_to_hold: # Int; default 0
+  earlystoppingbuffer: # Float or null; default infinity (no early stopping)
+  minimum_validation_improvement_percentage: # Float; default 0.02
+  gradient_accumulation_steps: # Int >= 1; default 1
+  mixed_precision: # True / False; default True
+  grad_clip: # Positive float; if defined
+
+optimization: # If defined, otherwise creates default instance
+  lr: # Float > 0; default 0.0001
+  weight_decay: # Float >= 0; default 0
+  optimizer_type: # "adam" | "adamw"; default "adam"
+  lr_scheduler_config: # If defined
+    min_lr: # Float >= 0; default 0.0
+    warmup_epochs: # Int >= 0; default 0
+    total_epochs: # Int > 0; if omitted, uses max_epochs
+    hold_min_lr: # True / False; default True
+
+weights: # If defined, otherwise creates default instance
+  spatial_method: # "uniform" | "cosine_lat"; default "uniform"
+  variable_weights: # If defined
+    target_channel_1: # Float
+  load_dir: # Any path object or string; if defined
+
+log_every_n_epochs: # Any int >= 1; default 5
+save_checkpoint: # True / False; default True
+seed: # Any int; if defined
+resume_dir: # Any string; if defined
