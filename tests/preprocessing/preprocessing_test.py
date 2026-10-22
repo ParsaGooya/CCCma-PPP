@@ -1463,7 +1463,6 @@ def make_fitted_pipeline():
 
 
 class TestAdditionalInitialization:
-    @pytest.mark.pruned
     def test_default_state(self):
         pipeline = PreprocessingPipeline()
 
@@ -1477,21 +1476,18 @@ class TestAdditionalInitialization:
         assert pipeline.pipeline == []
         assert pipeline.rename_dict is None
 
-    @pytest.mark.pruned
     def test_default_name_uses_uuid_prefix(self):
         pipeline = PreprocessingPipeline()
 
         assert pipeline.name.startswith("pipeline_")
         assert len(pipeline.name.removeprefix("pipeline_")) == 8
 
-    @pytest.mark.pruned
     def test_default_names_are_unique(self):
         first = PreprocessingPipeline()
         second = PreprocessingPipeline()
 
         assert first.name != second.name
 
-    @pytest.mark.pruned
     def test_selector_names_are_lowercased(self):
         selector = DummySelector(
             "MiXeD_Name",
@@ -1507,7 +1503,6 @@ class TestAdditionalInitialization:
         assert pipeline.pipeline[0][0] == "mixed_name"
         assert selector.calls == 1
 
-    @pytest.mark.pruned
     def test_set_name_stores_rename_dictionary(self):
         pipeline = PreprocessingPipeline()
         rename_dict = {
@@ -1551,7 +1546,6 @@ class TestAdditionalInitialization:
 
 
 class TestAdditionalFit:
-    @pytest.mark.pruned
     def test_fit_returns_self(self):
         pipeline = PreprocessingPipeline()
         data = make_base_data()
@@ -1564,7 +1558,6 @@ class TestAdditionalFit:
         assert result is pipeline
         assert pipeline.fitted is True
 
-    @pytest.mark.pruned
     def test_fit_records_mask(self):
         pipeline = PreprocessingPipeline()
         data = make_base_data()
@@ -1590,7 +1583,6 @@ class TestAdditionalFit:
 
         assert pipeline.mask is mask
 
-    @pytest.mark.pruned
     def test_fit_records_initialization_times(self):
         pipeline = PreprocessingPipeline()
         data = make_base_data()
@@ -1649,7 +1641,6 @@ class TestAdditionalFit:
             second,
         ]
 
-    @pytest.mark.pruned
     def test_fit_passes_same_mask_to_all_steps(self):
         first = AddPreprocessor()
         second = MultiplyPreprocessor()
@@ -1688,7 +1679,6 @@ class TestAdditionalFit:
         assert first.fit_calls[0]["mask"] is mask
         assert second.fit_calls[0]["mask"] is mask
 
-    @pytest.mark.pruned
     def test_fit_extracts_reference_coordinates_and_variables(self):
         pipeline = PreprocessingPipeline()
         data = make_base_data()
@@ -1707,7 +1697,6 @@ class TestAdditionalFit:
             "pr",
         ]
 
-    @pytest.mark.pruned
     def test_fit_does_not_save_when_disabled(
         self,
         monkeypatch,
@@ -1728,7 +1717,6 @@ class TestAdditionalFit:
 
         dump.assert_not_called()
 
-    @pytest.mark.pruned
     def test_fit_uses_uuid_name_for_default_save_name(
         self,
         tmp_path,
@@ -1805,7 +1793,6 @@ class TestAdditionalFit:
 
 
 class TestAdditionalTransform:
-    @pytest.mark.pruned
     def test_requires_fitted_pipeline(self):
         pipeline = PreprocessingPipeline()
 
@@ -1839,7 +1826,6 @@ class TestAdditionalTransform:
 
         assert result is data
 
-    @pytest.mark.pruned
     def test_steps_are_applied_in_forward_order(self):
         pipeline, first, second = make_fitted_pipeline()
         data = xr.DataArray(
@@ -1867,7 +1853,6 @@ class TestAdditionalTransform:
             data + 1.0,
         )
 
-    @pytest.mark.pruned
     def test_none_step_arguments_becomes_empty_mapping(self):
         pipeline, first, second = make_fitted_pipeline()
         data = xr.DataArray(
@@ -1908,7 +1893,6 @@ class TestAdditionalTransform:
         }
         assert first.transform_calls[0]["kwargs"] is not arguments
 
-    @pytest.mark.pruned
     def test_unknown_step_argument_raises_before_transformation(self):
         pipeline, first, second = make_fitted_pipeline()
 
@@ -1933,7 +1917,6 @@ class TestAdditionalTransform:
 
 
 class TestAdditionalInverseTransform:
-    @pytest.mark.pruned
     def test_requires_fitted_pipeline(self):
         pipeline = PreprocessingPipeline()
 
@@ -2002,14 +1985,12 @@ class TestAdditionalInverseTransform:
 
 
 class TestAdditionalFlattenerAccess:
-    @pytest.mark.pruned
     def test_has_flattener_false_for_empty_pipeline(self):
         pipeline = PreprocessingPipeline()
         pipeline.fitted_preprocessors = []
 
         assert pipeline.has_flattener is False
 
-    @pytest.mark.pruned
     def test_has_flattener_ignores_similarly_named_objects(self):
         class Flattennanremove:
             pass
@@ -2035,7 +2016,6 @@ class TestAdditionalFlattenerAccess:
         ):
             pipeline.get_flattener()
 
-    @pytest.mark.pruned
     def test_get_flattener_returns_first_matching_instance(
         self,
         monkeypatch,
@@ -2139,7 +2119,6 @@ class TestAdditionalToDataset:
         ):
             pipeline.to_dataset(data)
 
-    @pytest.mark.pruned
     def test_channel_count_must_match_reference_variables(self):
         pipeline = self.make_pipeline()
 
@@ -2164,7 +2143,6 @@ class TestAdditionalToDataset:
         ):
             pipeline.to_dataset(data)
 
-    @pytest.mark.pruned
     def test_without_flattener_renames_all_output_dimensions(self):
         pipeline = self.make_pipeline()
 
@@ -2318,7 +2296,6 @@ class TestInverseRename:
 
         assert result is data
 
-    @pytest.mark.pruned
     def test_inverse_rename_reverses_mapping(self):
         pipeline = PreprocessingPipeline()
         pipeline.rename_dict = {
@@ -2464,7 +2441,6 @@ class TestAdditionalAddFittedPreprocessor:
             second,
         ]
 
-    @pytest.mark.pruned
     def test_negative_index_uses_python_list_semantics(self):
         pipeline, first, second = make_fitted_pipeline()
         inserted = AddPreprocessor(
@@ -2489,7 +2465,6 @@ class TestAdditionalAddFittedPreprocessor:
             second,
         ]
 
-    @pytest.mark.pruned
     def test_unfitted_preprocessor_does_not_modify_pipeline(self):
         pipeline, first, second = make_fitted_pipeline()
         original_steps = list(pipeline.steps)
@@ -2533,7 +2508,6 @@ class TestAdditionalExtractOutputCoordinates:
         ):
             pipeline.extract_output_coords_vars(data)
 
-    @pytest.mark.pruned
     def test_reference_coordinates_follow_supported_order(self):
         pipeline = PreprocessingPipeline()
         pipeline.fitted = True
@@ -2629,7 +2603,6 @@ class TestAdditionalLoadFromMemory:
 
         load.assert_called_once_with(Path("/tmp/pipeline.joblib"))
 
-    @pytest.mark.pruned
     def test_loaded_mask_and_reference_coordinates_are_copied(
         self,
         monkeypatch,
@@ -2694,7 +2667,6 @@ class TestAdditionalCheckFitted:
         ):
             pipeline._check_fitted()
 
-    @pytest.mark.pruned
     def test_fitted_pipeline_is_accepted(self):
         pipeline = PreprocessingPipeline()
         pipeline.fitted = True

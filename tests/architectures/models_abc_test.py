@@ -268,7 +268,6 @@ class TestGeneratorConfig:
         assert config.num_training_noise_samples == 10
         assert config.num_validation_noise_samples == 10
 
-    @pytest.mark.pruned
     def test_validation_samples_default_to_training_samples(
         self,
     ):
@@ -288,7 +287,6 @@ class TestGeneratorConfig:
 
         assert config.num_validation_noise_samples == 3
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "noise_level",
         [
@@ -336,7 +334,6 @@ class TestCheckpointCompatibility:
             checkpoint_output_var_metadata=(output_metadata),
         )
 
-    @pytest.mark.pruned
     def test_no_checkpoint_returns_without_validation(
         self,
     ):
@@ -552,7 +549,6 @@ class TestCheckpointCompatibility:
 
 
 class TestInitializeWeights:
-    @pytest.mark.pruned
     def test_initialize_weights_visits_nested_modules(
         self,
     ):
@@ -572,7 +568,6 @@ class TestInitializeWeights:
         assert id(model.container[0]) in initialized_modules
         assert id(model.container[1]) in initialized_modules
 
-    @pytest.mark.pruned
     def test_initialize_weights_passes_method(self):
         model = NestedModel()
 
@@ -610,7 +605,6 @@ class TestInitializeWeights:
 
 
 class TestGetDevice:
-    @pytest.mark.pruned
     def test_returns_parameter_device(self):
         model = ConcreteModel(ConcreteModelConfig())
 
@@ -655,7 +649,6 @@ class TestLoadStateDict:
             freeze_weights=freeze_weights,
         )
 
-    @pytest.mark.pruned
     def test_missing_checkpoint_raises(
         self,
         tmp_path,
@@ -669,7 +662,6 @@ class TestLoadStateDict:
         ):
             model._load_state_dict(config)
 
-    @pytest.mark.pruned
     def test_loads_only_model_prefixed_keys(
         self,
         tmp_path,
@@ -733,7 +725,6 @@ class TestLoadStateDict:
         )
         collect.assert_called_once()
 
-    @pytest.mark.pruned
     def test_forwards_non_strict_flag(
         self,
         tmp_path,
@@ -800,7 +791,6 @@ class TestLoadStateDict:
 
         assert all(not parameter.requires_grad for parameter in model.parameters())
 
-    @pytest.mark.pruned
     def test_does_not_freeze_by_default(
         self,
         tmp_path,
@@ -836,13 +826,11 @@ class TestLoadStateDict:
 
 
 class TestCVAEConfig:
-    @pytest.mark.pruned
     def test_flow_setting_defaults_to_false(self):
         config = ConcreteCVAEConfig()
 
         assert config.condition_dependant_flow is False
 
-    @pytest.mark.pruned
     def test_flow_setting_can_be_enabled(self):
         config = ConcreteCVAEConfig(
             condition_dependant_flow=True,
@@ -850,7 +838,6 @@ class TestCVAEConfig:
 
         assert config.condition_dependant_flow is True
 
-    @pytest.mark.pruned
     def test_resolve_flow_settings_returns_self(self):
         config = ConcreteCVAEConfig()
 
@@ -873,7 +860,6 @@ class TestCVAEConfig:
                 condition_dependant_flow=False,
             )
 
-    @pytest.mark.pruned
     def test_dependent_latent_with_flow_allows_different_sizes(
         self,
     ):
@@ -887,7 +873,6 @@ class TestCVAEConfig:
         assert config.latent_size == 3
         assert config.condition_embedding_size == 5
 
-    @pytest.mark.pruned
     def test_independent_latent_allows_different_sizes(
         self,
     ):
@@ -902,7 +887,6 @@ class TestCVAEConfig:
 
 
 class TestCVAEModelInitialization:
-    @pytest.mark.pruned
     def test_condition_flow_setting_is_copied(
         self,
     ):
@@ -915,7 +899,6 @@ class TestCVAEModelInitialization:
 
 
 class TestSample:
-    @pytest.mark.pruned
     def test_converts_log_variance_to_variance(self):
         model = ConcreteCVAEModel(ConcreteCVAEConfig())
 
@@ -1034,7 +1017,6 @@ class TestSamplePrior:
             3,
         )
 
-    @pytest.mark.pruned
     def test_independent_latent_samples_standard_normal(
         self,
     ):
@@ -1082,7 +1064,6 @@ class TestSamplePrior:
         )
         assert cond_log_var is None
 
-    @pytest.mark.pruned
     def test_condition_dependent_flow_uses_normal_prior(
         self,
     ):
@@ -1266,7 +1247,6 @@ class TestSamplePrior:
         ):
             model._sample_prior(request)
 
-    @pytest.mark.pruned
     def test_user_samples_skip_prior_flow(
         self,
     ):
@@ -1288,7 +1268,6 @@ class TestSamplePrior:
 
         flow.inverse.assert_not_called()
 
-    @pytest.mark.pruned
     def test_condition_receives_request_values(
         self,
     ):
@@ -1323,7 +1302,6 @@ class TestSamplePrior:
             added_features=features,
         )
 
-    @pytest.mark.pruned
     def test_prior_reference_matches_condition_dtype_and_device(
         self,
     ):
@@ -1360,7 +1338,6 @@ class TestSamplePrior:
 
 
 class TestWeightsInit:
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "module_instance",
         [
@@ -1391,7 +1368,6 @@ class TestWeightsInit:
         initializer.assert_not_called()
         constant.assert_not_called()
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "layer",
         [
@@ -1438,7 +1414,6 @@ class TestWeightsInit:
         initializer.assert_called_once_with(layer.weight)
         constant.assert_not_called()
 
-    @pytest.mark.pruned
     @pytest.mark.parametrize(
         "layer",
         [
@@ -1478,7 +1453,6 @@ class TestWeightsInit:
         )
         constant.assert_not_called()
 
-    @pytest.mark.pruned
     def test_layer_without_bias(self):
         layer = nn.Linear(
             3,
@@ -1524,7 +1498,6 @@ class TestWeightsInit:
 
         initializer.assert_not_called()
 
-    @pytest.mark.pruned
     def test_frozen_bias_is_not_initialized(
         self,
     ):

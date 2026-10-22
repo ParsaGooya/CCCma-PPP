@@ -163,14 +163,12 @@ def patch_successful_main_dependencies(
 
 
 class TestGetParser:
-    @pytest.mark.pruned
     def test_returns_argument_parser(self):
         parser = get_parser()
 
         assert parser.prog
         assert parser.description == "Run inference from a configuration file"
 
-    @pytest.mark.pruned
     def test_parses_config_path(self):
         parser = get_parser()
 
@@ -182,7 +180,6 @@ class TestGetParser:
 
         assert arguments.config == "inference.yaml"
 
-    @pytest.mark.pruned
     def test_config_argument_is_string(self):
         parser = get_parser()
 
@@ -198,7 +195,6 @@ class TestGetParser:
             str,
         )
 
-    @pytest.mark.pruned
     def test_accepts_relative_config_path(self):
         parser = get_parser()
 
@@ -210,7 +206,6 @@ class TestGetParser:
 
         assert arguments.config == "configs/inference.yaml"
 
-    @pytest.mark.pruned
     def test_accepts_absolute_config_path(
         self,
         tmp_path,
@@ -226,7 +221,6 @@ class TestGetParser:
 
         assert arguments.config == str(config_path)
 
-    @pytest.mark.pruned
     def test_requires_config_argument(self):
         parser = get_parser()
 
@@ -237,7 +231,6 @@ class TestGetParser:
 
         assert error.value.code == 2
 
-    @pytest.mark.pruned
     def test_rejects_unknown_arguments(self):
         parser = get_parser()
 
@@ -253,7 +246,6 @@ class TestGetParser:
 
         assert error.value.code == 2
 
-    @pytest.mark.pruned
     def test_help_exits_successfully(
         self,
         capsys,
@@ -279,7 +271,6 @@ class TestGetParser:
 
 
 class TestMainHappyPath:
-    @pytest.mark.pruned
     def test_root_happy_path(
         self,
         monkeypatch,
@@ -337,7 +328,6 @@ class TestMainHappyPath:
         assert dependencies["writer"].predict_called is True
         assert distributed.cleanup_called is True
 
-    @pytest.mark.pruned
     def test_returns_none(
         self,
         monkeypatch,
@@ -352,7 +342,6 @@ class TestMainHappyPath:
 
 
 class TestMainDependencyArguments:
-    @pytest.mark.pruned
     def test_gets_distributed_instance_once(
         self,
         monkeypatch,
@@ -365,7 +354,6 @@ class TestMainDependencyArguments:
 
         dependencies["get_instance"].assert_called_once_with()
 
-    @pytest.mark.pruned
     def test_passes_yaml_path_to_prepare_config(
         self,
         monkeypatch,
@@ -381,7 +369,6 @@ class TestMainDependencyArguments:
 
         dependencies["prepare_config"].assert_called_once_with(str(yaml_path))
 
-    @pytest.mark.pruned
     def test_passes_yaml_data_to_dacite(
         self,
         monkeypatch,
@@ -403,7 +390,6 @@ class TestMainDependencyArguments:
         assert call.kwargs["data_class"] is predict_mod.InferenceConfig
         assert call.kwargs["data"] is config_data
 
-    @pytest.mark.pruned
     def test_uses_strict_dacite_configuration(
         self,
         monkeypatch,
@@ -422,7 +408,6 @@ class TestMainDependencyArguments:
         )
         assert dacite_config.strict is True
 
-    @pytest.mark.pruned
     def test_sets_seed_with_distributed_rank(
         self,
         monkeypatch,
@@ -443,7 +428,6 @@ class TestMainDependencyArguments:
 
         config.set_random_seed.assert_called_once_with(7)
 
-    @pytest.mark.pruned
     def test_setup_logger_receives_exact_arguments(
         self,
         monkeypatch,
@@ -463,7 +447,6 @@ class TestMainDependencyArguments:
             log_dir=config.log_dir,
         )
 
-    @pytest.mark.pruned
     def test_prepare_directory_receives_distributed(
         self,
         monkeypatch,
@@ -480,7 +463,6 @@ class TestMainDependencyArguments:
 
         config.prepare_directory.assert_called_once_with(dependencies["distributed"])
 
-    @pytest.mark.pruned
     def test_build_writer_receives_exact_arguments(
         self,
         monkeypatch,
@@ -497,7 +479,6 @@ class TestMainDependencyArguments:
             dependencies["logger"],
         )
 
-    @pytest.mark.pruned
     def test_writer_setup_receives_exact_arguments(
         self,
         monkeypatch,
@@ -517,7 +498,6 @@ class TestMainDependencyArguments:
             logger=dependencies["logger"],
         )
 
-    @pytest.mark.pruned
     def test_writer_predict_is_called_once(
         self,
         monkeypatch,
@@ -536,7 +516,6 @@ class TestMainDependencyArguments:
 
 
 class TestMainExecutionOrder:
-    @pytest.mark.pruned
     def test_seed_precedes_logger_setup(
         self,
         monkeypatch,
@@ -567,7 +546,6 @@ class TestMainExecutionOrder:
             "setup_logger",
         ]
 
-    @pytest.mark.pruned
     def test_directory_preparation_precedes_writer_build(
         self,
         monkeypatch,
@@ -598,7 +576,6 @@ class TestMainExecutionOrder:
             "build_writer",
         ]
 
-    @pytest.mark.pruned
     def test_writer_setup_precedes_prediction(
         self,
         monkeypatch,
@@ -625,7 +602,6 @@ class TestMainExecutionOrder:
             "predict",
         ]
 
-    @pytest.mark.pruned
     def test_cleanup_occurs_after_prediction(
         self,
         monkeypatch,
@@ -655,7 +631,6 @@ class TestMainExecutionOrder:
         ]
         distributed.cleanup.assert_called_once_with()
 
-    @pytest.mark.pruned
     def test_root_log_messages_surround_directory_preparation(
         self,
         monkeypatch,
@@ -687,7 +662,6 @@ class TestMainExecutionOrder:
 
 
 class TestMainCleanupOnFailure:
-    @pytest.mark.pruned
     def test_cleanup_runs_when_prepare_config_fails(
         self,
         monkeypatch,
@@ -717,7 +691,6 @@ class TestMainCleanupOnFailure:
 
         assert distributed.cleanup_called is True
 
-    @pytest.mark.pruned
     def test_cleanup_runs_when_dacite_conversion_fails(
         self,
         monkeypatch,
@@ -736,7 +709,6 @@ class TestMainCleanupOnFailure:
 
         assert dependencies["distributed"].cleanup_called is True
 
-    @pytest.mark.pruned
     def test_cleanup_runs_when_seed_setup_fails(
         self,
         monkeypatch,
@@ -760,7 +732,6 @@ class TestMainCleanupOnFailure:
         assert dependencies["distributed"].cleanup_called is True
         dependencies["setup_logger"].assert_not_called()
 
-    @pytest.mark.pruned
     def test_cleanup_runs_when_logger_setup_fails(
         self,
         monkeypatch,
@@ -780,7 +751,6 @@ class TestMainCleanupOnFailure:
         assert dependencies["distributed"].cleanup_called is True
         dependencies["build_writer"].assert_not_called()
 
-    @pytest.mark.pruned
     def test_cleanup_runs_when_directory_preparation_fails(
         self,
         monkeypatch,
@@ -804,7 +774,6 @@ class TestMainCleanupOnFailure:
         assert dependencies["distributed"].cleanup_called is True
         dependencies["build_writer"].assert_not_called()
 
-    @pytest.mark.pruned
     def test_cleanup_runs_when_writer_build_fails(
         self,
         monkeypatch,
@@ -823,7 +792,6 @@ class TestMainCleanupOnFailure:
 
         assert dependencies["distributed"].cleanup_called is True
 
-    @pytest.mark.pruned
     def test_cleanup_runs_when_writer_setup_fails(
         self,
         monkeypatch,
@@ -848,7 +816,6 @@ class TestMainCleanupOnFailure:
         assert dependencies["distributed"].cleanup_called is True
         writer.predict.assert_not_called()
 
-    @pytest.mark.pruned
     def test_cleanup_runs_when_prediction_fails(
         self,
         monkeypatch,
@@ -893,7 +860,6 @@ class TestMainCleanupOnFailure:
 
         distributed.cleanup.assert_called_once_with()
 
-    @pytest.mark.pruned
     def test_distributed_initialization_failure_does_not_cleanup(
         self,
         monkeypatch,

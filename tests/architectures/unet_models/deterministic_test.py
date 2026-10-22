@@ -152,7 +152,6 @@ def make_request(
     )
 
 
-@pytest.mark.pruned
 def test_config_defaults():
     config = make_config()
 
@@ -168,7 +167,6 @@ def test_config_defaults():
     assert config.GENERATOR is None
 
 
-@pytest.mark.pruned
 def test_config_calls_shared_validation():
     with patch.object(
         module,
@@ -183,7 +181,6 @@ def test_config_calls_shared_validation():
     checks.assert_called_once_with(config)
 
 
-@pytest.mark.pruned
 def test_config_propagates_shared_validation_error():
     with (
         patch.object(
@@ -202,7 +199,6 @@ def test_config_propagates_shared_validation_error():
         )
 
 
-@pytest.mark.pruned
 def test_shared_validation_runs_before_kernel_normalization():
     captured = {}
 
@@ -224,7 +220,6 @@ def test_shared_validation_runs_before_kernel_normalization():
     assert config.transpose_kernel_sizes == [5, 5]
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     ("channels", "expected"),
     [
@@ -246,7 +241,6 @@ def test_none_kernel_sizes_create_one_per_up_block(
     assert config.transpose_kernel_sizes == expected
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "kernel_size",
     [
@@ -269,7 +263,6 @@ def test_integer_kernel_size_is_repeated(kernel_size):
     ]
 
 
-@pytest.mark.pruned
 def test_explicit_kernel_list_is_preserved():
     kernel_sizes = [2, 3]
 
@@ -281,7 +274,6 @@ def test_explicit_kernel_list_is_preserved():
     assert config.transpose_kernel_sizes is kernel_sizes
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "method",
     [
@@ -297,7 +289,6 @@ def test_config_preserves_upsampling_method(method):
     assert config.upsampling_method == method
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "method",
     [
@@ -314,7 +305,6 @@ def test_config_preserves_alignment_method(method):
     assert config.skip_alignment_method == method
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "method",
     [
@@ -331,7 +321,6 @@ def test_config_preserves_mask_pooling(method):
     assert config.mask_pooling == method
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "activation",
     [
@@ -348,7 +337,6 @@ def test_config_preserves_output_activation(activation):
     assert config.output_activation == activation
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "hidden_channels",
     [
@@ -366,7 +354,6 @@ def test_config_preserves_output_hidden_channels(hidden_channels):
     assert config.output_block_hidden_channels == hidden_channels
 
 
-@pytest.mark.pruned
 def test_config_accepts_partial_conv_block():
     block_config = make_partial_block_config()
 
@@ -377,7 +364,6 @@ def test_config_accepts_partial_conv_block():
     assert config.block_config is block_config
 
 
-@pytest.mark.pruned
 def test_config_accepts_convnext_block():
     block_config = make_convnext_block_config()
 
@@ -388,7 +374,6 @@ def test_config_accepts_convnext_block():
     assert config.block_config is block_config
 
 
-@pytest.mark.pruned
 def test_config_build_constructs_unet():
     config = make_config()
     expected = object()
@@ -416,7 +401,6 @@ def test_config_build_constructs_unet():
     )
 
 
-@pytest.mark.pruned
 def test_config_build_passes_none_values():
     config = make_config()
     expected = object()
@@ -468,7 +452,6 @@ def test_model_rejects_invalid_input_rank(input_shape):
         )
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "output_shape",
     [
@@ -502,7 +485,6 @@ def test_model_rejects_different_spatial_shapes_without_hidden_output():
         )
 
 
-@pytest.mark.pruned
 def test_model_accepts_different_spatial_shapes_with_hidden_output():
     config = make_config(
         output_block_hidden_channels=4,
@@ -536,7 +518,6 @@ def test_model_rejects_nonpositive_spatial_dimensions(input_shape):
         )
 
 
-@pytest.mark.pruned
 def test_model_rejects_depth_too_large_for_input():
     config = make_config(
         channels=[4, 8, 16, 32, 64],
@@ -571,7 +552,6 @@ def test_depth_error_reports_allowed_levels():
         )
 
 
-@pytest.mark.pruned
 def test_model_accepts_maximum_valid_depth():
     config = make_config(
         channels=[4, 8, 16, 32],
@@ -587,7 +567,6 @@ def test_model_accepts_maximum_valid_depth():
     assert len(model.down_blocks) == 3
 
 
-@pytest.mark.pruned
 def test_model_stores_configuration():
     config = make_config()
 
@@ -601,7 +580,6 @@ def test_model_stores_configuration():
     assert model.added_features_dim == 2
 
 
-@pytest.mark.pruned
 def test_none_added_features_dimension_becomes_zero():
     model = make_model(
         added_features_dim=None,
@@ -610,7 +588,6 @@ def test_none_added_features_dimension_becomes_zero():
     assert model.added_features_dim == 0
 
 
-@pytest.mark.pruned
 def test_zero_added_features_dimension_remains_zero():
     model = make_model(
         added_features_dim=0,
@@ -619,7 +596,6 @@ def test_zero_added_features_dimension_remains_zero():
     assert model.added_features_dim == 0
 
 
-@pytest.mark.pruned
 def test_initial_mapping_includes_added_feature_channels():
     model = make_model(
         input_shape=(2, 16, 16),
@@ -630,7 +606,6 @@ def test_initial_mapping_includes_added_feature_channels():
     assert model.initial_mapping.stages[0].conv.out_channels == 4
 
 
-@pytest.mark.pruned
 def test_model_builds_one_down_block_per_channel_transition():
     config = make_config(
         channels=[4, 8, 16, 32],
@@ -642,7 +617,6 @@ def test_model_builds_one_down_block_per_channel_transition():
     assert len(model.down_blocks) == 3
 
 
-@pytest.mark.pruned
 def test_model_builds_one_up_block_per_channel_transition():
     config = make_config(
         channels=[4, 8, 16, 32],
@@ -654,7 +628,6 @@ def test_model_builds_one_up_block_per_channel_transition():
     assert len(model.up_blocks) == 3
 
 
-@pytest.mark.pruned
 def test_bottleneck_uses_last_channel_width():
     config = make_config(
         channels=[4, 8, 16],
@@ -666,7 +639,6 @@ def test_bottleneck_uses_last_channel_width():
     assert model.bottleneck.out_channels == 16
 
 
-@pytest.mark.pruned
 def test_output_uses_requested_channel_count():
     model = make_model(
         output_shape=(3, 16, 16),
@@ -679,7 +651,6 @@ def test_output_uses_requested_channel_count():
     assert final_conv.out_channels == 3
 
 
-@pytest.mark.pruned
 def test_down_blocks_without_skip_processing():
     config = make_config(
         process_skip=False,
@@ -690,7 +661,6 @@ def test_down_blocks_without_skip_processing():
     assert all(block.skip_processor is None for block in model.down_blocks)
 
 
-@pytest.mark.pruned
 def test_up_blocks_use_kernel_sizes_in_decoder_order():
     config = make_config(
         channels=[4, 8, 16],
@@ -704,7 +674,6 @@ def test_up_blocks_use_kernel_sizes_in_decoder_order():
     assert model.up_blocks[1].upsample.kernel_size == (3, 3)
 
 
-@pytest.mark.pruned
 def test_no_generator_disables_noise_in_all_up_blocks():
     model = make_model(
         config=make_config(
@@ -715,7 +684,6 @@ def test_no_generator_disables_noise_in_all_up_blocks():
     assert all(not block.inject_noise for block in model.up_blocks)
 
 
-@pytest.mark.pruned
 def test_full_noise_enables_noise_in_all_up_blocks():
     model = make_model(
         config=make_config(
@@ -729,7 +697,6 @@ def test_full_noise_enables_noise_in_all_up_blocks():
     assert all(block.inject_noise_in_block for block in model.up_blocks)
 
 
-@pytest.mark.pruned
 def test_low_noise_enables_upsampling_noise_but_not_block_noise():
     model = make_model(
         config=make_config(
@@ -743,7 +710,6 @@ def test_low_noise_enables_upsampling_noise_but_not_block_noise():
     assert all(block.inject_noise_in_block is False for block in model.up_blocks)
 
 
-@pytest.mark.pruned
 def test_prepare_input_without_mask_or_features():
     model = make_model()
     tensor = torch.randn(2, 2, 16, 16)
@@ -759,7 +725,6 @@ def test_prepare_input_without_mask_or_features():
     assert result.mask is None
 
 
-@pytest.mark.pruned
 def test_prepare_input_broadcasts_mask(
     monkeypatch,
 ):
@@ -783,7 +748,6 @@ def test_prepare_input_broadcasts_mask(
     assert result.mask is expected
 
 
-@pytest.mark.pruned
 def test_prepare_input_concatenates_added_features():
     model = make_model(
         added_features_dim=3,
@@ -810,7 +774,6 @@ def test_prepare_input_concatenates_added_features():
     assert result.mask is None
 
 
-@pytest.mark.pruned
 def test_prepare_input_adds_valid_feature_mask():
     model = make_model(
         added_features_dim=3,
@@ -838,7 +801,6 @@ def test_prepare_input_adds_valid_feature_mask():
     )
 
 
-@pytest.mark.pruned
 def test_prepare_input_does_not_create_feature_mask_without_input_mask():
     model = make_model(
         added_features_dim=3,
@@ -853,7 +815,6 @@ def test_prepare_input_does_not_create_feature_mask_without_input_mask():
     assert result.mask is None
 
 
-@pytest.mark.pruned
 def test_forward_without_generator():
     model = make_model()
     model.eval()
@@ -867,7 +828,6 @@ def test_forward_without_generator():
     assert result.output.shape == (2, 1, 16, 16)
 
 
-@pytest.mark.pruned
 def test_forward_without_generator_ignores_output_sample_size():
     model = make_model()
     model.eval()
@@ -896,7 +856,6 @@ def test_forward_with_added_features():
     assert result.output.shape == (2, 1, 16, 16)
 
 
-@pytest.mark.pruned
 def test_forward_resizes_to_output_shape(
     monkeypatch,
 ):
@@ -924,7 +883,6 @@ def test_forward_resizes_to_output_shape(
     assert result.output.shape == (2, 1, 12, 10)
 
 
-@pytest.mark.pruned
 def test_forward_output_is_finite():
     model = make_model()
     model.eval()
@@ -934,7 +892,6 @@ def test_forward_output_is_finite():
     assert torch.isfinite(result.output).all()
 
 
-@pytest.mark.pruned
 def test_generator_evaluation_repeats_requested_samples():
     config = make_config(
         GENERATOR=make_generator(
@@ -960,7 +917,6 @@ def test_generator_evaluation_repeats_requested_samples():
     )
 
 
-@pytest.mark.pruned
 def test_generator_training_uses_configured_sample_count():
     config = make_config(
         GENERATOR=make_generator(
@@ -986,7 +942,6 @@ def test_generator_training_uses_configured_sample_count():
     )
 
 
-@pytest.mark.pruned
 def test_generator_training_uses_configured_samples_when_request_is_none():
     config = make_config(
         GENERATOR=make_generator(
@@ -1012,7 +967,6 @@ def test_generator_training_uses_configured_samples_when_request_is_none():
     )
 
 
-@pytest.mark.pruned
 def test_generator_repeats_bottleneck_and_skips(
     monkeypatch,
 ):
@@ -1058,7 +1012,6 @@ def test_generator_repeats_bottleneck_and_skips(
     assert result.output.shape[0] == 3
 
 
-@pytest.mark.pruned
 def test_generator_does_not_repeat_when_sample_count_is_none(
     monkeypatch,
 ):
@@ -1120,7 +1073,6 @@ class FakeUpBlock(nn.Module):
         return skip
 
 
-@pytest.mark.pruned
 def test_forward_passes_skips_in_reverse_order(
     monkeypatch,
 ):
@@ -1326,7 +1278,6 @@ class CaptureSkipUpBlock(nn.Module):
         return skip
 
 
-@pytest.mark.pruned
 def test_config_defaults_include_skip_settings():
     config = make_config()
 
@@ -1334,7 +1285,6 @@ def test_config_defaults_include_skip_settings():
     assert config.process_skip_connections is False
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "value",
     [
@@ -1350,7 +1300,6 @@ def test_config_preserves_add_skip_connections(value):
     assert config.add_skip_connections is value
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "value",
     [
@@ -1366,7 +1315,6 @@ def test_config_preserves_process_skip_connections(value):
     assert config.process_skip_connections is value
 
 
-@pytest.mark.pruned
 def test_config_single_channel_level_has_no_kernel_sizes():
     config = make_config(
         channels=[4],
@@ -1376,7 +1324,6 @@ def test_config_single_channel_level_has_no_kernel_sizes():
     assert config.transpose_kernel_sizes == []
 
 
-@pytest.mark.pruned
 def test_config_expects_mask_for_convnext_partial_convolution():
     config = make_config(
         block_config=make_convnext_block_config(
@@ -1387,7 +1334,6 @@ def test_config_expects_mask_for_convnext_partial_convolution():
     assert config.EXPECTS_MASK is True
 
 
-@pytest.mark.pruned
 def test_config_does_not_expect_mask_for_convnext_standard_convolution():
     config = make_config(
         block_config=make_convnext_block_config(
@@ -1398,7 +1344,6 @@ def test_config_does_not_expect_mask_for_convnext_standard_convolution():
     assert config.EXPECTS_MASK is False
 
 
-@pytest.mark.pruned
 def test_down_blocks_receive_skip_connection_configuration():
     config = make_config(
         add_skip_connections=True,
@@ -1413,7 +1358,6 @@ def test_down_blocks_receive_skip_connection_configuration():
     assert all(block.skip_processor is not None for block in model.down_blocks)
 
 
-@pytest.mark.pruned
 def test_down_blocks_disable_skips_when_requested():
     config = make_config(
         add_skip_connections=False,
@@ -1429,7 +1373,6 @@ def test_down_blocks_disable_skips_when_requested():
     assert all(block.skip_processor is None for block in model.down_blocks)
 
 
-@pytest.mark.pruned
 def test_up_blocks_have_no_skip_channels_when_skips_disabled():
     model = make_model(
         config=make_config(
@@ -1440,7 +1383,6 @@ def test_up_blocks_have_no_skip_channels_when_skips_disabled():
     assert all(block.skip_channels is None for block in model.up_blocks)
 
 
-@pytest.mark.pruned
 def test_forward_decoder_training_uses_generator_sample_count(
     monkeypatch,
 ):
@@ -1484,7 +1426,6 @@ def test_forward_decoder_training_uses_generator_sample_count(
     assert all(count == 4 for count in repeat_counts)
 
 
-@pytest.mark.pruned
 def test_single_level_model_has_no_down_or_up_blocks():
     config = make_config(
         channels=[4],
@@ -1506,7 +1447,6 @@ def test_single_level_model_has_no_down_or_up_blocks():
     assert model.bottleneck.out_channels == 4
 
 
-@pytest.mark.pruned
 def test_single_level_model_forward():
     config = make_config(
         channels=[4],
@@ -1527,7 +1467,6 @@ def test_single_level_model_forward():
     )
 
 
-@pytest.mark.pruned
 def test_config_preserves_add_skip_connections_true():
     config = make_config(
         add_skip_connections=True,
@@ -1536,7 +1475,6 @@ def test_config_preserves_add_skip_connections_true():
     assert config.add_skip_connections is True
 
 
-@pytest.mark.pruned
 def test_config_preserves_add_skip_connections_false():
     config = make_config(
         add_skip_connections=False,
@@ -1545,7 +1483,6 @@ def test_config_preserves_add_skip_connections_false():
     assert config.add_skip_connections is False
 
 
-@pytest.mark.pruned
 def test_config_preserves_process_skip_connections_true():
     config = make_config(
         process_skip_connections=True,
@@ -1554,7 +1491,6 @@ def test_config_preserves_process_skip_connections_true():
     assert config.process_skip_connections is True
 
 
-@pytest.mark.pruned
 def test_config_preserves_process_skip_connections_false():
     config = make_config(
         process_skip_connections=False,
@@ -1563,7 +1499,6 @@ def test_config_preserves_process_skip_connections_false():
     assert config.process_skip_connections is False
 
 
-@pytest.mark.pruned
 def test_down_blocks_receive_skip_processing_setting():
     model = make_model(
         config=make_config(
@@ -1576,7 +1511,6 @@ def test_down_blocks_receive_skip_processing_setting():
     assert all(block.skip_processor is not None for block in model.down_blocks)
 
 
-@pytest.mark.pruned
 def test_skip_processors_are_not_created_when_skips_disabled():
     model = make_model(
         config=make_config(
@@ -1589,7 +1523,6 @@ def test_skip_processors_are_not_created_when_skips_disabled():
     assert all(block.skip_processor is None for block in model.down_blocks)
 
 
-@pytest.mark.pruned
 def test_up_blocks_receive_skip_channels_when_enabled():
     model = make_model(
         config=make_config(
@@ -1608,7 +1541,6 @@ def test_up_blocks_receive_skip_channels_when_enabled():
     ]
 
 
-@pytest.mark.pruned
 def test_up_blocks_receive_no_skip_channels_when_disabled():
     model = make_model(
         config=make_config(
@@ -1627,7 +1559,6 @@ def test_up_blocks_receive_no_skip_channels_when_disabled():
     ]
 
 
-@pytest.mark.pruned
 def test_odd_spatial_shapes_are_recorded_correctly():
     model = make_model(
         config=make_config(
@@ -1665,7 +1596,6 @@ def test_odd_spatial_shapes_are_recorded_correctly():
     ]
 
 
-@pytest.mark.pruned
 def test_rectangular_spatial_shapes_are_recorded_correctly():
     model = make_model(
         config=make_config(
@@ -1708,7 +1638,6 @@ def test_rectangular_spatial_shapes_are_recorded_correctly():
     ]
 
 
-@pytest.mark.pruned
 def test_prepare_input_calls_broadcast_mask_with_none():
     model = make_model()
     tensor = torch.randn(
@@ -1737,7 +1666,6 @@ def test_prepare_input_calls_broadcast_mask_with_none():
     assert result.mask is None
 
 
-@pytest.mark.pruned
 def test_prepare_input_preserves_channel_order():
     model = make_model(
         added_features_dim=2,
@@ -1826,7 +1754,6 @@ def test_prepare_input_uses_broadcast_mask_before_adding_feature_mask():
     )
 
 
-@pytest.mark.pruned
 def test_forward_decoder_without_skips_uses_resize_shapes_in_reverse_order():
     model = make_model(
         config=make_config(
@@ -1964,7 +1891,6 @@ def test_forward_decoder_without_skips_uses_resize_shapes_in_reverse_order():
     )
 
 
-@pytest.mark.pruned
 def test_forward_decoder_with_skips_does_not_pass_resize_shape():
     model = make_model(
         config=make_config(
@@ -2050,7 +1976,6 @@ def test_forward_decoder_with_skips_does_not_pass_resize_shape():
     assert captured["resize_shape"] is None
 
 
-@pytest.mark.pruned
 def test_forward_decoder_always_resizes_decoder_output(
     monkeypatch,
 ):
@@ -2082,7 +2007,6 @@ def test_forward_decoder_always_resizes_decoder_output(
     assert result is expected
 
 
-@pytest.mark.pruned
 def test_forward_uses_output_block_property():
     model = make_model()
     model.eval()
@@ -2115,7 +2039,6 @@ def test_forward_uses_output_block_property():
     assert result.output is projected_output
 
 
-@pytest.mark.pruned
 def test_forward_returns_deterministic_output():
     model = make_model()
     model.eval()
@@ -2126,7 +2049,6 @@ def test_forward_returns_deterministic_output():
     assert torch.is_tensor(result.output)
 
 
-@pytest.mark.pruned
 def test_generator_evaluation_with_zero_samples_does_not_repeat():
     model = make_model(
         config=make_config(
@@ -2156,7 +2078,6 @@ def test_generator_evaluation_with_zero_samples_does_not_repeat():
     )
 
 
-@pytest.mark.pruned
 def test_generator_medium_noise_only_enables_final_upsampling_noise():
     model = make_model(
         config=make_config(
@@ -2176,7 +2097,6 @@ def test_generator_medium_noise_only_enables_final_upsampling_noise():
     assert all(block.inject_noise_in_block for block in model.up_blocks)
 
 
-@pytest.mark.pruned
 def test_generator_low_noise_enables_every_upsampling_stage():
     model = make_model(
         config=make_config(
@@ -2196,7 +2116,6 @@ def test_generator_low_noise_enables_every_upsampling_stage():
     assert all(not block.inject_noise_in_block for block in model.up_blocks)
 
 
-@pytest.mark.pruned
 def test_generator_full_noise_enables_every_noise_location():
     model = make_model(
         config=make_config(
@@ -2216,7 +2135,6 @@ def test_generator_full_noise_enables_every_noise_location():
     assert all(block.inject_noise_in_block for block in model.up_blocks)
 
 
-@pytest.mark.pruned
 def test_forward_decoder_training_overrides_zero_sample_request(
     monkeypatch,
 ):
@@ -2287,7 +2205,6 @@ def test_forward_training_uses_configured_generator_samples():
     )
 
 
-@pytest.mark.pruned
 def test_forward_evaluation_uses_requested_generator_samples():
     model = make_model(
         config=make_config(
@@ -2314,7 +2231,6 @@ def test_forward_evaluation_uses_requested_generator_samples():
     )
 
 
-@pytest.mark.pruned
 def test_forward_generator_reshapes_batch_before_transpose():
     model = make_model(
         config=make_config(
@@ -2376,7 +2292,6 @@ def test_forward_generator_reshapes_batch_before_transpose():
     )
 
 
-@pytest.mark.pruned
 def test_checkpoint_configuration_calls_load_state_dict():
     config = make_config()
     checkpoint = SimpleNamespace(
@@ -2419,7 +2334,6 @@ def test_checkpoint_configuration_calls_load_state_dict():
     initialize.assert_not_called()
 
 
-@pytest.mark.pruned
 def test_without_checkpoint_calls_initialize_weights():
     config = make_config(
         init_method="xavier",
@@ -2437,7 +2351,6 @@ def test_without_checkpoint_calls_initialize_weights():
     initialize.assert_called_once_with("xavier")
 
 
-@pytest.mark.pruned
 def test_checkpoint_compatibility_validation_receives_shapes():
     with patch.object(
         UNet,
@@ -2470,7 +2383,6 @@ def test_checkpoint_compatibility_validation_receives_shapes():
     )
 
 
-@pytest.mark.pruned
 def test_build_output_forwards_configuration(
     monkeypatch,
 ):
@@ -2509,7 +2421,6 @@ def test_build_output_forwards_configuration(
     )
 
 
-@pytest.mark.pruned
 def test_output_block_property_tracks_replaced_output():
     model = make_model()
     replacement = nn.Identity()
@@ -2519,14 +2430,12 @@ def test_output_block_property_tracks_replaced_output():
     assert model.output_block is replacement
 
 
-@pytest.mark.pruned
 def test_sic_config_defaults_clip_output_to_false():
     config = make_sic_config()
 
     assert config.clip_output is False
 
 
-@pytest.mark.pruned
 def test_sic_config_preserves_true_clip_output():
     config = make_sic_config(
         clip_output=True,
@@ -2535,7 +2444,6 @@ def test_sic_config_preserves_true_clip_output():
     assert config.clip_output is True
 
 
-@pytest.mark.pruned
 def test_sic_config_build_constructs_sic_model():
     config = make_sic_config()
     expected = object()
@@ -2570,7 +2478,6 @@ def test_sic_config_build_constructs_sic_model():
     assert constructor.call_args.kwargs["added_features_dim"] == 3
 
 
-@pytest.mark.pruned
 def test_sic_model_uses_unet_output_sic():
     model = make_sic_model(
         config=make_sic_config(
@@ -2585,7 +2492,6 @@ def test_sic_model_uses_unet_output_sic():
     assert model.output.clip_output is True
 
 
-@pytest.mark.pruned
 def test_sic_build_output_forwards_all_configuration(
     monkeypatch,
 ):
@@ -2627,7 +2533,6 @@ def test_sic_build_output_forwards_all_configuration(
     )
 
 
-@pytest.mark.pruned
 def test_sic_clipped_output_stays_within_unit_interval():
     model = make_sic_model(
         config=make_sic_config(
@@ -2656,7 +2561,6 @@ def test_sic_clipped_output_stays_within_unit_interval():
     assert torch.all(result <= 1)
 
 
-@pytest.mark.pruned
 def test_sic_unclipped_output_can_exceed_unit_interval():
     model = make_sic_model(
         config=make_sic_config(
@@ -2684,7 +2588,6 @@ def test_sic_unclipped_output_can_exceed_unit_interval():
     assert torch.any(result > 1)
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     (
         "activation",
@@ -2739,7 +2642,6 @@ def test_sic_model_forward_shapes(
     )
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "block_config",
     [
@@ -2765,7 +2667,6 @@ def test_partial_convolution_models_expect_masks(
     assert config.EXPECTS_MASK is True
 
 
-@pytest.mark.pruned
 @pytest.mark.parametrize(
     "block_config",
     [
@@ -2809,7 +2710,6 @@ def test_no_skip_model_forward():
     )
 
 
-@pytest.mark.pruned
 def test_processed_skip_model_forward():
     model = make_model(
         config=make_config(
@@ -2914,7 +2814,6 @@ def make_chunk_request(
     )
 
 
-@pytest.mark.pruned
 def test_chunked_decoder_runs_once_per_requested_output_sample():
     model = make_model(
         config=make_config(
@@ -2952,7 +2851,6 @@ def test_chunked_decoder_runs_once_per_requested_output_sample():
     )
 
 
-@pytest.mark.pruned
 def test_chunked_decoder_reuses_skip_for_each_output_sample():
     model = make_model(
         config=make_config(
@@ -2987,7 +2885,6 @@ def test_chunked_decoder_reuses_skip_for_each_output_sample():
     assert all(call["resize_shape"] is None for call in up_block.calls)
 
 
-@pytest.mark.pruned
 def test_chunked_decoder_does_not_repeat_bottleneck_or_skips():
     model = make_model(
         config=make_config(
@@ -3055,7 +2952,6 @@ def test_chunked_forward_restores_output_sample_and_batch_dimensions():
     )
 
 
-@pytest.mark.pruned
 def test_chunked_decoder_resizes_every_generated_sample():
     model = make_model(
         config=make_config(
@@ -3139,7 +3035,6 @@ def test_chunked_decoder_without_skips_uses_recorded_resize_shapes():
     )
 
 
-@pytest.mark.pruned
 def test_chunking_is_ignored_without_generator():
     model = make_model(
         config=make_config(
@@ -3175,7 +3070,6 @@ def test_chunking_is_ignored_without_generator():
     )
 
 
-@pytest.mark.pruned
 def test_chunking_is_ignored_for_single_output_sample():
     model = make_model(
         config=make_config(
@@ -3213,7 +3107,6 @@ def test_chunking_is_ignored_for_single_output_sample():
     )
 
 
-@pytest.mark.pruned
 def test_false_chunk_setting_uses_vectorized_repeat_path():
     model = make_model(
         config=make_config(
@@ -3254,7 +3147,6 @@ def test_false_chunk_setting_uses_vectorized_repeat_path():
     )
 
 
-@pytest.mark.pruned
 def test_chunked_decoder_training_uses_configured_sample_count():
     model = make_model(
         config=make_config(
@@ -3293,7 +3185,6 @@ def test_chunked_decoder_training_uses_configured_sample_count():
     )
 
 
-@pytest.mark.pruned
 def test_chunked_forward_training_restores_configured_sample_dimension():
     model = make_model(
         config=make_config(
@@ -3332,7 +3223,6 @@ def test_chunked_forward_training_restores_configured_sample_dimension():
     )
 
 
-@pytest.mark.pruned
 def test_chunked_samples_are_concatenated_in_generation_order():
     model = make_model(
         config=make_config(
@@ -3381,7 +3271,6 @@ def test_chunked_samples_are_concatenated_in_generation_order():
     )
 
 
-@pytest.mark.pruned
 def test_chunked_decoder_passes_each_up_block_output_to_next_block():
     model = make_model(
         config=make_config(
