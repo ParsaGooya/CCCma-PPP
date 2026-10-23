@@ -484,6 +484,7 @@ class TrendRemover(PreprocessModuleABC):
     **kwargs : Any
         Description not yet provided.
     """
+    TEMPORAL_ORDER: ClassVar[dict] = {"day": 0,"month": 1,"year": 2,}
     
     def __init__(
         self,
@@ -689,8 +690,8 @@ class TrendRemover(PreprocessModuleABC):
             self.slope, self.intercept = self._fit_linear_trend(data)
 
         else:
-            if (TEMPORAL_ORDER.get(self.frequency) > 
-            TEMPORAL_ORDER.get(time_freq)):
+            if (self.TEMPORAL_ORDER.get(self.frequency) > 
+            self.TEMPORAL_ORDER.get(time_freq)):
                 raise ValueError(
                     f"The requeted frequency of initial time: {self.frequency}"
                     "to fit the trend must be None or finer than the initial time " 
@@ -804,7 +805,10 @@ class TrendRemover(PreprocessModuleABC):
             lead_time_resolution=self.lead_time_resolution,
         )
 
-        target_time = self._get_inverse_target_time(data)
+        if self.lead_time_dim in slope.dims:
+            target_time = data[self.init_time_dim]
+        else:
+            target_time = self._get_inverse_target_time(data)
 
         numeric_time = self._time_to_numeric(
             target_time,
@@ -1067,42 +1071,41 @@ class Flattennanremove(PreprocessModuleABC):
         self.reference_shape = None
         self.final_locations = None
 
+
 def align_stat_data_lead_time_inverse_transform(
-    ds: xr.DataArray,
-    stat: xr.DataArray,
+    ds: xr.DataArray | xr.Dataset,
+    stat: xr.DataArray | xr.Dataset,
     lead_time_resolution: lead_time_unit = "month",
     init_time_dim: str = init_time_dim,
     lead_time_dim: str = lead_time_dim,
-) -> xr.DataArray:
+) -> xr.DataArray | xr.Dataset:
     """
-    Document this function.
+    Align preprocessing statistics with data for inverse transformation.
+
+    Statistics containing a lead-time dimension are aligned using
+    initialization times. Otherwise, forecast valid times are used.
+
+    Temporal grouping dimensions ('year', 'month', 'day') are aligned
+    to the appropriate temporal coordinates.
 
     Parameters
     ----------
-    ds : xr.DataArray
-        Description not yet provided.
-    stat : xr.DataArray
-        Description not yet provided.
+    ds : xr.DataArray | xr.Dataset
+        Data to be inverse-transformed.
+    stat : xr.DataArray | xr.Dataset
+        Fitted preprocessing statistics.
     lead_time_resolution : lead_time_unit
-        Description not yet provided.
+        Resolution of forecast lead times.
     init_time_dim : str
-        Description not yet provided.
+        Initialization-time dimension name.
     lead_time_dim : str
-        Description not yet provided.
+        Lead-time dimension name.
 
     Returns
     -------
-    xr.DataArray
-        Description not yet provided.
-
-    Raises
-    ------
-    ValueError
-        Description not yet provided.
+    xr.DataArray | xr.Dataset
+        Temporally aligned statistics.
     """
-    if lead_time_dim in stat.dims:
-        return stat
-
     temporal_stat_dims = {
         init_time_dim,
         "year",
@@ -1115,19 +1118,32 @@ def align_stat_data_lead_time_inverse_transform(
 
     if init_time_dim not in ds.coords:
         raise ValueError(
-            f"Data must contain the initialization-time coordinate {init_time_dim!r}."
+            f"Data must contain the initialization-time coordinate "
+            f"{init_time_dim!r}."
         )
 
     init_times = np.asarray(ds[init_time_dim].values)
 
     if init_times.ndim != 1:
-        raise ValueError(f"Coordinate {init_time_dim!r} must be one-dimensional.")
+        raise ValueError(
+            f"Coordinate {init_time_dim!r} must be one-dimensional."
+        )
 
-    if lead_time_dim in ds.dims:
+    # Select the temporal reference.
+    if lead_time_dim in stat.dims or lead_time_dim not in ds.dims:
+        # Statistics already have a lead-time dimension.
+        # Align temporal groups using initialization times.
+        target_time = ds[init_time_dim]
+
+    else:
+        # Statistics do not have lead_time.
+        # Align temporal groups using forecast valid times.
         lead_times = np.asarray(ds[lead_time_dim].values)
 
         if lead_times.ndim != 1:
-            raise ValueError(f"Coordinate {lead_time_dim!r} must be one-dimensional.")
+            raise ValueError(
+                f"Coordinate {lead_time_dim!r} must be one-dimensional."
+            )
 
         init_time_grid, lead_time_grid = np.meshgrid(
             init_times,
@@ -1141,26 +1157,15 @@ def align_stat_data_lead_time_inverse_transform(
             lead_time_resolution=lead_time_resolution,
         ).reshape(init_time_grid.shape)
 
-        temporal_dims = (init_time_dim, lead_time_dim)
-        temporal_coords = {
-            init_time_dim: ds[init_time_dim],
-            lead_time_dim: ds[lead_time_dim],
-        }
-
-    else:
-        target_times = init_times
-
-        temporal_dims = (init_time_dim,)
-        temporal_coords = {
-            init_time_dim: ds[init_time_dim],
-        }
-
-    target_time = xr.DataArray(
-        target_times,
-        dims=temporal_dims,
-        coords=temporal_coords,
-        name="target_time",
-    )
+        target_time = xr.DataArray(
+            target_times,
+            dims=(init_time_dim, lead_time_dim),
+            coords={
+                init_time_dim: ds[init_time_dim],
+                lead_time_dim: ds[lead_time_dim],
+            },
+            name="target_time",
+        )
 
     rename_dims = {}
     indexers = {}
@@ -1197,4 +1202,10 @@ def align_stat_data_lead_time_inverse_transform(
     if temporary_coords:
         aligned_stat = aligned_stat.drop_vars(temporary_coords)
 
-    return aligned_stat.assign_coords(temporal_coords)
+    return aligned_stat.assign_coords(
+        {
+            dim: ds[dim]
+            for dim in (init_time_dim, lead_time_dim)
+            if dim in aligned_stat.dims and dim in ds.coords
+        }
+    )
