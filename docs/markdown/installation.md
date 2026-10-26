@@ -14,16 +14,16 @@ uv venv
 
 ## Activate the virtual environment
 
-### Linux/macOS
+- **Linux/macOS**
 
 ```bash
-source .venv/bin/activate
+  source .venv/bin/activate
 ```
 
-### Windows (PowerShell)
+- **Windows (PowerShell)**
 
 ```powershell
-.venv\Scripts\Activate.ps1
+  .venv\Scripts\Activate.ps1
 ```
 
 ## Install the package
@@ -32,7 +32,8 @@ source .venv/bin/activate
 uv pip install .
 ```
 
-### For development mode
+For development mode:
 
 ```bash
 uv pip install -e .
+```

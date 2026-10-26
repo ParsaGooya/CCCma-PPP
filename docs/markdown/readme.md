@@ -1,6 +1,4 @@
-# README
-
-## CCCma Post-Processing Package (PPP)
+# CCCma Post-Processing Package (PPP)
 
 A machine learning pipeline for post-processing seasonal-to-decadal predictions produced by the Canadian Earth System Models (CanESM) at the Canadian Centre for Climate Modelling and Analysis (CCCma).
 
@@ -11,8 +9,7 @@ The package is currently under active development and is undergoing quality assu
 ## Ownership and Use
 
 Developed by Parsa Gooya at the Canadian Centre for Climate Modelling and Analysis (CCCma), Environment and Climate Change Canada (ECCC).
-
-**Contact:** parsa.gooya@ec.gc.ca
+Contact: parsa.gooya@ec.gc.ca
 
 All rights reserved. This software and associated materials may not be used, copied, modified, distributed, or shared without prior written permission from the authors.
 
